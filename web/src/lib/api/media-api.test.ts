@@ -7,7 +7,13 @@ import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { graphql, HttpResponse } from "msw";
 import { describe, expect, it } from "vitest";
 
-import { uploadFilename, uploadMedia, uploadVideo, UploadPartsError } from "./media-api";
+import {
+  fetchMediaAttachmentStatus,
+  uploadFilename,
+  uploadMedia,
+  uploadVideo,
+  UploadPartsError,
+} from "./media-api";
 import type { PartUploader } from "./part-uploader";
 import type { AuthGuard } from "@/lib/session/guard";
 import { startMswServer } from "@/test/msw";
@@ -31,14 +37,19 @@ function payload(media: unknown, userErrors: unknown[] = []) {
   return { __typename: "UploadMediaPayload", media, userErrors };
 }
 
-function media(id: string) {
+function media(id: string, extra: Record<string, unknown> = {}) {
   return {
     __typename: "MediaAttachment",
     id,
     url: `https://media.example/${id}`,
     altText: null,
     status: "NORMAL",
-    options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+    mimeType: "image/webp",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    state: "READY",
+    failureReason: null,
+    ...extra,
   };
 }
 
@@ -114,7 +125,7 @@ describe("uploadVideo", () => {
   function beginHandler(
     upload: unknown,
     userErrors: unknown[] = [],
-    seen?: { declaredBytes?: number; kind?: string },
+    seen?: { declaredBytes?: number; kind?: string; scale?: string },
   ) {
     return graphql.mutation("BeginMediaUpload", ({ variables }) => {
       if (seen) Object.assign(seen, variables);
@@ -149,7 +160,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(1024) },
+      { blob: big(1024), scale: "POST" },
       { uploader: parts.stub },
     );
     expect(outcome.kind).toBe("success");
@@ -162,7 +173,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(64) },
+      { blob: big(64), scale: "POST" },
       { uploader: parts.stub, thresholdBytes: 64 },
     );
     expect(outcome.kind).toBe("success");
@@ -182,7 +193,7 @@ describe("uploadVideo", () => {
     await uploadVideo(
       client(),
       passthrough,
-      { blob: big(64) },
+      { blob: big(64), scale: "POST" },
       { uploader: parts.stub, thresholdBytes: 64 },
     );
     expect(parts.seen.partSizeBytes).toBe(4 * 1024 * 1024);
@@ -195,12 +206,42 @@ describe("uploadVideo", () => {
     await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096) },
+      { blob: big(4096), scale: "POST" },
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(seen.declaredBytes).toBe(4096);
     // STILL exists in the schema and is reserved; nothing names it.
     expect(seen.kind).toBe("VIDEO");
+  });
+
+  // The server sizes, re-encodes and validates a clip for the cap of the parent
+  // it is headed for — a comment's is half a post's — so the destination rides
+  // whichever path the clip's size takes.
+  it("names the clip's destination on both paths", async () => {
+    const opened: { scale?: string } = {};
+    server.use(beginHandler(session(), [], opened), completeHandler(payload(media("m"))));
+    await uploadVideo(
+      client(),
+      passthrough,
+      { blob: big(4096), scale: "COMMENT" },
+      { uploader: uploader().stub, thresholdBytes: 64 },
+    );
+    expect(opened.scale).toBe("COMMENT");
+
+    let single: { input?: { scale?: string } } = {};
+    server.use(
+      graphql.mutation("UploadMedia", ({ variables }) => {
+        single = variables as typeof single;
+        return HttpResponse.json({ data: { uploadMedia: payload(media("m-small")) } });
+      }),
+    );
+    await uploadVideo(
+      client(),
+      passthrough,
+      { blob: big(16), scale: "COMMENT" },
+      { uploader: uploader().stub, thresholdBytes: 64 },
+    );
+    expect(single.input?.scale).toBe("COMMENT");
   });
 
   // The clip names no poster of its own: a cover is a fact about the
@@ -211,7 +252,7 @@ describe("uploadVideo", () => {
     await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096) },
+      { blob: big(4096), scale: "POST" },
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(seen.uploadId).toBe("sess-1");
@@ -227,7 +268,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096) },
+      { blob: big(4096), scale: "POST" },
       { uploader: parts.stub, thresholdBytes: 64 },
     );
     expect(outcome.kind).toBe("refused");
@@ -250,7 +291,7 @@ describe("uploadVideo", () => {
     const outcome = await uploadVideo(
       client(),
       passthrough,
-      { blob: big(4096) },
+      { blob: big(4096), scale: "POST" },
       { uploader: uploader("The server would not take that video.").stub, thresholdBytes: 64 },
     );
 
@@ -279,9 +320,36 @@ describe("uploadVideo", () => {
     await uploadVideo(
       client(),
       counting,
-      { blob: big(4096) },
+      { blob: big(4096), scale: "POST" },
       { uploader: uploader().stub, thresholdBytes: 64 },
     );
     expect(wrapped).toEqual(["call-0", "call-1"]);
+  });
+});
+
+describe("fetchMediaAttachmentStatus", () => {
+  it("returns the asset when found", async () => {
+    server.use(
+      graphql.query("MediaAttachmentStatus", () =>
+        HttpResponse.json({ data: { mediaAttachment: media("m-1", { state: "PROCESSING" }) } }),
+      ),
+    );
+    const outcome = await fetchMediaAttachmentStatus(client(), "m-1");
+    expect(outcome).toEqual({
+      kind: "success",
+      value: expect.objectContaining({ id: "m-1", state: "PROCESSING" }),
+    });
+  });
+
+  it("returns success(null) for an asset this viewer cannot read", async () => {
+    server.use(
+      graphql.query("MediaAttachmentStatus", () =>
+        HttpResponse.json({ data: { mediaAttachment: null } }),
+      ),
+    );
+    expect(await fetchMediaAttachmentStatus(client(), "m-1")).toEqual({
+      kind: "success",
+      value: null,
+    });
   });
 });

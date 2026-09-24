@@ -3450,22 +3450,48 @@ pub struct MediaOptions {
     pub duration_ms: Option<i32>,
 }
 
+/// Where an uploaded asset stands between its upload and its first use
+/// (api-spec.md "Upload and gallery limits").
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum MediaAttachmentState {
+    /// Uploaded; the server is re-encoding it to the served target. Not
+    /// attachable yet — poll `mediaAttachment` until it is READY.
+    Processing,
+    /// The bytes are final and `digest` names them.
+    Ready,
+    /// The upload could not be made servable; `failureReason` says why.
+    /// Uploading the file again is a fresh attempt.
+    Failed,
+}
+
+impl MediaAttachmentState {
+    pub fn from_store(state: postgres_store::media::AssetState) -> Self {
+        match state {
+            postgres_store::media::AssetState::Processing => Self::Processing,
+            postgres_store::media::AssetState::Ready => Self::Ready,
+            postgres_store::media::AssetState::Failed => Self::Failed,
+        }
+    }
+}
+
 /// A media asset. Not a graph node — parents point at it and it never
 /// points back — so it carries no records. Bytes live in the media
 /// service, verifiable against the digest committed in the referencing
 /// payload envelope.
 ///
-/// The asset row is the whole of it except `altText` and `coverMedia`,
-/// which are facts about the *placement* rather than about the bytes: a
-/// gallery entry carries the description and the poster its version's
-/// manifest witnessed, and the same asset can read differently in two
-/// parents (data-model.md "Media attachments"). Outside a placement — a
-/// fresh upload, a profile picture — there is neither a description nor a
-/// poster to serve.
+/// The asset row is the whole of it except `altText`, `coverMedia` and
+/// `coverTaken`, which are facts about the *placement* rather than about
+/// the bytes: a gallery entry carries the description, the poster and the
+/// poster's provenance its version's manifest witnessed, and the same
+/// asset can read differently in two parents (data-model.md "Media
+/// attachments"). Outside a placement — a fresh upload, a profile picture
+/// — there is neither a description nor a poster to serve.
 pub struct MediaAttachmentType {
     pub asset: postgres_store::media::MediaAttachment,
     pub alt_text: Option<String>,
     pub cover_media_id: Option<Uuid>,
+    pub cover_taken: bool,
 }
 
 impl MediaAttachmentType {
@@ -3476,16 +3502,18 @@ impl MediaAttachmentType {
             asset,
             alt_text: None,
             cover_media_id: None,
+            cover_taken: false,
         }
     }
 
-    /// One gallery entry: the asset, and the description and poster this
-    /// version's junction row cached from its manifest.
+    /// One gallery entry: the asset, and the description, poster and
+    /// taken mark this version's junction row cached from its manifest.
     fn placement(entry: postgres_store::media::GalleryEntry) -> Self {
         Self {
             asset: entry.asset,
             alt_text: entry.alt_text,
             cover_media_id: entry.cover_media_id,
+            cover_taken: entry.cover_taken,
         }
     }
 }
@@ -3523,6 +3551,24 @@ impl MediaAttachmentType {
 
     async fn mime_type(&self) -> &str {
         &self.asset.mime_type
+    }
+
+    /// Whether the bytes are final. An upload the server has to re-encode
+    /// first reads PROCESSING, and prepare refuses it until it reads
+    /// READY — the envelope commits `digest`, so it may only ever commit
+    /// one that will not change. Every asset a parent carries is READY.
+    ///
+    /// While PROCESSING, `url`, `digest` and `sizeBytes` describe the
+    /// bytes as they arrived; at READY they describe the rendition, the
+    /// only bytes the asset will ever serve from then on.
+    async fn state(&self) -> MediaAttachmentState {
+        MediaAttachmentState::from_store(self.asset.state)
+    }
+
+    /// Why the asset is FAILED, worded for its author. Null in every
+    /// other state.
+    async fn failure_reason(&self) -> Option<&str> {
+        self.asset.failure_reason.as_deref()
     }
 
     /// The stored size. `Int` is 32-bit per the GraphQL specification
@@ -3612,6 +3658,17 @@ impl MediaAttachmentType {
             .load_one(id)
             .await?
             .map(MediaAttachmentType::asset))
+    }
+
+    /// True when `coverMedia` is a frame taken from the clip rather than a
+    /// still its author chose — the authoring fact the version's manifest
+    /// witnessed beside the cover (data-model.md, per-asset map key 4).
+    ///
+    /// Resolved from the junction row, like `coverMedia`, and only ever
+    /// true where the placement names a cover: false on a chosen cover,
+    /// on a placement without one, and outside a placement.
+    async fn cover_taken(&self) -> bool {
+        self.cover_taken
     }
 
     /// The account that uploaded the asset.

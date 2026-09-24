@@ -41,6 +41,87 @@ describe("TextField", () => {
     expect(screen.getByTestId("title").tagName).toBe("TEXTAREA");
   });
 
+  // THE GROWTH LAW (jakob's ruling, the sheets-and-video round, 2026-09-22 —
+  // design/readme.md §13, `design/components/forms/TextField.prompt.md`:
+  // "`rows` is a minimum, and a multi-line field grows"). jsdom lays nothing
+  // out, so what is pinned is the mechanism: the replica the box is sized by,
+  // the minimum it opens at, and which of the two elements scrolls.
+  it("grows with the writing rather than stopping at its rows", () => {
+    const { rerender } = render(
+      <TextField
+        label="Why?"
+        multiline
+        rows={1}
+        value=""
+        onChange={() => {}}
+        testId="why"
+      />,
+    );
+    const replica = screen.getByTestId("growing-box-replica");
+    expect(replica).toHaveTextContent("");
+
+    rerender(
+      <TextField
+        label="Why?"
+        multiline
+        rows={1}
+        value={"one\ntwo\nthree\nfour"}
+        onChange={() => {}}
+        testId="why"
+      />,
+    );
+    // The replica carries the words the box is measured by — a line for a
+    // line, with no cap at the row count.
+    expect(screen.getByTestId("growing-box-replica").textContent).toBe("one\ntwo\nthree\nfour\n");
+  });
+
+  it("opens at the rows it was given, as its minimum", () => {
+    render(
+      <TextField label="What's in the picture" multiline rows={2} value="" onChange={() => {}} testId="alt" />,
+    );
+    expect(screen.getByTestId("alt")).toHaveAttribute("rows", "2");
+    expect(screen.getByTestId("growing-box")).toHaveAttribute("data-min-rows", "2");
+  });
+
+  // WEB-WHY-NOGROW (jakob 2026-09-22): "as its minimum" was prose and a data
+  // attribute, and the LAYOUT never agreed — the box is a scroll container, so
+  // its automatic minimum size is zero and a sheet out of room shrank it to
+  // less than the one line it promises. Chromium, against the deployed
+  // stylesheet: a 20px window inside a 24px line before, one full line after.
+  // The floor is read off the style because `minRows` is a prop and Tailwind
+  // cannot generate a class from one.
+  it("never shrinks below the rows it opened at, however tight the sheet", () => {
+    const { rerender } = render(
+      <TextField label="Why?" multiline rows={1} value="" onChange={() => {}} testId="why" />,
+    );
+    expect(screen.getByTestId("growing-box").style.minHeight).toBe(
+      "calc(1lh + calc(1.25rem + 2px))",
+    );
+
+    rerender(
+      <TextField label="What's in the picture" multiline rows={3} value="" onChange={() => {}} testId="why" />,
+    );
+    expect(screen.getByTestId("growing-box").style.minHeight).toBe(
+      "calc(3lh + calc(1.25rem + 2px))",
+    );
+  });
+
+  // The floor is a FLOOR, not the height: a single-line field still carries
+  // the shrink that turns the sheet's leftover room into the cap.
+  it("keeps the shrink that derives the cap", () => {
+    render(<TextField label="Why?" multiline rows={1} value="" onChange={() => {}} testId="why" />);
+    expect(screen.getByTestId("growing-box").className).toContain("min-h-0");
+  });
+
+  // Past the room its sheet has, the FIELD scrolls — not the sheet under it,
+  // which is what keeps Done in reach.
+  it("scrolls inside its own box once the room runs out", () => {
+    render(<TextField label="Why?" multiline rows={1} value="" onChange={() => {}} testId="why" />);
+    expect(screen.getByTestId("growing-box").className).toContain("overflow-y-auto");
+    expect(screen.getByTestId("growing-box").className).toContain("min-h-0");
+    expect(screen.getByTestId("why").className).toContain("overflow-hidden");
+  });
+
   it("reports what the reader typed", () => {
     const onChange = vi.fn();
     render(<TextField label="Title" value="" onChange={onChange} testId="title" />);

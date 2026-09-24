@@ -14,6 +14,7 @@ import {
   bodyContent,
   bodyGate,
   DESCRIPTION_MAX_CHARS,
+  effectiveCover,
   emptyWizard,
   nextStep,
   POST_ATTACHMENT_CAP,
@@ -56,6 +57,14 @@ function chosen(frame = 0): WizardAction {
   return {
     type: "cover",
     cover: { id: "c0", file: bytes(4), frame, upload: { kind: "waiting" } },
+  };
+}
+
+/** The silent frame-1 fallback, mirroring `chosen` but via the auto path. */
+function autoChosen(): WizardAction {
+  return {
+    type: "autoCover",
+    cover: { id: "auto0", file: bytes(4), frame: 0, upload: { kind: "waiting" } },
   };
 }
 
@@ -351,6 +360,20 @@ describe("the uploads", () => {
       upload: { kind: "uploading" },
     });
     expect(sealGate(nearly)).toEqual({ ok: false, reason: "2 pictures are still uploading." });
+  });
+
+  // jakob's ruling: the seal waits for media to be READY to sign, not merely
+  // uploaded — a still-PROCESSING asset (the fallback-browser-original re-encode)
+  // counts exactly as an in-flight upload does, everywhere the count is read.
+  it("counts a still-processing asset as pending, not done", () => {
+    const state = run(
+      emptyWizard(),
+      picks(2),
+      { type: "upload", id: "a0", upload: { kind: "done", mediaId: "m0" } },
+      { type: "upload", id: "a1", upload: { kind: "processing", mediaId: "m1" } },
+    );
+    expect(uploadsPending(state)).toBe(1);
+    expect(sealGate(state)).toEqual({ ok: false, reason: "One picture is still uploading." });
   });
 
   it("reports a failure ahead of a wait, because only one of them is actionable", () => {
@@ -668,5 +691,64 @@ describe("a video post", () => {
     // Drafts written before this shipped carry no `kind` at all.
     const legacy = run(emptyWizard(), picks(2));
     expect(stepsFor(legacy)).toEqual(["pick", "crop", "details", "seal"]);
+  });
+});
+
+// The feed-video rulings, 2026-09-23: a clip that reaches upload with no
+// chosen cover gets its own frame 1 uploaded silently through the same leg. A
+// FAILED attempt reads as none at all, never as a refusal — that is the whole
+// point of "silent" — and a CHOSEN cover always wins over it.
+describe("the silent auto-cover", () => {
+  it("lets a chosen cover win over the silent one", () => {
+    const state = run(emptyWizard(), picksVideo(), autoChosen(), chosen());
+    expect(effectiveCover(state.cover, state.autoCover)).toBe(state.cover);
+  });
+
+  it("counts a pending auto-cover among the uploads the seal waits for, same as a chosen one", () => {
+    const state = run(emptyWizard(), picksVideo(), autoChosen(), {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    expect(uploadsPending(state)).toBe(1);
+    const gate = sealGate(state);
+    expect(gate.ok === false && gate.reason).toBe("The video is still uploading.");
+    // Unresolved either way: signing now would name no poster for a clip
+    // whose still might land a moment later.
+    expect(attachmentClaims(state)).toBeNull();
+
+    const done = run(state, {
+      type: "autoCoverUpload",
+      upload: { kind: "done", mediaId: "m-auto0" },
+    });
+    expect(uploadsPending(done)).toBe(0);
+    expect(sealGate(done).ok).toBe(true);
+    expect(attachmentClaims(done)).toEqual([
+      { mediaId: "m-v0", altText: null, coverMediaId: "m-auto0" },
+    ]);
+  });
+
+  it("treats a failed auto-cover as none at all, not as a refusal to report", () => {
+    const state = run(emptyWizard(), picksVideo(), autoChosen(), {
+      type: "upload",
+      id: "v0",
+      upload: { kind: "done", mediaId: "m-v0" },
+    });
+    const failed = run(state, {
+      type: "autoCoverUpload",
+      upload: { kind: "failed", message: "nope", retryable: true },
+    });
+    // Neither pending nor failed: a chosen cover's failure blocks the seal
+    // and speaks ("The video didn't upload."); the silent one drops out of
+    // the count entirely and the video ships exactly as a faceless one would.
+    expect(uploadsPending(failed)).toBe(0);
+    expect(uploadsFailed(failed)).toBe(0);
+    expect(sealGate(failed).ok).toBe(true);
+    expect(attachmentClaims(failed)).toEqual(claims("m-v0"));
+  });
+
+  it("takes the silent face with the clip when the clip is removed", () => {
+    const state = run(emptyWizard(), picksVideo(), autoChosen(), { type: "unpick", id: "v0" });
+    expect(state.autoCover).toBeNull();
   });
 });

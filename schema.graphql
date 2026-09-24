@@ -165,7 +165,8 @@ type AttachActorKeyPayload {
 
 """
 One attachment placement within a gallery. Assets are uploaded first
-via `uploadMedia`; the envelope commits their digests.
+via `uploadMedia`; the envelope commits their digests, so every asset
+named here — the attachment and its cover alike — must be READY.
 
 The list is the gallery in order, so `displayOrder` states the entry's
 own index and `isCover` is true on the first entry and nowhere else —
@@ -176,9 +177,9 @@ galleries only; a comment gallery ignores it.
 """
 input AttachmentInput {
 	"""
-	An asset **this author uploaded**. Cross-author re-use is not
-	supported through this path: sharing someone else's picture is a
-	link to their post, never a reference to their asset.
+	An asset **this author uploaded**, and READY. Cross-author re-use
+	is not supported through this path: sharing someone else's picture
+	is a link to their post, never a reference to their asset.
 	"""
 	mediaId: UUID!
 	displayOrder: Int!
@@ -193,14 +194,24 @@ input AttachmentInput {
 	altText: String
 	"""
 	The video's poster — an asset this author uploaded, either a frame
-	the client cut out of the clip or a picture chosen instead. Only a
-	video placement takes one, and a video may always go without.
+	the client cut out of the clip or a picture chosen instead, and
+	`coverTaken` says which. Only a video placement takes one, and a
+	video may always go without.
 	
 	Authored here for the same reason `altText` is: it is a fact about
 	this placement, so changing the cover is a new version of the
 	parent rather than a re-upload of the clip.
 	"""
 	coverMediaId: UUID
+	"""
+	True when the cover is a frame taken from the clip rather than a
+	still the author chose; absent or null reads as chosen. The bytes
+	cannot say which, so the author's client states it and the
+	manifest witnesses it beside the cover (data-model.md, per-asset
+	map key 4). Refused without a `coverMediaId`, and refused on a
+	placement that is not a video.
+	"""
+	coverTaken: Boolean
 }
 
 type AuthSession {
@@ -235,6 +246,12 @@ input BeginMediaUploadInput {
 	"""
 	declaredBytes: Int!
 	kind: MediaUploadKind!
+	"""
+	The parent the upload is headed for, as on `uploadMedia`: the early
+	refusal and the processing at completion both use its cap. POST
+	when omitted.
+	"""
+	scale: MediaScale! = POST
 }
 
 type BeginMediaUploadPayload {
@@ -808,6 +825,22 @@ type MediaAttachment {
 	digestAlgo: String!
 	mimeType: String!
 	"""
+	Whether the bytes are final. An upload the server has to re-encode
+	first reads PROCESSING, and prepare refuses it until it reads
+	READY — the envelope commits `digest`, so it may only ever commit
+	one that will not change. Every asset a parent carries is READY.
+	
+	While PROCESSING, `url`, `digest` and `sizeBytes` describe the
+	bytes as they arrived; at READY they describe the rendition, the
+	only bytes the asset will ever serve from then on.
+	"""
+	state: MediaAttachmentState!
+	"""
+	Why the asset is FAILED, worded for its author. Null in every
+	other state.
+	"""
+	failureReason: String
+	"""
 	The stored size. `Int` is 32-bit per the GraphQL specification
 	while the column is 64-bit, so a value past that range reads null
 	rather than wrapping into a wrong number — unreachable under the
@@ -860,10 +893,41 @@ type MediaAttachment {
 	"""
 	coverMedia: MediaAttachment
 	"""
+	True when `coverMedia` is a frame taken from the clip rather than a
+	still its author chose — the authoring fact the version's manifest
+	witnessed beside the cover (data-model.md, per-asset map key 4).
+	
+	Resolved from the junction row, like `coverMedia`, and only ever
+	true where the placement names a cover: false on a chosen cover,
+	on a placement without one, and outside a placement.
+	"""
+	coverTaken: Boolean!
+	"""
 	The account that uploaded the asset.
 	"""
 	author: User
 	createdAt: DateTime!
+}
+
+"""
+Where an uploaded asset stands between its upload and its first use
+(api-spec.md "Upload and gallery limits").
+"""
+enum MediaAttachmentState {
+	"""
+	Uploaded; the server is re-encoding it to the served target. Not
+	attachable yet — poll `mediaAttachment` until it is READY.
+	"""
+	PROCESSING
+	"""
+	The bytes are final and `digest` names them.
+	"""
+	READY
+	"""
+	The upload could not be made servable; `failureReason` says why.
+	Uploading the file again is a fresh attempt.
+	"""
+	FAILED
 }
 
 """
@@ -880,6 +944,21 @@ type MediaOptions {
 	"""
 	aspectRatio: String
 	durationMs: Int
+}
+
+"""
+The parent an upload is headed for, whose cap the asset is sized for.
+
+Only a video's cap differs between the two — a comment carries half a
+post's — so the destination decides how large a clip may arrive,
+whether it is within the served target, the rate a re-encode plans
+for, and what the rendition is validated against. A picture's cap is
+the same at either. An asset uploaded for one parent can still be
+attached to the other; the parent's own cap applies again at prepare.
+"""
+enum MediaScale {
+	POST
+	COMMENT
 }
 
 """
@@ -1140,6 +1219,12 @@ type Mutation {
 	both blocking work, so they run on the blocking pool — left on
 	the async runtime, one upload would stall every other request
 	behind it.
+	
+	The asset comes back READY when its bytes are already within the
+	served target — every still, and every video a client compressed
+	— and PROCESSING when the server has to re-encode it first. A
+	PROCESSING asset cannot be attached yet: poll `mediaAttachment`
+	until it reads READY (or FAILED, with the reason).
 	"""
 	uploadMedia(input: UploadMediaInput!): UploadMediaPayload!
 	"""
@@ -1167,6 +1252,9 @@ type Mutation {
 	Safe to retry. A client whose connection dropped waiting for this
 	reply calls it again and is handed the same asset, because the
 	session remembers what it produced.
+	
+	Like `uploadMedia`, the asset may come back PROCESSING, and is
+	attachable once `mediaAttachment` reads it READY.
 	"""
 	completeMediaUpload(input: CompleteMediaUploadInput!): UploadMediaPayload!
 	"""
@@ -1910,6 +1998,14 @@ type Query {
 	the staging actor's session; null otherwise.
 	"""
 	stagedWrite(id: UUID!): StagedWrite
+	"""
+	One of the viewer's own uploads — how a client learns that an
+	asset it uploaded as PROCESSING has become READY (or FAILED).
+	Polled the way `stagedWrite` is. Null for an unknown id, for
+	somebody else's asset, and without a session: an upload is
+	nobody else's business until a parent carries it.
+	"""
+	mediaAttachment(id: UUID!): MediaAttachment
 	"""
 	One post by id; null for an unknown id.
 	"""
@@ -2680,6 +2776,12 @@ and Collectives arrive with slice 5, so the uploader is the viewer.
 """
 input UploadMediaInput {
 	file: Upload!
+	"""
+	The parent the asset is headed for. A comment carries half a
+	post's video, so a clip is sized, re-encoded and validated for
+	this destination's cap. POST when omitted.
+	"""
+	scale: MediaScale! = POST
 }
 
 """

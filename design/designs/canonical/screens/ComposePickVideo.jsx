@@ -8,7 +8,12 @@
    replaced by the one this state needs: "A video is the whole post. Its cover
    comes next." It says why nothing else can join AND what happens next, in
    the space the controls left. Removing the clip (the tile's ×) gives the
-   step back.
+   step back. THE CAPTION IS THE SHAPE'S (jakob 2026-09-24, backlog item
+   104): a vertical clip skips the cover step — the shape keys the step, and
+   the device takes frame 1 silently (readme §13, the stored first frame) —
+   so a vertical clip's tray wears the trim "A video is the whole post."
+   instead: a promised step that never comes is a false sentence. This board
+   draws the landscape case.
 
    NO "Show all": that sheet reorders a set and names its cover. One clip is
    not a set, and its cover is the next step's whole subject.

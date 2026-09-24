@@ -1,10 +1,11 @@
 // @vitest-environment node
 //
 // The client's video gate, asserted against the SERVER'S OWN RULES rather than
-// against itself. Every number and every brand here is a copy of something in
+// against itself. Every MP4 brand here is a copy of something in
 // `crates/api/src/media/video.rs`; if the two drift, a reader is told their
 // file is fine and the server then refuses it, which is the failure this file
-// exists to make loud.
+// exists to make loud. QuickTime is the one container admitted beyond them, and
+// only because it never reaches the server as itself: the strip rewrites it.
 //
 // What cannot be tested here: the probe and the frame capture itself, which
 // need a real decoder. Node has no video element and jsdom has no media
@@ -18,7 +19,9 @@ import {
   formatDuration,
   frameTimes,
   isVideoFile,
-  looksLikeMp4,
+  pickedContainer,
+  PICKABLE_VIDEO_TYPES,
+  sniffContainer,
   sniffMp4,
   VIDEO_TYPE,
 } from "./video";
@@ -79,23 +82,60 @@ describe("sniffMp4", () => {
   it("does not walk past the box the header declares", () => {
     // A corrupt size must not let the scan wander into the payload and find
     // four bytes that happen to spell a brand.
-    const bytes = ftyp("qt  ");
+    const bytes = ftyp("avif");
     // The payload after the declared box carries "isom" — outside the box.
     const at = 12;
     for (let i = 0; i < 4; i += 1) bytes[at + i] = "isom".charCodeAt(i);
     expect(sniffMp4(bytes)).toBe(false);
   });
+
+  it("leaves a QuickTime major brand to QuickTime, whatever it lists beside it", () => {
+    // mediabunny's MP4 reader refuses a `qt  ` major brand; its QTFF reader
+    // takes it. The sniff sorts the file the same way the readers will.
+    expect(sniffMp4(ftyp("qt  ", ["isom"]))).toBe(false);
+  });
 });
 
-describe("looksLikeMp4", () => {
+describe("sniffContainer", () => {
+  it("names MP4 for every brand the server admits", () => {
+    expect(sniffContainer(ftyp("isom"))).toBe("mp4");
+    expect(sniffContainer(ftyp("mmp4", ["mp42"]))).toBe("mp4");
+  });
+
+  it("names an iPhone's QuickTime by its major brand", () => {
+    // What an iPhone writes: `qt  ` major, `qt  ` compatible.
+    expect(sniffContainer(ftyp("qt  ", ["qt  "]))).toBe("quicktime");
+    expect(sniffContainer(ftyp("qt  ", ["isom"]))).toBe("quicktime");
+  });
+
+  it("names nothing for the ISO still relatives or a file with no ftyp", () => {
+    expect(sniffContainer(ftyp("avif"))).toBeNull();
+    expect(sniffContainer(ftyp("heic"))).toBeNull();
+    // A QuickTime movie from before `ftyp` existed opens with `moov`; neither
+    // reader takes it, so the pick does not either.
+    expect(sniffContainer(new Uint8Array([0, 0, 0, 8, 109, 111, 111, 118, 0, 0, 0, 0]))).toBeNull();
+    expect(sniffContainer(new Uint8Array(4))).toBeNull();
+  });
+});
+
+describe("pickedContainer", () => {
   it("reads the header off the blob rather than trusting its type", async () => {
     // The exact lie the sniff exists to catch: a renamed file whose `type` the
     // operating system guessed from the extension.
-    const lying = new Blob([ftyp("qt  ")], { type: "video/mp4" });
-    await expect(looksLikeMp4(lying)).resolves.toBe(false);
+    const lying = new Blob([ftyp("avif")], { type: "video/mp4" });
+    await expect(pickedContainer(lying)).resolves.toBeNull();
 
     const honest = new Blob([ftyp("isom")], { type: "application/octet-stream" });
-    await expect(looksLikeMp4(honest)).resolves.toBe(true);
+    await expect(pickedContainer(honest)).resolves.toBe("mp4");
+
+    const movie = new Blob([ftyp("qt  ", ["qt  "])], { type: "video/quicktime" });
+    await expect(pickedContainer(movie)).resolves.toBe("quicktime");
+  });
+});
+
+describe("the picker's offer", () => {
+  it("offers MP4 and QuickTime, and no other moving type", () => {
+    expect(PICKABLE_VIDEO_TYPES.split(",")).toEqual(["video/mp4", "video/quicktime"]);
   });
 });
 

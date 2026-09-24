@@ -17,8 +17,11 @@ import {
   AbortMediaUploadDocument,
   BeginMediaUploadDocument,
   CompleteMediaUploadDocument,
+  MediaAttachmentStatusDocument,
   UploadMediaDocument,
+  type MediaScale,
   type MediaUploadKind,
+  type MediaAttachmentStatusQuery,
   type UploadMediaMutation,
 } from "@/__generated__/graphql";
 import { graphqlUri } from "@/lib/graphql-uri";
@@ -27,10 +30,36 @@ import type { AuthGuard } from "@/lib/session/guard";
 import { RESUMABLE_THRESHOLD_BYTES } from "@/lib/ui2/media/caps";
 import { OUTPUT_TYPE } from "@/lib/ui2/media/encode-image";
 import { createPartUploader, uploadsOrigin, type PartUploader } from "./part-uploader";
-import { failed, payloadOutcome, type Outcome } from "./outcome";
+import { failed, fetchOutcome, payloadOutcome, success, type Outcome } from "./outcome";
 
 /** The asset as the contract hands it back — the id an attachment then names. */
 export type MediaAsset = NonNullable<UploadMediaMutation["uploadMedia"]["media"]>;
+
+/** The same asset, read back mid-poll — `MediaAttachmentStatus`'s own shape. */
+export type MediaAttachmentStatus = NonNullable<MediaAttachmentStatusQuery["mediaAttachment"]>;
+
+/**
+ * Reads one of the viewer's own uploads back — how a caller learns that an
+ * asset it uploaded as PROCESSING has become READY (or FAILED). Polled the
+ * way `fetchStagedWrite` polls `stagedWrite` (`writes-api.ts`).
+ *
+ * null: the id names no asset of this session's viewer (unknown id, somebody
+ * else's asset, or no session) — the schema's own null, not a refusal.
+ */
+export async function fetchMediaAttachmentStatus(
+  client: ApolloClient,
+  id: string,
+): Promise<Outcome<MediaAttachmentStatus | null>> {
+  const fetched = await fetchOutcome(() =>
+    client.query({
+      query: MediaAttachmentStatusDocument,
+      variables: { id },
+      fetchPolicy: "network-only",
+    }),
+  );
+  if (fetched.kind !== "success") return fetched;
+  return success(fetched.value.mediaAttachment);
+}
 
 /**
  * The server is told a filename because a multipart part carries one, and a
@@ -54,10 +83,14 @@ export function uploadFilename(type: string = OUTPUT_TYPE): string {
  * A cover is a fact about where the clip sits rather than about its bytes, so
  * the poster and the video are two ordinary uploads and the placement is what
  * ties them together.
+ *
+ * `scale` names the parent a clip is headed for, whose cap the server sizes it
+ * against — a comment's video cap is half a post's. A picture's cap is the
+ * same at either, so a still leaves it out and the server reads POST.
  */
 export async function uploadMedia(
   client: ApolloClient,
-  asset: { blob: Blob },
+  asset: { blob: Blob; scale?: MediaScale },
 ): Promise<Outcome<MediaAsset>> {
   const file = new File([asset.blob], uploadFilename(asset.blob.type), {
     type: asset.blob.type,
@@ -66,7 +99,7 @@ export async function uploadMedia(
     () =>
       client.mutate({
         mutation: UploadMediaDocument,
-        variables: { input: { file } },
+        variables: { input: { file, scale: asset.scale } },
       }),
     (data) => data.uploadMedia.userErrors,
     (data) => data.uploadMedia.media,
@@ -126,12 +159,13 @@ function defaultUploader(): PartUploader {
 export async function uploadVideo(
   client: ApolloClient,
   guard: AuthGuard,
-  asset: { blob: Blob },
+  asset: { blob: Blob; scale: MediaScale },
   deps: ResumableDeps = {},
 ): Promise<Outcome<MediaAsset>> {
+  const { scale } = asset;
   const threshold = deps.thresholdBytes ?? RESUMABLE_THRESHOLD_BYTES;
   if (asset.blob.size < threshold) {
-    return guard.run(() => uploadMedia(client, { blob: asset.blob }));
+    return guard.run(() => uploadMedia(client, { blob: asset.blob, scale }));
   }
 
   // `kind` is VIDEO at every call site: `MediaUploadKind.STILL` is reserved
@@ -142,7 +176,7 @@ export async function uploadVideo(
       () =>
         client.mutate({
           mutation: BeginMediaUploadDocument,
-          variables: { declaredBytes: asset.blob.size, kind },
+          variables: { declaredBytes: asset.blob.size, kind, scale },
         }),
       (data) => data.beginMediaUpload.userErrors,
       (data) => data.beginMediaUpload.upload,

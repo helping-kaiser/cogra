@@ -111,11 +111,21 @@ export type Step = "pick" | "crop" | "cover" | "details" | "seal";
  * because they fail differently and the reader can act on only one of them: an
  * encode that fails is a picture this browser cannot read, an upload that fails
  * is worth a retry.
+ *
+ * `processing` is the bytes' own wait, after the upload has already landed:
+ * the server answered PROCESSING rather than READY and is re-encoding the
+ * asset (api-spec.md "Upload and gallery limits") — every Android upload and
+ * every web upload this browser could compress lands READY at once and never
+ * passes through it; it is the fallback-browser-original's path alone. It
+ * reads exactly like `uploading` everywhere the reader sees it (the ring
+ * turns, the seal waits) because there is nothing more specific to say yet —
+ * the distinction only matters to the code deciding what to poll next.
  */
 export type AssetUpload =
   | { readonly kind: "waiting" }
   | { readonly kind: "encoding" }
   | { readonly kind: "uploading" }
+  | { readonly kind: "processing"; readonly mediaId: string }
   | { readonly kind: "done"; readonly mediaId: string }
   | { readonly kind: "failed"; readonly message: string; readonly retryable: boolean };
 
@@ -162,6 +172,26 @@ export type CoverAsset = {
 /** A picture of the author's own rather than a frame out of the clip. */
 export const COVER_FROM_PICTURE = -1;
 
+/**
+ * The face that actually rides the clip's placement: a chosen cover always
+ * wins, and a silent `autoCover` counts only while it has not failed.
+ *
+ * A FAILED AUTO-COVER IS TREATED AS NONE, never as a failure to report — the
+ * feed-video ruling's silence covers the upload leg exactly as it covers a
+ * clip that offered no frames to begin with, so both dead ends must read the
+ * same way to the gate that decides whether the seal may proceed and to
+ * `attachmentClaims`'s `coverMediaId`. A PENDING auto-cover still counts,
+ * because the seal must wait to find out whether it will produce a still
+ * before deciding the post is ready.
+ */
+export function effectiveCover(
+  cover: CoverAsset | null,
+  autoCover: CoverAsset | null,
+): CoverAsset | null {
+  if (cover !== null) return cover;
+  return autoCover !== null && autoCover.upload.kind !== "failed" ? autoCover : null;
+}
+
 export type WizardState = {
   readonly step: Step;
   readonly mode: BodyMode;
@@ -172,6 +202,17 @@ export type WizardState = {
    * author has not settled yet — the cover screen fills it the moment it can.
    */
   readonly cover: CoverAsset | null;
+  /**
+   * The stored still nobody chose — the feed-video rulings, 2026-09-23. A
+   * clip that reaches upload with `cover` still null gets its own frame 1
+   * uploaded through this exactly as `cover` would be, so a reading surface
+   * is never handed a video with no face at all. Kept apart from `cover`
+   * rather than written into it: every screen that draws "has the author
+   * picked a face" (the door, the tile's inset mark, the describe sheet)
+   * reads `cover` alone, and must go on seeing null until a real choice is
+   * made — this field is upload plumbing, never drawn.
+   */
+  readonly autoCover: CoverAsset | null;
   /** One shape for the whole post; the framing inside it is per picture. */
   readonly shape: PostShape;
   /** Which asset the crop screen is working on. */
@@ -206,6 +247,7 @@ export function emptyWizard(): WizardState {
     words: "",
     assets: [],
     cover: null,
+    autoCover: null,
     shape: "tall",
     focused: 0,
     title: "",
@@ -314,12 +356,17 @@ export function coverGate(): Gate {
 /** Every upload this draft is waiting on — the cover counts, though it is no attachment. */
 function allUploads(state: WizardState): readonly AssetUpload[] {
   const uploads = state.assets.map((asset) => asset.upload);
-  return state.cover === null ? uploads : [...uploads, state.cover.upload];
+  const cover = effectiveCover(state.cover, state.autoCover);
+  return cover === null ? uploads : [...uploads, cover.upload];
 }
 
 export function uploadsPending(state: WizardState): number {
   return allUploads(state).filter(
-    (upload) => upload.kind === "waiting" || upload.kind === "encoding" || upload.kind === "uploading",
+    (upload) =>
+      upload.kind === "waiting" ||
+      upload.kind === "encoding" ||
+      upload.kind === "uploading" ||
+      upload.kind === "processing",
   ).length;
 }
 
@@ -421,9 +468,9 @@ export function signedActions(state: WizardState): number {
  */
 export function attachmentClaims(state: WizardState): readonly GalleryEntryDraft[] | null {
   if (state.mode === "words") return null;
-  if (state.cover !== null && state.cover.upload.kind !== "done") return null;
-  const coverMediaId =
-    state.cover?.upload.kind === "done" ? state.cover.upload.mediaId : null;
+  const cover = effectiveCover(state.cover, state.autoCover);
+  if (cover !== null && cover.upload.kind !== "done") return null;
+  const coverMediaId = cover?.upload.kind === "done" ? cover.upload.mediaId : null;
   const claims: GalleryEntryDraft[] = [];
   for (const asset of state.assets) {
     if (asset.upload.kind !== "done") return null;
@@ -457,6 +504,8 @@ export type WizardAction =
   | { type: "unpick"; id: string }
   | { type: "cover"; cover: CoverAsset | null }
   | { type: "coverUpload"; upload: AssetUpload }
+  | { type: "autoCover"; cover: CoverAsset | null }
+  | { type: "autoCoverUpload"; upload: AssetUpload }
   | { type: "reorder"; from: number; to: number }
   | { type: "focus"; index: number }
   | { type: "shape"; shape: PostShape }
@@ -524,6 +573,7 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
             },
           ],
           cover: null,
+          autoCover: null,
         };
       }
 
@@ -549,8 +599,10 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
         assets,
         // The cover belongs to the clip, so removing the clip takes its face
         // with it — a poster left behind would be uploaded for a video that is
-        // no longer in the post.
+        // no longer in the post. The silent one goes with it for the same
+        // reason.
         cover: assets.length === 0 ? null : state.cover,
+        autoCover: assets.length === 0 ? null : state.autoCover,
         focused: Math.min(state.focused, Math.max(0, assets.length - 1)),
       };
     }
@@ -562,6 +614,14 @@ export function wizardReducer(state: WizardState, action: WizardAction): WizardS
       return state.cover === null
         ? state
         : { ...state, cover: { ...state.cover, upload: action.upload } };
+
+    case "autoCover":
+      return { ...state, autoCover: action.cover };
+
+    case "autoCoverUpload":
+      return state.autoCover === null
+        ? state
+        : { ...state, autoCover: { ...state.autoCover, upload: action.upload } };
 
     case "reorder": {
       // ORDER IS THE COVER: the first picture leads the post, so moving one is

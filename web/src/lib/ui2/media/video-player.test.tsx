@@ -11,6 +11,7 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { intersect, observedThresholds } from "@/test/media-env";
+import { VeilContext } from "./body-veil";
 import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { MediaTile } from "./media-tile";
@@ -28,6 +29,24 @@ const COVER = "https://media.example/cover.webp";
 function player(props: Partial<React.ComponentProps<typeof VideoPlayer>> = {}) {
   render(<VideoPlayer src={CLIP} {...props} />);
   return screen.getByTestId("video-player") as HTMLVideoElement;
+}
+
+/**
+ * The disc's corner, read where it is actually decided — the inline style,
+ * the way the master writes it (`MediaAttachment.jsx:117-122`).
+ *
+ * The `absolute` assertion runs the other way on purpose: the utility must be
+ * ABSENT. It is the class that lost to `.cg-state`'s unlayered `position:
+ * relative`, so leaving it in the list would put the fix one careless
+ * "tidy-up" away from silently reverting to a disc in normal flow.
+ */
+function expectDiscInTheCorner(disc: HTMLElement) {
+  expect(disc.style.position).toBe("absolute");
+  expect(disc.style.bottom).toBe("8px");
+  expect(disc.style.right).toBe("8px");
+  expect(disc.style.left).toBe("");
+  expect(disc.style.top).toBe("");
+  expect(disc.className).not.toMatch(/\babsolute\b/);
 }
 
 describe("autoplay", () => {
@@ -63,6 +82,65 @@ describe("autoplay", () => {
 
   it("never carries the native transport — every card wears the sound disc instead", () => {
     expect(player()).not.toHaveAttribute("controls");
+  });
+});
+
+// The sensitive veil covers its clip the same way a sheet suspends the
+// surface behind it (design/readme.md, backlog item 103): "a veiled clip
+// sits fully out of the stage rotation — no playback, no sound-disc
+// presence… Unveiling re-elects the surface's stage exactly as a sheet's
+// dismissal does, so the unveiled clip autoplays iff it wins — no knob of
+// its own. Preloading stays on." `VeilContext` stands in for `BodyVeil`
+// here, the same way these tests drive the stage through bare DOM events
+// rather than mounting a whole feed around the player.
+describe("the sensitive veil (backlog 103)", () => {
+  function veiledPlayer(veiled: boolean, testId = "video-player") {
+    render(
+      <VeilContext.Provider value={veiled}>
+        <VideoPlayer src={CLIP} testId={testId} />
+      </VeilContext.Provider>,
+    );
+    return screen.getByTestId(testId) as HTMLVideoElement;
+  }
+
+  it("does not play while veiled, even at full visibility", () => {
+    const video = veiledPlayer(true);
+    act(() => intersect(true));
+    expect(video.paused).toBe(true);
+  });
+
+  it("shows no sound disc while veiled", () => {
+    veiledPlayer(true);
+    expect(screen.queryByTestId("video-player-sound")).toBeNull();
+  });
+
+  it("plays after reveal, iff still visible at that moment", () => {
+    const { rerender } = render(
+      <VeilContext.Provider value={true}>
+        <VideoPlayer src={CLIP} />
+      </VeilContext.Provider>,
+    );
+    const video = screen.getByTestId("video-player") as HTMLVideoElement;
+
+    // Already past the visibility gate while still veiled — must not play.
+    act(() => intersect(true));
+    expect(video.paused).toBe(true);
+
+    // Unveiling re-runs the autoplay effect, which re-observes and asks the
+    // gate again — no separate election, the same claim it would make on a
+    // fresh mount.
+    rerender(
+      <VeilContext.Provider value={false}>
+        <VideoPlayer src={CLIP} />
+      </VeilContext.Provider>,
+    );
+    expect(screen.getByTestId("video-player-sound")).toBeInTheDocument();
+    act(() => intersect(true));
+    expect(video.paused).toBe(false);
+  });
+
+  it("does not touch preload", () => {
+    expect(veiledPlayer(true)).toHaveAttribute("preload", "metadata");
   });
 });
 
@@ -166,12 +244,18 @@ describe("the reading surface", () => {
   // G1 / design/components/media/MediaAttachment.jsx:105 — the MediaDisc
   // master's default corner is bottom-right (the thumb's side while
   // scrolling), not bottom-left.
+  //
+  // WEB-DISC-FLOW (jakob 2026-09-22): this test used to read `bottom-2` and
+  // `right-2` off the class list and passed while the disc sat at the
+  // frame's bottom-LEFT, half off-screen — because `.cg-state`'s unlayered
+  // `position: relative` outranked the layered `absolute` utility and the
+  // button fell into normal flow. A class-name assertion cannot see a class
+  // that lost the cascade, which is the same blind spot WEB-DISC-MISSING
+  // below was written for; the corner is read off the inline style now,
+  // because that is where it is decided.
   it("sits at the master's bottom-right corner", () => {
     player({ surface: "reading" });
-    const disc = screen.getByTestId("video-player-sound");
-    expect(disc.className).toMatch(/\bbottom-2\b/);
-    expect(disc.className).toMatch(/\bright-2\b/);
-    expect(disc.className).not.toMatch(/\bleft-2\b/);
+    expectDiscInTheCorner(screen.getByTestId("video-player-sound"));
   });
 
   // WEB-DISC-MISSING (jakob 2026-09-22): `bg-surface-snackbar` and
@@ -240,13 +324,11 @@ describe("the full surface (a feed card's clip)", () => {
 
   // G1 / design/components/media/MediaAttachment.jsx:105 — the MediaDisc
   // master's default corner is bottom-right (the thumb's side while
-  // scrolling), not bottom-left.
+  // scrolling), not bottom-left. WEB-DISC-FLOW: see the matching test on the
+  // reading surface above for why the corner is read off the style.
   it("sits at the master's bottom-right corner", () => {
     player();
-    const disc = screen.getByTestId("video-player-sound");
-    expect(disc.className).toMatch(/\bbottom-2\b/);
-    expect(disc.className).toMatch(/\bright-2\b/);
-    expect(disc.className).not.toMatch(/\bleft-2\b/);
+    expectDiscInTheCorner(screen.getByTestId("video-player-sound"));
   });
 
   // WEB-DISC-MISSING (jakob 2026-09-22) — see the matching test on the

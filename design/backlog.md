@@ -1292,41 +1292,46 @@ had left open and fixed what the canvas showed:
   the round's PR for the root cause (a flex-sized stage with a
   percentage max-height that never resolved).
 
-### 34 · The change-history surface · *design*
+### 34 · The change-history surface · *design* · **ruled**
 
 Filed by the video conform round 2026-09-03, from jakob's ruling
-that **everything versioned shows its change history to the user**,
-reachable from the thing's own three-dot menu. The roadmap carries
-the scope (Staged workstreams, *Change histories on every versioned
-thing*); the surfaces are undrawn.
+that **everything versioned shows its change history to the user**.
+Ruled 2026-09-22 and drawn as would-like #2 in the post-MVP tree —
+thirteen boards on the Change histories page (readme §13, *The
+change-histories round*; `copy-voice.md` carries the words).
 
-Every versioned kind is in scope — posts, comments, stances,
-profiles, chat messages — and the product already keeps the rows: an
-edit replaces the whole content and earlier versions stay public
-under *Edited* unless removed (the "Editing" dialog,
-[guidelines/copy-voice.md](guidelines/copy-voice.md)). What has
-never been drawn is where a reader *goes* to see them.
+1. **One pattern, one board per kind.** A page title, a list of whole
+   versions newest first, the current one marked, the additive law at
+   the foot — the shape does not change with the kind, only the master
+   the versions are drawn by (`PostHistory`, `CommentHistory`,
+   `ProfileHistory`). A stance is the exception that proves it: it is
+   a history already, so it gets a timeline rather than a chronicle.
+2. **A version row is the whole version, never a diff.** The store
+   keeps complete states and L1 signs a full new record per edit, so a
+   difference is something a reader works out by reading; computing one
+   would be a claim about which change mattered. From a row, the
+   version's own detail opens where the kind has one
+   (`PostVersionDetail`).
+3. **A tombstoned version keeps its row**, wearing the mark in the
+   content's place at its own date. Per-version removal is drawn
+   (`VersionRemoveConfirm`), and the author's register leads with
+   *Remove the whole post* — the head never falls through, so nobody
+   should be able to kill an object by removing versions one at a time.
+4. **`Edit history`**, in the ⋮ beside `Edit` — `History` is taken
+   twice over — and the `Edited` marker becomes a door too. Both appear
+   only once a second version exists.
+5. **The stance case is the timeline**, read off the record mirror with
+   no table added: every record cast along the pair, newest first,
+   severance standing in it as the counter-record it is. Its header
+   says in plain words what the standing adds up to, because the fold
+   clips; the exact raw sum rides geek mode. The doors follow the door
+   rule — a face is an authoring door and is fully spent, so the
+   readouts open the history: a row's value, and the pad's `Current
+   opinion` line.
 
-The questions:
-
-1. **One surface or one per kind?** A post's history and a stance's
-   history are different shapes — a body that changed against a pair
-   of numbers that moved. Whether that is one screen with a row
-   vocabulary or a family of screens is the lead question.
-2. **What a version row shows.** The date, and what else — a diff, a
-   summary, the whole earlier version, the acts that rode the edit?
-   The acts sheet (`EditActs` / `CommentEditActs`) already words what
-   an edit signs, and a history row is that after the fact.
-3. **Where the removed versions sit.** An author may remove earlier
-   versions, and a redaction leaves a visible mark rather than
-   erasing silently. The history is the surface where that mark is
-   most visible, so its removed state is part of the design, not an
-   edge case.
-4. **The menu entry's words**, and whether a thing with exactly one
-   version shows the entry at all.
-5. **The stance case.** A stance's history is a record of where
-   someone stood over time — the most sensitive of the five to draw,
-   and the one most likely to want a shape of its own.
+The chat container's own chronicle is drawn: the chat details round's
+`ChatHistory` (post-MVP). What is still owed: the comment master carries
+no redaction state, so a removed comment version has no mark to draw yet.
 
 ### 35 · Video playback — decisions the transition fix surfaced · *design* · **ruled**
 
@@ -3366,3 +3371,148 @@ a reader hunting for the way out of a sheet they cannot leave.
 
 Recorded 2026-09-17 in `DescribeSheet.prompt.md` and `ComposeSensitive.jsx`'s
 docblock. No board spent, no fixture changed.
+
+### 102 · Push notifications — the post-MVP round · *design* · **ruled 2026-09-22**
+
+The first round drawn in `designs/postmvp/`. Push is named but not built
+in `docs/implementation/notifications.md`: it is the *delivery* of a row
+the list already holds, never a source of one, so nothing here changes
+what notifies. Nine kinds, the doc's own taxonomy.
+
+RULED by jakob 2026-09-22, six ways.
+
+**A `Notifications` group, after Reading.** Reading is where a reader
+says what the product shows them; push is the same activity one step
+further out. Per-kind toggling is the whole strategy: a channel a reader
+can only kill outright is a channel they kill, so the granularity is
+what keeps it alive.
+
+**A master switch and nine per-kind rows, on a subpage** (`PushKinds`).
+The doc's taxonomy, unclustered — a grouping would be a second model to
+keep in step with the first. The settings page carries one disclosure
+row reading its state back, the `Default license` grammar.
+
+**The OS ask fires only from an explicit act.** One act spends it: the
+master switch on the push settings page. The one-time dismissible offer
+row at the top of the list is the door to that page — the tap lands
+where the choice is made, the way every notification row lands on its
+subject. Never at launch: on native a denial is sticky, which is why
+nothing may spend the ask on a reader who did not reach for it.
+Dismissed is dismissed for good.
+
+**Push content is the drawn row, and nothing invented.** Title is the
+row's sentence (`@ada commented on your post`); body is the row's second
+line where one exists and is absent where none does; the tap lands
+exactly where opening the row lands. The full copy register applies —
+sentence case, no exclamation, no counts, no emoji.
+
+**Tray and badge: the platform's own, and no more.** Platform-default
+collapse, no custom *N new* summary, and no numeric app-icon badge ever
+— the launcher's dot is the bell's dot at launcher scale, which is the
+same honesty the boolean `hasUnreadNotifications` already carries. A
+foregrounded app suppresses the banner. Prose law, not drawn.
+
+**The defaults.** On: comment on your post, application approvable,
+application approved, application rejected. Off: reply, mention,
+citation, opinion on your profile, invite landed. The on-set is what a
+reader is answerable for — their own post's comments, and the four
+moments an application turns; the off-set is what the list holds
+perfectly well until they look.
+
+Forward note: **when chats ship, chat-message-received joins the
+on-set.** A message addressed to one person and waiting is the clearest
+case the on-set has; it is recorded rather than drawn because the kind
+does not exist yet (`notifications.md`, *The kinds later slices add*).
+
+This also files the per-kind muting that readme §13, *The notifications
+round* left as *filed post-MVP* — it is this item, and the nine rows are
+it.
+
+### 103 · The veiled clip's playback state is undrawn · *design* · **ruled + recorded 2026-09-24**
+
+Filed by the implementation session 2026-09-23, surfaced by their
+feed-video preload work (pre-existing behavior their V3 lane made
+visible): a sensitive post keeps its media mounted under the veil —
+the revealing-moves-nothing ruling — so a veiled clip already
+**autoplays behind the blur**, and now also gets preloaded. The
+sensitive-veil boards say what the veil looks like; nothing rules
+what the media *does* beneath it.
+
+**Ruled (jakob 2026-09-24): the veil covers its clip the way a
+sheet covers a surface.** A veiled clip sits fully out of the
+stage rotation — no playback, no sound-disc presence — because
+the veil is the reader's declared not-yet. The unveil re-elects
+the surface's stage exactly as the suspension clause does on a
+sheet's dismissal, so the unveiled clip autoplays iff it wins the
+election; autoplay-on-unveil vs cover-at-rest was never a third
+knob. Preload stays on — invisible, leaks nothing, makes the
+unveil instant. Recorded in readme §13 (the stage-law bullet) and
+the `MediaAttachment` docblock; the gating is the implementation
+session's, relayed as a contract.
+
+### 104 · The vertical pick caption promises a step that never comes · *design* · **ruled + recorded 2026-09-24**
+
+Surfaced by the implementation session's Android stored-frame work
+(the filing PR, #845, was closed unmerged, so the item lands here
+already ruled): `ComposePickVideo`'s tray caption — "A video is
+the whole post. Its cover comes next." — is untrue on the vertical
+path, where the shape keys the cover step out of the walk and the
+device takes frame 1 silently (readme §13, the stored first
+frame).
+
+**Ruled (jakob 2026-09-24): the vertical pick wears the
+already-blessed trim** — `A video is the whole post.` (blessed
+2026-09-14 as the edit's trim) — because the second sentence
+exists to preview the cover step, and the vertical path has none.
+No new line is minted. Recorded in copy-voice's staging family,
+the `ComposePickVideo` docblock, and the `PickTray` contract; the
+drawn board is the landscape case and stands. The client caption
+swap is the implementation session's, relayed as a contract.
+
+### 105 · Search results the index cannot serve · *design + docs* · **ruled + recorded 2026-09-24**
+
+Found by the chats integration lane 2026-09-24: canonical
+`ExploreSearch` draws a chat-message result row and a comment
+result row, and the search rulings (readme §13, the search
+rulings) make both findable — but api-spec.md excluded both
+kinds from the global index.
+
+**Ruled (jakob 2026-09-24): the indirect kinds are
+scope-served, and neither side moves.** The 2026-08-28 ruling's
+own mechanics never asked for body search: messages, comments
+and offers surface only in scoped queries (`@handle <text>`,
+`#tag <text>`), matched through the existing name/title index
+joined by authorship — no body is ever indexed, so the mass of
+body words never clogs the default mix, and a scoped message
+result reaches any plaintext chat (public reads), never just
+the viewer's own. `ExploreSearch` already draws exactly this
+state. Recorded in readme §13 ("The indirect kinds are
+scope-served") and api-spec's Search section (the scoped-join
+paragraph). One string still owed: the quiet line an unscoped
+indirect-kind selection shows (copy-voice candidate, awaiting
+blessing).
+
+### 106 · Which frame the preview face means · *design* · **ruled + recorded 2026-09-24**
+
+Flagged by the implementation session 2026-09-24, building the
+frame-0 ruling on web: the STORED silent still is now strictly
+frame 0 on both platforms, but web's UI-only preview faces — the
+pick tray's tile, the details tile, the describe sheet — still
+derive from the ~1-second frame. So a coverless clip's preview
+face and stored face can differ on web. The record is ambiguous:
+the wizard-tile rule says the tiles "always wear the clip's first
+frame" (readme §13, the stored still's scoping), and "first frame
+means frame 0, strictly" now exists as a phrase — but that
+strictness was ruled for the STORED still's no-flash rationale,
+which a tray affordance doesn't carry. One line from jakob
+settles it: either the preview face is the stored face (frame 0
+everywhere, web's preview extraction changes), or the preview
+face is the platform's cheap thumbnail and the record says so.
+No implementation action until ruled.
+
+**Ruled (jakob 2026-09-24): the preview face is the stored face.**
+The compose tiles' claim to wear the clip's first frame holds to
+frame 0 — web's preview extraction changes to match the stored
+still. Recorded in readme §13 (the stored first frame) and the
+`MediaAttachment` docblock; the web change is the implementation
+session's, relayed as a contract.

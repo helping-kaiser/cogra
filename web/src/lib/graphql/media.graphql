@@ -11,10 +11,19 @@
 # (`MediaFields`), so a freshly uploaded asset is drawable without a
 # second read — and so the two clients read one shape rather than each
 # guessing which half of the asset an upload owes them.
+#
+# `state`/`failureReason` ride beside the fragment rather than inside it:
+# `MediaFields` is spread by every gallery read too, where the asset is
+# always READY (api-spec.md "Upload and gallery limits"), so pricing
+# these two fields against every one of those reads would buy nothing
+# there. Only the upload legs — this, `CompleteMediaUpload`, and the
+# `mediaAttachment` poll — need to know whether the bytes are final yet.
 mutation UploadMedia($input: UploadMediaInput!) {
   uploadMedia(input: $input) {
     media {
       ...MediaFields
+      state
+      failureReason
     }
     userErrors {
       ...UserErrorFields
@@ -31,8 +40,11 @@ mutation UploadMedia($input: UploadMediaInput!) {
 # `kind` is `VIDEO` at every call site this app has. `MediaUploadKind.STILL`
 # is reserved: a still is capped at 10 MiB, below the 8 MiB threshold in
 # practice and never worth a three-round-trip session, so no client names it.
-mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!) {
-  beginMediaUpload(input: { declaredBytes: $declaredBytes, kind: $kind }) {
+#
+# `scale` is the parent the clip is headed for, whose cap the server sizes,
+# re-encodes and validates it against — a comment's is half a post's.
+mutation BeginMediaUpload($declaredBytes: Int!, $kind: MediaUploadKind!, $scale: MediaScale!) {
+  beginMediaUpload(input: { declaredBytes: $declaredBytes, kind: $kind, scale: $scale }) {
     upload {
       id
       partSizeBytes
@@ -53,10 +65,25 @@ mutation CompleteMediaUpload($uploadId: UUID!) {
   completeMediaUpload(input: { uploadId: $uploadId }) {
     media {
       ...MediaFields
+      state
+      failureReason
     }
     userErrors {
       ...UserErrorFields
     }
+  }
+}
+
+# Polls one of the viewer's own uploads after it comes back PROCESSING —
+# the same idiom `stagedWrite` is polled with (writes.graphql). `url` rides
+# along inside `MediaFields`: while PROCESSING it names the bytes as they
+# arrived, and at READY it names the rendition, so the composer's asset
+# record has to be replaced by this answer rather than patched in place.
+query MediaAttachmentStatus($id: UUID!) {
+  mediaAttachment(id: $id) {
+    ...MediaFields
+    state
+    failureReason
   }
 }
 

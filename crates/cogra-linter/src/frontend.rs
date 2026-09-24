@@ -342,7 +342,9 @@ pub fn parse(
     match src.language.as_ref().map(crate::adopt::Language::as_str) {
         Some(crate::frontend_md::MARKDOWN) => crate::frontend_md::parse(src, a),
         Some(crate::pretokenize::rust::RUST) => crate::frontend_rust::parse(src, pre, a),
-        Some(crate::frontend_web::TYPESCRIPT) => crate::frontend_web::parse(src, a),
+        Some(crate::frontend_web::TYPESCRIPT | crate::frontend_web::JAVASCRIPT) => {
+            crate::frontend_web::parse(src, a)
+        }
         Some(crate::frontend_kotlin::KOTLIN) => crate::frontend_kotlin::parse(src, a),
         _ => Ok(Parsed {
             path: src.path.clone(),

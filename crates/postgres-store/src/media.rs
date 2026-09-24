@@ -7,9 +7,13 @@
 //! the natural query is always parent to attachments (data-model.md "Why
 //! parents point at attachments").
 //!
-//! An asset row is **immutable after upload**: there is no update surface
-//! for one, the digest names the bytes permanently, and the object is
-//! cacheable forever. Neither a description nor a poster is the asset's to
+//! An asset row is **immutable once it is ready**: the digest names the
+//! bytes permanently and the object is cacheable forever. Before that it
+//! is `processing` — the upload has landed but its final bytes do not
+//! exist yet — and the only update surface is the ingest worker's, which
+//! moves a row to `ready` or `failed` exactly once. Prepare refuses any
+//! asset that is not `ready`, so no envelope ever commits a digest that
+//! could still change. Neither a description nor a poster is the asset's to
 //! hold — both ride the payload envelope and the junction row caches them
 //! per version, so writing a description or naming a different cover is a
 //! new version of the parent and the bytes never move again (data-model.md
@@ -24,8 +28,109 @@
 //! authorship to cache from.
 
 use chrono::{DateTime, Utc};
+use sqlx::postgres::{PgTypeInfo, PgValueRef};
 use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
+
+/// Where an asset stands between its upload and its first use.
+///
+/// Stored as text under a CHECK, the shape every state column in the
+/// schema uses, and decoded straight into this type so no caller ever
+/// compares strings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AssetState {
+    /// The upload landed and its final bytes do not exist yet. Nothing may
+    /// reference it: the digest it carries now is not the one it will be
+    /// served under.
+    Processing,
+    /// The stored bytes are final and the digest names them.
+    Ready,
+    /// The upload could not be made servable; `failure_reason` says why.
+    Failed,
+}
+
+impl AssetState {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Processing => "processing",
+            Self::Ready => "ready",
+            Self::Failed => "failed",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "processing" => Self::Processing,
+            "ready" => Self::Ready,
+            "failed" => Self::Failed,
+            _ => return None,
+        })
+    }
+}
+
+impl sqlx::Type<Postgres> for AssetState {
+    fn type_info() -> PgTypeInfo {
+        <&str as sqlx::Type<Postgres>>::type_info()
+    }
+
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        <&str as sqlx::Type<Postgres>>::compatible(ty)
+    }
+}
+
+impl<'r> sqlx::Decode<'r, Postgres> for AssetState {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let raw = <&str as sqlx::Decode<Postgres>>::decode(value)?;
+        Self::parse(raw).ok_or_else(|| format!("unknown media asset state {raw:?}").into())
+    }
+}
+
+/// The destination an upload is sized for: a post or a comment.
+///
+/// A comment carries half a post's video, so the destination is the cap an
+/// upload is planned and validated against. Stored as text under a CHECK,
+/// the same shape as [`AssetState`], on the asset row — the ingest worker
+/// re-encodes long after the request that named it — and on the upload
+/// session, which processes its bytes only when it completes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MediaScale {
+    Post,
+    Comment,
+}
+
+impl MediaScale {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Post => "post",
+            Self::Comment => "comment",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        Some(match s {
+            "post" => Self::Post,
+            "comment" => Self::Comment,
+            _ => return None,
+        })
+    }
+}
+
+impl sqlx::Type<Postgres> for MediaScale {
+    fn type_info() -> PgTypeInfo {
+        <&str as sqlx::Type<Postgres>>::type_info()
+    }
+
+    fn compatible(ty: &PgTypeInfo) -> bool {
+        <&str as sqlx::Type<Postgres>>::compatible(ty)
+    }
+}
+
+impl<'r> sqlx::Decode<'r, Postgres> for MediaScale {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, sqlx::error::BoxDynError> {
+        let raw = <&str as sqlx::Decode<Postgres>>::decode(value)?;
+        Self::parse(raw).ok_or_else(|| format!("unknown media scale {raw:?}").into())
+    }
+}
 
 /// One asset row.
 #[derive(Debug, Clone)]
@@ -38,6 +143,10 @@ pub struct MediaAttachment {
     pub mime_type: String,
     pub size_bytes: Option<i64>,
     pub options: serde_json::Value,
+    pub state: AssetState,
+    /// Why the asset failed, in words its author can read. Present exactly
+    /// when `state` is `Failed` — a CHECK holds the two together.
+    pub failure_reason: Option<String>,
     /// The erasure slice's columns. Nothing in the repo writes them yet —
     /// the slice is unbuilt, deliberately, and the read surfaces that
     /// branch on them are ahead of it rather than dead. The direction
@@ -57,16 +166,13 @@ pub struct SweptAsset {
     pub storage_key: String,
 }
 
-/// Records an uploaded asset, or returns the one this author already has
-/// for these bytes.
+/// Records an uploaded asset whose bytes are already final, or returns
+/// the one this author already has for these bytes.
 ///
-/// The conflict arm is a no-op update rather than `DO NOTHING` so the
-/// statement returns a row either way — `DO NOTHING` suppresses
-/// `RETURNING`, which would turn a retried upload into a second round
-/// trip and a race. The caller tells the two cases apart by comparing the
-/// returned `storage_key` against the one it generated: a different key
-/// means the row was already there and the object just written is an
-/// orphan to collect.
+/// The caller tells the two cases apart by comparing the returned
+/// `storage_key` against the one it generated: a different key means the
+/// row was already there and the object just written is an orphan to
+/// collect.
 ///
 /// Uniqueness is on `(author_id, digest)`, never on the digest alone: two
 /// authors uploading identical bytes get two rows and two objects, so
@@ -78,7 +184,7 @@ pub struct SweptAsset {
 /// an author and a digest name at most one asset. Storage is the cheap
 /// resource; ambiguity here is not.
 ///
-/// The conflict arm returns whatever row was already there, redaction
+/// A retry is answered with whatever row was already there, redaction
 /// columns included — so once the erasure slice exists, a re-upload of
 /// bytes whose usage was redacted hands the caller back the existing
 /// asset. That is the intended answer under the direction recorded in
@@ -95,32 +201,312 @@ pub async fn insert(
     mime_type: &str,
     size_bytes: i64,
     options: &serde_json::Value,
+    scale: MediaScale,
 ) -> Result<MediaAttachment, sqlx::Error> {
-    sqlx::query_as!(
+    write_asset(
+        pool,
+        NewAsset {
+            id,
+            author_id,
+            digest,
+            digest_algo,
+            storage_key,
+            mime_type,
+            size_bytes,
+            options,
+            scale,
+            state: AssetState::Ready,
+            source_digest: None,
+        },
+    )
+    .await
+}
+
+/// Records an uploaded asset that still has to be re-encoded, or returns
+/// the one this author already has for these bytes.
+///
+/// The row is `processing` and carries the digest of the bytes as they
+/// arrived — in `digest`, because the column is what the retry rule
+/// reads while the asset is in flight, and in `source_digest`, which
+/// outlives the transcode: once the row is `ready` its `digest` names the
+/// rendition, and a retried upload of the same file still has to find it.
+#[allow(clippy::too_many_arguments)]
+pub async fn insert_processing(
+    pool: &PgPool,
+    id: Uuid,
+    author_id: Uuid,
+    digest: &[u8],
+    digest_algo: &str,
+    storage_key: &str,
+    mime_type: &str,
+    size_bytes: i64,
+    options: &serde_json::Value,
+    scale: MediaScale,
+) -> Result<MediaAttachment, sqlx::Error> {
+    write_asset(
+        pool,
+        NewAsset {
+            id,
+            author_id,
+            digest,
+            digest_algo,
+            storage_key,
+            mime_type,
+            size_bytes,
+            options,
+            scale,
+            state: AssetState::Processing,
+            source_digest: Some(digest),
+        },
+    )
+    .await
+}
+
+/// Everything the two inserts share.
+struct NewAsset<'a> {
+    id: Uuid,
+    author_id: Uuid,
+    digest: &'a [u8],
+    digest_algo: &'a str,
+    storage_key: &'a str,
+    mime_type: &'a str,
+    size_bytes: i64,
+    options: &'a serde_json::Value,
+    scale: MediaScale,
+    state: AssetState,
+    source_digest: Option<&'a [u8]>,
+}
+
+/// The asset an upload of these bytes already produced, or a fresh row.
+///
+/// Three statements rather than one upsert, because an upload has two
+/// digests to be recognised by — the one it arrived with and, once it is
+/// re-encoded, the one it is served under — and `ON CONFLICT` names one
+/// arbiter. The read comes first; the insert takes `DO NOTHING` on any
+/// conflict, which Postgres resolves only after a concurrent inserter of
+/// the same key has committed; and the second read then sees the row that
+/// won. A failed asset is never the answer: it holds its digests no
+/// longer, so the same file can be uploaded again once the cause is gone.
+async fn write_asset(pool: &PgPool, new: NewAsset<'_>) -> Result<MediaAttachment, sqlx::Error> {
+    if let Some(row) = upload_of(pool, new.author_id, new.digest).await? {
+        return Ok(row);
+    }
+    let inserted = sqlx::query_as!(
         MediaAttachment,
         r#"
         INSERT INTO media_attachments
             (id, author_id, digest, digest_algo, storage_key,
-             mime_type, size_bytes, options)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (author_id, digest)
-            DO UPDATE SET author_id = media_attachments.author_id
+             mime_type, size_bytes, options, state, source_digest, scale)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        ON CONFLICT DO NOTHING
         RETURNING id, author_id, digest, digest_algo, storage_key,
                   mime_type, size_bytes,
                   options AS "options!: serde_json::Value",
+                  state AS "state: AssetState", failure_reason,
+                  redaction_reason, redacted_at, created_at
+        "#,
+        new.id,
+        new.author_id,
+        new.digest,
+        new.digest_algo,
+        new.storage_key,
+        new.mime_type,
+        new.size_bytes,
+        new.options,
+        new.state.as_str(),
+        new.source_digest,
+        new.scale.as_str(),
+    )
+    .fetch_optional(pool)
+    .await?;
+    if let Some(row) = inserted {
+        return Ok(row);
+    }
+    upload_of(pool, new.author_id, new.digest)
+        .await?
+        .ok_or(sqlx::Error::RowNotFound)
+}
+
+/// The live asset this author's upload of these bytes produced, by either
+/// of its digests.
+async fn upload_of(
+    pool: &PgPool,
+    author_id: Uuid,
+    digest: &[u8],
+) -> Result<Option<MediaAttachment>, sqlx::Error> {
+    sqlx::query_as!(
+        MediaAttachment,
+        r#"
+        SELECT id, author_id, digest, digest_algo, storage_key,
+               mime_type, size_bytes,
+               options AS "options!: serde_json::Value",
+               state AS "state: AssetState", failure_reason,
+               redaction_reason, redacted_at, created_at
+        FROM media_attachments
+        WHERE author_id = $1
+          AND state <> 'failed'
+          AND (digest = $2 OR source_digest = $2)
+        ORDER BY created_at
+        LIMIT 1
+        "#,
+        author_id,
+        digest,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// A `processing` asset a worker holds the lease on.
+#[derive(Debug, Clone)]
+pub struct IngestJob {
+    pub id: Uuid,
+    pub author_id: Uuid,
+    /// Where the bytes as they arrived are stored.
+    pub storage_key: String,
+    pub mime_type: String,
+    pub options: serde_json::Value,
+    /// The destination the upload named, whose cap the re-encode plans
+    /// for and the rendition is validated against.
+    pub scale: MediaScale,
+    /// How many times a worker has claimed this row, this claim included.
+    pub attempts: i32,
+}
+
+/// Leases the oldest `processing` asset nobody holds.
+///
+/// `FOR UPDATE SKIP LOCKED` is the queue idiom Postgres documents for
+/// exactly this — "to avoid lock contention with multiple consumers
+/// accessing a queue-like table" — so two workers never claim the same
+/// row and neither waits on the other. The claim is a lease rather than a
+/// held lock: the row lock lasts one statement, and what keeps a second
+/// worker away afterwards is `lease_until`. A worker that dies stops
+/// renewing it, and its row is claimable again when the lease lapses —
+/// which is how a restart picks up what was in flight.
+pub async fn claim_ingest(
+    pool: &PgPool,
+    lease_secs: f64,
+) -> Result<Option<IngestJob>, sqlx::Error> {
+    sqlx::query_as!(
+        IngestJob,
+        r#"
+        UPDATE media_attachments
+        SET lease_until = now() + make_interval(secs => $1),
+            attempts    = attempts + 1
+        WHERE id = (
+            SELECT id FROM media_attachments
+            WHERE state = 'processing'
+              AND (lease_until IS NULL OR lease_until < now())
+            ORDER BY created_at
+            FOR UPDATE SKIP LOCKED
+            LIMIT 1
+        )
+        RETURNING id, author_id, storage_key, mime_type,
+                  options AS "options!: serde_json::Value",
+                  scale AS "scale: MediaScale", attempts
+        "#,
+        lease_secs,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Extends a lease the worker still holds. False when the row is no longer
+/// `processing` — swept, or settled by someone else — which tells the
+/// worker its result has nowhere to go.
+pub async fn renew_ingest_lease(
+    pool: &PgPool,
+    id: Uuid,
+    lease_secs: f64,
+) -> Result<bool, sqlx::Error> {
+    let renewed = sqlx::query!(
+        "UPDATE media_attachments
+         SET lease_until = now() + make_interval(secs => $2)
+         WHERE id = $1 AND state = 'processing'",
+        id,
+        lease_secs,
+    )
+    .execute(pool)
+    .await?;
+    Ok(renewed.rows_affected() == 1)
+}
+
+/// Hands a lease back after a failure worth retrying, holding the row off
+/// for `retry_after_secs` so a fault that is still there is not hit again
+/// at once. The same statement as a renewal: what differs is only that
+/// nobody renews it again, so it lapses when the wait is over.
+pub async fn release_ingest(
+    pool: &PgPool,
+    id: Uuid,
+    retry_after_secs: f64,
+) -> Result<(), sqlx::Error> {
+    renew_ingest_lease(pool, id, retry_after_secs).await?;
+    Ok(())
+}
+
+/// The final bytes of a re-encoded asset, as the row will describe them.
+#[derive(Debug, Clone, Copy)]
+pub struct Rendition<'a> {
+    pub digest: &'a [u8],
+    pub storage_key: &'a str,
+    pub size_bytes: i64,
+    pub options: &'a serde_json::Value,
+}
+
+/// Settles a `processing` asset as `ready`, pointing it at its rendition.
+///
+/// This is the one moment an asset's digest changes, and it is safe for
+/// exactly one reason: nothing can have committed the old one, because
+/// prepare refuses an asset that is not `ready`. `None` when the row is no
+/// longer `processing` — the rendition then belongs to nobody and the
+/// caller deletes it.
+///
+/// A unique violation here means this author already holds a live asset
+/// with the rendition's digest; the caller settles the row as failed.
+pub async fn finish_ingest(
+    pool: &PgPool,
+    id: Uuid,
+    rendition: Rendition<'_>,
+) -> Result<Option<MediaAttachment>, sqlx::Error> {
+    sqlx::query_as!(
+        MediaAttachment,
+        r#"
+        UPDATE media_attachments
+        SET state       = 'ready',
+            digest      = $2,
+            storage_key = $3,
+            size_bytes  = $4,
+            options     = $5,
+            lease_until = NULL
+        WHERE id = $1 AND state = 'processing'
+        RETURNING id, author_id, digest, digest_algo, storage_key,
+                  mime_type, size_bytes,
+                  options AS "options!: serde_json::Value",
+                  state AS "state: AssetState", failure_reason,
                   redaction_reason, redacted_at, created_at
         "#,
         id,
-        author_id,
-        digest,
-        digest_algo,
-        storage_key,
-        mime_type,
-        size_bytes,
-        options,
+        rendition.digest,
+        rendition.storage_key,
+        rendition.size_bytes,
+        rendition.options,
     )
-    .fetch_one(pool)
+    .fetch_optional(pool)
     .await
+}
+
+/// Settles a `processing` asset as `failed`, with the reason its author
+/// will read. False when the row was no longer `processing`.
+pub async fn fail_ingest(pool: &PgPool, id: Uuid, reason: &str) -> Result<bool, sqlx::Error> {
+    let failed = sqlx::query!(
+        "UPDATE media_attachments
+         SET state = 'failed', failure_reason = $2, lease_until = NULL
+         WHERE id = $1 AND state = 'processing'",
+        id,
+        reason,
+    )
+    .execute(pool)
+    .await?;
+    Ok(failed.rows_affected() == 1)
 }
 
 /// One entry of a version's gallery: the asset and the facts that are
@@ -144,21 +530,27 @@ pub struct GalleryEntry {
     /// Distinct from `is_cover`, which answers which attachment *leads* a
     /// multi-asset parent rather than what covers a single one.
     pub cover_media_id: Option<Uuid>,
+    /// Whether that poster was taken from the clip rather than chosen by
+    /// its author — witnessed beside the cover it qualifies, so it is only
+    /// ever true on a placement that names one.
+    pub cover_taken: bool,
 }
 
 /// One entry of a gallery as it is written: the asset, the description the
-/// record witnessed for it, and the poster it named.
+/// record witnessed for it, the poster it named, and whether that poster
+/// was taken.
 ///
-/// All three come out of the payload envelope's manifest at promotion,
+/// All four come out of the payload envelope's manifest at promotion,
 /// never out of the request that produced it — the digest names the asset,
-/// per-asset map key 2 names the description and key 3 the cover
-/// (data-model.md "The payload envelope"). That is what makes a gallery
-/// rebuildable from the record.
+/// per-asset map key 2 names the description, key 3 the cover and key 4
+/// the taken mark (data-model.md "The payload envelope"). That is what
+/// makes a gallery rebuildable from the record.
 #[derive(Debug, Clone)]
 pub struct GalleryPlacement {
     pub attachment_id: Uuid,
     pub alt_text: Option<String>,
     pub cover_media_id: Option<Uuid>,
+    pub cover_taken: bool,
 }
 
 /// Writes one version's gallery, in order.
@@ -170,8 +562,8 @@ pub struct GalleryPlacement {
 /// witnessed record disagree about what a reader sees. `alt_text` is the
 /// same fact said twice for the same reason — the row caches what the
 /// manifest entry carried, so a read serves the version's own description
-/// without decoding a payload. `cover_media_id` rides along on the same
-/// terms, from per-asset map key 3.
+/// without decoding a payload. `cover_media_id` and `cover_taken` ride
+/// along on the same terms, from per-asset map keys 3 and 4.
 ///
 /// Idempotent on re-running the write that produced it: a retried
 /// pre-sign re-inserts the same rows onto the same version.
@@ -183,20 +575,21 @@ pub async fn attach_to_post_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, orders, alts, covers) = split_placements(gallery)?;
+    let (ids, orders, alts, covers, taken) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO post_attachments
              (post_version_id, attachment_id, display_order, is_cover, alt_text,
-              cover_media_id)
-         SELECT $1, a.id, a.ord, a.ord = 0, a.alt, a.cover
-         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[])
-              AS a(id, ord, alt, cover)
+              cover_media_id, cover_taken)
+         SELECT $1, a.id, a.ord, a.ord = 0, a.alt, a.cover, a.taken
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[], $6::bool[])
+              AS a(id, ord, alt, cover, taken)
          ON CONFLICT (post_version_id, attachment_id) DO NOTHING",
         post_version_id,
         &ids,
         &orders,
         &alts as &[Option<String>],
         &covers as &[Option<Uuid>],
+        &taken,
     )
     .execute(&mut **tx)
     .await?;
@@ -214,38 +607,46 @@ pub async fn attach_to_comment_version(
     if gallery.is_empty() {
         return Ok(());
     }
-    let (ids, orders, alts, covers) = split_placements(gallery)?;
+    let (ids, orders, alts, covers, taken) = split_placements(gallery)?;
     sqlx::query!(
         "INSERT INTO comment_attachments
              (comment_version_id, attachment_id, display_order, alt_text,
-              cover_media_id)
-         SELECT $1, a.id, a.ord, a.alt, a.cover
-         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[])
-              AS a(id, ord, alt, cover)
+              cover_media_id, cover_taken)
+         SELECT $1, a.id, a.ord, a.alt, a.cover, a.taken
+         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[], $6::bool[])
+              AS a(id, ord, alt, cover, taken)
          ON CONFLICT (comment_version_id, attachment_id) DO NOTHING",
         comment_version_id,
         &ids,
         &orders,
         &alts as &[Option<String>],
         &covers as &[Option<Uuid>],
+        &taken,
     )
     .execute(&mut **tx)
     .await?;
     Ok(())
 }
 
-/// The four parallel arrays one gallery is bound as.
-type GalleryArrays = (Vec<Uuid>, Vec<i16>, Vec<Option<String>>, Vec<Option<Uuid>>);
+/// The five parallel arrays one gallery is bound as.
+type GalleryArrays = (
+    Vec<Uuid>,
+    Vec<i16>,
+    Vec<Option<String>>,
+    Vec<Option<Uuid>>,
+    Vec<bool>,
+);
 
-/// The gallery as the four parallel arrays `unnest` zips back together.
+/// The gallery as the five parallel arrays `unnest` zips back together.
 /// One `unnest` over parallel arrays is what keeps the whole gallery one
 /// statement, and the arrays have to be built before the query borrows
 /// them.
 ///
-/// All four are built in one pass so their lengths cannot diverge:
-/// `unnest` pads the short arrays of a ragged set with NULL, and both
-/// `attachment_id` and `display_order` are `NOT NULL`, so a divergence is
-/// either a refused statement or wrong rows — never a visible mismatch.
+/// All five are built in one pass so their lengths cannot diverge:
+/// `unnest` pads the short arrays of a ragged set with NULL, and
+/// `attachment_id`, `display_order` and `cover_taken` are `NOT NULL`, so a
+/// divergence is either a refused statement or wrong rows — never a
+/// visible mismatch.
 ///
 /// `display_order` is a `smallint`, so a gallery longer than `i16::MAX` is
 /// refused rather than wrapped. A wrapped index would restart the ordering
@@ -256,6 +657,7 @@ fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx:
     let mut orders = Vec::with_capacity(gallery.len());
     let mut alts = Vec::with_capacity(gallery.len());
     let mut covers = Vec::with_capacity(gallery.len());
+    let mut taken = Vec::with_capacity(gallery.len());
     for (index, placement) in gallery.iter().enumerate() {
         let order = i16::try_from(index).map_err(|_| {
             sqlx::Error::Encode(
@@ -270,8 +672,9 @@ fn split_placements(gallery: &[GalleryPlacement]) -> Result<GalleryArrays, sqlx:
         orders.push(order);
         alts.push(placement.alt_text.clone());
         covers.push(placement.cover_media_id);
+        taken.push(placement.cover_taken);
     }
-    Ok((ids, orders, alts, covers))
+    Ok((ids, orders, alts, covers, taken))
 }
 
 struct GalleryRow {
@@ -288,6 +691,9 @@ struct GalleryRow {
     alt_text: Option<String>,
     options: serde_json::Value,
     cover_media_id: Option<Uuid>,
+    cover_taken: bool,
+    state: AssetState,
+    failure_reason: Option<String>,
     redaction_reason: Option<String>,
     redacted_at: Option<DateTime<Utc>>,
     created_at: DateTime<Utc>,
@@ -306,6 +712,8 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
                 mime_type: row.mime_type,
                 size_bytes: row.size_bytes,
                 options: row.options,
+                state: row.state,
+                failure_reason: row.failure_reason,
                 redaction_reason: row.redaction_reason,
                 redacted_at: row.redacted_at,
                 created_at: row.created_at,
@@ -314,6 +722,7 @@ fn gallery_entry(row: GalleryRow) -> (i64, GalleryEntry) {
             is_cover: row.is_cover,
             alt_text: row.alt_text,
             cover_media_id: row.cover_media_id,
+            cover_taken: row.cover_taken,
         },
     )
 }
@@ -331,10 +740,11 @@ pub async fn post_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.post_version_id AS "version_id!", j.display_order,
-                  j.is_cover, j.alt_text, j.cover_media_id,
+                  j.is_cover, j.alt_text, j.cover_media_id, j.cover_taken,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
+                  m.state AS "state: AssetState", m.failure_reason,
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM post_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
@@ -356,10 +766,11 @@ pub async fn comment_galleries(
     let rows = sqlx::query_as!(
         GalleryRow,
         r#"SELECT j.comment_version_id AS "version_id!", j.display_order,
-                  FALSE AS "is_cover!", j.alt_text, j.cover_media_id,
+                  FALSE AS "is_cover!", j.alt_text, j.cover_media_id, j.cover_taken,
                   m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
                   m.mime_type, m.size_bytes,
                   m.options AS "options!: serde_json::Value",
+                  m.state AS "state: AssetState", m.failure_reason,
                   m.redaction_reason, m.redacted_at, m.created_at
            FROM comment_attachments j
            JOIN media_attachments m ON m.id = j.attachment_id
@@ -381,6 +792,10 @@ pub async fn comment_galleries(
 /// under two rows, and a manifest names its own author's assets only
 /// (data-model.md "Why parents point at attachments" — the anti-hijack
 /// rule).
+///
+/// Only `ready` rows answer. A manifest can only ever name a ready asset —
+/// prepare refuses any other — so this is a statement of that rule at the
+/// read rather than a filter anything relies on.
 pub async fn assets_by_digests(
     pool: &PgPool,
     author_id: Uuid,
@@ -392,9 +807,10 @@ pub async fn assets_by_digests(
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
+               state AS "state: AssetState", failure_reason,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
-        WHERE author_id = $1 AND digest = ANY($2)
+        WHERE author_id = $1 AND digest = ANY($2) AND state = 'ready'
         "#,
         author_id,
         digests,
@@ -415,6 +831,7 @@ pub async fn assets_by_ids(
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
+               state AS "state: AssetState", failure_reason,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE id = ANY($1)
@@ -433,6 +850,7 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
         SELECT id, author_id, digest, digest_algo, storage_key,
                mime_type, size_bytes,
                options AS "options!: serde_json::Value",
+               state AS "state: AssetState", failure_reason,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
         WHERE id = $1
@@ -454,6 +872,9 @@ pub struct UploadSession {
     pub declared_bytes: i64,
     pub part_size_bytes: i32,
     pub part_count: i32,
+    /// The destination named when the session opened, which the
+    /// assembled bytes are processed for at completion.
+    pub scale: MediaScale,
     /// The asset a finished session produced, and the reason a retried
     /// completion is cheap: set, it is the answer; null, the upload is
     /// still open.
@@ -481,6 +902,7 @@ pub async fn open_upload_session(
     declared_bytes: i64,
     part_size_bytes: i32,
     part_count: i32,
+    scale: MediaScale,
     ttl_secs: f64,
 ) -> Result<UploadSession, sqlx::Error> {
     sqlx::query_as!(
@@ -488,10 +910,11 @@ pub async fn open_upload_session(
         r#"
         INSERT INTO media_upload_sessions
             (id, author_id, storage_key, upload_id, declared_bytes,
-             part_size_bytes, part_count, expires_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, now() + make_interval(secs => $8))
+             part_size_bytes, part_count, scale, expires_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now() + make_interval(secs => $9))
         RETURNING id, author_id, storage_key, upload_id, declared_bytes,
-                  part_size_bytes, part_count, media_id, expires_at
+                  part_size_bytes, part_count, scale AS "scale: MediaScale",
+                  media_id, expires_at
         "#,
         id,
         author_id,
@@ -500,6 +923,7 @@ pub async fn open_upload_session(
         declared_bytes,
         part_size_bytes,
         part_count,
+        scale.as_str(),
         ttl_secs,
     )
     .fetch_one(pool)
@@ -522,7 +946,8 @@ pub async fn upload_session(
         UploadSession,
         r#"
         SELECT id, author_id, storage_key, upload_id, declared_bytes,
-               part_size_bytes, part_count, media_id, expires_at
+               part_size_bytes, part_count, scale AS "scale: MediaScale",
+               media_id, expires_at
         FROM media_upload_sessions
         WHERE id = $1 AND author_id = $2 AND expires_at > now()
         "#,
@@ -679,7 +1104,10 @@ pub async fn expired_upload_sessions(
 /// An upload precedes the write that references it, so a compose the
 /// author abandoned leaves a row and an object that no parent will ever
 /// point at. Nothing else collects them: staged writes have their own
-/// epoch-denominated GC, and an asset is not a staged write.
+/// epoch-denominated GC, and an asset is not a staged write. A `failed`
+/// asset is one of these by construction — nothing may reference it — and
+/// ages out the same way, as would a `processing` one the ingest worker
+/// never settled.
 ///
 /// **The join is the seam.** "Orphaned" means no reference from any of
 /// the four content junctions, none from the profile and chat image
@@ -792,23 +1220,27 @@ mod placement_tests {
             attachment_id: Uuid::from_u128(n),
             alt_text: alt.map(str::to_string),
             cover_media_id: cover.map(Uuid::from_u128),
+            cover_taken: false,
         }
     }
 
-    /// The four arrays are one gallery said four ways, so they have to
+    /// The five arrays are one gallery said five ways, so they have to
     /// come out the same length and in the same order — `unnest` pads a
-    /// ragged set with NULL, and two of the four columns are NOT NULL.
+    /// ragged set with NULL, and three of the five columns are NOT NULL.
     ///
-    /// A gallery's four bound arrays agree on length and on order.
+    /// A gallery's five bound arrays agree on length and on order.
     /// ´claim:media:a-gallerys-arrays-cannot-diverge´
     #[test]
-    fn the_four_arrays_agree_on_length_and_order() {
+    fn the_five_arrays_agree_on_length_and_order() {
         let gallery = [
             placement(1, Some("first"), None),
-            placement(2, None, Some(9)),
+            GalleryPlacement {
+                cover_taken: true,
+                ..placement(2, None, Some(9))
+            },
             placement(3, Some("third"), None),
         ];
-        let (ids, orders, alts, covers) = split_placements(&gallery).expect("fits");
+        let (ids, orders, alts, covers, taken) = split_placements(&gallery).expect("fits");
         assert_eq!(
             ids,
             vec![Uuid::from_u128(1), Uuid::from_u128(2), Uuid::from_u128(3)]
@@ -819,6 +1251,7 @@ mod placement_tests {
             vec![Some("first".to_string()), None, Some("third".to_string())]
         );
         assert_eq!(covers, vec![None, Some(Uuid::from_u128(9)), None]);
+        assert_eq!(taken, vec![false, true, false]);
     }
 
     /// Position is the order and index 0 is the cover, so the first

@@ -81,6 +81,7 @@ export function PostCard({
   license,
   pending = false,
   edited = false,
+  onInspectEdit,
   bundle,
   signedIn = true,
   taught = true,
@@ -93,6 +94,7 @@ export function PostCard({
   stanceOpen = false,
   stancePadInset = 16,
   stanceDefaultPick,
+  stanceOnOpenHistory,
   score,
   onOpenScore,
   comments,
@@ -112,6 +114,16 @@ export function PostCard({
   citedBy = 0,
   onOpenCitedBy,
   menuItems = [],
+  /* TWO SLOTS FOR THE OTHER FEED KINDS (the post-MVP chats integration
+     round's final micro-fix, jakob 2026-09-24). A chat and a message ride the
+     feed in this same shell — header, ⋮, license, action row — but neither is
+     a post: `lead` stands where the author chip stands (a message's sender and
+     their chat; a chat's disc, name and kind mark), and `main` stands where the
+     text block stands (a message as its chat bubble; a chat as its last
+     message's row), inside the same door. Additive: given neither, the card
+     renders exactly as before. */
+  lead,
+  main,
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -232,9 +244,10 @@ export function PostCard({
     </div>
   );
 
+  const bodyBlock = main ?? textBlock;
   const linkedText =
     detail || !onOpen ? (
-      textBlock
+      bodyBlock
     ) : (
       <a
         href={href ?? "#"}
@@ -245,14 +258,14 @@ export function PostCard({
         className="cg-focus"
         style={{ display: "block", color: "inherit", textDecoration: "none" }}
       >
-        {textBlock}
+        {bodyBlock}
       </a>
     );
 
   const body = (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
-        {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
+        {lead ?? (author && <ActorChip handle={author.handle} displayName={author.displayName} />)}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
           {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
           {/* ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW — a dot in
@@ -398,7 +411,12 @@ export function PostCard({
           <span aria-hidden="true">Cited by {citedBy}</span>
         </button>
       )}
-      {edited && <EditedMarker />}
+      {/* THE MARKER IS A DOOR ONCE THERE IS SOMEWHERE TO GO (the change-histories
+          round). A post with one version has no history to open, so the marker
+          is not even drawn; a post with two has both the ⋮ row and this, and the
+          marker takes its tappable form rather than growing a control beside it —
+          a history door is a readout. */}
+      {edited && <EditedMarker onInspect={onInspectEdit} />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
           product lives on — then the Post score, then comments, then anything
@@ -444,6 +462,7 @@ export function PostCard({
               defaultOpen={stanceOpen}
               padInset={stancePadInset}
               defaultPick={stanceDefaultPick}
+              onOpenHistory={stanceOnOpenHistory}
             />
           )}
           {score !== undefined && (

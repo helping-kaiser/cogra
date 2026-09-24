@@ -33,6 +33,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -57,7 +58,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -95,6 +96,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -205,6 +207,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -213,7 +216,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 27 boards → ReplyEntry",
+        "start · «comment count» on 28 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -244,6 +247,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -529,6 +533,7 @@
         "FeedUnread",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -537,7 +542,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 22 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 23 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -558,6 +563,7 @@
         "FeedUnread",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
         "Removed",
@@ -759,6 +765,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -783,7 +790,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -821,6 +828,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -877,6 +885,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -901,7 +910,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -939,6 +948,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -995,6 +1005,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -1019,7 +1030,7 @@
         "WalletSetup"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1055,6 +1066,7 @@
         "NotificationsEmpty",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -1405,6 +1417,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Reel",
         "Removed",
         "TagPage",
@@ -1412,7 +1425,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 26 boards → ProfileOther",
+        "start · «author chip» on 27 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1438,6 +1451,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "Reel",
         "Removed",
         "TagPage",
@@ -1731,6 +1745,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "ProfilePosts",
         "Removed",
         "TagPage",
@@ -1738,7 +1753,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Post Score» on 26 boards → FeedEntry",
+        "start · «Post Score» on 27 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1770,6 +1785,7 @@
         "Main",
         "PostDetail",
         "PostDetailVideo",
+        "PostDetailVideoSensitive",
         "ProfilePosts",
         "Removed",
         "TagPage",
@@ -2585,6 +2601,19 @@
       "endpoint": [
         "reel-to-detail"
       ]
+    },
+    "PostDetailVideoSensitive": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "PostOpinions": {
       "flows": [

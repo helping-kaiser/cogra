@@ -14,11 +14,11 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -83,6 +83,10 @@ fun MediaGallery(
 ) {
     if (items.isEmpty()) return
 
+    // The stage this gallery's clips compete for: the scroll surface's, or
+    // the gallery's own when it stands in none.
+    val stage = LocalScrollStage.current ?: rememberScrollStage()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -106,6 +110,8 @@ fun MediaGallery(
         ) { page ->
             GalleryFrame(
                 item = items[page],
+                page = page,
+                stage = stage,
                 frameRatio = frameRatio,
                 fit = fit,
                 maxHeight = maxHeight,
@@ -137,15 +143,37 @@ fun MediaGallery(
 @Composable
 private fun GalleryFrame(
     item: MediaItem,
+    page: Int,
+    stage: ScrollStage,
     frameRatio: Float,
     fit: ContentScale,
     maxHeight: Dp,
     shape: Shape,
 ) {
-    // How much of this frame the reader can see. Autoplay follows it,
-    // so a clip starts when it arrives and stops when it leaves —
-    // "autoplay muted on visibility" (roadmap slice 2.5.2).
-    var visible by remember { mutableFloatStateOf(0f) }
+    val videoUrl = item.videoUrl
+    // A clip plays when its surface's stage is its own — THE STAGE LAW
+    // ([StageElection]): the incumbent keeps it while past 70%, the topmost
+    // qualifying clip takes it the moment the incumbent drops, and nothing
+    // plays when nothing qualifies. The frame's part is to say where it
+    // stands, every layout pass, and which list row it stands in, so the
+    // list can say when that row is no longer placed ([standOn]).
+    val key = remember(videoUrl) { Any() }
+    // **COMPOSITION NEVER READS THE PLACE, ONLY THE DECISION.** A clip's
+    // place is rewritten on every layout pass, which while a list is
+    // scrolling means every frame; composing from it would recompose this
+    // frame once per frame per clip on screen, on the thread that owes the
+    // compositor the next one (`GalleryVisibilityChurnTest`). The holder
+    // changes only when the stage does, and `derivedStateOf` narrows even
+    // that to the frames it concerns
+    // (developer.android.com/develop/ui/compose/performance/bestpractices,
+    // "Use derivedStateOf to limit recompositions").
+    val onStage by remember(stage, key) { derivedStateOf { stage.holder === key } }
+    // THE VEIL TAKES THE CLIP OUT OF THE ROTATION (jakob 2026-09-24, backlog
+    // item 103): the stage never elects a veiled frame, and this frame will
+    // not play under one even for the pass before the stage re-decides — no
+    // playback and no sound disc behind the blur the reader chose.
+    val veiled = LocalStageVeil.current
+    val playing = onStage && !veiled
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -156,42 +184,49 @@ private fun GalleryFrame(
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .then(
-                if (item.isVideo) {
-                    Modifier.onVisibilityChanged { visible = it }
+                if (videoUrl != null) {
+                    Modifier.standOn(stage, key, page, LocalScrollStageRow.current, veiled)
                 } else {
                     Modifier
                 },
             ),
     ) {
-        val videoUrl = item.videoUrl
         // Symptom (b) is about this number on the way back: the clip
         // should resume if it is in the viewport and must not start if
         // it is far out of it, and the log has to show which side of
         // the line the frame landed on and when.
         if (videoUrl != null) {
             val traced = remember(videoUrl) { VideoTrace.clip(videoUrl) }
-            LaunchedEffect(visible, traced) {
-                VideoTrace.autoplay(traced, visible, visible >= AUTOPLAY_VISIBLE_FRACTION)
+            // Keyed on the decision, not on the number behind it: a line
+            // per frame is not a log of what autoplay decided, it is the
+            // decision buried in its own noise. The fraction is still
+            // reported — read here, outside composition, so it says what
+            // the frame measured at the moment the stage changed hands.
+            val said = remember(traced) { SaidPlaying() }
+            LaunchedEffect(playing, traced) {
+                VideoTrace.autoplay(traced, stage.visibleOf(key), playing)
+                said.playing = playing
+            }
+            // A frame the list disposes while it plays stops playing with it,
+            // but no decision changes to say so — without this line the log
+            // would name it playing for as long as the log is read.
+            DisposableEffect(traced) {
+                onDispose { if (said.playing) VideoTrace.autoplay(traced, stage.visibleOf(key), false) }
             }
         }
-        // A player off screen is still a hardware codec held open, and a
-        // device has only a handful. A frame nobody can see draws its
-        // poster instead and holds nothing — which is also what the
-        // poster is *for*, so the card looks the same either way.
-        //
-        // **The bar is the autoplay bar, not a sliver.** There is one
-        // stage and the surface entering it last is the one that shows,
-        // so a card the reader is not looking at must not enter it at
-        // all: a card showing 8% of itself was taking the decoder off
-        // the card showing all of itself, which left the card being
-        // read wearing its cover for as long as it sat there.
-        if (videoUrl != null && visible >= AUTOPLAY_VISIBLE_FRACTION) {
+        // Only the clip holding the stage composes a player, and composing
+        // it is what claims [VideoStage]'s one player for this clip; the
+        // frame that lost the stage drops its player in the same pass,
+        // which surrenders it. A frame off the stage draws its poster and
+        // holds nothing — which is also what the poster is *for*, so the
+        // card looks the same either way.
+        if (videoUrl != null && playing) {
             VideoPlayer(
                 url = videoUrl,
                 // The poster is the cover asset: what the author chose
                 // as the clip's face on `ComposeCover`.
                 posterUrl = item.imageModel(),
-                autoplay = visible >= AUTOPLAY_VISIBLE_FRACTION,
+                autoplay = playing,
                 durationMs = item.durationMs,
                 // The gallery's own scale, so a clip is framed the way
                 // every picture beside it is — and so the poster and
@@ -218,14 +253,10 @@ private fun GalleryFrame(
     }
 }
 
-/**
- * How much of a frame has to be showing before it starts itself.
- *
- * High rather than a bare majority: two clips can be on screen at once
- * on a tall display, and the mute is shared — so the bar for "the reader
- * is looking at this one" has to be more than half a card.
- */
-private const val AUTOPLAY_VISIBLE_FRACTION = 0.7f
+/** The last autoplay verdict a frame put in the trace — read only when it leaves. */
+private class SaidPlaying {
+    var playing = false
+}
 
 /**
  * `--media-max-height`: the viewport, less the top safe area, the bottom

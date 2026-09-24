@@ -20,8 +20,8 @@ export function PendingMarker({ label = "Still settling", inline = false }) {
   return <p style={{ margin: 0, ...ink }}>{label}</p>;
 }
 
-/** The edit marker: a soft marker with an optional tap to see what changed.
-    Friendly, not forensic. */
+/** The edit marker: a soft marker with an optional tap onto the edit history —
+    every version whole, newest first, never a diff. Friendly, not forensic. */
 export function EditedMarker({ label = "Edited", onInspect }) {
   if (!onInspect) {
     return <p style={{ margin: 0, fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>{label}</p>;

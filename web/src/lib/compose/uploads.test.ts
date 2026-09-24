@@ -2,16 +2,20 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { ApolloClient } from "@apollo/client";
+import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { graphql, HttpResponse } from "msw";
 import { CENTERED } from "@/lib/ui2/media/crop";
-import { PICTURE_MAX_BYTES } from "@/lib/ui2/media/caps";
+import { PICTURE_MAX_BYTES, POST_VIDEO_MAX_BYTES } from "@/lib/ui2/media/caps";
 import { createGuard, type AuthGuard } from "@/lib/session/guard";
 import { createTokenStore } from "@/lib/session/token-store";
 import type { Refresher } from "@/lib/session/refresher";
-import { TOO_BIG_PICTURE } from "./pick";
+import { startMswServer } from "@/test/msw";
+import { COMMENT_SCALE, POST_SCALE, TOO_BIG_PICTURE } from "./pick";
 import { runUpload, runVideoUpload, waitingAssets } from "./uploads";
 import type { AssetUpload, CoverAsset, PickedAsset } from "./wizard";
+
+const mswServer = startMswServer();
 
 // The remux is mocked: it is covered on its own in `strip-video.test.ts`, and
 // Node cannot run a real one. What matters here is that the upload path calls
@@ -21,6 +25,17 @@ const STRIPPED = new Blob([new Uint8Array(new ArrayBuffer(12)) as BlobPart], {
 });
 const stripVideoMetadata = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/ui2/media/strip-video", () => ({ stripVideoMetadata }));
+
+// The compression is mocked for the same reason, and by default declines — the
+// picked bytes come back — which is what every browser without WebCodecs does.
+// Its own decisions are `compress-video.test.ts`'s subject; what matters here
+// is that its output, whatever it is, is what goes on to the strip.
+const compressVideo = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/ui2/media/compress-video", () => ({ compressVideo }));
+
+/** A post — the destination the upload path is told about — and its video cap. */
+const SCALE = POST_SCALE;
+const CAP = POST_VIDEO_MAX_BYTES;
 
 const asset: PickedAsset = {
   id: "a0",
@@ -92,6 +107,13 @@ afterEach(() => {
 beforeEach(() => {
   stripVideoMetadata.mockReset();
   stripVideoMetadata.mockResolvedValue({ blob: STRIPPED, tookMs: 12 });
+  compressVideo.mockReset();
+  compressVideo.mockImplementation(async (blob: Blob) => ({
+    blob,
+    path: "unsupported",
+    tookMs: 0,
+    videoCodec: null,
+  }));
 });
 
 /** A canvas that encodes to fixed bytes, so the encode is not what is under test. */
@@ -318,6 +340,144 @@ describe("runUpload", () => {
   });
 });
 
+/** A real Apollo client over MSW — the network-boundary idiom `media-api.test.ts` uses. */
+function apolloClient(): ApolloClient {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new HttpLink({ uri: "http://localhost/graphql" }),
+  });
+}
+
+function mediaFields(id: string, extra: Record<string, unknown> = {}) {
+  return {
+    __typename: "MediaAttachment",
+    id,
+    url: `https://media.example/${id}`,
+    altText: null,
+    status: "NORMAL",
+    mimeType: "image/webp",
+    options: { __typename: "MediaOptions", aspectRatio: "1:1", durationMs: null },
+    coverMedia: null,
+    state: "READY",
+    failureReason: null,
+    ...extra,
+  };
+}
+
+const noSleep = async () => {};
+
+// THE UPLOAD ITSELF ALREADY CARRIES `state` (media.graphql's UploadMedia).
+// EVERY STILL COMES BACK READY, so the common case — every picture, every
+// clip this browser could compress — takes today's path with no extra
+// request; a PROCESSING answer is the fallback-browser-original path alone,
+// and this suite drives it end to end against the generated operations
+// rather than the hand-rolled `.mutate` stub the rest of the file uses,
+// because the wait now spans a second operation (`MediaAttachmentStatus`).
+describe("runUpload — waiting for a PROCESSING asset", () => {
+  it("goes straight to done when the upload answers READY", async () => {
+    encodable();
+    mswServer.use(
+      graphql.mutation("UploadMedia", () =>
+        HttpResponse.json({
+          data: {
+            uploadMedia: {
+              __typename: "UploadMediaPayload",
+              media: mediaFields("m-ready"),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    const { seen, step } = steps();
+
+    await runUpload(apolloClient(), guard, asset, 4 / 5, step, { sleep: noSleep });
+
+    expect(seen).toEqual([
+      { kind: "encoding" },
+      { kind: "uploading" },
+      { kind: "done", mediaId: "m-ready" },
+    ]);
+  });
+
+  it("reports processing, then polls until READY", async () => {
+    encodable();
+    mswServer.use(
+      graphql.mutation("UploadMedia", () =>
+        HttpResponse.json({
+          data: {
+            uploadMedia: {
+              __typename: "UploadMediaPayload",
+              media: mediaFields("m-slow", { state: "PROCESSING" }),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+    );
+    let polls = 0;
+    mswServer.use(
+      graphql.query("MediaAttachmentStatus", () => {
+        polls += 1;
+        const state = polls < 2 ? "PROCESSING" : "READY";
+        return HttpResponse.json({ data: { mediaAttachment: mediaFields("m-slow", { state }) } });
+      }),
+    );
+    const { seen, step } = steps();
+
+    await runUpload(apolloClient(), guard, asset, 4 / 5, step, { sleep: noSleep });
+
+    expect(seen).toEqual([
+      { kind: "encoding" },
+      { kind: "uploading" },
+      { kind: "processing", mediaId: "m-slow" },
+      { kind: "done", mediaId: "m-slow" },
+    ]);
+    expect(polls).toBe(2);
+  });
+
+  it("reports the server's own reason, not retryable, when the poll settles FAILED", async () => {
+    encodable();
+    mswServer.use(
+      graphql.mutation("UploadMedia", () =>
+        HttpResponse.json({
+          data: {
+            uploadMedia: {
+              __typename: "UploadMediaPayload",
+              media: mediaFields("m-bad", { state: "PROCESSING" }),
+              userErrors: [],
+            },
+          },
+        }),
+      ),
+      graphql.query("MediaAttachmentStatus", () =>
+        HttpResponse.json({
+          data: {
+            mediaAttachment: mediaFields("m-bad", {
+              state: "FAILED",
+              failureReason: "This video's format isn't one the server can serve.",
+            }),
+          },
+        }),
+      ),
+    );
+    const { seen, step } = steps();
+
+    await runUpload(apolloClient(), guard, asset, 4 / 5, step, { sleep: noSleep });
+
+    expect(seen).toEqual([
+      { kind: "encoding" },
+      { kind: "uploading" },
+      { kind: "processing", mediaId: "m-bad" },
+      {
+        kind: "failed",
+        message: "This video's format isn't one the server can serve.",
+        retryable: false,
+      },
+    ]);
+  });
+});
+
 // THE ORDER IS THE CHEAP LEG FIRST. Both are ordinary uploads — the poster
 // rides `AttachmentInput` at prepare, not the clip's own call — so the order
 // is about cost: a refused cover discovered after the whole clip has gone up
@@ -352,13 +512,16 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, SCALE);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls).toHaveLength(2);
-    // Both go up as bytes alone: neither upload names the other.
+    // Both go up as bytes alone: neither upload names the other. The clip
+    // names the parent it is headed for, whose cap the server sizes it to; the
+    // cover is a still, whose cap is the same at either, and names none.
     expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
-    expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File) });
+    expect(calls[0]![0].variables.input.scale).toBeUndefined();
+    expect(calls[1]![0].variables.input).toEqual({ file: expect.any(File), scale: "POST" });
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
   });
@@ -371,7 +534,7 @@ describe("runVideoUpload", () => {
     const client = clientUnauthenticatedOnce("media-cover");
     const poster = steps();
 
-    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step);
+    await runVideoUpload(client, healing, clip, cover, steps().step, poster.step, SCALE);
 
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(poster.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-cover" });
@@ -387,14 +550,15 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, null, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, null, video.step, poster.step, COMMENT_SCALE);
 
     const calls = (client.mutate as ReturnType<typeof vi.fn>).mock.calls;
     // One call, not two: there is no cover leg to run.
     expect(calls).toHaveLength(1);
-    // The clip goes up as bytes alone, exactly as a covered one does; what
-    // faceless means is that the placement names no poster at prepare.
-    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File) });
+    // The clip goes up as bytes and its destination, exactly as a covered one
+    // does; what faceless means is that the placement names no poster at
+    // prepare.
+    expect(calls[0]![0].variables.input).toEqual({ file: expect.any(File), scale: "COMMENT" });
     expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
     // The cover reports nothing at all: there was no cover to report on.
     expect(poster.seen).toEqual([]);
@@ -422,7 +586,7 @@ describe("runVideoUpload", () => {
       },
     };
 
-    await runVideoUpload(client, priming, clip, null, steps().step, steps().step);
+    await runVideoUpload(client, priming, clip, null, steps().step, steps().step, SCALE);
 
     expect(order).toEqual(["prime", "upload"]);
   });
@@ -431,7 +595,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-video");
 
-    await runVideoUpload(client, guard, clip, null, steps().step, steps().step);
+    await runVideoUpload(client, guard, clip, null, steps().step, steps().step, SCALE);
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[0]![0].variables.input
@@ -443,7 +607,7 @@ describe("runVideoUpload", () => {
     encodable();
     const client = clientAnsweringInTurn("media-cover", "media-video");
 
-    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step);
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, SCALE);
 
     expect(stripVideoMetadata).toHaveBeenCalledWith(clip.file);
     const sent = (client.mutate as ReturnType<typeof vi.fn>).mock.calls[1]![0].variables.input
@@ -461,7 +625,7 @@ describe("runVideoUpload", () => {
     const client = clientAnsweringInTurn("media-cover", "media-video");
     const video = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, steps().step);
+    await runVideoUpload(client, guard, clip, cover, video.step, steps().step, SCALE);
 
     // Falling back to the picked bytes would upload the file with its metadata
     // intact — the exact outcome the strip exists to prevent. And it is not
@@ -475,6 +639,173 @@ describe("runVideoUpload", () => {
     expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(1);
   });
 
+  it("compresses first, for the destination's cap, and strips what the compression made", async () => {
+    encodable();
+    const encoded = new Blob([new Uint8Array(new ArrayBuffer(5)) as BlobPart], {
+      type: "video/mp4",
+    });
+    compressVideo.mockResolvedValueOnce({
+      blob: encoded,
+      path: "encoded",
+      tookMs: 900,
+      videoCodec: "hevc",
+    });
+    const client = clientAnsweringInTurn("media-cover", "media-video");
+
+    await runVideoUpload(client, guard, clip, cover, steps().step, steps().step, SCALE);
+
+    // Identity, not equality: two Blobs compare equal structurally, and what
+    // matters is WHICH bytes each step was handed.
+    expect(compressVideo).toHaveBeenCalledOnce();
+    expect(compressVideo.mock.calls[0]![0]).toBe(clip.file);
+    expect(compressVideo.mock.calls[0]![1]).toBe(CAP);
+    // The strip runs on the ENCODED bytes — the metadata promise holds on the
+    // compressed path exactly as on the plain one.
+    expect(stripVideoMetadata).toHaveBeenCalledOnce();
+    expect(stripVideoMetadata.mock.calls[0]![0]).toBe(encoded);
+  });
+
+  // THE CAP IS WEIGHED ON WHAT IS SENT (jakob 2026-09-23). The pick lets an
+  // over-cap clip in wherever this browser can encode it down, so the size
+  // question is answered here, on the stripped bytes — the picture path's
+  // `TOO_BIG_PICTURE`, in the destination's own video sentence.
+  it("refuses in the destination's words when what would be sent is over its cap", async () => {
+    encodable();
+    const over = { size: CAP + 1, type: "video/mp4" } as Blob;
+    stripVideoMetadata.mockResolvedValueOnce({ blob: over, tookMs: 12 });
+    const client = clientAnsweringInTurn("media-video");
+    const video = steps();
+
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, SCALE);
+
+    expect(video.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: POST_SCALE.tooBigVideo,
+      retryable: false,
+    });
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+  });
+
+  // THE SERVER ADMITS H.264 ALONE. An iPhone's HEVC clip that this browser
+  // did not, in the end, encode would spend the whole upload to earn that
+  // refusal — so it is said here, before a byte goes.
+  it("refuses a picture that is not H.264 and was not encoded here", async () => {
+    encodable();
+    compressVideo.mockImplementationOnce(async (blob: Blob) => ({
+      blob,
+      path: "unsupported",
+      tookMs: 3,
+      videoCodec: "hevc",
+    }));
+    const client = clientAnsweringInTurn("media-video");
+    const video = steps();
+
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, SCALE);
+
+    expect(video.seen.at(-1)).toEqual({
+      kind: "failed",
+      message: "This browser couldn't prepare that video.",
+      retryable: false,
+    });
+    expect(stripVideoMetadata).not.toHaveBeenCalled();
+    expect((client.mutate as ReturnType<typeof vi.fn>).mock.calls).toHaveLength(0);
+  });
+
+  it("offers a retry when that encode failed mid-way rather than being refused", async () => {
+    encodable();
+    compressVideo.mockImplementationOnce(async (blob: Blob) => ({
+      blob,
+      path: "failed",
+      tookMs: 3,
+      videoCodec: "hevc",
+    }));
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      SCALE,
+    );
+
+    expect(video.seen.at(-1)).toMatchObject({ kind: "failed", retryable: true });
+  });
+
+  it("sends an H.264 clip that was not encoded, as it always has", async () => {
+    encodable();
+    compressVideo.mockImplementationOnce(async (blob: Blob) => ({
+      blob,
+      path: "unsupported",
+      tookMs: 3,
+      videoCodec: "avc",
+    }));
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      SCALE,
+    );
+
+    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+  });
+
+  it("weighs a comment's clip against a comment's cap", async () => {
+    encodable();
+    const between = { size: COMMENT_SCALE.videoMaxBytes + 1, type: "video/mp4" } as Blob;
+    stripVideoMetadata.mockResolvedValueOnce({ blob: between, tookMs: 12 });
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      COMMENT_SCALE,
+    );
+
+    expect(compressVideo.mock.calls[0]![1]).toBe(COMMENT_SCALE.videoMaxBytes);
+    expect(video.seen.at(-1)).toMatchObject({ kind: "failed", message: COMMENT_SCALE.tooBigVideo });
+  });
+
+  it("sends a clip that lands exactly at the cap", async () => {
+    encodable();
+    // A cap the stripped test bytes meet exactly: the cap is inclusive.
+    const tight = { ...SCALE, videoMaxBytes: STRIPPED.size };
+    const video = steps();
+
+    await runVideoUpload(
+      clientAnsweringInTurn("media-video"),
+      guard,
+      clip,
+      null,
+      video.step,
+      steps().step,
+      tight,
+    );
+
+    expect(video.seen.at(-1)).toEqual({ kind: "done", mediaId: "media-video" });
+  });
+
+  it("reports the compression as the same `encoding` stage, adding no state", async () => {
+    encodable();
+    const client = clientAnsweringInTurn("media-video");
+    const video = steps();
+
+    await runVideoUpload(client, guard, clip, null, video.step, steps().step, SCALE);
+
+    expect(video.seen.map((s) => s.kind)).toEqual(["encoding", "uploading", "done"]);
+  });
+
   it("fails the video when the cover fails, because the video cannot exist without it", async () => {
     encodable();
     const client = clientAnswering({
@@ -486,7 +817,7 @@ describe("runVideoUpload", () => {
     const video = steps();
     const poster = steps();
 
-    await runVideoUpload(client, guard, clip, cover, video.step, poster.step);
+    await runVideoUpload(client, guard, clip, cover, video.step, poster.step, SCALE);
 
     // The refusal on the cover, named as a cover rather than as a file…
     expect(poster.seen.at(-1)).toEqual({
@@ -511,7 +842,7 @@ describe("runVideoUpload", () => {
       }),
     );
     await expect(
-      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}),
+      runVideoUpload(clientAnswering({}), guard, clip, cover, () => {}, () => {}, SCALE),
     ).resolves.toBeUndefined();
   });
 });

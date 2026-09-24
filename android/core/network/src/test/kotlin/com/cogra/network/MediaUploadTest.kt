@@ -2,7 +2,9 @@ package com.cogra.network
 
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.MediaAssetState
 import com.cogra.domain.Outcome
+import com.cogra.domain.media.MediaDestination
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
 import com.cogra.network.auth.AuthGuard
@@ -56,6 +58,13 @@ class MediaUploadTest {
 
     private var completeCalls = 0
     private var beginCalls = 0
+    private var mediaAttachmentCalls = 0
+
+    /** Whether the next upload/complete answer comes back PROCESSING instead of READY. */
+    private var processingUpload = false
+
+    /** What the next (and every subsequent) `mediaAttachment` poll answers. */
+    private var mediaAttachmentResponse = """{"data":{"mediaAttachment":null}}"""
 
     @Before
     fun setUp() {
@@ -103,8 +112,12 @@ class MediaUploadTest {
             .addHeader("Content-Type", "application/json")
     }
 
+    /** Every GraphQL request body, in order — multipart bodies included. */
+    private val graphqlBodies = mutableListOf<String>()
+
     private fun graphql(request: RecordedRequest): MockResponse {
         val body = request.body.readUtf8()
+        graphqlBodies += body
         val json = when {
             body.contains("beginMediaUpload") -> {
                 beginCalls += 1
@@ -115,21 +128,27 @@ class MediaUploadTest {
             body.contains("completeMediaUpload") -> {
                 completeCalls += 1
                 """{"data":{"completeMediaUpload":{"__typename":"UploadMediaPayload",
-                   "media":${mediaJson()},"userErrors":[]}}}"""
+                   "media":${mediaJson(state = if (processingUpload) "PROCESSING" else "READY")},
+                   "userErrors":[]}}}"""
             }
             body.contains("uploadMedia") ->
                 """{"data":{"uploadMedia":{"__typename":"UploadMediaPayload",
-                   "media":${mediaJson()},"userErrors":[]}}}"""
+                   "media":${mediaJson(state = if (processingUpload) "PROCESSING" else "READY")},
+                   "userErrors":[]}}}"""
+            body.contains("mediaAttachment") -> {
+                mediaAttachmentCalls += 1
+                mediaAttachmentResponse
+            }
             else -> """{"data":{}}"""
         }
         return MockResponse().setBody(json).addHeader("Content-Type", "application/json")
     }
 
-    private fun mediaJson() = """
+    private fun mediaJson(state: String = "READY", failureReason: String? = null) = """
         {"__typename":"MediaAttachment","id":"v1","url":"https://media/v1","altText":null,
          "status":"NORMAL","mimeType":"video/mp4",
          "options":{"__typename":"MediaOptions","aspectRatio":"9:16","durationMs":1000},
-         "coverMedia":null}
+         "coverMedia":null,"state":"$state","failureReason":${failureReason?.let { "\"$it\"" }}}
     """.trimIndent()
 
     /** A clip of [bytes] bytes on disk, and the repository that sends it. */
@@ -164,7 +183,7 @@ class MediaUploadTest {
         failuresFor[1] = 2
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         // Three attempts at part one, one at part two — and the upload
@@ -182,7 +201,7 @@ class MediaUploadTest {
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
         val ticks = mutableListOf<UploadProgress>()
 
-        repo.uploadVideo(clip) { ticks += it }
+        repo.uploadVideo(clip, MediaDestination.POST) { ticks += it }
 
         // Progress only ever moves forward — a retried part reports
         // nothing until it lands, so the bar never goes backwards.
@@ -198,7 +217,7 @@ class MediaUploadTest {
         failuresFor[1] = 99
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         // It gave up rather than looping, and never asked to complete.
@@ -216,7 +235,7 @@ class MediaUploadTest {
         refusalsFor[1] = 422
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Refused::class.java)
         // A refusal is not retried, and completion is never asked for.
@@ -234,7 +253,7 @@ class MediaUploadTest {
         // No token saved at all.
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Failed::class.java)
         assertThat(partAttempts).isEmpty()
@@ -246,7 +265,7 @@ class MediaUploadTest {
         tokens.save(AuthTokens("access", "refresh", "acct"))
         val (repo, clip) = repositoryFor(PART_SIZE + 10)
 
-        repo.uploadVideo(clip)
+        repo.uploadVideo(clip, MediaDestination.POST)
 
         val puts = generateSequence { server.takeRequest(1, MILLISECONDS) }
             .filter { it.path.orEmpty().startsWith("/media/uploads/") }
@@ -269,11 +288,103 @@ class MediaUploadTest {
         // nothing else.
         val (repo, clip) = repositoryFor(PART_SIZE - 1)
 
-        val outcome = repo.uploadVideo(clip)
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
 
         assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
         assertThat(beginCalls).isEqualTo(0)
         assertThat(partAttempts).isEmpty()
+    }
+
+    /**
+     * The server sizes, re-encodes and validates a clip for the cap of the
+     * parent it is headed for — a comment's is half a post's — so the
+     * destination rides whichever route the clip's size takes.
+     */
+    @Test
+    fun aClipInPartsNamesItsDestinationWhenTheSessionOpens() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE + 10)
+
+        repo.uploadVideo(clip, MediaDestination.COMMENT)
+
+        val begin = graphqlBodies.single { it.contains("beginMediaUpload") }
+        assertThat(begin).contains("\"scale\":\"COMMENT\"")
+    }
+
+    @Test
+    fun aClipInOneRequestNamesItsDestinationBesideItsBytes() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
+
+        repo.uploadVideo(clip, MediaDestination.COMMENT)
+
+        val single = graphqlBodies.single { it.contains("uploadMedia(") }
+        assertThat(single).contains("\"scale\":\"COMMENT\"")
+    }
+
+    /**
+     * The poll primitive `awaitReady` (core:domain) drives: whatever the
+     * server answers for `mediaAttachment` maps straight through, with no
+     * repository-level interpretation of PROCESSING/READY/FAILED.
+     */
+    @Test
+    fun mediaAttachmentMapsAReadyAsset() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, _) = repositoryFor(PART_SIZE - 1)
+        mediaAttachmentResponse = """{"data":{"mediaAttachment":
+            {"__typename":"MediaAttachment","id":"v1","state":"READY","failureReason":null}}}"""
+
+        val outcome = repo.mediaAttachment("v1")
+
+        assertThat(outcome).isInstanceOf(Outcome.Success::class.java)
+        val readiness = (outcome as Outcome.Success).value
+        assertThat(readiness?.id).isEqualTo("v1")
+        assertThat(readiness?.state).isEqualTo(MediaAssetState.READY)
+        assertThat(readiness?.failureReason).isNull()
+    }
+
+    @Test
+    fun mediaAttachmentMapsAFailedAssetWithItsReason() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, _) = repositoryFor(PART_SIZE - 1)
+        mediaAttachmentResponse = """{"data":{"mediaAttachment":
+            {"__typename":"MediaAttachment","id":"v1","state":"FAILED",
+             "failureReason":"not H.264"}}}"""
+
+        val outcome = repo.mediaAttachment("v1")
+
+        val readiness = (outcome as Outcome.Success).value
+        assertThat(readiness?.state).isEqualTo(MediaAssetState.FAILED)
+        assertThat(readiness?.failureReason).isEqualTo("not H.264")
+    }
+
+    /** Gone entirely — collected long ago, or never the caller's own upload. */
+    @Test
+    fun mediaAttachmentAnswersNullForAnUnknownId() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, _) = repositoryFor(PART_SIZE - 1)
+        mediaAttachmentResponse = """{"data":{"mediaAttachment":null}}"""
+
+        val outcome = repo.mediaAttachment("gone")
+
+        assertThat((outcome as Outcome.Success).value).isNull()
+    }
+
+    /**
+     * Not the shipped path — Android's own uploads are always within
+     * target — but the wire carries it, so the repository has to pass it
+     * through rather than assume every upload answers READY.
+     */
+    @Test
+    fun anUploadMayComeBackProcessing() = runTest {
+        tokens.save(AuthTokens("access", "refresh", "acct"))
+        val (repo, clip) = repositoryFor(PART_SIZE - 1)
+        processingUpload = true
+
+        val outcome = repo.uploadVideo(clip, MediaDestination.POST)
+
+        val media = (outcome as Outcome.Success).value
+        assertThat(media.state).isEqualTo(MediaAssetState.PROCESSING)
     }
 
     private companion object {

@@ -117,9 +117,23 @@ image = { version = "0.25", default-features = false, features = ["webp"] }
 # The metadata probe over uploaded video. Reads the container's boxes to
 # prove the tracks are the codecs the policy admits and to read the
 # duration off them — `Mp4Reader::read_header` walks the header alone and
-# decodes no samples, which is the whole of what is wanted here: the
-# server validates video and never transcodes it.
+# decodes no samples. That is also what decides whether an upload needs
+# re-encoding at all, so a clip already within target costs this read and
+# nothing more; the re-encode itself is ffmpeg, run as a process.
 mp4 = { version = "0.14" }
+
+# The H.264 sequence parameter set parser beside it. The SPS rides the
+# header `mp4` already reads (`avcC`), and its VUI is where a clip states
+# its bit depth, chroma format and transfer characteristics — which is how
+# an HDR (PQ or HLG) or 10-bit upload is told apart from the 8-bit SDR the
+# readers are served, without decoding a frame. A parser for H.264
+# bitstream syntax, "not a video decoder".
+h264-reader = { version = "0.9" }
+
+# The ingest worker's scratch space: ffmpeg reads and writes files, and a
+# `TempDir` removes them however the job ends. Already in the tree through
+# async-graphql's upload spooling.
+tempfile = { version = "3" }
 
 # The key-backup blob reference (auth.md "Blob format (v1)") — used only
 # by common's golden-vector export. Pinned to the 0.10-generation

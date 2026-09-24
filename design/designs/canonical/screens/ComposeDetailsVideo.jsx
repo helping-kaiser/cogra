@@ -32,7 +32,16 @@
    picks, where another can be chosen.
 
    The description row is the same one pictures wear, reading the clip — one
-   entry for the whole thing, never one for the cover. */
+   entry for the whole thing, never one for the cover.
+
+   THE SKIPPED STEP STILL TAKES FRAME 1 (jakob 2026-09-23, the feed-video
+   rulings). Skipping the cover step skips the CHOICE, not the still: the
+   device silently extracts the clip's first frame and uploads it as the
+   stored face, using the frame picker's own extraction. Reading surfaces are
+   always handed a still, so a coverless clip never shows an empty box while
+   video data loads — and no flash can come of it, because a frame-1 still IS
+   the frame playback starts on. When extraction fails, the post ships without
+   a still and the neutral tile stands (Cover · no frames came back). */
 export function Screen() {
   return (
     <>

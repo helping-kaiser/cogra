@@ -13,10 +13,11 @@ use postgres_store::{PgPool, auth as store, content as content_store, genesis, m
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, Node, PostType, Record,
-    RecordConnection, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType,
-    User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
-    keyset_page, list_cost, list_limit, record_connection, resolve_reference_target,
+    Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType, Node,
+    PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
+    ReferenceTarget, StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor,
+    content_cursor_key, keyset_connection, keyset_page, list_cost, list_limit, record_connection,
+    resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -213,6 +214,27 @@ impl Query {
             Ok(_) | Err(staged::StagedError::NotFound(_)) => Ok(None),
             Err(e) => Err(async_graphql::Error::new(e.to_string())),
         }
+    }
+
+    /// One of the viewer's own uploads — how a client learns that an
+    /// asset it uploaded as PROCESSING has become READY (or FAILED).
+    /// Polled the way `stagedWrite` is. Null for an unknown id, for
+    /// somebody else's asset, and without a session: an upload is
+    /// nobody else's business until a parent carries it.
+    async fn media_attachment(
+        &self,
+        ctx: &Context<'_>,
+        id: Uuid,
+    ) -> async_graphql::Result<Option<MediaAttachmentType>> {
+        let Some(viewer) = ctx.data::<Option<Viewer>>()?.as_ref().copied() else {
+            return Ok(None);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(postgres_store::media::by_id(pool, id)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+            .filter(|asset| asset.author_id == viewer.user_id)
+            .map(MediaAttachmentType::asset))
     }
 
     /// One post by id; null for an unknown id.

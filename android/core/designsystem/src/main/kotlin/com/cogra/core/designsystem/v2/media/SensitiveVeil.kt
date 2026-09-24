@@ -3,8 +3,10 @@ package com.cogra.core.designsystem.v2.media
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,10 +19,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -69,6 +73,17 @@ import com.cogra.core.designsystem.v2.token.Veil
  * a post's body region, which always carries media or several lines of text;
  * wrapping a single line would clip the chrome rather than expand it.
  *
+ * **A clip under the veil is out of its stage's rotation** (jakob 2026-09-24,
+ * backlog item 103, `design/readme.md` "The feed-video rulings": "the
+ * sensitive veil covers its clip the same way" a sheet covers a surface). The
+ * veil says so to everything it covers through [LocalStageVeil], and the
+ * content keeps ONE slot in the composition whether veiled or not — which is
+ * what "stays mounted" means — so a clip is the same clip on both sides of
+ * the reveal: the reveal is an eligibility change, not a re-election, so the
+ * stage simply evaluates the now-unveiled clip like any other place —
+ * joining the rotation without displacing a qualifying incumbent
+ * ([StageElection]).
+ *
  * @param reason the author's optional stated reason, shown on the veil when
  *   they self-marked the post (design/readme.md §13).
  */
@@ -83,13 +98,6 @@ fun SensitiveVeil(
     testTag: String? = null,
     content: @Composable () -> Unit,
 ) {
-    if (!veiled) {
-        Box(modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
-            content()
-        }
-        return
-    }
-
     val canBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val description = buildString {
         append(veilText)
@@ -101,54 +109,94 @@ fun SensitiveVeil(
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
     ) {
         Box(
-            modifier = Modifier
-                .then(if (canBlur) Modifier.blur(Veil.BlurRadius) else Modifier)
-                // Pixels are hidden; the tree must be too.
-                .clearAndSetSemantics { contentDescription = description },
+            modifier = if (veiled) {
+                Modifier
+                    .then(if (canBlur) Modifier.blur(Veil.BlurRadius) else Modifier)
+                    // Pixels are hidden; the tree must be too.
+                    .clearAndSetSemantics { contentDescription = description }
+            } else {
+                Modifier
+            },
         ) {
-            content()
+            CompositionLocalProvider(LocalStageVeil provides veiled, content = content)
         }
 
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .background(
-                    MaterialTheme.colorScheme.scrim.copy(
-                        alpha = if (canBlur) Veil.ScrimAlpha else Veil.OpaqueFallbackAlpha,
-                    ),
+        if (veiled) {
+            VeilFace(
+                canBlur = canBlur,
+                veilText = veilText,
+                reason = reason,
+                revealLabel = revealLabel,
+                onReveal = onReveal,
+                testTag = testTag,
+            )
+        }
+    }
+}
+
+/** The wash and its chrome over a veiled body: the glyph, the words, the reason and the reveal. */
+@Composable
+private fun BoxScope.VeilFace(
+    canBlur: Boolean,
+    veilText: String,
+    reason: String?,
+    revealLabel: String,
+    onReveal: () -> Unit,
+    testTag: String?,
+) {
+    Box(
+        modifier = Modifier
+            .matchParentSize()
+            .background(
+                MaterialTheme.colorScheme.scrim.copy(
+                    alpha = if (canBlur) Veil.ScrimAlpha else Veil.OpaqueFallbackAlpha,
                 ),
-            contentAlignment = Alignment.Center,
+            )
+            // THE WASH IS THE ONLY DOOR THROUGH THE VEIL
+            // (design/components/honesty/SensitiveVeil.jsx: the reveal is a
+            // full-tile button, and its handler's own comment reads "The
+            // veil is a decision, not a route: it must not also open the
+            // post it sits in"). Without pointer input of its own, the wash
+            // is invisible to Compose's hit test and a tap on it falls
+            // through to the still-composed body underneath — this is that
+            // pointer input, tapping anywhere on the wash reveals. Raw
+            // pointerInput rather than clickable: it must not add a second
+            // accessible control next to the reveal button below, and
+            // `awaitFirstDown(requireUnconsumed = true)` — detectTapGestures'
+            // default — already skips a down the button itself consumed, so
+            // the button's own click still fires once, not twice.
+            .pointerInput(onReveal) { detectTapGestures(onTap = { onReveal() }) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Space.x2),
+            modifier = Modifier.padding(Space.x4),
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(Space.x2),
-                modifier = Modifier.padding(Space.x4),
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Visibility,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.inverseOnSurface,
-                )
+            Icon(
+                imageVector = Icons.Filled.Visibility,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.inverseOnSurface,
+            )
+            Text(
+                text = veilText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+            )
+            if (reason != null) {
                 Text(
-                    text = veilText,
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = reason,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.inverseOnSurface,
                 )
-                if (reason != null) {
-                    Text(
-                        text = reason,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.inverseOnSurface,
-                    )
-                }
-                CograButton(
-                    text = revealLabel,
-                    onClick = onReveal,
-                    kind = ButtonKind.Outlined,
-                    size = ButtonSize.Compact,
-                    testTag = testTag?.let { "${it}_reveal" } ?: "veil_reveal",
-                )
             }
+            CograButton(
+                text = revealLabel,
+                onClick = onReveal,
+                kind = ButtonKind.Outlined,
+                size = ButtonSize.Compact,
+                testTag = testTag?.let { "${it}_reveal" } ?: "veil_reveal",
+            )
         }
     }
 }
@@ -184,6 +232,12 @@ enum class SensitiveSource { Author, Platform }
  *
  * The whole block is the reveal — one target, not a button inside a
  * panel — and the label and the source line are announced as one thing.
+ *
+ * **A replaced clip is off its stage outright** — nothing of the body is
+ * composed under the block — and the reveal brings it onto the stage for the
+ * first time, unveiled: the stage evaluates it exactly like any other place
+ * joining the rotation, without displacing a qualifying incumbent
+ * ([StageElection], jakob 2026-09-24, backlog item 103).
  */
 @Composable
 fun SensitiveVeilCompact(
@@ -197,7 +251,7 @@ fun SensitiveVeilCompact(
 ) {
     if (!veiled) {
         Box(modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)) {
-            content()
+            CompositionLocalProvider(LocalStageVeil provides false, content = content)
         }
         return
     }

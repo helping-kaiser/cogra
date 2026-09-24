@@ -51,6 +51,9 @@ import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograBandChats
 import com.cogra.core.designsystem.v2.atom.CograBandIdentity
+import com.cogra.core.designsystem.v2.media.PreloadClips
+import com.cogra.core.designsystem.v2.media.ScrollStageHost
+import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.LicenseChoice
@@ -231,6 +234,13 @@ fun FeedScreen(
     // / snapshotFlow), so the watch costs nothing while the reader is
     // nowhere near the end and needs no manual scroll listener.
     val listState = rememberLazyListState()
+    // THE CLIPS AHEAD ARE READ BEFORE THE READER GETS THERE: the stage
+    // preloads the opening of the clips around the reader, nearest first
+    // (`VideoPreload`). The feed knows which posts carry one and where the
+    // reader is; the position is read off the layout inside a snapshot, so
+    // scrolling moves it without recomposing the screen.
+    val clips = remember(state.posts) { FeedClips.of(state.posts) }
+    PreloadClips(clips = clips.urls, focus = { clips.focus(listState.layoutInfo) })
     // The collapsing top (design.md §6): the bar hides scrolling down
     // and returns after a third of a screen of upward scroll; the
     // borrowed-view band and the key banner ride the same region and
@@ -339,61 +349,76 @@ fun FeedScreen(
                                 }
                             }
                         }
-                        // A feed post spans the screen edge to edge,
-                        // and 8dp of surface between cards is the seam
-                        // (design/readme.md §13). Only the rows that are
-                        // not cards keep the gutter.
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .testTag("feed_list"),
-                            contentPadding = PaddingValues(top = Space.x2),
-                            verticalArrangement = Arrangement.spacedBy(Space.x2),
-                        ) {
-                            item(key = "feed_banners") { Gutter { banners() } }
-                            // "Your post didn't land." The canonical
-                            // `ComposeExpired` board puts this here, at
-                            // the top of the feed the author returns
-                            // to, rather than in the composer they have
-                            // already left.
-                            expiredLabel?.let { label ->
-                                item(key = "feed_expired") {
-                                    Gutter {
-                                        ExpiredCard(
-                                            label = label,
-                                            onDismiss = onExpiredDismissed,
-                                            onOpenDraft = onOpenDraft,
+                        // ONE STAGE FOR THE FEED (the stage law, design/readme.md
+                        // "The feed-video rulings"): its clips compete for one,
+                        // the playing clip keeps it while past 70%, and the
+                        // topmost qualifying clip takes it the moment it drops.
+                        // The raised thread SUSPENDS it (jakob 2026-09-24, the
+                        // same rulings): a card under the sheet is not on
+                        // screen in the law's sense, however much of it the
+                        // window still measures, and the thread's own stage
+                        // decides what plays until it drops.
+                        ScrollStageHost(listState, suspended = commentsFor != null) {
+                            // A feed post spans the screen edge to edge,
+                            // and 8dp of surface between cards is the seam
+                            // (design/readme.md §13). Only the rows that are
+                            // not cards keep the gutter.
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .testTag("feed_list"),
+                                contentPadding = PaddingValues(top = Space.x2),
+                                verticalArrangement = Arrangement.spacedBy(Space.x2),
+                            ) {
+                                item(key = "feed_banners") { Gutter { banners() } }
+                                // "Your post didn't land." The canonical
+                                // `ComposeExpired` board puts this here, at
+                                // the top of the feed the author returns
+                                // to, rather than in the composer they have
+                                // already left.
+                                expiredLabel?.let { label ->
+                                    item(key = "feed_expired") {
+                                        Gutter {
+                                            ExpiredCard(
+                                                label = label,
+                                                onDismiss = onExpiredDismissed,
+                                                onOpenDraft = onOpenDraft,
+                                            )
+                                        }
+                                    }
+                                }
+                                items(state.posts, key = { it.id }) { post ->
+                                    // The row's key again, so the stage can ask
+                                    // the list whether this card is still placed.
+                                    ScrollStageRow(post.id) {
+                                        PostCard(
+                                            post = post,
+                                            onClick = { onOpenPost(post.id) },
+                                            onOpenComments = { commentsFor = post.id },
+                                            onOpenPost = onOpenPost,
+                                            onOpenActor = onOpenActor,
+                                            onOpenTopic = onOpenTopic,
+                                            onShare = onShare,
+                                            viewerId = viewerId,
+                                            onEdit = onEditPost,
+                                            onCite = onCitePost,
+                                            revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
+                                            onReveal = { onReveal(post.id, post.sensitiveMark()) },
+                                            stanceControl = stanceControl,
                                         )
                                     }
                                 }
-                            }
-                            items(state.posts, key = { it.id }) { post ->
-                                PostCard(
-                                    post = post,
-                                    onClick = { onOpenPost(post.id) },
-                                    onOpenComments = { commentsFor = post.id },
-                                    onOpenPost = onOpenPost,
-                                    onOpenActor = onOpenActor,
-                                    onOpenTopic = onOpenTopic,
-                                    onShare = onShare,
-                                    viewerId = viewerId,
-                                    onEdit = onEditPost,
-                                    onCite = onCitePost,
-                                    revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
-                                    onReveal = { onReveal(post.id, post.sensitiveMark()) },
-                                    stanceControl = stanceControl,
-                                )
-                            }
-                            // The slot the next page fills. At rest it draws
-                            // nothing — the page comes because the reader
-                            // kept going (`WatchFeedTail` above). In flight
-                            // it is the list's own loading spinner, and a
-                            // page that did not arrive stands here with its
-                            // way back — the drawn twin of `MoreComments`.
-                            val appendFault = state.transportFault == TransportFault.APPEND
-                            if (state.hasNextPage && (state.loadingMore || appendFault)) {
-                                item { Gutter { FeedTailSlot(state = state, onLoadMore = onLoadMore) } }
+                                // The slot the next page fills. At rest it draws
+                                // nothing — the page comes because the reader
+                                // kept going (`WatchFeedTail` above). In flight
+                                // it is the list's own loading spinner, and a
+                                // page that did not arrive stands here with its
+                                // way back — the drawn twin of `MoreComments`.
+                                val appendFault = state.transportFault == TransportFault.APPEND
+                                if (state.hasNextPage && (state.loadingMore || appendFault)) {
+                                    item { Gutter { FeedTailSlot(state = state, onLoadMore = onLoadMore) } }
+                                }
                             }
                         }
                     }

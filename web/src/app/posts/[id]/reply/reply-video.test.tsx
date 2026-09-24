@@ -4,11 +4,12 @@
 // and the frame capture are stubbed while the container sniff and the 50 MiB
 // cap are left real, since those are the rules this composer is meant to apply.
 
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { captureFrameZero } from "@/lib/ui2/media/video";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
@@ -16,6 +17,9 @@ import { renderWithProviders } from "@/test/providers";
 import { ReplyWizard } from "./reply-wizard-view";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
+// A frame distinct from `FRAME` above, so a test can tell the row's offers
+// apart from the silent still's own extraction by which blob rode the upload.
+const FRAME_ZERO = new Blob([new Uint8Array([0]) as BlobPart], { type: "image/png" });
 
 vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/ui2/media/video")>();
@@ -23,6 +27,9 @@ vi.mock("@/lib/ui2/media/video", async (importOriginal) => {
     ...actual,
     probeVideo: vi.fn(async () => ({ durationMs: 18_000, width: 1080, height: 1080 })),
     captureFrames: vi.fn(async () => [FRAME, FRAME, FRAME]),
+    // The silent still's own, independent extraction (FRAME 1 MEANS FRAME 0,
+    // STRICTLY, jakob 2026-09-24).
+    captureFrameZero: vi.fn(async () => FRAME_ZERO),
   };
 });
 
@@ -39,6 +46,19 @@ vi.mock("@/lib/ui2/media/strip-video", () => ({
     blob: new Blob([new Uint8Array(new ArrayBuffer(8)) as BlobPart], { type: "video/mp4" }),
     tookMs: 3,
   })),
+}));
+
+// The compression likewise, answering as a browser without WebCodecs does: the
+// picked bytes, unchanged, and weighed at the pick as they are.
+// `compress-video.test.ts` covers its decisions.
+vi.mock("@/lib/ui2/media/compress-video", () => ({
+  compressVideo: vi.fn(async (blob: Blob) => ({
+    blob,
+    path: "unsupported",
+    tookMs: 0,
+    videoCodec: null,
+  })),
+  clipOutlook: vi.fn(async () => "as-picked"),
 }));
 
 const server = startMswServer();
@@ -110,6 +130,29 @@ beforeEach(() => {
   Object.defineProperty(URL, "createObjectURL", { value: () => "blob:x", configurable: true });
   Object.defineProperty(URL, "revokeObjectURL", { value: () => {}, configurable: true });
 });
+
+/**
+ * A `createObjectURL` that tells blobs apart, for the tests below that need
+ * to prove the tile's face is specifically `captureFrameZero`'s bytes and not
+ * the row's own `frames[0]` opening offer — the shared mock above deliberately
+ * cannot distinguish them, since every other test only cares that SOME
+ * preview exists.
+ */
+function distinctObjectUrls() {
+  let next = 0;
+  const known = new WeakMap<Blob, string>();
+  Object.defineProperty(URL, "createObjectURL", {
+    value: (blob: Blob) => {
+      const existing = known.get(blob);
+      if (existing !== undefined) return existing;
+      const minted = `blob:${next}`;
+      next += 1;
+      known.set(blob, minted);
+      return minted;
+    },
+    configurable: true,
+  });
+}
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -221,6 +264,39 @@ describe("a comment's video", () => {
     expect(counter.parentElement).toHaveTextContent("0 of 1 described");
   });
 
+  // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item 106):
+  // the composer's own tile stands the clip on `captureFrameZero`'s own frame
+  // 0 while no cover is chosen, never the row's own `frames[0]` ~1s "opening"
+  // offer — FRAME and FRAME_ZERO are deliberately different blobs above, so
+  // this pins the right bytes for the right reason.
+  it("shows the clip's frame 0 on the composer's own tile, not the row's ~1s offer", async () => {
+    distinctObjectUrls();
+    draw();
+    await pickFiles([aVideo()]);
+    await screen.findByTestId("reply-cover-frame-0");
+
+    const tile = screen.getByTestId(/^reply-media-.*-image$/);
+    expect(tile).toHaveAttribute("src", URL.createObjectURL(FRAME_ZERO));
+    expect(tile.getAttribute("src")).not.toBe(URL.createObjectURL(FRAME));
+  });
+
+  // Same ruling, the describe sheet's own face: it must not fall back to
+  // nothing (or to the row's ~1s offer) while a coverless clip's frame 0 is
+  // sitting right there.
+  it("shows the clip's frame 0 in the describe sheet when no cover is chosen", async () => {
+    distinctObjectUrls();
+    draw();
+    await pickFiles([aVideo()]);
+    await screen.findByTestId("reply-cover-frame-0");
+    fireEvent.click(screen.getByTestId("reply-describe-counter"));
+
+    const sheet = await screen.findByTestId("reply-describe-sheet");
+    const image = sheet.querySelector("img");
+    expect(image).not.toBeNull();
+    expect(image!.getAttribute("src")).toBe(URL.createObjectURL(FRAME_ZERO));
+    expect(image!.getAttribute("src")).not.toBe(URL.createObjectURL(FRAME));
+  });
+
   // CW-16 (2026-09-08 UI audit): the sheet the counter opens is the video
   // shape, not the picture one — its own title and the play disc on the
   // clip's cover frame, never a per-picture walk.
@@ -306,5 +382,92 @@ describe("a comment's video", () => {
     write("the words stand on their own");
     fireEvent.click(screen.getByTestId("reply-next"));
     expect(await screen.findByTestId("reply-seal")).toBeInTheDocument();
+  });
+
+  // The feed-video rulings, 2026-09-23, sharpened 2026-09-24 ("FRAME 1 MEANS
+  // FRAME 0, STRICTLY"): a clip that reaches upload with no chosen cover
+  // gets its own frame 0 uploaded silently, through the same leg a chosen
+  // cover would ride — HERE, "the cover step is skipped" structurally,
+  // since a comment's video never had one to walk at all.
+  describe("the silent auto-cover", () => {
+    it("uploads the clip's own frame 0 as its cover when nothing is chosen", async () => {
+      let calls = 0;
+      server.use(
+        graphql.mutation("UploadMedia", () => {
+          calls += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: {
+                  __typename: "MediaAttachment",
+                  id: `m${calls}`,
+                  url: "https://media.test/x.webp",
+                  altText: null,
+                  status: "NORMAL",
+                  options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+                },
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      const clip = aVideo();
+      draw();
+      await pickFiles([clip]);
+      // No offer tapped — the row stays exactly as "keeps the clip faceless
+      // when no offer is tapped" pins it. The still still goes up.
+      await screen.findByTestId("reply-cover-frame-0");
+
+      // Two uploads land — the silent frame-0 still, then the clip itself —
+      // where a coverless clip would have sent only the one.
+      await waitFor(() => expect(calls).toBe(2));
+      // And the row itself never learns of it: no offer reads as chosen.
+      for (const tile of screen.getAllByTestId(/^reply-cover-frame-/)) {
+        expect(tile).toHaveAttribute("aria-pressed", "false");
+      }
+      // THE RIGHT EXTRACTION RAN: the silent still is `captureFrameZero`'s
+      // own read of the clip, never the row's tray capture.
+      expect(captureFrameZero).toHaveBeenCalledWith(clip);
+    });
+
+    it("ships the clip with no still at all when its own frame-0 extraction finds nothing", async () => {
+      // The row's own offers still succeed — a failure in the silent
+      // extraction alone must not touch what the tray shows to tap.
+      vi.mocked(captureFrameZero).mockResolvedValueOnce(null);
+      let calls = 0;
+      server.use(
+        graphql.mutation("UploadMedia", () => {
+          calls += 1;
+          return HttpResponse.json({
+            data: {
+              uploadMedia: {
+                __typename: "UploadMediaPayload",
+                media: {
+                  __typename: "MediaAttachment",
+                  id: `m${calls}`,
+                  url: "https://media.test/x.mp4",
+                  altText: null,
+                  status: "NORMAL",
+                  options: { __typename: "MediaOptions", aspectRatio: "1:1" },
+                },
+                userErrors: [],
+              },
+            },
+          });
+        }),
+      );
+      draw();
+      await pickFiles([aVideo()]);
+
+      // The clip's own upload still lands — only the cover leg was skipped.
+      await screen.findByTestId("reply-cover-frame-0");
+      await waitFor(() => expect(calls).toBe(1));
+      // Settled: a second wait would only prove nothing else arrives.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(calls).toBe(1);
+      expect(screen.queryByTestId("reply-transport-error")).toBeNull();
+    });
   });
 });

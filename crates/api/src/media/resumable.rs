@@ -54,7 +54,7 @@ use postgres_store::PgPool;
 use postgres_store::media as store;
 use uuid::Uuid;
 
-use super::{BlobStore, GalleryError, MediaConfig, MediaError, store_asset};
+use super::{BlobStore, GalleryError, GalleryKind, MediaConfig, MediaError, store_asset};
 
 /// The most parts one upload may be cut into, fixed by S3 at 10 000.
 ///
@@ -159,11 +159,13 @@ fn expected_part_bytes(session: &store::UploadSession, part_number: u32) -> u64 
     }
 }
 
-/// The cap the declared kind answers to, for the early refusal only.
-fn declared_cap(config: &MediaConfig, kind: DeclaredKind) -> usize {
+/// The cap the declared kind answers to at the destination the upload
+/// named, for the early refusal only.
+fn declared_cap(config: &MediaConfig, kind: DeclaredKind, destination: GalleryKind) -> usize {
+    let caps = config.caps_for(destination);
     match kind {
-        DeclaredKind::Still => config.max_upload_bytes,
-        DeclaredKind::Video => config.max_video_upload_bytes,
+        DeclaredKind::Still => caps.still_bytes,
+        DeclaredKind::Video => caps.video_bytes,
     }
 }
 
@@ -178,6 +180,9 @@ fn declared_cap(config: &MediaConfig, kind: DeclaredKind) -> usize {
 /// and a crash in the gap between them leaves an upload only the store's
 /// own lifecycle rule will collect, which is exactly the rule S3's
 /// guidance asks operators to configure.
+///
+/// The destination is recorded on the session: the bytes are processed
+/// only at completion, and they are sized for the parent named here.
 pub async fn begin(
     pool: &PgPool,
     blobs: &dyn BlobStore,
@@ -185,12 +190,13 @@ pub async fn begin(
     author: Uuid,
     declared_bytes: i64,
     kind: DeclaredKind,
+    destination: GalleryKind,
 ) -> Result<UploadPlan, SessionError> {
     if declared_bytes <= 0 {
         return Err(refuse("declaredBytes", "an upload has to carry bytes"));
     }
     let declared = declared_bytes as u64;
-    let cap = declared_cap(config, kind) as u64;
+    let cap = declared_cap(config, kind, destination) as u64;
     if declared > cap {
         return Err(refuse(
             "declaredBytes",
@@ -225,6 +231,7 @@ pub async fn begin(
         declared_bytes,
         part_size_bytes,
         part_count_col,
+        destination.into(),
         config.upload_session_ttl_secs,
     )
     .await
@@ -400,7 +407,8 @@ pub async fn complete(
         .get(&session.storage_key)
         .await
         .map_err(SessionError::internal)?;
-    let caps = config.caps();
+    let destination = GalleryKind::from(session.scale);
+    let caps = config.caps_for(destination);
     let processed = tokio::task::spawn_blocking(move || super::process(&bytes, caps))
         .await
         .map_err(SessionError::internal)?;
@@ -413,7 +421,7 @@ pub async fn complete(
         }
     };
 
-    let row = store_asset(pool, blobs, author, asset)
+    let row = store_asset(pool, blobs, author, destination, asset)
         .await
         .map_err(|e| match e {
             super::GalleryPlanError::BadInput(e) => SessionError::BadInput(e),

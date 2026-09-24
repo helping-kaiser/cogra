@@ -41,9 +41,15 @@ fn auth_config() -> anyhow::Result<AuthConfig> {
 }
 
 /// Builds the server from the environment and serves it: the GraphQL
-/// surface, the L1 stand-in behind the seam, and four background loops —
+/// surface, the L1 stand-in behind the seam, and the background loops —
 /// mirror ingestion, the dev epoch clock, the account reaper (auth.md
-/// "Reaper"), and the auth-throttle GC sweep (auth.md "Rate limiting").
+/// "Reaper"), the auth-throttle GC sweep (auth.md "Rate limiting"), the
+/// media orphan sweep, and the media ingest workers.
+///
+/// The server serves without ffmpeg too: every upload already within the
+/// video target is unaffected, and one that needs re-encoding fails with
+/// a reason its author reads. What an operator reads is the error logged
+/// here at startup.
 ///
 /// `.env` is read before anything else, so a plain `cargo run` matches the
 /// make targets; real environment variables still win, because dotenvy
@@ -148,6 +154,40 @@ async fn main() -> anyhow::Result<()> {
         media.orphan_reaper_interval_secs,
         media.orphan_max_age_secs,
     ));
+
+    let ffmpeg = match api::media::transcode::Ffmpeg::detect(&media.ffmpeg).await {
+        Ok(ffmpeg) => {
+            tracing::info!(
+                encoder = ffmpeg.h264_encoder(),
+                tone_map = ffmpeg.tone_maps(),
+                workers = media.ingest_workers,
+                "media ingest re-encodes through ffmpeg"
+            );
+            if !ffmpeg.tone_maps() {
+                tracing::error!(
+                    "ffmpeg lacks zscale, tonemap or h264_metadata (a build without zimg?): \
+                     HDR videos will fail processing until it has them"
+                );
+            }
+            Some(Arc::new(ffmpeg))
+        }
+        Err(e) => {
+            tracing::error!(
+                error = %e,
+                "ffmpeg unavailable (MEDIA_FFMPEG): videos over the served target will fail \
+                 processing until it is installed"
+            );
+            None
+        }
+    };
+    for _ in 0..media.ingest_workers {
+        tokio::spawn(api::media::ingest_queue::ingest_loop(
+            pool.clone(),
+            blobs.clone(),
+            media.clone(),
+            ffmpeg.clone(),
+        ));
+    }
 
     let auth = auth_config()?;
     let uploads = api::UploadRouting {

@@ -27,13 +27,15 @@
 //! which is the one shape that cannot lose prose, and the shape the corpus's
 //! own module migration produced by hand.
 //!
-//! # The one place this crate runs another program
+//! # Asking git
 //!
 //! [`modified`] asks `git status --porcelain`, because whether a file carries
 //! uncommitted work is a fact about the repository and not about the corpus,
-//! and no walk of the tree can answer it. The porcelain format is git's own
-//! documented script interface and is stable across versions, which is why it
-//! is the one that is parsed (´dec:lint:fix-precondition´).
+//! and no walk of the tree can answer it — the same reason the carrier is
+//! taken from `git ls-files` (´dec:lint:tracked-carrier´). The porcelain
+//! format is git's own documented script interface and is stable across
+//! versions, which is why it is the one that is parsed
+//! (´dec:lint:fix-precondition´).
 
 use std::collections::BTreeMap;
 use std::fs;

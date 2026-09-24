@@ -8,19 +8,22 @@
 // the client's strip was faulty. That makes this the video half of the same
 // promise: what leaves the device is already clean.
 //
+// EVERY CLIP COMES THROUGH HERE, compressed or not. Where the browser can
+// encode, `compress-video.ts` first brings a clip outside the upload target
+// down to it; what it hands on — its encode, or the picked bytes when the clip
+// was already within target or the browser has no encoder — is stripped here
+// either way. Compression and strip are separate steps on purpose: the strip
+// needs nothing from WebCodecs, so it holds on every browser, and the encode
+// never has to be trusted to have dropped anything.
+//
 // A REMUX, NOT A RE-ENCODE, and the distinction is the whole design. The
 // encoded H.264 and AAC packets are copied from the input's demuxer straight
 // into a fresh MP4 muxer; no frame is decoded, no frame is encoded, and the
-// picture quality is bit-for-bit what the author's camera produced. Only the
-// CONTAINER is rewritten — which is exactly what a metadata strip needs, since
-// the metadata lives in container boxes rather than in the video stream.
+// picture is bit-for-bit what arrived here. Only the CONTAINER is rewritten —
+// which is exactly what a metadata strip needs, since the metadata lives in
+// container boxes rather than in the video stream.
 //
-// This is also why the web does not compress video the way it downscales
-// pictures: a re-encode would need an H.264 encoder, which means WebCodecs, and
-// that path is unavailable on Firefox Android and carries a documented
-// patent/royalty caveat. Remuxing needs neither.
-//
-// THE LIBRARY: mediabunny 1.55.7, MPL-2.0, pinned exactly.
+// THE LIBRARY: mediabunny 1.56.1, MPL-2.0, pinned exactly.
 // (https://mediabunny.dev · https://github.com/Vanilagy/mediabunny)
 // Chosen because it is the muxer MDN's own WebCodecs guide points to, it ships
 // ZERO WebAssembly and no worker asset on this path — so nothing has to be
@@ -39,24 +42,22 @@
 // rests on, and it is stronger than deleting boxes after the fact.
 //
 // WHY NOT `Conversion` WITH `tags: {}`, which is the library's own one-liner
-// for this: because it does not actually copy. Its fast path requires the
-// track's first timestamp to be at or after the conversion's start, and an AAC
-// track written by any ordinary encoder begins at a NEGATIVE timestamp — the
-// 1024-sample priming delay, measured at -23.2 ms on a plain ffmpeg AAC track.
-// That trips its `needsTrimming` condition, so the audio takes the
-// decode-and-re-encode branch: the author's sound would be re-compressed for a
-// container-level change, and on a browser with no AAC *encoder* the track
-// would be discarded outright. Copying the packets by hand is what makes "never
-// re-encode" true rather than aspirational — and it is what the fast path of
-// `Conversion` does internally anyway, so this is the same operation without
-// the condition that disqualifies it.
+// for this: because it writes each input track's name back out as a fresh
+// `udta/name` box. Its copy path is the same packet move as the one below —
+// `compress-video.ts` relies on it to carry AAC across — so copying the packets
+// by hand is that operation without the one box it would add.
 //
-// `formats: [MP4]` rather than `ALL_FORMATS` is deliberate: the docs note "The
-// `formats` parameter enables tree-shaking"
+// `formats: [MP4, QTFF]` rather than `ALL_FORMATS` is deliberate: the docs note
+// "The `formats` parameter enables tree-shaking"
 // (https://mediabunny.dev/guide/reading-media-files), and every other demuxer
-// would otherwise be bundled for a path that only ever sees MP4 — which the
-// pick screening has already guaranteed by sniffing the container from the
-// bytes.
+// would otherwise be bundled for a path that only ever sees the two containers
+// the pick screening admits by sniffing the bytes (`video.ts`). QuickTime is
+// how an iPhone records; mediabunny reads it with its own `QTFF` format — the
+// `MP4` reader refuses the `qt  ` brand — and the output is an MP4 either way,
+// so this remux is what turns a `.mov` into the only container the server
+// takes, on every browser, with or without WebCodecs. The timed-metadata
+// tracks an iPhone adds beside picture and sound are never surfaced as tracks
+// by the reader, so they are not copied either.
 //
 // WHAT THIS DOES NOT REMOVE, stated because a security claim must be honest.
 // The output's `mvhd`/`tkhd` creation time is set to the moment of the remux by
@@ -78,6 +79,7 @@ import {
   MP4,
   Mp4OutputFormat,
   Output,
+  QTFF,
   type AudioCodec,
   type InputAudioTrack,
   type InputVideoTrack,
@@ -120,7 +122,7 @@ export type StripResult = {
  */
 export async function stripVideoMetadata(file: Blob): Promise<StripResult> {
   const started = performance.now();
-  const input = new Input({ formats: [MP4], source: new BlobSource(file) });
+  const input = new Input({ formats: [MP4, QTFF], source: new BlobSource(file) });
   const output = new Output({
     // With `BufferTarget` the default fast-start behaviour is "in-memory",
     // which writes the `moov` box at the FRONT — so the uploaded file begins

@@ -318,6 +318,18 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
     std::fs::write(src.join("alpha.rs"), "pub fn one() {}\n").expect("a file-backed module");
     std::fs::write(src.join("beta").join("mod.rs"), "pub fn two() {}\n")
         .expect("a directory-backed module");
+    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
+        let done = std::process::Command::new("git")
+            .arg("-C")
+            .arg(&at)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            done.status.success(),
+            "git {args:?}: the carrier is what git lists"
+        );
+    }
 
     let walked = cogra_linter::Walk::new(ruled(), &at)
         .sources()
@@ -337,14 +349,21 @@ fn the_check_and_the_measurement_agree_over_a_fixture() {
 }
 
 /// (´dec:lint:cross-source-pairing´): the agreement holds over this
-/// repository, at the size `[profiles]` records as the module migration's.
+/// repository too.
+///
+/// Only the agreement is asserted. The census's size is a measurement that
+/// moves with every module the corpus gains, so it is what a run reports and
+/// never what a test pins; the fixture above owns the exact answer.
 ///
 /// The check and the measurement read one census over this repository.
 /// ´claim:pairing:check-and-measurement-agree-here´
 #[test]
 fn the_check_and_the_measurement_agree_over_this_corpus() {
     let reported = measured(ruled(), &root());
-    assert_eq!(reported.len(), 111, "the size `[profiles]` records");
+    assert!(
+        !reported.is_empty(),
+        "an empty census would make the agreement vacuous"
+    );
 
     let run = cogra_linter::check(ruled(), &root()).expect("the check runs over the corpus");
     assert_eq!(covered(&run), reported, "one pairing, one census");

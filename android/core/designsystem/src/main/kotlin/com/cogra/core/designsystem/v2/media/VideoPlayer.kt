@@ -29,9 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -80,27 +78,6 @@ object VideoSound {
         _muted.value = true
     }
 }
-
-/**
- * How much of this element is inside the window, as a fraction of its
- * own height.
- *
- * Autoplay is a question about what the reader can actually see, and
- * Compose answers it through layout rather than through a scroll
- * listener: `boundsInWindow` is already clipped to what is on screen, so
- * its height against the element's own is the fraction showing.
- */
-fun Modifier.onVisibilityChanged(onChange: (Float) -> Unit): Modifier =
-    onGloballyPositioned { coordinates ->
-        val height = coordinates.size.height
-        onChange(
-            if (height == 0) {
-                0f
-            } else {
-                (coordinates.boundsInWindow().height / height.toFloat()).coerceIn(0f, 1f)
-            },
-        )
-    }
 
 /**
  * One clip, playing where it sits.
@@ -192,8 +169,8 @@ fun VideoPlayer(
     val traced = remember(url) { VideoTrace.clip(url) }
 
     // Read from the stage rather than held: a second clip taking the
-    // stage releases this one's player, and a surface holding its own
-    // reference would go on talking to a released instance.
+    // stage takes this one's player over to itself, and a surface holding
+    // its own reference would go on driving somebody else's clip.
     val player = borrowFromStage(url, token, traced)
 
     // Whether the clip this surface is for is the one on stage — asked
@@ -234,8 +211,11 @@ fun VideoPlayer(
                 // the stage rather than the player: a line here means a
                 // clip genuinely arrived, not that a four-second loop
                 // came round again.
-                if (!VideoStage.hasRendered) VideoTrace.firstFrame(traced)
-                VideoStage.rendered()
+                //
+                // Every surface bound to the one player hears every
+                // frame, so the stage is told which clip this surface is
+                // for and decides whether the frame can be that clip's.
+                if (VideoStage.rendered(url)) VideoTrace.firstFrame(traced)
             }
         }
         player?.addListener(listener)

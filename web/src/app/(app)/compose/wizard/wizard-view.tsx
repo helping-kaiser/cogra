@@ -36,24 +36,27 @@ import {
   attachmentClaims,
   bodyContent,
   COVER_FROM_PICTURE,
+  effectiveCover,
   emptyWizard,
   isVideoPost,
   sealGate,
   shapeRatio,
+  stepIndex,
   wizardReducer,
   type PickedAsset,
   type WizardAction,
   type WizardState,
 } from "@/lib/compose/wizard";
-import { captureFrames, probeVideo } from "@/lib/ui2/media/video";
+import { captureFrames, captureFrameZero, probeVideo } from "@/lib/ui2/media/video";
 import { newComposeId } from "@/lib/compose/ids";
-import { screenPick, type PickRefusal } from "@/lib/compose/pick";
+import { POST_SCALE, screenPick, type PickRefusal } from "@/lib/compose/pick";
 import {
   composeDraftStore,
   draftIsWorthKeeping,
   draftSummary,
   type ComposeDraftStore,
 } from "@/lib/compose/draft-store";
+import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
 import { PickStep } from "./pick-step";
@@ -180,6 +183,13 @@ export function ComposeWizard({
   const frames = mine?.frames ?? NO_FRAMES;
   const framePreviews = mine?.urls ?? NO_URLS;
   const capturing = videoFile !== null && captured?.file !== videoFile;
+  // THE SILENT STILL'S OWN EXTRACTION, kept apart from the tray's offers
+  // above. FRAME 1 MEANS FRAME 0, STRICTLY (jakob, 2026-09-24): a coverless
+  // clip's stored face is `captureFrameZero`'s read of the clip's true
+  // start, never `frames[0]` — which stays the tray's ~1s "opening" tile.
+  const [silentCover, setSilentCover] = useState<{ file: Blob; frame: Blob | null } | null>(null);
+  const forSilentCover = silentCover !== null && silentCover.file === videoFile ? silentCover : null;
+  const silentCovering = videoFile !== null && forSilentCover === null;
   useRevokeOnChange(framePreviews);
   // The files that did not get in. Not part of the draft — a refused file never
   // joined the batch — so this is view state, and it PERSISTS until the author
@@ -187,14 +197,22 @@ export function ComposeWizard({
   const [refusals, setRefusals] = useState<readonly PickRefusal[]>(NO_REFUSALS);
   const cover = state.cover;
   // The face itself, wherever it came from — a captured frame or the
-  // author's own picture — so the details thumbnail and the cover row's own
-  // tile can both show it rather than the video's bytes or a bare outline.
+  // author's own picture — so the cover row's own tile can show it rather
+  // than the video's bytes or a bare outline.
   const coverPreview = useObjectUrl(cover?.file ?? null);
-  // THE COVERLESS CLIP'S FACE IS ITS FIRST FRAME (design/readme.md, the
-  // video-cover round). An `img` cannot decode the clip's own bytes, so the
-  // tile that stands for the video needs a still either way: the chosen face
-  // when there is one, and otherwise the opening frame already in hand.
-  const clipFace = coverPreview ?? framePreviews[0] ?? null;
+  // THE CLIP'S FACE IS ALWAYS ITS OWN FIRST FRAME, never the chosen cover —
+  // a cover rides a tile only as the small ringed inset, never as the face
+  // itself (`design/designs/canonical/screens/ComposeDetailsVideo.jsx`,
+  // jakob's hand-test ruling 2026-09-23). An `img` cannot decode the clip's
+  // own bytes, so the pick tray, the details tile, and the describe sheet all
+  // need this still in its place — null while extraction has not landed or
+  // found nothing, which draws the neutral tile rather than a borrowed
+  // picture. THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog
+  // item 106): this is `forSilentCover`'s frame 0, never `framePreviews[0]` —
+  // the tray's own ~1s offer — because a tray face that differs from what
+  // every reader will see is a lie in the one place the author is deciding
+  // whether they need a cover.
+  const clipFace = useObjectUrl(forSilentCover?.frame ?? null);
 
   // The badge's number AND the clip's shape, read off the clip as soon as it is
   // picked rather than waiting for the cover screen — the details row shows the
@@ -221,11 +239,16 @@ export function ComposeWizard({
     };
   }, [videoFile]);
 
-  // THE FRAMES ARE TAKEN WHEN THE SCREEN IS REACHED, not at pick: a decode of
-  // the whole clip is the most expensive thing this flow does, and an author
-  // who picked a video and then changed their mind should never pay for it.
+  // THE FACE IS EXTRACTED AS SOON AS THE CLIP IS PICKED, not only once the
+  // cover screen is reached (`design/designs/canonical/screens/
+  // ComposeDetailsVideo.jsx`, jakob's 2026-09-23 ruling: "the device silently
+  // extracts the clip's first frame ... using the frame picker's own
+  // extraction"). The pick tray and the details tile both stand the clip on
+  // this same still, so both need it from the moment there is a clip —
+  // waiting for the cover screen left them with nothing to show but the
+  // video's own bytes, which an `<img>` cannot decode.
   useEffect(() => {
-    if (videoFile === null || state.step !== "cover" || captured?.file === videoFile) return;
+    if (videoFile === null || captured?.file === videoFile) return;
     let cancelled = false;
     void captureFrames(videoFile)
       .then((taken) => {
@@ -250,7 +273,25 @@ export function ComposeWizard({
     return () => {
       cancelled = true;
     };
-  }, [videoFile, state.step, captured, dispatch]);
+  }, [videoFile, captured]);
+
+  // A SECOND, INDEPENDENT EXTRACTION for the silent still alone — never tied
+  // to the tray's capture above, so retiming the tray's offers can never
+  // retime what a coverless clip stores (`captureFrameZero`'s own docblock).
+  useEffect(() => {
+    if (videoFile === null || silentCover?.file === videoFile) return;
+    let cancelled = false;
+    void captureFrameZero(videoFile)
+      .then((frame) => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame });
+      })
+      .catch(() => {
+        if (!cancelled) setSilentCover({ file: videoFile, frame: null });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [videoFile, silentCover]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and
@@ -408,15 +449,53 @@ export function ComposeWizard({
       if (video.upload.kind !== "waiting" || started.current.has(video.id)) {
         return;
       }
+
+      // THE STORED FRAME, NOT A CHOICE (the feed-video rulings, 2026-09-23,
+      // sharpened 2026-09-24; `ComposeDetailsVideo.jsx`'s docblock). Nothing
+      // was picked, so before this clip goes up faceless the silent
+      // extraction gets one chance to hand back the clip's own frame 0 —
+      // through the same cover leg a chosen face would ride. This only
+      // decides once: `autoCover` staying null is what lets the branch below
+      // tell "never tried" from "tried and failed".
+      if (cover === null && state.autoCover === null) {
+        // Waiting for the silent extraction to settle rather than for a
+        // cover to exist — the same distinction `capturing` draws for the
+        // tray. Deciding early would read "not back yet" as "never coming"
+        // and ship the clip faceless on a capture that was about to hand
+        // back a perfectly good frame.
+        if (silentCovering) return;
+        const frame = forSilentCover?.frame ?? undefined;
+        if (frame !== undefined) {
+          // THE RULE IS DISABLED DELIBERATELY, as `previews.ts` already does:
+          // the capture is an external system, and its settled frame set is
+          // exactly what this reads — there is no render-time or event-handler
+          // moment that could make this decision instead.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          dispatch({
+            type: "autoCover",
+            cover: { id: newComposeId(), file: frame, frame: 0, upload: { kind: "waiting" } },
+          });
+          return;
+        }
+        // No frames came back at all: falls through and uploads faceless,
+        // exactly as an author-skipped cover always has.
+      }
+
+      const effective = effectiveCover(cover, state.autoCover);
       started.current.add(video.id);
-      if (cover !== null) started.current.add(cover.id);
+      if (effective !== null) started.current.add(effective.id);
       void runVideoUpload(
         client,
         guard,
         video,
-        cover,
+        effective,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
-        (upload) => dispatch({ type: "coverUpload", upload }),
+        // A CHOSEN COVER'S PROGRESS IS THE ONLY ONE EVER DRAWN. The auto-cover
+        // has no screen of its own, so its steps land on `autoCoverUpload`
+        // where only the gate and `attachmentClaims` read them — never on
+        // `coverUpload`, which is what the (nonexistent) cover UI would watch.
+        (upload) => dispatch({ type: cover !== null ? "coverUpload" : "autoCoverUpload", upload }),
+        POST_SCALE,
       );
       return;
     }
@@ -428,7 +507,19 @@ export function ComposeWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [uploading, state.assets, video, cover, ratio, client, guard, dispatch]);
+  }, [
+    uploading,
+    state.assets,
+    state.autoCover,
+    video,
+    cover,
+    silentCovering,
+    forSilentCover,
+    ratio,
+    client,
+    guard,
+    dispatch,
+  ]);
 
   const retry = (id: string) => {
     started.current.delete(id);
@@ -440,6 +531,18 @@ export function ComposeWizard({
       dispatch({ type: "coverUpload", upload: { kind: "waiting" } });
     }
     dispatch({ type: "upload", id, upload: { kind: "waiting" } });
+  };
+
+  // THIS STAGE NEVER STANDS ON AN EMPTY BODY (jakob's ruling, 2026-09-23;
+  // design commit 27aaa1cb, `ComposeDetails.jsx`/`ComposePicked.jsx`
+  // docblocks). Removing an asset that empties the draft — the video's own
+  // ×, or the last picture in the Show-all manager — gives the pick step
+  // back rather than leaving Details standing on nothing. The staged title,
+  // description, tags and references stay in the draft, waiting for a body.
+  const removeAsset = (id: string) => {
+    const emptying = state.assets.length === 1;
+    dispatch({ type: "unpick", id });
+    if (emptying) dispatch({ type: "goto", step: "pick" });
   };
 
   // Re-cropping invalidates the bytes that were uploaded from the old framing,
@@ -458,6 +561,12 @@ export function ComposeWizard({
       // lands on the cover screen, and the face is what may be about to change.
       cover:
         current.cover === null ? null : { ...current.cover, upload: { kind: "waiting" as const } },
+      // The silent one resets the same way, so a re-tried clip re-tries its
+      // stored frame too rather than standing on a stale done or failed.
+      autoCover:
+        current.autoCover === null
+          ? null
+          : { ...current.autoCover, upload: { kind: "waiting" as const } },
     }));
   };
 
@@ -569,6 +678,18 @@ export function ComposeWizard({
     dispatch({ type: "back" });
     if (previous === "pick") router.push("/feed");
   };
+
+  // The browser's Back is the same arrow (design/readme.md: "the platform
+  // back gesture does the same"). Each stage past the pick rides its own
+  // history entry, so a Back press never reaches the page behind the wizard
+  // until the pick — the arrival entry — is where it stands, and from there
+  // the browser leaves exactly as it always did.
+  useStageHistory({
+    surface: "compose",
+    level: stepIndex(state),
+    onBack: leave,
+    onForward: () => dispatch({ type: "advance" }),
+  });
 
   // The X: OUT OF THE FLOW from any stage, draft kept, NO confirmation —
   // nothing is lost, and the draft prompt is the return surface. Without it an
@@ -699,6 +820,7 @@ export function ComposeWizard({
             error={gate.ok ? null : gate.reason}
             blocked={!gate.ok}
             coverSrc={coverPreview}
+            clipFace={clipFace}
             onWords={(words) => dispatch({ type: "words", words })}
             onMode={(mode) => dispatch({ type: "mode", mode })}
             onPick={(files) => void takeFiles(files)}
@@ -767,7 +889,7 @@ export function ComposeWizard({
           onManage={() => setManaging(true)}
           onDescribe={() => setDescribing(state.assets[0]?.id ?? null)}
           onRetry={retry}
-          onRemove={(id) => dispatch({ type: "unpick", id })}
+          onRemove={removeAsset}
           onNext={() => dispatch({ type: "advance" })}
           blocked={!gate.ok}
         />
@@ -831,7 +953,17 @@ export function ComposeWizard({
           described: asset.altText.trim() !== "",
         }))}
         onDescribe={(id) => setDescribing(id)}
-        onRemove={(id) => dispatch({ type: "unpick", id })}
+        // THE LAST × GIVES THE PICK STEP BACK (jakob's ruling, 2026-09-23;
+        // design commit 27aaa1cb, `ComposePicked.jsx`): removing the last
+        // picture closes the manager itself, the way the video path's own ×
+        // gives its step back — whether the manager was opened from the pick
+        // step (already showing it) or from Details (which never stands on
+        // an empty body).
+        onRemove={(id) => {
+          const last = state.assets.length === 1;
+          removeAsset(id);
+          if (last) setManaging(false);
+        }}
         onMove={(from, to) => dispatch({ type: "reorder", from, to })}
         testId="wizard-picked-sheet"
       />
@@ -839,7 +971,17 @@ export function ComposeWizard({
       <DescribeSheet
         open={describing !== null}
         onClose={() => setDescribing(null)}
-        src={describing === null ? null : (previews[describing] ?? null)}
+        // A video's own bytes are what `previews` holds for it — an `<img>`
+        // cannot decode them, so the sheet stands the clip on its first
+        // frame the same way its other tiles do (same defect as W1, this
+        // surface just never had its own test).
+        src={
+          describing === null
+            ? null
+            : isVideoPost(state)
+              ? clipFace
+              : (previews[describing] ?? null)
+        }
         crop={state.assets.find((asset) => asset.id === describing)?.crop ?? null}
         value={state.assets.find((asset) => asset.id === describing)?.altText ?? ""}
         onChange={(altText) => {

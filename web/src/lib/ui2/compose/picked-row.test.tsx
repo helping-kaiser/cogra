@@ -35,10 +35,49 @@ describe("PickedRow", () => {
     expect(screen.getByText("2 pictures — the body")).toBeInTheDocument();
   });
 
-  it("passes a video's length through, activating the thumb's video anatomy", () => {
+  // The duration pill floors at 80px tiles (jakob's ruling, 2026-09-22;
+  // design/readme.md §13): on this row's 48px thumb the pill would outweigh
+  // the media, so the length passes through without drawing it — the row's
+  // caption carries the clip-ness.
+  it("passes a video's length through without the pill the 48px thumb cannot carry", () => {
     const withDuration: PickedThumb[] = [{ id: "a", src: "blob:a", durationMs: 42_000 }];
     render(<PickedRow items={withDuration} caption="1 video — the body" onManage={vi.fn()} />);
-    expect(screen.getByTestId("picked-row-thumb-0-duration")).toHaveTextContent("0:42");
+    expect(screen.queryByTestId("picked-row-thumb-0-duration")).toBeNull();
+  });
+
+  // A CLIP HAS NO MANAGER (jakob's ruling 2026-09-15, "one clip is not a
+  // set"): `onManage` null draws no clickable wrapper at all, and `onRemove`
+  // gives the tile its own × instead.
+  describe("with no manager", () => {
+    const video: PickedThumb[] = [{ id: "v", src: "blob:v", coverSrc: "blob:cover" }];
+
+    it("draws no button — there is nothing to open", () => {
+      render(<PickedRow items={video} caption="Video" onManage={null} />);
+      const row = screen.getByTestId("picked-row");
+      expect(row.tagName).not.toBe("BUTTON");
+      expect(screen.queryAllByRole("button")).toHaveLength(0);
+    });
+
+    it("gives the tile its own remove control, named by the caller", () => {
+      const onRemove = vi.fn();
+      render(
+        <PickedRow
+          items={video}
+          caption="Video"
+          onManage={null}
+          onRemove={onRemove}
+          removeLabel="Remove this video"
+        />,
+      );
+      fireEvent.click(screen.getByLabelText("Remove this video"));
+      expect(onRemove).toHaveBeenCalledWith(0);
+    });
+
+    it("rides the cover as the tile's own inset mark, never the Cover badge", () => {
+      render(<PickedRow items={video} caption="Video" onManage={null} />);
+      expect(screen.getByTestId("picked-row-thumb-0-cover-mark")).toBeInTheDocument();
+      expect(screen.queryByText("Cover")).toBeNull();
+    });
   });
 });
 

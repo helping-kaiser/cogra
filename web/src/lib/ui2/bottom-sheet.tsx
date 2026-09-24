@@ -25,13 +25,57 @@ import {
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 
+/**
+ * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
+ * `height="calc(100% - 72px)"`).
+ */
+export const SHEET_CEILING_SLIVER_PX = 72;
+
+/**
+ * THE SHEET CEILING — how tall a sheet may ever be (jakob's ruling, the
+ * sheets-and-video round, 2026-09-22: design/readme.md §13 and
+ * `design/components/core/BottomSheet.jsx:29-49`, whose master spells the
+ * same `calc(100% - 72px - env(safe-area-inset-top, 0px))`).
+ *
+ * A sheet's top edge never rises above a {@link SHEET_CEILING_SLIVER_PX}
+ * strip measured from the top of the SAFE AREA. On the web that is the top of
+ * the viewport, plus whatever the device keeps for itself — `dvh` is what
+ * makes it the LIVE viewport rather than the one the browser's own chrome was
+ * hiding, and `env(safe-area-inset-top)` is the notch the viewport still
+ * counts. The rounded corners keep a strip of the surface behind visible: a
+ * drawer that reached the top edge would read as a destination.
+ *
+ * THE CEILING CAPS THE OTHER CLASSES RATHER THAN REPLACING THEM, which is why
+ * it arrives inside a `min()` and not as the height itself: a content sheet
+ * keeps its own 92dvh, and the ceiling only binds on a screen short enough
+ * for that percentage to reach the sliver.
+ *
+ * It is a style rather than a Tailwind class because Tailwind scans source
+ * TEXT for class names — a class built from the sliver could never be
+ * generated, so the number would have to be written out a second time in a
+ * literal, which is exactly the drift the constant exists to stop. The sheet
+ * already carries a style for its drag offset; this rides beside it.
+ */
+export const SHEET_CEILING =
+  `calc(100dvh - ${SHEET_CEILING_SLIVER_PX}px - env(safe-area-inset-top, 0px))`;
+
+/** The height class a content sheet keeps, held under the ceiling. */
+const CONTENT_MAX = "92dvh";
+
+/** What a sheet's surface — and the column inside it — is bounded by. */
+function sheetHeight(tallest: boolean): CSSProperties {
+  return tallest
+    ? { height: SHEET_CEILING }
+    : { maxHeight: `min(${CONTENT_MAX}, ${SHEET_CEILING})` };
+}
+
 export function BottomSheet({
   open,
   onClose,
   title,
   titleTrailing,
   titleHidden = false,
-  height = "content",
+  tallest = false,
   foot,
   children,
   bodyRef,
@@ -60,16 +104,16 @@ export function BottomSheet({
    */
   titleHidden?: boolean;
   /**
-   * `content` lets the content set the sheet's size, up to the sliver the
-   * screen keeps; `full` pins it at the drawn full height instead — the
-   * comments sheet fills the screen to 72px below the top
-   * (`_shared.jsx:1249` — `height="calc(100% - 72px)"`). Design's own master
-   * takes the same prop for the same reason: "a pinned input row at its foot
-   * needs the surface itself to own the height" (`BottomSheet.jsx:29-32`),
-   * and a sheet sized by its content would rise and fall as a page of
-   * comments lands.
+   * THE TALLEST CLASS, ASKED FOR BY NAME (`BottomSheet.jsx`'s own `tallest`).
+   * A sheet is content-sized by default and grows with what it carries, held
+   * under {@link SHEET_CEILING}; `tallest` pins it AT the ceiling instead.
+   * The comments sheet is the one that asks: "a pinned input row at its foot
+   * needs the surface itself to own the height" (readme §13, 2026-08-28), and
+   * a sheet sized by its content would rise and fall as a page of comments
+   * lands. Its children manage their own scrolling from there — which is also
+   * why the composer's growth comes out of the list above it.
    */
-  height?: "content" | "full";
+  tallest?: boolean;
   /**
    * The row pinned below the scrolling body — design's `CommentComposerFoot`
    * slot. It sits outside the scroll region so it stays reachable however
@@ -176,13 +220,15 @@ export function BottomSheet({
       }}
       onPointerUp={endPull}
       onPointerCancel={endPull}
-      style={{ "--cg-sheet-drag": `${pull}px` } as CSSProperties}
+      style={
+        { "--cg-sheet-drag": `${pull}px`, ...sheetHeight(tallest) } as CSSProperties
+      }
       // `mt-auto` is what puts it at the bottom edge: a dialog is centred by
-      // default, and this one rises from the edge it will go back to. It may
-      // fill the screen up to a sliver below the top, so the rounded corners
-      // keep a strip of the surface behind visible.
-      className={`${closing ? "cg-sheet-out" : "cg-sheet-in"} ${
-        height === "full" ? "h-[calc(100dvh-72px)]" : "max-h-[92dvh]"
+      // default, and this one rises from the edge it will go back to. It
+      // fills the screen up to a sliver below the safe area at most, so the
+      // rounded corners keep a strip of the surface behind visible.
+      className={`${
+        closing ? "cg-sheet-out" : "cg-sheet-in"
       } mt-auto mb-0 w-full max-w-[42rem] rounded-t-extra-large border-0 ${
         // ONE SCRIM, HOWEVER MANY SHEETS. The system has a single dimming
         // token (`--scrim-dialog`, 50% black) and stacking moves the z-layer,
@@ -197,7 +243,14 @@ export function BottomSheet({
           : "bg-surface-container-high backdrop:bg-scrim/50"
       } p-0 text-on-surface`}
     >
-      <div className={`flex flex-col ${height === "full" ? "h-full" : "max-h-[92dvh]"}`}>
+      <div
+        data-testid={`${testId}-column`}
+        className="flex flex-col"
+        // The same bound as the surface: a percentage of an indefinite height
+        // resolves to nothing, so the column cannot simply ask for `100%` of
+        // a sheet that is only capped.
+        style={tallest ? { height: "100%" } : sheetHeight(false)}
+      >
         {/* The handle says the sheet can be pulled down, and it can. The
             gesture is read across the whole surface, so the grip marks where
             the eye goes rather than the only place that answers; the
@@ -220,7 +273,13 @@ export function BottomSheet({
             if (bodyRef) bodyRef.current = node;
           }}
           data-testid={`${testId}-body`}
-          className={`min-h-0 flex-1 overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
+          // A COLUMN, SO WHAT IT HOLDS CAN YIELD. A sheet that grows with a
+          // field stops at the ceiling, and from there something has to give
+          // way: the body's children shrink (down to their own `min-h-0`)
+          // before the body starts scrolling, which is what puts the scroll
+          // INSIDE the growing field rather than under the whole sheet. The
+          // scroll stays as the fallback for content that cannot shrink.
+          className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
         >
           {children}
         </div>

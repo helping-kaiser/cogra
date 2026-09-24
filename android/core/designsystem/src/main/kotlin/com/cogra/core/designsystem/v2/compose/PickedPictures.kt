@@ -51,6 +51,11 @@ import com.cogra.core.designsystem.v2.token.ThemePreviews
  *   boards write it. Its presence is what turns the tile into the
  *   composer's video anatomy, so a video body never reads as a picture
  *   one; pictures leave it null.
+ * @param coverSrc a clip's chosen cover, riding the tile's own inset
+ *   corner mark ([MediaThumb]'s `coverSrc`) rather than a second field —
+ *   one attachment is one tile
+ *   (`design/designs/canonical/screens/ComposeDetailsVideo.jsx:19-21`,
+ *   design/readme.md §13 "The cover's tile"). Pictures leave it null.
  */
 data class PickedPicture(
     val item: MediaItem,
@@ -59,6 +64,7 @@ data class PickedPicture(
     val progress: Float? = null,
     val failed: Boolean = false,
     val duration: String? = null,
+    val coverSrc: Any? = null,
 ) {
     internal fun badge(cover: Boolean): ThumbBadge? = when {
         failed -> ThumbBadge.Failed
@@ -69,7 +75,8 @@ data class PickedPicture(
 
 /**
  * The composer's summary of the body — thumbnails and the count, **one
- * tappable row** (`design/components/compose/PickedRow.prompt.md`).
+ * tappable row** (`design/components/compose/PickedRow.prompt.md`) for a
+ * gallery.
  *
  * **The row carries no "Crop" or "Edit" links** (jakob 2026-08-31: "none").
  * The whole row is the affordance and it opens the Show all sheet, which is
@@ -77,21 +84,36 @@ data class PickedPicture(
  * needs no second entrance: the wizard is linear and Back reaches it, and a
  * duplicate entrance to the same step is the two-menus pattern the system
  * refuses elsewhere.
+ *
+ * **A clip has no manager** ([onManage] `null`; jakob's ruling 2026-09-15,
+ * "one clip is not a set" — there is no set for a Show all sheet to open
+ * on). The row then draws no tap affordance of its own, and [onRemove]
+ * gives the one tile its own [ThumbBadge.Remove] instead — the same ×
+ * the pick tray already draws on this same clip
+ * (`design/designs/canonical/screens/ComposeDetailsVideo.jsx` lines
+ * 23-32).
  */
 @Composable
 fun PickedRow(
     pictures: List<PickedPicture>,
     caption: String,
-    onManage: () -> Unit,
+    onManage: (() -> Unit)?,
     modifier: Modifier = Modifier,
     manageLabel: String = "Manage the pictures",
+    onRemove: ((Int) -> Unit)? = null,
     testTag: String? = null,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .defaultMinSize(minHeight = Layout.TouchTargetMin)
-            .clickable(role = Role.Button, onClickLabel = manageLabel, onClick = onManage)
+            .then(
+                if (onManage != null) {
+                    Modifier.clickable(role = Role.Button, onClickLabel = manageLabel, onClick = onManage)
+                } else {
+                    Modifier
+                },
+            )
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
@@ -99,12 +121,15 @@ fun PickedRow(
         pictures.forEachIndexed { index, picture ->
             MediaThumb(
                 item = picture.item,
-                badge = picture.badge(cover = false),
+                badge = onRemove?.let { remove -> ThumbBadge.Remove { remove(index) } }
+                    ?: picture.badge(cover = false),
                 uploading = picture.uploading,
                 progress = picture.progress,
                 duration = picture.duration,
+                coverSrc = picture.coverSrc,
                 // The row is one control; its thumbnails are not each a
-                // separate thing to find.
+                // separate thing to find — true with a remove badge too:
+                // it is the one clip's own ×, not a second target.
                 contentDescription = null,
                 testTag = testTag?.let { "${it}_thumb_$index" },
             )

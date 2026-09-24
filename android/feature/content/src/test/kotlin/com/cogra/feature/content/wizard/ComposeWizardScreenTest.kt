@@ -3,6 +3,8 @@ package com.cogra.feature.content.wizard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionContains
@@ -89,6 +91,7 @@ class ComposeWizardScreenTest {
     private var sealBacks = 0
     private var coverFrames = mutableListOf<Int>()
     private var coverPickers = 0
+    private var coverDoors = 0
     private var dismissedRefusals = mutableListOf<Int>()
     private var restoreKeys = 0
     private var keepDrafts = 0
@@ -102,6 +105,7 @@ class ComposeWizardScreenTest {
         state: ComposeWizardState,
         permission: MediaPermission = MediaPermission.Granted(partial = false),
         onTogglePick: (String) -> Unit = { picked += it },
+        onRemovePickAt: (Int) -> Unit = { removals += it },
     ) {
         ComposeWizardScreen(
             state = state,
@@ -119,6 +123,7 @@ class ComposeWizardScreenTest {
             onCropsChanged = {},
             onPickCoverFrame = { coverFrames += it },
             onOpenCoverPicker = { coverPickers += 1 },
+            onOpenCoverStep = { coverDoors += 1 },
             onDismissRefusal = { dismissedRefusals += it },
             onTitleChange = {},
             onDescriptionChange = {},
@@ -141,7 +146,7 @@ class ComposeWizardScreenTest {
             onDescribePictures = { describes += 1 },
             onDescribeAt = { describedAt += it },
             onMovePick = { from, to -> moves += (from to to) },
-            onRemovePickAt = { removals += it },
+            onRemovePickAt = onRemovePickAt,
             onSign = { signs += 1 },
             onContinueDraft = { draftContinues += 1 },
             onDiscardDraft = { draftDiscards += 1 },
@@ -408,6 +413,61 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertDoesNotExist()
     }
 
+    // The details board's Cover field (`ComposeDetailsVideo`, design/readme.md
+    // §13): the door is a field's empty state, and for a vertical clip it is
+    // the only entrance to the step the clip skipped.
+
+    @Test
+    fun aVerticalClipsDetailsOpenTheSkippedStepThroughTheDoor() {
+        val vertical = ComposeWizardState(
+            step = WizardStep.Details,
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverChoice = CoverChoice.FirstFrame,
+        )
+        compose.setContent { Wizard(vertical) }
+
+        // The first frame the clip carries is a still, not a face anyone
+        // chose: the field stays a door over it.
+        compose.onNodeWithTag("wizard_cover_door").assertIsDisplayed().performClick()
+        assertThat(coverDoors).isEqualTo(1)
+        assertThat(backs).isEqualTo(0)
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertDoesNotExist()
+    }
+
+    // "A clip that came through the cover step shows no door — its face is
+    // chosen, and the step is one Back away" (`ComposeDetailsVideo.jsx`).
+    @Test
+    fun aClipThatWalkedTheCoverStepShowsNoDoorEvenWithoutAFace() {
+        val walked = ComposeWizardState(
+            step = WizardStep.Details,
+            picked = listOf(PickedAsset("clip", 16f / 9f, durationMs = 42_000)),
+        )
+        compose.setContent { Wizard(walked) }
+
+        compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
+    }
+
+    // Finding 6, jakob's ruling 2026-09-22 (design/readme.md §13 "The
+    // cover's tile"): ONE ATTACHMENT IS ONE TILE. A clip that walked the
+    // cover step draws no separate Cover section at all — the chosen
+    // frame rides the picked row's own tile as its inset corner mark.
+    @Test
+    fun theDetailsStepMergesTheChosenCoverIntoTheVideoTilesOwnMark() {
+        val withVideoCover = ComposeWizardState(
+            step = WizardStep.Details,
+            picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+            coverFrames = List(3) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 192)) },
+            coverChoice = CoverChoice.Frame(0),
+        )
+        compose.setContent { Wizard(withVideoCover) }
+
+        compose.onNodeWithTag("wizard_picked_row").assertIsDisplayed()
+        compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("wizard_cover_change").assertDoesNotExist()
+    }
+
     @Test
     fun theGridDrawsTheDevicesOwnPicturesAndTogglesThemInPlace() {
         compose.setContent { Wizard(withPicks) }
@@ -432,13 +492,37 @@ class ComposeWizardScreenTest {
 
     // CW-06 (`ComposePickVideo`'s `PickTray`): one clip is not a set to
     // reorder, so the tray drops Show all and carries the caption this state
-    // needs instead of the sheet.
+    // needs instead of the sheet. A square clip keeps a cover step, so it
+    // gets the full caption.
     @Test
     fun theTraySwapsInTheClipsOwnCaptionAndDropsShowAll() {
         compose.setContent { Wizard(withVideoPicked) }
 
         compose.onNodeWithTag("wizard_picked_count").assertTextEquals("Picked · 1")
         compose.onNodeWithText("A video is the whole post. Its cover comes next.").assertIsDisplayed()
+        compose.onNodeWithTag("wizard_show_all").assertDoesNotExist()
+    }
+
+    private val withVerticalVideoPicked = ComposeWizardState(
+        mode = BodyMode.Media,
+        picked = listOf(PickedAsset("clip", 0.5625f, durationMs = 42_000)),
+        deviceMedia = listOf(
+            DeviceMedia("clip", 0.5625f, durationMs = 42_000),
+            DeviceMedia("other", 1f),
+        ),
+    )
+
+    // jakob's ruling 2026-09-24, backlog item 104 (design/guidelines/copy-voice.md
+    // "Staging a video"; design/components/compose/PickTray.prompt.md "The clip
+    // caption is the shape's."): a vertical clip skips the cover step, so its
+    // second sentence — which previews that step — would be a false promise,
+    // and the tray wears the trim instead of the full caption.
+    @Test
+    fun theTrayTrimsTheCaptionForAVerticalClip() {
+        compose.setContent { Wizard(withVerticalVideoPicked) }
+
+        compose.onNodeWithText("A video is the whole post.").assertIsDisplayed()
+        compose.onNodeWithText("A video is the whole post. Its cover comes next.").assertDoesNotExist()
         compose.onNodeWithTag("wizard_show_all").assertDoesNotExist()
     }
 
@@ -670,6 +754,32 @@ class ComposeWizardScreenTest {
         assertThat(removals).containsExactly(1)
     }
 
+    // Finding 4 of jakob's round-four review, 2026-09-23 (jakob's
+    // 2026-09-23 ruling, ComposePicked.jsx / ComposeDetails.jsx): the
+    // manager's own last x behaves like the video path's — the sheet
+    // closes and the pick step comes back, tray empty.
+    @Test
+    fun removingTheLastPictureInTheManagerClosesItAndReturnsThePickStep() {
+        var state by mutableStateOf(
+            withPicks.copy(
+                picked = listOf(PickedAsset("a", 1f)),
+                step = WizardStep.Details,
+                pickedSheetOpen = true,
+            ),
+        )
+        compose.setContent {
+            Wizard(
+                state = state,
+                onRemovePickAt = { index -> state = state.removePick(state.picked[index].uri) },
+            )
+        }
+
+        compose.onNodeWithTag("wizard_picked_sheet_row_0_remove").performClick()
+
+        compose.onNodeWithTag("wizard_picked_sheet").assertDoesNotExist()
+        compose.onNodeWithTag("wizard_pick_next").assertIsDisplayed()
+    }
+
     @Test
     fun theDescribeSheetIsWhereAltTextIsAuthored() {
         val state = withPicks.copy(step = WizardStep.Details, describingIndex = 0)
@@ -724,6 +834,28 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(ready) }
         compose.onNodeWithTag("wizard_sign").assertIsEnabled().performClick()
         assertThat(signs).isEqualTo(1)
+    }
+
+    // Finding 4's upload-line guard (design/components/compose/UploadNotice.prompt.md
+    // lines 1, 11): the line is strictly the in-flight gate and must never
+    // draw "Uploading 0 of 0" for a media-mode batch the removal fix left
+    // empty — reachable only transitionally (`canSign` already refuses an
+    // empty batch on its own, see `ComposeWizardStateTest`), but the line
+    // has to hold the contract regardless of how the state arrived.
+    @Test
+    fun theUploadLineNeverDrawsForAnEmptyBatch() {
+        val emptied = ComposeWizardState(mode = BodyMode.Media, step = WizardStep.Seal)
+        compose.setContent { Wizard(emptied) }
+
+        compose.onNodeWithTag("wizard_seal_uploading").assertDoesNotExist()
+    }
+
+    @Test
+    fun theSealRefusesToSignWithAnEmptyMediaBatch() {
+        val emptied = ComposeWizardState(mode = BodyMode.Media, step = WizardStep.Seal)
+        compose.setContent { Wizard(emptied) }
+
+        compose.onNodeWithTag("wizard_sign").assertIsNotEnabled()
     }
 
     @Test

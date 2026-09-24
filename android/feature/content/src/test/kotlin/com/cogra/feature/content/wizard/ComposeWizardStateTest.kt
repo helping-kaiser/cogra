@@ -11,6 +11,7 @@ import com.cogra.domain.media.CropWindow
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 /**
@@ -104,6 +105,59 @@ class ComposeWizardStateTest {
 
         // Only then does back walk the stages.
         assertThat(closed.retreated()?.step).isEqualTo(WizardStep.Crop)
+    }
+
+    // -- The last removal gives the pick step back (jakob 2026-09-23) --
+
+    @Test
+    fun removingTheVideosOnlyPickReturnsThePickStep() {
+        // ComposeDetailsVideo.jsx:23-32 — "taking it away gives back the
+        // step that takes picks".
+        val atDetails = video.copy(step = WizardStep.Details)
+
+        val after = atDetails.removePick("clip")
+
+        assertThat(after.picked).isEmpty()
+        assertThat(after.step).isEqualTo(WizardStep.Body)
+        // The stage never becomes the words path.
+        assertThat(after.mode).isEqualTo(BodyMode.Media)
+    }
+
+    @Test
+    fun removingTheLastPictureFromTheManagerClosesItAndReturnsThePickStep() {
+        // jakob's 2026-09-23 ruling (ComposePicked.jsx / ComposeDetails.jsx):
+        // the manager's own last x behaves like the video path's one.
+        val staged = media.copy(
+            picked = listOf(PickedAsset("a")),
+            step = WizardStep.Details,
+            pickedSheetOpen = true,
+            title = "Salt maps of the coast road",
+            description = "Stood there long enough that the midges found me.",
+            tagSection = TagSectionState(tags = listOf(TagRow("fieldnotes"))),
+        )
+
+        val after = staged.removePick("a")
+
+        assertThat(after.picked).isEmpty()
+        assertThat(after.step).isEqualTo(WizardStep.Body)
+        assertThat(after.pickedSheetOpen).isFalse()
+        // Staged title/description/tags stay in the draft, waiting for
+        // the body to return — the removal is never refused and the
+        // stage never becomes a words-mode post.
+        assertThat(after.title).isEqualTo("Salt maps of the coast road")
+        assertThat(after.description).isEqualTo("Stood there long enough that the midges found me.")
+        assertThat(after.tagSection.tags).containsExactly(TagRow("fieldnotes"))
+        assertThat(after.mode).isEqualTo(BodyMode.Media)
+    }
+
+    @Test
+    fun removingOnePictureOfSeveralStaysOnTheSameStage() {
+        val atDetails = media.copy(step = WizardStep.Details)
+
+        val after = atDetails.removePick("a")
+
+        assertThat(after.picked.map { it.uri }).containsExactly("b")
+        assertThat(after.step).isEqualTo(WizardStep.Details)
     }
 
     @Test
@@ -452,12 +506,30 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun aCoverlessVideoIsCompleteOnceItsOwnBytesLand() {
-        // The default: no face was ever chosen, so there is no id to
-        // wait for — going without a cover is always possible.
+    fun aFacelessVideoIsCompleteOnceItsBytesAndItsFirstFrameLand() {
+        // No face was ever chosen — going without one is always possible
+        // — but the clip is still stored with its first frame, and the
+        // placement cannot name that still before it exists.
         val uploaded = video.withUpload("clip", AssetUpload.Done("video-1"))
         assertThat(uploaded.coverChoice).isEqualTo(CoverChoice.None)
-        assertThat(uploaded.uploadsComplete).isTrue()
+        assertThat(uploaded.uploadsComplete).isFalse()
+        assertThat(uploaded.copy(coverMediaId = "frame-1").uploadsComplete).isTrue()
+        // A clip that gave no still at all is complete without one.
+        assertThat(uploaded.withoutFirstFrame().uploadsComplete).isTrue()
+    }
+
+    /**
+     * THE ONE PREDICATE: which cover states store frame 1. Every clip
+     * without a chosen face — skipped or declined — and nothing else
+     * (design's ruling 2026-09-24).
+     */
+    @Test
+    fun everyFacelessClipAndOnlyAFacelessClipStoresItsFirstFrame() {
+        assertThat(CoverChoice.FirstFrame.storesFirstFrame).isTrue()
+        assertThat(CoverChoice.None.storesFirstFrame).isTrue()
+        assertThat(CoverChoice.NoStill.storesFirstFrame).isFalse()
+        assertThat(CoverChoice.Frame(0).storesFirstFrame).isFalse()
+        assertThat(CoverChoice.Picture("p").storesFirstFrame).isFalse()
     }
 
     @Test
@@ -480,5 +552,127 @@ class ComposeWizardStateTest {
     @Test
     fun aFreshWizardStartsWithNoFaceChosen() {
         assertThat(ComposeWizardState().coverChoice).isEqualTo(CoverChoice.None)
+    }
+
+    // -- The shape-keyed skip (design/backlog.md item 49; readme §13, the
+    // video-cover round; the feed-video rulings 2026-09-23) --
+
+    private fun clipOfRatio(ratio: Float?) = ComposeWizardState(
+        mode = BodyMode.Media,
+        picked = listOf(PickedAsset("clip", ratio, durationMs = 42_000)),
+    )
+
+    /**
+     * SHAPE ALONE DECIDES: taller than wide skips the step; wide and
+     * exactly square keep it, with no band around square. A shape not
+     * known (or not a ratio at all) keeps the step — the safe default.
+     */
+    @Test
+    fun onlyAClipTallerThanWideSkipsTheCoverStep() {
+        val skips = listOf<Pair<Float?, Boolean>>(
+            16f / 9f to false,
+            1f to false,
+            1.0001f to false,
+            0.9999f to true,
+            4f / 5f to true,
+            9f / 16f to true,
+            null to false,
+            0f to false,
+            -1f to false,
+            Float.NaN to false,
+            Float.POSITIVE_INFINITY to false,
+        )
+        skips.forEach { (ratio, skipped) ->
+            val clip = clipOfRatio(ratio)
+            assertWithMessage("skips at $ratio").that(clip.skipsCoverStep).isEqualTo(skipped)
+            assertWithMessage("step at $ratio").that(clip.hasCoverStep).isEqualTo(!skipped)
+        }
+    }
+
+    @Test
+    fun lengthNeverDecides() {
+        val short = clipOfRatio(9f / 16f).copy(picked = listOf(PickedAsset("c", 9f / 16f, durationMs = 1)))
+        val long = clipOfRatio(9f / 16f).copy(picked = listOf(PickedAsset("c", 9f / 16f, durationMs = 3_600_000)))
+        assertThat(short.skipsCoverStep).isTrue()
+        assertThat(long.skipsCoverStep).isTrue()
+    }
+
+    /** `publish-a-vertical-video`: pick → details, frame 1 as the still. */
+    @Test
+    fun aVerticalClipGoesStraightToDetailsCarryingItsFirstFrame() {
+        val next = clipOfRatio(9f / 16f).advanced()
+        assertThat(next?.step).isEqualTo(WizardStep.Details)
+        assertThat(next?.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        // Back from details returns to the pick: there is no step behind it.
+        assertThat(next?.retreated()?.step).isEqualTo(WizardStep.Body)
+    }
+
+    /**
+     * SKIPPED IS NOT DECLINED — as state. A clip that walked the step and
+     * left it without a face is DECLINED ([CoverChoice.None]), never
+     * [CoverChoice.FirstFrame]: the door stands only for the skip. (Both
+     * are stored with frame 1 — see [storesFirstFrame].)
+     */
+    @Test
+    fun aClipThatWalkedTheStepAndChoseNothingIsDeclinedNotSkipped() {
+        val walked = clipOfRatio(16f / 9f).advanced()?.advanced()
+        assertThat(walked?.step).isEqualTo(WizardStep.Details)
+        assertThat(walked?.coverChoice).isEqualTo(CoverChoice.None)
+    }
+
+    /** `give-a-vertical-clip-a-cover`: the door opens the skipped step. */
+    @Test
+    fun theDoorOpensTheSkippedStepAndBothWaysOutReturnToDetails() {
+        val details = checkNotNull(clipOfRatio(9f / 16f).advanced())
+        val cover = details.openedCoverStep()
+        assertThat(cover?.step).isEqualTo(WizardStep.Cover)
+        assertThat(cover?.advanced()?.step).isEqualTo(WizardStep.Details)
+        assertThat(cover?.retreated()?.step).isEqualTo(WizardStep.Details)
+    }
+
+    @Test
+    fun aClipThatWalkedTheStepHasNoDoorToOpen() {
+        val details = clipOfRatio(16f / 9f).copy(step = WizardStep.Details)
+        assertThat(details.openedCoverStep()).isNull()
+        // Nor does any stage but details.
+        assertThat(clipOfRatio(9f / 16f).openedCoverStep()).isNull()
+    }
+
+    @Test
+    fun aFaceChosenThroughTheDoorSurvivesAWalkBackToThePick() {
+        val chosen = checkNotNull(clipOfRatio(9f / 16f).advanced()).copy(coverChoice = CoverChoice.Frame(1))
+        val again = chosen.retreated()?.advanced()
+        assertThat(again?.step).isEqualTo(WizardStep.Details)
+        assertThat(again?.coverChoice).isEqualTo(CoverChoice.Frame(1))
+    }
+
+    /**
+     * The skipped step's still is stored, not optional: the gate waits
+     * for its id — and a still that cannot be made settles to none, so
+     * the wait always ends.
+     */
+    @Test
+    fun theGateWaitsForTheFirstFrameUntilItLandsOrIsGivenUp() {
+        val skipped = checkNotNull(clipOfRatio(9f / 16f).advanced())
+            .withUpload("clip", AssetUpload.Done("video-1"))
+        assertThat(skipped.uploadsComplete).isFalse()
+        assertThat(skipped.copy(coverMediaId = "frame-1").uploadsComplete).isTrue()
+
+        val givenUp = skipped.withoutFirstFrame()
+        assertThat(givenUp.coverChoice).isEqualTo(CoverChoice.NoStill)
+        assertThat(givenUp.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun givingUpTheFirstFrameNeverTouchesAChosenFace() {
+        val chosen = clipOfRatio(9f / 16f).copy(coverChoice = CoverChoice.Frame(0))
+        assertThat(chosen.withoutFirstFrame().coverChoice).isEqualTo(CoverChoice.Frame(0))
+    }
+
+    @Test
+    fun aNewClipForgetsTheFirstFrameItsPredecessorCarried() {
+        val skipped = checkNotNull(clipOfRatio(9f / 16f).advanced())
+        val swapped = skipped.togglePick("other", 16f / 9f, durationMs = 1_000)
+        assertThat(swapped.coverChoice).isEqualTo(CoverChoice.None)
     }
 }

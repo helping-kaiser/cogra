@@ -37,6 +37,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { useVeiled } from "./body-veil";
 import { isMuted, setMuted, useMuted } from "./mute";
 import { formatDuration } from "./video";
 import { VideoTransport } from "./video-transport";
@@ -144,6 +145,13 @@ export function VideoPlayer({
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
+  // The sensitive veil covers its clip the same way a sheet suspends the
+  // surface behind it (design/readme.md, backlog item 103): a veiled clip
+  // sits fully out of the stage rotation — no playback, no sound-disc
+  // presence — because the veil is the reader's declared not-yet.
+  // Unveiling re-elects the stage exactly as a sheet's dismissal does, so
+  // the clip below only autoplays if it wins the visibility gate again.
+  const veiled = useVeiled();
   const transport = surface === "transport";
   // The clip's own clock, read off the element rather than held beside it: the
   // element is the truth about where playback is, and a second copy ticking on
@@ -176,6 +184,16 @@ export function VideoPlayer({
     const video = ref.current;
     if (!video || !autoplay) return;
     if (typeof IntersectionObserver === "undefined") return;
+
+    if (veiled) {
+      // Out of the rotation entirely: surrender any claim already held
+      // (defends the rare case a revealed clip is veiled again) and skip
+      // observing altogether, so a clip behind the blur never claims the
+      // stage and never draws its sound disc while it holds no claim.
+      if (!video.paused) video.pause();
+      surrender(stageToken);
+      return;
+    }
 
     const reduced =
       typeof window.matchMedia === "function" &&
@@ -212,7 +230,7 @@ export function VideoPlayer({
       observer.disconnect();
       surrender(stageToken);
     };
-  }, [autoplay, src, stageToken]);
+  }, [autoplay, src, stageToken, veiled]);
 
   // The chrome only hides over a clip that is RUNNING. Hiding it over a paused
   // clip would leave the reader with a still picture and no way back to the
@@ -384,8 +402,11 @@ export function VideoPlayer({
           pill, at both scales (design/readme.md, "the video conform round").
           It carries the sticky decision every video shares, so pressing it
           here changes the sound for the whole session — which is why it
-          reads the shared store rather than the element. */}
-      {!transport && (
+          reads the shared store rather than the element. Veiled, it is gone
+          entirely rather than merely blurred — a sound control for a clip
+          that cannot claim playback would offer a decision that does
+          nothing (backlog item 103). */}
+      {!transport && !veiled && (
         <button
           type="button"
           data-testid={`${testId}-sound`}
@@ -401,8 +422,29 @@ export function VideoPlayer({
           // `text-*` Tailwind classes built from them compile to nothing:
           // read as `var()` here instead, matching the master
           // (`design/components/media/MediaAttachment.jsx:127-128`).
-          className="cg-state cg-focus absolute bottom-2 right-2 grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0"
-          style={{ background: "var(--surface-snackbar)", color: "var(--on-surface-snackbar)" }}
+          // WHY THE CORNER IS A STYLE AND NOT `absolute bottom-2 right-2`
+          // (jakob's round-three hand test, 2026-09-22): tokens-2.css is
+          // `@import`ed AFTER `tailwindcss` and its rules are therefore
+          // UNLAYERED, while every Tailwind utility lives in
+          // `@layer utilities` — and an unlayered declaration beats a layered
+          // one whatever the source order. So `.cg-state`'s `position:
+          // relative` (tokens-2.css:207) silently outranked the `absolute`
+          // utility, the disc dropped out of the corner into normal flow at
+          // the frame's left edge, and the card's section below clipped it.
+          // The master positions this control with an inline style for its
+          // own reasons (`MediaAttachment.jsx:117-131`) and an inline style
+          // is the one thing an unlayered rule cannot outrank, so the two
+          // answers are the same answer. Same file, same mechanism, same
+          // shape as the snackbar colours below.
+          className="cg-state cg-focus grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0"
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            right: "8px",
+            zIndex: 2,
+            background: "var(--surface-snackbar)",
+            color: "var(--on-surface-snackbar)",
+          }}
         >
           <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
             {muted ? (

@@ -12,10 +12,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
@@ -31,8 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Space
@@ -54,6 +62,53 @@ fun sheetContainerColor(stacked: Boolean, colors: ColorScheme, default: Color): 
     if (stacked) colors.surfaceContainerHighest else default
 
 /**
+ * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
+ * `height="calc(100% - 72px)"`).
+ */
+val SheetCeilingSliver = 72.dp
+
+/**
+ * THE SHEET CEILING — how tall a sheet may ever be (jakob's ruling, the
+ * sheets-and-video round, 2026-09-22: design/readme.md §13 and
+ * `design/components/core/BottomSheet.jsx:29-49`, whose master spells the
+ * same thing as `calc(100% - 72px - env(safe-area-inset-top, 0px))`).
+ *
+ * A sheet's top edge never rises above a [SheetCeilingSliver] strip measured
+ * from the top of the SAFE AREA: below the status bar and the display cutout,
+ * never the physical top of the glass. The rounded corners keep a strip of
+ * the surface behind visible, and no sheet ever touches or passes the safe
+ * area — the describe sheet grew to the device's top edge and took its Done
+ * button off the screen with it, which is the bug this height kills.
+ *
+ * ONE MECHANISM, NOT TWO. The comments sheet already drew exactly this shape
+ * against the window; naming it here is what lets every other sheet cap
+ * itself with the same number instead of inventing a second one. The safe
+ * inset is what the comments sheet was missing, and the sliver is now
+ * measured from where content may actually start.
+ *
+ * THE CEILING CAPS RATHER THAN REPLACES. A content-sized sheet is held UNDER
+ * it ([CograSheetSurface]'s `heightIn`) and still grows with what it carries;
+ * only the comments sheet is pinned AT it — the `tallest` class, asked for by
+ * name.
+ *
+ * The IME is deliberately NOT subtracted: a sheet pads itself clear of the
+ * keyboard from INSIDE this height ([CograSheetSurface]), so the top edge
+ * stays exactly where it is when the keyboard arrives and the content yields
+ * instead.
+ *
+ * `safeDrawing` is the documented inset for content that must not overlap the
+ * system bars or the cutout
+ * ([WindowInsets](https://developer.android.com/develop/ui/compose/layouts/insets)).
+ */
+@Composable
+fun sheetCeilingHeight(): Dp {
+    val density = LocalDensity.current
+    val window = LocalWindowInfo.current.containerSize.height
+    val safeTop = WindowInsets.safeDrawing.getTop(density)
+    return (with(density) { (window - safeTop).toDp() } - SheetCeilingSliver).coerceAtLeast(0.dp)
+}
+
+/**
  * The bottom sheet's *surface*, extracted from its presentation.
  *
  * A sheet is a drawer the reader opened and can drop (design/readme.md §7):
@@ -68,31 +123,69 @@ fun sheetContainerColor(stacked: Boolean, colors: ColorScheme, default: Color): 
  * Geometry is the canonical seal board's: the extra-large (28dp) rung on the
  * top corners only, `surfaceContainerHigh`, a 32×4 handle in `outlineVariant`,
  * and 24dp side padding.
+ *
+ * [tallest] IS THE CLASS ASKED FOR BY NAME (`BottomSheet.jsx`'s `tallest`,
+ * readme §13): the surface is PINNED AT the ceiling rather than held under
+ * it, and it drops the side padding — the drawn tallest sheet pads nothing
+ * horizontally and its children own their own insets (`_shared.jsx`'s
+ * comments sheet). The height must live HERE, on the surface INSIDE the
+ * sheet, never on `ModalBottomSheet`'s own modifier: Material measures its
+ * expanded anchor inside that modifier chain, so a height fixed outside it
+ * becomes the anchor math's whole world — the anchor collapses to zero and
+ * the sheet pins to the top of the window instead of rising to the ceiling.
  */
 @Composable
 fun CograSheetSurface(
     modifier: Modifier = Modifier,
     showHandle: Boolean = true,
+    tallest: Boolean = false,
     testTag: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val side = if (tallest) 0.dp else Space.x6
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // The tag rides ahead of the sizing and padding, so what a test
+            // measures under it is the drawn surface — its height and its
+            // edges — not the padded box inside it.
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+            // THE CEILING, ON EVERY SHEET (see [sheetCeilingHeight]). A
+            // content-sized sheet grows with what it carries and stops here;
+            // the surface never reaches the safe area, so whatever the sheet
+            // stacks at its foot stays on the screen. The tallest class is
+            // pinned at the ceiling instead.
+            .then(
+                if (tallest) {
+                    Modifier.height(sheetCeilingHeight())
+                } else {
+                    Modifier.heightIn(max = sheetCeilingHeight())
+                },
+            )
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             // The surface reaches the screen's edge; only its content steps
             // clear of the navigation bar. [CograSheetHost] hands the sheet no
             // insets of its own, so the drawn background is what covers them.
-            .navigationBarsPadding()
-            .padding(start = Space.x6, end = Space.x6, top = Space.x2, bottom = Space.x6)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
+            //
+            // THE KEYBOARD TAKES THE SAME PADDING, whichever is larger: the
+            // IME replaces the navigation bar rather than stacking on it, and
+            // `union` is the documented way to pad by one inset or the other
+            // rather than both (developer.android.com's inset guidance). It
+            // pads from INSIDE the ceiling, so a raised keyboard shortens the
+            // content instead of pushing the sheet's top edge up.
+            .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+            .padding(start = side, end = side, top = Space.x2, bottom = Space.x6),
+        // The drawn surface carries no gap of its own (`BottomSheet.jsx`,
+        // `gap: 0`); the content class's spacing is the seal board's. The
+        // tallest class's handle brings the board's own margin instead.
+        verticalArrangement = if (tallest) Arrangement.Top else Arrangement.spacedBy(Space.x3),
     ) {
         if (showHandle) {
             Spacer(
                 Modifier
                     .align(Alignment.CenterHorizontally)
+                    .padding(bottom = if (tallest) Space.x3 else 0.dp)
                     .width(32.dp)
                     .height(4.dp)
                     .clip(CircleShape)

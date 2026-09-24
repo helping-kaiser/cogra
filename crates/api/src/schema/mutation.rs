@@ -460,7 +460,8 @@ fn reference_drafts(
 }
 
 /// One attachment placement within a gallery. Assets are uploaded first
-/// via `uploadMedia`; the envelope commits their digests.
+/// via `uploadMedia`; the envelope commits their digests, so every asset
+/// named here — the attachment and its cover alike — must be READY.
 ///
 /// The list is the gallery in order, so `displayOrder` states the entry's
 /// own index and `isCover` is true on the first entry and nowhere else —
@@ -470,9 +471,9 @@ fn reference_drafts(
 /// galleries only; a comment gallery ignores it.
 #[derive(InputObject)]
 struct AttachmentInput {
-    /// An asset **this author uploaded**. Cross-author re-use is not
-    /// supported through this path: sharing someone else's picture is a
-    /// link to their post, never a reference to their asset.
+    /// An asset **this author uploaded**, and READY. Cross-author re-use
+    /// is not supported through this path: sharing someone else's picture
+    /// is a link to their post, never a reference to their asset.
     media_id: Uuid,
     display_order: i32,
     is_cover: Option<bool>,
@@ -483,13 +484,21 @@ struct AttachmentInput {
     /// correcting it is a new version of the parent, never a re-upload.
     alt_text: Option<String>,
     /// The video's poster — an asset this author uploaded, either a frame
-    /// the client cut out of the clip or a picture chosen instead. Only a
-    /// video placement takes one, and a video may always go without.
+    /// the client cut out of the clip or a picture chosen instead, and
+    /// `coverTaken` says which. Only a video placement takes one, and a
+    /// video may always go without.
     ///
     /// Authored here for the same reason `altText` is: it is a fact about
     /// this placement, so changing the cover is a new version of the
     /// parent rather than a re-upload of the clip.
     cover_media_id: Option<Uuid>,
+    /// True when the cover is a frame taken from the clip rather than a
+    /// still the author chose; absent or null reads as chosen. The bytes
+    /// cannot say which, so the author's client states it and the
+    /// manifest witnesses it beside the cover (data-model.md, per-asset
+    /// map key 4). Refused without a `coverMediaId`, and refused on a
+    /// placement that is not a video.
+    cover_taken: Option<bool>,
 }
 
 impl AttachmentInput {
@@ -500,6 +509,7 @@ impl AttachmentInput {
             is_cover: self.is_cover,
             alt_text: self.alt_text.clone(),
             cover_media_id: self.cover_media_id,
+            cover_taken: self.cover_taken.unwrap_or(false),
         }
     }
 }
@@ -726,6 +736,34 @@ struct PrepareProfileUpdateInput {
 #[derive(InputObject)]
 struct UploadMediaInput {
     file: Upload,
+    /// The parent the asset is headed for. A comment carries half a
+    /// post's video, so a clip is sized, re-encoded and validated for
+    /// this destination's cap. POST when omitted.
+    #[graphql(default_with = "MediaScale::Post")]
+    scale: MediaScale,
+}
+
+/// The parent an upload is headed for, whose cap the asset is sized for.
+///
+/// Only a video's cap differs between the two — a comment carries half a
+/// post's — so the destination decides how large a clip may arrive,
+/// whether it is within the served target, the rate a re-encode plans
+/// for, and what the rendition is validated against. A picture's cap is
+/// the same at either. An asset uploaded for one parent can still be
+/// attached to the other; the parent's own cap applies again at prepare.
+#[derive(async_graphql::Enum, Copy, Clone, Eq, PartialEq)]
+enum MediaScale {
+    Post,
+    Comment,
+}
+
+impl From<MediaScale> for media::GalleryKind {
+    fn from(scale: MediaScale) -> Self {
+        match scale {
+            MediaScale::Post => Self::Post,
+            MediaScale::Comment => Self::Comment,
+        }
+    }
 }
 
 /// The asset, or the refusal that explains what was wrong with the file.
@@ -773,6 +811,11 @@ struct BeginMediaUploadInput {
     /// nothing, and a part that does not match the cut is refused.
     declared_bytes: i32,
     kind: MediaUploadKind,
+    /// The parent the upload is headed for, as on `uploadMedia`: the early
+    /// refusal and the processing at completion both use its cap. POST
+    /// when omitted.
+    #[graphql(default_with = "MediaScale::Post")]
+    scale: MediaScale,
 }
 
 /// The cut the server dictated, and how long the client has to send it.
@@ -2119,6 +2162,12 @@ impl Mutation {
     /// both blocking work, so they run on the blocking pool — left on
     /// the async runtime, one upload would stall every other request
     /// behind it.
+    ///
+    /// The asset comes back READY when its bytes are already within the
+    /// served target — every still, and every video a client compressed
+    /// — and PROCESSING when the server has to re-encode it first. A
+    /// PROCESSING asset cannot be attached yet: poll `mediaAttachment`
+    /// until it reads READY (or FAILED, with the reason).
     async fn upload_media(
         &self,
         ctx: &Context<'_>,
@@ -2138,7 +2187,8 @@ impl Mutation {
         let config = ctx.data::<MediaConfig>()?;
         let blobs = ctx.data::<Arc<dyn BlobStore>>()?;
         let value = input.file.value(ctx)?;
-        let caps = config.caps();
+        let destination = media::GalleryKind::from(input.scale);
+        let caps = config.caps_for(destination);
 
         let processed = tokio::task::spawn_blocking(move || {
             use std::io::Read;
@@ -2159,19 +2209,20 @@ impl Mutation {
             }
         };
 
-        let row = match media::store_asset(pool, blobs.as_ref(), v.user_id, asset).await {
-            Ok(row) => row,
-            Err(media::GalleryPlanError::BadInput(e)) => {
-                return Ok(UploadMediaPayload::refused(UserError::at(
-                    ErrorCode::BadInput,
-                    e.message,
-                    e.path,
-                )));
-            }
-            Err(media::GalleryPlanError::Internal(e)) => {
-                return Err(async_graphql::Error::new(e));
-            }
-        };
+        let row =
+            match media::store_asset(pool, blobs.as_ref(), v.user_id, destination, asset).await {
+                Ok(row) => row,
+                Err(media::GalleryPlanError::BadInput(e)) => {
+                    return Ok(UploadMediaPayload::refused(UserError::at(
+                        ErrorCode::BadInput,
+                        e.message,
+                        e.path,
+                    )));
+                }
+                Err(media::GalleryPlanError::Internal(e)) => {
+                    return Err(async_graphql::Error::new(e));
+                }
+            };
         Ok(UploadMediaPayload {
             media: Some(MediaAttachmentType::asset(row)),
             user_errors: vec![],
@@ -2216,6 +2267,7 @@ impl Mutation {
             v.user_id,
             i64::from(input.declared_bytes),
             input.kind.into(),
+            input.scale.into(),
         )
         .await
         {
@@ -2244,6 +2296,9 @@ impl Mutation {
     /// Safe to retry. A client whose connection dropped waiting for this
     /// reply calls it again and is handed the same asset, because the
     /// session remembers what it produced.
+    ///
+    /// Like `uploadMedia`, the asset may come back PROCESSING, and is
+    /// attachable once `mediaAttachment` reads it READY.
     async fn complete_media_upload(
         &self,
         ctx: &Context<'_>,

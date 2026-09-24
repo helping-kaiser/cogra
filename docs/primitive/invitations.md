@@ -219,13 +219,13 @@ handshake — live in [auth.md](../implementation/auth.md).
 
 ## 5. The inviter reward
 
-The accepted inviter earns the **single-hop 1% CGT reward**: at
-each campaign settlement, an earner's inviter receives `0.01·P`
-sized by that earner's payout share
+The accepted inviter earns the **single-hop CGT reward**: at
+each campaign settlement, an earner's inviter receives
+`(1 − reserve_share)·0.01·P` sized by that earner's payout share
 ([economics.md §7.3](economics.md#73-the-inviter-reward)). Direct
 inviter only — no chain, no pyramid dynamic; permanent — the
 relation never expires, so the inviter earns over the member's
-lifetime; paid in CGT, the reward economy, never the burn value.
+lifetime; paid in CGT, the reward economy, never in burn value.
 It fires only on the accepted mutual pair — never on a one-way
 edge. Genesis members have no inviter; their share falls back to
 burn.

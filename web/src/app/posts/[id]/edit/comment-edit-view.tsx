@@ -171,7 +171,8 @@ export function CommentEditView({
                     upload !== null &&
                     (upload.kind === "waiting" ||
                       upload.kind === "encoding" ||
-                      upload.kind === "uploading")
+                      upload.kind === "uploading" ||
+                      upload.kind === "processing")
                       ? "indeterminate"
                       : undefined
                   }

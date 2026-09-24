@@ -51,6 +51,11 @@ fun UploadStatusLine(
     modifier: Modifier = Modifier,
     testTag: String? = null,
 ) {
+    // Strictly the in-flight gate (component prompt lines 1, 11): nothing
+    // is uploading when there is nothing to upload, so the line never
+    // draws "Uploading 0 of 0" — a caller's own gate is the first line of
+    // defence, this is the component's own.
+    if (total <= 0) return
     Row(
         modifier = modifier
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)

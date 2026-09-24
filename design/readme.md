@@ -291,7 +291,7 @@ never leave mid-task. Per surface:
 
 | Collapses | Pins |
 |---|---|
-| feed · search results · topic page · profile · saved · notifications · history · invites list | post detail · every compose and edit stage · settings · the ceremonies · chats · About |
+| feed · search results · topic page · profile · saved · notifications · history · invites list · the chats list, both faces | post detail · every compose and edit stage · settings · the ceremonies · a chat's thread · About |
 
 On web, **pinned means `position: sticky`** — the bar rides the page's
 edge and never hides — and the collapsing surfaces adopt `CollapsingTop`
@@ -454,6 +454,10 @@ fills is the most common way an icon set starts to look accidental.
 | `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
 | `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
 | `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
+| `lock` / `lock_outline` | a chat message sent encrypted, and the chat foot's lock toggle, whose state is its fill — the post-MVP chats round's; `lock_outline` is the system's own addition, `person`'s two-cut precedent |
+| `add_comment` | the chats list's floating New chat — the post-MVP chats round's, the system's own addition |
+| `mic` | the chat foot's voice note, hold to record, standing where the send arrow stands while the field is empty — the post-MVP chats integration round's, the system's own addition |
+| `delete` | the locked voice recording's discard — the post-MVP chats integration round's, the system's own addition |
 
 **All of them are inlined** — path data in `Icon`, reference copies in
 `assets/icons/`. All but `graph_3` are the classic **filled** 24px
@@ -2266,7 +2270,9 @@ item 33, jakob's rulings the same day).
 - **Share is new, and it is one tap to the platform's own sheet.**
   Drawn on the rail, on the detail view **and on the feed card**; no
   menu of ours, because a share menu here would be a worse copy of the
-  one the reader's apps already live in. **No count** — a share tally
+  one the reader's apps already live in. (Revised by the chats
+  integration round: once chats exist, the share act opens `Send to a
+  chat`, with the platform's sheet inside it.) **No count** — a share tally
   would be a public number the graph does not record.
 - **The action row's order is its order of importance**: stance,
   score, comment, then share. That order is also the *queue*: on a
@@ -4160,7 +4166,7 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   disappearances would let a reader commit believing their comments would
   leave other people's threads. Two insets, `ChangeEmailConfirm`'s shape,
   for its reason — two readings a reader has to hold at once. The wallet
-  is named in `What stays`: the address is held by the reader's key
+  is named in `What stays`: the realization address is held by the reader's key
   and no part of the platform can touch it.
 - **The content sweep is a checkbox, and the emailed link is the whole
   friction.** `erasure.md` makes identity-level the default and
@@ -5749,11 +5755,14 @@ board's private habit; jakob ruled it as recommended.
   tray says *cover* in a single place whatever kind of body is in it.
 - **Each surface carries the cover its own way.** The **pick tray**
   shows the inset, which is how a walk that can be walked backwards
-  tells the author what the step behind them settled. The **details and
-  edit stages** carry a *Cover* field section under *Video*: the door
-  *Add a cover* where none is chosen, the face and *Change the cover*
-  where one is — the two states drawn once each across the two scales.
-  A clip that walked the cover step shows no cover section at all. A
+  tells the author what the step behind them settled. The **edit
+  stage** carries a *Cover* field section under *Video*, in both its
+  states: the door *Add a cover* where none is chosen, the face and
+  *Change the cover* where one is. The **compose details stage**
+  carries only the door, and only for a clip whose shape skipped the
+  frame picker; a clip that walked the cover step shows no cover
+  section at all — its face rides the tile's inset, and the step is
+  one Back away. A
   **reading surface** shows the cover as the card's still, and branches
   on nothing: whether that still was chosen or taken was settled while
   the post was written.
@@ -5801,22 +5810,964 @@ they were settled.
   boards and its endpoints. Flows hold at **66 declared · 64 resolved**,
   gaps at **13**.
 
----
+### The post-MVP separation — 2026-09-22
 
-## 14. The canvases
+The MVP board is done, and the next rounds are not MVP. Rather than let
+the baseline absorb boards whose slice is nowhere near current, post-MVP
+work is drawn apart — ruled by jakob the day the push round opened.
 
-The tree draws one app and is graded as one thing. The editor it is
-reviewed in holds 200 files per canvas and publishes 16MB, and at 191
-boards the tree stands on both ceilings — so the *review* splits into
-four canvases while the tree itself stays whole.
+- **A post-MVP round is drawn in a tree of its own.**
+  `designs/postmvp/` is a sibling of `designs/canonical/`, with its own
+  `screens/`, its own `canvas.json`, its own `graph.json` and its own
+  `_shared.jsx`. `designs/canonical/` and the four canvases stay exactly
+  what they were: the MVP baseline, and the boards implementation reads
+  from. A reader who opens canonical is looking at what is being built.
+- **It is the fifth canvas** — `CoGra · Post-MVP rounds`, its own
+  review surface, seeded by the same `gen-canvases.mjs` from the same
+  kind of `canvases.json`. Five canvases now, four of them the MVP's.
+- **The migration rule: boards move across as reviewed rounds**, when
+  their slice becomes the work — not by being copied early and not one
+  board at a time. And whatever implementation needs lands in canonical,
+  always: a board the clients are expected to build is by definition
+  current, so its home is the baseline. Nothing implementation needs is
+  ever only in postmvp.
+- **The pipeline takes the tree as a parameter**, which is the whole of
+  the plumbing. `_build/trees.mjs` names the generated trees and nothing
+  else does; `render-screens`, `gen-maps`, `gen-canvases` and
+  `check-flows` loop over that list, each tree checked against its own
+  canvas and its own graph. The ideation canvases stay off the list on
+  purpose — they render only when named by hand, which is what keeps a
+  frozen board frozen. Both trees share `components/` unchanged: one
+  design system, drawn twice as far.
+- **A board name is unique across every tree.** `flow-markers.mjs` is
+  keyed by board name alone, so two trees with a `Settings` would stamp
+  one tree's flow numbers onto the other's markup. The post-MVP boards
+  carry their round in their names.
+- **The gate**: canonical's output is **byte-identical** across the
+  split — **217 screens · 1568 edges · 13 gaps · flows 66/64/2** all
+  hold, and every board, map and manifest in the tree hashes the same
+  before and after. A separation that moved the baseline would not be a
+  separation.
 
-**The tree is the master.** The board files and
-`designs/canonical/canvas.json` are the graded truth: coordinates,
-page assignment, annotations, and the flow graph beside them. The four
-canvases are review surfaces — claude.ai artifacts seeded from that
-master, each carrying the boards of the pages it serves. Nothing is
-decided on a canvas that is not written back into the tree; a canvas
-is re-seeded from the tree, never the other way round.
+### The push round — 2026-09-22
+
+The first post-MVP round, and the first boards in the new tree.
+`docs/implementation/notifications.md` names push and does not build it:
+it is the **delivery of a row the list already holds, never a source of
+one**, which is the fact every ruling below hangs off. Nine kinds, the
+doc's own taxonomy. Backlog item 102.
+
+- **A `Notifications` group, after Reading, with per-kind toggling
+  (jakob).** Reading is where a reader says what the product shows them;
+  push is that one step further out. The granularity is the strategy
+  rather than a refinement of it: a channel a reader can only kill
+  outright is a channel they kill, so the way to keep push alive is to
+  make turning one kind off easy.
+- **One row on the page, nine on a subpage (jakob).** The settings page
+  carries a disclosure row reading its state back — the `Default
+  license` grammar — and `PushKinds` carries the master switch and the
+  nine kinds unclustered. A settings page is scanned; nine switches
+  inside a group turn one line of the scan into a screen of it. And a
+  clustering would be a second taxonomy to keep in step with the doc's.
+- **The OS ask fires only from an explicit act, never at launch
+  (jakob).** It has one home: the master switch on the push settings
+  page. The one-time dismissible offer row at the top of the list is
+  the door to that page — the tap lands where the choice is made, the
+  way every notification row lands on its subject (jakob) — so on
+  native, where a denial is **sticky**, the ask is never spent on a
+  reader who did not reach for it, and on web the reader arrives at the
+  browser's own dialog through their own deliberate taps. Dismissed is
+  dismissed for good — an offer that came back would be the launch
+  prompt with extra steps.
+- **Push content is the drawn row, and nothing invented (jakob).** The
+  title is the row's sentence (`@ada commented on your post`); the body
+  is the row's second line where the row has one, and absent where it
+  has none; the tap lands exactly where opening the row lands. The whole
+  copy register applies out there too — sentence case, no exclamation,
+  no counts, no emoji. A notification that said more than its row would
+  make the tray a second product with its own voice.
+- **Tray and badge are the platform's own, and no more (jakob).**
+  Platform-default collapse, never a custom *N new* summary; **no
+  numeric app-icon badge, ever** — the launcher's dot is the bell's dot
+  at launcher scale, the same honesty the boolean
+  `hasUnreadNotifications` already carries, and a number would be the
+  errand the bell refuses to set. A foregrounded app suppresses the
+  banner: the surface is already open. Prose law, not drawn.
+- **The defaults, ruled kind by kind (jakob).** On: **comment on your
+  post**, **application approvable**, **application approved**,
+  **application rejected**. Off: **reply**, **mention**, **citation**,
+  **opinion on your profile**, **invite landed**. What is on is what a
+  reader is answerable for — their own post's comments, and the four
+  moments an application turns; what is off is what the list holds
+  perfectly well until they look.
+- **Forward note: chat-message-received joins the on-set when chats
+  ship.** A message addressed to one person and waiting is the clearest
+  case the on-set has. It is recorded rather than drawn because the kind
+  does not exist yet — the taxonomy's own rule covers it when it does
+  (`notifications.md`, *The kinds later slices add*).
+
+### The foot ruling — 2026-09-22
+
+The implementation session, building the sheet ceiling, found two
+rulings colliding on one control: the sheets-and-video round names the
+thread's **Add a comment** a growing `rows={1}` field, but the
+comments-sheet round (2026-08-28) draws that foot as a field-shaped
+**door** into the full-focus composer — and a field whose tap navigates
+away is never typed in, so it cannot grow. jakob ruled the collision:
+
+- **The foot stays a door.** Composing a comment keeps its one home —
+  the full-focus composer, where draft, media, and the signing ceremony
+  live. A live inline foot would need that whole ceremony in a one-line
+  row, or would create a second, lighter class of comment; neither is
+  drawn. The graph's `Add a comment → ReplyCompose` edge was already
+  the door and stands unchanged.
+- **The growth law loses one of its three fields.** It governs the
+  fields a writer actually writes in — the description sheet and the
+  sensitive **Why?** — not the foot. The sheets-and-video round's text
+  naming the foot a growing field is superseded on that one point; its
+  ceiling, growth, and rows-as-minimum rules stand untouched.
+- **A live foot is the chats round's question.** A chat is an inline
+  signed send; if that round designs one, the comment foot inherits it
+  then — never as a sheet bite now.
+- **No pixels move.** Boards draw every field at its `rows`, and the
+  foot was drawn at one line under either reading, so the ruling
+  changes the record and the docblock (`CommentComposerFoot`), not a
+  board.
+
+### The change-histories round — 2026-09-22
+
+Would-like #2, and the second round in the post-MVP tree. Thirteen
+boards: a chronicle for every versioned kind of content, a timeline for
+the stance — which turns out to be a history already — and the doors
+onto both. Backlog item 34.
+
+- **One list of whole versions, newest first, the current one marked,
+  and never a diff (jakob).** The store keeps complete states and L1
+  signs a full new record for every edit, so a difference between two
+  versions is something a reader works out by reading. Computing one
+  would also be a claim about which change mattered, which is the
+  author's business rather than the product's. From a row a reader opens
+  that version's own detail surface where the kind has one.
+- **A version is the content state only; tag and reference changes are
+  not edits (jakob, canvas review 2026-09-23).** "Only adding or removing
+  a tag or reference are not edits of the post. They are standalone edges
+  pointing to it — they are just baked into the edit screen in UI." A
+  version row carries exactly what `post_versions` keeps — title,
+  description, body, media and the sensitive mark — and nothing else. So
+  no version can differ from another by a tag, a tag change never mints
+  a version, and every version card wears the same tags line: the post's
+  current tags, a fact about the post rather than about any one of its
+  versions. Implementation reads this as contract.
+- **Any kind of post, one chronicle (jakob).** A body is words xor media
+  per version, so a post can change kind between two versions and the
+  chronicle draws both side by side, each by the same master at the same
+  variant. A picture version opens `PostVersionDetailMedia` — canonical's
+  media detail anatomy, nothing added and nothing moved — and a words
+  version opens `PostVersionDetail`.
+- **The historic banner is a panel of its own (jakob, canvas review).**
+  The first drawing butted onto the card and read as its header. It is
+  now the key-absent notice's anatomy — `tertiary-container` with its
+  `on-` pair, the card's rung, padding and gap — at the card's own width,
+  one column gap above it, the line in `body-medium` and the way back as
+  an `inverse` button on its own line. Both detail boards wear it
+  unchanged.
+- **A tombstoned version always keeps its row (jakob).** Removal takes
+  the payload and never the record (`erasure.md` §1), so the mark stands
+  in the content's place at the version's own date — whether one version
+  went or the whole thing did. A row that vanished would be the silent
+  erasure every honesty surface in this product exists to prevent.
+- **Per-version removal is drawn, and the whole-post removal leads the
+  author's register (jakob).** The head never falls through: removing the
+  current version's payload leaves the head selected and rendering
+  absent, so an author working version by version ends with a post that
+  still stands wearing a mark. The act that does what they mean is
+  therefore the first thing on the page, and the confirm words the
+  consequence before it is pressed. `Remove this version` rides EVERY
+  version with a payload, the current one included — removing the head
+  leaves the older versions standing and the post rendering removed. A
+  tombstoned version's slot never goes empty: it carries the quiet word
+  `Already removed`, `PickedSheet`'s "Described" idiom, not pressable.
+- **Comments and profiles get the same register (jakob, canvas review).**
+  "Removing the contents of your profile is not deleting your account —
+  you need to be able to do so." `CommentHistoryOwn` leads with `Remove
+  the whole comment`, `ProfileHistoryOwn` with `Remove every version`,
+  whose footnote draws the account's edge: the account, the handle and
+  everything published stay. Both carry `Remove this version` on every
+  version with a payload and `Already removed` in a tombstone's slot, and
+  both open `VersionRemoveConfirm` — the post board is the confirm's
+  master at every scale, and no comment or profile confirm is drawn. The
+  reader's chronicles gained the matching tombstone rows, which is why
+  `CommentCard` now takes `PostCard`'s optional `redacted` skeleton.
+- **Two doors, both appearing only once a second version exists
+  (jakob).** An `Edit history` row in the ⋮ — beside `Edit`, because
+  `History` is taken twice over (your own profile's ⋮, the wallet's
+  section) — and the `Edited` marker's own tap, which wires the
+  `onInspect` slot `PendingMarker.jsx` has carried unused since the
+  honesty markers were drawn. A door onto a list of one would teach a
+  reader that the feature does nothing.
+- **A stance IS a history, so the timeline reads the record mirror and
+  adds no table (jakob).** The bundle is the fold of every record ever
+  cast from one node to another; the timeline is that list, newest
+  first. Severance shows as what it is — a counter-record at its own
+  date, wearing the system's own word.
+- **The header says the sum in plain words, because the fold clips
+  (jakob).** A raw sum of +27.40 reads +1.00 past the cap, so a standing
+  cannot tell one gentle pick from twenty-seven years of them — and that
+  accumulated conviction is the thing a reader wants. The sentence
+  carries it; the exact pair rides `cg-exact` and paints in geek mode
+  only, both markups always drawn. The sentence has rules for any count
+  and any span (`copy-voice.md`, jakob, canvas review): numerals for the
+  count, `in` days or weeks under a month and `over` months or years from
+  one, the weight clause only when the raw sum passes the dial, and
+  `One pick, {date}.` for a single record.
+- **Both timelines carry the one "?" (jakob, canvas review).** `How
+  opinions build` rides the sheet title's row and opens `TimelineHelp` —
+  `HelpDialog`'s shape over the real sheet: an opinion is the sum of
+  every signed pick, the sum keeps counting past the dial, and walking
+  back is one more record, never a deletion.
+- **The door rule: authoring doors are faces and fields, history doors
+  are readouts (jakob).** The stance face is fully spent — tap opens the
+  pad, hold signs a gentle positive — so it never opens a history. On a
+  list the row splits: the person area opens the person (the 2026-09-01
+  ruling), the value readout opens that pair's timeline. On the pad the
+  `Current opinion` label gains the tappable marker's underline and a
+  tail, two rows clear of the field so no drag can end on it.
+- **Timelines are public to everyone, signed out included (jakob).**
+  Every record in one is a public act already, and the gates in this
+  product are on acting. There is nothing here to act on.
+- **The framing is additive everywhere (jakob).** On L1 an edit signs a
+  full new record with its own hash, salt and witness, pointing at
+  unchanged media — editing only ever adds, and "more" can be a version
+  with one picture fewer. `copy-voice.md`'s *Editing* line carries that
+  framing, and every chronicle closes on it in the reader's words.
+
+### The sheet's short-viewport clause — 2026-09-23
+
+The implementation session measured the sensitive sheet on web: its
+fixed furniture totals 286px, and on a small phone with the keyboard
+up the dvh-capped ceiling leaves the growing Why field no room — on
+the most extreme heights the furniture alone overflows. jakob ruled
+the gap in the growth law's cap clause:
+
+- **Pinned ends, scrolling middle.** A sheet that cannot fit its
+  furniture pins its grab area and its Done row and scrolls what
+  stands between them; nothing is shed, and the growing field's
+  floor is the last thing to leave view. The explainer line is
+  simply the first thing to slide away. One anatomy at every
+  height — no threshold variant, no keyboard-avoidance change —
+  for every sheet with a growing field, both platforms.
+
+### The feed-video rulings — 2026-09-23
+
+Two gaps from the implementation session's feed-video audit, both
+ruled before the chats work opened. The first completes the video
+conform round's one-at-a-time law: 70% said who *may* play, but not
+who *does* when two qualify at once — the audit measured the
+claim-order accident costing 4 of 39 clips the stage before they
+painted a frame.
+
+- **The stage law: incumbency, instant succession, topmost when
+  empty — continuously evaluated.** Each scroll surface has **one
+  stage**, and a post's clip and a comment's clip compete for the
+  same one. The playing clip **keeps the stage as long as it stays
+  past the 70% gate** — nothing takes the stage from a clip that
+  still qualifies, so a second clip scrolling into view changes
+  nothing, and scrolling back up past a playing clip never ricochets
+  playback to the one above. The instant the incumbent falls below
+  the gate the stage re-evaluates — **mid-scroll, finger down, never
+  waiting for the scroll to settle** — and the topmost qualifying
+  clip takes it in the same moment: the seamless swap, the old clip
+  freezing on its frame per the cover ruling, the new one starting
+  milliseconds behind. When nothing qualifies, nothing plays until
+  something does. jakob's reason for rejecting the library-standard
+  settle-deferral (Toro and its descendants start playback only at
+  scroll idle): *"users are not used to even stop scrolling
+  anymore"* — Instagram hands the stage over without a lifted
+  finger, and so does CoGra. A hard fling needs no clause of its
+  own: incumbents succeed each other faster than playback can
+  start, so a clip that leaves before painting simply never leaves
+  its still face. **A sheet over a surface suspends that surface's
+  stage** (jakob 2026-09-24, ruled with the implementation
+  session): a clip behind a sheet is not on screen in the law's
+  sense — the covered surface's incumbent stops rather than
+  playing on under the scrim, and a clip drawn on the sheet
+  competes for the stage by the same law, never by claim
+  accident. The sheet's dismissal lifts the suspension and the
+  stage re-evaluates as if scrolled. **The sensitive veil covers
+  its clip the same way** (jakob 2026-09-24, backlog item 103): a
+  veiled clip sits fully out of the stage rotation — no playback,
+  no sound-disc presence — because the veil is the reader's
+  declared not-yet, and a clip playing behind a blur the reader
+  chose contradicts it. **The unveil is an eligibility change,
+  not a suspension lift** (jakob 2026-09-24, sharpened when the
+  first build read it as the sheet's from-empty re-election): a
+  sheet suspends the whole surface's stage, so its dismissal
+  decides from empty — but the veil never stopped the surface's
+  incumbent, so the unveiled clip joins the rotation exactly as a
+  clip scrolling into view does: it changes nothing while an
+  incumbent still qualifies, and takes the stage by the ordinary
+  law when the stage is empty or next re-evaluates. Anything else
+  could move playback between two *other* clips on an unveil,
+  which no reader asked for. Preloading stays on: it is
+  invisible, leaks nothing the veil hides, and makes the unveil
+  instant.
+- **The first frame is stored, not derived.** *"The coverless
+  clip's face is its first frame"* was already the rule; what made
+  it a 1–3s empty box in practice was that no still existed and
+  the face could only paint once video data arrived. Now the
+  authoring fact is literal: on the vertical path, where the cover
+  step is skipped, the device **silently extracts frame 1 and
+  uploads it as the clip's still** — the frame-picker's own
+  extraction machinery, run without the step. **Frame 1 means the
+  clip's frame 0, strictly** (jakob 2026-09-24, ruled when the
+  platforms diverged): a still taken from ~1s into the clip is a
+  cover *in* the video rather than the start of it, so playback
+  visibly jumps off it — the exact flash this ruling exists to
+  kill. A black or blurry opening frame is the clip's honest face,
+  and an author who wants a prettier one chooses a cover. **The
+  preview face is the stored face** (jakob 2026-09-24, backlog
+  item 106): the compose tiles' claim to wear the clip's first
+  frame holds to the same frame 0 — a tray face that differs from
+  what every reader will see is a lie in the one place the author
+  is deciding whether they need a cover. Reading surfaces are
+  always handed a stored still, coverless or not, and a loading
+  clip loads exactly as a loading picture does. This cannot
+  reintroduce the flash the no-cover ruling guards against: the
+  flash came from a chosen cover differing from frame 1, and a
+  frame-1 still *is* the frame playback starts on — the drawn
+  QuietNote's "it starts on its own first frame" becomes seamless
+  rather than approximate. When silent extraction fails, the post
+  ships without a still and *Cover · no frames came back*'s neutral
+  tile already says what stands there. The stored still is what
+  READING surfaces are handed — the chosen cover where one was
+  chosen, the taken frame 1 where none was; the COMPOSE WIZARD's
+  own tiles are a different rule and always wear the clip's first
+  frame, the chosen cover riding as the ringed inset only (the
+  video-cover round). **The rule holds at both scales** (jakob
+  2026-09-24, when the platforms' reply tiles diverged): the
+  reply composer's clip tile is an authoring tile like the
+  tray's — frame 0 as its face, the chosen frame as the ringed
+  inset — because a divergence between the two composers would
+  be invisible until it confused, and the inline cover row
+  already shows the chosen frame at full prominence right below
+  it. No new boards; both rulings
+  land as contracts to the implementation session.
+
+### The compose last-picture ruling — 2026-09-23
+
+The picture path's manager had no edge for removing the last
+picture, and the fallout was an empty Details walking to the seal.
+jakob ruled it as the video path's rule applied to pictures:
+
+- **The last × gives the pick step back.** Removing the last
+  picture closes the manager and returns the pick step, tray
+  empty; the stage never stands on a body that is gone, so no
+  empty post reaches the seal. It does NOT become the words path —
+  that fork was the author's explicit early choice, and edit's
+  body-becomes-words rule exists only because the edit wizard has
+  no pick step to give back. The removal is never refused, and the
+  staged title, description, tags and references wait in the
+  draft. Drawn on canonical (`ComposePicked`'s remove edge,
+  docblocks there and on `ComposeDetails`), merged as its own PR.
+
+### The chats base round — 2026-09-23
+
+Would-like #3, the third round in the post-MVP tree: the four base
+boards, `ChatsHome`, `ChatsExplore`, `ChatThread` and `ChatCreate`, on a
+page of their own. The masters (`ChatRow`, `ChatExploreRow`,
+`ChatBubble`, `ChatSealedNotice`, `ChatFoot`) live in the tree's
+prelude until the round migrates.
+
+- **Messenger clothes over the proposal primitive (jakob).** A chat's
+  backbone is the proposal machinery, and nothing on these surfaces may
+  look like a proposal. This is the one place CoGra adopts messenger
+  convention wholesale: a list of your chats, bubbles, your own on the
+  right.
+- **The send arrow is the seal (jakob).** The signing ceremony
+  compresses into the send act: a tap signs the message and sends it;
+  press and hold opens the what-you-sign sheet; a one-time quiet line
+  under the foot on the first send says so. The field is live — the
+  question the foot ruling left to this round — and the comment foot's
+  inheritance is not taken here.
+- **The lock toggle (jakob).** Per-message encryption beside the field,
+  sticky per chat, plaintext by default for a fresh chat, the state
+  shown by the lock's fill (`lock_outline` / `lock`). Every encrypted
+  message wears a quiet lock by its time, readable or not; one the
+  reader holds no key for shows a friendly notice with the raw text
+  one tap under it.
+- **Bubbles carry content, time and the lock, nothing else (jakob).**
+  Opinions, citing, saving and commenting live behind a long-press.
+  Messages never edit.
+- **Two faces, one page (jakob).** `Your chats` and `All chats` swap
+  both ways; the explorer is the ordinary rank narrowed to chats, with
+  no second algorithm and no header claiming one. A guest reads the
+  explorer; the swap to their own chats is where the join prompt meets
+  them.
+- **The founding is minimal (jakob).** Name, picture and description,
+  all optional; who can join as three choice rows — open, on request,
+  invite only — never a segmented pill. The governance map ships its
+  default silently. A 1:1 and a group both start from the list's `New
+  chat`.
+
+### The chats round, completed — 2026-09-23
+
+jakob reviewed the base boards on the canvas the same day and ruled the
+revisions and the rest of the round: eleven more boards, fifteen in all
+on the Chats page. The masters grew in the tree's prelude —
+`NewChatFab`, `NoKeyPreview`, `HideJoinedSwitch`, `DayDivider`,
+`ChatThreadHeader`, `ChatJoinFoot` — and `ChatBubble` took media.
+
+- **The product's first FAB (jakob).** `New chat` floats bottom-right
+  over the list on both faces and stays while the list scrolls — the
+  messenger's grammar, and the one place the "no FAB" rule the
+  `Invites` entry point records gives way. It is glyph-only
+  (`add_comment`, so it never reads as a second New post) and tonal
+  (`secondary-container`): the bar's compose action keeps the one loud
+  surface, and opening a picker commits nothing.
+- **The list collapses; the thread pins (jakob).** The chats list is a
+  surface a reader dwells in, so it moves to §2's Collapses column and
+  takes `CollapsingTop`; a chat's thread keeps its pin.
+- **Previews decrypt wherever the reader holds the key (jakob).** Push
+  already shows the words, so hiding them on the list is annoyance
+  without honesty. `An encrypted message`, with the lock, appears only
+  where the key is genuinely absent — rare on your own list (a message
+  from before you joined), common in the explorer (a non-member holds
+  no key).
+- **Two clocks (jakob).** Rows keep the ages ladder — a row answers
+  freshness. The thread prints exact clock times on every bubble and a
+  day divider wherever it crosses a day — it is a coordination surface,
+  the one place CoGra needs when-exactly. The divider speaks the
+  dateline's date and never `Today`.
+- **The thread's header is the door (jakob).** The chat's picture and
+  name open its detail surface — members, description, mute, leave,
+  the history of its metadata. That surface is a later sub-round and
+  the one gap this round leaves on purpose.
+- **The explorer's filter is a quiet switch, on (jakob):** `Hide chats
+  you're in` — the face exists to discover.
+- **Contrast (jakob's review, conformance).** Text on the reader's own
+  bubble and the no-key notice take `text-body`: the fill's formal
+  `on-` pair measures 4.58:1, AA at the floor.
+- **`Invite only` is the preselected policy (jakob)** — what people
+  already know, and what a chat founded by picking people is.
+- **Long-press is the chats' second gesture (jakob).** On a row it
+  opens the chat's options (`Mute`, `Chat details`); on a bubble, the
+  message's acts — the comment's menu pointed at a message, with `Give
+  your opinion` and `Reply` added and no Edit row, ever.
+- **One door for both kinds (jakob).** The FAB opens a people picker
+  with `New group chat` at its head: a person opens the 1:1, the group
+  row turns the list into a multi-pick that ends in the founding. Tapping
+  someone you already share a 1:1 with asks — carry on, or start a
+  separate chat — because several 1:1s with one person are legal
+  (`chats.md` §9).
+- **The seals.** Holding the send arrow opens what one message signs,
+  in the compose seal's vocabulary; the founding's `Next` reaches its
+  own seal — the chat and one invitation per picked person, signed
+  together — on the profile Save's precedent.
+- **The non-member's face** is the thread itself with the join, worded
+  by the chat's policy, where the foot would be; a guest gets the same
+  face.
+- **Stickers are parked (jakob).**
+
+### The chat details round — 2026-09-23
+
+Round B1 of the chats work: the detail surface the chats round left as
+its one deliberate gap, and its satellites — eight boards on the Chats
+page (`ChatDetails`, `ChatDetailsReader`, `ChatEdit`, `ChatEditSeal`,
+`ChatHistory`, `ChatSearchIn`, `ChatMediaGallery`, `ChatLeaveConfirm`).
+The five gap edges that pointed at it — the four thread headers and the
+row menu's `Chat details` — now land on it. The masters (`ChatIdentity`,
+`ChatDisc`, `MemberRows`, `OpenDecisionsEmpty`, `ChatVersionCard`,
+`ChatEventRow`) live in the tree's prelude.
+
+- **Multi-voice acts wear messenger clothes (jakob).** An act is instant
+  where the actor's own voice suffices under the chat's governance map;
+  otherwise it waits as a quiet pending card in the thread and a row
+  under an `Open decisions` section on the details, beside media. This
+  round draws the section and its empty state (`Nothing is being
+  decided.`); the pending card and the filled section are round B2's,
+  an intended gap on the edit seal's act.
+- **No presence, ever (jakob).** No online, last-seen or typing signal
+  on a member row or anywhere else.
+- **The chat's opinion control sits on the details (jakob)** — the
+  profile header's stance-anchor precedent: the wide anchor leads the
+  actions row, and the row's second act (`Edit chat` for an eligible
+  member, the join for a reader outside) takes its word's width.
+- **Founding creates the chat whole; an invitee who has not pointed
+  back is pending (jakob).** The member list marks them `Invited —
+  hasn't joined yet`, with no role. The thread's quiet line for the same
+  fact is a state of the drawn thread, not a board.
+- **The founder holds admin; roles show on member rows (jakob)** —
+  `Admin`, `Moderator`, `Member`, the default map's three roles. A
+  member can be a Collective, drawn as the person row it looks like
+  (`ActorChip`'s rule) with `a collective` on its second line.
+- **Metadata grows like posts and profiles (jakob).** Layered full-state
+  versions, the L1 mechanism being succession. The chronicle is the
+  change-histories pattern verbatim — whole versions newest first, the
+  current one marked, never a diff — with membership events (joined,
+  left, invited) as quiet rows between the versions, never part of one.
+- **Mute lives on the row menu and on the details (jakob)**, one
+  per-chat setting, and it silences the device push only — messages
+  write no bell rows.
+- **Leave is unilateral and unconditional (jakob)**, and the Leave
+  record's optional parting reason is a field in its confirm and a
+  quoted line under `left` in the chronicle.
+- **Chats are public (jakob)**, so the details are readable by
+  non-members and guests: the member's acts are absent, and the join,
+  worded by the chat's policy, stands where `Edit chat` stands.
+- **Deferred (jakob):** message disavowal and everything
+  moderation-flavoured — the moderation slice's.
+- **The lane's calls, flagged for review:** the anatomy's order
+  (WhatsApp's group info filtered: identity, actions row, media, open
+  decisions, members, mute and history, leave); `Edit chat` on the
+  actions row rather than in the header; the leave confirm not offering
+  the opinion door; the clip tile wearing the sound disc and no duration
+  (the one-duration ruling); the leave dialog keeping its heading and
+  answers pinned while a grown reason scrolls (the sheet's
+  short-viewport clause, read for a dialog).
+
+jakob reviewed the round on the canvas the same day and ruled five
+corrections:
+
+- **Search rides the thread's header (jakob).** `Search in this chat`
+  left the details for a glyph at the pinned header's trailing edge,
+  beside the details door, on every thread — the reader's outside the
+  chat included, since plaintext is a public read and the truth note
+  says the same to both. `ChatSearchIn`'s way back is the thread.
+- **Role readouts are doors (jakob).** On a member's details, tapping
+  `Admin`, `Moderator` or `Member` opens the role-change flow —
+  `decision:change_role`'s multi-voice face, round B2's. The row splits
+  the stance row's way (the person area opens the person, the value its
+  own surface), and the word wears the `Edited` marker's tappable
+  underline. A reader outside keeps plain readouts; the pending invitee
+  has neither word nor door.
+- **A chat's versions are removable by decision (jakob).** His case: a
+  picture changed to one a member never wanted public. `Remove this
+  version` rides every version with a payload, opening
+  `decision:redact_version`'s multi-voice face (B2's; the decision joins
+  chats.md §5, gated as `disavow_message`: > 50% cast, ≥ 20% quorum). A
+  chat has no author — its creator is only its creator — so the door
+  shows for every member, where a post's shows for its author alone. A
+  removed version tombstones by the change-histories grammar.
+- **The edit's seal says three (jakob).** The default map's
+  `set:metadata` gate (> 50% weighted cast, 10% quorum) makes even a
+  solo admin's change a proposal passing on its proposer's own ballot,
+  so the reader signs the anchor, its reference to the chat and their
+  +1 ballot — `3 things, signed together`, the founding seal's exact
+  precedent, worded `Change`, `Chat` and `Your opinion` · `For the
+  change`. The system actor signs the succession on its own and never
+  joins the reader's count.
+- **The `Why?` field stays (jakob).** `layer1-interface.md`'s act
+  payload schema gives Leave a "parting reason" — "if the interface
+  says so then the L1 author intended it to exist" — and the leave
+  confirm's docblock cites it.
+- **The gate**: canonical holds byte-identical — **217 screens · 1568
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 44
+  screens and 167 edges. The chats round's five gaps are resolved, and
+  five stand in their place: the four intended B2 faces
+  (Add people, the role change, a version's removal, the change that
+  waits for more voices) and a Collective member's own page, owed since
+  the Collective actor variant (§7).
+
+### The chats governance round — 2026-09-23
+
+Round B2 of the chats work: the multi-voice faces the details round left
+as intended gaps, and jakob's fix pass on the canvas the next day —
+fourteen boards on the Chats page (`ChatThreadDecisions`,
+`ChatDetailsDecisions`, `ChatDecisionDetail`, `ChatAgreeSheet`,
+`ChatInvitePicker`, `ChatInviteSeal`, `ChatThreadInvited`,
+`ChatJoinSeal`, `ChatThreadRequested`, `ChatThreadApproved`,
+`ChatRequestApprove`, `ChatRoleSheet`, `ChatVersionRemoveConfirm`,
+`ChatHistoryRemoved`). The masters (`PendingCard`, `DecisionOutcome`,
+`OpenDecisions`, `VoteActs`, `ApproveAct`, `VoteSheet`, `VoteRows`,
+`ChatVersionTombstone`) live in the tree's prelude with the bodies the
+boards share; `ChatJoinFoot` gained the invited, requested and approved
+states, and `RedactedContent` a fourth mark.
+
+- **Nothing may look like a proposal (jakob).** A chat's backbone is the
+  proposal machinery. An act whose actor's own say clears its gate is
+  instant: a proposal that passes on its proposer's first ballot, sealed
+  as `3 things, signed together` (the change, its link to the subject,
+  the proposer's own opinion for it — `ChatEditSeal`'s precedent). An act
+  that needs more voices is a quiet card in the thread at the moment it
+  was proposed: a plain sentence (`Mira Voss wants to remove Kel Moreau
+  from the chat`), `Disagree` and `Agree`, and a count of the people who
+  agree (`2 of 5 so far`). The same open decisions stand as rows under
+  `Open decisions` on the details. Proposals never expire, so no card
+  carries a clock.
+- **A vote both ways is a real vote (jakob 2026-09-24).** A ballot's
+  direction is its sign — positive agrees, negative disagrees, zero
+  withdraws (governance.md §3) — and every chat threshold reads the cast
+  (`> 50% of the cast`, `≥ 2/3 of the cast`, beside a quorum of the
+  eligible weight that has cast), so a disagreement counts toward the
+  quorum and against the share. Chat tallies are bidirectional with
+  mirror failure (governance.md §2.4): a decision fails, terminally, once
+  its negative side meets the same threshold shape over the weight
+  against; while neither side crosses it stays open and members may vote
+  again. The positive-only petition tally is Network-scope only and never
+  a chat's. So an outcome line has two faces — passed (`Tobias Lindqvist
+  is now a moderator`) and failed (`The chat kept its name`) — and a
+  failed decision is final; asking again is a new decision.
+- **No vote signs on a bare tap (jakob 2026-09-24).** `Agree`, `Disagree`
+  and `Approve` open the vote's own small seal — `ChatSignSheet`'s
+  vocabulary compressed to one sentence saying what the vote is, a quiet
+  line that it is public and can be changed, and the seal's button (`Sign
+  and agree`). One master, drawn once as `ChatAgreeSheet`; the nouns swap
+  per vote.
+- **A decision opens whole (jakob 2026-09-24).** A card's words, and a
+  row's, open `ChatDecisionDetail`: what would change, in full — for a
+  change to the chat, the proposed version beside the current one, its
+  picture on the card at the details' 80px and a tap away from the
+  fullscreen viewer; every vote cast, who and which way, as the public and
+  auditable records they are (api-spec.md, `Proposal.ballots`); and the
+  reader's own vote with `Disagree instead` (`Agree instead` over a
+  disagreement) and `Take back your vote`. Changing a vote signs a newer
+  ballot, since the tally reads each person's newest. Taking it back signs
+  the zero-direction ballot, as governance.md specifies; api-spec.md's
+  ballot input does not accept ZERO yet, which is the implementation's to
+  close.
+- **The decision page is where a vote is revised (jakob 2026-09-24).** A
+  card the reader has voted on — their own proposal always — shows a
+  readout, `You agreed` or `You disagreed`, where the two words stood, and
+  the whole card opens the decision page; the details row mirrors it.
+  Cards stay calm.
+- **The count convention — the brief's recommendation, awaiting jakob's
+  canvas review.** A card counts the people who agree and never shows
+  weight. The tally underneath is weighted (admin 5, moderator 3, member
+  1), so a card can settle early, or stand level while its count reads
+  well — the drawn change is at 3 of 6 agreeing and exactly half each way
+  by role, because Mira's disagreement weighs 3. The card carries no
+  arithmetic; the decision page shows both directions, and geek mode
+  paints the weighted sums there — a widening of the geek round's "the
+  pairs, and only the pairs" to a governance tally.
+- **An invitation is the inviter's own act (jakob).** It is a public,
+  priced vouch and never a chat decision: a picker over the people not in
+  the chat, then a seal counting one invitation per person, and no card.
+  Withdrawing your own invitation (a De-invite) is a later surface.
+- **Joining is always the joiner's own record (jakob, confirmed
+  2026-09-24).** One seal, a sheet over the thread at `1 thing, signed`,
+  serves the three routes: an open chat's `Join`, an accepted invitation
+  and an approved request. Only the fact row saying how the reader comes
+  to be joining swaps its nouns. An approval never joins anyone:
+  membership comes only from the joiner's own signed Participant (chats.md
+  §4; layer1-interface.md §9.8). An invitee reads the chat from outside
+  with `{name} invited you.` and `Join` at the foot, and no Decline,
+  because ignoring an invitation needs no record. A requester's thread
+  carries their own card, `You asked to join`, over a foot that says the
+  request is sent; once approved, the card becomes `Your request was
+  approved` and `Join` returns.
+- **A join request meets its approver as a card.** Under the default map
+  one approval settles it, so the card carries no count and `Approve`
+  stands alone — a request has no against; ignoring it is the no.
+- **Roles and removals go through the same seal.** A role word opens a
+  sheet of the three roles with the current one marked. A version's
+  removal opens `VersionRemoveConfirm`'s dialog with the nouns swapped
+  and a paragraph saying the chat decides it. Both proposals go through
+  `ChatEditSeal`'s seal, not drawn again. A removed version keeps its
+  row and date under the chat's own mark, `Removed by the chat's
+  decision`, because a chat has no author and the members' choice is no
+  platform verdict.
+- **The lane's calls, flagged for review:** the decisions fixture moved to
+  Salt-crust rubbings, where the reader is a plain member (in Coast
+  walkers the admin reader's own say clears the metadata gate); outcome
+  lines settle in place at the proposal's moment; the card is an outlined
+  card on the page ground, neither bubble fill; `Agree` is the filled small
+  button and `Disagree` the text one beside it, the dialog's pair, since
+  the house button has no tonal variant; on a details row the two words
+  take a line under the sentence; the card carries no geek arithmetic;
+  the decision page is one tall board; the proposed picture takes the
+  details' 80px disc, the largest the chat's picture is drawn, rather than
+  the post chronicle's full-width picture, because a chat's picture is a
+  disc; the readout stands at the count line's end where the buttons
+  stood, and a voted card is one button whole; the requester's two moments are two
+  boards; an approval shows both as a card and as a row; the role sheet's
+  rows carry no lines; the invite picker leaves out people already
+  invited; names are spelled whole (`Mira Voss`, not `Mira`).
+- **Owed, and named:** the composers for a join request's message and an
+  invitation's message are round B3's (jakob), as are the invitation and
+  approval notification rows — the graph enters `ChatThreadInvited` and
+  `ChatThreadApproved` there — and the explorer row's word for an invited
+  reader; starting a kick and message disavowal stay with the moderation
+  slice. chats.md §8 speaks of redacting a superseded version while the
+  details round's ruling covers the current one too.
+- **The gate**: canonical holds byte-identical — **217 screens · 1568
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 58
+  screens and 240 edges. The four intended B2 gaps are resolved; the one
+  gap left is a Collective member's own page (§7).
+
+### The chats integration round — 2026-09-24
+
+Round B3 of the chats work, and the round that closes it: what a chat owes
+the rest of the product, and what the rest of the product owes a chat.
+Twenty boards on the Chats page (`ChatThreadReactions`,
+`ChatMessageOpinions`, `ChatMessagePad`, `ChatThreadReply`,
+`ChatMessageMenuOwn`, `ChatMessageRemoveConfirm`, `ChatThreadRemoved`,
+`ChatThreadRecording`, `ChatThreadRecordingPaused`, `ChatThreadVoice`,
+`ChatThreadSealedMedia`, `ChatThreadPending`, `ChatThreadSentPost`,
+`ChatSendSheet`, `ChatAskSheet`, `ChatJoinSealPad`, `ChatNotifications`,
+`ChatFeedCards`, `ChatSearchResults`, `ChatSaved`), and revisions to boards
+already drawn (`PushKinds`, `ChatsExplore`, `ChatInviteSeal`,
+`ChatThreadInvited`, `ChatThreadRequested`, `ChatMessageMenu`,
+`ChatJoinSeal`, `ChatCreateSeal`, `ChatSignSheet`, and every thread through
+its masters). The prelude's masters for it are `ReactionTrace`,
+`BubbleQuote`, `ReplyQuoteStrip`, `RemovedBubble`, `VoiceNote`, `NoKeyMedia`,
+`MicSeal`, `ChatFootRecording`, `DidntLand`, `BubbleCitation`,
+`ChatFeedCard`, `MessageFeedCard`, `SealStance` and `ChatSealSubject`;
+`ChatBubble` gained `quote`, `trace`, `pending`, `removed`, `fill`, `voice`,
+`avatar`, `onCard` and the timestamp tuck, `ChatFoot` the quote strip and the
+mic, `ChatJoinFoot` the invitation's message. The design system gained, all
+additively and with every canonical board rendering byte-identically: the
+`mic` and `delete` glyphs (§5), `Timeline`'s `surface` tone,
+`StanceControl`'s `firstConnection` mode and `PostCard`'s `lead` and `main`
+slots.
+
+- **Reactions are the opinions already cast on a message (jakob).** No new
+  record kind and no emoji system: every Opinion → Message already carries
+  a pair, and the twenty faces already read it. WhatsApp's shape — a quiet
+  pill hanging from the bubble, the faces aggregated (each person's opinion
+  read as its nearest face, the most-worn first, three at most) and the
+  count of people beside them. It is a readout, never a picker; a tap opens
+  `Opinions on this message`, the opinions sheet's grammar at message scale.
+  Geek mode paints each person's pair after the count, the first three then
+  `+N more` — never an average, which would be a number nobody signed.
+- **The message's two opinion destinations are drawn (jakob, the fix
+  pass).** `Give your opinion` opens `StanceControl`'s own pad over the
+  thread — its anchor held out of view, because a bubble wears no face — and
+  `Opinions on this` opens the sheet of `StanceRow`s, each split to its
+  timeline.
+- **Voice notes are a chat-scale media kind only (jakob).** Post audio stays
+  parked. The mic stands where the send arrow stands while the field is
+  empty. **Tap to record, one state (jakob, the final micro-fix):** the tap
+  turns the foot into the recording's controls — the running length and
+  `Describe`, then delete, the lock toggle visible and flippable until send
+  (jakob: the sticky lock governs a voice message like any message), pause
+  and the explicit send arrow. There is no hold, no slide and no release that
+  sends: hidden gestures fight the product's visible-controls honesty, and a
+  release that signed would sign by accident, against the sign-step ruling —
+  the arrow is the only way a note is signed. **Pause flips to play**, `Keep
+  recording`, which extends the same note (`ChatThreadRecordingPaused`). The
+  bubble is compact — play, the transport's own `Timeline`, the length and
+  the clock in one 40px band; a note is described like all media, the
+  author's words where given and `Voice message, 0:42` where not.
+- **The timestamp tucks (jakob, the fix pass; a `ChatBubble` rule, so every
+  thread re-renders).** When a message's last line is short, the clock tucks
+  into it at the lower right, marginally lower than the words; only a long
+  last line pushes it to its own line. Built the standard way — an invisible
+  copy of the clock ends the text as a spacer, the visible one lies over the
+  reserved room.
+- **An encrypted message encrypts its attachments (jakob; chats.md §7).** A
+  keyed reader sees the media with the quiet lock; a no-key reader gets the
+  reserved tile with the lock and one friendly sentence, and no expand to
+  bytes — cipher text is at least characters, cipher pixels are nothing. The
+  tile claims no shape, since the ratio rides the sealed payload. And the
+  implementation's consequence: **client-side processing is the only quality
+  enforcement for encrypted chat blobs** — the server holds no key, so no
+  transcode, resize or thumbnail path exists for them, and the stored still
+  of an encrypted clip is taken on the device before encryption or not at
+  all.
+- **The chat and the message are feed cards, on the real card (jakob: both
+  declared opt-in kinds; rebuilt in the fix pass).** Both are `PostCard`,
+  mounted, with its header, its ⋮ and the normal action row — the opinion
+  face, the score, the comments, the share — and the card itself is the
+  door: a chat's to its thread, a message's to its thread at the message; the
+  join lives inside. Redrawn for jakob to judge on the canvas (the final
+  micro-fix; the direction blessed conditionally): through `PostCard`'s
+  additive `lead` and `main` slots, the message card's author line is the
+  sender's `ActorChip` and `· in {chat}`, and its body is the message as the
+  thread's own `ChatBubble` — tail and tucked clock, the face dropped because
+  the author line names the sender, the fill lifted a tonal step so it shows
+  on the card; the chat card's author line is its disc, its name with the
+  `forum` kind mark and the policy line under them, and its body is its last
+  message as a `ContentRow` preview row. Nothing but a chat looks like a
+  bubble, and a row-body breaks the text-post look. The ⋮ had gone missing because the first
+  drawing hand-built both cards on `Card`, and handed the real `PostCard`
+  below them a fixture with no `license` and no `menuItems`, for which the
+  card draws no dot.
+- **A chat result opens the chat's read surface, for anyone (ruled).** A
+  message is the fourth saveable kind, its Saved row the comment's shape
+  with `in {chat}` on its second line. Canonical's `RefsSheet` gap — the
+  referenced node's own surface — re-wires at migration: its chat and
+  message rows land on the read surface and on the thread at the message.
+- **The foot takes a reply's quote (round A's docblock, drawn).** `QuotedRow`
+  above the field with a × that lets the reply go; landed, the quote rides
+  the bubble's head and scrolls to the message it answers.
+- **The share act always opens `Send to a chat` (backlog item 23, ruled in;
+  unified by jakob in the fix pass).** This revises the reel round's "one tap
+  to the platform's own sheet": every share glyph, on every card, detail and
+  reel, opens the send sheet, and the platform's share lives inside it as
+  `Share outside CoGra`. One symbol — the share glyph everywhere; the send
+  arrow stays the seal's alone. The system's node glyphs give the message
+  kind `send` (`NODE_GLYPHS`, on reference and search rows and on Saved); it
+  stays as it is (jakob: the contexts disambiguate), closed. The sheet: the
+  reader's chats as choice rows,
+  and the chat's own foot, whose arrow signs one message citing the post. The
+  sent post reads back as its `ReferenceRow` at chat scale. A Reference is
+  never encrypted, so the lock seals the words beside a sent post and never
+  which post it was.
+- **The seals' opinion is the real stance element (jakob, the fix pass: "you
+  should be able to express your actual opinion when accepting an invite or
+  creating a request").** The join's seal, the request's sheet and the
+  founding's seal hold `StanceControl` itself in their `Your opinion` row — the
+  pressable face, its pair in geek mode — and a tap opens the ordinary pad
+  over the seal (`ChatJoinSealPad`); what it sets is what the seal signs. On
+  these seals the control runs in its first-connection mode (jakob, the final
+  micro-fix): a first connection has nothing to walk back, so the pad omits
+  the walk-away; the message's pad keeps the full control, an opinion on a
+  message being a real, revisitable stance. The message's own seal keeps the
+  compose seal's one-axis grammar, `OwnStanceReadout` with `Adjust`.
+- **Pending and didn't-land (design.md §9).** A message still settling shows
+  whole with `Still settling ·` before its clock; one that expires leaves
+  every reader's view and its author gets a calm notice where it stood —
+  `Nothing was spent.`, `Dismiss` and `Try again`.
+- **Removed messages (round A's docblock, drawn).** The author's own `Remove`
+  sits among the acts on their own bubble's menu, behind the post's confirm
+  with the nouns swapped; the removed message is `RedactedContent` where the
+  bubble stood. `Removed by its author` and `Removed under the platform's
+  rules` never read alike. Message disavowal stays with moderation.
+- **Three notification kinds (jakob).** An invitation (`@mira invited you to
+  Night fishing crew` → `ChatThreadInvited`), a request awaiting your approval
+  (→ `ChatRequestApprove`, written only for those the map lets approve), and
+  your request approved (→ `ChatThreadApproved`). No bell row for an
+  ordinary message, ever: unread lives on the chats icon's dot. Push gains the
+  three kinds and a `Chats` group whose `New messages` is on — the push
+  round's forward note, drawn — the one push kind with no bell row, delivering
+  what the thread holds; per-chat mute is its footnote. Whether messages split
+  into 1:1 and group buckets stays undecided.
+- **The two small composers (jakob).** `Ask to join` opens the request's own
+  small sheet — the join seal's shape, with an optional `Message` — instead of
+  sending on the tap; the invitation's optional `Message` stands on the invite
+  seal, one message riding every invitation in the batch. The invitee reads it
+  quoted at the foot, the approver reads the request's on the card.
+- **The explorer's invited word.** An invited reader's row says `You're
+  invited`, in the join's register, and lands on the join's seal.
+- **The lane's calls, flagged for review:** the mic replaces the arrow while
+  the field is empty, rather than standing beside it; the recording's live
+  mark is a `primary` mic, not a red dot; the recording foot adds `Describe`
+  to WhatsApp's anatomy; the paused state is a board of its own, since its
+  middle control has its own edge; the trace hangs outside the bubble, which
+  bends round A's "nothing on the bubble" only that far; geek mode's trace
+  lists pairs rather than any summary; the no-key tile stands at the wide
+  rung (a band for voice), not the payload's shape; the message card's bubble
+  takes `surface-container-high` on the card; `PostCard`'s two new slots are
+  the micro-fix's second design-system touch; only plaintext messages are
+  message-card candidates; the send sheet sends to one chat at a time and
+  reads the sent post back without its pair; the founding's seal gains the
+  opinion row too; the approval row names the chat as its actor; the chat rows speak handles, the
+  list's grammar; the three new push kinds default on, by analogy; the
+  invitation's message field sits on the seal; the explorer's word is
+  `You're invited`; `Try again` returns the words without signing.
+- **The componentization law (jakob, the fix pass: "we want actual
+  components. ALWAYS!").** A board mounts the real master wherever one
+  exists; hand-drawn look-alikes stand only in explicit show-me-options
+  testing. The chats boards were audited, A through B3, and rebuilt where a
+  master existed: the thread header is `PageHeader` (the door in its title
+  slot, search in its action slot), the feed cards `PostCard`, the reply
+  quote `QuotedRow`, the sent post `ReferenceRow`, the no-key tile
+  `MediaAttachment`'s reserved region, the voice line `Timeline`, the seals'
+  opinion `StanceControl`, the message's opinions `StanceRow`, and the
+  hand-drawn discs on the founding and its seal `ChatDisc`. What remains
+  prelude-drawn has no master to mount — the chat's disc with its `forum`
+  glyph, the bubble, the pending card, the member row's role split, the
+  event row, the FAB, the foot's icon controls, the trace, the didn't-land
+  notice — and each is a candidate to promote into `components/` when the
+  round migrates.
+- **The canvas grammar, kept.** Rows stand 120px apart below the tallest
+  board of the row above, so the first B3 row clears the decision page's
+  960px board and its name strip.
+- **Two contradictions, flagged.** design.md shows pending content in full to
+  every reader, where the brief said "to its author" — the board follows the
+  doc. And canonical's `ExploreSearch` draws a chat-message result and a
+  comment result, both of which api-spec.md rules out of the global index;
+  `ChatSearchResults` follows the contract, and canonical's board is the
+  backlog's to reconcile.
+- **The gate**: canonical holds byte-identical — **217 screens · 1568
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 78 screens
+  and 385 edges, with the one gap it had: a Collective member's own page
+  (§7). Every destination this round cannot name — canonical's feed,
+  search, Saved, notifications, the share glyph, the score, the viewer — is
+  the `canonical` terminal, re-wired at migration.
+
+**The chats work, closed.** Four rounds now cover chats end to end: the list
+with its two faces, the thread and its foot that seals, founding and the
+people picker (the base round and its completion); the details surface, its
+edit and chronicle, search in the chat, media and leaving (B1); every
+multi-voice decision in messenger clothes, the invitation, the three routes
+into a chat and the request's two sides (B2); and what the chat and the rest
+of the product owe each other — reactions and a message's opinions, replies,
+voice, encrypted media, pending and removal, the share act's one door, the
+opinion set on every seal, feed, search, Saved, notifications and push (B3),
+all of it on real masters. Deferred, and named: the moderation slice's items — message
+disavowal, starting a kick, withdrawing one's own invitation (De-invite) and
+everything verdict-flavoured; a Collective member's own page, owed since the
+Collective actor variant (§7); stickers, parked; general post audio, parked;
+and backlog item 34's container note — its chat chronicle is drawn (B1's
+`ChatHistory`), and its comment-redaction half stays owed where it was.
+
+### The indirect kinds are scope-served — 2026-09-24
+
+Backlog item 105's resolution (jakob, the fix session): the search
+rulings' three indirect kinds — messages, comments and offers — and
+api-spec's index were read against each other, and both survive
+because the 2026-08-28 ruling's own mechanics never asked for body
+search:
+
+- **Scope-served.** A message, comment or offer result exists only in
+  a **scoped** query (`@handle <text>`, `#tag <text>`): the remainder
+  matches name-class fields and titles — the scoped author's content
+  and the names of their acts' targets — joined through authorship.
+  **No body is ever indexed** for the global surface; the sheer mass
+  of body words would clog any default result mix, and a keyword
+  alone still surfaces nobody's conversation. In-chat body search
+  stays `chatSearch`'s, over plaintext only — encrypted bodies are
+  never searchable anywhere, since the backend holds ciphertext.
+- **All chats, never just the viewer's.** A scoped message result
+  reaches any plaintext chat — chats are public reads, so the scope
+  is the author, not the viewer's membership.
+- **The default mix carries the seven direct kinds.** Selecting an
+  indirect kind without a scope shows a quiet line pointing at the
+  scope operator instead of results (its string is a copy-voice
+  candidate, awaiting blessing).
+- `ExploreSearch` already draws exactly this — its rows are an
+  @-scoped query's indirect hits — so no board moves; api-spec gains
+  the scoped-join paragraph.
+
+### The pinned clip's veil face — 2026-09-24
+
+The implementation session's veil build found the gap: the video
+detail pins its clip *above* the card, outside the card's veil, so
+a sensitive video post's detail autoplayed unblurred with full
+transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
+
+- **The pinned clip veils in place.** The body veils as one and
+  revealing moves nothing, so the veil sits where the clip always
+  sits — the veil state never demotes the clip back into the card.
+- **The transport goes with it.** Nothing plays beneath a veil
+  (backlog item 103), so the face is the whole surface and its only
+  affordance is the reveal.
+- **One scope, one tap.** The pinned clip and the card share one
+  `SensitiveScope`; the reveal is per post, so either veil face
+  reveals both and the screen becomes `PostDetailVideo`. A nested
+  `SensitiveScope` now defers to the ambient one — the fix that
+  makes the per-post law hold when a surface wraps the card from
+  outside.
+- The board is a **declared entry** in the graph's own idiom —
+  the same detail any non-portrait clip tap opens, in the state
+  the record brings, not a different tap.
+
+The canonical tree draws one app and is graded as one thing. The editor
+it is reviewed in holds 200 files per canvas and publishes 16MB, and at
+191 boards the tree stood on both ceilings — so the *review* splits into
+four canvases while the tree itself stays whole. `designs/postmvp/` is
+the second tree and brings the fifth canvas with it (§13, *The post-MVP
+separation*); the four below are the MVP's, and they are what
+implementation reads.
+
+**A tree is the master.** The board files and its own `canvas.json` are
+the graded truth: coordinates, page assignment, annotations, and the
+flow graph beside them. The canvases are review surfaces — claude.ai
+artifacts seeded from that master, each carrying the boards of the pages
+it serves. Nothing is decided on a canvas that is not written back into
+the tree; a canvas is re-seeded from the tree, never the other way
+round.
 
 **Which canvas serves which pages:**
 
@@ -5827,15 +6778,25 @@ is re-seeded from the tree, never the other way round.
 | [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
 | [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
 
+The fifth is the post-MVP tree's own —
+[CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
+id `postmvp`, serving the Push notifications, Change histories and Chats
+pages and opening on the first. It lives in the successor canvas tooling
+(the Design Artifact type): the same seed manifests, published as the
+artifact's own board files rather than through the old seeded editor.
+Its predecessor artifact stands frozen with the pre-migration
+versions in its picker.
+
 A canvas title never carries `< > & "` or a backslash — the editor
 refuses them at seed time, which is why the titles say "and". The old
-single-canvas artifact stands as a signpost to these four; its version
-picker keeps the pre-split monolith.
+single-canvas artifact stands as a signpost to all five — the MVP four
+and the post-MVP canvas beneath them; its version picker keeps the
+pre-split monolith.
 
-That map is data, not a habit: `designs/canonical/canvases.json` holds
+That map is data, not a habit: each tree's own `canvases.json` holds
 it, hand-maintained — each entry carries its canvas's published `url`,
 the links in the table above — and `_build/gen-canvases.mjs` writes one seed
-manifest per canvas under `designs/canonical/canvases/<id>/` — the
+manifest per canvas under `<tree>/canvases/<id>/` — the
 artboards and annotations of its pages with coordinates verbatim, the
 page bar in the order above, plus an `images.json` naming the
 photographs its boards actually reference, so seeding a canvas reads
@@ -5864,12 +6825,15 @@ file is what holds still and what CI grades. Briefs, hand-test notes
 and PR bodies name `ProfileEdit.dc.html`, not the artifact it happens
 to be visible in today.
 
-**Cross-canvas edges are ordinary.** One flow graph spans all four —
-`graph.json` knows boards and pages, not canvases — so an edge from a
-compose board to a feed board is normal wiring, drawn with the same
-`⤴ page` marker the maps already use for a cross-page jump.
-Reachability, entries and gaps are checked over the whole graph; no
-canvas is ever checked alone.
+**Cross-canvas edges are ordinary; cross-tree edges do not exist.** One
+flow graph spans a tree's canvases — `graph.json` knows boards and
+pages, not canvases — so an edge from a compose board to a feed board is
+normal wiring, drawn with the same `⤴ page` marker the maps already use
+for a cross-page jump. Reachability, entries and gaps are checked over
+that whole graph; no canvas is ever checked alone. A tree's graph stops
+at the tree, though: a post-MVP board cannot point at a canonical one,
+because the round it belongs to has not landed in the app the canonical
+graph describes. It gets its edges when it migrates.
 
 ---
 
@@ -5886,10 +6850,13 @@ canvas is ever checked alone.
   `npm install` once in `_build/`, then `node _build/bundle.mjs`.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
+- `_build/trees.mjs` — the generated trees, named once (§13, *The
+  post-MVP separation*). The stages below read this list; the ideation
+  canvases are deliberately not on it.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
   `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
-  `check-readouts.mjs`, `report-summaries.mjs` — the canonical-canvas
-  pipeline (§13, *Canvas pages and flows*): render the screens, stamp
+  `check-readouts.mjs`, `report-summaries.mjs` — the board pipeline
+  (§13, *Canvas pages and flows*): render the screens, stamp
   the flow numbers, generate the maps, seed the per-canvas manifests
   (§14), gate the result. Run all seven after any
   screen, component, or graph.json edit. A screen whose state is not a
@@ -5921,3 +6888,12 @@ and `iconography.md` for the deeper dives.
 pages, annotations), `graph.json` and the flow layer beside it (§13),
 `canvases.json` + `canvases/<id>/` (the canvas map and per-canvas seed
 manifests, §14), and `img/` (the photographs the boards carry).
+
+**`designs/postmvp/`** — the same shape, one tree over: rounds drawn
+before their slice is the work, reviewed on the fifth canvas, and moved
+into canonical when they become current (§13, *The post-MVP
+separation*). Its own `screens/`, `_shared.jsx`, `canvas.json`,
+`graph.json`, `canvases.json` and `img/`; the same `components/`. Its
+photographs are its own copies — the budgets are per-canvas (§14), and
+a tree that reached into another's `img/` would seed a canvas from two
+places.

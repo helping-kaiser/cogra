@@ -1613,17 +1613,19 @@ function EditComposeBody({ unchanged = false } = {}) {
   );
 }
 
-/* The comment sheet's composer foot: your face, and the field that opens a
-   comment. Every sheet of comments carries it, so it is written once.
+/* The comment sheet's composer foot: your face, and the field-shaped door
+   that opens a comment. Every sheet of comments carries it, so it is
+   written once.
 
-   THE FIELD GROWS AND THE LIST GIVES IT THE ROOM (jakob's ruling, the
-   sheets-and-video round). The field is multi-line with a minimum of one line,
-   so it opens as the single line drawn here and takes a second the moment the
-   comment needs one. The sheet cannot grow with it — it already stands at the
-   tallest-sheet ceiling — so the growth comes OUT OF THE LIST ABOVE, the way
-   every chat app the reader already uses does it: the words being written push
-   the thread up rather than walking off the bottom of the screen. Past the room
-   the sheet has, the field scrolls inside itself. */
+   THE FOOT IS A DOOR, NOT AN EDITOR (the comments-sheet round, readme §13;
+   held against the growth law in the foot ruling, 2026-09-22). The tap
+   lands in the full-focus composer — draft, media, and the signing ceremony
+   live there, and a lighter comment path split off from that ceremony is a
+   product the tree does not draw. Nothing is ever typed here, so the growth
+   law does not reach this field: it is drawn at its single line and stays
+   there. Whether the foot ever goes live is the chats round's question — a
+   chat is an inline signed send, and this foot inherits whatever that round
+   designs. */
 function CommentComposerFoot() {
   return (
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>

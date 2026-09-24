@@ -153,7 +153,13 @@ internal fun ColumnScope.SealStepBody(
         ) {
             // `ComposeSealUploading`: while this shows, the sign button is
             // disabled — nothing signs until the content it signs exists.
-            if (state.mode == BodyMode.Media && !state.uploadsComplete) {
+            // Strictly the in-flight gate
+            // (design/components/compose/UploadNotice.prompt.md lines 1,
+            // 11): `picked.isNotEmpty()` keeps it from ever rendering
+            // "Uploading 0 of 0" for an emptied media-mode batch — the
+            // gate `state.mode == BodyMode.Media` alone does not, since
+            // mode survives a removal that empties the tray.
+            if (state.mode == BodyMode.Media && state.picked.isNotEmpty() && !state.uploadsComplete) {
                 UploadStatusLine(
                     done = state.uploadsDone,
                     total = state.picked.size,
@@ -541,12 +547,20 @@ internal fun SensitiveSheet(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
+        // ONE LINE TO START, AND IT GROWS (jakob 2026-09-22). A reason is a
+        // sentence, not a word, and a single-line box hid everything past the
+        // first phrase of it. It takes a line per line and stops at the room
+        // the sheet's own chrome left, from where it scrolls inside itself.
         CograTextField(
             value = reason,
             onValueChange = onReasonChange,
             label = "Why?",
             optional = true,
             optionalLabel = "Optional — shown on the veil",
+            singleLine = false,
+            minLines = 1,
+            growToFit = true,
+            modifier = Modifier.weight(1f, fill = false),
             // The contract refuses a reason without the mark, so the
             // field is only live once the switch is on: offering a box
             // that would be refused is worse than not offering it.

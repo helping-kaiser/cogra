@@ -1,0 +1,2908 @@
+{
+  "$doc": "The post-MVP tree's screen graph, the same grammar canonical's carries (backlog item 22). Every number has exactly one edge here, whose `to` lists every outcome: a board, a declared terminal, or an explicit gap. Boards named here live in this tree only — flow-markers.mjs is keyed by board name across every tree, so a post-MVP board never takes a canonical board's name. THE PAGE IS NOT WIRED, and deliberately: the settings boards are excerpts of canonical's Settings, so the rows on either side of the round's own group lead to boards this graph cannot name (readme §14 — a tree's graph stops at the tree). Only the round's own controls carry numbers; the rest take theirs when the round migrates into canonical and its edges become ordinary wiring.",
+  "wired": [],
+  "terminals": {
+    "back": "Back — returns to the previous screen",
+    "self": "Acts on this screen — state changes in place",
+    "os": "Hands off to the OS — the platform's own permission ask, browser download, system sheet",
+    "canonical": "Hands back to the MVP tree — a board this graph cannot name, because a tree's graph stops at the tree (readme §14). The destination exists and is drawn; it takes an ordinary edge the day this round migrates into canonical"
+  },
+  "scanExempt": {
+    "HistoryMenu": "the own-post sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "VersionRemoveConfirm": "the think-twice dialog covers the author's register — every row beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "OpinionsRowDoors": "the opinions sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "StanceTimeline": "the timeline sheet covers the opinions page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live, and it is a reading surface with nothing to act on",
+    "StanceTimelinePost": "the timeline sheet covers the post detail — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
+    "PadHistoryDoor": "the scrim wash covers the shell — the back arrow, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
+    "TimelineHelp": "the \"?\" dialog covers the timeline sheet, which covers the opinions page — two washes deep, and only the dialog (and its scrim) is live"
+  },
+  "entries": {
+    "PushSettings": "the settings page at the notifications group — this round's excerpt of canonical's Settings, not a screen of its own",
+    "NotificationsOffer": "the notifications list as a reader who has never been asked about push meets it — a state the account arrives in, not a tap",
+    "PushDenied": "the settings page after the platform refused the ask — a state the device brings, not a tap",
+    "HistoryMenu": "the own post's ⋮, opened on its detail surface — this round's excerpt of canonical's own-post sheet, not a screen of its own",
+    "EditedMarkerDoor": "the post's detail surface, reached the ordinary way — this round's excerpt of it, drawn for the one marker the round makes tappable",
+    "CommentHistory": "the comment's ⋮ in the thread, whose roster gains the same row the post's does — a menu this graph cannot name, because it lives in canonical",
+    "ProfileHistory": "the profile's ⋮, whose roster gains the same row — likewise a canonical menu",
+    "CommentHistoryOwn": "your own comment's ⋮ in the thread, whose roster gains the same Edit history row — a canonical menu, so its author lands on the register",
+    "ProfileHistoryOwn": "your own profile's ⋮, whose roster gains the row — a canonical menu, so its owner lands on the register",
+    "OpinionsRowDoors": "the opinions count on a post's detail, which opens this sheet — this round's excerpt of canonical's `PostOpinions`, drawn for the split its rows gain",
+    "ProfileStancesDoors": "a profile's figures row, which opens the opinions page — this round's excerpt of canonical's `ProfileStances`, drawn for the same split",
+    "PadHistoryDoor": "a stance face, tapped anywhere a stance face is drawn — the pad is a cross-cutting overlay, and the shell beneath it is the everyday one rather than the state's own",
+    "ChatsHome": "the band's chats icon, on every tab root — canonical's band, which this graph cannot name; until the round migrates the icon opens `ChatsComingSoon` there",
+    "ChatThreadReactions": "a thread once people have given opinions on its messages — a state the chat arrives in, not a tap; the traces are the opinions already cast",
+    "ChatThreadSealedMedia": "a thread carrying encrypted pictures, one from an epoch the reader was not in — a state the chat arrives in, not a tap",
+    "ChatSendSheet": "every share glyph — canonical's cards, detail and reel, which this graph cannot name; the share act always opens this sheet (jakob's fix-pass ruling), and until the round migrates those glyphs hand off to the OS sheet there",
+    "ChatNotifications": "the band's bell — canonical's Notifications list, which this graph cannot name; the three chat kinds are drawn in its place here",
+    "ChatFeedCards": "the feed, with Chats and Messages turned on in its filter — canonical's Feed, which this graph cannot name",
+    "ChatSearchResults": "Explore's search, a query matching a chat's name — canonical's ExploreSearch, which this graph cannot name",
+    "ChatSaved": "Saved, from the own profile's ⋮ — canonical's list, which this graph cannot name; the message row is drawn in its place here"
+  },
+  "boardKinds": {},
+  "edges": [
+    {
+      "from": "PushSettings",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back where the gear was — the profile, in canonical" }]
+    },
+    {
+      "from": "PushSettings",
+      "via": 2,
+      "kind": "advance",
+      "label": "Push notifications",
+      "to": [{ "board": "PushKinds", "case": "the master switch and the nine kinds under it" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "PushSettings", "case": "back to the group the row sits in" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 2,
+      "kind": "advance",
+      "label": "Push notifications — the master switch",
+      "to": [
+        { "terminal": "os", "case": "turned on for the first time — the platform's own permission ask, which only an act like this may raise" },
+        { "terminal": "self", "case": "already granted, or being turned off — the switch flips and nothing is asked" }
+      ]
+    },
+    {
+      "from": "PushKinds",
+      "via": 3,
+      "kind": "advance",
+      "label": "Comments on your posts",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; a comment on your post is yours to answer" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 4,
+      "kind": "advance",
+      "label": "Replies to your comments",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default; the list holds these until you look" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 5,
+      "kind": "advance",
+      "label": "Mentions of you",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 6,
+      "kind": "advance",
+      "label": "Citations of your posts and comments",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 7,
+      "kind": "advance",
+      "label": "Opinions on you",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default; the profile opinion, never one on your content" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 8,
+      "kind": "advance",
+      "label": "Applicants ready for your approval",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; nothing else can tell the link's issuer somebody is waiting" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 9,
+      "kind": "advance",
+      "label": "People landing through your invites",
+      "to": [{ "terminal": "self", "case": "the switch flips — off by default" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 10,
+      "kind": "advance",
+      "label": "Your application approved",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; the moment the account becomes a member" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 11,
+      "kind": "advance",
+      "label": "Your application closed",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; a close the applicant could otherwise only infer from a queue going quiet" }]
+    },
+    {
+      "from": "NotificationsOffer",
+      "via": 1,
+      "kind": "advance",
+      "label": "Want these announced as they happen?",
+      "to": [{ "board": "PushKinds", "case": "the push settings — the tap lands where the choice is made, the way every notification row lands on its subject" }]
+    },
+    {
+      "from": "NotificationsOffer",
+      "via": 2,
+      "kind": "cancel",
+      "label": "No thanks",
+      "to": [{ "terminal": "self", "case": "the row goes, for good; the list stays where it was and settings keeps the offer" }]
+    },
+    {
+      "from": "PushDenied",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back where the gear was — the profile, in canonical" }]
+    },
+
+    {
+      "from": "HistoryMenu",
+      "via": 1,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "PostHistoryOwn", "case": "the author's own sheet, so the row lands on the register — the same chronicle every reader gets, with their two acts joined" }]
+    },
+    {
+      "from": "EditedMarkerDoor",
+      "via": 1,
+      "kind": "advance",
+      "label": "Edited — the marker in its tappable form",
+      "to": [
+        { "board": "PostHistory", "case": "any reader — the chronicle, whole and public, gates being on acting rather than on reading" },
+        { "board": "PostHistoryOwn", "case": "its author — the same list with the whole-post removal leading it and one act on every version that still has a payload, the current one included" }
+      ]
+    },
+    {
+      "from": "PostHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the post the history is of" }]
+    },
+    {
+      "from": "PostHistory",
+      "via": 2,
+      "kind": "advance",
+      "label": "the current version",
+      "to": [{ "terminal": "canonical", "case": "the post's own detail — the current version IS the post, so its row opens the post rather than a historic copy of it" }]
+    },
+    {
+      "from": "PostHistory",
+      "via": 3,
+      "kind": "advance",
+      "label": "an earlier version",
+      "to": [
+        { "board": "PostVersionDetail", "case": "a words version — that version whole, at detail size, under the panel that says which version it is" },
+        { "board": "PostVersionDetailMedia", "case": "a picture version — the same surface on canonical's media detail anatomy, under the same panel" }
+      ]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the post the history is of" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove the whole post",
+      "to": [{ "terminal": "canonical", "case": "the post's own think-twice dialog, which this round does not touch — removing the post removes every version at once" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at version scale, over the register it was reached from — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 4,
+      "kind": "advance",
+      "label": "the current version",
+      "to": [{ "terminal": "canonical", "case": "the post's own detail, exactly as the reader's chronicle opens it" }]
+    },
+    {
+      "from": "PostHistoryOwn",
+      "via": 5,
+      "kind": "advance",
+      "label": "an earlier version",
+      "to": [
+        { "board": "PostVersionDetail", "case": "a words version, whole — the author reads a version on the same surface everybody else does" },
+        { "board": "PostVersionDetailMedia", "case": "a picture version, whole, on the media detail's anatomy" }
+      ]
+    },
+    {
+      "from": "VersionRemoveConfirm",
+      "via": 1,
+      "kind": "advance",
+      "label": "Remove version",
+      "to": [
+        { "board": "PostHistoryOwn", "case": "the list stands and the version becomes a mark in its own row; had it been the current version, the post would go on showing it removed — no earlier version takes its place" },
+        { "board": "CommentHistoryOwn", "case": "reached at comment scale — the same outcome on the comment's register; a whole-comment removal marks every row at once" },
+        { "board": "ProfileHistoryOwn", "case": "reached at profile scale — the same outcome on the profile's register; an every-version removal marks every row at once, and the account, the handle and everything published stay" }
+      ]
+    },
+    {
+      "from": "VersionRemoveConfirm",
+      "via": 2,
+      "kind": "cancel",
+      "label": "Keep it",
+      "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }]
+    },
+    {
+      "from": "PostVersionDetail",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chronicle the version was opened from" }]
+    },
+    {
+      "from": "PostVersionDetail",
+      "via": 2,
+      "kind": "advance",
+      "label": "See the current version",
+      "to": [{ "terminal": "canonical", "case": "the post as it stands — the way out for a reader who arrived here by link rather than through the chronicle" }]
+    },
+    {
+      "from": "PostVersionDetailMedia",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chronicle the version was opened from" }]
+    },
+    {
+      "from": "PostVersionDetailMedia",
+      "via": 2,
+      "kind": "advance",
+      "label": "See the current version",
+      "to": [{ "terminal": "canonical", "case": "the post as it stands — its current version is words, and it opens on the post's own detail" }]
+    },
+    {
+      "from": "CommentHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the thread the comment is read in" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the thread the comment is read in" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove the whole comment",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at whole-comment scale (master — the post boards' dialog; no comment confirm is drawn) — every version goes at once and the comment keeps its place in the thread, wearing the mark" }]
+    },
+    {
+      "from": "CommentHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at comment-version scale (master) — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
+    },
+    {
+      "from": "ProfileHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the profile" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to your profile" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove every version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at whole-profile scale (master — the post boards' dialog; no profile confirm is drawn) — every version's contents at once, while the account, the handle and everything published stay; account deletion is a different act, in settings" }]
+    },
+    {
+      "from": "ProfileHistoryOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at profile-version scale (master) — on any version with a payload, the current one included; a tombstone's slot says Already removed and is not pressable" }]
+    },
+
+    {
+      "from": "OpinionsRowDoors",
+      "via": 1,
+      "kind": "advance",
+      "label": "a row's person area",
+      "to": [{ "terminal": "canonical", "case": "their profile — acting on an opinion happens where the pad and its context live, which is the standing ruling this half of the row keeps" }]
+    },
+    {
+      "from": "OpinionsRowDoors",
+      "via": 2,
+      "kind": "advance",
+      "label": "a row's value readout",
+      "to": [{ "board": "StanceTimelinePost", "case": "every record that person has signed on this post — a history door is a readout, so the value is the door" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the profile the figures row was on" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 2,
+      "kind": "advance",
+      "label": "a row's person area",
+      "to": [{ "terminal": "canonical", "case": "their profile — the same half of the same row, on the page the sheet mirrors" }]
+    },
+    {
+      "from": "ProfileStancesDoors",
+      "via": 3,
+      "kind": "advance",
+      "label": "a row's value readout",
+      "to": [{ "board": "StanceTimeline", "case": "every record that person has signed toward this one, in the direction the tab is showing" }]
+    },
+    {
+      "from": "PadHistoryDoor",
+      "via": 1,
+      "kind": "advance",
+      "label": "Current opinion · see how it built",
+      "to": [{ "board": "StanceTimeline", "case": "the records the standing above the field was summed from — the pad stays parked beneath the sheet, the pick untouched" }]
+    },
+    {
+      "from": "StanceTimeline",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions build",
+      "to": [{ "board": "TimelineHelp", "case": "the How-opinions-build text, over this sheet" }]
+    },
+    {
+      "from": "StanceTimelinePost",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions build",
+      "to": [{ "board": "TimelineHelp", "case": "the How-opinions-build text (master — drawn over the person↔person sheet; the words do not change with the target)" }]
+    },
+    {
+      "from": "TimelineHelp",
+      "via": 1,
+      "kind": "back",
+      "label": "Close",
+      "to": [{ "terminal": "back", "case": "the dialog closes — back to the timeline that asked" }]
+    },
+    {
+      "from": "TimelineHelp",
+      "via": 2,
+      "kind": "back",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes" }]
+    },
+
+    {
+      "from": "ChatsHome",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the root the chats icon was tapped on" }]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 2,
+      "kind": "detour",
+      "label": "? — How chats work",
+      "to": [{ "board": "ChatsHelp", "case": "the page's one dialog — chats are public, encryption is per message, sending signs" }]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 3,
+      "kind": "advance",
+      "label": "All chats",
+      "to": [{ "board": "ChatsExplore", "case": "the explorer face — every chat, by the ordinary rank" }]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 4,
+      "kind": "advance",
+      "label": "New chat — the floating button",
+      "to": [{ "board": "ChatPicker", "case": "the people picker — a person for a 1:1, New group chat for a group" }]
+    },
+    {
+      "from": "ChatsHome",
+      "via": 5,
+      "kind": "advance",
+      "label": "a chat — tap, or press and hold",
+      "to": [
+        { "board": "ChatThread", "case": "a tap — the chat's thread, its foot live; every row on this face is a chat the reader is in" },
+        { "board": "ChatThreadDecisions", "case": "a tap on a chat with decisions open — Salt-crust rubbings: the thread carries them as quiet cards at their moments" },
+        { "board": "ChatRequestApprove", "case": "a tap on a chat where someone asks to join and the reader can approve — Headland honey: the request waits as a card in its thread" },
+        { "board": "ChatRowMenu", "case": "press and hold — the chat's options over the list" }
+      ]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the root the chats icon was tapped on — the faces are one page, so back leaves the page rather than swapping" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 2,
+      "kind": "detour",
+      "label": "? — How chats work",
+      "to": [{ "board": "ChatsHelp", "case": "the same dialog Your chats opens (master — drawn over that face; the words do not change with the face)" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 3,
+      "kind": "advance",
+      "label": "Your chats",
+      "to": [
+        { "board": "ChatsHome", "case": "the list of chats the reader is in" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 4,
+      "kind": "advance",
+      "label": "Hide chats you're in",
+      "to": [{ "terminal": "self", "case": "the switch flips — off, the chats the reader is in join the list wearing Member; the order is untouched" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 5,
+      "kind": "advance",
+      "label": "a chat",
+      "to": [
+        { "board": "ChatThreadReader", "case": "a chat the reader is not in — the thread, readable, the join where the foot would be; a guest lands here too" },
+        { "board": "ChatThreadInvited", "case": "an invite-only chat the reader has been invited to (Night fishing crew, its row saying You're invited) — the thread, the invitation and its message, and the join where the foot would be" },
+        { "board": "ChatThreadRequested", "case": "a chat the reader has asked to join — the thread, their request a card in it, the foot saying it is sent" },
+        { "board": "ChatThread", "case": "a chat the reader is in, once the switch is off — its thread, foot live" }
+      ]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 6,
+      "kind": "advance",
+      "label": "Join",
+      "to": [
+        { "board": "ChatJoinSeal", "case": "an open chat — the join's seal, the open route's nouns (Who can join · Anyone); signing opens the chat with the reader in it" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 7,
+      "kind": "advance",
+      "label": "Ask to join",
+      "to": [
+        { "board": "ChatAskSheet", "case": "a chat that takes requests — the request's small sheet with its optional message, over the explorer here (master: the sheet's anatomy); signed, the row says the request is sent — how it is decided is the chat's governance, which this surface never names" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 8,
+      "kind": "advance",
+      "label": "New chat — the floating button",
+      "to": [
+        { "board": "ChatPicker", "case": "the people picker — the same control in the same corner as on Your chats" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatThread",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details — members, description, mute, leave, the history of its name and picture" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 3,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text, under the notice" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties — the next message's encryption, sticky for this chat until flipped back; plaintext by default" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus — the keyboard comes up and the foot rises with it" }]
+    },
+    {
+      "from": "ChatThread",
+      "via": 6,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "board": "ChatThreadPending", "case": "a tap — the arrow is the seal: the message is signed in the reader's name and joins the thread whole, Still settling before its clock until it is ordered; the first-send line goes for good" },
+        { "board": "ChatSignSheet", "case": "press and hold — what this one message signs, over the thread" }
+      ]
+    },
+    {
+      "from": "ChatThread",
+      "via": 7,
+      "kind": "advance",
+      "label": "a bubble — press and hold",
+      "to": [
+        { "board": "ChatMessageMenu", "case": "someone else's bubble — the message's acts, over the thread" },
+        { "board": "ChatMessageMenuOwn", "case": "the reader's own bubble — the same acts with Remove among them" }
+      ]
+    },
+    {
+      "from": "ChatThread",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat — the plaintext messages that match" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatPickerGroup", "case": "back to the people picked — nothing is founded" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 2,
+      "kind": "advance",
+      "label": "Choose a picture",
+      "to": [{ "terminal": "os", "case": "the platform's own picture picker; the crop that follows is canonical's avatar crop at chat scale, not drawn here" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 3,
+      "kind": "advance",
+      "label": "Name",
+      "to": [{ "terminal": "self", "case": "typing" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 4,
+      "kind": "advance",
+      "label": "Description",
+      "to": [{ "terminal": "self", "case": "typing — the field grows by the growth law" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 5,
+      "kind": "advance",
+      "label": "Who can join — a choice row",
+      "to": [{ "terminal": "self", "case": "the dot moves — Open, On request or Invite only; Invite only is where it starts" }]
+    },
+    {
+      "from": "ChatCreate",
+      "via": 6,
+      "kind": "advance",
+      "label": "Next",
+      "to": [{ "board": "ChatCreateSeal", "case": "the founding's seal — what the new chat and its invitations sign" }]
+    },
+    {
+      "from": "ChatRowMenu",
+      "via": 1,
+      "kind": "advance",
+      "label": "Mute",
+      "to": [{ "board": "ChatsHome", "case": "the sheet closes and the row wears the silenced speaker; on a muted chat the row reads Unmute and takes it off" }]
+    },
+    {
+      "from": "ChatRowMenu",
+      "via": 2,
+      "kind": "advance",
+      "label": "Chat details",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details — the same destination the thread's header opens" }]
+    },
+    {
+      "from": "ChatRowMenu",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet closes, nothing changed" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 1,
+      "kind": "advance",
+      "label": "Save",
+      "to": [{ "terminal": "self", "case": "the message joins Saved and the sheet closes; kept, the row reads Unsave" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 2,
+      "kind": "advance",
+      "label": "Cite in a new post",
+      "to": [{ "terminal": "canonical", "case": "the post wizard at its start with the message staged as its citation — canonical's ComposeCited arrival" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 3,
+      "kind": "advance",
+      "label": "Give your opinion",
+      "to": [{ "board": "ChatMessagePad", "case": "the ordinary opinion pad, parked over the thread, on the message held" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 4,
+      "kind": "advance",
+      "label": "Reply",
+      "to": [{ "board": "ChatThreadReply", "case": "the sheet closes and the foot takes the quote above the field, ready — the reply quote strip" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 5,
+      "kind": "advance",
+      "label": "Cited by",
+      "to": [{ "terminal": "canonical", "case": "what cites this message — canonical's cited-by sheet" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 6,
+      "kind": "advance",
+      "label": "Opinions on this",
+      "to": [{ "board": "ChatMessageOpinions", "case": "who holds an opinion on this message — the opinions sheet over the thread (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 7,
+      "kind": "advance",
+      "label": "License terms",
+      "to": [{ "terminal": "canonical", "case": "the message's terms in a sheet over the thread — canonical's license sheet" }]
+    },
+    {
+      "from": "ChatMessageMenu",
+      "via": 8,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet closes" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "back to the chats page face the button was on" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 2,
+      "kind": "advance",
+      "label": "Search people",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows by name and handle" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 3,
+      "kind": "advance",
+      "label": "New group chat",
+      "to": [{ "board": "ChatPickerGroup", "case": "the same list, now staging people for a group" }]
+    },
+    {
+      "from": "ChatPicker",
+      "via": 4,
+      "kind": "advance",
+      "label": "a person",
+      "to": [
+        { "board": "ChatThread", "case": "someone the reader has no 1:1 with — the 1:1 opens, empty (master: the thread's anatomy)" },
+        { "board": "ChatExistingAsk", "case": "someone the reader already shares a 1:1 with — the dialog asks which they mean" }
+      ]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatPicker", "case": "back to the plain picker; the staged people are let go" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 2,
+      "kind": "advance",
+      "label": "Search people",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows by name and handle" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 3,
+      "kind": "advance",
+      "label": "× — remove a staged person",
+      "to": [{ "terminal": "self", "case": "the person leaves the staged rows and returns to the list" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 4,
+      "kind": "advance",
+      "label": "a person — stage them",
+      "to": [{ "terminal": "self", "case": "the person joins the staged rows above the list" }]
+    },
+    {
+      "from": "ChatPickerGroup",
+      "via": 5,
+      "kind": "advance",
+      "label": "Next",
+      "to": [{ "board": "ChatCreate", "case": "the founding, with the staged people said back as the ones invited" }]
+    },
+    {
+      "from": "ChatExistingAsk",
+      "via": 1,
+      "kind": "advance",
+      "label": "Open that chat",
+      "to": [{ "board": "ChatThread", "case": "the 1:1 the reader already has (master: the thread's anatomy)" }]
+    },
+    {
+      "from": "ChatExistingAsk",
+      "via": 2,
+      "kind": "advance",
+      "label": "Start a new chat",
+      "to": [{ "board": "ChatThread", "case": "a second, separate 1:1 with the same person, empty (master: the thread's anatomy)" }]
+    },
+    {
+      "from": "ChatExistingAsk",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes; the picker stands" }]
+    },
+    {
+      "from": "ChatSignSheet",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog — what signing is does not change with what is signed" }]
+    },
+    {
+      "from": "ChatSignSheet",
+      "via": 2,
+      "kind": "advance",
+      "label": "Sign and send",
+      "to": [{ "board": "ChatThread", "case": "the sheet closes and the message joins the thread — the same act as a tap on the arrow" }]
+    },
+    {
+      "from": "ChatSignSheet",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet closes, nothing sent; the draft stays in the field" }]
+    },
+    {
+      "from": "ChatsHelp",
+      "via": 1,
+      "kind": "back",
+      "label": "Close",
+      "to": [{ "terminal": "back", "case": "the dialog closes — back to the face that asked" }]
+    },
+    {
+      "from": "ChatsHelp",
+      "via": 2,
+      "kind": "back",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details — the same destination as the thread's other header" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 3,
+      "kind": "advance",
+      "label": "a picture or a clip in a bubble",
+      "to": [{ "terminal": "canonical", "case": "the fullscreen viewer — canonical's, where the transport lives" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 6,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 7,
+      "kind": "advance",
+      "label": "the clip's sound disc",
+      "to": [{ "terminal": "self", "case": "sound on or off — the one control a clip wears in a bubble" }]
+    },
+    {
+      "from": "ChatThreadMedia",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the keyboard goes down and the thread closes — the draft stays in the chat's field" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details; the keyboard goes down and the draft stays in the field" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 3,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock empties — back to plaintext for this chat" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 4,
+      "kind": "advance",
+      "label": "Message",
+      "to": [{ "terminal": "self", "case": "typing — the field grows a line at a time and takes its room from the thread" }]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 5,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "board": "ChatThread", "case": "a tap — signed and sent, encrypted; the keyboard stays up in the product, and the thread board is the master" },
+        { "board": "ChatSignSheet", "case": "press and hold — what the message signs" }
+      ]
+    },
+    {
+      "from": "ChatThreadKeyboard",
+      "via": 6,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "the keyboard goes down and search opens, the draft kept in the field" }]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatsExplore", "case": "back to all chats" }]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetailsReader", "case": "the chat's details, public to a non-member as to a member — read-only, the join worded by the chat's policy; a guest lands here too" }]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 3,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 4,
+      "kind": "advance",
+      "label": "Ask to join — the join, worded by the chat's policy",
+      "to": [
+        { "board": "ChatAskSheet", "case": "a chat that takes requests — the request's small sheet, its optional message, then Sign and ask" },
+        { "board": "ChatJoinSeal", "case": "an open chat's Join — the join's seal, the open route's nouns" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatThreadReader",
+      "via": 5,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "a reader outside searches the same plaintext — the public read (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow — a step back",
+      "to": [{ "board": "ChatCreate", "case": "back to the founding's fields, everything as it was" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 2,
+      "kind": "cancel",
+      "label": "X — Leave",
+      "to": [{ "board": "ChatsHome", "case": "nothing is founded and nobody is invited" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 4,
+      "kind": "advance",
+      "label": "Sign and start the chat",
+      "to": [{ "board": "ChatThread", "case": "the new chat opens, empty but for its founding, the invitations on their way (master: the thread's anatomy)" }]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 5,
+      "kind": "back",
+      "label": "Back",
+      "to": [{ "board": "ChatCreate", "case": "the seal's own way back — the arrow said again at the foot" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the thread the header was tapped in, or the list the row menu was opened over" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 2,
+      "kind": "advance",
+      "label": "the chat's opinion face — tap or hold",
+      "to": [{ "terminal": "canonical", "case": "a tap parks canonical's opinion pad over the details; a hold signs a gentle positive on the chat in place" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 3,
+      "kind": "advance",
+      "label": "Edit chat",
+      "to": [{ "board": "ChatEdit", "case": "the name, picture and description, holding the current version — shown wherever the governance map makes the reader eligible" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 4,
+      "kind": "advance",
+      "label": "Media in this chat",
+      "to": [{ "board": "ChatMediaGallery", "case": "every picture and clip the chat's messages carry, newest first" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 5,
+      "kind": "advance",
+      "label": "Add people",
+      "to": [{ "board": "ChatInvitePicker", "case": "the people not yet in the chat, a tap staging each — any member may invite" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 6,
+      "kind": "advance",
+      "label": "a member row — the person",
+      "to": [
+        { "terminal": "canonical", "case": "a person, or the invited person not yet joined — their profile, canonical's" },
+        { "gap": "a Collective member — its own page; the Collective actor variant is specified and not yet built (readme §7)" }
+      ]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 7,
+      "kind": "advance",
+      "label": "a member row — the role word (Admin / Moderator / Member)",
+      "to": [{ "board": "ChatRoleSheet", "case": "the three roles over the details, the member's current one marked; the pending invitee's row has no role and no door" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 8,
+      "kind": "advance",
+      "label": "Mute this chat",
+      "to": [{ "terminal": "self", "case": "the switch flips — the chat's device push goes silent; the chat keeps its place and its dot on the list, and the row menu's Mute reads Unmute" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 9,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "ChatHistory", "case": "the chat's versions, newest first, with the membership events between them" }]
+    },
+    {
+      "from": "ChatDetails",
+      "via": 10,
+      "kind": "advance",
+      "label": "Leave this chat",
+      "to": [{ "board": "ChatLeaveConfirm", "case": "the think-twice dialog, with the optional parting reason" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatThreadReader", "case": "back to the thread read from outside" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 2,
+      "kind": "advance",
+      "label": "the chat's opinion face — tap or hold",
+      "to": [
+        { "terminal": "canonical", "case": "canonical's opinion pad — an opinion on a chat needs no membership" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 3,
+      "kind": "advance",
+      "label": "Ask to join — the join, worded by the chat's policy",
+      "to": [
+        { "board": "ChatAskSheet", "case": "a chat that takes requests — the request's small sheet with its optional message, over the details here (master: the sheet's anatomy); signed, the button says the request is sent" },
+        { "board": "ChatJoinSeal", "case": "an open chat's Join — the join's seal, the open route's nouns" },
+        { "terminal": "canonical", "case": "a guest — the join prompt, canonical's guest gate" }
+      ]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 4,
+      "kind": "advance",
+      "label": "Media in this chat",
+      "to": [{ "board": "ChatMediaGallery", "case": "the same grid, of what a non-member can open (master: the gallery's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 5,
+      "kind": "advance",
+      "label": "a member row",
+      "to": [{ "terminal": "canonical", "case": "the member's profile, canonical's" }]
+    },
+    {
+      "from": "ChatDetailsReader",
+      "via": 6,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "ChatHistory", "case": "the same chronicle — a chat's history is public (master: the chronicle's anatomy)" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatDetails", "case": "back to the details — nothing is signed and nothing changes" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 2,
+      "kind": "advance",
+      "label": "Change picture",
+      "to": [{ "terminal": "os", "case": "the platform's own picture picker; the crop that follows is canonical's avatar crop at chat scale, not drawn here" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 3,
+      "kind": "advance",
+      "label": "Name",
+      "to": [{ "terminal": "self", "case": "typing" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 4,
+      "kind": "advance",
+      "label": "Description",
+      "to": [{ "terminal": "self", "case": "typing — the field grows by the growth law" }]
+    },
+    {
+      "from": "ChatEdit",
+      "via": 5,
+      "kind": "advance",
+      "label": "Save",
+      "to": [{ "board": "ChatEditSeal", "case": "the change's seal — what the new version signs" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow — a step back",
+      "to": [{ "board": "ChatEdit", "case": "back to the fields, everything as it was" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 2,
+      "kind": "cancel",
+      "label": "X — Leave",
+      "to": [{ "board": "ChatDetails", "case": "nothing is signed and the chat stays as it is" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 4,
+      "kind": "advance",
+      "label": "Sign the change",
+      "to": [
+        { "board": "ChatDetails", "case": "the reader's own voice suffices under the chat's map — the change passes, the chat's system actor executes the succession, and the details show the new version; as the role change's seal (ChatRoleSheet, the nouns swapped) the member's row shows the new role" },
+        { "board": "ChatHistoryRemoved", "case": "as a version removal's seal (ChatVersionRemoveConfirm, the nouns swapped) where the reader's say settles it — the version tombstones in place under the chat's own mark" },
+        { "board": "ChatThreadDecisions", "case": "the map needs more voices — the change (or the role change, or the removal) waits as the reader's own quiet card in the thread, counting people and nothing to press, and as a row under Open decisions" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent seal and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatEditSeal",
+      "via": 5,
+      "kind": "back",
+      "label": "Back",
+      "to": [{ "board": "ChatEdit", "case": "the seal's own way back — the arrow said again at the foot" }]
+    },
+    {
+      "from": "ChatHistory",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the details it was opened from — a member's or a reader's" }]
+    },
+    {
+      "from": "ChatHistory",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "ChatVersionRemoveConfirm", "case": "the think-twice dialog over the chronicle — the removal is the chat's decision, and any member may start it; a reader outside has no act here" }]
+    },
+    {
+      "from": "ChatSearchIn",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the thread whose header opened it — a member's or a reader's" }]
+    },
+    {
+      "from": "ChatSearchIn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Search messages",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows to the plaintext messages that match, newest first" }]
+    },
+    {
+      "from": "ChatSearchIn",
+      "via": 3,
+      "kind": "advance",
+      "label": "a result",
+      "to": [
+        { "board": "ChatThread", "case": "a member — the thread, scrolled to the message (master: the thread's anatomy)" },
+        { "board": "ChatThreadReader", "case": "a reader outside — the thread read from outside, scrolled to the message" }
+      ]
+    },
+    {
+      "from": "ChatMediaGallery",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the details it was opened from — a member's or a reader's" }]
+    },
+    {
+      "from": "ChatMediaGallery",
+      "via": 2,
+      "kind": "advance",
+      "label": "a tile — a picture or a clip",
+      "to": [
+        { "board": "ChatThreadMedia", "case": "a member — the thread, scrolled to the message the media rides, its words beside it; a second tap there opens the viewer (master: the thread's anatomy)" },
+        { "board": "ChatThreadReader", "case": "a reader outside — the thread read from outside, scrolled to the message" }
+      ]
+    },
+    {
+      "from": "ChatMediaGallery",
+      "via": 3,
+      "kind": "advance",
+      "label": "the clip's sound disc",
+      "to": [{ "terminal": "self", "case": "sound on or off — the one global decision every clip shares" }]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 1,
+      "kind": "advance",
+      "label": "Why? — the optional parting reason",
+      "to": [{ "terminal": "self", "case": "typing — the field grows by the growth law, and the dialog keeps its heading and answers in view" }]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 2,
+      "kind": "advance",
+      "label": "Leave",
+      "to": [
+        { "board": "ChatsHome", "case": "the Leave is signed, with the reason if one was given; the chat leaves the reader's list" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 3,
+      "kind": "cancel",
+      "label": "Stay",
+      "to": [{ "board": "ChatDetails", "case": "the dialog closes; nothing is signed and any reason typed is let go" }]
+    },
+    {
+      "from": "ChatLeaveConfirm",
+      "via": 4,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes, nothing signed" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetailsDecisions", "case": "the chat's details, its Open decisions filled with the same two decisions" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 3,
+      "kind": "advance",
+      "label": "Agree — on a card awaiting the reader's voice",
+      "to": [{ "board": "ChatAgreeSheet", "case": "the vote's small seal over the thread — nothing is signed until Sign and agree" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 6,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 7,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatThreadDecisions", "case": "back to the thread the header was tapped in" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 2,
+      "kind": "advance",
+      "label": "the chat's opinion face — tap or hold",
+      "to": [{ "terminal": "canonical", "case": "a tap parks canonical's opinion pad over the details; a hold signs a gentle positive on the chat in place" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 3,
+      "kind": "advance",
+      "label": "Edit chat",
+      "to": [{ "board": "ChatEdit", "case": "the name, picture and description — the rename in this chat's thread came from here (master: the edit's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 4,
+      "kind": "advance",
+      "label": "Media in this chat",
+      "to": [{ "board": "ChatMediaGallery", "case": "every picture and clip the chat's messages carry (master: the gallery's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 5,
+      "kind": "advance",
+      "label": "an open decision — the words",
+      "to": [{ "board": "ChatDecisionDetail", "case": "the decision whole — what would change, every vote both ways, the reader's own vote (the reader's own change drawn; the kick is the same page, master)" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 6,
+      "kind": "advance",
+      "label": "Agree — on a decision awaiting the reader's voice",
+      "to": [{ "board": "ChatAgreeSheet", "case": "the vote's small seal, over the details here (master: the sheet's anatomy); signed, the row reads 3 of 5 so far and You agreed, and a settled decision leaves the section" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 7,
+      "kind": "advance",
+      "label": "Add people",
+      "to": [{ "board": "ChatInvitePicker", "case": "the people not yet in the chat (master: the picker's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 8,
+      "kind": "advance",
+      "label": "a member row — the person",
+      "to": [{ "terminal": "canonical", "case": "the member's profile, canonical's" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 9,
+      "kind": "advance",
+      "label": "a member row — the role word (Admin / Moderator / Member)",
+      "to": [{ "board": "ChatRoleSheet", "case": "the three roles over the details (master: the sheet's anatomy) — here the reader weighs 1, so a change they choose waits as their own card" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 10,
+      "kind": "advance",
+      "label": "Mute this chat",
+      "to": [{ "terminal": "self", "case": "the switch flips — the chat's device push goes silent" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 11,
+      "kind": "advance",
+      "label": "Edit history",
+      "to": [{ "board": "ChatHistory", "case": "the chat's versions with the membership events between them (master: the chronicle's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 12,
+      "kind": "advance",
+      "label": "Leave this chat",
+      "to": [{ "board": "ChatLeaveConfirm", "case": "the think-twice dialog (master: the dialog's anatomy)" }]
+    },
+    {
+      "from": "ChatInvitePicker",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatDetails", "case": "back to the details; the staged people are let go and nobody is invited" }]
+    },
+    {
+      "from": "ChatInvitePicker",
+      "via": 2,
+      "kind": "advance",
+      "label": "Search people",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows to people not yet in the chat" }]
+    },
+    {
+      "from": "ChatInvitePicker",
+      "via": 3,
+      "kind": "advance",
+      "label": "a staged person's ×",
+      "to": [{ "terminal": "self", "case": "the person is unstaged and returns to the list" }]
+    },
+    {
+      "from": "ChatInvitePicker",
+      "via": 4,
+      "kind": "advance",
+      "label": "a person",
+      "to": [{ "terminal": "self", "case": "the person is staged above the list" }]
+    },
+    {
+      "from": "ChatInvitePicker",
+      "via": 5,
+      "kind": "advance",
+      "label": "Next",
+      "to": [{ "board": "ChatInviteSeal", "case": "the invitations' seal — one invitation per staged person" }]
+    },
+    {
+      "from": "ChatInviteSeal",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow — a step back",
+      "to": [{ "board": "ChatInvitePicker", "case": "back to the people picked, everything as it was" }]
+    },
+    {
+      "from": "ChatInviteSeal",
+      "via": 2,
+      "kind": "cancel",
+      "label": "X — Leave",
+      "to": [{ "board": "ChatDetails", "case": "nothing is signed and nobody is invited" }]
+    },
+    {
+      "from": "ChatInviteSeal",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatInviteSeal",
+      "via": 4,
+      "kind": "advance",
+      "label": "Sign and invite",
+      "to": [
+        { "board": "ChatDetails", "case": "the invitations land — the reader's own act, no decision waits — and the members list each person as Invited — hasn't joined yet" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent seal and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatInviteSeal",
+      "via": 5,
+      "kind": "back",
+      "label": "Back",
+      "to": [{ "board": "ChatInvitePicker", "case": "the seal's own way back — the arrow said again at the foot" }]
+    },
+    {
+      "from": "ChatThreadInvited",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "wherever the invitation was opened from — the notification row or all chats" }]
+    },
+    {
+      "from": "ChatThreadInvited",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetailsReader", "case": "the chat's details, public to an invitee as to anyone — read-only (master: the reader's details)" }]
+    },
+    {
+      "from": "ChatThreadInvited",
+      "via": 3,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadInvited",
+      "via": 4,
+      "kind": "advance",
+      "label": "Join — under the invitation",
+      "to": [{ "board": "ChatJoinSeal", "case": "the join's seal, the invited route's nouns — the reader's own Participant" }]
+    },
+    {
+      "from": "ChatThreadInvited",
+      "via": 5,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "an invitee searches the same public plaintext (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatJoinSeal",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatJoinSeal",
+      "via": 2,
+      "kind": "advance",
+      "label": "Sign and join",
+      "to": [
+        { "board": "ChatThread", "case": "the Participant is signed — the chat opens with the reader in it, foot live (master: the thread's anatomy), whichever route led here" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatJoinSeal",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet goes down, nothing signed — the thread it rose over, by route: invited, approved, or the open chat's" }]
+    },
+    {
+      "from": "ChatThreadRequested",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "ChatsExplore", "case": "back to all chats" }]
+    },
+    {
+      "from": "ChatThreadRequested",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetailsReader", "case": "the chat's details, read from outside — the request appears there as an open decision" }]
+    },
+    {
+      "from": "ChatThreadRequested",
+      "via": 3,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadRequested",
+      "via": 4,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat, the public plaintext (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadApproved",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [
+        { "board": "ChatsExplore", "case": "opened from all chats — back to all chats" },
+        { "board": "ChatNotifications", "case": "opened from the approval's notification row — back to the list" }
+      ]
+    },
+    {
+      "from": "ChatThreadApproved",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetailsReader", "case": "the chat's details, read from outside (master: the reader's details)" }]
+    },
+    {
+      "from": "ChatThreadApproved",
+      "via": 3,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadApproved",
+      "via": 4,
+      "kind": "advance",
+      "label": "Join — after the approval",
+      "to": [{ "board": "ChatJoinSeal", "case": "the join's seal, the approved route's nouns (Your request · Approved) — the Participant the approval backs" }]
+    },
+    {
+      "from": "ChatThreadApproved",
+      "via": 5,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat, the public plaintext (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details — the request stands there too, a row under Open decisions with Approve at its end (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 3,
+      "kind": "advance",
+      "label": "Approve — on a join request",
+      "to": [{ "board": "ChatAgreeSheet", "case": "the vote's small seal, the nouns swapped (You approve Sal Torres joining the chat · Sign and approve); signed, one approval settles it and the card becomes Sal Torres's request was approved — Sal then signs their own join (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 6,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 7,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatRoleSheet",
+      "via": 1,
+      "kind": "advance",
+      "label": "a role other than the current one",
+      "to": [
+        { "board": "ChatEditSeal", "case": "the role change's seal — three things, signed together: the change, its link to the member, the reader's own opinion for it (master: the seal's anatomy, the nouns swapped); signed, it lands at once where the reader's say is enough, else as their own card" }
+      ]
+    },
+    {
+      "from": "ChatRoleSheet",
+      "via": 2,
+      "kind": "advance",
+      "label": "the current role",
+      "to": [{ "terminal": "self", "case": "already the member's role — nothing changes and nothing is signed" }]
+    },
+    {
+      "from": "ChatRoleSheet",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "board": "ChatDetails", "case": "the sheet goes down, nothing signed" }]
+    },
+    {
+      "from": "ChatVersionRemoveConfirm",
+      "via": 1,
+      "kind": "advance",
+      "label": "Remove version",
+      "to": [
+        { "board": "ChatEditSeal", "case": "the removal's seal — three things, signed together: the removal, its link to the version, the reader's own opinion for it (master: the seal's anatomy, the nouns swapped); signed, it lands at once where the reader's say is enough, else as their own card" }
+      ]
+    },
+    {
+      "from": "ChatVersionRemoveConfirm",
+      "via": 2,
+      "kind": "cancel",
+      "label": "Keep it",
+      "to": [{ "board": "ChatHistory", "case": "the dialog closes; nothing is signed and the version stays" }]
+    },
+    {
+      "from": "ChatVersionRemoveConfirm",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes, nothing signed" }]
+    },
+    {
+      "from": "ChatHistoryRemoved",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the details it was opened from" }]
+    },
+    {
+      "from": "ChatHistoryRemoved",
+      "via": 2,
+      "kind": "advance",
+      "label": "Remove this version",
+      "to": [{ "board": "ChatVersionRemoveConfirm", "case": "the think-twice dialog for another version (master: the dialog over the chronicle); the removed one's slot says Already removed and takes no tap" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 8,
+      "kind": "advance",
+      "label": "a card's words — any decision in the thread",
+      "to": [{ "board": "ChatDecisionDetail", "case": "the decision whole — the reader's own change drawn; Mira's kick opens the same page with Kel's row as what would change and the vote's two words as the reader's (master)" }]
+    },
+    {
+      "from": "ChatThreadDecisions",
+      "via": 9,
+      "kind": "advance",
+      "label": "Disagree — on a card awaiting the reader's voice",
+      "to": [{ "board": "ChatAgreeSheet", "case": "the vote's small seal, the nouns swapped (You disagree that Kel Moreau should be removed from the chat · Sign and disagree) — a real vote against, counted in the quorum and against the share (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatDetailsDecisions",
+      "via": 13,
+      "kind": "advance",
+      "label": "Disagree — on a decision awaiting the reader's voice",
+      "to": [{ "board": "ChatAgreeSheet", "case": "the vote's small seal, the nouns swapped (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatRequestApprove",
+      "via": 8,
+      "kind": "advance",
+      "label": "the request card's words",
+      "to": [{ "board": "ChatDecisionDetail", "case": "the request whole — the requester's own row as what would change, a door to their profile, and the reader's Approve (master: the decision's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRequested",
+      "via": 5,
+      "kind": "advance",
+      "label": "the reader's own request card's words",
+      "to": [{ "board": "ChatDecisionDetail", "case": "the request whole, as the chat reads it — public like every decision (master: the decision's anatomy)" }]
+    },
+    {
+      "from": "ChatAgreeSheet",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatAgreeSheet",
+      "via": 2,
+      "kind": "advance",
+      "label": "Sign and agree — the vote's seal button, its verb by the vote",
+      "to": [
+        { "board": "ChatThreadDecisions", "case": "one ballot signed in the reader's name — the sheet goes down, the card reads 3 of 5 so far with You agreed in place of the two words; where a vote settles it, the card becomes its outcome line (passed, or failed when the against side crosses)" },
+        { "terminal": "back", "case": "opened from the decision page or the details — back there, the vote shown as the reader's own" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatAgreeSheet",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "board": "ChatThreadDecisions", "case": "the sheet goes down, nothing signed — the card as it was" }]
+    },
+    {
+      "from": "ChatDecisionDetail",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the thread whose card was tapped, or the details whose row was" }]
+    },
+    {
+      "from": "ChatDecisionDetail",
+      "via": 2,
+      "kind": "advance",
+      "label": "a vote row — the person",
+      "to": [{ "terminal": "canonical", "case": "the voter's profile, canonical's — every vote is a public record" }]
+    },
+    {
+      "from": "ChatDecisionDetail",
+      "via": 3,
+      "kind": "advance",
+      "label": "Disagree instead — changing the reader's vote (Agree instead over a disagreement)",
+      "to": [{ "board": "ChatAgreeSheet", "case": "the vote's small seal with the new direction's nouns — a newer ballot, and the tally reads each person's newest (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatDecisionDetail",
+      "via": 4,
+      "kind": "advance",
+      "label": "Take back your vote",
+      "to": [{ "board": "ChatAgreeSheet", "case": "the vote's small seal worded for a withdrawal (Sign and withdraw) — the zero-direction ballot, governance.md §3–§4 (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatDecisionDetail",
+      "via": 5,
+      "kind": "advance",
+      "label": "the proposed picture — on the version card",
+      "to": [{ "terminal": "canonical", "case": "the fullscreen viewer — canonical's, the picture whole; the second-tap grammar for media, as ChatThreadMedia's media tap lands" }]
+    },
+
+    {
+      "from": "ChatThreadReactions",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 3,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up; the first character swaps the mic for the send arrow (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 6,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 7,
+      "kind": "advance",
+      "label": "a bubble — press and hold",
+      "to": [
+        { "board": "ChatMessageMenu", "case": "someone else's bubble — the message's acts, over the thread (master: the sheet's anatomy)" },
+        { "board": "ChatMessageMenuOwn", "case": "the reader's own bubble — the same acts with Remove among them" }
+      ]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadReactions",
+      "via": 9,
+      "kind": "advance",
+      "label": "a reaction trace — the faces and the count under a bubble",
+      "to": [{ "board": "ChatMessageOpinions", "case": "Opinions on this message — every person the trace counts, each row splitting to its timeline" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 3,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 4,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "terminal": "self", "case": "typing — the quote stays above the field" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 5,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "terminal": "self", "case": "a tap — the reply is signed with its Reference to Juno's message and lands with her words quoted at its head; the strip goes" },
+        { "board": "ChatSignSheet", "case": "press and hold — what the reply signs (master: the sheet's anatomy)" }
+      ]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 6,
+      "kind": "advance",
+      "label": "× — Cancel the reply",
+      "to": [{ "terminal": "self", "case": "the quote leaves the foot; the typed words stay in the field" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 7,
+      "kind": "advance",
+      "label": "a quote at a bubble's head",
+      "to": [{ "terminal": "self", "case": "the thread scrolls to the message it quotes" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadReply",
+      "via": 9,
+      "kind": "advance",
+      "label": "a bubble — press and hold",
+      "to": [
+        { "board": "ChatMessageMenu", "case": "someone else's bubble — the message's acts, over the thread (master: the sheet's anatomy)" },
+        { "board": "ChatMessageMenuOwn", "case": "the reader's own bubble — the same acts with Remove among them" }
+      ]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 3,
+      "kind": "advance",
+      "label": "a voice note's play",
+      "to": [{ "terminal": "self", "case": "the note plays in place, its elapsed time where the length stood; any other note or clip playing stops" }]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 4,
+      "kind": "advance",
+      "label": "a voice note's scrub line",
+      "to": [{ "terminal": "self", "case": "the position moves along the note" }]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 5,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 6,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up; the first character swaps the mic for the send arrow (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 7,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadVoice",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadSealedMedia",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadSealedMedia",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadSealedMedia",
+      "via": 3,
+      "kind": "advance",
+      "label": "a keyed encrypted picture",
+      "to": [{ "terminal": "canonical", "case": "the fullscreen viewer — canonical's; the no-key tile has no second tap and no number" }]
+    },
+    {
+      "from": "ChatThreadSealedMedia",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadSealedMedia",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up; the first character swaps the mic for the send arrow (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadSealedMedia",
+      "via": 6,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadSealedMedia",
+      "via": 7,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 3,
+      "kind": "advance",
+      "label": "Dismiss — on the didn't-land notice",
+      "to": [{ "terminal": "self", "case": "the notice goes; nothing else changes" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 4,
+      "kind": "advance",
+      "label": "Put it back — on the didn't-land notice",
+      "to": [{ "terminal": "self", "case": "the notice goes and its words return to the field, the arrow ready — nothing is signed on this tap" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 5,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 6,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up; the first character swaps the mic for the send arrow (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 7,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadPending",
+      "via": 9,
+      "kind": "advance",
+      "label": "a bubble — press and hold",
+      "to": [
+        { "board": "ChatMessageMenu", "case": "someone else's bubble — the message's acts, over the thread (master: the sheet's anatomy)" },
+        { "board": "ChatMessageMenuOwn", "case": "the reader's own bubble — the same acts with Remove among them" }
+      ]
+    },
+    {
+      "from": "ChatThreadRemoved",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadRemoved",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRemoved",
+      "via": 3,
+      "kind": "advance",
+      "label": "a quote at a bubble's head — here quoting a removed message",
+      "to": [{ "terminal": "self", "case": "the thread scrolls to the mark where the quoted message stood" }]
+    },
+    {
+      "from": "ChatThreadRemoved",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadRemoved",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up; the first character swaps the mic for the send arrow (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRemoved",
+      "via": 6,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadRemoved",
+      "via": 7,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 1,
+      "kind": "advance",
+      "label": "Save",
+      "to": [{ "terminal": "self", "case": "the message joins Saved and the sheet closes; kept, the row reads Unsave" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 2,
+      "kind": "advance",
+      "label": "Cite in a new post",
+      "to": [{ "terminal": "canonical", "case": "the post wizard with the message staged as its citation — canonical's ComposeCited arrival" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 3,
+      "kind": "advance",
+      "label": "Give your opinion",
+      "to": [{ "terminal": "canonical", "case": "the ordinary opinion pad, parked over the thread — canonical's pad" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 4,
+      "kind": "advance",
+      "label": "Reply",
+      "to": [{ "board": "ChatThreadReply", "case": "the foot takes the quote, field ready (master: the reply's anatomy)" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 5,
+      "kind": "advance",
+      "label": "Remove",
+      "to": [{ "board": "ChatMessageRemoveConfirm", "case": "the think-twice dialog over the thread" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 6,
+      "kind": "advance",
+      "label": "Cited by",
+      "to": [{ "terminal": "canonical", "case": "what cites this message — canonical's cited-by sheet" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 7,
+      "kind": "advance",
+      "label": "Opinions on this",
+      "to": [{ "board": "ChatMessageOpinions", "case": "who holds an opinion on your message (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 8,
+      "kind": "advance",
+      "label": "License terms",
+      "to": [{ "terminal": "canonical", "case": "the message's terms in a sheet over the thread — canonical's license sheet" }]
+    },
+    {
+      "from": "ChatMessageMenuOwn",
+      "via": 9,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet closes" }]
+    },
+    {
+      "from": "ChatMessageRemoveConfirm",
+      "via": 1,
+      "kind": "advance",
+      "label": "Remove",
+      "to": [
+        { "board": "ChatThreadRemoved", "case": "the words and whatever the message carried leave every reader's view; the mark Removed by its author stands where the bubble stood" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatMessageRemoveConfirm",
+      "via": 2,
+      "kind": "cancel",
+      "label": "Keep it",
+      "to": [{ "terminal": "back", "case": "the dialog closes; nothing is removed" }]
+    },
+    {
+      "from": "ChatMessageRemoveConfirm",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the chats page face the thread was opened from" }]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 3,
+      "kind": "advance",
+      "label": "a sent post's block in a bubble",
+      "to": [{ "terminal": "canonical", "case": "the post's detail surface — canonical's, the cited post whole" }]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties, sticky for this chat" }]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message — the field",
+      "to": [{ "board": "ChatThreadKeyboard", "case": "the field takes focus and the keyboard comes up; the first character swaps the mic for the send arrow (master: the keyboard's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 6,
+      "kind": "advance",
+      "label": "the mic — Record a voice message (the field is empty)",
+      "to": [
+        { "board": "ChatThreadRecording", "case": "a tap — the recording starts and the foot becomes its controls: Describe, delete, the lock, pause and the send arrow" }
+      ]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 7,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadSentPost",
+      "via": 8,
+      "kind": "advance",
+      "label": "a bubble — press and hold",
+      "to": [
+        { "board": "ChatMessageMenu", "case": "someone else's bubble — the message's acts, over the thread (master: the sheet's anatomy)" },
+        { "board": "ChatMessageMenuOwn", "case": "the reader's own bubble — the same acts with Remove among them" }
+      ]
+    },
+    {
+      "from": "ChatSendSheet",
+      "via": 1,
+      "kind": "advance",
+      "label": "Search your chats",
+      "to": [{ "terminal": "self", "case": "typing — the list narrows to the reader's chats by name" }]
+    },
+    {
+      "from": "ChatSendSheet",
+      "via": 2,
+      "kind": "advance",
+      "label": "Share outside CoGra",
+      "to": [{ "terminal": "os", "case": "the platform's own share sheet, from inside the send sheet — the share glyph never opens it directly" }]
+    },
+    {
+      "from": "ChatSendSheet",
+      "via": 3,
+      "kind": "advance",
+      "label": "a chat — pick it",
+      "to": [{ "terminal": "self", "case": "the dot moves to this chat; the foot's lock takes that chat's sticky choice" }]
+    },
+    {
+      "from": "ChatSendSheet",
+      "via": 4,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties — the words beside the post are sealed or not; the post itself never is, and the line says so while the lock is on" }]
+    },
+    {
+      "from": "ChatSendSheet",
+      "via": 5,
+      "kind": "advance",
+      "label": "Message — optional",
+      "to": [{ "terminal": "self", "case": "typing — the words sent with the post" }]
+    },
+    {
+      "from": "ChatSendSheet",
+      "via": 6,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "board": "ChatThreadSentPost", "case": "a tap — one message citing the post is signed into the picked chat; the sheet goes down and the snackbar's Open lands on the thread with the post landed" },
+        { "board": "ChatSignSheet", "case": "press and hold — what the message signs, the post among it (master: the sheet's anatomy)" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatSendSheet",
+      "via": 7,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet goes down over the post, nothing sent" }]
+    },
+    {
+      "from": "ChatAskSheet",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How signing works",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog" }]
+    },
+    {
+      "from": "ChatAskSheet",
+      "via": 2,
+      "kind": "advance",
+      "label": "Message — optional",
+      "to": [{ "terminal": "self", "case": "typing — the field grows by the growth law; the sheet keeps its title and its act in view" }]
+    },
+    {
+      "from": "ChatAskSheet",
+      "via": 3,
+      "kind": "advance",
+      "label": "Sign and ask",
+      "to": [
+        { "board": "ChatThreadRequested", "case": "the Join Request is signed with its message — a card in the thread quoting it, and the foot says the request is sent" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatAskSheet",
+      "via": 4,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "board": "ChatThreadReader", "case": "the sheet goes down, nothing signed — the thread read from outside, Ask to join at its foot" }]
+    },
+    {
+      "from": "ChatNotifications",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the root the bell was tapped on" }]
+    },
+    {
+      "from": "ChatNotifications",
+      "via": 2,
+      "kind": "advance",
+      "label": "an invitation row",
+      "to": [{ "board": "ChatThreadInvited", "case": "the chat read as an invitee — the thread, the inviter's line and message, and Join at the foot" }]
+    },
+    {
+      "from": "ChatNotifications",
+      "via": 3,
+      "kind": "advance",
+      "label": "a request-awaiting-approval row",
+      "to": [{ "board": "ChatRequestApprove", "case": "the chat's thread with the request's card and Approve" }]
+    },
+    {
+      "from": "ChatNotifications",
+      "via": 4,
+      "kind": "advance",
+      "label": "an approval row",
+      "to": [{ "board": "ChatThreadApproved", "case": "the chat's thread with the outcome line and Join at the foot" }]
+    },
+    {
+      "from": "ChatNotifications",
+      "via": 5,
+      "kind": "advance",
+      "label": "canonical's rows (a comment, a reply)",
+      "to": [{ "terminal": "canonical", "case": "each lands on its subject — canonical's list and its edges" }]
+    },
+    {
+      "from": "ChatSearchResults",
+      "via": 1,
+      "kind": "advance",
+      "label": "the search field",
+      "to": [{ "terminal": "self", "case": "typing — the results change with the query" }]
+    },
+    {
+      "from": "ChatSearchResults",
+      "via": 2,
+      "kind": "advance",
+      "label": "What the search shows",
+      "to": [{ "terminal": "canonical", "case": "canonical's search filter sheet" }]
+    },
+    {
+      "from": "ChatSearchResults",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — How searching works",
+      "to": [{ "terminal": "canonical", "case": "canonical's search help dialog" }]
+    },
+    {
+      "from": "ChatSearchResults",
+      "via": 4,
+      "kind": "advance",
+      "label": "a chat result",
+      "to": [
+        { "board": "ChatThreadReader", "case": "the chat's read surface, for anyone — a non-member or a guest reads the thread with the join at its foot" },
+        { "board": "ChatThread", "case": "a chat the reader is in — its own thread (master: the thread's anatomy)" }
+      ]
+    },
+    {
+      "from": "ChatSearchResults",
+      "via": 5,
+      "kind": "advance",
+      "label": "canonical's result rows (a person, a post)",
+      "to": [{ "terminal": "canonical", "case": "each opens its own surface — canonical's search and its edges" }]
+    },
+    {
+      "from": "ChatSaved",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "canonical", "case": "the own profile, canonical's" }]
+    },
+    {
+      "from": "ChatSaved",
+      "via": 2,
+      "kind": "advance",
+      "label": "a saved message",
+      "to": [{ "board": "ChatThread", "case": "the thread, scrolled to the message (master: the thread's anatomy)" }]
+    },
+    {
+      "from": "ChatSaved",
+      "via": 3,
+      "kind": "advance",
+      "label": "Unsave — on a row",
+      "to": [{ "terminal": "canonical", "case": "the row leaves with canonical's undo snackbar — SavedUndo's moment" }]
+    },
+    {
+      "from": "ChatSaved",
+      "via": 4,
+      "kind": "advance",
+      "label": "canonical's saved rows (a post, a comment)",
+      "to": [{ "terminal": "canonical", "case": "each opens its own surface — canonical's list and its edges" }]
+    },
+    {
+      "from": "ChatsExplore",
+      "via": 9,
+      "kind": "advance",
+      "label": "You're invited — an invited reader's row",
+      "to": [{ "board": "ChatJoinSeal", "case": "the join's seal, the invited route's nouns (Invited by · Mira Voss) — the reader's own Participant" }]
+    },
+    {
+      "from": "ChatInviteSeal",
+      "via": 6,
+      "kind": "advance",
+      "label": "Message — optional",
+      "to": [{ "terminal": "self", "case": "typing — one message rides every invitation in the batch; it grows by the growth law" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 12,
+      "kind": "advance",
+      "label": "Invitations to chats",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default (the lane's analogy, flagged)" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 13,
+      "kind": "advance",
+      "label": "Requests to join your chats",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default; only a reader the chat's map lets approve ever receives one" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 14,
+      "kind": "advance",
+      "label": "Your requests to join approved",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default" }]
+    },
+    {
+      "from": "PushKinds",
+      "via": 15,
+      "kind": "advance",
+      "label": "New messages",
+      "to": [{ "terminal": "self", "case": "the switch flips — on by default (the push round's forward note); a muted chat stays quiet whatever it says" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 1,
+      "kind": "advance",
+      "label": "the feed's filter trigger",
+      "to": [{ "terminal": "canonical", "case": "canonical's filter sheet — Chats and Messages among its kinds" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 2,
+      "kind": "advance",
+      "label": "the chat card — the card itself",
+      "to": [
+        { "board": "ChatThreadReader", "case": "a chat the reader is not in — the thread read from outside, the join at its foot (master: the reader's thread)" },
+        { "board": "ChatThread", "case": "a chat the reader is in — its thread (master: the thread's anatomy)" }
+      ]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 3,
+      "kind": "advance",
+      "label": "the message card — the card itself",
+      "to": [
+        { "board": "ChatThreadReader", "case": "the thread, scrolled to the message (master: the reader's thread)" },
+        { "board": "ChatThread", "case": "a chat the reader is in — its thread, scrolled to the message" }
+      ]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 4,
+      "kind": "advance",
+      "label": "an author chip",
+      "to": [{ "terminal": "canonical", "case": "the author's profile — canonical's" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 5,
+      "kind": "advance",
+      "label": "a card's opinion face — tap or hold",
+      "to": [{ "terminal": "canonical", "case": "a tap parks canonical's opinion pad over the feed, on the chat, the message or the post; a hold signs a gentle positive in place" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 6,
+      "kind": "advance",
+      "label": "a card's score",
+      "to": [{ "terminal": "canonical", "case": "the score's drill-down — canonical's" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 7,
+      "kind": "advance",
+      "label": "a card's comments",
+      "to": [{ "terminal": "canonical", "case": "the comments sheet over the feed — canonical's" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 8,
+      "kind": "advance",
+      "label": "a card's share",
+      "to": [{ "board": "ChatSendSheet", "case": "Send to a chat — the share act's one door, Share outside CoGra inside it (master: the sheet's anatomy)" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 9,
+      "kind": "advance",
+      "label": "a card's ⋮",
+      "to": [{ "terminal": "canonical", "case": "the card's menu — Save, Cite in a new post, License terms — canonical's sheet" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 10,
+      "kind": "advance",
+      "label": "the post card — the card itself",
+      "to": [{ "terminal": "canonical", "case": "the post's detail surface — canonical's" }]
+    },
+    {
+      "from": "ChatFeedCards",
+      "via": 11,
+      "kind": "advance",
+      "label": "a tag chip",
+      "to": [{ "terminal": "canonical", "case": "the tag's page — canonical's" }]
+    },
+    {
+      "from": "ChatJoinSeal",
+      "via": 4,
+      "kind": "advance",
+      "label": "Your opinion — the opinion face on Night fishing crew",
+      "to": [
+        { "board": "ChatJoinSealPad", "case": "a tap — the ordinary pad over the seal, the staged default at its knob; Set puts the pick back on the row, and the seal's button signs it (master: the pad over the join's seal)" },
+        { "terminal": "self", "case": "press and hold — the gentle default the row already holds, staged, never signed apart from the seal" }
+      ]
+    },
+    {
+      "from": "ChatAskSheet",
+      "via": 5,
+      "kind": "advance",
+      "label": "Your opinion — the opinion face on Harbour office",
+      "to": [
+        { "board": "ChatJoinSealPad", "case": "a tap — the ordinary pad over the seal, the staged default at its knob; Set puts the pick back on the row, and the seal's button signs it (master: the pad over the join's seal)" },
+        { "terminal": "self", "case": "press and hold — the gentle default the row already holds, staged, never signed apart from the seal" }
+      ]
+    },
+    {
+      "from": "ChatCreateSeal",
+      "via": 6,
+      "kind": "advance",
+      "label": "Your opinion — the opinion face on the new chat",
+      "to": [
+        { "board": "ChatJoinSealPad", "case": "a tap — the ordinary pad over the seal, the staged default at its knob; Set puts the pick back on the row, and the seal's button signs it (master: the pad over the join's seal)" },
+        { "terminal": "self", "case": "press and hold — the gentle default the row already holds, staged, never signed apart from the seal" }
+      ]
+    },
+    {
+      "from": "ChatSignSheet",
+      "via": 4,
+      "kind": "advance",
+      "label": "Adjust — on Your opinion",
+      "to": [{ "terminal": "canonical", "case": "the one-axis pad over the sheet — an opinion on your own content names a valence only; canonical's own-post pad, ComposeSeal's Adjust" }]
+    },
+    {
+      "from": "ChatJoinSealPad",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions work",
+      "to": [{ "terminal": "canonical", "case": "the pad's own dialog" }]
+    },
+    {
+      "from": "ChatJoinSealPad",
+      "via": 2,
+      "kind": "advance",
+      "label": "the pad's field",
+      "to": [{ "terminal": "self", "case": "the knob moves; the face and pair above the field follow it" }]
+    },
+    {
+      "from": "ChatJoinSealPad",
+      "via": 3,
+      "kind": "cancel",
+      "label": "Cancel",
+      "to": [{ "board": "ChatJoinSeal", "case": "the pad closes; the seal's row keeps the value it had" }]
+    },
+    {
+      "from": "ChatJoinSealPad",
+      "via": 4,
+      "kind": "advance",
+      "label": "Set",
+      "to": [{ "board": "ChatJoinSeal", "case": "the pad closes and the row wears the pick — nothing is signed until Sign and join" }]
+    },
+    {
+      "from": "ChatMessagePad",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — How opinions work",
+      "to": [{ "terminal": "canonical", "case": "the pad's own dialog" }]
+    },
+    {
+      "from": "ChatMessagePad",
+      "via": 2,
+      "kind": "advance",
+      "label": "the pad's field",
+      "to": [{ "terminal": "self", "case": "the knob moves; the face and pair above the field follow it" }]
+    },
+    {
+      "from": "ChatMessagePad",
+      "via": 3,
+      "kind": "cancel",
+      "label": "Cancel",
+      "to": [{ "terminal": "back", "case": "the pad closes over the thread, nothing signed" }]
+    },
+    {
+      "from": "ChatMessagePad",
+      "via": 4,
+      "kind": "advance",
+      "label": "Set",
+      "to": [
+        { "board": "ChatThreadReactions", "case": "one Opinion → Message is signed; the message's trace gains the reader's face (master: the traces)" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatMessageOpinions",
+      "via": 1,
+      "kind": "advance",
+      "label": "a row — the person",
+      "to": [{ "terminal": "canonical", "case": "their profile — canonical's" }]
+    },
+    {
+      "from": "ChatMessageOpinions",
+      "via": 2,
+      "kind": "advance",
+      "label": "a row — the opinion's value",
+      "to": [{ "board": "StanceTimelinePost", "case": "how that person's opinion on the message built, record by record (master: the content timeline's anatomy)" }]
+    },
+    {
+      "from": "ChatMessageOpinions",
+      "via": 3,
+      "kind": "cancel",
+      "label": "scrim — tap outside",
+      "to": [{ "terminal": "back", "case": "the sheet goes down over the thread" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the recording is let go, nothing signed, and the thread closes" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details; the recording is let go (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 3,
+      "kind": "advance",
+      "label": "Describe",
+      "to": [{ "terminal": "canonical", "case": "the describe sheet, audio's shape — canonical's DescribeSheet; the description rides the note" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 4,
+      "kind": "advance",
+      "label": "Delete the recording",
+      "to": [{ "terminal": "self", "case": "the recording is let go, nothing signed; the foot returns to the field and the mic" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 5,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties — the note will be sealed by what it says when the arrow is pressed; sticky for the chat" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 6,
+      "kind": "advance",
+      "label": "Pause the recording",
+      "to": [{ "board": "ChatThreadRecordingPaused", "case": "the recording pauses; the middle control flips to play, Keep recording" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 7,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "board": "ChatThreadVoice", "case": "the note is signed and sent, sealed by the lock's state, and lands as a voice bubble (master: the voice bubble's anatomy)" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat; the recording is let go (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRecording",
+      "via": 9,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "the recording is let go, nothing signed, and the thread closes" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 2,
+      "kind": "advance",
+      "label": "the header — the chat's picture and name",
+      "to": [{ "board": "ChatDetails", "case": "the chat's details; the recording is let go (master: the details' anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 3,
+      "kind": "advance",
+      "label": "Describe",
+      "to": [{ "terminal": "canonical", "case": "the describe sheet, audio's shape — canonical's DescribeSheet; the description rides the note" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 4,
+      "kind": "advance",
+      "label": "Delete the recording",
+      "to": [{ "terminal": "self", "case": "the recording is let go, nothing signed; the foot returns to the field and the mic" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 5,
+      "kind": "advance",
+      "label": "the lock toggle — Encrypt end to end",
+      "to": [{ "terminal": "self", "case": "the lock fills or empties — the note will be sealed by what it says when the arrow is pressed; sticky for the chat" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 6,
+      "kind": "advance",
+      "label": "Keep recording",
+      "to": [{ "board": "ChatThreadRecording", "case": "recording goes on into the same note — the audio extends and the length counts on from where it paused" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 7,
+      "kind": "advance",
+      "label": "the send arrow — Sign and send",
+      "to": [
+        { "board": "ChatThreadVoice", "case": "the paused note is signed and sent as it is, sealed by the lock's state (master: the voice bubble's anatomy)" },
+        { "terminal": "canonical", "case": "key elsewhere or offline — canonical's key-absent and network-error boards (masters)" }
+      ]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 8,
+      "kind": "advance",
+      "label": "the header's search glyph — Search in this chat",
+      "to": [{ "board": "ChatSearchIn", "case": "search within this chat; the recording is let go (master: the search's anatomy)" }]
+    },
+    {
+      "from": "ChatThreadRecordingPaused",
+      "via": 9,
+      "kind": "advance",
+      "label": "Show the encrypted text",
+      "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    }
+  ]
+}

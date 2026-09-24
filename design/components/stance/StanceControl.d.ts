@@ -59,6 +59,18 @@ export interface StanceControlProps {
    * that says an axis out loud.
    */
   axes?: PadAxes;
+  /**
+   * The standing's own door (the change-histories round): the "Current opinion"
+   * line above the field opens the timeline the sum was built from. Pure
+   * pass-through to `StanceStanding`.
+   */
+  onOpenHistory?: () => void;
+  /**
+   * First-connection mode: the control stands on a seal signing the reader's
+   * first record toward the target, handed the staged default as its value.
+   * Nothing to walk back yet, so the pad omits the walk-away. Off by default.
+   */
+  firstConnection?: boolean;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;

@@ -179,9 +179,14 @@ A manifest entry is a nested integer-keyed map: key 0 the
 **mime** they are to be read as (tstr), key 2 the **alt text**
 describing them (tstr, omitted when there is none), key 3 the
 **cover digest** for a video (32-byte bstr, omitted on a still and
-on a video shown without a poster). That is what a reader needs to
-render honestly — which bytes, what type, what the picture is of,
-and which still stands in for a clip that is not playing. The cover
+on a video shown without a poster), key 4 the **cover-taken** mark
+(bool, present only alongside key 3, refused otherwise) recording
+that the cover is the system's own first frame rather than one the
+author chose — absent means chosen, and the only legal in-band
+value is `true`. That is what a reader needs to render honestly —
+which bytes, what type, what the picture is of, which still stands
+in for a clip that is not playing, and whether that still was
+chosen or taken. The cover
 is witnessed because it is the face the post wears at rest: an
 author signs the face as they sign the body, and an edit that
 changes it is a new version saying so. Alt text is witnessed
@@ -192,9 +197,14 @@ author signs nothing they did not author. Gallery order is the
 array position, so no index rides that could disagree with the
 order it is stored in. The nested map runs the same reserved-key
 discipline the outer envelope runs: an unknown key is refused
-rather than ignored, so a v2 field cannot be silently dropped by
-a v1 reader that would then render an asset it did not fully
-understand.
+rather than ignored.
+
+That refusal is what lets both maps grow additively. A new field
+is a new key assigned under schema version 1 — manifest keys 3
+and 4 each arrived that way — and every reader refuses a key above
+the highest it knows, so a reader older than a field refuses the
+payload rather than dropping the field and rendering an asset it
+did not fully understand.
 
 Key 11 carries the profile's avatar — its one image — as that same
 per-asset map, one deep: the same reader renders a gallery and
@@ -439,8 +449,14 @@ points at a parent — see "Why parents point at attachments" below.
 -- row never points at a parent — see "Why parents point at attachments"
 -- below.
 --
--- An asset row is immutable after upload: there is no update surface,
--- and a re-crop is a new asset (new bytes, new digest). The upload
+-- An asset row is immutable once it is ready: a re-crop is a new asset
+-- (new bytes, new digest). Before that it is `processing` — a video
+-- outside the served target, waiting for the ingest worker to re-encode
+-- it — and the worker is the only update surface: it settles the row
+-- `ready`, pointing it at the rendition's digest, key and size, or
+-- `failed` with a reason, exactly once. Prepare refuses anything but a
+-- ready asset, so the one moment a digest changes is a moment no
+-- envelope can have committed it. The upload
 -- carries nothing authored — a description (alt text) is witnessed in
 -- the referencing payload's manifest and cached on the junction row
 -- per version, so a picture uploads the moment it is picked and is
@@ -485,20 +501,49 @@ CREATE TABLE media_attachments (
     mime_type        TEXT         NOT NULL,
     size_bytes       BIGINT,
     options          JSONB        NOT NULL DEFAULT '{}'::jsonb,
+    -- The ingest state, stated by every insert (no default).
+    state            TEXT         NOT NULL
+        CHECK (state IN ('processing', 'ready', 'failed')),
+    -- What the author reads when the asset failed; present exactly then.
+    failure_reason   TEXT,
+    -- The digest of the bytes as they arrived, kept on a re-encoded
+    -- asset so a retried upload of the same file finds it after
+    -- `digest` has moved to the rendition. Null on an asset stored as
+    -- it arrived.
+    source_digest    BYTEA,
+    -- The ingest queue's claim: a worker leases a processing row and
+    -- renews the lease while it works, so a job whose worker died is
+    -- claimable again once the lease lapses.
+    lease_until      TIMESTAMPTZ,
+    attempts         INTEGER      NOT NULL DEFAULT 0,
     -- The tombstone shape every version table uses: redaction removes
     -- the bytes and leaves the mark (primitive/layers.md §5).
     redaction_reason TEXT,
     redacted_at      TIMESTAMPTZ,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    -- One asset per author per digest: a retried upload of the same
-    -- picture resolves to the row that already exists instead of a
-    -- second object. The upload returns that row rather than erroring.
-    UNIQUE (author_id, digest)
+    CHECK ((state = 'failed') = (failure_reason IS NOT NULL))
 );
+
+-- One live asset per author per digest: a retried upload of the same
+-- picture resolves to the row that already exists instead of a second
+-- object, and the upload returns that row rather than erroring. A
+-- failed asset holds its digest no longer, so the same file can be
+-- uploaded again once the cause is gone. The same rule covers the
+-- digest a re-encoded asset arrived with.
+CREATE UNIQUE INDEX media_attachments_author_digest_key
+    ON media_attachments (author_id, digest) WHERE state <> 'failed';
+CREATE UNIQUE INDEX media_attachments_author_source_digest_key
+    ON media_attachments (author_id, source_digest)
+    WHERE source_digest IS NOT NULL AND state <> 'failed';
+
+-- The ingest queue reads the oldest processing row; at rest the index
+-- is empty.
+CREATE INDEX media_attachments_processing_idx
+    ON media_attachments (created_at) WHERE state = 'processing';
 ```
 
-That unique constraint's index leads with `author_id`, so it
-serves every author-keyed lookup — the account-redaction sweep of
+The author-digest index leads with `author_id`, so it serves every
+author-keyed lookup — the account-redaction sweep of
 [erasure.md](../instances/erasure.md) among them — as a prefix
 scan, and no separate author index is carried.
 
@@ -899,12 +944,13 @@ gallery rows and renders as it stood.
 ```sql
 -- Junction: post versions → attachments (ordered, optionally a cover,
 -- each entry carrying its witnessed description and, for a video, the
--- poster it is covered by). display_order, is_cover, alt_text and
--- cover_media_id are parent-version facts about the relationship, not
--- properties of the asset — each caches what the version's manifest
--- witnessed (array position; per-asset map keys 2 and 3), which is why
--- the same asset can read differently in two parents and why an edit
--- can change a cover without touching an immutable clip row.
+-- poster it is covered by and whether that poster was taken).
+-- display_order, is_cover, alt_text, cover_media_id and cover_taken are
+-- parent-version facts about the relationship, not properties of the
+-- asset — each caches what the version's manifest witnessed (array
+-- position; per-asset map keys 2, 3 and 4), which is why the same asset
+-- can read differently in two parents and why an edit can change a
+-- cover without touching an immutable clip row.
 CREATE TABLE post_attachments (
     post_version_id BIGINT   NOT NULL
         REFERENCES post_versions(version_id) ON DELETE CASCADE,
@@ -914,11 +960,13 @@ CREATE TABLE post_attachments (
     alt_text        TEXT,
     cover_media_id  UUID     REFERENCES media_attachments(id)
         CHECK (cover_media_id IS NULL OR cover_media_id <> attachment_id),
+    cover_taken     BOOLEAN  NOT NULL DEFAULT FALSE,
+    CHECK (NOT cover_taken OR cover_media_id IS NOT NULL),
     PRIMARY KEY (post_version_id, attachment_id)
 );
 
 -- Junction: comment versions → attachments (ordered, described, a
--- video carrying its poster).
+-- video carrying its poster and whether it was taken).
 CREATE TABLE comment_attachments (
     comment_version_id BIGINT   NOT NULL
         REFERENCES comment_versions(version_id) ON DELETE CASCADE,
@@ -927,6 +975,8 @@ CREATE TABLE comment_attachments (
     alt_text           TEXT,
     cover_media_id     UUID     REFERENCES media_attachments(id)
         CHECK (cover_media_id IS NULL OR cover_media_id <> attachment_id),
+    cover_taken        BOOLEAN  NOT NULL DEFAULT FALSE,
+    CHECK (NOT cover_taken OR cover_media_id IS NOT NULL),
     PRIMARY KEY (comment_version_id, attachment_id)
 );
 
@@ -1480,8 +1530,11 @@ A video's cover (the poster) is a `cover_media_id` foreign key to
 `media_attachments` on the **junction row**, beside `alt_text` — a
 parent-version fact about the placement, not a property of the
 asset, which is why an edit can name a different cover without
-touching a clip whose row is immutable once written. An entry may
-not name itself as its own poster. The poster is redacted with its
+touching a clip whose row is immutable once ready. An entry may
+not name itself as its own poster. `cover_taken` sits beside it on
+the same terms, caching manifest key 4: true when the poster is a
+frame taken from the clip rather than a still the author chose, and
+never true on a row without a poster. The poster is redacted with its
 video and the removal cascade can see the link. The junction-side
 `is_cover` is a different concern: it selects which attachment leads
 a multi-asset parent.

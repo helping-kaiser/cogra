@@ -4,9 +4,11 @@
 advertisers fund campaigns in and contributors earn, settled on
 CoGra's own rail. It is one of the two moneys of
 [economics.md §1](economics.md#1-the-two-economies), and it is
-**fully disconnected from the other**: the burn value behind
-`B_i` and the θ-debit is a different asset on the far side of the
-L1 boundary, never minted, held, or priced by CoGra. This doc
+**fully disconnected from the other**: the burn value `B_i` behind
+the θ-debit is no asset at all — a realization's record of
+destroyed value on the far side of the L1 boundary
+(``post:comparator:burn-primitive``, R2), never minted or priced
+by CoGra. This doc
 defines CGT's supply side — the **release schedule**, the
 **initial allocation**, and the **protocol-owned liquidity** that
 moves released supply into circulation — and where the money that leaves the campaign
@@ -75,9 +77,9 @@ CGT **inherits the peer-network token's release schedule at its
 current point** — no reset, no fresh issuance event at launch. The
 schedule has already been running (§3); CGT continues it forward
 from wherever it stands. The inherited curve is **CGT's own supply
-curve and nothing else**: it has no relationship to the burn value,
-which CoGra never mints and whose economics belong to the
-realization.
+curve and nothing else**: it has no relationship to burn value,
+which CoGra never mints and whose pricing belongs to the
+realization (``rem:comparator:surface-readings``).
 
 **Why a decaying calendar release, and not per-action
 distribution.** Rewarding users per activity — per like, post, or
@@ -156,9 +158,9 @@ rail's native asset. Pairing against it adds **no issuer or
 custodian** beyond the chain itself: a USD stablecoin prices CGT
 directly in dollars but depends on a central issuer who can freeze
 or redeem; wrapped or bridged BTC reintroduces a custodian holding
-the real Bitcoin. L-BTC is Bitcoin inside the same federation
-trust floor the burn value already stands on — the only deep
-pair with no extra trust dependency. The consequence:
+the real Bitcoin. L-BTC is Bitcoin inside the federation trust
+floor CGT's own chain already stands on — the only deep pair with
+no extra trust dependency. The consequence:
 **contributor earnings are realised in L-BTC**, so their fiat
 value follows
 `(contributor share) · (CGT/L-BTC trajectory) · (BTC/USD)` — the
@@ -282,7 +284,7 @@ run.
   deflationary regime.
 
 Beside burn, campaign flow also *sells* CGT: the admission fund
-(§6.2) converts its `reserve_share·P` inflow out of CGT entirely.
+(§6.2) converts its settlement inflow out of CGT entirely.
 Conversion is market flow, not supply change — it moves units, the
 way any holder's sale does — so the trajectory above is set by
 release and burn alone.
@@ -301,9 +303,13 @@ by demand growth rather than calendar rewards to idle holders.
 
 Two pots receive the campaign equation's platform-side flow, and
 they are deliberately separate: **the team treasury** is the
-project's revenue; **the admission fund** is the community's. Separating them keeps each accountable — the team's
-income is not raidable by subsidy policy, and the community's
-self-funding is not a discretionary line in the project's budget.
+project's revenue; **the admission fund** is the community's.
+Separating them keeps each accountable — the team's
+income is not raidable by subsidy policy, the one exception being
+the settlement carve of
+[economics.md §7](economics.md#7-the-conservation-equation),
+bounded by the pinned ceiling; and the community's self-funding is
+not a discretionary line in the project's budget.
 
 ### 6.1 The team treasury
 
@@ -315,7 +321,8 @@ launches on central hardware, so real infra costs must be covered).
 
 It accrues from two streams:
 
-- **Campaign treasury share** — `0.02%·D + 1.98%·P` per settlement
+- **Campaign treasury share** —
+  `0.02%·D + (1 − reserve_share)·1.98%·P` per settlement
   ([economics.md §7](economics.md#7-the-conservation-equation)),
   already CGT-denominated.
 - **Ladder spread** — the realized spread income swept from the
@@ -328,13 +335,14 @@ own liquidity, **not** from monetising user data.
 
 ### 6.2 The admission fund
 
-The reserve pool receives the `reserve_share·P` settlement line
-([economics.md §7.2](economics.md#72-the-admission-fund)) and
+The fund receives the `admission_fund` settlement line
+([economics.md §7.2](economics.md#72-the-admission-fund)) —
+`reserve_share·P` from the contributor pool plus the same fraction
+of the treasury's and the inviter's `P`-scaled shares — and
 exists for exactly one kind of outflow: **funding the community's
-admission burns**. CGT is swapped into L-BTC through the protocol's
-own ladder at execution-time market price — chunked, publicly
-accounted, never at a frozen internal rate
-([ledger.md](../implementation/ledger.md)) — and burned at
+admission burns**. CGT is converted at execution-time market
+price — chunked, publicly accounted, never at a frozen internal
+rate ([ledger.md](../implementation/ledger.md)) — and burned at
 members', system actors', and Collectives' own addresses — the
 funder-unconstrained burn L1 explicitly permits, raising only the
 funded member's own `B_i`.
@@ -344,17 +352,18 @@ funded member's own `B_i`.
   per-member caps that govern the outflow. The community that pays
   the fee governs both sides of it.
 - **The steady-state target is checkable**: advertiser revenue
-  covers the community's admission costs when the pool's public inflow
-  keeps pace with its on-chain burn outflow — arithmetic, not a
-  promise.
-- **Seeded at genesis, open to top-ups.** The genesis admission burns that
-  instantiate the network are funded directly at launch; the pool
-  then carries ongoing admission. Anything may flow in; only admission
-  funding flows out.
+  covers the community's admission costs when the pool's settlement
+  inflow keeps pace with its burn outflow — arithmetic, not a
+  promise. The genesis seed and top-ups are a separately reported
+  inflow line and never count toward it.
+- **Seeded at genesis, open to top-ups.** The operator's genesis
+  funding is the pool's first inflow, and the admission burns
+  that instantiate the network draw from it. Anything may flow
+  in; only admission funding flows out.
 
 The conversion crosses the two-economy boundary in the only
 sanctioned direction and place
 ([economics.md §1](economics.md#1-the-two-economies)): the pool
 merely exchanges one asset for another on the open market and burns
-the result at members' addresses. CGT and the burn value stay two
-distinct moneys end to end.
+the result at members' addresses. CGT and burn value stay distinct
+end to end.

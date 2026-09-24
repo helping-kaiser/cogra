@@ -133,7 +133,8 @@ Until PeerNetworks Layer 1 ships, the backend runs an **L1 stand-in**
 behind the interface boundary: an implementation of the
 [layer1-interface.md](../primitive/layer1-interface.md) contract with
 two named simplifications. **Money** — the `B_i` surface and θ-debits
-honored as numbers, without a realization of the burn primitive behind them.
+honored as numbers, with no realization of the burn primitive
+behind them.
 **Standing** — formation, the admission handshake, ordering, causal
 keys, maturity, and the θ-ledger are implemented in full, but the
 conserved standing solve (layer1-interface.md §11.3–11.5) is not: every
@@ -178,6 +179,14 @@ event-driven and is not an MVP dependency.
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
   canonical boards.
+- **The shell's navigation contract** — the bottom bar's re-tap
+  ladder and the platform-back semantics ruled 2026-09-10
+  (design/readme.md "The bottom bar's re-tap ladder": system back
+  pops within the current stack, then from another tab's root to
+  Feed's root, then leaves; web tabs are routes and the browser
+  owns history) — implemented and conform on both clients. Flows
+  with their own step stacks (wizards, crop) route the platform
+  back gesture through their in-flow back first.
 - **Slice 9 — production deployment** and **slice 10 — release
   engineering** below, both minted for the MVP.
 
@@ -266,7 +275,7 @@ write needs a landed, funded actor with a device-held key.
   superseding the earlier deferral to slice 2: the field is
   invite/auth-flow state, so it ships with the flow). The
   device-local answered-bit stays only as the dismissal memory.
-- Actor-identity uniqueness at the attach: one account per
+- Actor-identity uniqueness at the attach: one account per realization
   address — `attachActorKey` refuses a key already bound to a
   different account ([auth.md](auth.md#application-the-applicant-state)).
   Surfaced by the slice-1 hand test: a second account on a device
@@ -449,9 +458,13 @@ the start — and delivery splits by content kind.
   per-type size caps; `durationMs` reading a value.
 - The wizard's cover step, and animated WebP and GIF.
 - The upload accepts **MP4 / H.264 + AAC** at 100 MiB and animated
-  WebP at the picture's own cap, validated and never transcoded; a
-  still GIF converts on the device and an animated one is refused
-  there. A video is the whole body and its poster rides the
+  WebP at the picture's own cap, validated; a still GIF converts on
+  the device and an animated one is refused there. Video is served
+  at the Android composer's target: clients compress where they
+  can, and the server re-encodes an upload that exceeds it before
+  it can be attached — `PROCESSING` until the rendition exists,
+  refused by prepare until `READY` — so the served bytes are always
+  the witnessed ones. A video is the whole body and its poster rides the
   placement, named at prepare. A comment carries one too, at half
   the byte budget.
 - Metadata is stripped on the device and **checked again here**,
@@ -786,14 +799,18 @@ On the roadmap but outside the slice order; each names its gate.
   [miner-api.md](miner-api.md)); revisit when someone actually wants
   to operate a paid miner.
 - **Change histories on every versioned thing** — posts, comments,
-  stances, profiles and chat messages all keep their versions, and
-  the reader can see them: a history surface reached from the
-  thing's own three-dot menu, showing what changed and when. It
-  reads rows that already exist and mints no records, so it is a
-  read surface over the version tables rather than a slice of its
-  own. Gate: each kind joins as its versions ship — posts and
-  comments from slice 2, profiles from 2.1, stances from 2.2, chat
-  messages at slice 5.
+  stances, profiles and chats all keep their versions, and the
+  reader can see them: one list of whole versions, newest first,
+  the current one marked and never a diff. A tombstoned version
+  keeps its row and wears the mark. Reached from the thing's own
+  three-dot menu and from the Edited marker for content, and from
+  a value readout for a stance. It reads rows that already exist
+  and mints no records — the version tables for content, the
+  record mirror for a stance, which is a history already. Gate:
+  each kind joins as its versions ship — posts and comments from
+  slice 2, profiles from 2.1, stances from 2.2, the chat container
+  at slice 5 (its name, image, description and members; message
+  bodies never edit).
 - **Walk-the-graph frontend** — a visual graph-exploration client;
   parked product idea. Neighborhood queries over the record mirror
   suffice until it earns its build.

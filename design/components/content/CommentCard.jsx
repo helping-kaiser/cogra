@@ -9,7 +9,7 @@ import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 import { MediaGallery } from "../media/MediaAttachment.jsx";
-import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
+import { RedactedContent, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -57,6 +57,12 @@ export function CommentCard({
   onOpenReplies,
   signedIn = true,
   taught = true,
+  /* Off only where a surface deliberately carries no stance affordance —
+     `PostCard`'s own prop, spelled here for the same reason it exists there.
+     The change-histories round is the case: an opinion is held on the comment,
+     never on one of its versions, so a chronicle of three versions drawing
+     three opinion faces would be drawing one fact three times. */
+  showStance = true,
   onCommit,
   onReply,
   onEdit,
@@ -71,12 +77,22 @@ export function CommentCard({
   topics = [],
   references = 0,
   onOpenReferences,
+  /* THE RECORD'S SKELETON, exactly as `PostCard` draws it (the change-histories
+     round, 2026-09-23): redaction is record-granular, so the words, the
+     pictures, the topics line and the license all go at once and the mark
+     stands in their place — `true` for the default wording, or
+     `RedactedContentProps` for the reason, the date and a note. The author,
+     the timestamp and the thread position survive around it. First drawn for a
+     removed VERSION in a comment's edit history, which wears the mark a
+     removed post wears. */
+  redacted,
   children,
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
   // menu rather than sitting on the comment, and it comes up in a sheet over
-  // the thread rather than on the card.
-  const items = license ? [...menuItems, { label: LICENSE_MENU_LABEL, onSelect: () => {} }] : menuItems;
+  // the thread rather than on the card. It rode the payload, so a redacted
+  // record has none to show.
+  const items = license && !redacted ? [...menuItems, { label: LICENSE_MENU_LABEL, onSelect: () => {} }] : menuItems;
   /* THE VEIL TAKES THE WHOLE BODY, words and pictures as one block. A comment
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
@@ -156,7 +172,9 @@ export function CommentCard({
             <OverflowMenu items={items} ariaLabel="More on this comment" />
           </div>
         </div>
-        {sensitive ? (
+        {redacted ? (
+          <RedactedContent {...(redacted === true ? {} : redacted)} />
+        ) : sensitive ? (
           <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
             {body}
           </SensitiveVeil>
@@ -165,16 +183,17 @@ export function CommentCard({
         )}
         {/* The same topics-and-citations line a post wears, one line —
             a comment is content like any other and signs the same acts. */}
-        <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />
+        {!redacted && <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />}
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}
         {/* One affordance row, as on PostCard: the opinion leads, everything else
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
+        {(showStance || (signedIn && (onReply || (own && onEdit))) || actions) && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }}>
           {/* Owned by the shell — see PostCard. */}
-          <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
+          {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />}
           {signedIn && onReply && (
             <Button variant="text" size="sm" onClick={onReply}>
               Reply
@@ -187,6 +206,7 @@ export function CommentCard({
           )}
           {actions}
         </div>
+        )}
       </Card>
       {children}
       {/* The collapsed form: a short rule and the count, indented under the

@@ -9,6 +9,7 @@
 | sqlx-cli | Running migrations | Auto-installed by `make init`; manual: `cargo install sqlx-cli --no-default-features --features postgres` |
 | mkcert | The dev server's certificate, for phones that reach it by address ([below](#reaching-the-web-dev-server-from-the-phone)) | https://github.com/FiloSottile/mkcert |
 | lychee | The markdown link check in `make ci` | `cargo install lychee` |
+| ffmpeg | The API's media ingest worker re-encodes videos over the served target with it ([api-spec.md "Upload and gallery limits"](api-spec.md#content-authoring)); the ingest tests drive it. Needs an H.264 encoder (`libx264`, or `libopenh264` in builds without x264) and `aac`; tone-mapping HDR uploads also needs the `zscale` filter (a build linked against zimg), `tonemap` and the `h264_metadata` bitstream filter, which Fedora's `ffmpeg-free` and Ubuntu's `ffmpeg` both carry. Without it the API still runs, logs an error at startup, and fails over-target uploads with a reason (HDR ones alone, when only the tone map is missing); the tests that need it skip locally and fail under `CI` | Your distribution's `ffmpeg` package |
 | Node | The web app and the design tree (`make web-ci`, `make design-ci`) | The version in `web/.nvmrc` |
 | python3 | Only for `make fuzz-interchange`, whose seed script expands the RFC 8949 vectors with it | Any 3.x |
 
@@ -91,6 +92,11 @@ over file values.
 | `MEDIA_ORPHAN_MAX_AGE_SECS` | `86400` | How long an asset no parent references survives before the reaper collects it and its object |
 | `MEDIA_UPLOAD_PART_SIZE_BYTES` | `8388608` | How large a piece a resumable upload is cut into ([api-spec.md "Resuming a large upload"](api-spec.md#content-authoring)). Refused below 5 MiB, the floor S3 puts under every part but the last — a smaller cut would accept every part and then fail to assemble. It also decides what a blip costs: a dropped connection loses at most the part in flight |
 | `MEDIA_UPLOAD_SESSION_TTL_SECS` | `86400` | How long an unfinished upload survives before the media reaper aborts it and releases its parts. A day, matching `MEDIA_ORPHAN_MAX_AGE_SECS` — an upload nobody finished and an asset nobody attached are the same abandoned compose |
+| `MEDIA_FFMPEG` | `ffmpeg` | The ffmpeg the ingest worker drives — a name looked up on `PATH`, or a path. Probed once at startup for an H.264 and an AAC encoder, and for the HDR tone map's filters |
+| `MEDIA_TRANSCODE_TIMEOUT_SECS` | `1800` | The longest one re-encode may run before ffmpeg is killed and the job retried; a job is failed after its third attempt |
+| `MEDIA_INGEST_POLL_SECS` | `2` | How long an idle ingest worker waits before looking for a `processing` asset again. A worker that just settled one claims the next at once |
+| `MEDIA_INGEST_LEASE_SECS` | `60` | How long a worker's claim on a job holds without renewal; renewed every third of itself while the job runs. The most a restart delays the job that was in flight. At least 3 |
+| `MEDIA_INGEST_WORKERS` | `1` | Ingest workers in this process. Each runs one ffmpeg at a time and ffmpeg spreads an encode over every core, so more only help once uploads queue behind each other |
 | `MEDIA_STALE_UPLOADS_EXPIRY` | `24h` | The store-side backstop, for the uploads a crash orphans before their session row exists (compose-only). MinIO implements it as a server setting, not as an S3 `AbortIncompleteMultipartUpload` lifecycle rule — it rejects such a rule — and the expiry matches the TTL above: the same abandoned upload, seen from both sides. Another store needs the lifecycle rule instead |
 | `MEDIA_STALE_UPLOADS_CLEANUP_INTERVAL` | `6h` | How often the store looks for them (compose-only) |
 | `BREACH_CHECK` | `hibp` | The password breach corpus ([auth.md "Password requirements"](auth.md#password-requirements)): `hibp` (live range API) or `off` (offline dev — no lookup) |
@@ -216,7 +222,9 @@ which is the case the headroom is for.
 
 `Test` dominates because it builds sqlx-cli from source; `Query budgets`
 reaches the same database in a fifth of the time by letting
-`#[sqlx::test]` apply the migrations instead.
+`#[sqlx::test]` apply the migrations instead. `Test` also installs
+ffmpeg for the media ingest tests, which is not in the measurement
+above.
 
 ### Reaching the web dev server from the phone
 

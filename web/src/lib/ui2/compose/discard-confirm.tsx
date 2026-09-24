@@ -57,6 +57,15 @@ export function DiscardConfirm({
         event.preventDefault();
         onKeepWriting();
       }}
+      // A close request the dialog may not refuse still closes it — the
+      // platform makes `cancel` uncancelable without a recent user
+      // activation, as an Android back gesture can arrive. Closed while still
+      // asked to be open is that close, and it is the safe answer; without it
+      // the dialog would be shut while the flow believed it open, and the X
+      // could never raise it again.
+      onClose={() => {
+        if (open) onKeepWriting();
+      }}
       className="cg-dialog-in m-auto w-[calc(100%-3.375rem)] max-w-[22rem] rounded-extra-large border-0 bg-surface-container-high p-6 text-on-surface backdrop:bg-scrim/50"
     >
       {/* `headline-small` is a dialog heading's role; `title-medium` is a

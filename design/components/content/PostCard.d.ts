@@ -35,6 +35,12 @@ export interface PostCardProps {
   /** Authored and signed, not yet ordered on L1. Shows in full regardless. */
   pending?: boolean;
   edited?: boolean;
+  /**
+   * Opens the edit history from the marker (the change-histories round): handed
+   * one, `EditedMarker` takes its tappable form. Reachable only where a second
+   * version exists, which is also the only case the marker is drawn in.
+   */
+  onInspectEdit?: () => void;
   bundle?: StanceBundle | null;
   signedIn?: boolean;
   /**
@@ -76,6 +82,12 @@ export interface PostCardProps {
    * so an origin pick reads as its nearest neighbour.
    */
   stanceDefaultPick?: { pDirected: number; pInterest: number };
+  /**
+   * Makes the pad's "Current opinion" line a door onto the timeline the
+   * standing was summed from (the change-histories round). Pass-through to
+   * `StanceControl`'s `onOpenHistory`.
+   */
+  stanceOnOpenHistory?: () => void;
   /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
@@ -161,6 +173,16 @@ export interface PostCardProps {
    * affordance row keeps only what a reader reaches for.
    */
   menuItems?: readonly { label: string; onSelect?: () => void }[];
+  /**
+   * Stands where the author chip stands, for a feed kind that is not a post —
+   * a message's sender and chat, a chat's disc, name and kind mark. Additive.
+   */
+  lead?: React.ReactNode;
+  /**
+   * Stands where the text block stands, inside the same door — a message as
+   * its chat bubble, a chat as its last message's row. Additive.
+   */
+  main?: React.ReactNode;
   /**
    * Squares the top-left corner so a row flag (TaggedRow) fuses with the
    * card. Defaults to false.

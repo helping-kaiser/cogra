@@ -29,13 +29,24 @@
 //!    transaction. An orphaned object is collectable garbage; a row
 //!    pointing at nothing is a render that can never succeed.
 //!
-//! Nothing here transforms the picture: no thumbnails, no downscale, no
-//! rendition ladder. Clients crop and re-encode on device, so the stored
-//! bytes are already the bytes the post is made of, and the URL carries
-//! no size — renditions stay addable later without a contract change.
+//! Nothing here transforms a picture: no thumbnails, no downscale, no
+//! rendition ladder. Clients crop and re-encode stills on device, so the
+//! stored bytes are already the bytes the post is made of, and the URL
+//! carries no size — renditions stay addable later without a contract
+//! change.
+//!
+//! **A video is held to a target instead.** Clients compress where they
+//! can, and the same probe that proves an upload decides whether it is
+//! within the served target ([`transcode`]). One that is stored `ready`
+//! at once; one that is not is stored `processing`, and the [`ingest_queue`]
+//! worker re-encodes it before anything may attach it. Either way the
+//! bytes a digest is committed over are the only bytes the asset ever
+//! serves.
 
 pub mod blob;
+pub mod ingest_queue;
 pub mod resumable;
+pub mod transcode;
 pub mod video;
 pub mod webp;
 
@@ -69,13 +80,13 @@ pub use blob::{BlobError, BlobStore, ObjectBlobStore, S3Config};
 /// carries — and it clears DCI 4K (4096 × 2160).
 pub const MAX_PIXEL_DIMENSION: u32 = 4096;
 
-/// What a probe learned about the stored bytes: the canvas, and the
-/// playing time where the format states one.
+/// What a probe learned about the stored bytes: the canvas, the playing
+/// time where the format states one, and a video's signal.
 ///
-/// One type for both formats. They differ only in whether a duration is
-/// always present, which is what the `Option` says — two structurally
-/// identical types differing in that one field is a distinction the
-/// caller has to re-unify anyway.
+/// One type for both formats. They differ only in which facts are always
+/// present, which is what the `Option`s say — two nearly identical types
+/// differing in those fields is a distinction the caller has to re-unify
+/// anyway.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Probe {
     pub width: u32,
@@ -84,6 +95,17 @@ pub struct Probe {
     /// the asset, never a limit on it: there is deliberately no duration
     /// cap. A still states one only when it is animated.
     pub duration_ms: Option<u64>,
+    /// What a video's own bitstream says about its samples — bit depth,
+    /// chroma format, transfer. Absent on a still, and on a clip whose
+    /// sequence parameter set does not parse.
+    pub signal: Option<video::Signal>,
+    /// Whether the container's audio, if it carries one, is already AAC.
+    /// `true` on a still and on a video with no audio track — there is
+    /// nothing about audio for a re-encode to fix. This is a fact, never
+    /// a refusal: [`video::probe`] admits any audio codec, and this is
+    /// what [`process`] reads to decide whether audio alone routes a
+    /// clip to the ingest worker.
+    pub audio_aac: bool,
 }
 
 /// What the byte pipeline can refuse, and why. Every variant is a
@@ -148,9 +170,27 @@ pub struct MediaConfig {
     /// How long an unfinished upload may sit before the sweep collects
     /// it and releases its parts.
     pub upload_session_ttl_secs: f64,
+    /// The ffmpeg the ingest worker drives — a name looked up on `PATH`,
+    /// or a path.
+    pub ffmpeg: String,
+    /// The longest one re-encode may run before it is killed and retried.
+    pub transcode_timeout_secs: u64,
+    /// How long an idle ingest worker waits before looking for work.
+    pub ingest_poll_secs: u64,
+    /// How long a worker's claim on a job holds without renewal — the
+    /// most a restart delays the job that was in flight.
+    pub ingest_lease_secs: u64,
+    /// How many ingest workers run in this process. Each drives one
+    /// ffmpeg at a time, and ffmpeg spreads one encode over every core,
+    /// so one is the right number until uploads queue behind each other.
+    pub ingest_workers: usize,
 }
 
 const DEFAULT_MAX_UPLOAD_BYTES: usize = 10 * 1024 * 1024;
+const DEFAULT_TRANSCODE_TIMEOUT_SECS: u64 = 1800;
+const DEFAULT_INGEST_POLL_SECS: u64 = 2;
+const DEFAULT_INGEST_LEASE_SECS: u64 = 60;
+const DEFAULT_INGEST_WORKERS: usize = 1;
 const DEFAULT_MAX_VIDEO_UPLOAD_BYTES: usize = 100 * 1024 * 1024;
 const DEFAULT_ORPHAN_REAPER_INTERVAL_SECS: u64 = 600;
 const DEFAULT_ORPHAN_MAX_AGE_SECS: f64 = 86_400.0;
@@ -211,6 +251,11 @@ impl Default for MediaConfig {
             orphan_max_age_secs: DEFAULT_ORPHAN_MAX_AGE_SECS,
             upload_part_size_bytes: DEFAULT_UPLOAD_PART_SIZE_BYTES,
             upload_session_ttl_secs: DEFAULT_UPLOAD_SESSION_TTL_SECS,
+            ffmpeg: "ffmpeg".into(),
+            transcode_timeout_secs: DEFAULT_TRANSCODE_TIMEOUT_SECS,
+            ingest_poll_secs: DEFAULT_INGEST_POLL_SECS,
+            ingest_lease_secs: DEFAULT_INGEST_LEASE_SECS,
+            ingest_workers: DEFAULT_INGEST_WORKERS,
         }
     }
 }
@@ -255,6 +300,23 @@ impl MediaConfig {
                 "MEDIA_UPLOAD_SESSION_TTL_SECS",
                 base.upload_session_ttl_secs,
             )?,
+            ffmpeg: env_or("MEDIA_FFMPEG", &base.ffmpeg),
+            transcode_timeout_secs: env_parsed(
+                "MEDIA_TRANSCODE_TIMEOUT_SECS",
+                base.transcode_timeout_secs,
+            )?,
+            ingest_poll_secs: env_parsed("MEDIA_INGEST_POLL_SECS", base.ingest_poll_secs)?,
+            ingest_lease_secs: {
+                let lease = env_parsed("MEDIA_INGEST_LEASE_SECS", base.ingest_lease_secs)?;
+                if lease < 3 {
+                    anyhow::bail!(
+                        "MEDIA_INGEST_LEASE_SECS must be at least 3: the lease is renewed \
+                         every third of itself"
+                    );
+                }
+                lease
+            },
+            ingest_workers: env_parsed("MEDIA_INGEST_WORKERS", base.ingest_workers)?,
         })
     }
 
@@ -277,17 +339,29 @@ impl MediaConfig {
             .saturating_mul(2)
     }
 
-    /// The caps as the byte pipeline takes them.
-    pub fn caps(&self) -> UploadCaps {
+    /// The caps as the byte pipeline takes them, for an upload headed for
+    /// `destination`.
+    ///
+    /// The still cap is one number wherever a picture goes. The video cap
+    /// is the destination's own, bounded by the configured one — which is
+    /// the widest any upload may be, and so also bounds a comment's.
+    pub fn caps_for(&self, destination: GalleryKind) -> UploadCaps {
         UploadCaps {
             still_bytes: self.max_upload_bytes,
-            video_bytes: self.max_video_upload_bytes,
+            video_bytes: self
+                .max_video_upload_bytes
+                .min(usize::try_from(destination.video_bytes()).unwrap_or(usize::MAX)),
         }
     }
 }
 
 /// The per-type byte caps, carried together because the pipeline picks
 /// between them only after it has sniffed what it is holding.
+///
+/// The video cap is already the destination's: every check an upload
+/// meets — the size, whether it is within target, the rate a re-encode
+/// plans for, and the validation of the rendition — reads this one number,
+/// so a clip is sized for the parent it was uploaded for.
 #[derive(Debug, Clone, Copy)]
 pub struct UploadCaps {
     pub still_bytes: usize,
@@ -308,6 +382,17 @@ pub struct ProcessedAsset {
     /// video always, an animated still when its frames state one. Null on
     /// a single-frame picture, which is what `durationMs` reads.
     pub duration_ms: Option<u64>,
+    /// Whether these bytes must be re-encoded before they may be served:
+    /// a video outside the target [`transcode::within_target`] states, an
+    /// HDR or otherwise unserved signal, or audio that is not already
+    /// AAC. Always false on a still.
+    pub needs_transcode: bool,
+    /// Whether the bytes' audio, if any, is already AAC — carried
+    /// through from [`Probe::audio_aac`] so the ingest worker can assert
+    /// its own rendition really is AAC before it is stored
+    /// (`ingest_queue::run_job`), the witness guarantee's last gate.
+    /// Always true on a still.
+    pub audio_aac: bool,
 }
 
 impl ProcessedAsset {
@@ -354,6 +439,15 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// reading the container that will actually be stored, so a rewrite that
 /// damaged the file refuses the upload instead of publishing something
 /// that will not play.
+///
+/// The probe's answer also decides whether a video needs re-encoding —
+/// canvas, duration, byte count, and the signal its sequence parameter set
+/// states are all it takes — so a clip already within target costs nothing
+/// beyond this call. A clip that is HDR, deeper than 8 bits, or not 4:2:0
+/// is outside the target whatever its rate: readers are served 8-bit SDR.
+/// Audio that is not already AAC routes a clip to re-encoding the same
+/// way, whatever its rate or canvas: the ingest worker is what turns it
+/// into the AAC readers are promised.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
     let format = Format::of(bytes).ok_or(MediaError::Unsupported)?;
     let limit = format.cap(caps);
@@ -362,6 +456,15 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
     }
     let stripped = (format.strip)(bytes)?;
     let probe = (format.probe)(&stripped)?;
+    let needs_transcode = !format.still
+        && (!transcode::within_target(
+            probe.width,
+            probe.height,
+            probe.duration_ms,
+            stripped.len() as u64,
+            caps.video_bytes as u64,
+        ) || probe.signal.is_some_and(|signal| !signal.is_served())
+            || !probe.audio_aac);
     Ok(ProcessedAsset {
         digest: Sha256::digest(&stripped).into(),
         bytes: stripped,
@@ -369,6 +472,8 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
         height: probe.height,
         mime: format.mime,
         duration_ms: probe.duration_ms,
+        needs_transcode,
+        audio_aac: probe.audio_aac,
     })
 }
 
@@ -451,11 +556,10 @@ pub const MAX_ALT_TEXT_CHARS: usize = 1000;
 /// The largest video a post will carry — the upload cap restated as a
 /// composition rule.
 ///
-/// The upload cannot enforce a parent's limit, because an asset is
-/// uploaded before it is attached and nothing at that moment knows which
-/// parent it is headed for. So the widest limit is the one the upload
-/// admits, and the parent applies its own when the context is finally
-/// known.
+/// An upload names the parent it is headed for, and is sized, planned and
+/// validated against that parent's cap ([`MediaConfig::caps_for`]). The
+/// parent applies its own cap again when the asset is attached, because
+/// an asset uploaded for one parent can be attached to the other.
 pub const MAX_POST_VIDEO_BYTES: i64 = 100 * 1024 * 1024;
 
 /// The largest video a comment will carry — half a post's.
@@ -466,13 +570,32 @@ pub const MAX_POST_VIDEO_BYTES: i64 = 100 * 1024 * 1024;
 /// The cover rides the still cap either way.
 pub const MAX_COMMENT_VIDEO_BYTES: i64 = 50 * 1024 * 1024;
 
-/// Which parent a gallery is being planned for. The two differ in how
-/// many assets they take, in how large a video they carry, and in
-/// whether a cover means anything.
+/// Which parent media is headed for: the gallery being planned, or the
+/// destination an upload named. The two differ in how many assets they
+/// take, in how large a video they carry, and in whether a cover means
+/// anything.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GalleryKind {
     Post,
     Comment,
+}
+
+impl From<GalleryKind> for store::MediaScale {
+    fn from(kind: GalleryKind) -> Self {
+        match kind {
+            GalleryKind::Post => Self::Post,
+            GalleryKind::Comment => Self::Comment,
+        }
+    }
+}
+
+impl From<store::MediaScale> for GalleryKind {
+    fn from(scale: store::MediaScale) -> Self {
+        match scale {
+            store::MediaScale::Post => Self::Post,
+            store::MediaScale::Comment => Self::Comment,
+        }
+    }
 }
 
 impl GalleryKind {
@@ -517,9 +640,13 @@ pub struct AttachmentDraft {
     pub alt_text: Option<String>,
     /// The still that stands in for this clip before playback — an asset
     /// this author uploaded, either a frame the client cut out of the
-    /// video or a picture chosen instead. Only a video placement takes
-    /// one; a video may always go without.
+    /// video or a picture chosen instead, and `cover_taken` says which.
+    /// Only a video placement takes one; a video may always go without.
     pub cover_media_id: Option<Uuid>,
+    /// Whether that still was taken from the clip rather than chosen by
+    /// the author — an authoring fact the manifest witnesses beside the
+    /// cover it qualifies, so it is refused without a cover or a video.
+    pub cover_taken: bool,
 }
 
 /// A field-level refusal carrying the path into the input that names the
@@ -598,11 +725,11 @@ fn gallery_path(index: usize, field: &str) -> Vec<String> {
 ///    sharing a gallery with anything else is refused — its cover rides
 ///    the placement rather than a second entry, which is what lets "ten
 ///    pictures or one video" stay one counting rule. The video's byte
-///    cap is the parent's own, and this is the first moment it can be
-///    applied: an asset is uploaded before it is attached, so the upload
-///    admits the widest limit and the parent narrows it here. A comment
-///    carries half a post's video for the same reason it carries four
-///    pictures rather than ten.
+///    cap is the parent's own. The upload was already sized for the
+///    parent it named, but an asset uploaded for a post can be attached
+///    to a comment, so the parent checks again here. A comment carries
+///    half a post's video for the same reason it carries four pictures
+///    rather than ten.
 ///
 /// The ownership comparison is written against the author rather than
 /// against "the viewer" even though this slice has no `actAs` and the two
@@ -639,6 +766,7 @@ struct EntryDraft {
     id: Uuid,
     alt_text: Option<String>,
     cover: Option<Uuid>,
+    cover_taken: bool,
 }
 
 /// The half of gallery planning that reads only what the client sent:
@@ -654,6 +782,8 @@ struct EntryDraft {
 /// A placement naming itself as its poster is refused here rather than
 /// left to the junction's own CHECK: a constraint violation would surface
 /// as a server error instead of the field refusal the author can act on.
+/// A taken mark with no cover to qualify is refused here for the same
+/// reason — the manifest and the junction each refuse that shape too.
 fn gallery_entries(
     kind: GalleryKind,
     drafts: &[AttachmentDraft],
@@ -703,10 +833,17 @@ fn gallery_entries(
                 "an attachment cannot be its own cover",
             ));
         }
+        if draft.cover_taken && draft.cover_media_id.is_none() {
+            return Err(GalleryError::at(
+                gallery_path(i, "coverTaken"),
+                "a taken cover needs the coverMediaId it was taken as",
+            ));
+        }
         entries.push(EntryDraft {
             id: draft.media_id,
             alt_text,
             cover: draft.cover_media_id,
+            cover_taken: draft.cover_taken,
         });
     }
 
@@ -746,7 +883,12 @@ fn resolve_gallery(
             }
         }
         let cover = resolve_cover(author, i, entry, asset, rows)?;
-        manifest.push(manifest_entry(asset, entry.alt_text.clone(), cover)?);
+        manifest.push(manifest_entry(
+            asset,
+            entry.alt_text.clone(),
+            cover,
+            entry.cover_taken,
+        )?);
     }
     Ok(PlannedGallery {
         attachment_ids: entries.iter().map(|entry| entry.id).collect(),
@@ -757,8 +899,9 @@ fn resolve_gallery(
 /// The poster this placement names, checked against its own row.
 ///
 /// The cover arrives as an ordinary uploaded asset — either a frame the
-/// client pulled out of the video or a picture the author chose instead,
-/// which the server cannot tell apart and has no reason to. There is no
+/// client took out of the video or a picture the author chose instead.
+/// The bytes do not say which, so the client states it in `coverTaken`
+/// and the manifest witnesses the statement beside the cover. There is no
 /// server-side frame extraction: that would be a decoder in the upload
 /// path, and the upload path decodes nothing it does not have to.
 ///
@@ -766,8 +909,8 @@ fn resolve_gallery(
 /// it:
 ///
 /// 1. **A cover on something that is not a video.** A still is not covered
-///    by anything, so naming one is a mistake worth reporting rather than
-///    a value worth ignoring.
+///    by anything, so naming one — or marking one taken — is a mistake
+///    worth reporting rather than a value worth ignoring.
 /// 2. **An asset that is not there.**
 /// 3. **Someone else's asset.** The same anti-hijack rule a gallery entry
 ///    runs (data-model.md "Why parents point at attachments"): a cover
@@ -786,6 +929,12 @@ fn resolve_cover<'a>(
     asset: &store::MediaAttachment,
     rows: &'a [store::MediaAttachment],
 ) -> Result<Option<&'a store::MediaAttachment>, GalleryError> {
+    if entry.cover_taken && asset.mime_type != video::MIME {
+        return Err(GalleryError::at(
+            gallery_path(index, "coverTaken"),
+            "only a video's cover can be taken",
+        ));
+    }
     let Some(id) = entry.cover else {
         return Ok(None);
     };
@@ -808,14 +957,24 @@ fn resolve_cover<'a>(
     Ok(Some(cover))
 }
 
-/// The three rules every asset reference runs before it may be used: the
-/// asset is there, this author uploaded it, and it has not been removed.
+/// The four rules every asset reference runs before it may be used: the
+/// asset is there, this author uploaded it, it has not been removed, and
+/// its bytes are final.
 ///
 /// Written once because it is the anti-hijack rule (data-model.md "Why
 /// parents point at attachments") and three surfaces — a gallery entry, a
 /// poster, a profile picture — each carried their own copy. Only the
 /// ownership sentence differs, because each names a different thing to
 /// the author.
+///
+/// **The last rule is the witness guarantee's gate.** Every path from an
+/// asset id to a payload envelope passes through here, and the envelope
+/// commits the asset's digest. An asset that is still `processing` has a
+/// digest that is about to change, so committing it would publish a
+/// witness the served bytes will never match; refusing here is what
+/// makes "the bytes behind a committed digest never change" a property of
+/// the code rather than of timing. A failed asset is refused with the
+/// reason it failed, which is the one thing its author can act on.
 fn usable_asset<'a>(
     asset: Option<&'a store::MediaAttachment>,
     author: Uuid,
@@ -832,8 +991,25 @@ fn usable_asset<'a>(
             "this asset has been removed",
         ));
     }
-    Ok(asset)
+    match asset.state {
+        store::AssetState::Ready => Ok(asset),
+        store::AssetState::Processing => Err(GalleryError::at(path.to_vec(), NOT_READY_MESSAGE)),
+        store::AssetState::Failed => Err(GalleryError::at(
+            path.to_vec(),
+            format!(
+                "this asset could not be processed: {}",
+                asset
+                    .failure_reason
+                    .as_deref()
+                    .unwrap_or("no reason recorded")
+            ),
+        )),
+    }
 }
+
+/// What prepare says about an asset that is still `processing`.
+pub const NOT_READY_MESSAGE: &str =
+    "this asset is still being processed; attach it once its state is READY";
 
 /// The description as the manifest will carry it: trimmed, length-checked,
 /// and blank folded to absent so `""` and null cannot mean two different
@@ -854,20 +1030,27 @@ fn checked_alt_text(raw: Option<&str>) -> Result<Option<String>, String> {
 /// duration) stays out: an author signs what they wrote, never a
 /// measurement.
 ///
-/// The description and the poster come from the caller rather than from
-/// the asset row, because the row holds neither: both are facts about this
-/// placement, and this entry is where the author's statement about them is
-/// sealed (data-model.md "Media attachments"). The cover is witnessed by
-/// its digest rather than its id, the way the manifest names every asset.
+/// The description, the poster and whether it was taken come from the
+/// caller rather than from the asset row, because the row holds none of
+/// them: all three are facts about this placement, and this entry is where
+/// the author's statement about them is sealed (data-model.md "Media
+/// attachments"). The cover is witnessed by its digest rather than its id,
+/// the way the manifest names every asset.
+///
+/// The taken mark is sealed only beside a cover. Planning refuses the
+/// other shape before this point; tying the two here as well keeps every
+/// entry this builds one the envelope's decoder accepts.
 fn manifest_entry(
     asset: &store::MediaAttachment,
     alt_text: Option<String>,
     cover: Option<&store::MediaAttachment>,
+    cover_taken: bool,
 ) -> Result<common::envelope::MediaAsset, GalleryPlanError> {
     Ok(common::envelope::MediaAsset {
         digest: manifest_digest(asset)?,
         mime: asset.mime_type.clone(),
         alt_text,
+        cover_taken: cover_taken && cover.is_some(),
         cover: cover.map(manifest_digest).transpose()?,
     })
 }
@@ -947,7 +1130,7 @@ fn checked_profile_image(
             GalleryError::at(path, "a profile picture must be an image, not a video").into(),
         );
     }
-    manifest_entry(asset, None, None)
+    manifest_entry(asset, None, None, false)
 }
 
 /// The asset one profile image slot's manifest entry names, resolved the
@@ -988,7 +1171,10 @@ pub async fn resolve_profile_image(
 /// asset is gone renders as one fewer picture, not as a post that will not
 /// load. A *cover* digest with no row is thinner still: the placement is
 /// written without a poster rather than dropped, because the clip is the
-/// body and the still that fronts it is not.
+/// body and the still that fronts it is not. The taken mark goes with the
+/// poster it qualifies: a placement written without its cover is written
+/// unmarked too, since a mark describing a still that is not there says
+/// nothing (and the junction refuses it).
 ///
 /// Posters are looked up in the same round trip, and by digest for the
 /// same reason the entries are: the manifest names assets by their bytes,
@@ -1015,10 +1201,14 @@ pub async fn resolve_manifest(
     Ok(manifest
         .iter()
         .filter_map(|entry| {
-            id_of(&entry.digest).map(|attachment_id| store::GalleryPlacement {
-                attachment_id,
-                alt_text: entry.alt_text.clone(),
-                cover_media_id: entry.cover.as_ref().and_then(|c| id_of(c)),
+            id_of(&entry.digest).map(|attachment_id| {
+                let cover_media_id = entry.cover.as_ref().and_then(|c| id_of(c));
+                store::GalleryPlacement {
+                    attachment_id,
+                    alt_text: entry.alt_text.clone(),
+                    cover_media_id,
+                    cover_taken: entry.cover_taken && cover_media_id.is_some(),
+                }
             })
         })
         .collect())
@@ -1040,11 +1230,36 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
     format!("{}/{}", base_url.trim_end_matches('/'), storage_key)
 }
 
+/// Where an upload waiting to be re-encoded is kept.
+///
+/// Under a prefix of its own, like a resumable upload's staging key, so
+/// the bytes that will never be served are told apart from the ones that
+/// are at a glance. The rendition gets an ordinary asset key when it
+/// exists, and this object is deleted.
+pub fn ingest_key(id: Uuid) -> String {
+    format!("ingest/{id}.mp4")
+}
+
+/// The layout facts a row carries about its bytes.
+pub(crate) fn asset_options(asset: &ProcessedAsset) -> serde_json::Value {
+    let mut options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
+    if let Some(duration_ms) = asset.duration_ms
+        && let Some(map) = options.as_object_mut()
+    {
+        map.insert("duration_ms".into(), duration_ms.into());
+    }
+    options
+}
+
 /// Writes the object, then the row.
 ///
 /// Bytes and derived facts only: the row carries nothing the author typed,
 /// which is what lets a picture upload the moment it is picked
 /// (data-model.md "Media attachments").
+///
+/// A video outside the served target is written `processing`, under its
+/// [`ingest_key`], for the [`ingest_queue`] worker to re-encode; everything else
+/// is written `ready` under its final key, and is attachable at once.
 ///
 /// A retried upload of the same picture by the same author resolves to
 /// the row that already exists — the object written on this attempt is
@@ -1052,39 +1267,43 @@ pub fn public_url(base_url: &str, storage_key: &str) -> String {
 /// sweeper, because the sweeper's window is a day and this is known now.
 /// Failing that delete is logged and no more: the row is correct, and an
 /// unreferenced object is exactly what the sweeper exists for.
+///
+/// The destination is written on the row whichever way it goes: a
+/// `processing` row is re-encoded for that parent's cap long after the
+/// request that named it is gone.
 pub async fn store_asset(
     pool: &PgPool,
     blobs: &dyn BlobStore,
     author: Uuid,
+    destination: GalleryKind,
     asset: ProcessedAsset,
 ) -> Result<store::MediaAttachment, GalleryPlanError> {
     let id = Uuid::new_v4();
-    let key = storage_key(id, asset.mime);
+    let key = if asset.needs_transcode {
+        ingest_key(id)
+    } else {
+        storage_key(id, asset.mime)
+    };
     let size_bytes = i64::try_from(asset.bytes.len()).map_err(internal)?;
-    let mut options = serde_json::json!({ "v": 1, "aspect_ratio": asset.aspect_ratio() });
-    if let Some(duration_ms) = asset.duration_ms
-        && let Some(map) = options.as_object_mut()
-    {
-        map.insert("duration_ms".into(), duration_ms.into());
-    }
+    let options = asset_options(&asset);
+    let digest = asset.digest;
+    let mime = asset.mime;
+    let needs_transcode = asset.needs_transcode;
 
-    blobs
-        .put(&key, asset.bytes, asset.mime)
+    blobs.put(&key, asset.bytes, mime).await.map_err(internal)?;
+
+    let scale = destination.into();
+    let row = if needs_transcode {
+        store::insert_processing(
+            pool, id, author, &digest, "sha256", &key, mime, size_bytes, &options, scale,
+        )
         .await
-        .map_err(internal)?;
-
-    let row = store::insert(
-        pool,
-        id,
-        author,
-        &asset.digest,
-        "sha256",
-        &key,
-        asset.mime,
-        size_bytes,
-        &options,
-    )
-    .await
+    } else {
+        store::insert(
+            pool, id, author, &digest, "sha256", &key, mime, size_bytes, &options, scale,
+        )
+        .await
+    }
     .map_err(internal)?;
 
     if row.storage_key != key
@@ -1165,6 +1384,8 @@ mod planning_tests {
             mime_type: mime.into(),
             size_bytes: Some(1024),
             options: serde_json::json!({}),
+            state: store::AssetState::Ready,
+            failure_reason: None,
             redaction_reason: None,
             redacted_at: None,
             created_at: chrono::Utc::now(),
@@ -1178,6 +1399,7 @@ mod planning_tests {
             is_cover: None,
             alt_text: None,
             cover_media_id: None,
+            cover_taken: false,
         }
     }
 
@@ -1186,6 +1408,14 @@ mod planning_tests {
             id,
             alt_text: None,
             cover,
+            cover_taken: false,
+        }
+    }
+
+    fn taken(id: Uuid, cover: Option<Uuid>) -> EntryDraft {
+        EntryDraft {
+            cover_taken: true,
+            ..entry(id, cover)
         }
     }
 
@@ -1383,6 +1613,74 @@ mod planning_tests {
             planned.manifest[0].cover.expect("a witnessed poster"),
             still.digest.as_slice()
         );
+        assert!(!planned.manifest[0].cover_taken, "absent reads as chosen");
+    }
+
+    /// The taken mark qualifies a cover, so it is refused on a placement
+    /// that names none and on one that is not a video — each at the
+    /// placement's own `coverTaken`, before anything is sealed.
+    ///
+    /// A taken mark is refused without a cover and on anything but a video, at the placement's coverTaken.
+    /// ´claim:media:a-taken-mark-needs-a-covered-video´
+    #[test]
+    fn a_taken_mark_needs_a_covered_video() {
+        let mut uncovered = draft(Uuid::new_v4(), 0);
+        uncovered.cover_taken = true;
+        let refusal = gallery_entries(GalleryKind::Post, &[uncovered])
+            .expect_err("a taken mark with no cover");
+        assert_eq!(refusal.path, gallery_path(0, "coverTaken"));
+        assert_eq!(
+            refusal.message,
+            "a taken cover needs the coverMediaId it was taken as"
+        );
+
+        let author = Uuid::new_v4();
+        let picture = asset(author, webp::MIME);
+        let still = asset(author, webp::MIME);
+        match resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[taken(picture.id, Some(still.id))],
+            &[picture.clone(), still.clone()],
+        )
+        .expect_err("a taken mark on a picture")
+        {
+            GalleryPlanError::BadInput(e) => {
+                assert_eq!(e.path, gallery_path(0, "coverTaken"));
+                assert_eq!(e.message, "only a video's cover can be taken");
+            }
+            GalleryPlanError::Internal(e) => panic!("expected a field refusal, got {e}"),
+        }
+    }
+
+    /// A taken cover is sealed as key 4 beside the cover it qualifies, and
+    /// a chosen one leaves the mark out — the planner is where the
+    /// author's statement becomes the witnessed one.
+    ///
+    /// A taken cover is witnessed in the manifest entry beside its cover digest.
+    /// ´claim:media:a-taken-cover-is-witnessed-beside-its-cover´
+    #[test]
+    fn a_taken_cover_is_witnessed_beside_its_cover() {
+        let author = Uuid::new_v4();
+        let video = asset(author, video::MIME);
+        let still = store::MediaAttachment {
+            digest: vec![9u8; 32],
+            ..asset(author, webp::MIME)
+        };
+        let planned = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[taken(video.id, Some(still.id))],
+            &[video.clone(), still.clone()],
+        )
+        .expect("a clip covered by its own frame");
+        assert!(planned.manifest[0].cover_taken);
+        assert_eq!(
+            planned.manifest[0]
+                .cover
+                .expect("the cover the mark qualifies"),
+            still.digest.as_slice()
+        );
     }
 
     /// The anti-hijack rule and the body's shape, each against the entry
@@ -1467,6 +1765,68 @@ mod planning_tests {
                 .expect_err("past the parent's video cap")
             ),
             gallery_path(0, "mediaId")
+        );
+    }
+
+    /// Nothing that is not `ready` reaches a manifest: a clip still being
+    /// re-encoded is refused as the attachment and as a poster alike, and a
+    /// failed one is refused with the reason it failed — so no envelope can
+    /// commit a digest the served bytes will not match.
+    ///
+    /// Prepare refuses an asset whose bytes are not final, naming the field that carried it.
+    /// ´claim:media:prepare-refuses-an-asset-that-is-not-ready´
+    #[test]
+    fn prepare_refuses_an_asset_that_is_not_ready() {
+        let author = Uuid::new_v4();
+        let processing = store::MediaAttachment {
+            state: store::AssetState::Processing,
+            ..asset(author, video::MIME)
+        };
+        let refused = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[entry(processing.id, None)],
+            std::slice::from_ref(&processing),
+        )
+        .expect_err("a processing clip is not attachable");
+        assert_eq!(path_of(&refused), gallery_path(0, "mediaId"));
+        assert_eq!(refused.to_string(), NOT_READY_MESSAGE);
+
+        let failed = store::MediaAttachment {
+            state: store::AssetState::Failed,
+            failure_reason: Some(ingest_queue::REASON_DID_NOT_ENCODE.into()),
+            ..asset(author, video::MIME)
+        };
+        let refused = resolve_gallery(
+            author,
+            GalleryKind::Post,
+            &[entry(failed.id, None)],
+            std::slice::from_ref(&failed),
+        )
+        .expect_err("a failed clip is not attachable");
+        assert!(
+            refused
+                .to_string()
+                .contains(ingest_queue::REASON_DID_NOT_ENCODE),
+            "the author reads why: {refused}"
+        );
+
+        let video = asset(author, video::MIME);
+        let pending_poster = store::MediaAttachment {
+            state: store::AssetState::Processing,
+            ..asset(author, webp::MIME)
+        };
+        assert_eq!(
+            path_of(
+                &resolve_gallery(
+                    author,
+                    GalleryKind::Post,
+                    &[entry(video.id, Some(pending_poster.id))],
+                    &[video.clone(), pending_poster],
+                )
+                .expect_err("a poster is held to the same rule")
+            ),
+            gallery_path(0, "coverMediaId")
         );
     }
 
@@ -1581,6 +1941,8 @@ mod tests {
             height,
             mime: webp::MIME,
             duration_ms: None,
+            needs_transcode: false,
+            audio_aac: true,
         }
         .aspect_ratio()
     }
@@ -1684,6 +2046,29 @@ mod tests {
             10 * DEFAULT_MAX_UPLOAD_BYTES,
             "one video is capped where ten pictures are"
         );
+    }
+
+    /// A comment's video cap is half a post's; a picture's is one number
+    /// wherever it goes; and the configured video cap bounds both, being
+    /// the widest any upload may be.
+    ///
+    /// An upload's video cap is its destination's, bounded by the configured one, and a picture's is the same at either.
+    /// ´claim:media:an-uploads-cap-is-its-destinations´
+    #[test]
+    fn an_uploads_caps_are_its_destinations() {
+        let config = MediaConfig::default();
+        let post = config.caps_for(GalleryKind::Post);
+        let comment = config.caps_for(GalleryKind::Comment);
+        assert_eq!(post.video_bytes as i64, MAX_POST_VIDEO_BYTES);
+        assert_eq!(comment.video_bytes as i64, MAX_COMMENT_VIDEO_BYTES);
+        assert_eq!(post.still_bytes, comment.still_bytes);
+
+        let narrow = MediaConfig {
+            max_video_upload_bytes: 1024,
+            ..MediaConfig::default()
+        };
+        assert_eq!(narrow.caps_for(GalleryKind::Post).video_bytes, 1024);
+        assert_eq!(narrow.caps_for(GalleryKind::Comment).video_bytes, 1024);
     }
 
     /// A file's own claim about its type never gets a vote — the caller
