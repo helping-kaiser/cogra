@@ -246,6 +246,12 @@ funder-unconstrained burn L1 permits (``rem:gates:guild-funding``).
   ("advertiser revenue covers the community's admission costs")
   stays checkable in realized terms, arithmetic over public
   transactions.
+- **L-BTC inflow skips conversion.** The genesis seed and voluntary
+  top-ups enter the fund directly in L-BTC — no conversion leg, the
+  same public accounting. They are the fund's, never
+  protocol-owned liquidity
+  ([token.md §4](../primitive/token.md#4-protocol-owned-liquidity-pol)):
+  the ladder's depth is a different pot.
 
 There is no peg step, no exchange hop, and no custody boundary in
 this flow: CGT and the admission denomination live on the same
