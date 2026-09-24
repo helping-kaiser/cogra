@@ -91,7 +91,10 @@ import { VideoTransport } from "./VideoControls.jsx";
      at compose and uploads it, so a coverless clip's face never waits on
      video data — it loads exactly as a picture loads. FRAME 1 MEANS FRAME 0,
      STRICTLY (jakob 2026-09-24): a ~1s still is a cover in the video, not
-     the start of it, and playback visibly jumps off it. Where a clip yields no
+     the start of it, and playback visibly jumps off it. THE PREVIEW FACE IS
+     THE STORED FACE (jakob 2026-09-24, backlog item 106): the compose
+     tiles wear this same frame 0 — the tray's claim to be the clip's face
+     holds to the frame. Where a clip yields no
      frame at all, `poster` and `src` are both absent and the reserved region's
      `label` stands — never a borrowed picture.
 
