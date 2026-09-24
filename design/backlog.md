@@ -3444,10 +3444,13 @@ what the media *does* beneath it.
 **Ruled (jakob 2026-09-24): the veil covers its clip the way a
 sheet covers a surface.** A veiled clip sits fully out of the
 stage rotation — no playback, no sound-disc presence — because
-the veil is the reader's declared not-yet. The unveil re-elects
-the surface's stage exactly as the suspension clause does on a
-sheet's dismissal, so the unveiled clip autoplays iff it wins the
-election; autoplay-on-unveil vs cover-at-rest was never a third
+the veil is the reader's declared not-yet. The unveil is an
+eligibility change, not a suspension lift: the unveiled clip
+joins the rotation as if it had just scrolled into view, an
+incumbent keeps the stage, and the clip autoplays iff it wins on
+its own terms — the from-empty election belongs to sheets alone,
+whose suspension stopped the incumbent (the §13 correction, same
+day); autoplay-on-unveil vs cover-at-rest was never a third
 knob. Preload stays on — invisible, leaks nothing, makes the
 unveil instant. Recorded in readme §13 (the stage-law bullet) and
 the `MediaAttachment` docblock; the gating is the implementation
