@@ -283,14 +283,7 @@ async fn run_job(
             tracing::warn!(id = %job.id, error = %e, "the pipeline refused a rendition");
             JobError::Refused(refusal(&e))
         })?;
-    if !processed.audio_aac {
-        // The witness guarantee's last gate: the rendition is the bytes a
-        // digest is about to be committed over, and ffmpeg's own recipe
-        // (`transcode::Ffmpeg::args`) always re-encodes audio to AAC. If
-        // it ever produced anything else, the encode did not do its job.
-        tracing::warn!(id = %job.id, "ffmpeg's own rendition did not come out AAC");
-        return Err(JobError::Refused(REASON_DID_NOT_ENCODE));
-    }
+    assert_rendition_is_aac(job.id, &processed)?;
 
     let written = Written {
         key: key.to_string(),
@@ -372,6 +365,22 @@ fn refusal(e: &super::MediaError) -> &'static str {
         super::MediaError::TooLarge { .. } => REASON_TOO_LONG,
         _ => REASON_DID_NOT_ENCODE,
     }
+}
+
+/// The witness guarantee's last gate: a rendition is the bytes a digest
+/// is about to be committed over, and ffmpeg's own recipe
+/// ([`transcode::Ffmpeg::args`]) always re-encodes audio to AAC. If it
+/// ever produced anything else, the encode did not do its job, and the
+/// job fails the same way any other refused rendition does.
+fn assert_rendition_is_aac(
+    job_id: Uuid,
+    processed: &super::ProcessedAsset,
+) -> Result<(), JobError> {
+    if processed.audio_aac {
+        return Ok(());
+    }
+    tracing::warn!(id = %job_id, "ffmpeg's own rendition did not come out AAC");
+    Err(JobError::Refused(REASON_DID_NOT_ENCODE))
 }
 
 /// Points the row at its rendition, then drops the original.
