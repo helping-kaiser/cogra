@@ -55,6 +55,7 @@ import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.media.MediaViewer
 import com.cogra.core.designsystem.v2.media.PinnedClip
+import com.cogra.core.designsystem.v2.media.SensitiveVeil
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.CommentView
@@ -512,19 +513,40 @@ private fun PostDetailBody(
     // owns whether it is up.
     var viewerAt by rememberSaveable { mutableStateOf<Int?>(null) }
     val attachments = remember(post.attachments) { post.attachments.map { it.toItem() } }
+    // ONE SCOPE FOR THE WHOLE POST (jakob 2026-09-24, the pinned-clip veil
+    // ruling; `SensitiveScope` in design/components/honesty/SensitiveVeil.jsx):
+    // the pinned clip and the card body beneath it are two veils over one
+    // body, so they read one revealed-state and one tap lifts both. The same
+    // set the feed reads: a reader who already chose to look at this post is
+    // not asked again on the way in.
+    val mark = post.sensitiveMark()
+    val revealed = state.reveals.isRevealed(post.id, mark)
+    val reveal = { onReveal(post.id, mark) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         if (pinned != null) {
             // OUTSIDE the list, which is what "pinned" means: the body rises
             // beneath a clip that stays put.
-            PinnedClip(
-                item = pinned,
-                // The clip's two routes into the viewer — the bar's fullscreen
-                // toggle and the clip's own tap (graph.json, `PostDetailVideo`
-                // via 19 and via 3). A post carries one clip, so the viewer
-                // opens on it.
-                onOpenViewer = { viewerAt = 0 },
-            )
+            //
+            // A SENSITIVE CLIP WEARS ITS OWN VEIL IN PLACE — never demoted into
+            // the card. The veil is the post body's full face over the clip's
+            // frame, and under it the clip is out of the stage and carries no
+            // transport ([PinnedClip]).
+            SensitiveVeil(
+                veiled = !revealed && isSensitive(post.content, post.description, post.attachmentsStatus),
+                onReveal = reveal,
+                modifier = Modifier.fillMaxWidth(),
+                testTag = PINNED_VEIL_TAG,
+            ) {
+                PinnedClip(
+                    item = pinned,
+                    // The clip's two routes into the viewer — the bar's
+                    // fullscreen toggle and the clip's own tap (graph.json,
+                    // `PostDetailVideo` via 19 and via 3). A post carries one
+                    // clip, so the viewer opens on it.
+                    onOpenViewer = { viewerAt = 0 },
+                )
+            }
         }
         // The post is a card here too, edge to edge with its 8dp seam — on the
         // boards the post wears the card and the thread stands in its own sheet
@@ -539,14 +561,14 @@ private fun PostDetailBody(
         ) {
             item {
                 DetailCard(
-                    state = state,
                     post = post,
                     removed = removed,
                     mediaPinned = pinned != null,
                     // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail`
                     // via 4), on the page the reader was looking at.
                     onOpenMedia = { page -> viewerAt = page },
-                    onReveal = onReveal,
+                    revealed = revealed,
+                    onReveal = reveal,
                     onOpenActor = onOpenActor,
                     onOpenTopic = onOpenTopic,
                     onOpenPost = onOpenPost,
@@ -571,14 +593,15 @@ private fun PostDetailBody(
 /** The post itself, as the card it wears on every surface. */
 @Composable
 private fun DetailCard(
-    state: PostDetailUiState,
     post: PostView,
     removed: Boolean,
     /** The gallery's tap, handed the page under the reader's thumb. */
     onOpenMedia: (Int) -> Unit,
     /** The clip is pinned above this card, so the body draws no gallery. */
     mediaPinned: Boolean,
-    onReveal: (String, SensitiveMark) -> Unit,
+    /** The post's one revealed-state, shared with the pinned clip's veil. */
+    revealed: Boolean,
+    onReveal: () -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
     onOpenPost: (String) -> Unit,
@@ -627,10 +650,8 @@ private fun DetailCard(
                 bleed = Space.x4,
                 mediaPinned = mediaPinned,
                 onOpenMedia = onOpenMedia,
-                // The same set the feed reads: a reader who already chose to
-                // look at this post is not asked again on the way in.
-                revealed = state.reveals.isRevealed(post.id, post.sensitiveMark()),
-                onReveal = { onReveal(post.id, post.sensitiveMark()) },
+                revealed = revealed,
+                onReveal = onReveal,
             )
             DetailCardFoot(
                 post = post,
@@ -743,6 +764,9 @@ internal fun CommentView.asReplyTarget(): ReplyTarget = ReplyTarget(
  */
 private fun String.clipForCard(limit: Int = TARGET_SNIPPET_CHARS): String =
     if (length <= limit) this else take(limit).trimEnd() + "…"
+
+/** The pinned clip's own veil; its reveal button is `${PINNED_VEIL_TAG}_reveal`. */
+internal const val PINNED_VEIL_TAG = "detail_pinned_veil"
 
 private const val TARGET_TITLE_CHARS = 48
 private const val TARGET_SNIPPET_CHARS = 120

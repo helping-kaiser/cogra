@@ -83,6 +83,7 @@ export function CommentAttachments({
   previews,
   cover = null,
   framePreviews = NO_URLS,
+  clipFace = null,
   capturing = false,
   durationMs = 0,
   refusals = NO_REFUSALS,
@@ -101,6 +102,13 @@ export function CommentAttachments({
   /** ReplyVideo's cover row. Null until a face is settled. */
   cover?: CoverAsset | null;
   framePreviews?: readonly string[];
+  /**
+   * The clip's stored frame 0 — the tile's face while no cover has been
+   * chosen (item 106: "the preview face is the stored face"). Once a cover
+   * IS chosen, the tile keeps showing that choice instead, unchanged from
+   * before this ruling.
+   */
+  clipFace?: string | null;
   capturing?: boolean;
   durationMs?: number;
   refusals?: readonly PickRefusal[];
@@ -142,7 +150,7 @@ export function CommentAttachments({
         <ul className="m-0 flex list-none flex-wrap items-start gap-2 p-0">
           <li className="flex-none">
             <MediaThumb
-              src={framePreviews[cover?.frame ?? 0] ?? null}
+              src={cover !== null ? (framePreviews[cover.frame] ?? null) : clipFace}
               altText={clip.altText}
               width={thumbWidth(undefined)}
               height={THUMB_HEIGHT}
