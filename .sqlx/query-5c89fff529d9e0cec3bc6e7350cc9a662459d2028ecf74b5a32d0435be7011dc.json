@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT i.id, i.kind, i.handle, i.actor_pubkey, i.realization_address, i.created_at\n         FROM auth_applications ap\n         JOIN auth_invite_links l ON l.id = ap.invite_link_id\n         JOIN actors i ON i.id = l.inviter_id\n         WHERE ap.account_id = $1\n         ORDER BY ap.created_at DESC LIMIT 1",
+  "query": "SELECT id, kind, handle, actor_pubkey, realization_address, created_at\n         FROM actors WHERE id = ANY($1)",
   "describe": {
     "columns": [
       {
@@ -36,7 +36,7 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "UuidArray"
       ]
     },
     "nullable": [
@@ -48,5 +48,5 @@
       false
     ]
   },
-  "hash": "1c240a646e11f8f9a520e32f1d6cac46ad23357a67b18e69d7a13f977e59ab3a"
+  "hash": "5c89fff529d9e0cec3bc6e7350cc9a662459d2028ecf74b5a32d0435be7011dc"
 }

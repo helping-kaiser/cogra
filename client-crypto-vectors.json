@@ -481,8 +481,8 @@
     }
   ],
   "signing": {
-    "realizationAddress": "65b60673d6ed884bf01c2c222d82ada0740f29ac",
     "publicKeyHex": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664",
+    "realizationAddress": "65b60673d6ed884bf01c2c222d82ada0740f29ac",
     "samples": [
       {
         "msgUtf8": "cogra",

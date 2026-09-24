@@ -1323,7 +1323,9 @@ impl Mutation {
                 });
             }
         };
-        match onboarding::attach_actor_key(pool, v.user_id, actor_pubkey, input.realization_address).await {
+        match onboarding::attach_actor_key(pool, v.user_id, actor_pubkey, input.realization_address)
+            .await
+        {
             Ok(()) => Ok(AttachActorKeyPayload {
                 user: store::actor_identity(pool, v.user_id)
                     .await?

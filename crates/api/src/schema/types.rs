@@ -184,7 +184,8 @@ pub(crate) async fn borrowed_vantage(
     if store::reciprocation_latched(pool, account.id).await? {
         return Ok(None);
     }
-    let (Some(account_address), Some(inviter_address)) = (&account.realization_address, &inviter.realization_address)
+    let (Some(account_address), Some(inviter_address)) =
+        (&account.realization_address, &inviter.realization_address)
     else {
         return Ok(Some(inviter));
     };
