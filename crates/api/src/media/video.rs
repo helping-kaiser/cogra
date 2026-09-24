@@ -493,21 +493,38 @@ fn is_quarter_turn(a: i32, b: i32, c: i32, d: i32) -> bool {
     a == 0 && d == 0 && b != 0 && c != 0
 }
 
-/// The refusal gate for video: the container's tracks must be the codecs
-/// the policy admits, and nothing else may ride along.
+/// The refusal gate for video: the container's video track must be the
+/// one codec the policy admits, and nothing but video and audio tracks
+/// may ride along.
 ///
-/// H.264 video and AAC audio are the accepted pair, so every other track
-/// is refused rather than ignored — a stored file carrying a codec the
-/// readers were never promised is a render that fails on someone's
-/// device, and the upload is the only place that can still say no. A
-/// file with no video track at all is not a video whatever its brand
-/// says.
+/// **Video is H.264, whatever the readers get served — that is the one
+/// codec every reader decodes, and this server's ffmpeg cannot even
+/// decode the patent-excluded alternative it is most often asked about.**
+/// Audio is not held to a codec here: an audio track may carry anything
+/// this server's ffmpeg can turn into AAC, because the ingest transcoder
+/// is the true universal fallback for a client that could not produce
+/// AAC itself. This probe only records whether the audio it found
+/// already is AAC ([`Probe::audio_aac`]) — that fact is what
+/// [`super::process`] reads to decide whether a clip passes through
+/// untouched or is queued for the ingest worker, which re-encodes
+/// non-AAC audio and, per [`super::transcode`], can leave an
+/// already-in-target video stream copied rather than re-encoded. A
+/// codec ffmpeg genuinely cannot decode still fails, just later — the
+/// ingest job fails into `FAILED` with a reason its author reads,
+/// rather than the upload being refused on a guess about what the
+/// bytes are.
+///
+/// A stored file still needs a video track: a container carrying only
+/// sound, or a track that is neither audio nor video (a subtitle track,
+/// say), is refused — a stored file must always be a video, not a
+/// container shape the readers were never promised.
 pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
     let size = u64::try_from(bytes.len()).map_err(|_| MediaError::Undecodable)?;
     let mp4 = Mp4Reader::read_header(Cursor::new(bytes), size)
         .map_err(|_| MediaError::Malformed("the video container does not parse"))?;
 
     let mut video: Option<(u32, u32, Option<Signal>)> = None;
+    let mut audio_aac = true;
     for track in mp4.tracks().values() {
         match track.track_type() {
             Ok(TrackType::Video) => {
@@ -527,13 +544,11 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
                 }
             }
             Ok(TrackType::Audio) => {
-                if !matches!(track.media_type(), Ok(MediaType::AAC)) {
-                    return Err(MediaError::Codec("the audio track is not AAC"));
-                }
+                audio_aac &= matches!(track.media_type(), Ok(MediaType::AAC));
             }
             _ => {
                 return Err(MediaError::Codec(
-                    "the file carries a track that is neither H.264 video nor AAC audio",
+                    "the file carries a track that is neither video nor audio",
                 ));
             }
         }
@@ -556,6 +571,7 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
         height,
         duration_ms: Some(u64::try_from(mp4.duration().as_millis()).unwrap_or(u64::MAX)),
         signal,
+        audio_aac,
     })
 }
 
@@ -1019,10 +1035,15 @@ pub(crate) mod tests {
         assert_eq!(before, after, "the same movie, minus what named its author");
     }
 
-    /// A container carrying any codec but H.264 video and AAC audio is refused, whatever its brand promised.
-    /// ´claim:media:only-h264-and-aac-are-admitted´
+    /// A container without an H.264 video track is refused, whatever its
+    /// brand promised — a codec ffmpeg cannot even decode (H.265, this
+    /// server's dev and CI builds being patent-excluded from it), and
+    /// sound with no picture at all.
+    ///
+    /// A container without an H.264 video track is refused, whatever else it carries.
+    /// ´claim:media:only-h264-video-is-admitted´
     #[test]
-    fn a_codec_outside_the_policy_is_refused() {
+    fn a_video_codec_outside_the_policy_is_refused() {
         let hevc = movie(
             mp4::MediaConfig::HevcConfig(mp4::HevcConfig {
                 width: 1920,
@@ -1047,6 +1068,23 @@ pub(crate) mod tests {
         assert!(
             matches!(probe(&audio_only), Err(MediaError::Codec(_))),
             "sound alone is not a video"
+        );
+    }
+
+    /// The probe records whether an AAC track's audio is AAC — the fact
+    /// [`super::process`] reads to decide whether audio alone routes a
+    /// clip to the ingest worker. A video with no audio track at all
+    /// carries nothing for a re-encode to fix either.
+    ///
+    /// The probe reports whether a video's audio, if it carries one, is already AAC.
+    /// ´claim:media:the-probe-reports-whether-audio-is-aac´
+    #[test]
+    fn the_probe_reports_whether_audio_is_already_aac() {
+        assert!(
+            probe(&movie(h264(1920, 1080), 2_500))
+                .expect("a video with no audio track")
+                .audio_aac,
+            "nothing to transcode when there is no audio at all"
         );
     }
 }
