@@ -647,14 +647,14 @@ formation, package validity, or the epoch target;
 |---|---|---|
 | $\beta$ | 1.386 ($= 2\ln 2$); enters the projected standing core as well as raw damping | `ax:epoch:thermodynamic-boundary` |
 | $\eta$ | 0.05 (bleed; enters the core $Q$) | `def:graph:path-view-extraction` |
-| $\nu$ | 0.10 (illustrative numéraire, reserve/action; structural after lock) | `def:comparator:numeraire` |
+| $\nu$ | 0.10 (illustrative numéraire, burn units per action-credit; structural after lock) | `def:comparator:numeraire` |
 | $\rho_{\text{pol}}$ | 1 (canonical default policy floor; dimensionless, host-dialed) | `def:epoch:policy-floor` |
-| $\theta$ | $\approx 0.05281$ at reference (reserve/action; **algorithmic per-epoch output**, one-boundary lead, never a host input; defined by the width-fence inversion $\theta = \nu\,\lambda_Q^{-1}(1/(m_\theta W_{\text{loc}}))$ at reference $W_{\text{loc}} = 1$) | `def:epoch:safety-threshold` |
+| $\theta$ | $\approx 0.05281$ at reference (burn units per action; **algorithmic per-epoch output**, one-boundary lead, never a host input; defined by the width-fence inversion $\theta = \nu\,\lambda_Q^{-1}(1/(m_\theta W_{\text{loc}}))$ at reference $W_{\text{loc}} = 1$) | `def:epoch:safety-threshold` |
 | $\rho_\theta = \theta/\nu$ | $\approx 0.5281$ at reference (the wall) | `def:epoch:safety-floor` |
 | $\rho_{\text{eff}}$ | $\max(\rho_{\text{pol}}, \rho_\theta)$; $= \rho_{\text{pol}} = 1$ on any valid certificate (derived) | `def:epoch:participation-floor` |
 | $m_\theta$ | $5/4$ (chartered margin factor; one dial read four ways) | `def:epoch:safety-threshold` |
 | $N_{\text{epoch}}$ | 10000 (illustrative **target** act budget, denominated in accepted authored acts; not yet locked) | `def:epoch:epoch-act-budget` |
-| $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer; not yet locked) | `post:epoch:final-edge-set` |
+| $\delta_{\text{pos}}$ | 500 (illustrative burn-snapshot buffer, chosen to exceed the settlement depth the realization publishes, R4(e); not yet locked) | `post:epoch:final-edge-set` |
 | $L_{\text{hop}}$ | 4 (chartered transport depth, in hops of the conserved transport) | `def:epoch:standing-depth-mass` |
 | $\gamma$ | $1/4$ (chartered activation exponent; **not** the reciprocal of $L_{\text{hop}}$) | `def:epoch:responsive-vouch-activation` |
 | $Q(1)$ | $\approx 0.6975$ (activation normalization of the deployed core) | `def:epoch:responsive-vouch-activation` |
@@ -671,7 +671,7 @@ $\tilde{w}_{\max}^{\text{Op}} \approx 0.502$. The pre-Edition-4 raw
 precision clip $\epsilon_{\text{clip}}$ is **deleted with no successor**
 (`rem:sorting:raw-pruning-is-implementation`).
 
-The comparator's single reserve→action unit is the **numéraire** $\nu$; the
+The comparator's single burn-unit→action join is the **numéraire** $\nu$; the
 participation floor is a *pair* — the host-dialed $\rho_{\text{pol}}$ and the
 network-computed safety threshold $\theta$ — governed in §11.8. The wall
 $\rho_\theta$ is read by W2a and keys the below-wall activation clamp; the
@@ -682,14 +682,20 @@ reference calibration $(\nu, \rho_{\text{pol}}) = (0.10, 1)$, $\rho_{\text{eff}}
 No netting-clip constant exists: the stance-aggregation clip is the fixed
 $\mathrm{clip}_{[-1,1]}$ in `def:epoch:net-stance`, not a calibrated value.
 
-*Interface constants* are owned by the realization and
-surfaced through `PA-` citations; they enter no Layer-1 closure formula.
-The realization's unit-cost projection $1/((1-f)\zeta)$ converts the burn-value
-admission benchmarks into reserve deposits
-(`eq:comparator:admission-benchmark-deposits`, §7.1); the pre-Edition-4
-single entry-cost formula $\delta_{\min}$ is superseded by that benchmark
-family. Illustrative Layer 1 constants are subject to empirical calibration
-during the centralized deployment phase and are not yet locked.
+*Interface constants* — $B_{\max}$ (R9), $c_{\mathrm{u}} \ge 1$ (R10), and
+the settlement depth (R4(e)) — are published by the realization, read as
+constants, and re-derived nowhere. A realization's own fees, splits, phase
+leads, and any ceiling derived from them are its design; the network
+neither names nor recomputes them (`rem:comparator:surface-readings`).
+$c_{\mathrm{u}}$ turns a burn-value quantity into an outlay in the
+realization's external denomination by multiplication — the admission
+benchmarks of §7.1 (`eq:comparator:admission-benchmark-deposits`). The
+minimum deposit $\delta_{\min} = \rho_{\text{eff}}\,\nu\,c_{\mathrm{u}}$,
+the door price projected through $c_{\mathrm{u}}$, is the sole user-facing
+quantity carried in that external denomination
+(`subsec:necessity:floor-as-numeraire`). Illustrative Layer 1 constants are
+subject to empirical calibration during the centralized deployment phase and
+are not yet locked.
 
 ---
 
@@ -769,9 +775,9 @@ proposing $m \ge 1$ epoch acts:
 $$B_{\mathrm{W1}}(m) = m\theta, \qquad B_{\mathrm{safety}}(m) = 2m\theta,
 \qquad B_{\mathrm{door}}(m) = m(\theta + \nu\rho_{\text{eff}}),$$
 
-projected through the realization's cost interface as reserve deposits
-$\delta(m) = B(m)/((1-f)\zeta)$
-(`eq:comparator:admission-benchmark-deposits`,
+projected through the published unit cost as outlays in the realization's
+external denomination $\delta(m) = B(m)\,c_{\mathrm{u}}$ (R10;
+`eq:comparator:admission-benchmark-deposits`,
 `subsec:comparator:capacity-and-admission-benchmarks`). These are
 final-state gate benchmarks, not prices that guarantee selection into the
 finite write set; there is no universal admission price. Band dwell is
