@@ -126,8 +126,8 @@ describe("the local draft", () => {
   // "none" rather than handing the wizard a field its own type promises will
   // never be missing.
   it("reads a draft with no auto-cover field at all as having none", async () => {
-    const { cover: _cover, autoCover: _autoCover, ...rest } = emptyWizard();
-    const legacyState = { ...rest, cover: null } as unknown;
+    const legacyState: Record<string, unknown> = { ...emptyWizard(), cover: null };
+    delete legacyState.autoCover;
     await new Promise<void>((resolve, reject) => {
       const open = indexedDB.open("cogra.compose", 1);
       open.onupgradeneeded = () => open.result.createObjectStore("draft");
