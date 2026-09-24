@@ -29,8 +29,8 @@ one conserved allocation operator. This reference draws two scopes from it:
 Proofs and motivation prose are omitted.
 
 **Pinned anchor set.** This file's citation set is pinned under the spec's
-anchor-stability contract: 364 distinct anchor names,
-`anchor_set_hash = 32495505d9d99edf2db0c709f9063fef0d3e015817cc1b98fd51c0cf9bb5de72`
+anchor-stability contract: 374 distinct anchor names,
+`anchor_set_hash = 88c0e4d9e51bfa34091d363236c61db1a3f8838047faad0f883617ade4ca83f4`
 (sha256 over the sorted distinct anchor names joined by `\n`, no trailing
 newline). Once
 registered with the Peer Team, renaming any pinned label is a breaking
@@ -52,8 +52,8 @@ anything not in the feedback closure below is a Layer 2's to reimplement
   system satisfying requirements R1–R11 (§1.1) is a *realization*; the
   network reads a realization through exactly four interface objects and
   nothing else. The burn value map is neutral because the primitive records
-  a destroyed magnitude and declines to price it. Knows nothing of clusters,
-  terminal read-sites, or guild policy.
+  a destroyed magnitude and declines to price it. The primitive knows
+  nothing of clusters, terminal read-sites, or guild policy.
   (`subsec:introduction:two-layers-derived`)
 - **Layer 1 (Peer Network)** — the root of the stack, and the binding.
   Reads the imported frame as the network's source, welds it onto a public
