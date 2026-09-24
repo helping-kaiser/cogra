@@ -412,11 +412,11 @@ Every campaign conserves its deposit. Per campaign, in CGT:
 ```
 D              = contributors + treasury + burn + admission_fund + inviter + refund
 
-contributors   = (0.95 − reserve_share) · P      (split per §8)
-treasury       = 0.0002 · D + 0.0198 · P
+contributors   = (0.95 − reserve_share) · P                     (split per §8)
+treasury       = 0.0002 · D + (1 − reserve_share) · 0.0198 · P
 burn           = 0.0003 · D + 0.0197 · P
-admission_fund = reserve_share · P               (§7.2)
-inviter        = 0.0100 · P                      (§7.3)
+admission_fund = reserve_share · (P + 0.0198 · P + 0.0100 · P)  (§7.2)
+inviter        = (1 − reserve_share) · 0.0100 · P               (§7.3)
 refund         = 0.9995 · (D − P)
 ```
 
@@ -426,10 +426,14 @@ treasury, plus a **scaling-on-`P` share** across the five outflows.
 `1%`), bounded to a pinned ceiling so governance can dial the
 community's self-funding up or down but never gut the contributor
 pool; the value in force at settlement applies and is recorded in
-the settlement payload (§10).
+the settlement payload (§10). It carves the admission fund's line
+from every `P`-scaled earning line — `reserve_share·P` from the
+contributor pool, the same fraction of the treasury's and the
+inviter's `P`-scaled shares — so the team treasury pays in like
+every other earner; the flat floor is never carved.
 
-- At `P = D`, `reserve_share = 1%`: `94%` contributors, `2%`
-  treasury, `2%` burn, `1%` reserve, `1%` inviter.
+- At `P = D`, `reserve_share = 1%`: `94%` contributors, `1.9802%`
+  treasury, `2%` burn, `1.0298%` reserve, `0.99%` inviter.
 - At `P = 0` (refund-only): `99.95%` refunded, `0.02%·D` treasury,
   `0.03%·D` burn; reserve and inviter get nothing — nobody earned,
   and the community taxes earnings, not failures. The floor is
@@ -449,8 +453,8 @@ and scales with all of it, campaigns, tips, and purchases alike
 ### 7.1 The strict cap
 
 **Total-to-graph `< D` always.** Contributors and
-inviters together take `(0.95 − reserve_share)·P + 0.01·P ≤
-0.96·P`, and `P ≤ D`, so
+inviters together take `(0.95 − reserve_share)·P +
+(1 − reserve_share)·0.01·P ≤ 0.96·P`, and `P ≤ D`, so
 
 ```
 total-to-graph ≤ 0.96·P ≤ 0.96·D < D.
@@ -464,7 +468,8 @@ it spends at least
 0.0005·D + (0.0495 + reserve_share)·P
 ```
 
-(less the inviter's `0.01·P` if it also controls the inviter slot)
+(less the inviter's `(1 − reserve_share)·0.01·P` if it also
+controls the inviter slot)
 — strictly positive, and strictly *more* loss-making as
 `reserve_share` rises. The reserve line is not extractable money:
 it becomes `B_i` capacity at members' addresses, spendable only as
@@ -513,10 +518,11 @@ its admission fees — pool splitting, a later stage of its own
 
 ### 7.3 The inviter reward
 
-Each earner's **inviter** receives `0.01·P` sized by that earner's
-own payout share — carved from what would otherwise burn (burn
-drops from 3% to 2% of `P` at full payout; the contributor pool is
-untouched).
+Each earner's **inviter** receives `(1 − reserve_share)·0.01·P`
+sized by that earner's own payout share — a `1%` share carved from
+what would otherwise burn (burn drops from 3% to 2% of `P` at full
+payout; the contributor pool is untouched), less the admission
+fund's carve (§7).
 
 - **Pure-`P`.** At `P = 0` nobody earned, so no inviter is paid.
 - **Single-hop and permanent.** The inviter is the one actor whose
