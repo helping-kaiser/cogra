@@ -470,8 +470,8 @@ it spends at least
 
 (less the inviter's `(1 − reserve_share)·0.01·P` if it also
 controls the inviter slot)
-— strictly positive, and strictly *more* loss-making as
-`reserve_share` rises. The reserve line is not extractable money:
+— strictly positive, and for `P > 0` strictly *more* loss-making
+as `reserve_share` rises. The reserve line is not extractable money:
 it becomes `B_i` capacity at members' addresses, spendable only as
 θ-debits, never withdrawable — burn value carries no redemption
 and never moves between addresses
@@ -536,8 +536,9 @@ fund's carve (§7).
   ([invitations.md](invitations.md)); never a chain,
   so no pyramid dynamic. The relation is permanent, so the inviter
   earns over the invitee's lifetime — the bring-real-users
-  incentive. Genesis members have no inviter; their 1% falls back
-  to burn. **Collectives likewise have no inviter** — their 1%
+  incentive. Genesis members have no inviter; their whole `0.01·P`
+  falls back to burn — no inviter earned, so the fund carves
+  nothing from it. **Collectives likewise have no inviter** — their 1%
   falls back to burn, deliberately: a collective's makeup drifts
   over years, so neither its founder's inviter nor anyone else
   holds a permanent claim on its earnings; and since the share is
