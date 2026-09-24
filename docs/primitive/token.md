@@ -348,10 +348,10 @@ funded member's own `B_i`.
   covers the community's admission costs when the pool's public
   inflow keeps pace with its burn outflow — arithmetic, not a
   promise.
-- **Seeded at genesis, open to top-ups.** The genesis admission
-  burns that instantiate the network are funded directly at
-  launch; the pool then carries ongoing admission. Anything may
-  flow in; only admission funding flows out.
+- **Seeded at genesis, open to top-ups.** The operator's genesis
+  funding is the pool's first inflow, and the admission burns
+  that instantiate the network draw from it. Anything may flow
+  in; only admission funding flows out.
 
 The conversion crosses the two-economy boundary in the only
 sanctioned direction and place

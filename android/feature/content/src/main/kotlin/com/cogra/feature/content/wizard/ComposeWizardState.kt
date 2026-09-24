@@ -207,6 +207,15 @@ data class PickedAsset(
     val upload: AssetUpload = AssetUpload.Idle,
     /** The clip's length; null on a picture, which is what tells them apart. */
     val durationMs: Int? = null,
+    /**
+     * The clip's own cover, carried through unchanged.
+     *
+     * The edit surfaces draw no cover picker, so this is only ever the
+     * id the load found already standing — never authored here. Losing
+     * it on the way to the signed attachment claim is what silently
+     * erases a covered clip's cover on edit.
+     */
+    val coverMediaId: String? = null,
 ) {
     val mediaId: String? get() = (upload as? AssetUpload.Done)?.mediaId
 
