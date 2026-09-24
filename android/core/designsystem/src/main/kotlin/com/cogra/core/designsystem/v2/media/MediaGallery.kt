@@ -172,8 +172,8 @@ private fun GalleryFrame(
     // item 103): the stage never elects a veiled frame, and this frame will
     // not play under one even for the pass before the stage re-decides — no
     // playback and no sound disc behind the blur the reader chose.
-    val veil = LocalStageVeil.current
-    val playing = onStage && veil != StageVeil.Veiled
+    val veiled = LocalStageVeil.current
+    val playing = onStage && !veiled
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -185,7 +185,7 @@ private fun GalleryFrame(
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .then(
                 if (videoUrl != null) {
-                    Modifier.standOn(stage, key, page, LocalScrollStageRow.current, veil)
+                    Modifier.standOn(stage, key, page, LocalScrollStageRow.current, veiled)
                 } else {
                     Modifier
                 },
