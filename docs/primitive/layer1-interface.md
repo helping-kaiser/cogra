@@ -2668,7 +2668,7 @@ $\hat{r}_u/\rho_\theta$, carrying low-rate mass onward, so
 rate-proportional dilution persists, priced and bounded by the hull. The
 specification makes **no** claim that every unit of relational standing
 pressure is continuously backed by positive current residual balance;
-replacing full-pair transport with a source-root eligibility rule is an
+replacing graduated export with a hard source-root eligibility cutoff is an
 open question (`frontier:source-root-eligibility`).
 
 **Dilution cost (`prop:epoch:dilution-cost`):** coordinated low-rate
