@@ -3682,7 +3682,7 @@ ride the same proposal machinery under the chat's governance map.
 Founding is a device-side ceremony: the creator's device generates
 the Collective's key and address (custody starts creator-held —
 [collectives.md §2](../instances/collectives.md#2-custody)), the
-θ-debits are treasury-funded, and the prepare stages the batch —
+θ-debits are community-funded, and the prepare stages the batch —
 the Collective's Registration (profile + social contract payload,
 signed with the new collective key on the creator's device) and
 the founder ↔ collective mutual Opinion pair (stance fabric, not
