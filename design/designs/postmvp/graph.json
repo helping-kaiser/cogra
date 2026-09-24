@@ -2741,13 +2741,6 @@
       "to": [{ "board": "ChatJoinSeal", "case": "the pad closes and the row wears the pick — nothing is signed until Sign and join" }]
     },
     {
-      "from": "ChatJoinSealPad",
-      "via": 5,
-      "kind": "advance",
-      "label": "Walk it back",
-      "to": [{ "terminal": "self", "case": "the master's walk-back, drawn because the control is handed the staged default as its value — on a seal it returns the row to no opinion rather than signing a counter-record (a flagged seam: the master has no staged state)" }]
-    },
-    {
       "from": "ChatMessagePad",
       "via": 1,
       "kind": "detour",

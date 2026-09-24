@@ -3081,6 +3081,9 @@ function BubbleCitation({ kind = "post", name, src, sub }) {
    THE STAGED DEFAULT IS HANDED AS THE CONTROL'S VALUE, so the face and the
    pair read what will be signed if the reader changes nothing — one record,
    the low default. The pad's `Set` replaces it before anything is signed.
+   And the control runs in its FIRST-CONNECTION mode (jakob, the final
+   micro-fix): a first connection has nothing to walk back, so the pad omits
+   the walk-away.
 
    THE READER'S OWN MESSAGE IS THE OTHER CASE: an opinion on one's own content
    names a valence only (the one-axis table), so `ChatSignSheet` keeps the
@@ -3095,7 +3098,7 @@ const STAGED_STANCE = {
 };
 
 function SealStance({ target, open = false }) {
-  return <StanceControl targetLabel={target} bundle={STAGED_STANCE} defaultOpen={open} defaultPick={STAGED_STANCE.current} onCommit={() => {}} />;
+  return <StanceControl targetLabel={target} bundle={STAGED_STANCE} defaultOpen={open} defaultPick={STAGED_STANCE.current} firstConnection onCommit={() => {}} />;
 }
 
 /* THE JOIN'S SEAL, WHOLE — drawn once because two boards draw it: the seal

@@ -11,12 +11,11 @@
    puts the pick back on the seal's row; nothing is signed until `Sign and
    join`, so the pad here never signs on its own.
 
-   A SEAM, FLAGGED: the pad shows `Walk it back`. `StanceControl` draws its
-   pair only for a value it is handed as a standing, so the seal hands it the
-   staged default that way — and a standing brings the walk-back with it. On a
-   seal the walk-back can only mean "no opinion on this join", never a
-   counter-record; the master has no staged state to say so, and growing one
-   is a design-system question for jakob, not a board's to answer.
+   NO WALK-BACK HERE (jakob's ruling, the final micro-fix): a first connection
+   has nothing to walk back, so the seal's control runs in `StanceControl`'s
+   first-connection mode, which omits the walk-away and nothing else. The
+   message pad (`ChatMessagePad`) keeps the full control — an opinion on a
+   message is a real, revisitable stance, and its walk-back arrives with it.
 
    THE MASTER FOR EVERY SEAL THAT CARRIES A STANCE TOWARD A CHAT: the request's
    sheet (`ChatAskSheet`) and the founding's seal (`ChatCreateSeal`) open the

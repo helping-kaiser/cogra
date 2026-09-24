@@ -2561,7 +2561,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Opinion', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
-    { n: 5, find: ">Walk it back</button>", tag: "button" },
   ],
   ChatMessagePad: [
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
