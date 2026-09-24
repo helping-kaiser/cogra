@@ -2975,12 +2975,12 @@ $\rho_{\text{pol}}$ and the effective floor is derived by the safety clamp
 
 Apply in both deployment phases; what changes is the consequence of failed
 verification, not the specification. Seven invariants bind the closure
-surface; the full paper's `app:deployment` additionally documents seven
-terminal invariants (client-reproducible feed ranking,
-device-local computation scope, concealment-entropy custody, auditable
-terminal centrality, attribution-view insulation of CAN enrichment,
-maturity-announcement irrevocability, time-locked supply auditability)
-reproduced by their own owners.
+surface; the full paper's `app:deployment` additionally documents five
+terminal invariants (client-reproducible feed ranking, device-local
+computation scope, concealment-entropy custody, auditable terminal
+centrality, attribution-view insulation of CAN enrichment), reproduced by
+their own owners, and one realization-side invariant (end of this
+section).
 
 - **Continuous Public Availability of Graph State
   (`subsec:deployment:public-availability`).** Every edge record —
@@ -3026,9 +3026,12 @@ reproduced by their own owners.
   derived raw constants ($\tilde{w}_{\text{spam}}, \tilde{w}_{\max},
   \tilde{w}_{\max}^{\text{Op}}$), **and the standing-census, complete-act
   compiler, coefficient, projected-activation, path-selection, allocator,
-  mediant, scalar-encoding, and certificate formula editions** are known to
-  all clients and do not change without clients being able to detect the
-  change and invalidate affected cached computations before it applies.
+  mediant, scalar-encoding, and certificate formula editions**, together
+  with the interface constants the network reads from its realization and
+  surfaces unmodified (`subsec:deployment:realization-obligations`), are
+  known to all clients and do not change without clients being able to
+  detect the change and invalidate affected cached computations before it
+  applies.
 - **Self-Sufficient Edge Record (`subsec:deployment:sufficiency`).** The
   published record for each edge contains exactly the fields required to
   recompute $\tilde{w}(e)$, $\epsilon(e)$, the CAN base value, and the
@@ -3073,10 +3076,17 @@ reproduced by their own owners.
   that reimplements a terminal default publishes its own complete
   specification in its place.
 
-Outside these (terminal or realization-side, reproduced by their own owners):
-feed ranking, device-local computation scope, centrality certificates, CAN
-attribution-view insulation, and the burn-primitive preservation properties (the
-immutability invariant covers ledger entries).
+**Realization Obligations (`subsec:deployment:realization-obligations`).**
+The deployment runs against a realization that publishes, and keeps
+published, the R7 audit quantities, $B_{\max}$ (R9), $c_{\mathrm{u}}$ (R10),
+the settlement depth (R4(e)), and — where the realization has an operator
+accruing burn value — the R11 operator bound. The network carries all of it
+to participants unmodified and without access control; the deployment adds
+no channel by which a published quantity could be silently dropped,
+replaced, or amended in transit. Two duties: *publication* on the
+realization, *non-occlusion* on the deployment. Design space: a pointer to
+the realization's own publication, a mirror in the network's append-log, or
+a periodic published snapshot beside the network's own constants.
 
 ---
 
