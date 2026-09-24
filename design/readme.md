@@ -4166,7 +4166,7 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   disappearances would let a reader commit believing their comments would
   leave other people's threads. Two insets, `ChangeEmailConfirm`'s shape,
   for its reason — two readings a reader has to hold at once. The wallet
-  is named in `What stays`: the address is held by the reader's key
+  is named in `What stays`: the realization address is held by the reader's key
   and no part of the platform can touch it.
 - **The content sweep is a checkbox, and the emailed link is the whole
   friction.** `erasure.md` makes identity-level the default and
