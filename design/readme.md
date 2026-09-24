@@ -6718,6 +6718,29 @@ search:
   @-scoped query's indirect hits — so no board moves; api-spec gains
   the scoped-join paragraph.
 
+### The pinned clip's veil face — 2026-09-24
+
+The implementation session's veil build found the gap: the video
+detail pins its clip *above* the card, outside the card's veil, so
+a sensitive video post's detail autoplayed unblurred with full
+transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
+
+- **The pinned clip veils in place.** The body veils as one and
+  revealing moves nothing, so the veil sits where the clip always
+  sits — the veil state never demotes the clip back into the card.
+- **The transport goes with it.** Nothing plays beneath a veil
+  (backlog item 103), so the face is the whole surface and its only
+  affordance is the reveal.
+- **One scope, one tap.** The pinned clip and the card share one
+  `SensitiveScope`; the reveal is per post, so either veil face
+  reveals both and the screen becomes `PostDetailVideo`. A nested
+  `SensitiveScope` now defers to the ambient one — the fix that
+  makes the per-post law hold when a surface wraps the card from
+  outside.
+- The board is a **declared entry** in the graph's own idiom —
+  the same detail any non-portrait clip tap opens, in the state
+  the record brings, not a different tap.
+
 The canonical tree draws one app and is graded as one thing. The editor
 it is reviewed in holds 200 files per canvas and publishes 16MB, and at
 191 boards the tree stood on both ceilings — so the *review* splits into
