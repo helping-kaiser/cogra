@@ -9,7 +9,9 @@
 
    THE FOOT SAYS WHO INVITED THEM AND OFFERS THE JOIN (`ChatJoinFoot`'s
    `invited` state): `Mira Voss invited you.` in one quiet line, and `Join`
-   filled under it — the page's one committing act. JOINING SIGNS THE READER'S
+   filled under it — the page's one committing act. Between the two, Mira's
+   own words, quoted: the Invitation's optional message, written on the invite
+   seal (the chats integration round, 2026-09-24). JOINING SIGNS THE READER'S
    OWN PARTICIPANT, and the join opens its seal (`ChatJoinSeal`): one record,
    theirs, read back before it is signed.
 
@@ -17,12 +19,11 @@
    requires no graph action (layer1-interface.md §9.8), so a refusal button
    would promise an act that does not exist. The reader declines by leaving.
 
-   EVERY ROUTE LANDS HERE. The invitation's notification row is round B3's —
-   the kind does not exist yet — and it will open this face; the explorer's
-   row for an invite-only chat the reader has been invited to opens it too. The
-   way back is therefore the plain `Back`, since where it returns depends on
-   the door. The explorer row's own word for an invited reader (it says
-   `Invite only` to everyone today) is owed with B3.
+   EVERY ROUTE LANDS HERE: the invitation's notification row
+   (`ChatNotifications`, the integration round) and a tap on the explorer's
+   row for the chat. The way back is therefore the plain `Back`, since where it
+   returns depends on the door. The explorer row's own word, `You're invited`,
+   skips this face and goes straight to the join's seal, the way `Join` does.
 
    THE CHAT IS NIGHT FISHING CREW — the explorer's invite-only row, its last
    message Tobias's and sealed — and Mira, one of its members, invited the

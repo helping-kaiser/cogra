@@ -68,6 +68,12 @@ const {
   ReferenceRow,
   StagedReference,
   LICENSE_MENU_LABEL,
+  CograBand,
+  FeedFilter,
+  FilterTrigger,
+  QuotedRow,
+  NodeMark,
+  STANCE_ANCHORS,
 } = components;
 
 function SettingsExcerpt({ children }) {
@@ -943,10 +949,20 @@ function ChatRowWord({ children }) {
 
    THE RANK YIELDS THE EDGE TO THE ACT — `ReferenceRow`'s picker rule: where a
    row's edge is an action, ranking still orders the list and the number is
-   not drawn. */
+   not drawn.
+
+   AN INVITED READER'S ROW WEARS ITS OWN WORD (the chats integration round,
+   2026-09-24): `You're invited`, in the join's register — an `InlineAction`,
+   because it is an act — standing where `Join`, `Ask to join` or `Invite only`
+   would. It says the one fact that changes what the reader can do here: an
+   invite-only chat is shut to a stranger and open to them. The tap lands where
+   `Join` lands, the join's seal, on the invited route's nouns (`Invited by` ·
+   the inviter) — the invitation read back before anything is signed. The
+   word's candidates are copy-voice's. */
 const JOIN_WORD = {
   open: <InlineAction size="sm">Join</InlineAction>,
   request: <InlineAction size="sm">Ask to join</InlineAction>,
+  invited: <InlineAction size="sm">You're invited</InlineAction>,
   invite: <ChatRowWord>Invite only</ChatRowWord>,
   member: <ChatRowWord>Member</ChatRowWord>,
 };
@@ -1029,18 +1045,31 @@ function HideJoinedSwitch({ on = true }) {
    feed rung); the transport lives in the viewer a tap away, never in a bubble.
 
    `id` names the bubble for the flow layer — a long-press lands on the whole
-   bubble, so the badge does. */
-function ChatBubble({ own = false, author, first = true, last = true, when, sealed = false, media, id, children }) {
+   bubble, so the badge does.
+
+   THE INTEGRATION ROUND'S FIVE ADDITIONS (2026-09-24), each drawing nothing
+   when absent, so every earlier board renders exactly as it did:
+   · `quote` — the message this one replies to, at the bubble's head
+     (`BubbleQuote`);
+   · `trace` — the opinions already cast on it, under the bubble
+     (`ReactionTrace`); an array of pairs;
+   · `pending` — the product's pending grammar at chat scale: `Still
+     settling` before the clock, in the time's own ink;
+   · `removed` — the bubble becomes the removal mark (`RemovedBubble`);
+   · `fill` — the full 78% a piece of media takes, for a voice note or a
+     no-key tile, which carry no `media` of their own. */
+function ChatBubble({ own = false, author, first = true, last = true, when, sealed = false, media, id, quote, trace, pending = false, removed, fill = false, children }) {
+  if (removed) return <RemovedBubble own={own} author={author} first={first} last={last} when={when} id={id} {...removed} />;
   const ink = own ? "var(--text-body)" : "var(--text-secondary)";
   const tail = own ? { borderBottomRightRadius: "var(--radius-extra-small)" } : { borderBottomLeftRadius: "var(--radius-extra-small)" };
-  return (
+  const row = (
     <div style={{ display: "flex", justifyContent: own ? "flex-end" : "flex-start", alignItems: "flex-end", gap: 8 }}>
       {!own && (last ? <MonogramAvatar name={author.name} src={author.src} size="md" /> : <span style={{ flex: "none", width: 32 }} />)}
       <div
         data-message={id}
         style={{
           maxWidth: "78%",
-          width: media ? "78%" : undefined,
+          width: media || fill ? "78%" : undefined,
           boxSizing: "border-box",
           display: "flex",
           flexDirection: "column",
@@ -1057,6 +1086,7 @@ function ChatBubble({ own = false, author, first = true, last = true, when, seal
             {author.name}
           </span>
         )}
+        {quote && <BubbleQuote {...quote} />}
         {media && (
           <div style={{ margin: "4px 0 2px" }}>
             <MediaAttachment {...media} radius="var(--radius-medium)" maxHeight="220px" />
@@ -1071,8 +1101,18 @@ function ChatBubble({ own = false, author, first = true, last = true, when, seal
               <Icon name="lock" size={12} />
             </span>
           )}
+          {pending && <span>Still settling ·</span>}
           {when}
         </span>
+      </div>
+    </div>
+  );
+  if (!trace) return row;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: own ? "flex-end" : "flex-start" }}>
+      {row}
+      <div style={{ marginTop: -6, padding: own ? "0 8px 0 0" : "0 0 0 48px", maxWidth: "78%", boxSizing: "border-box" }}>
+        <ReactionTrace pairs={trace} />
       </div>
     </div>
   );
@@ -1258,9 +1298,34 @@ function FieldAligned({ children }) {
   return <span style={{ flex: "none", height: 42, display: "grid", placeItems: "center" }}>{children}</span>;
 }
 
-function ChatFoot({ draft = "", sealed = false, firstSend = false }) {
+/* THE MIC STANDS WHERE THE ARROW STANDS WHILE THE FIELD IS EMPTY (the chats
+   integration round, 2026-09-24 — WhatsApp's grammar, the lane's call,
+   flagged). An empty field has nothing for the arrow to sign, so the slot
+   carries the voice note instead; the first typed character swaps the arrow
+   back. The alternative — the mic always beside the arrow — costs the field
+   48px on every thread for a control that is useless the moment there are
+   words. Holding the mic records; RELEASING SIGNS AND SENDS, so the mic is the
+   seal as much as the arrow is, and it wears the arrow's filled `primary`
+   disc. A plain tap starts the recording LOCKED — the hands-free state, where
+   cancel and send are buttons — which is the non-drag equivalent every drag
+   gesture owes (readme §10). */
+function MicSeal() {
+  return (
+    <button
+      type="button"
+      aria-label="Record a voice message"
+      className="cg-state cg-focus cg-hit"
+      style={{ display: "grid", placeItems: "center", width: 40, height: 40, flex: "none", border: 0, padding: 0, background: "var(--primary)", color: "var(--on-primary)", borderRadius: "var(--radius-full)", cursor: "pointer" }}
+    >
+      <Icon name="mic" size={20} />
+    </button>
+  );
+}
+
+function ChatFoot({ draft = "", sealed = false, firstSend = false, quote }) {
   return (
     <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 16px", borderTop: "1px solid var(--border-hairline)" }}>
+      {quote && <ReplyQuoteStrip {...quote} />}
       <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
         <FieldAligned>
           <LockToggle on={sealed} />
@@ -1268,9 +1333,7 @@ function ChatFoot({ draft = "", sealed = false, firstSend = false }) {
         <div style={{ flex: 1, minWidth: 0 }}>
           <TextField label="Message" rows={1} value={draft} />
         </div>
-        <FieldAligned>
-          <SendSeal />
-        </FieldAligned>
+        <FieldAligned>{draft ? <SendSeal /> : <MicSeal />}</FieldAligned>
       </div>
       {firstSend && <QuietNote>Sending signs the message in your name. Press and hold the arrow to see what you sign.</QuietNote>}
     </div>
@@ -1299,14 +1362,24 @@ function ChatFoot({ draft = "", sealed = false, firstSend = false }) {
      nothing more is pressable. It names no one who decides — the chats
      round's rule that governance ships silently.
    · `approved` — the request passed; the join stands alone, filled, because
-     the transcript's outcome line directly above it says why. */
-function ChatJoinFoot({ policy = "request", state, invitedBy }) {
+     the transcript's outcome line directly above it says why.
+
+   THE INVITATION'S OWN WORDS RIDE THE INVITED FOOT (the chats integration
+   round, 2026-09-24). An Invitation carries its inviter's optional message as
+   payload (chats.md §4, *Invite flow*), written on the invite seal
+   (`ChatInviteSeal`); where there is one, `invitationMessage` stands quoted
+   under the line that names the inviter — the leave reason's grammar, the
+   inviter's own words in their own quotation marks. */
+function ChatJoinFoot({ policy = "request", state, invitedBy, invitationMessage }) {
   const join = <Button style={{ width: "100%" }}>Join</Button>;
   let body;
   if (state === "invited") {
     body = (
       <>
         <QuietNote>{`${invitedBy} invited you.`}</QuietNote>
+        {invitationMessage && (
+          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-body)" }}>“{invitationMessage}”</span>
+        )}
         {join}
       </>
     );
@@ -1413,6 +1486,11 @@ function HarbourOfficeThread({ after }) {
     </ChatThreadColumn>
   );
 }
+
+/* The reader's own words on their request to join Harbour office — typed in
+   the request's sheet (`ChatAskSheet`), quoted on their own card
+   (`ChatThreadRequested`). */
+const HARBOUR_REQUEST_MESSAGE = "The blue wool hat is mine — and I'd like to help with the lost-and-found.";
 
 function ChatThreadBody({ firstSend = false }) {
   return (
@@ -2234,10 +2312,15 @@ function ChatThreadInvitedBody() {
     <>
       <ChatThreadHeader name="Night fishing crew" backLabel="Back" />
       <NightFishingThread />
-      <ChatJoinFoot state="invited" invitedBy="Mira Voss" />
+      <ChatJoinFoot state="invited" invitedBy="Mira Voss" invitationMessage={NIGHT_FISHING_INVITATION} />
     </>
   );
 }
+
+/* Mira's words on the invitation — written on the invite seal's optional
+   field; the invited foot, the notification row and the join's seal all read
+   the same line. */
+const NIGHT_FISHING_INVITATION = "We go out when the wind drops — you said you'd like to try.";
 
 /* A REMOVED CHAT VERSION — `ProfileVersionTombstone`'s shape at chat scale.
    Everything a chat version holds was its payload — the picture, the name, the
@@ -2303,5 +2386,562 @@ function ChatHistoryBody({ removed = false }) {
         </ChatEventRow>
       </HistoryColumn>
     </>
+  );
+}
+
+/* ══ THE CHATS INTEGRATION ROUND ═════════════════════════════════════════════
+
+   Round B3 of the chats work (jakob's rulings 2026-09-23/24), and the round
+   that closes it: what a chat owes the rest of the product, and what the
+   rest of the product owes a chat. Opinions on a message shown back as a
+   trace; voice notes; the faces an encrypted attachment wears; the chat and
+   the message as feed cards; a chat in search, a message in Saved; the reply's
+   quote; a post sent into a chat; the pending and the unlanded message; the
+   removed message; the chat notifications; the two small composers.
+
+   STILL MESSENGER CLOTHES. Every addition below is a messenger convention a
+   reader already owns — the reaction under a bubble, the held mic, the quote
+   above a reply, the share sheet's row of conversations — carried over CoGra's
+   own records, never a new kind of record. */
+
+/* ── THE REPLY ───────────────────────────────────────────────────────────────
+
+   `Reply` on a message's acts (`ChatMessageMenu`) puts the quote on the foot:
+   the message being answered, held above the field (`ReplyQuoteStrip`). What
+   the reader then sends is a new message in this chat carrying a Reference to
+   the one it answers (chats.md §3 — quoting from a message is a Reference with
+   the message as citing artifact). Landed, the quote rides the head of the new
+   bubble (`BubbleQuote`), a tap away from the message it answers.
+
+   THE STRIP IS `QuotedRow`, the composer's own "thing being answered" — the
+   reply composer's block, one level down. It is contained and inert, as that
+   master's charter says; its one control is the × beside it, which lets the
+   reply go and leaves the words in the field. */
+function ReplyQuoteStrip({ name, snippet, src }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <QuotedRow title={`Replying to ${name}`} snippet={snippet} name={name} src={src} />
+      </div>
+      <button
+        type="button"
+        aria-label="Cancel the reply"
+        className="cg-state cg-focus cg-hit"
+        style={{ display: "grid", placeItems: "center", width: 40, height: 40, flex: "none", border: 0, padding: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer" }}
+      >
+        <Icon name="close" size={20} />
+      </button>
+    </div>
+  );
+}
+
+/* THE QUOTE AT A BUBBLE'S HEAD — the message a reply answers, in the tonal
+   step above either bubble fill (`surface-container-highest`, `QuotedRow`'s
+   own tone), its sender's name and one ellipsized line. A DOOR: it scrolls the
+   thread to the message it quotes, and says so for the ear. Where the quoted
+   message is encrypted and the reader holds no key, the line is `An encrypted
+   message` — the preview rule (`NoKeyPreview`), stated, not drawn. */
+function BubbleQuote({ name, snippet }) {
+  return (
+    <button
+      type="button"
+      aria-label={`Replying to ${name}: ${snippet} — go to the message`}
+      className="cg-state cg-focus"
+      style={{ display: "flex", flexDirection: "column", gap: 0, margin: "2px 0 4px", padding: "6px 10px", border: 0, borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", color: "var(--text-body)", fontFamily: "var(--font-sans)", textAlign: "left", cursor: "pointer", minWidth: 0 }}
+    >
+      <span style={{ fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", fontWeight: "var(--text-label-medium--font-weight)" }}>{name}</span>
+      <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{snippet}</span>
+    </button>
+  );
+}
+
+/* ── THE REACTION TRACE ──────────────────────────────────────────────────────
+
+   REACTIONS ARE THE OPINIONS ALREADY CAST ON A MESSAGE (jakob 2026-09-24: "we
+   add them just like with whatsapp.. its cool to have"). NO NEW RECORD KIND
+   AND NO EMOJI SYSTEM: a message is first-class content (chats.md §1) and
+   every Opinion → Message already carries a pair, which the twenty faces
+   already read. So the trace is a READOUT, never a picker — it draws what is
+   there, and giving one's own opinion stays the message menu's `Give your
+   opinion`, the ordinary pad.
+
+   WHATSAPP'S SHAPE: a quiet pill hanging from the bubble's lower edge, the
+   faces AGGREGATED — each person's opinion read as the nearest of the twenty
+   (`nearestAnchor`), the most-worn faces first, at most three — and the count
+   of PEOPLE beside them. Each person counts once however many picks their
+   opinion is built from: the trace answers "how did people take this", and a
+   sum of records would be a different question.
+
+   THE CARD'S RULE BENDS ONCE, AND ONLY THIS FAR. Round A ruled that a bubble
+   carries content, time and the lock and nothing else. The trace hangs
+   OUTSIDE the bubble, on the page ground, in `text-secondary` — never a
+   control on the bubble, never a number on it — and it appears only where
+   someone has an opinion; a message nobody answered is exactly as bare as
+   before.
+
+   A TAP OPENS `Opinions on this` — the message menu's existing destination,
+   canonical's opinions sheet, with the whole list, each row splitting to its
+   own timeline.
+
+   GEEK MODE PAINTS THE PAIRS (the geek round's "the pairs, and only the
+   pairs"): a `cg-exact` tail after the count, each person's pair in the
+   pad's order, the first three and then `+N more` — the sheet holds the rest.
+   The lane's reading of the grammar for an aggregate, flagged: the pairs are
+   the individual opinions the faces stand for, never an average, which would
+   be a number no one signed. The spoken name carries the faces' words and the
+   pairs in both modes.
+
+   TWO HELPERS SPELLED HERE, because a board reaches the bundle's components
+   and not its helpers (canonical's `SR_ONLY` precedent): `nearestAnchor`'s
+   walk and `formatStancePair`'s form, both over the exposed `STANCE_ANCHORS`
+   table and the system's one number format — the same table, read the same
+   way, never a second one. */
+function traceAnchor(pair) {
+  let best = STANCE_ANCHORS[0];
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const anchor of STANCE_ANCHORS) {
+    const dd = anchor.pDirected - pair.pDirected;
+    const di = anchor.pInterest - pair.pInterest;
+    const distance = dd * dd + di * di;
+    if (distance < bestDistance) {
+      best = anchor;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+const TRACE_DIMENSION = new Intl.NumberFormat("en-US", { signDisplay: "always", minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const traceDimension = (value) =>
+  TRACE_DIMENSION.formatToParts(value)
+    .map((part) => (part.type === "minusSign" ? "−" : part.value))
+    .join("");
+const formatStancePair = (pair) => `${traceDimension(pair.pDirected)} / ${traceDimension(pair.pInterest)}`;
+
+function traceFaces(pairs) {
+  const tally = new Map();
+  pairs.forEach((pair, index) => {
+    const anchor = traceAnchor(pair);
+    const row = tally.get(anchor.emoji) ?? { anchor, n: 0, first: index };
+    row.n += 1;
+    tally.set(anchor.emoji, row);
+  });
+  return [...tally.values()].sort((a, b) => b.n - a.n || a.first - b.first).slice(0, 3);
+}
+
+function ReactionTrace({ pairs }) {
+  const faces = traceFaces(pairs);
+  const people = pairs.length;
+  const shown = pairs.slice(0, 3).map(formatStancePair);
+  const more = people > 3 ? ` · +${people - 3} more` : "";
+  const exact = `${shown.join(" · ")}${more}`;
+  const spoken = `Opinions on this — ${people} ${people === 1 ? "person" : "people"}: ${faces.map((f) => f.anchor.label).join(", ")}; ${exact}. See who`;
+  return (
+    <button
+      type="button"
+      aria-label={spoken}
+      className="cg-state cg-focus cg-hit"
+      style={{ display: "inline-flex", flexWrap: "wrap", alignItems: "center", columnGap: 4, rowGap: 0, minHeight: 24, padding: "1px 8px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-full)", background: "var(--surface-page)", color: "var(--text-secondary)", fontFamily: "var(--font-sans)", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", cursor: "pointer" }}
+    >
+      <span aria-hidden="true" style={{ fontSize: 14, letterSpacing: 1 }}>{faces.map((f) => f.anchor.emoji).join("")}</span>
+      <span aria-hidden="true">{people}</span>
+      <span className="cg-exact" aria-hidden="true" style={{ whiteSpace: "nowrap" }}>{exact}</span>
+    </button>
+  );
+}
+
+/* ── THE REMOVED MESSAGE ─────────────────────────────────────────────────────
+
+   A MESSAGE REMOVED IS A MARK WHERE THE BUBBLE STOOD — on its own side, under
+   its sender's name, at its own clock time. Removal takes the payload, never
+   the record (erasure.md §1; design.md §9, *Removed*), so the message keeps
+   its place in the transcript and every reply that quotes it keeps its quote's
+   door; what went is the words and the media.
+
+   THE MARK IS `RedactedContent`, whole, in the bubble's place — the reserved
+   surface a kept space wears, one step above the page and above either bubble
+   fill, so a removed message never reads as a quieter message. Its two
+   readings are the two the standing honesty rule keeps apart (readme §9, *Two
+   reasons, two wordings*):
+   · `author` — the sender's own Remove (round A's docblocked act, drawn now):
+     `Removed by its author`, with a message's own second line;
+   · `illegal` — a platform verdict, by a passed proposal: `Removed under the
+     platform's rules` — `A passed proposal removed it. The decision is
+     public.`
+   They must never read alike, and they do not: different words on the first
+   line, different claims on the second, and nothing either one shares with a
+   live bubble. A chat's own message disavowal (`decision:disavow_message`)
+   removes nothing — the body stays (chats.md §6) — and stays deferred with
+   the moderation slice. */
+function RemovedBubble({ own = false, author, first = true, last = true, when, id, reason = "author", note }) {
+  return (
+    <div style={{ display: "flex", justifyContent: own ? "flex-end" : "flex-start", alignItems: "flex-end", gap: 8 }}>
+      {!own && (last ? <MonogramAvatar name={author.name} src={author.src} size="md" /> : <span style={{ flex: "none", width: 32 }} />)}
+      <div data-message={id} style={{ maxWidth: "78%", display: "flex", flexDirection: "column", gap: 4 }}>
+        {!own && first && (
+          <span style={{ fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", fontWeight: "var(--text-label-medium--font-weight)", paddingLeft: 4 }}>
+            {author.name}
+          </span>
+        )}
+        <RedactedContent reason={reason} note={note} />
+        <span style={{ alignSelf: "flex-end", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{when}</span>
+      </div>
+    </div>
+  );
+}
+
+const REMOVED_MESSAGE_NOTE = "Its place in the chat stays, and so do the replies to it.";
+
+/* ── VOICE NOTES ─────────────────────────────────────────────────────────────
+
+   AUDIO JOINS AS A CHAT-SCALE MEDIA KIND, AND ONLY THERE (jakob 2026-09-24).
+   A post's audio stays parked; a message may carry a voice note, the
+   messenger's own kind of media, the way it may carry a picture or a clip.
+
+   THE BUBBLE: play, a scrub line, the length — WhatsApp's shape, drawn in
+   CoGra's quiet ink. The play control is glyph-only in the bubble's own ink
+   (a filled disc per voice note would make a thread of them a row of calls to
+   action); the scrub line is a hairline track with the played part and a
+   thumb in `primary`, the one colour the transport spends; the length is
+   `label-small`, tabular, beside it. A playing note shows its elapsed time
+   where the length stood — behaviour, stated.
+
+   DESCRIBED FOR ACCESSIBILITY LIKE ALL MEDIA. A picture's alt text is
+   authored and optional and never invented (`MediaAttachment`); a voice note
+   is the same: its accessible name is the author's description where they
+   gave one, and `Voice message, 0:42` where they did not. The description is
+   written in the locked recording's `Describe` (the describe sheet, audio's
+   shape) — a held-and-released note goes as it is. Stated, not drawn.
+
+   E2E LIKE ANY ATTACHMENT (chats.md §7): with the lock on, the audio bytes are
+   encrypted on the device under the epoch key before upload. A keyed reader
+   hears it, the quiet lock by the time; a reader with no key meets
+   `NoKeyMedia`'s voice tile. */
+function VoiceNote({ length, progress = 0, description }) {
+  const played = `${Math.round(progress * 100)}%`;
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+      <button
+        type="button"
+        aria-label={`Play — ${description ?? `Voice message, ${length}`}`}
+        className="cg-state cg-focus cg-hit"
+        style={{ display: "grid", placeItems: "center", width: 40, height: 40, flex: "none", border: 0, padding: 0, marginLeft: -8, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-body)", cursor: "pointer" }}
+      >
+        <Icon name="play_arrow" size={28} />
+      </button>
+      <span
+        role="slider"
+        tabIndex={0}
+        aria-label="Position in the voice message"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(progress * 100)}
+        aria-valuetext={`0:00 of ${length}`}
+        style={{ position: "relative", flex: 1, minWidth: 0, height: 24, display: "flex", alignItems: "center" }}
+      >
+        <span style={{ position: "absolute", left: 0, right: 0, height: 3, borderRadius: 2, background: "var(--border-field)" }} />
+        <span style={{ position: "absolute", left: 0, width: played, height: 3, borderRadius: 2, background: "var(--primary)" }} />
+        <span style={{ position: "absolute", left: `calc(${played} - 6px)`, width: 12, height: 12, borderRadius: "var(--radius-full)", background: "var(--primary)" }} />
+      </span>
+      <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontVariantNumeric: "tabular-nums", color: "var(--text-secondary)" }}>{length}</span>
+    </div>
+  );
+}
+
+/* ── THE FACES AN ENCRYPTED ATTACHMENT WEARS ─────────────────────────────────
+
+   AN ENCRYPTED MESSAGE ENCRYPTS ITS ATTACHMENTS, ON THE DEVICE, UNDER THE
+   EPOCH KEY (chats.md §7, the encrypted-attachments clause). A KEYED reader
+   sees the picture, the clip or the voice note as any member does, with the
+   quiet lock by the time — `ChatBubble`'s `sealed`, unchanged. A NO-KEY reader
+   gets `NoKeyMedia`: the reserved tile a kept space wears, the lock on it and
+   one friendly sentence in the notice's register — what this is, and why it
+   will not open. Never an error, never a warning glyph: nothing failed.
+
+   NO EXPAND-TO-BYTES FOR MEDIA — THE ASYMMETRY WITH TEXT, ON PURPOSE. A no-key
+   text message offers `Show the encrypted text`, because cipher text is at
+   least characters: a reader can see that something was said and roughly how
+   much, and the raw string is honest to show. Cipher PIXELS ARE NOTHING — an
+   encrypted picture decoded as an image is noise, and its bytes as text are a
+   wall of base64 that says less than the sentence does. So the tile is the
+   whole face, and it has no second tap.
+
+   THE TILE CLAIMS NO SHAPE. A picture's ratio rides its encrypted payload, so
+   a no-key reader cannot know it, and a tile at the picture's true shape would
+   be a claim the reader's device could not have made. It stands at one fixed
+   height at the bubble's width; the voice tile at a row's height, where the
+   voice note would stand. A captioned message's words are sealed with it and
+   wear the text notice under the tile (`ChatSealedNotice`) — stated, not
+   drawn.
+
+   AND THE IMPLEMENTATION CONSEQUENCE, CARRIED FROM THE IMPLEMENTATION
+   SESSION'S FLAG: CLIENT-SIDE PROCESSING IS THE ONLY QUALITY ENFORCEMENT FOR
+   ENCRYPTED CHAT BLOBS. The server holds ciphertext and no key, so no
+   transcode, re-encode, thumbnail or size-normalising path exists for them —
+   whatever the device uploads is what every keyed member downloads. Resizing,
+   compression, format normalisation and the stored first-frame still all run
+   on the sender's device before encryption, or not at all; a plaintext
+   thumbnail beside an encrypted body would make the lock a lie. */
+const NO_KEY_MEDIA_WORDS = {
+  picture: "An encrypted picture — you don't have the key to see it.",
+  clip: "An encrypted clip — you don't have the key to play it.",
+  voice: "An encrypted voice message — you don't have the key to hear it.",
+};
+
+function NoKeyMedia({ kind = "picture" }) {
+  const words = NO_KEY_MEDIA_WORDS[kind];
+  const compact = kind === "voice";
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: compact ? "row" : "column",
+        alignItems: compact ? "center" : "flex-start",
+        justifyContent: compact ? "flex-start" : "flex-end",
+        gap: compact ? 10 : 8,
+        minHeight: compact ? 48 : 140,
+        boxSizing: "border-box",
+        margin: "4px 0 2px",
+        padding: compact ? "8px 12px" : "12px",
+        borderRadius: "var(--radius-medium)",
+        background: "var(--surface-container-high)",
+        color: "var(--text-body)",
+      }}
+    >
+      <span aria-hidden="true" style={{ display: "inline-flex", color: "var(--text-secondary)" }}>
+        <Icon name="lock" size={20} />
+      </span>
+      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{words}</span>
+    </div>
+  );
+}
+
+/* ── THE RECORDING FOOT ──────────────────────────────────────────────────────
+
+   HOLD TO RECORD, WITH WHATSAPP'S SLIDE-TO-LOCK (jakob 2026-09-24). The finger
+   is on the mic, so the foot gives up its row: the running length on the left
+   beside a small mic in `primary` — the one mark that says a recording is
+   live, calm rather than a red dot — `Slide left to cancel` in the middle, and
+   the held mic, grown to the FAB's 56px under the thumb, on the right. Above
+   the held mic stands the LOCK LANE: `lock_outline` over an upward chevron
+   (`expand_more` turned, the wallet badge's rotation precedent), the path a
+   thumb slides to keep recording hands-free.
+
+   THE THREE ENDINGS. Release — the note is signed and sent, the mic being the
+   seal. Slide left past the lane's start — the recording is let go, nothing
+   signed. Slide up onto the lock — the LOCKED state: the foot keeps the
+   running length and gains `Cancel` (×), `Describe` and the send arrow, all
+   buttons, which is also where a plain tap on the mic lands (the non-drag
+   equivalent, readme §10). The locked state is stated, not drawn.
+
+   THE LOCK TOGGLE'S CHOICE CARRIES THROUGH. The toggle leaves the row while
+   the finger is down, and the note is sealed or not by the chat's sticky
+   choice exactly as a typed message is; the one quiet line under the row says
+   which, so the reader never records into an encryption state they cannot
+   see. */
+function ChatFootRecording({ length, sealed = false }) {
+  return (
+    <div style={{ position: "relative", flex: "none", display: "flex", flexDirection: "column", gap: 8, padding: "12px 16px 16px", borderTop: "1px solid var(--border-hairline)" }}>
+      <div
+        aria-hidden="true"
+        style={{ position: "absolute", right: 24, bottom: "calc(100% + 8px)", width: 40, height: 96, boxSizing: "border-box", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderRadius: "var(--radius-full)", background: "var(--surface-container-high)", color: "var(--text-secondary)" }}
+      >
+        <Icon name="lock_outline" size={20} />
+        <Icon name="expand_more" size={20} style={{ transform: "rotate(180deg)" }} />
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 56 }}>
+        <span role="timer" aria-label={`Recording, ${length}`} style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: 6, color: "var(--text-body)", fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)", fontVariantNumeric: "tabular-nums" }}>
+          <span aria-hidden="true" style={{ display: "inline-flex", color: "var(--primary)" }}>
+            <Icon name="mic" size={20} />
+          </span>
+          {length}
+        </span>
+        <span style={{ flex: 1, minWidth: 0, textAlign: "center", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>Slide left to cancel</span>
+        <button
+          type="button"
+          aria-label="Recording — release to sign and send"
+          className="cg-state cg-focus"
+          style={{ display: "grid", placeItems: "center", width: 56, height: 56, flex: "none", border: 0, padding: 0, background: "var(--primary)", color: "var(--on-primary)", borderRadius: "var(--radius-full)", cursor: "pointer" }}
+        >
+          <Icon name="mic" size={28} />
+        </button>
+      </div>
+      <QuietNote>{sealed ? "Encrypted — only the chat's members can hear it. Release to sign and send; slide up to lock." : "Not encrypted — anyone can hear it. Release to sign and send; slide up to lock."}</QuietNote>
+    </div>
+  );
+}
+
+/* ── THE PENDING AND THE UNLANDED MESSAGE ────────────────────────────────────
+
+   THE PRODUCT'S PENDING GRAMMAR AT CHAT SCALE (design.md §9, *Pending*). A
+   sent message is signed at once and ordered a moment later; until then it is
+   PENDING, and it shows in full — the words are real, only its place in the
+   order is not — with `Still settling` before its clock, in the time's own ink
+   (`ChatBubble`'s `pending`). design.md says pending content shows in full to
+   EVERY reader, not only its author; the board draws the author's thread,
+   where the case is met most, and the same bubble reads the same to anyone.
+
+   A MESSAGE THAT EXPIRES UNLANDED LEAVES EVERY READER'S VIEW — readers see
+   nothing in its place, since on the graph nothing ever existed — AND ITS
+   AUTHOR GETS A CALM NOTICE THAT IT DID NOT LAND (design.md §9), in the
+   honesty register, never `error`. `DidntLand` is that notice at chat scale:
+   `ComposeExpired`'s task card cut down to the thread — on the author's own
+   side where the bubble stood, an outline on the page ground rather than a
+   bubble fill, because it is no longer a message and nobody else sees it; the
+   words it carried quoted so the author knows which one; `Nothing was spent.`,
+   the post's own reassurance; and two answers, the post card's pair: `Dismiss`
+   quiet, `Put it back` filled — the words return to the field, and the arrow
+   signs as always, so nothing is re-signed on this tap. */
+function DidntLand({ words }) {
+  return (
+    <div role="status" style={{ alignSelf: "flex-end", maxWidth: "78%", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 4, padding: "10px 12px 8px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-large)" }}>
+      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>Your message didn't land</span>
+      <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>“{words}” couldn't finish settling. Nothing was spent.</span>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, paddingTop: 4 }}>
+        <Button variant="text" size="sm">
+          Dismiss
+        </Button>
+        <Button size="sm">Put it back</Button>
+      </div>
+    </div>
+  );
+}
+
+/* ── A POST SENT INTO A CHAT ─────────────────────────────────────────────────
+
+   A SENT POST IS A MESSAGE CITING THE POST (backlog item 23, ruled in; the
+   Reference grammar). One Send mints the message and a Reference from it to
+   the post (chats.md §3), so the bubble carries the post the way a citation
+   is read back — as itself: its mark and its name, and under the name whose
+   it is (the cited round's single reading, `ReferenceRow`'s anatomy at chat
+   scale). The reader's own words, where they added any, are the message's
+   body under it.
+
+   AT CHAT SCALE, NOT FEED SCALE. The post is not re-drawn as a card inside a
+   bubble — a thread of those would read as a feed — but as its reference: the
+   32px `NodeMark` (the post's first picture, or its `T`), its title, and its
+   author. A DOOR: the whole block opens the post.
+
+   THE PAIR IS NOT DRAWN — the lane's call, flagged. A reference row reads its
+   pair back; here a face beside a sent post would read as the sender's
+   REACTION to it, which is the trace's job, and the bubble carries content,
+   time and the lock. The citation's pair is the Send's default low one, read
+   where every reference's pair is read — the message's tags and references.
+
+   A REFERENCE IS NEVER ENCRYPTED (chats.md §7: references are edges on the
+   shared graph and have no payload to hide). So a post sent with the lock on
+   seals the words beside it and not which post it was — the send sheet says
+   so while the lock is on, and a no-key reader sees the post's block over the
+   text notice. */
+function BubbleCitation({ kind = "post", name, src, sub }) {
+  return (
+    <button
+      type="button"
+      aria-label={`${name} — ${sub} — open the post`}
+      className="cg-state cg-focus"
+      style={{ display: "flex", alignItems: "center", gap: 10, margin: "2px 0 4px", padding: 8, border: 0, borderRadius: "var(--radius-medium)", background: "var(--surface-container-highest)", color: "var(--text-body)", fontFamily: "var(--font-sans)", textAlign: "left", cursor: "pointer", minWidth: 0 }}
+    >
+      <NodeMark kind={kind} name={name} src={src} />
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)" }}>{name}</span>
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{sub}</span>
+      </span>
+    </button>
+  );
+}
+
+/* ── THE FEED CARDS ──────────────────────────────────────────────────────────
+
+   A CHAT AND A MESSAGE ARE BOTH DECLARED FEED KINDS, OPT-IN (the feed's filter
+   lists `Chats` and `Messages`, off by default), and neither had a card. Both
+   are drawn here, from the card grammar, and both are the lane's anatomy,
+   flagged for review.
+
+   THE CHAT CARD is the chat as a feed candidate — a lineage ranks as one
+   candidate (chats.md §3). Its parts, top to bottom:
+   · IDENTITY — the chat's disc at 48px, its name as the card's title, the
+     policy line under it (`CHAT_POLICY_LINE`, the details' own words);
+   · the DESCRIPTION, as a post's words stand;
+   · LIVE-NESS — the one thing a chat has that a post does not: that it is
+     going on. `14 members · last message 35m`, then the last message's own
+     line, previewed exactly as the explorer row previews it (the sender, the
+     words; `An encrypted message` where the reader holds no key). No presence,
+     ever: members are counted, never shown as online;
+   · the ACTION ROW — the opinion face (an Opinion → Chat, the space's own
+     sentiment) and the join, worded by the policy, where a post's row has its
+     score, comments and share. The lane's calls: no score (a chat's rank is
+     the feed's business; the Post score is a post's), no comment count (a
+     chat has messages, and they are the live-ness line), no share (sharing a
+     chat is not ruled).
+   The card's head is the door to the chat — the thread, read from outside or
+   in.
+
+   THE MESSAGE CARD is one message the rank surfaced, WITH ITS CHAT: the
+   context line first (the chat's disc and `in {chat}` — the search row's
+   indirect-hit words), then the message IN MESSENGER CLOTHES, a foreign
+   bubble on the card with its sender's name and face, because a message out
+   of its thread should still read as something said in a chat rather than
+   as a post. The card keeps the age ladder on its head (the list clock), and
+   the bubble keeps no clock — the thread's exact time lives in the thread.
+   The action row is the opinion face and `Open in the chat`, which lands on
+   the thread scrolled to the message.
+   ONLY PLAINTEXT MESSAGES ARE CANDIDATES — the lane's reading, flagged: a
+   feed is read by people who hold no key, and a card whose body is a no-key
+   notice would be a card about nothing. */
+function ChatFeedCard({ name, image, policy, description, members, lastAge, lastLine }) {
+  return (
+    <Card ariaLabel={`Chat: ${name}`}>
+      <button
+        type="button"
+        aria-label={`${name} — open the chat`}
+        className="cg-state cg-focus"
+        style={{ display: "flex", alignItems: "center", gap: 12, margin: "-4px", padding: 4, border: 0, borderRadius: "var(--radius-medium)", background: "none", color: "var(--on-surface)", fontFamily: "var(--font-sans)", textAlign: "left", cursor: "pointer" }}
+      >
+        <ChatDisc image={image} size={48} />
+        <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>{name}</span>
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{CHAT_POLICY_LINE[policy]}</span>
+        </span>
+      </button>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{description}</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{`${members} members · last message ${lastAge}`}</span>
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{lastLine}</span>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <StanceControl targetLabel={name} onCommit={() => {}} />
+        <Button variant="outline" size="sm">
+          {policy === "open" ? "Join" : "Ask to join"}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+function MessageFeedCard({ chat, chatImage, author, age, children }) {
+  return (
+    <Card ariaLabel={`A message in ${chat}`}>
+      <button
+        type="button"
+        aria-label={`In ${chat} — open the chat at this message`}
+        className="cg-state cg-focus"
+        style={{ display: "flex", alignItems: "center", gap: 8, margin: "-4px", padding: 4, border: 0, borderRadius: "var(--radius-medium)", background: "none", color: "var(--text-secondary)", fontFamily: "var(--font-sans)", textAlign: "left", cursor: "pointer" }}
+      >
+        <ChatDisc image={chatImage} size={24} />
+        <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)" }}>{`in ${chat}`}</span>
+        <span style={{ flex: "none", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)" }}>{age}</span>
+      </button>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+        <MonogramAvatar name={author.name} src={author.src} size="md" />
+        <div style={{ maxWidth: "85%", display: "flex", flexDirection: "column", gap: 2, padding: "8px 12px", borderRadius: "var(--radius-large)", borderBottomLeftRadius: "var(--radius-extra-small)", background: "var(--surface-container-high)", color: "var(--text-body)" }}>
+          <span style={{ fontSize: "var(--text-label-medium)", lineHeight: "var(--text-label-medium--line-height)", fontWeight: "var(--text-label-medium--font-weight)" }}>{author.name}</span>
+          <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{children}</span>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <StanceControl targetLabel={`${author.name}'s message`} onCommit={() => {}} />
+        <InlineAction size="sm">Open in the chat</InlineAction>
+      </div>
+    </Card>
   );
 }
