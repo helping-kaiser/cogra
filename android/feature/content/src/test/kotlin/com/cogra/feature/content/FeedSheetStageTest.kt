@@ -26,8 +26,10 @@ import org.robolectric.annotation.Config
  * with its stage, the real [CommentsSheet] in its own window with its own,
  * and [VideoStage]'s one player between them.
  *
- * `SheetOverStageTest` (core:designsystem) pins the two hosts' claim order in
- * isolation; this pins that the screens as wired behave that way.
+ * A sheet over a surface suspends that surface's stage (jakob 2026-09-24,
+ * `design/readme.md`, "The feed-video rulings"). `SheetOverStageTest`
+ * (core:designsystem) pins the suspension on two bare hosts; this pins that
+ * the feed hands its host the thread's open state.
  */
 // Media3's `UnstableApi` is a lint marker rather than a Kotlin opt-in,
 // so it propagates by being applied here — `@OptIn` has no effect on it.
@@ -48,9 +50,12 @@ class FeedSheetStageTest {
         VideoSound.reset()
     }
 
-    /** A clip in the thread takes the one player from the feed clip under it. */
+    /**
+     * The raised thread suspends the feed's stage (jakob 2026-09-24), and the
+     * thread's own stage gives its clip the player.
+     */
     @Test
-    fun aCommentClipTakesThePlayerFromTheFeedClipItIsRaisedOver() {
+    fun raisingTheThreadStopsTheFeedClipAndTheThreadsClipPlays() {
         renderFeed(thread = listOf(clipComment()))
         assertHolds(POST_CLIP)
 
@@ -59,19 +64,27 @@ class FeedSheetStageTest {
         assertHolds(COMMENT_CLIP)
     }
 
-    /**
-     * The thread drops and the feed clip is not handed the player back: it
-     * stays parked on the comment's clip, owned by nobody.
-     */
+    /** A thread with nothing to play still stops the card under it. */
     @Test
-    fun theFeedClipIsNotHandedThePlayerBackWhenTheThreadDrops() {
+    fun aThreadWithoutClipsStillStopsTheFeedClip() {
+        renderFeed(thread = listOf(testComment("c1")))
+
+        openThread()
+
+        assertThat(VideoStage.holding?.url).isEqualTo(POST_CLIP)
+        assertThat(VideoStage.holding?.owner).isNull()
+        assertThat(VideoStage.holding?.player?.playWhenReady).isFalse()
+    }
+
+    /** The thread drops, and the card under it takes the player back at once. */
+    @Test
+    fun droppingTheThreadHandsTheFeedClipThePlayerBack() {
         renderFeed(thread = listOf(clipComment()))
         openThread()
 
         closeThread()
 
-        assertThat(VideoStage.holding?.url).isEqualTo(COMMENT_CLIP)
-        assertThat(VideoStage.holding?.owner).isNull()
+        assertHolds(POST_CLIP)
     }
 
     private fun renderFeed(thread: List<CommentView>) {

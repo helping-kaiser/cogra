@@ -353,7 +353,12 @@ fun FeedScreen(
                         // "The feed-video rulings"): its clips compete for one,
                         // the playing clip keeps it while past 70%, and the
                         // topmost qualifying clip takes it the moment it drops.
-                        ScrollStageHost(listState) {
+                        // The raised thread SUSPENDS it (jakob 2026-09-24, the
+                        // same rulings): a card under the sheet is not on
+                        // screen in the law's sense, however much of it the
+                        // window still measures, and the thread's own stage
+                        // decides what plays until it drops.
+                        ScrollStageHost(listState, suspended = commentsFor != null) {
                             // A feed post spans the screen edge to edge,
                             // and 8dp of surface between cards is the seam
                             // (design/readme.md §13). Only the rows that are
