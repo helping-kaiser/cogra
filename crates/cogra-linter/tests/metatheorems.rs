@@ -615,7 +615,27 @@ fn temporary(name: &str) -> PathBuf {
         "the headline table was put back to a stale count"
     );
     std::fs::write(docs.join("environment-kinds.md"), stale).expect("the registry document");
+    track(&at);
     at
+}
+
+/// Makes `root` a repository and tracks everything now standing in it: the
+/// carrier is what git lists (´dec:lint:tracked-carrier´), so a register a
+/// test writes is in the carrier once it is tracked.
+fn track(root: &Path) {
+    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
+        let done = std::process::Command::new("git")
+            .arg("-C")
+            .arg(root)
+            .args(args)
+            .output()
+            .expect("git runs");
+        assert!(
+            done.status.success(),
+            "git {args:?}: {}",
+            String::from_utf8_lossy(&done.stderr)
+        );
+    }
 }
 
 /// The registry document, relative to the corpus root.
@@ -664,6 +684,7 @@ fn regeneration_is_idempotent_and_a_check_after_a_write_is_current() {
 
     cogra_linter::registers::write_all(&first, &cogra_linter::Scope::WholeCorpus, &at)
         .expect("the first write");
+    track(&at);
     let after = cogra_linter::check(adoption(), &at).expect("the rewritten corpus");
     assert_eq!(
         register_findings(&after),
@@ -717,6 +738,7 @@ fn the_companion_register_feeds_nothing_it_presents() {
     );
     cogra_linter::registers::write_all(&without, &cogra_linter::Scope::WholeCorpus, &at)
         .expect("the write");
+    track(&at);
 
     let after = cogra_linter::check(adoption(), &at).expect("the corpus with its register");
     let carried = after
