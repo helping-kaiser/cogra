@@ -254,8 +254,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
   and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
-- **Your first opinion** (the vouch-back pad): Vouching back signs where
-  you stand on the person who vouched you in — your first opinion, and
+- **Your first opinion** (the vouch-back pad): Vouching back signs your
+  opinion of the person who vouched you in — your first one, and
   your feed grows from it. / The pad is how you shape what reaches you —
   for or against, and how much. Nothing is signed until Set.
 
@@ -266,8 +266,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   versions stay public under "Edited" unless you remove them. An edit
   never bumps the post as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
-- **Citing**: A citation is its own signed action and carries where
-  you stand on what you cite. You can cite anything on CoGra — start
+- **Citing**: A citation is its own signed action and carries your
+  opinion of what you cite. You can cite anything on CoGra — start
   with @handle or #tag to reach comments, messages, and offers. /
   Comments and chat messages can also be cited from themselves —
   open one and choose "Cite in a new post".
@@ -1680,7 +1680,7 @@ primitive's freedom to reciprocate anyone stays in §2 and stays off the
 screen — no surface offers a choice of inviter, because no reader is
 asked to make one.
 
-## Awaiting blessing — the topic disconnects
+## Disconnecting from a topic
 
 **A person is walked back; a topic is DISCONNECTED from** (jakob
 2026-09-15, rejecting *walked back*, *let go* and *dropped* for the
@@ -1723,7 +1723,7 @@ every topic pad says `Disconnect`, wherever either stands.
 surface not even nearly.** They name the mechanic in the docs and the
 code; what a reader is told is what they are left with.
 
-## Awaiting blessing — the draft's discard
+## The draft's discard
 
 **The blocked roll's answer** (`ComposeDraftDiscard`, jakob 2026-09-15).
 Under an unanswered draft the picture roll is dimmed and out of reach; a
@@ -1745,7 +1745,7 @@ tap on it used to reach nothing, and now it raises this:
   new post` — what a screen reader meets where a sighted reader meets a
   dimmed grid.
 
-## Awaiting blessing — the change-histories round
+## Change histories
 
 The words of would-like #2 (post-MVP tree, 2026-09-22). Two kinds of
 history — a content chronicle and a stance timeline — and one law under
