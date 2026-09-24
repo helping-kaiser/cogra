@@ -24,7 +24,7 @@
 
    THE OPTIONAL PARTING REASON (jakob: the Leave record carries one as its
    payload). ITS LEGITIMACY IS ON RECORD: layer1-interface.md's act payload
-   schema (`tbl:nodes:act-payload-schema`) names the Leave act's canonical
+   schema (``tbl:nodes:act-payload-schema``) names the Leave act's canonical
    payload a "parting reason", and jakob kept the field on the fix pass
    against his own first instinct — "if the interface says so then the L1
    author intended it to exist" (2026-09-23). One field, the sensitive sheet's `Why?` exactly — `TextField` at
