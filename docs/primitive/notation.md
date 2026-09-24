@@ -57,10 +57,9 @@ Feed-calibration parameters are governed network parameters
 ## 3. Glyph discipline
 
 When a new CoGra doc needs a symbol, it checks the interface
-ledger first and picks a free glyph. Three collisions are
+ledger first and picks a free glyph. Two collisions are
 sanctioned, each disambiguated by context: CoGra's path count `k`
-beside L1's epoch index `k` (as in `E_k`), the recency factor
-`f(Δt)` beside the realization's fee `f` in `(1−f)ζ`, and the campaign value
+beside L1's epoch index `k` (as in `E_k`), and the campaign value
 `V` beside L1's CAN value `V(n)` — CoGra's crowd-sum
 reimplementation of the same terminal object, told apart by
 argument. Any other collision is a review error, not a style

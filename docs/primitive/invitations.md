@@ -225,7 +225,7 @@ sized by that earner's payout share
 ([economics.md §7.3](economics.md#73-the-inviter-reward)). Direct
 inviter only — no chain, no pyramid dynamic; permanent — the
 relation never expires, so the inviter earns over the member's
-lifetime; paid in CGT, the reward economy, never the burn value.
+lifetime; paid in CGT, the reward economy, never in burn value.
 It fires only on the accepted mutual pair — never on a one-way
 edge. Genesis members have no inviter; their share falls back to
 burn.
