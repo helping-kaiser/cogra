@@ -2243,6 +2243,58 @@ describe("PostView — references", () => {
         await screen.findByTestId("post-pinned-clip");
         expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
         expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
+        // An unmarked post pins no veil over its clip.
+        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+      });
+
+      // THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video
+      // post's clip veils IN PLACE — never demoted into the card — and ONE
+      // scope spans the clip and the card body, sharing the post's own
+      // reveal (`reveal.ts`) the way the card's own `BodyRegion` already
+      // does.
+      it("veils the pinned clip in place, mounted but wearing no transport or sound disc", async () => {
+        server.use(
+          ...withBody({
+            description: "One rubbing includes a dead seabird.",
+            attachments: [clip("m1")],
+            attachmentsStatus: "SENSITIVE",
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        await screen.findByTestId("post-pinned-clip-veil");
+        // Still mounted under the veil, the same contract `BodyVeil` keeps
+        // for every other veiled body — revealing must move nothing.
+        expect(screen.getByTestId("post-pinned-clip")).toBeInTheDocument();
+        // Nothing plays beneath a veil (backlog item 103): no transport bar
+        // to operate and no sound disc for a clip that cannot claim playback.
+        expect(screen.queryByTestId("post-pinned-clip-media-transport")).toBeNull();
+        expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
+        // The card's own body veils too — the same post, one sensitive state.
+        expect(screen.getByTestId("post-veil")).toBeInTheDocument();
+      });
+
+      it("answers one reveal for the pinned clip and the card together", async () => {
+        server.use(
+          ...withBody({
+            description: "One rubbing includes a dead seabird.",
+            attachments: [clip("m1")],
+            attachmentsStatus: "SENSITIVE",
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        const veil = await screen.findByTestId("post-pinned-clip-veil");
+        fireEvent.click(within(veil).getByRole("button"));
+
+        // The one tap on the clip's own face lifted the card's veil too.
+        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+        expect(screen.queryByTestId("post-veil")).toBeNull();
+        expect(screen.getByTestId("post-description")).toHaveTextContent(
+          "One rubbing includes a dead seabird.",
+        );
+        // Revealed, the clip stands with its ladder's second rung back.
+        expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
       });
 
       it("leaves a post of pictures exactly where it was", async () => {
