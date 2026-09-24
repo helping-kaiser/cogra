@@ -263,8 +263,16 @@ class ComposeWizardViewModelTest {
                 List(count) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 100, 125)) }
             }
 
-        override suspend fun info(uri: String): VideoInfo? =
-            if (uri.startsWith("clip")) VideoInfo(42_000, 0.5625f) else null
+        /**
+         * `clip*` is a wide 16:9 clip — the shape that walks the cover
+         * step — and `tall-clip*` a 9:16 one, which skips it. Anything
+         * else is not a clip the header can read.
+         */
+        override suspend fun info(uri: String): VideoInfo? = when {
+            uri.startsWith("tall-clip") -> VideoInfo(42_000, TALL)
+            uri.startsWith("clip") -> VideoInfo(42_000, WIDE)
+            else -> null
+        }
     }
 
     private fun viewModel() = ComposeWizardViewModel(
@@ -1490,5 +1498,36 @@ class ComposeWizardViewModelTest {
         vm.onOpenSheet(SealSheet.Stance)
         assertThat(vm.state.value.stagedPDirected)
             .isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+    }
+
+    /**
+     * MediaStore rows a phone's portrait recording at its STORED
+     * dimensions — 1920×1080, the quarter turn kept in a separate
+     * ORIENTATION column — so the grid's ratio calls it landscape. The
+     * clip's shape decides whether the cover step stands, so it is read
+     * from the clip's own header, which is post-rotation.
+     */
+    @Test
+    fun aGridClipTakesItsShapeFromItsHeaderRatherThanTheStoresRow() = runTest(dispatcher) {
+        deviceMedia.offered = listOf(DeviceMedia("tall-clip-grid", WIDE, durationMs = 42_000))
+        val vm = viewModel()
+        vm.start()
+        vm.onMediaPermissionGranted()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTogglePick("tall-clip-grid")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val pick = vm.state.value.picked.single()
+        assertThat(pick.isVideo).isTrue()
+        assertThat(pick.sourceRatio).isEqualTo(TALL)
+        // The store's own duration still stands: it is the header's
+        // shape, not its running time, that the row gets wrong.
+        assertThat(pick.durationMs).isEqualTo(42_000)
+    }
+
+    private companion object {
+        const val WIDE = 16f / 9f
+        const val TALL = 9f / 16f
     }
 }

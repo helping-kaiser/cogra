@@ -14,7 +14,6 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.PICTURE_MAX_BYTES
-import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
@@ -289,22 +288,25 @@ class ComposeWizardViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            // The grid already knows, because `MediaStore` said which
-            // collection the row came from. The system picker hands over
-            // a bare URI, so that one is asked — a header read, not a
+            // The grid already knows the KIND, because `MediaStore` said
+            // which collection the row came from. The system picker hands
+            // over a bare URI, so that one is asked — a header read, not a
             // decode.
             val known = current.deviceMedia.firstOrNull { it.uri == uri }
-            val clip = if (known != null) {
-                known.takeIf { it.isVideo }?.let { VideoInfo(it.durationMs ?: 0, it.aspectRatio) }
-            } else {
-                video.info(uri)
-            }
+            // A CLIP'S SHAPE COMES FROM ITS OWN HEADER, grid or not. The
+            // store's WIDTH/HEIGHT are the stored dimensions, with the
+            // rotation in a separate ORIENTATION column (MediaProvider's
+            // `ModernMediaScanner`), so a phone's portrait recording rows
+            // in as landscape — and the shape decides whether the cover
+            // step stands (`hasCoverStep`). `VideoInfo` is post-rotation.
+            val header = if (known == null || known.isVideo) video.info(uri) else null
+            val isClip = known?.isVideo ?: (header != null)
             // The shared screening (`PickScale.kt`): a file nothing can
             // read is refused where it was offered rather than accepted
             // and failed later (`ComposePickedErrors`). Bytes are weighed
             // after the pass that shrinks them — a still at its upload,
             // a clip after its transcode (see `startVideoUpload`).
-            if (clip == null) {
+            if (!isClip) {
                 val refusal = screenPicture(uri, processor, knownReadable = known != null)
                 if (refusal != null) {
                     _state.update { it.copy(refused = it.refused + refusal) }
@@ -315,8 +317,11 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update {
                 it.togglePick(
                     uri = uri,
-                    sourceRatio = clip?.aspectRatio ?: known?.aspectRatio,
-                    durationMs = clip?.durationMs,
+                    // A grid clip whose header will not read has no
+                    // trustworthy shape: null, which takes the cover
+                    // step — the safe default `hasCoverStep` names.
+                    sourceRatio = if (isClip) header?.aspectRatio else known?.aspectRatio,
+                    durationMs = if (isClip) known?.durationMs ?: header?.durationMs ?: 0 else null,
                 )
             }
             val after = _state.value.picked.size
@@ -324,7 +329,7 @@ class ComposeWizardViewModel @Inject constructor(
             when {
                 // A picture's own ratio is read from its header for the
                 // crop preview; a clip already stated its shape above.
-                after > before && clip == null -> mediaReader.readSourceRatio(uri)
+                after > before && !isClip -> mediaReader.readSourceRatio(uri)
                 // Replaced rather than added: whatever the previous body
                 // was uploading is no longer part of this post.
                 after <= before -> cancelUploadsExcept(uri)
