@@ -228,8 +228,8 @@ the same public state it attests.
 
 The admission fund's single outflow
 ([token.md §6.2](../primitive/token.md#62-the-admission-fund)) runs
-entirely inside the one chain: the pool's `reserve_share·P` inflow
-is swapped **CGT → L-BTC through the protocol's own ladder** — the
+entirely inside the one chain: the pool's settlement inflow is
+swapped **CGT → L-BTC through the protocol's own ladder** — the
 fund sells into the bid side like any other holder — and the
 resulting L-BTC funds **destination-addressed admission burns** at
 members', system actors', and Collectives' own addresses, the
@@ -246,6 +246,12 @@ funder-unconstrained burn L1 permits (``rem:gates:guild-funding``).
   ("advertiser revenue covers the community's admission costs")
   stays checkable in realized terms, arithmetic over public
   transactions.
+- **L-BTC inflow skips conversion.** The genesis seed and voluntary
+  top-ups enter the fund directly in L-BTC — no conversion leg, the
+  same public accounting. They are the fund's, never
+  protocol-owned liquidity
+  ([token.md §4](../primitive/token.md#4-protocol-owned-liquidity-pol)):
+  the ladder's depth is a different pot.
 
 There is no peg step, no exchange hop, and no custody boundary in
 this flow: CGT and the admission denomination live on the same
@@ -284,6 +290,13 @@ updating it is a parallel Registration, newest wins, every prior
 state witnessed. Losing the key and its recovery code loses the CGT
 at that address; CoGra cannot recover it and never could — the same
 responsibility line auth.md draws for the actor key.
+
+**The operator holds the admission fund's key**, as it holds the
+team treasury's
+([network.md "The cast"](../primitive/network.md#the-cast)). The
+fund/treasury separation
+([token.md §6](../primitive/token.md#6-treasury)) is an accounting
+separation under one key-holder, both sides publicly provable.
 
 Build-time candidate: **LWK** (Blockstream's Rust Liquid wallet kit,
 with UniFFI bindings) fits the existing Rust + UniFFI stack for
