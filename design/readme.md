@@ -6320,16 +6320,17 @@ corrections:
 ### The chats governance round — 2026-09-23
 
 Round B2 of the chats work: the multi-voice faces the details round left
-as intended gaps — twelve boards on the Chats page (`ChatThreadDecisions`,
-`ChatDetailsDecisions`, `ChatInvitePicker`, `ChatInviteSeal`,
-`ChatThreadInvited`, `ChatJoinSeal`, `ChatThreadRequested`,
-`ChatThreadApproved`, `ChatRequestApprove`, `ChatRoleSheet`,
-`ChatVersionRemoveConfirm`, `ChatHistoryRemoved`). The masters
-(`PendingCard`, `DecisionOutcome`, `OpenDecisions`, `PeopleSoFar`,
-`AgreeAct`, `ApproveAct`, `ChatVersionTombstone`) live in the tree's
-prelude with the bodies the boards share; `ChatJoinFoot` gained the
-invited, requested and approved states, and `RedactedContent` a fourth
-mark.
+as intended gaps, and jakob's fix pass on the canvas the next day —
+fourteen boards on the Chats page (`ChatThreadDecisions`,
+`ChatDetailsDecisions`, `ChatDecisionDetail`, `ChatAgreeSheet`,
+`ChatInvitePicker`, `ChatInviteSeal`, `ChatThreadInvited`,
+`ChatJoinSeal`, `ChatThreadRequested`, `ChatThreadApproved`,
+`ChatRequestApprove`, `ChatRoleSheet`, `ChatVersionRemoveConfirm`,
+`ChatHistoryRemoved`). The masters (`PendingCard`, `DecisionOutcome`,
+`OpenDecisions`, `VoteActs`, `ApproveAct`, `VoteSheet`, `VoteRows`,
+`ChatVersionTombstone`) live in the tree's prelude with the bodies the
+boards share; `ChatJoinFoot` gained the invited, requested and approved
+states, and `RedactedContent` a fourth mark.
 
 - **Nothing may look like a proposal (jakob).** A chat's backbone is the
   proposal machinery. An act whose actor's own say clears its gate is
@@ -6338,35 +6339,67 @@ mark.
   the proposer's own opinion for it — `ChatEditSeal`'s precedent). An act
   that needs more voices is a quiet card in the thread at the moment it
   was proposed: a plain sentence (`Mira Voss wants to remove Kel Moreau
-  from the chat`), an `Agree` that is a ballot in disguise, and a count
-  of people (`2 of 5 so far`). When the tally crosses, the card settles
-  into one outcome line (`Kel Moreau was removed`). The same open
-  decisions stand as rows under `Open decisions` on the details, where
-  the words are a door to the card and the act is its own target.
-  Proposals never expire, so no card carries a clock.
+  from the chat`), `Disagree` and `Agree`, and a count of the people who
+  agree (`2 of 5 so far`). The same open decisions stand as rows under
+  `Open decisions` on the details. Proposals never expire, so no card
+  carries a clock.
+- **A vote both ways is a real vote (jakob 2026-09-24).** A ballot's
+  direction is its sign — positive agrees, negative disagrees, zero
+  withdraws (governance.md §3) — and every chat threshold reads the cast
+  (`> 50% of the cast`, `≥ 2/3 of the cast`, beside a quorum of the
+  eligible weight that has cast), so a disagreement counts toward the
+  quorum and against the share. Chat tallies are bidirectional with
+  mirror failure (governance.md §2.4): a decision fails, terminally, once
+  its negative side meets the same threshold shape over the weight
+  against; while neither side crosses it stays open and members may vote
+  again. The positive-only petition tally is Network-scope only and never
+  a chat's. So an outcome line has two faces — passed (`Tobias Lindqvist
+  is now a moderator`) and failed (`The chat kept its name`) — and a
+  failed decision is final; asking again is a new decision.
+- **No vote signs on a bare tap (jakob 2026-09-24).** `Agree`, `Disagree`
+  and `Approve` open the vote's own small seal — `ChatSignSheet`'s
+  vocabulary compressed to one sentence saying what the vote is, a quiet
+  line that it is public and can be changed, and the seal's button (`Sign
+  and agree`). One master, drawn once as `ChatAgreeSheet`; the nouns swap
+  per vote.
+- **A decision opens whole (jakob 2026-09-24).** A card's words, and a
+  row's, open `ChatDecisionDetail`: what would change, in full — for a
+  change to the chat, the proposed version beside the current one and the
+  new picture whole; every vote cast, who and which way, as the public and
+  auditable records they are (api-spec.md, `Proposal.ballots`); and the
+  reader's own vote with `Disagree instead` and `Take back your vote`.
+  Changing a vote signs a newer ballot, since the tally reads each
+  person's newest. Taking it back signs the zero-direction ballot, as
+  governance.md specifies; api-spec.md's ballot input does not accept
+  ZERO yet, which is the implementation's to close.
 - **The count convention — the brief's recommendation, awaiting jakob's
-  canvas review.** A card counts people and never shows weight. The tally
-  underneath is weighted (admin 5, moderator 3, member 1), so a card can
-  settle early (at 3 of 5 if an admin is among the three) and simply
-  settles when it settles. Geek mode paints the weighted arithmetic after
-  the count in the geek-pair grammar, which widens the geek round's
-  "the pairs, and only the pairs" to a governance tally.
+  canvas review.** A card counts the people who agree and never shows
+  weight. The tally underneath is weighted (admin 5, moderator 3, member
+  1), so a card can settle early, or stand level while its count reads
+  well — the drawn change is at 3 of 6 agreeing and exactly half each way
+  by role, because Mira's disagreement weighs 3. The card carries no
+  arithmetic; the decision page shows both directions, and geek mode
+  paints the weighted sums there — a widening of the geek round's "the
+  pairs, and only the pairs" to a governance tally.
 - **An invitation is the inviter's own act (jakob).** It is a public,
   priced vouch and never a chat decision: a picker over the people not in
   the chat, then a seal counting one invitation per person, and no card.
   Withdrawing your own invitation (a De-invite) is a later surface.
-- **Joining is always the joiner's own record (jakob).** One seal, a sheet
-  over the thread at `1 thing, signed`, serves the three routes: an open
-  chat's `Join`, an accepted invitation and an approved request. Only the
-  fact row saying how the reader comes to be joining swaps its nouns. An
-  invitee reads the chat from outside with `{name} invited you.` and
-  `Join` at the foot, and no Decline, because ignoring an invitation needs
-  no record. A requester's thread carries their own card, `You asked to
-  join`, over a foot that says the request is sent. Once it is approved,
-  the card settles into `Your request was approved` and `Join` returns.
-- **A join request meets its approver as a card.**
-  Under the default map one approval settles it, so the card carries no
-  count, and `Approve` on it is the approver's ballot, signed on the tap.
+- **Joining is always the joiner's own record (jakob, confirmed
+  2026-09-24).** One seal, a sheet over the thread at `1 thing, signed`,
+  serves the three routes: an open chat's `Join`, an accepted invitation
+  and an approved request. Only the fact row saying how the reader comes
+  to be joining swaps its nouns. An approval never joins anyone:
+  membership comes only from the joiner's own signed Participant (chats.md
+  §4; layer1-interface.md §9.8). An invitee reads the chat from outside
+  with `{name} invited you.` and `Join` at the foot, and no Decline,
+  because ignoring an invitation needs no record. A requester's thread
+  carries their own card, `You asked to join`, over a foot that says the
+  request is sent; once approved, the card becomes `Your request was
+  approved` and `Join` returns.
+- **A join request meets its approver as a card.** Under the default map
+  one approval settles it, so the card carries no count and `Approve`
+  stands alone — a request has no against; ignoring it is the no.
 - **Roles and removals go through the same seal.** A role word opens a
   sheet of the three roles with the current one marked. A version's
   removal opens `VersionRemoveConfirm`'s dialog with the nouns swapped
@@ -6377,29 +6410,28 @@ mark.
   platform verdict.
 - **The lane's calls, flagged for review:** the decisions fixture moved to
   Salt-crust rubbings, where the reader is a plain member (in Coast
-  walkers the admin reader's own say clears the rename gate, so their
-  pending rename could not honestly stand there); outcome lines settle in
-  place at the proposal's moment; the card is an outlined card on the page
-  ground, neither bubble fill; a tap on `Agree` or `Approve` signs
-  directly, the send arrow's precedent, and the after-state `You agreed`
-  is stated rather than drawn; the card offers only `Agree`, though the
-  ballot primitive has an against; the requester's two moments are two
-  boards; an approval shows both as a card and as a row; the role and
-  removal seals are docblocked to `ChatEditSeal` rather than drawn; the
-  role sheet's rows carry no lines; the invite picker leaves out people
-  already invited; names are spelled whole (`Mira Voss`, not `Mira`), as
-  the chronicle's event rows spell them.
-- **Owed, and named:** no drawn surface writes a join request's message
-  or an invitation's message (both are their records' payloads); the
-  invitation and approval notification rows are round B3's, and the
-  graph enters `ChatThreadInvited` and `ChatThreadApproved` there; the
-  explorer row's word for an invited reader waits for B3; starting a kick
-  and message disavowal stay with the moderation slice. chats.md §8
-  speaks of redacting a superseded version while the details round's
-  ruling covers the current one too.
+  walkers the admin reader's own say clears the metadata gate); outcome
+  lines settle in place at the proposal's moment; the card is an outlined
+  card on the page ground, neither bubble fill; `Agree` is the filled small
+  button and `Disagree` the text one beside it, the dialog's pair, since
+  the house button has no tonal variant; on a details row the two words
+  take a line under the sentence; the card carries no geek arithmetic;
+  the decision page is one tall board, the new picture shown whole under
+  the proposed version; `You agreed` and `You disagreed`, after voting,
+  are stated rather than drawn; the requester's two moments are two
+  boards; an approval shows both as a card and as a row; the role sheet's
+  rows carry no lines; the invite picker leaves out people already
+  invited; names are spelled whole (`Mira Voss`, not `Mira`).
+- **Owed, and named:** the composers for a join request's message and an
+  invitation's message are round B3's (jakob), as are the invitation and
+  approval notification rows — the graph enters `ChatThreadInvited` and
+  `ChatThreadApproved` there — and the explorer row's word for an invited
+  reader; starting a kick and message disavowal stay with the moderation
+  slice. chats.md §8 speaks of redacting a superseded version while the
+  details round's ruling covers the current one too.
 - **The gate**: canonical holds byte-identical — **217 screens · 1568
-  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 56
-  screens and 228 edges. The four intended B2 gaps are resolved; the one
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 58
+  screens and 240 edges. The four intended B2 gaps are resolved; the one
   gap left is a Collective member's own page (§7).
 
 ---

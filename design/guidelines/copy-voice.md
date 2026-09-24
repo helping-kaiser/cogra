@@ -2053,36 +2053,63 @@ invitation turns on the chat's rules.
 
 ### The chats governance round — same day
 
-Round B2's words (post-MVP tree, 2026-09-23). Candidates, none blessed.
-The register: a decision is said as what a person wants, then how many
-people have agreed so far, never as proposal, ballot, vote, tally, quorum
-or weight.
+Round B2's words (post-MVP tree, 2026-09-23, with jakob's fix pass of
+2026-09-24). Candidates, none blessed. The register: a decision is said as
+what a person wants, then how many people agree so far. `Vote` is the
+reader's own word for what they cast (jakob's, in the fix pass); proposal,
+ballot, tally, quorum and weight stay off the screen.
 
 **A decision waiting in the thread.**
 
 - The sentence names the proposer and what they want, in full display
   names: `Mira Voss wants to remove Kel Moreau from the chat`; the
-  reader's own reads `You want to rename the chat to “Salt prints”`; a
-  role change `{name} wants to make {name} a moderator`; a removal
-  `{name} wants to remove the version of 10 September`.
-- The count is people: `2 of 5 so far`, `1 of 6 so far`. It never names a
-  threshold and never promises how many it will take.
-- The act is `Agree`, named `Agree — {the sentence}` for the ear. Once
-  agreed, the slot says `You agreed`. On a join request the act is
-  `Approve`, named `Approve — Sal Torres asks to join`.
-- Geek mode adds the arithmetic after the count, for example `· 4 of 13
-  by role (admin 5, moderator 3, member 1) — settles at 5.2, ⅔ for`.
-  Spoken in both modes: `By role — admin 5, moderator 3, member 1 — 4 of
-  13 so far; it settles at 5.2, with two thirds for`.
-- Settled, a card becomes one line saying what is now true: `Tobias
+  reader's own reads `You want to change the chat's name, picture and
+  description`; a role change `{name} wants to make {name} a moderator`; a
+  removal `{name} wants to remove the version of 10 September`.
+- The count is the people who agree: `2 of 5 so far`, `3 of 6 so far`. It
+  never names a threshold and never promises how many it will take.
+- The two words are `Disagree` and `Agree`, named `Disagree — {the
+  sentence}` and `Agree — {the sentence}` for the ear. Once voted, the slot
+  says `You agreed` or `You disagreed`. On a join request the act is
+  `Approve` alone, named `Approve — Sal Torres asks to join`.
+- The card's words are a door, named `{the sentence} — see the decision`.
+- Settled, a card becomes one line saying what is now true. Passed: `Tobias
   Lindqvist is now a moderator`, `Kel Moreau was removed`, `The chat is
   now called “Salt prints”`, `Sal Torres's request was approved`, and for
-  the requester `Your request was approved`.
+  the requester `Your request was approved`. Failed: `The chat kept its
+  name`, `Kel Moreau stays in the chat` — what stayed, never "rejected" or
+  "voted down".
 - A join request: `Sal Torres asks to join`, the request's message quoted
   under it; the requester's own card `You asked to join`.
 
+**The vote's small seal.** The sheet `What you sign` with `How signing
+works`; one sentence — `You agree that Kel Moreau should be removed from
+the chat.`, `You disagree that Kel Moreau should be removed from the
+chat.`, `You approve Sal Torres joining the chat.`, or for a withdrawal
+`You take back your vote on changing the chat's name, picture and
+description.`; the line `Your vote is public, and it is yours to change or
+take back later.`; the act `Sign and agree`, `Sign and disagree`, `Sign and
+approve` or `Sign and withdraw`.
+
+**A decision, opened.** Titled `Decision`, back `Back`. The sentence as
+its heading, and under it `Proposed by you on 20 September · open` (`Proposed
+by {name}` for someone else's; `passed on {date}` or `failed on {date}` once
+settled). The sections `If it passes` and `The chat now`, the proposed
+picture named `The proposed picture: …` for the ear. `Votes`, over `3
+agreed · 1 disagreed · 2 haven't voted`; each row the voter, the date they
+voted (`you · 20 September` for the reader's own), and `Agreed` or
+`Disagreed`; under the list `Every vote is a public record. Each person's
+newest vote is the one that counts.` Geek mode adds `· by role 3 for, 3
+against — 6 of 14 cast (admin 5, moderator 3, member 1); either side past
+half the cast settles it`, spoken in both modes as `By role — admin 5,
+moderator 3, member 1 — 3 for and 3 against, 6 of 14 cast; either side past
+half of the cast settles it`. `Your vote`, over `You agreed when you
+proposed it, on 20 September.`, with `Disagree instead` and `Take back your
+vote`.
+
 **Open decisions, filled.** Each row is the card's sentence over its
-count. The door is named `{sentence}, {count} so far — see it in the chat`.
+count, with the two words under them at the row's edge. The door is named
+`{sentence}, {count} — see the decision`.
 
 **Adding people.** Titled `Add people`, back `Back to chat details`, the
 field `Search people`, the forward action `Next`; under the list `People
