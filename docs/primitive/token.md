@@ -284,7 +284,7 @@ run.
   deflationary regime.
 
 Beside burn, campaign flow also *sells* CGT: the admission fund
-(§6.2) converts its `reserve_share·P` inflow out of CGT entirely.
+(§6.2) converts its settlement inflow out of CGT entirely.
 Conversion is market flow, not supply change — it moves units, the
 way any holder's sale does — so the trajectory above is set by
 release and burn alone.
@@ -318,7 +318,8 @@ launches on central hardware, so real infra costs must be covered).
 
 It accrues from two streams:
 
-- **Campaign treasury share** — `0.02%·D + 1.98%·P` per settlement
+- **Campaign treasury share** —
+  `0.02%·D + (1 − reserve_share)·1.98%·P` per settlement
   ([economics.md §7](economics.md#7-the-conservation-equation)),
   already CGT-denominated.
 - **Ladder spread** — the realized spread income swept from the
@@ -331,8 +332,10 @@ own liquidity, **not** from monetising user data.
 
 ### 6.2 The admission fund
 
-The fund receives the `reserve_share·P` settlement line
-([economics.md §7.2](economics.md#72-the-admission-fund)) and
+The fund receives the `admission_fund` settlement line
+([economics.md §7.2](economics.md#72-the-admission-fund)) —
+`reserve_share·P` from the contributor pool plus the same fraction
+of the treasury's and the inviter's `P`-scaled shares — and
 exists for exactly one kind of outflow: **funding the community's
 admission burns**. CGT is converted at execution-time market
 price — chunked, publicly accounted, never at a frozen internal

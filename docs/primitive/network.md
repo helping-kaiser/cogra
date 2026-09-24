@@ -225,7 +225,9 @@ loss-limited by a pinned bound or by construction, per D4.4's
 "mundane knobs" framing.
 
 - **`reserve_share`** — the campaign-pool fraction carved for the
-  community's admission fund, genesis default `1%`. Hard-capped by
+  community's admission fund, from the contributor pool and at the
+  same rate from the treasury's and the inviter's `P`-scaled
+  shares; genesis default `1%`. Hard-capped by
   a **pinned ceiling in the published spec** — the ceiling itself
   is not a parameter, so governance can never gut the contributor
   pool

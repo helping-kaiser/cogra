@@ -30,7 +30,7 @@ within a phase, order is flexible.
 | 2c. Client hardening | 1 | **Q54** | Semantic verification of the payload envelope — whether a client decodes what it signs instead of comparing served bytes. Interim-crypto-scoped (Q30): the substrate swap may move who composes a payload. |
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
-| 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `reserve_share·P` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
+| 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `admission_fund` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -479,7 +479,7 @@ federation could change this).
 ### Context
 
 A network runs one global admission fund: every settlement's
-`reserve_share·P` carve pays into it, everyone contributes to it,
+`admission_fund` carve pays into it, everyone contributes to it,
 and it pays the community's admission burns. A community can leave
 the global pot and run its own pool for its admission fees — one
 network splitting into several community pools.
@@ -490,7 +490,7 @@ How does a split work? Specifically:
 
 - **Leaving.** What act takes a community out of the global pot,
   under whose governance, and what it takes with it.
-- **Routing.** Which pool a settlement's `reserve_share·P` carve
+- **Routing.** Which pool a settlement's `admission_fund` carve
   pays into once more than one pool exists.
 - **Governance.** Whether each pool governs its own
   `reserve_share`, generosity, and per-member caps, and how that

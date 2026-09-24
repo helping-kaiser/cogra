@@ -118,7 +118,7 @@ where each concept sits relative to the seam.
 | CGT (reward economy) | off-graph | CoGra's own token — the campaign-pool currency, fully disconnected from burn value. "Burn" means CGT supply destruction, never the θ-debit. |
 | Subsidised θ-debits | off-graph | Only the actor's own balance ever pays the actor's θ (W1). Community funding is admission burns to the member's own address (``rem:gates:guild-funding``) — funder-unconstrained, the comparator sees a funded member exactly as a self-funded one; generosity and caps are governed network parameters. Members, system actors, and Collectives all draw on one pot, the community's admission fund. |
 | Campaigns, settlement, payouts | gesture | The campaign's public record rides L1: an advertiser-authored Content anchor carries the terms as witnessed payload, `(0,0)` References declare the targeting, and adjustments and settlement land as witnessed payloads on Opinions toward the anchor ([economics.md §3](economics.md#3-the-campaign-record), [§10](economics.md#10-the-settlement-record-and-the-payout-flow)). The money rail and payout plumbing stay CoGra's own, off-graph; the attribution they pay against is computed over L1 records (below). |
-| Inviter reward | off-graph | Single-hop 1% CGT to the accepted mutual-pair inviter (§1) — permanent, no chain of referrals. |
+| Inviter reward | off-graph | Single-hop `(1 − reserve_share)·0.01·P` CGT to the accepted mutual-pair inviter (§1) — permanent, no chain of referrals. |
 | Feed ranking | consume | Terminal — CoGra's own published computation over L1's per-edge primitive `w̃(e)` and viewer-rooted paths. |
 | Reward attribution | consume | CoGra is a CAN built on the same path extraction as the feed, subject to the three CAN invariants. |
 
