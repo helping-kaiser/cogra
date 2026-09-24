@@ -6364,14 +6364,21 @@ states, and `RedactedContent` a fourth mark.
   per vote.
 - **A decision opens whole (jakob 2026-09-24).** A card's words, and a
   row's, open `ChatDecisionDetail`: what would change, in full — for a
-  change to the chat, the proposed version beside the current one and the
-  new picture whole; every vote cast, who and which way, as the public and
+  change to the chat, the proposed version beside the current one, its
+  picture on the card at the details' 80px and a tap away from the
+  fullscreen viewer; every vote cast, who and which way, as the public and
   auditable records they are (api-spec.md, `Proposal.ballots`); and the
-  reader's own vote with `Disagree instead` and `Take back your vote`.
-  Changing a vote signs a newer ballot, since the tally reads each
-  person's newest. Taking it back signs the zero-direction ballot, as
-  governance.md specifies; api-spec.md's ballot input does not accept
-  ZERO yet, which is the implementation's to close.
+  reader's own vote with `Disagree instead` (`Agree instead` over a
+  disagreement) and `Take back your vote`. Changing a vote signs a newer
+  ballot, since the tally reads each person's newest. Taking it back signs
+  the zero-direction ballot, as governance.md specifies; api-spec.md's
+  ballot input does not accept ZERO yet, which is the implementation's to
+  close.
+- **The decision page is where a vote is revised (jakob 2026-09-24).** A
+  card the reader has voted on — their own proposal always — shows a
+  readout, `You agreed` or `You disagreed`, where the two words stood, and
+  the whole card opens the decision page; the details row mirrors it.
+  Cards stay calm.
 - **The count convention — the brief's recommendation, awaiting jakob's
   canvas review.** A card counts the people who agree and never shows
   weight. The tally underneath is weighted (admin 5, moderator 3, member
@@ -6416,9 +6423,11 @@ states, and `RedactedContent` a fourth mark.
   button and `Disagree` the text one beside it, the dialog's pair, since
   the house button has no tonal variant; on a details row the two words
   take a line under the sentence; the card carries no geek arithmetic;
-  the decision page is one tall board, the new picture shown whole under
-  the proposed version; `You agreed` and `You disagreed`, after voting,
-  are stated rather than drawn; the requester's two moments are two
+  the decision page is one tall board; the proposed picture takes the
+  details' 80px disc, the largest the chat's picture is drawn, rather than
+  the post chronicle's full-width picture, because a chat's picture is a
+  disc; the readout stands at the count line's end where the buttons
+  stood, and a voted card is one button whole; the requester's two moments are two
   boards; an approval shows both as a card and as a row; the role sheet's
   rows carry no lines; the invite picker leaves out people already
   invited; names are spelled whole (`Mira Voss`, not `Mira`).

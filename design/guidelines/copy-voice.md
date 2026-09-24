@@ -2069,10 +2069,13 @@ ballot, tally, quorum and weight stay off the screen.
 - The count is the people who agree: `2 of 5 so far`, `3 of 6 so far`. It
   never names a threshold and never promises how many it will take.
 - The two words are `Disagree` and `Agree`, named `Disagree — {the
-  sentence}` and `Agree — {the sentence}` for the ear. Once voted, the slot
-  says `You agreed` or `You disagreed`. On a join request the act is
-  `Approve` alone, named `Approve — Sal Torres asks to join`.
+  sentence}` and `Agree — {the sentence}` for the ear. On a join request
+  the act is `Approve` alone, named `Approve — Sal Torres asks to join`.
 - The card's words are a door, named `{the sentence} — see the decision`.
+- A card the reader has voted on shows a readout, not a button: `You
+  agreed` or `You disagreed` where the two words stood, and the whole card
+  is the door, named `{the sentence}, {count}, You agreed — see the
+  decision`. The reader's own card always reads `You agreed`.
 - Settled, a card becomes one line saying what is now true. Passed: `Tobias
   Lindqvist is now a moderator`, `Kel Moreau was removed`, `The chat is
   now called “Salt prints”`, `Sal Torres's request was approved`, and for
@@ -2094,8 +2097,8 @@ approve` or `Sign and withdraw`.
 **A decision, opened.** Titled `Decision`, back `Back`. The sentence as
 its heading, and under it `Proposed by you on 20 September · open` (`Proposed
 by {name}` for someone else's; `passed on {date}` or `failed on {date}` once
-settled). The sections `If it passes` and `The chat now`, the proposed
-picture named `The proposed picture: …` for the ear. `Votes`, over `3
+settled). The sections `If it passes` and `The chat now`; the proposed
+picture on its card is a door named `Open the proposed picture`. `Votes`, over `3
 agreed · 1 disagreed · 2 haven't voted`; each row the voter, the date they
 voted (`you · 20 September` for the reader's own), and `Agreed` or
 `Disagreed`; under the list `Every vote is a public record. Each person's
@@ -2105,11 +2108,14 @@ half the cast settles it`, spoken in both modes as `By role — admin 5,
 moderator 3, member 1 — 3 for and 3 against, 6 of 14 cast; either side past
 half of the cast settles it`. `Your vote`, over `You agreed when you
 proposed it, on 20 September.`, with `Disagree instead` and `Take back your
-vote`.
+vote`. The change act names the other direction: `Disagree instead` over an
+agreement, `Agree instead` over a disagreement.
 
 **Open decisions, filled.** Each row is the card's sentence over its
-count, with the two words under them at the row's edge. The door is named
-`{sentence}, {count} — see the decision`.
+count, with the two words under them at the row's edge — or, once the
+reader has voted, `You agreed` at the count line's end inside the door. The
+door is named `{sentence}, {count} — see the decision`, with `, You agreed`
+before the dash on a voted row.
 
 **Adding people.** Titled `Add people`, back `Back to chat details`, the
 field `Search people`, the forward action `Next`; under the list `People
