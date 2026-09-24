@@ -167,6 +167,12 @@ const PATHS = {
      the same screen, and `forum` is already the band's chats door. Classic
      filled, verbatim. */
   add_comment: ["M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18zM17 11h-4v4h-2v-4H7V9h4V5h2v4h4v2z"],
+  /* The chat foot's voice note (the chats integration round, post-MVP,
+     2026-09-24): hold to record. Classic filled `mic` (av/mic), verbatim from
+     material-design-icons, the background rect stripped per the set's rule. */
+  mic: [
+    "M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z",
+  ],
   expand_more: ["M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"],
   /* The Saved list's own control (the review-fix round). A filled bookmark is
      the one glyph a reader already reads as "kept", so the row's unsave needs
