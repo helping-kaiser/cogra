@@ -1,5 +1,6 @@
 import React from "react";
 import { MediaAttachment } from "./MediaAttachment.jsx";
+import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
 /* THE PINNED CLIP (readme §13, the reel round) — the top of a video post's
    detail view, and what the stream's squish morph leaves behind: the clip
@@ -17,20 +18,36 @@ import { MediaAttachment } from "./MediaAttachment.jsx";
    the viewer would give it.
 
    The tap on it is the surface's to wire: back into the stream where the reader
-   came from it, and into the fullscreen viewer everywhere else. */
+   came from it, and into the fullscreen viewer everywhere else.
 
-export function PinnedClip({ item, elapsed, duration, progress, playing = true }) {
+   THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24, the pinned clip's veil face):
+   the body veils as one and revealing moves nothing, so a sensitive video post's
+   pinned clip veils IN PLACE rather than demoting into the card below it — the
+   veil sits where the clip always sits. The transport goes with it: under the
+   backlog-103 ruling nothing plays beneath a veil, so the face is the whole
+   surface and its only affordance is the reveal. */
+
+export function PinnedClip({ item, elapsed, duration, progress, playing = true, sensitive }) {
+  const clip = (
+    <MediaAttachment
+      {...item}
+      controls={sensitive ? "none" : "transport"}
+      radius="0px"
+      playing={playing}
+      elapsed={elapsed}
+      duration={duration}
+      progress={progress}
+    />
+  );
   return (
     <div style={{ flex: "none", background: "#000" }}>
-      <MediaAttachment
-        {...item}
-        controls="transport"
-        radius="0px"
-        playing={playing}
-        elapsed={elapsed}
-        duration={duration}
-        progress={progress}
-      />
+      {sensitive ? (
+        <SensitiveVeil kind="media" reason={sensitive.reason} source={sensitive.source} radius="0px">
+          {clip}
+        </SensitiveVeil>
+      ) : (
+        clip
+      )}
     </div>
   );
 }

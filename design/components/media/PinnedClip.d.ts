@@ -9,6 +9,11 @@
  * rung — the full transport — on a black ground, and the tap on it belongs to
  * the surface: back into the stream where the reader came from it, into the
  * fullscreen viewer everywhere else.
+ *
+ * THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video post's
+ * clip veils IN PLACE rather than demoting into the card, transport hidden —
+ * under the backlog-103 ruling nothing plays beneath a veil, so the face is
+ * the whole surface and its only affordance is the reveal.
  */
 import type { MediaAttachmentProps } from "./MediaAttachment";
 
@@ -21,6 +26,8 @@ export interface PinnedClipProps {
   duration?: string;
   /** 0..1 along the timeline. */
   progress?: number;
+  /** Present, the clip veils in place and the transport is not drawn. */
+  sensitive?: { reason?: string; source?: "author" | "platform" };
 }
 
 export declare function PinnedClip(props: PinnedClipProps): JSX.Element;
