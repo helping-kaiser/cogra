@@ -6099,7 +6099,12 @@ painted a frame.
   QuietNote's "it starts on its own first frame" becomes seamless
   rather than approximate. When silent extraction fails, the post
   ships without a still and *Cover · no frames came back*'s neutral
-  tile already says what stands there. No new boards; both rulings
+  tile already says what stands there. The stored still is what
+  READING surfaces are handed — the chosen cover where one was
+  chosen, the taken frame 1 where none was; the COMPOSE WIZARD's
+  own tiles are a different rule and always wear the clip's first
+  frame, the chosen cover riding as the ringed inset only (the
+  video-cover round). No new boards; both rulings
   land as contracts to the implementation session.
 
 ### The compose last-picture ruling — 2026-09-23
