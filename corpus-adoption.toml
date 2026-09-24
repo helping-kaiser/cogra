@@ -80,6 +80,14 @@ schema_version   = [1, 0, 0]
 # "this corpus's own additions" of ARCH sig:linter:adoption-data is an
 # open list, and stating the exclusions in their own section keeps
 # them out of Omega, where they could only appear as owner-less rules.
+#
+# THE BASE SET IS WHAT GIT TRACKS (crates/cogra-linter/docs/design.md,
+# dec:lint:tracked-carrier): the carrier is `git ls-files` at the root,
+# cut by the rows below, plus the optional roots of [partition], which
+# are walked on disk. An untracked file is outside the carrier with no
+# row naming it, so the rows below that name trees git never tracks
+# (target/, node_modules/, the worktrees, per-module build/) reach
+# nothing and stand as records of what the carrier excludes.
 ####################################################################
 
 [carrier]
@@ -490,13 +498,16 @@ becoming an empty carrier, and optional does not touch that case.
 When the trees are present they are fully checked: LBL
 ansatz:labels:unchecked-locals expressly REJECTS exempting the
 working notes from resolution.
-THE ROWS ALSO NAME WHERE THE WALK MAY CROSS A LINK. optional = true
-is the only place the carrier walk follows a link out of the tree
-(crates/cogra-linter/src/carrier.rs, "The link policy"): these two
+THE ROWS ALSO NAME WHAT IS WALKED ON DISK, AND WHERE A LINK IS
+CROSSED. The carrier is the tracked set (design.md,
+dec:lint:tracked-carrier), and these two roots are gitignored, so an
+optional root is walked on disk rather than listed by git. optional =
+true is also the only place the carrier walk follows a link out of the
+tree (crates/cogra-linter/src/carrier.rs, "The link policy"): these two
 roots are links wherever they exist, and no other name in the corpus
 is allowed to resolve somewhere else. Adding optional = true to a row
-therefore says two things — an absent root is legal, and a link there
-is crossed — and both are meant.
+therefore says three things — an absent root is legal, the root is
+walked, and a link there is crossed — and all three are meant.
 """
 
 # --- 20: the residual rule that makes Omega total ---------------

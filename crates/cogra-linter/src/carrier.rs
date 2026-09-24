@@ -10,19 +10,35 @@
 //! package and never its module, so refactoring inside a package moves
 //! nothing.
 //!
-//! The traversal is a recursive [`std::fs::read_dir`] with sorted entries.
-//! A directory-walking crate was refused by the design: the carrier is
-//! defined by literal path prefixes, and a walker would bring glob
-//! semantics, ignore-file resolution, and an ordering and symlink policy
-//! this walk has to fix for itself anyway (´dec:lint:refused-dependencies´).
+//! # The corpus is what version control tracks
+//!
+//! The base set is `git ls-files`: the files the repository's index holds,
+//! minus the carrier's literal exclusions (´dec:lint:tracked-carrier´). An
+//! untracked file — build output, a local report, a draft nobody added —
+//! is not a member of the carrier rather than a member some exclusion row
+//! had to excuse, so the verdict is a property of the commit and not of
+//! whoever ran the check. A root whose tracked set cannot be taken is an
+//! [`UNREADABLE_TREE`] diagnostic carrying git's own account of why, never
+//! an empty carrier.
+//!
+//! The one exception is the roots the adoption data marks `optional`: the
+//! working-note trees are gitignored by design and checked all the same,
+//! so each is walked on disk, a recursive [`std::fs::read_dir`] with sorted
+//! entries. A directory-walking crate was refused by the design: a walker
+//! would bring glob semantics, ignore-file resolution, and an ordering and
+//! symlink policy this walk has to fix for itself anyway
+//! (´dec:lint:refused-dependencies´).
 //!
 //! # The link policy
 //!
-//! The walk crosses a link — POSIX symbolic link or Windows junction, the
-//! same reparse point to `file_type` — only where it stands exactly at a
-//! root the adoption data marks `optional`. This corpus configures two,
-//! the working-note trees, and they are links on every machine that has
-//! them; a link anywhere else contributes neither a source nor a descent.
+//! A link — POSIX symbolic link or Windows junction, the same reparse point
+//! to `file_type` — is crossed only where it stands exactly at a root the
+//! adoption data marks `optional`. This corpus configures two, the
+//! working-note trees, and they are links on every machine that has them.
+//! A link anywhere else contributes neither a source nor a descent: a
+//! tracked one is recognized by the index's own mode rather than by the
+//! filesystem, so a checkout that materialized it as a plain file changes
+//! nothing, and one met inside an optional tree is not followed.
 //!
 //! The rule is stated rather than emergent because the alternative is not
 //! a policy at all: following whatever a name resolves to means the corpus
@@ -37,21 +53,23 @@
 //! only thing an owner, an exclusion, or a finding is ever matched against
 //! — is the corpus's own.
 //!
-//! A broken link is still resolved far enough to report it: a dangling
-//! entry is an [`UNREADABLE_SOURCE`] diagnostic wherever it sits, because
-//! refusing to follow a link is a decision and failing to read one is a
-//! defect, and the two must not look alike.
+//! A broken link on disk is still resolved far enough to report it: a
+//! dangling entry of a walked tree is an [`UNREADABLE_SOURCE`] diagnostic,
+//! because refusing to follow a link is a decision and failing to read one
+//! is a defect, and the two must not look alike.
 
 use std::collections::HashSet;
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 use crate::adopt::{Adoption, Language, OwnerId, relative_str};
 use crate::diag::{ByteSpan, Diagnostic, Location, RuleId, Severity};
 
-/// A tree that could not be read. The subtree is skipped and the walk goes
-/// on: an unreadable tree is a shorter source list beside a diagnostic,
-/// never an empty carrier.
+/// A tree that could not be read, or a root whose tracked set git would not
+/// list. The tree is skipped and the walk goes on: an unreadable tree is a
+/// shorter source list beside a diagnostic, never an empty carrier.
 pub const UNREADABLE_TREE: RuleId = RuleId::new("carrier-unreadable-tree");
 
 /// A file inside the carrier that could not be read.
@@ -184,14 +202,35 @@ impl<'a> Walk<'a> {
     /// the sources *and* the failures, and never trades one for the other:
     /// an unreadable tree is a reported diagnostic beside a shorter source
     /// list, which is the case the disciplines forbid collapsing into an
-    /// empty carrier. An absent optional root contributes neither a source
-    /// nor a diagnostic.
+    /// empty carrier. A root git will not list is such a tree, and so is
+    /// a tracked file that is no longer on disk. An absent optional root
+    /// contributes neither a source nor a diagnostic.
     pub fn sources(&self) -> Result<Vec<SourceFile>, WalkOutcome> {
         let mut sources = Vec::new();
         let mut failures = Vec::new();
+        self.tracked(&mut sources, &mut failures);
         let mut entered = HashSet::new();
-        self.descend(&self.root, false, &mut sources, &mut failures, &mut entered);
+        for rule in self
+            .adoption
+            .partition
+            .rules
+            .iter()
+            .filter(|rule| rule.optional)
+        {
+            let path = self.root.join(rule.path.as_str().trim_end_matches('/'));
+            match fs::symlink_metadata(&path) {
+                Err(absent) if absent.kind() == io::ErrorKind::NotFound => {}
+                found => self.visit(
+                    &path,
+                    found.map(|metadata| metadata.file_type()),
+                    &mut sources,
+                    &mut failures,
+                    &mut entered,
+                ),
+            }
+        }
         sources.sort_by_key(|one| relative_str(&one.path));
+        sources.dedup_by(|one, other| one.path == other.path);
         failures.sort();
         if failures.is_empty() {
             Ok(sources)
@@ -200,29 +239,101 @@ impl<'a> Walk<'a> {
         }
     }
 
-    /// One directory, its entries in path order.
+    /// Every tracked file of the root that the carrier keeps.
+    ///
+    /// A tracked link or submodule is recognized by its index mode and
+    /// contributes nothing (the link policy in the module header). Only a
+    /// source some reader consumes is opened, exactly as in a walked tree,
+    /// so a tracked file that is gone from disk is reported where it is
+    /// read and carried empty where nothing would have read it.
+    fn tracked(&self, sources: &mut Vec<SourceFile>, failures: &mut Vec<Diagnostic>) {
+        let listed = match tracked_entries(&self.root) {
+            Ok(listed) => listed,
+            Err(problem) => {
+                failures.push(self.failure(UNREADABLE_TREE, Path::new(""), &problem));
+                return;
+            }
+        };
+        for entry in listed {
+            let relative = match entry {
+                Tracked::Link => continue,
+                Tracked::File(relative) => relative,
+                Tracked::NotText(lossy) => {
+                    failures.push(self.failure(
+                        UNREADABLE_SOURCE,
+                        Path::new(&lossy),
+                        "the tracked path is not UTF-8, so no path rule can decide it",
+                    ));
+                    continue;
+                }
+            };
+            if self.adoption.carrier.excludes(&relative) {
+                continue;
+            }
+            self.file(&self.root.join(&relative), &relative, sources, failures);
+        }
+    }
+
+    /// One entry of a walked tree, whose kind the caller has already asked.
+    ///
+    /// `kind` is the entry's own `file_type`, which decides what it is, and
+    /// only a link is resolved further — measured on this corpus, an extra
+    /// `metadata` per entry more than doubled the walk.
+    ///
+    /// The policy of the module header is one arm of the match below — a
+    /// resolved link that does not stand at a configured optional root ends
+    /// its entry there — and it sits ahead of the directory arm so that
+    /// refusing to cross reads as the decision it is. A link that does not
+    /// resolve at all takes the `Err` arm instead and is reported, because a
+    /// broken link is a defect and an uncrossed one is not.
+    fn visit(
+        &self,
+        path: &Path,
+        kind: io::Result<fs::FileType>,
+        sources: &mut Vec<SourceFile>,
+        failures: &mut Vec<Diagnostic>,
+        entered: &mut HashSet<PathBuf>,
+    ) {
+        let Ok(relative) = path.strip_prefix(&self.root) else {
+            return;
+        };
+        if self.adoption.carrier.excludes(relative) {
+            return;
+        }
+        let kind = kind.and_then(|kind| {
+            if kind.is_symlink() {
+                fs::metadata(path).map(|resolved| (resolved.file_type(), true))
+            } else {
+                Ok((kind, false))
+            }
+        });
+        match kind {
+            Ok((_, true)) if !self.adoption.partition.is_optional_root(relative) => {}
+            Ok((kind, linked)) if kind.is_dir() => {
+                self.descend(path, linked, sources, failures, entered);
+            }
+            Ok(_) => self.file(path, relative, sources, failures),
+            Err(problem) => failures.push(self.failure(
+                UNREADABLE_SOURCE,
+                relative,
+                &format!("cannot read the entry: {problem}"),
+            )),
+        }
+    }
+
+    /// One directory of a walked tree, its entries in path order.
     ///
     /// `linked` says the walk arrived here through a symbolic link, and it
     /// is the only case that pays for a canonical path: a plain tree
     /// reaches every directory once, and the two configured roots of this
     /// corpus are links, so the guard against a link cycle costs one
-    /// resolution per link rather than one per directory. The entry's own
-    /// `file_type` decides what it is, and only a link is resolved further
-    /// — measured on this corpus, an extra `metadata` per entry more than
-    /// doubled the walk.
+    /// resolution per link rather than one per directory.
     ///
     /// With the link policy in the module header, the only links the walk
     /// crosses are the configured roots themselves, so the cycle the guard
     /// answers is the narrow one that survives it: two roots resolving to
     /// one tree, which is walked under the first of their names and not
     /// again under the second.
-    ///
-    /// The policy is one arm of the match below — a resolved link that does
-    /// not stand at a configured optional root ends its entry there — and
-    /// it sits ahead of the directory arm so that refusing to cross reads
-    /// as the decision it is. A link that does not resolve at all takes the
-    /// `Err` arm instead and is reported, because a broken link is a defect
-    /// and an uncrossed one is not.
     fn descend(
         &self,
         directory: &Path,
@@ -242,9 +353,10 @@ impl<'a> Walk<'a> {
                 .filter_map(Result::ok)
                 .collect::<Vec<fs::DirEntry>>(),
             Err(problem) => {
+                let at = directory.strip_prefix(&self.root).unwrap_or(directory);
                 failures.push(self.failure(
                     UNREADABLE_TREE,
-                    directory,
+                    at,
                     &format!("cannot read the tree: {problem}"),
                 ));
                 return;
@@ -252,42 +364,29 @@ impl<'a> Walk<'a> {
         };
         entries.sort_by_key(fs::DirEntry::path);
         for entry in entries {
-            let path = entry.path();
-            let Ok(relative) = path.strip_prefix(&self.root) else {
-                continue;
-            };
-            if self.adoption.carrier.excludes(relative) {
-                continue;
-            }
-            let kind = entry.file_type().and_then(|kind| {
-                if kind.is_symlink() {
-                    fs::metadata(&path).map(|resolved| (resolved.file_type(), true))
-                } else {
-                    Ok((kind, false))
-                }
-            });
-            match kind {
-                Ok((_, true)) if !self.adoption.partition.is_optional_root(relative) => continue,
-                Ok((kind, linked)) if kind.is_dir() => {
-                    self.descend(&path, linked, sources, failures, entered);
-                }
-                Ok(_) if !self.is_read(relative) => {
-                    sources.push(self.source(relative, Vec::new()));
-                }
-                Ok(_) => match fs::read(&path) {
-                    Ok(bytes) => sources.push(self.source(relative, bytes)),
-                    Err(problem) => failures.push(self.failure(
-                        UNREADABLE_SOURCE,
-                        relative,
-                        &format!("cannot read the source: {problem}"),
-                    )),
-                },
-                Err(problem) => failures.push(self.failure(
-                    UNREADABLE_SOURCE,
-                    relative,
-                    &format!("cannot read the entry: {problem}"),
-                )),
-            }
+            self.visit(&entry.path(), entry.file_type(), sources, failures, entered);
+        }
+    }
+
+    /// One file the carrier keeps, read only where some reader consumes it.
+    fn file(
+        &self,
+        path: &Path,
+        relative: &Path,
+        sources: &mut Vec<SourceFile>,
+        failures: &mut Vec<Diagnostic>,
+    ) {
+        if !self.is_read(relative) {
+            sources.push(self.source(relative, Vec::new()));
+            return;
+        }
+        match fs::read(path) {
+            Ok(bytes) => sources.push(self.source(relative, bytes)),
+            Err(problem) => failures.push(self.failure(
+                UNREADABLE_SOURCE,
+                relative,
+                &format!("cannot read the source: {problem}"),
+            )),
         }
     }
 
@@ -326,5 +425,112 @@ impl<'a> Walk<'a> {
             related: Vec::new(),
             message: String::from(message),
         }
+    }
+}
+
+/// One entry of the index, as the carrier needs it.
+#[derive(Debug, PartialEq, Eq)]
+enum Tracked {
+    /// A regular file, its path relative to the root and `/`-separated.
+    File(PathBuf),
+    /// A symbolic link or a submodule, which the link policy leaves out.
+    Link,
+    /// A path whose bytes are not UTF-8, spelled lossily for the report.
+    NotText(String),
+}
+
+/// The index mode of a symbolic link.
+const MODE_LINK: &[u8] = b"120000";
+
+/// The index mode of a submodule, a commit rather than a file.
+const MODE_GITLINK: &[u8] = b"160000";
+
+/// The index entries of the repository at `root`, in git's order.
+///
+/// Provenance: transplanted from the L1 author's orchestration-linter 0.1.0
+/// (source archive `orchestration-linter-0.1.0-416b136`, commit 416b136,
+/// `packages/linter/src/plan.rs`, `git_tracked`), AGPL-3.0-only like this
+/// crate. Kept: `git -C <root> ls-files -z`, a NUL-split of stdout, and a
+/// failed or unstartable listing reported as `git ls-files: <git's own
+/// account>` rather than paraphrased. Adapted: `--stage` is added so the
+/// index mode says which entries are links and submodules without a
+/// filesystem query per file, and the error is a message for the caller's
+/// located diagnostic instead of the author's finding type.
+///
+/// `ls-files` is one of git's interrogation (plumbing) commands, and `-z`
+/// is its documented script form: NUL-terminated records with no quoting,
+/// each `<mode> SP <object> SP <stage> TAB <path>` under `--stage`. An
+/// unmerged path is listed once per stage, and the caller's sort-and-dedup
+/// by path takes it once.
+fn tracked_entries(root: &Path) -> Result<Vec<Tracked>, String> {
+    let output = match Command::new("git")
+        .arg("-C")
+        .arg(root)
+        .args(["ls-files", "-z", "--stage"])
+        .output()
+    {
+        Ok(output) if output.status.success() => output.stdout,
+        Ok(output) => {
+            return Err(format!(
+                "git ls-files: {}",
+                String::from_utf8_lossy(&output.stderr).trim()
+            ));
+        }
+        Err(error) => return Err(format!("git ls-files: {error}")),
+    };
+    Ok(output
+        .split(|&byte| byte == 0)
+        .filter(|record| !record.is_empty())
+        .filter_map(tracked_entry)
+        .collect())
+}
+
+/// One `--stage` record, or `None` for a record that is not one.
+fn tracked_entry(record: &[u8]) -> Option<Tracked> {
+    let tab = record.iter().position(|&byte| byte == b'\t')?;
+    let (info, path) = (&record[..tab], &record[tab + 1..]);
+    let mode = info.split(|&byte| byte == b' ').next()?;
+    if mode == MODE_LINK || mode == MODE_GITLINK {
+        return Some(Tracked::Link);
+    }
+    Some(match std::str::from_utf8(path) {
+        Ok(text) => Tracked::File(PathBuf::from(text)),
+        Err(_) => Tracked::NotText(String::from_utf8_lossy(path).into_owned()),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Tracked, tracked_entry};
+    use std::path::PathBuf;
+
+    /// The mode alone says a link or a submodule, and the path after the tab
+    /// may hold the spaces the mode's own fields are separated by.
+    ///
+    /// An index record is read by its mode and by the whole path after its tab.
+    /// ´claim:walk:an-index-record-is-read-by-mode-and-path´
+    #[test]
+    fn a_stage_record_reads_as_its_mode_and_path() {
+        assert_eq!(
+            tracked_entry(b"100644 0123abcd 0\tdocs/a note.md"),
+            Some(Tracked::File(PathBuf::from("docs/a note.md")))
+        );
+        assert_eq!(
+            tracked_entry(b"100755 0123abcd 0\tandroid/gradlew"),
+            Some(Tracked::File(PathBuf::from("android/gradlew")))
+        );
+        assert_eq!(
+            tracked_entry(b"120000 0123abcd 0\tlinked"),
+            Some(Tracked::Link)
+        );
+        assert_eq!(
+            tracked_entry(b"160000 0123abcd 0\tvendor/sub"),
+            Some(Tracked::Link)
+        );
+        assert_eq!(
+            tracked_entry(b"100644 0123abcd 0\tod\xffd"),
+            Some(Tracked::NotText(String::from("od\u{fffd}d")))
+        );
+        assert_eq!(tracked_entry(b"no tab here"), None);
     }
 }

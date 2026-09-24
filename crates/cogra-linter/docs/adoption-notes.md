@@ -741,6 +741,21 @@ with — verified empirically, not only by construction, against the
 pre-fix code on an identical tree (2265 sources either way; see
 Measurements).
 
+**R29 — The carrier is the tracked corpus.** The carrier's base set is
+`git ls-files` at the root, cut by `[carrier]`'s rows; the two optional
+working-note roots, gitignored by design, are walked on disk
+(``dec:lint:tracked-carrier``). This closes the class R28 closed one
+instance of: local Gradle and detekt runs left untracked output —
+per-module `build/` reports, gradle caches — for the check to trip on
+(``carrier-unreadable-tree`` beside a gradle build), and each fix was a
+further row naming a build tool's output. An untracked file is now
+outside the carrier with no row, and the verdict is the commit's
+rather than the checkout's. The cost is stated: a new file is not
+checked until it is `git add`ed, which CI never notices and a local run
+can. The listing is transplanted from the L1 author's linter
+(orchestration-linter 0.1.0, commit 416b136), with provenance at the
+function.
+
 ---
 
 ## Measurements
