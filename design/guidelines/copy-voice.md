@@ -958,11 +958,11 @@ you change it back. Both choices stay on this device.` *Stays on this
 device* is the theme group's own spelling for a client-local choice,
 said once under the group rather than inside either row.
 
-## Awaiting blessing — the geek round's review
+## The opinion pad and its surroundings
 
 The lines the review round wrote (jakob's rulings, 2026-09-11 evening).
 The naming law above is part of the same ruling and is written where it
-belongs; these are the new strings.
+belongs.
 
 **The gesture, said in the settings group.** `Giving an opinion` is the
 group, `A tap opens it; drift to where it feels right.` the pad's hint, and
@@ -1029,11 +1029,11 @@ round, named here so the review pass has them in one place: `Un-tag`,
 the edit body's `Withdrawn: #coastroad`, and the acts card's
 `Tags withdrawn` row label.
 
-## Awaiting blessing — the private-viewer-state round
+## Saved, History and hiding
 
 Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
 `HistoryEmpty`, `SettingsHidden`, the three content menus and the
-settings page, and up for review in the same pass.
+settings page.
 
 **The reader's word is save** (jakob's ruling). The surface it fills is
 `Saved`, and the row in your own profile's ⋮ is that same word, so the
@@ -1076,11 +1076,11 @@ and each row carries `Unhide` and the moment of the hiding in the ages
 vocabulary (`Hidden 3d`, `Hidden 12.08.2026`) — the removal mark's own
 precedent: the word, then the ladder or the date.
 
-## Awaiting blessing — the caps-affordance round
+## Caps and their refusals
 
-Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`,
-and up for review in the same pass. Two families: the count a capped
-field shows near its cap, and the refusal it shows past it.
+Drawn on `ComposeDetailsCaps`, `ComposeWordsCaps` and `TagPickerRefused`.
+Two families: the count a capped field shows near its cap, and the
+refusal it shows past it.
 
 **The count is two words, and the second one is the reader's side.**
 `6 left` while there is room, `7 over` past it — never `94/100`, which
@@ -1868,12 +1868,12 @@ to be opened.
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
 
-## Awaiting blessing — the search-scope line
+## The search-scope line
 
-One string from backlog item 105's ruling (readme §13, the indirect
-kinds are scope-served): with Messages, Comments or Offers selected
-and no scope in the query, the results region carries one quiet line
-where results would stand — the way, not an apology:
+From backlog item 105's ruling (readme §13, the indirect kinds are
+scope-served): with Messages, Comments or Offers selected and no
+scope in the query, the results region carries one quiet line where
+results would stand — the way, not an apology:
 
 - `Found through people and tags — start with @handle or #tag.`
 
