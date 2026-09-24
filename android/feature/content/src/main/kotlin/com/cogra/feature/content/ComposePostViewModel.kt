@@ -476,7 +476,9 @@ class ComposePostViewModel @Inject constructor(
                         // is: an edit that does not re-state the gallery
                         // clears it, which would replace a media post's
                         // pictures with whatever the form's words hold.
-                        attachments = s.attachments.map { AttachmentClaim(it.id, it.altText, it.cover?.id) },
+                        attachments = s.attachments.map {
+                            AttachmentClaim(it.id, it.altText, it.cover?.id, it.coverTaken)
+                        },
                         // The record is the post's complete content
                         // state, so the mark it carries is the mark that
                         // stands — whether the author moved it on CW-46's

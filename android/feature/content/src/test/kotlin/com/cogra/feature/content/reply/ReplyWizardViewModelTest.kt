@@ -501,6 +501,10 @@ class ReplyWizardViewModelTest {
         assertThat(video.firstFrameAsks).isEqualTo(1)
         assertThat(media.order).containsExactly("still", "clip").inOrder()
         assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
+        // Declined or skipped, never chosen: the clip's own first frame
+        // stands in silently, which is exactly what `coverTaken` says
+        // (PR #874).
+        assertThat(content.lastAttachments.single().coverTaken).isTrue()
     }
 
     /**
@@ -556,6 +560,8 @@ class ReplyWizardViewModelTest {
         assertThat(vm.state.value.coverMediaId).isNotNull()
         assertThat(content.lastAttachments.single().coverMediaId)
             .isEqualTo(vm.state.value.coverMediaId)
+        // The author's own picture, never mistaken for a taken frame.
+        assertThat(content.lastAttachments.single().coverTaken).isFalse()
     }
 
     /**
@@ -664,6 +670,10 @@ class ReplyWizardViewModelTest {
         assertThat(video.firstFrameAsks).isEqualTo(1)
         assertThat(media.order).containsExactly("still", "clip").inOrder()
         assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
+        // Declined or skipped, never chosen: the clip's own first frame
+        // stands in silently, which is exactly what `coverTaken` says
+        // (PR #874).
+        assertThat(content.lastAttachments.single().coverTaken).isTrue()
     }
 
     @Test

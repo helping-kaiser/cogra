@@ -148,7 +148,7 @@ class MediaUploadTest {
         {"__typename":"MediaAttachment","id":"v1","url":"https://media/v1","altText":null,
          "status":"NORMAL","mimeType":"video/mp4",
          "options":{"__typename":"MediaOptions","aspectRatio":"9:16","durationMs":1000},
-         "coverMedia":null,"state":"$state","failureReason":${failureReason?.let { "\"$it\"" }}}
+         "coverMedia":null,"coverTaken":false,"state":"$state","failureReason":${failureReason?.let { "\"$it\"" }}}
     """.trimIndent()
 
     /** A clip of [bytes] bytes on disk, and the repository that sends it. */
