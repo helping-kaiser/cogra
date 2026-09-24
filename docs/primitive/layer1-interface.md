@@ -46,15 +46,20 @@ anything not in the feedback closure below is a Layer 2's to reimplement
 
 ## 1 The layer model
 
-- **The burn primitive** (beneath the stack rather than a layer of it) — the frame source. Exports exactly one
-  object, the burn record, and by declining to price it guarantees its
-  neutrality. Knows nothing of clusters, terminal read-sites, or guild
-  policy. (`subsec:introduction:two-layers-derived`)
-- **Layer 1 (Peer Network)** — the binding. Reads the imported frame as the
-  network's source, welds it onto a public directed graph $G = (V, E)$ to
-  produce the relative-standing field $\alpha_i$
-  (`def:epoch:final-standing`), and publishes the closure quantities
-  admission reads. The public-auditability layer.
+- **The burn primitive** — the frame source. Not a layer of the stack but
+  what lies beneath it: a non-repayable, publicly verifiable, costly action
+  together with the record it leaves (`def:comparator:burn-primitive`). Any
+  system satisfying requirements R1–R11 (§1.1) is a *realization*; the
+  network reads a realization through exactly four interface objects and
+  nothing else. The burn value map is neutral because the primitive records
+  a destroyed magnitude and declines to price it. Knows nothing of clusters,
+  terminal read-sites, or guild policy.
+  (`subsec:introduction:two-layers-derived`)
+- **Layer 1 (Peer Network)** — the root of the stack, and the binding.
+  Reads the imported frame as the network's source, welds it onto a public
+  directed graph $G = (V, E)$ to produce the relative-standing field
+  $\alpha_i$ (`def:epoch:final-standing`), and publishes the closure
+  quantities admission reads. The public-auditability layer.
 - **Terminal complement (Layer 2: guilds / consumers / services)** —
   read-sites. Downstream services consume $\alpha_i$, title, and other
   published values at terminal sites. The closure edition names the terminal
@@ -62,10 +67,10 @@ anything not in the feedback closure below is a Layer 2's to reimplement
   grant (`post:transport:guild-grant`); it specifies none of its mechanisms.
   Identity association and payload carriage are terminal.
 
-| Layer | Comparator role | Owns / prices |
+| Part | Comparator role | Owns / prices |
 |---|---|---|
 | The burn primitive (beneath Layer 1) | frame source — supplies the neutral exogenous scalar | owns nothing of the graph (`rem:comparator:neutrality-from-silence`) |
-| Layer 1 (Network) | the binding — welds the frame onto $G$, publishes the standing field, the ledger, and every closure constant | owns the public infrastructure; earns only the realization's fee |
+| Layer 1 (Network) | the binding — welds the frame onto $G$, publishes the standing field, the ledger, and every closure constant | owns the public infrastructure; prices nothing of its own |
 | Terminal complement | read-sites — downstream services may consume $\alpha_i$, title, and other published values at terminal sites | named only in `tbl:symbols:boundary`; mechanisms not specified in the closure edition |
 
 (`tbl:introduction:layer-roles`)
@@ -74,6 +79,77 @@ The map from an actor to the *person* behind it is never represented at
 Layer 1: it has no feedback read-site, hence terminal. Severing it changes
 no $\alpha_i$, no $W_{\text{end}}^{(k)}(u \to i)$, no title, and no gate.
 (`rem:comparator:identity-is-layer-2`)
+
+### 1.1 The burn interface and requirements R1–R11
+
+**The Burn Interface (`def:comparator:burn-interface`).** A realization
+exposes exactly four objects to the network, and the network reads nothing
+else of it:
+
+- **(B) burn value** — the map $B : \mathbb{A} \to \mathbb{R}_{\ge 0}$
+  recording, at each address, the magnitude destroyed there; $B_i$ is its
+  fiber at the address the network binds to actor $i$ (§14.1).
+- **($\mathbb{A}$) address space** — the opaque index set of that map. An
+  address is a name the primitive can write against; the primitive makes no
+  claim that it is a person, a holder, or an identity.
+- **($B_{\max}$) capacity bound** — the published bound on aggregate burn
+  value attainable before the realization opens to external acquisition
+  (`def:comparator:bootstrap-capacity`).
+- **($c_{\mathrm{u}}$) unit-cost projection** — the published cost, in the
+  external denomination the realization prices in, of acquiring one unit of
+  burn value at that realization's own terms.
+
+The first two are the frame; the last two are constants the network reads
+and never re-derives. Everything else a realization carries — an economy,
+instruments, prices, phases, an operator — is its own: no such quantity
+enters a network published-quantity formula
+(`rem:comparator:surface-readings`).
+
+**Burn Primitive Requirements (`post:comparator:burn-primitive`).** A
+system failing any of these is not a realization; a system meeting all of
+them is one. R1–R5 are the frame requirements; R6–R11 are what the
+network's machinery additionally reads.
+
+- **R1 exogenous origin** — $B$ is not derived from $G$; no network
+  operation writes it.
+- **R2 neutrality** — the primitive records a destroyed magnitude and
+  confers no claim at its own level: no value, no redemption, no
+  entitlement; it declines to price the record.
+- **R3 non-transferability** — no operation moves, merges, reassigns, or
+  pools burn value across addresses.
+- **R4 settlement-pinned monotone valuation** — (a) a value is pinned at a
+  settlement event; (b) successive pinned values at an address are
+  non-decreasing; (c) between settlements the published value never exceeds
+  the value the next settlement pins; (d) a published value is revisable
+  only downward, only as far as the last pinned value, and only when the
+  ordering of events at a settlement boundary is itself revised; (e) the
+  realization publishes a **settlement depth** beyond which no ordering is
+  revised, so a value sampled at or below it is order-free and equals its
+  pinned value.
+- **R5 bindability** — addresses are opaque, permanent, and carry no
+  identity claim; the network's map from actors into $\mathbb{A}$ is the
+  frame binding (`def:comparator:frame-binding`).
+- **R6 non-negativity** — every value of $B$ lies on the single ordered
+  line $\mathbb{R}_{\ge 0}$.
+- **R7 auditability by provenance** — every unit of $B$ is anchored to a
+  genuine, irrecoverable destruction and capped, per recording event, by the
+  destruction it rides on; a record not backed by destruction contributes
+  zero; the realization publishes the quantities a reader needs to
+  recompute this.
+- **R8 instantaneous costliness, append-only record** — what a burn
+  destroys is priced at the instant it occurs; its record is never removed;
+  no operation maps a record back to what was destroyed.
+- **R9 bootstrap capacity** — the realization publishes $B_{\max}$.
+- **R10 unit-cost projection** — the realization publishes $c_{\mathrm{u}}$,
+  so a burn-value quantity reads as an outlay by multiplication;
+  necessarily $c_{\mathrm{u}} \ge 1$.
+- **R11 operator bound** — if a realization has an operator that accrues
+  burn value from operating it, the realization bounds that operator's burn
+  value by a result it proves and publishes; the network reads the bound as
+  an interface constant and re-proves nothing.
+
+R1–R11 name the burn-primitive requirements only. The safety-threshold
+premises are X1–X7 (§11.8).
 
 ---
 
