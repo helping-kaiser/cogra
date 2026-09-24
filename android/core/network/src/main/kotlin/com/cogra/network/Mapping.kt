@@ -239,6 +239,7 @@ internal fun MediaFields.toDomain(): MediaAssetView = MediaAssetView(
     mimeType = mimeType,
     durationMs = options.durationMs,
     cover = coverMedia?.toDomain(),
+    coverTaken = coverTaken,
 )
 
 /**

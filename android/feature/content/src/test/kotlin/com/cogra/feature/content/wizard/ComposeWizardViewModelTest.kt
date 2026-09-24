@@ -1184,6 +1184,9 @@ class ComposeWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
+        // Declined, not chosen: the clip's own first frame stands in
+        // silently, which is exactly what `coverTaken` says (PR #874).
+        assertThat(content.lastAttachments.single().coverTaken).isTrue()
     }
 
     /**
@@ -1261,6 +1264,8 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.coverMediaId).isNotNull()
         assertThat(content.lastAttachments.single().coverMediaId)
             .isEqualTo(vm.state.value.coverMediaId)
+        // The author's own picture, never mistaken for a taken frame.
+        assertThat(content.lastAttachments.single().coverTaken).isFalse()
     }
 
     @Test
@@ -1497,6 +1502,9 @@ class ComposeWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
+        // Skipped, not chosen: the door was never opened, so the frame
+        // the step took stands in silently (PR #874).
+        assertThat(content.lastAttachments.single().coverTaken).isTrue()
     }
 
     /**
@@ -1592,6 +1600,9 @@ class ComposeWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m2")
+        // Chosen through the door: the stored first frame it replaced is
+        // not what rides on the wire (PR #874).
+        assertThat(content.lastAttachments.single().coverTaken).isFalse()
     }
 
     /**

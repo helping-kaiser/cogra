@@ -330,7 +330,8 @@ class ComposePostViewModelTest {
      */
     @Test
     fun anEditCarriesTheClipsCoverThrough() = runTest(dispatcher) {
-        content.loadedAttachments = listOf(clip("m1", cover = picture("cover-1", null)))
+        content.loadedAttachments =
+            listOf(clip("m1", cover = picture("cover-1", null), coverTaken = true))
         val vm = viewModel()
         vm.start("post-9")
         dispatcher.scheduler.advanceUntilIdle()
@@ -340,7 +341,29 @@ class ComposePostViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.saved).isTrue()
-        assertThat(content.lastEditAttachments).containsExactly(AttachmentClaim("m1", null, "cover-1"))
+        assertThat(content.lastEditAttachments)
+            .containsExactly(AttachmentClaim("m1", null, "cover-1", coverTaken = true))
+    }
+
+    /**
+     * A chosen cover's `coverTaken` is the same kind of state as a taken
+     * one's — carried through, never flipped by the round trip (PR #874).
+     */
+    @Test
+    fun anEditCarriesAChosenCoversNotTakenFlagThrough() = runTest(dispatcher) {
+        content.loadedAttachments =
+            listOf(clip("m1", cover = picture("cover-1", null), coverTaken = false))
+        val vm = viewModel()
+        vm.start("post-9")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTitleChange("A new title")
+        vm.onSubmit()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.saved).isTrue()
+        assertThat(content.lastEditAttachments)
+            .containsExactly(AttachmentClaim("m1", null, "cover-1", coverTaken = false))
     }
 
     /** A clip with no cover chosen re-states none — nothing to carry through. */
@@ -423,7 +446,7 @@ class ComposePostViewModelTest {
         mimeType = "image/webp",
     )
 
-    private fun clip(id: String, cover: MediaAssetView?) = MediaAssetView(
+    private fun clip(id: String, cover: MediaAssetView?, coverTaken: Boolean = false) = MediaAssetView(
         id = id,
         url = "https://media.example/$id",
         altText = null,
@@ -432,6 +455,7 @@ class ComposePostViewModelTest {
         mimeType = "video/mp4",
         durationMs = 12_000,
         cover = cover,
+        coverTaken = coverTaken,
     )
 
     @Test
