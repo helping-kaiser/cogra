@@ -65,6 +65,12 @@ export interface StanceControlProps {
    * pass-through to `StanceStanding`.
    */
   onOpenHistory?: () => void;
+  /**
+   * First-connection mode: the control stands on a seal signing the reader's
+   * first record toward the target, handed the staged default as its value.
+   * Nothing to walk back yet, so the pad omits the walk-away. Off by default.
+   */
+  firstConnection?: boolean;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;

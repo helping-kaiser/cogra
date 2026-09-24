@@ -1329,9 +1329,9 @@ change-histories round*; `copy-voice.md` carries the words).
    readouts open the history: a row's value, and the pad's `Current
    opinion` line.
 
-What is still owed: the chat container's own chronicle, which defers
-to the chats round; the comment master carries no redaction state, so
-a removed comment version has no mark to draw yet.
+The chat container's own chronicle is drawn: the chat details round's
+`ChatHistory` (post-MVP). What is still owed: the comment master carries
+no redaction state, so a removed comment version has no mark to draw yet.
 
 ### 35 · Video playback — decisions the transition fix surfaced · *design* · **ruled**
 
