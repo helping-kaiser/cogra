@@ -190,7 +190,7 @@ internal fun coverPreviewRatio(sourceRatio: Float?): Float =
  * stays a door over it (`ComposeDetailsVideo`).
  */
 internal fun ComposeWizardState.coverModel(): Any? = when (val choice = coverChoice) {
-    CoverChoice.None, CoverChoice.FirstFrame -> null
+    CoverChoice.None, CoverChoice.FirstFrame, CoverChoice.NoStill -> null
     is CoverChoice.Frame -> coverFrames.getOrNull(choice.index)?.picture?.bytes
     is CoverChoice.Picture -> choice.uri
 }
@@ -242,7 +242,7 @@ internal fun CoverDoor(onOpen: () -> Unit, testTag: String) {
  */
 internal fun CoverChoice.toPick(): CoverPick = when (this) {
     // The first frame was never picked, so no tile rings for it.
-    CoverChoice.None, CoverChoice.FirstFrame -> CoverPick.None
+    CoverChoice.None, CoverChoice.FirstFrame, CoverChoice.NoStill -> CoverPick.None
     is CoverChoice.Frame -> CoverPick.Frame(index)
     is CoverChoice.Picture -> CoverPick.OwnPicture
 }

@@ -118,8 +118,10 @@ internal sealed interface FirstFrameStill {
 /**
  * THE SKIPPED STEP STILL TAKES FRAME 1 (design/readme.md "The feed-video
  * rulings — 2026-09-23"; `ComposeDetailsVideo.jsx`): skipping the cover
- * step skips the CHOICE, not the still. Frame 1 is extracted with the
- * frame picker's own machinery and uploaded as an ordinary still, on the
+ * step skips the CHOICE, not the still — and so does declining a face on
+ * the step (design's ruling 2026-09-24: every face-less clip is stored
+ * with a still; [storesFirstFrame]). Frame 1 is extracted with the frame
+ * picker's own machinery and uploaded as an ordinary still, on the
  * cover's own leg.
  *
  * Everything that means "there is no still to keep" — no frame came

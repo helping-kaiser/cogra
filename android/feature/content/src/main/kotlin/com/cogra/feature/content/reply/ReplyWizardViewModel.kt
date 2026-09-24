@@ -39,6 +39,7 @@ import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.attachmentFieldIndex
 import com.cogra.feature.content.wizard.refusesVideo
 import com.cogra.feature.content.wizard.screenPicture
+import com.cogra.feature.content.wizard.storesFirstFrame
 import com.cogra.feature.content.wizard.toResolvedUpload
 import com.cogra.feature.content.wizard.uploadFirstFrame
 import java.io.File
@@ -291,9 +292,9 @@ class ReplyWizardViewModel @Inject constructor(
      * Two standalone uploads where a cover was chosen, in this order
      * because the cover is the cheap leg: a refused cover is learned at
      * once rather than after fifty megabytes. The placement names the
-     * poster's id at prepare, so the id has to exist by then.
-     * [CoverChoice.None] is a settled answer rather than a wait, so it
-     * skips straight to the clip's own bytes.
+     * poster's id at prepare, so the id has to exist by then. A clip
+     * with no face chosen — the door left shut or the row left untouched
+     * alike ([storesFirstFrame]) — stores frame 1 on that leg instead.
      *
      * A NEW FACE NEVER MOVES THE CLIP'S BYTES. A clip already on the
      * server stays there while a face chosen afterwards goes up on its
@@ -315,14 +316,14 @@ class ReplyWizardViewModel @Inject constructor(
     private suspend fun runJourney(uri: String, clipLanded: Boolean, processed: ProcessedVideo?) {
         if (!clipLanded) _state.update { it.withUpload(uri, AssetUpload.Running) }
         val choice = _state.value.coverChoice
-        val coverId = when (choice) {
-            CoverChoice.None -> null
-            // A vertical clip nobody gave a face: frame 1 is its still.
-            CoverChoice.FirstFrame -> when (val still = firstFrameStill(uri)) {
+        val coverId = when {
+            // A clip nobody gave a face: frame 1 is its still.
+            choice.storesFirstFrame -> when (val still = firstFrameStill(uri)) {
                 is FirstFrameStill.Stored -> still.mediaId
                 FirstFrameStill.Absent -> null
                 FirstFrameStill.Fault -> return
             }
+            choice is CoverChoice.None || choice is CoverChoice.NoStill -> null
             else -> _state.value.coverMediaId ?: uploadCover() ?: return
         }
         // An id belongs to the face it was uploaded for: a face chosen
@@ -334,8 +335,9 @@ class ReplyWizardViewModel @Inject constructor(
 
     /**
      * Frame 1's id, reusing one already stored (`uploadFirstFrame`). An
-     * absent still settles the choice to none, silently; a fault lands on
-     * the clip's own failure line, where its retry extracts again.
+     * absent still settles to [CoverChoice.NoStill], silently; a fault
+     * lands on the clip's own failure line, where its retry extracts
+     * again.
      */
     private suspend fun firstFrameStill(uri: String): FirstFrameStill {
         _state.value.coverMediaId?.let { return FirstFrameStill.Stored(it) }
@@ -343,7 +345,7 @@ class ReplyWizardViewModel @Inject constructor(
         when (still) {
             is FirstFrameStill.Stored -> Unit
             FirstFrameStill.Absent -> _state.update {
-                if (it.coverChoice == CoverChoice.FirstFrame) it.copy(coverChoice = CoverChoice.None) else it
+                if (it.coverChoice.storesFirstFrame) it.copy(coverChoice = CoverChoice.NoStill) else it
             }
             FirstFrameStill.Fault -> _state.update {
                 it.withUpload(uri, AssetUpload.Failed(UploadFailure.TRANSPORT))
@@ -408,7 +410,7 @@ class ReplyWizardViewModel @Inject constructor(
         val state = _state.value
         val clip = state.video ?: return null
         val picture = when (val choice = state.coverChoice) {
-            CoverChoice.None, CoverChoice.FirstFrame -> null
+            CoverChoice.None, CoverChoice.FirstFrame, CoverChoice.NoStill -> null
             is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
             is CoverChoice.Picture -> processor.process(
                 choice.uri,

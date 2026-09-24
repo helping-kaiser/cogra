@@ -40,29 +40,32 @@ enum class WizardStep { Body, Crop, Cover, Details, Seal }
  * is always possible" (jakob 2026-09-10, the video-cover round), and
  * the contract, the database and the backend all accept a placement
  * naming none. Either a frame or a picture is uploaded as its own
- * still and named on the video's own upload; [None] names nothing and
- * uploads nothing.
+ * still and named on the video's own upload. A clip with no face chosen
+ * is still stored with a still — its first frame — whatever path it took
+ * ([storesFirstFrame]).
  */
 sealed interface CoverChoice {
     /**
-     * No face — a settled answer, not a not-yet. A clip that walked the
-     * cover step and left without tapping anything keeps this, and ships
-     * without a still.
+     * No face chosen — a settled answer, not a not-yet. A clip that
+     * walked the cover step and left without tapping anything keeps
+     * this: DECLINED. Declining a face is not declining a still — the
+     * clip is stored with its first frame ([storesFirstFrame]).
      */
     data object None : CoverChoice
 
     /**
-     * THE SKIPPED STEP'S STILL: the clip's own first frame, never chosen
-     * and never offered (design/readme.md "The feed-video rulings —
-     * 2026-09-23": "the first frame is stored, not derived";
-     * `ComposeDetailsVideo.jsx`, "THE SKIPPED STEP STILL TAKES FRAME 1").
+     * No face chosen, and no step offered one: SKIPPED — the wizard
+     * routed this clip past the cover step because of its shape
+     * (design/readme.md "The feed-video rulings — 2026-09-23": "the first
+     * frame is stored, not derived"; `ComposeDetailsVideo.jsx`, "THE
+     * SKIPPED STEP STILL TAKES FRAME 1").
      *
-     * It is what a clip carries when the wizard routed it past the cover
-     * step because of its shape, and it is a value of its own rather than
-     * [None] because the two must never be confused: skipping the step
-     * skips the CHOICE, not the still, while a clip that walked the step
-     * and declined keeps no still at all. The wizard sets it at the skip,
-     * so the fact is recorded where it happens rather than re-derived.
+     * It is a value of its own rather than [None] because the two paths
+     * are not the same fact: the details door stands for a skipped clip
+     * and never for one that came through the step ("a clip that came
+     * through the cover step shows no door"). The wizard sets it at the
+     * skip, so the fact is recorded where it happens rather than
+     * re-derived. Like [None] it is stored with its first frame.
      *
      * It is not a face the author picked, so nothing draws it as one —
      * the details field stays a door, and a face chosen through that door
@@ -70,12 +73,40 @@ sealed interface CoverChoice {
      */
     data object FirstFrame : CoverChoice
 
+    /**
+     * The clip gave no still: frame 1 could not be extracted or kept, so
+     * the post ships without one and readers meet the neutral tile
+     * (`Cover · no frames came back`). The only still-less outcome, and a
+     * settled one — nothing is retried.
+     */
+    data object NoStill : CoverChoice
+
     /** One of the offered frames, by index into the offered list. */
     data class Frame(val index: Int) : CoverChoice
 
     /** A picture of the author's own, by picker URI. */
     data class Picture(val uri: String) : CoverChoice
 }
+
+/**
+ * WHICH COVER STATES STORE THE CLIP'S FIRST FRAME as its still — the one
+ * place that answers it, for both composers.
+ *
+ * Every clip without a chosen face, skipped or declined alike (design's
+ * ruling 2026-09-24 on the feed-video rulings: "reading surfaces are
+ * then ALWAYS handed a stored still, coverless or not" — a declined
+ * exception would bring back the empty box the ruling exists to remove).
+ * Failed extraction ([CoverChoice.NoStill]) is the only still-less clip.
+ */
+val CoverChoice.storesFirstFrame: Boolean
+    get() = this is CoverChoice.None || this is CoverChoice.FirstFrame
+
+/**
+ * Whether a clip's face needs nothing more sent: the still it stands on
+ * has its id, or it has settled on having none.
+ */
+fun CoverChoice.settledWith(coverMediaId: String?): Boolean =
+    coverMediaId != null || this is CoverChoice.NoStill || (this is CoverChoice.None && !storesFirstFrame)
 
 /**
  * Which half of the body is being authored.
@@ -434,26 +465,20 @@ data class ComposeWizardState(
     /**
      * Every pick has an id: the gallery can be attached as it stands.
      *
-     * A video's face is optional, but a face that was chosen still has
-     * to land before the body counts as complete: the placement cannot
-     * name an id that does not exist yet. [CoverChoice.None] carries no
-     * such id to wait for, so it never holds this up.
-     *
-     * [CoverChoice.FirstFrame] does wait — the skipped step's still is
-     * stored, not optional — and the wait always ends: a still that
-     * cannot be made settles the choice to [CoverChoice.None].
+     * A video's face is optional, but its still is not: a chosen face,
+     * or the first frame a face-less clip is stored with, has to land
+     * before the body counts as complete — the placement cannot name an
+     * id that does not exist yet. The wait always ends: a still that
+     * cannot be made settles to [CoverChoice.NoStill].
      */
     val uploadsComplete: Boolean
         get() = picked.isNotEmpty() &&
             uploadedIds.size == picked.size &&
             (!isVideoPost || coverSettled)
 
-    /**
-     * Whether the clip's face needs nothing more sent: none is wanted,
-     * or the one standing has its id.
-     */
+    /** Whether the clip's still needs nothing more sent (see [settledWith]). */
     val coverSettled: Boolean
-        get() = coverChoice is CoverChoice.None || coverMediaId != null
+        get() = coverChoice.settledWith(coverMediaId)
 
     /**
      * The body carries something publishable. The XOR is read here
@@ -771,12 +796,12 @@ fun ComposeWizardState.withCoverIdFor(choice: CoverChoice, id: String?): Compose
     if (coverChoice == choice) copy(coverMediaId = id) else this
 
 /**
- * The skipped step's still could not be made: the clip ships without
- * one, silently (`Cover · no frames came back` is what readers meet).
- * A face chosen meanwhile through the door is left alone.
+ * Frame 1 could not be made: the clip ships without a still, silently
+ * (`Cover · no frames came back` is what readers meet). A face chosen
+ * meanwhile is left alone.
  */
 fun ComposeWizardState.withoutFirstFrame(): ComposeWizardState =
-    if (coverChoice == CoverChoice.FirstFrame) copy(coverChoice = CoverChoice.None) else this
+    if (coverChoice.storesFirstFrame) copy(coverChoice = CoverChoice.NoStill) else this
 
 /**
  * Drops a pick from the tray without touching the rest of the order.

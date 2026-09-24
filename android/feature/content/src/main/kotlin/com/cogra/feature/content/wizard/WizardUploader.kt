@@ -69,8 +69,7 @@ internal class WizardUploader(
      * learned in a second, instead of after a minute of transcoding and
      * a ninety-megabyte send. The placement names the poster's id at
      * prepare, so the id has to exist by then rather than by the time
-     * the clip goes up. [CoverChoice.None] is a settled answer rather
-     * than a wait, so it skips straight to the clip's own bytes.
+     * the clip goes up.
      *
      * A NEW FACE NEVER MOVES THE CLIP'S BYTES. The placement names the
      * face at prepare, so a clip already on the server stays there while
@@ -78,10 +77,11 @@ internal class WizardUploader(
      * stepping back — goes up on its own; and a journey with nothing left
      * to send does nothing at all.
      *
-     * A clip that skipped the cover step carries [CoverChoice.FirstFrame],
-     * and its face leg stores frame 1 ([uploadFirstFrame]) — on the same
-     * leg, in the same order, and waited on by the same gate as a chosen
-     * face.
+     * A clip with no face chosen — skipped or declined alike
+     * ([storesFirstFrame]) — stores frame 1 on this leg instead
+     * ([uploadFirstFrame]): the same leg, the same order, and the same
+     * gate as a chosen face. The offered frames are slice midpoints that
+     * keep off frame 0, so frame 1 is always extracted on its own.
      */
     fun startVideoUpload() {
         val current = state.value
@@ -90,13 +90,13 @@ internal class WizardUploader(
         jobs.remove(clip.uri)?.cancel()
         jobs[clip.uri] = scope.launch {
             val choice = state.value.coverChoice
-            val coverId = when (choice) {
-                CoverChoice.None -> null
-                CoverChoice.FirstFrame -> when (val still = firstFrameStill(clip.uri)) {
+            val coverId = when {
+                choice.storesFirstFrame -> when (val still = firstFrameStill(clip.uri)) {
                     is FirstFrameStill.Stored -> still.mediaId
                     FirstFrameStill.Absent -> null
                     FirstFrameStill.Fault -> return@launch
                 }
+                choice is CoverChoice.None || choice is CoverChoice.NoStill -> null
                 else -> state.value.coverMediaId ?: uploadCover() ?: return@launch
             }
             state.update { it.withCoverIdFor(choice, coverId) }
@@ -107,8 +107,8 @@ internal class WizardUploader(
 
     /**
      * Frame 1's id, reusing one already stored; an absent still settles
-     * the choice to none, silently, and a fault lands on the clip's own
-     * failure line, where its retry extracts again.
+     * to [CoverChoice.NoStill], silently, and a fault lands on the clip's
+     * own failure line, where its retry extracts again.
      */
     private suspend fun firstFrameStill(uri: String): FirstFrameStill {
         state.value.coverMediaId?.let { return FirstFrameStill.Stored(it) }
@@ -186,7 +186,7 @@ internal class WizardUploader(
         val current = state.value
         val clip = current.video ?: return null
         val picture = when (val choice = current.coverChoice) {
-            CoverChoice.None, CoverChoice.FirstFrame -> null
+            CoverChoice.None, CoverChoice.FirstFrame, CoverChoice.NoStill -> null
             is CoverChoice.Frame -> current.coverFrames.getOrNull(choice.index)?.picture
             is CoverChoice.Picture -> processor.process(
                 choice.uri,

@@ -506,12 +506,30 @@ class ComposeWizardStateTest {
     }
 
     @Test
-    fun aCoverlessVideoIsCompleteOnceItsOwnBytesLand() {
-        // The default: no face was ever chosen, so there is no id to
-        // wait for — going without a cover is always possible.
+    fun aFacelessVideoIsCompleteOnceItsBytesAndItsFirstFrameLand() {
+        // No face was ever chosen — going without one is always possible
+        // — but the clip is still stored with its first frame, and the
+        // placement cannot name that still before it exists.
         val uploaded = video.withUpload("clip", AssetUpload.Done("video-1"))
         assertThat(uploaded.coverChoice).isEqualTo(CoverChoice.None)
-        assertThat(uploaded.uploadsComplete).isTrue()
+        assertThat(uploaded.uploadsComplete).isFalse()
+        assertThat(uploaded.copy(coverMediaId = "frame-1").uploadsComplete).isTrue()
+        // A clip that gave no still at all is complete without one.
+        assertThat(uploaded.withoutFirstFrame().uploadsComplete).isTrue()
+    }
+
+    /**
+     * THE ONE PREDICATE: which cover states store frame 1. Every clip
+     * without a chosen face — skipped or declined — and nothing else
+     * (design's ruling 2026-09-24).
+     */
+    @Test
+    fun everyFacelessClipAndOnlyAFacelessClipStoresItsFirstFrame() {
+        assertThat(CoverChoice.FirstFrame.storesFirstFrame).isTrue()
+        assertThat(CoverChoice.None.storesFirstFrame).isTrue()
+        assertThat(CoverChoice.NoStill.storesFirstFrame).isFalse()
+        assertThat(CoverChoice.Frame(0).storesFirstFrame).isFalse()
+        assertThat(CoverChoice.Picture("p").storesFirstFrame).isFalse()
     }
 
     @Test
@@ -590,11 +608,13 @@ class ComposeWizardStateTest {
     }
 
     /**
-     * SKIPPED IS NOT DECLINED. A clip that walked the step and left it
-     * without a face keeps no still at all; only the skip takes frame 1.
+     * SKIPPED IS NOT DECLINED — as state. A clip that walked the step and
+     * left it without a face is DECLINED ([CoverChoice.None]), never
+     * [CoverChoice.FirstFrame]: the door stands only for the skip. (Both
+     * are stored with frame 1 — see [storesFirstFrame].)
      */
     @Test
-    fun aClipThatWalkedTheStepAndChoseNothingStaysCoverless() {
+    fun aClipThatWalkedTheStepAndChoseNothingIsDeclinedNotSkipped() {
         val walked = clipOfRatio(16f / 9f).advanced()?.advanced()
         assertThat(walked?.step).isEqualTo(WizardStep.Details)
         assertThat(walked?.coverChoice).isEqualTo(CoverChoice.None)
@@ -639,7 +659,7 @@ class ComposeWizardStateTest {
         assertThat(skipped.copy(coverMediaId = "frame-1").uploadsComplete).isTrue()
 
         val givenUp = skipped.withoutFirstFrame()
-        assertThat(givenUp.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(givenUp.coverChoice).isEqualTo(CoverChoice.NoStill)
         assertThat(givenUp.uploadsComplete).isTrue()
     }
 

@@ -17,6 +17,7 @@ import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.UploadFailure
 import com.cogra.feature.content.wizard.inFlight
 import com.cogra.feature.content.wizard.pickedPictures
+import com.cogra.feature.content.wizard.settledWith
 import com.cogra.feature.content.wizard.withAltText
 import com.cogra.feature.content.wizard.withSourceRatio
 import com.cogra.feature.content.wizard.withUpload
@@ -139,12 +140,12 @@ data class ReplyWizardState(
      * Starts at [CoverChoice.None]: extraction may still be running, may
      * come back with nothing to offer, or the author may simply move on
      * to the seal before it resolves — every one of those is a settled
-     * "no cover" rather than a wait, so `Next` never blocks on this
+     * "no face" rather than a wait, so `Next` never blocks on this
      * (jakob 2026-09-10, the video-cover round). Extraction offers and
      * never chooses. A vertical clip starts at [CoverChoice.FirstFrame]
      * instead: there is no step to skip at comment scale, so the row is
-     * what gives way, and the clip carries its first frame unless a face
-     * is chosen through the door.
+     * what gives way. Either way a clip with no face chosen is stored
+     * with its first frame.
      */
     val coverChoice: CoverChoice = CoverChoice.None,
     val coverMediaId: String? = null,
@@ -238,20 +239,18 @@ data class ReplyWizardState(
     /**
      * Every pick has an id: the gallery can be attached as it stands.
      *
-     * A clip's face is optional, but a face that was chosen still has to
-     * land before the clip counts as complete: the placement cannot
-     * name an id that does not exist yet. [CoverChoice.None] carries no
-     * such id to wait for, so it never holds this up.
+     * A clip's face is optional, but its still is not: a chosen face, or
+     * the first frame a face-less clip is stored with, has to land before
+     * the clip counts as complete — the placement cannot name an id that
+     * does not exist yet. The wait always ends: a still that cannot be
+     * made settles to [CoverChoice.NoStill].
      */
     val uploadsComplete: Boolean
         get() = uploadedIds.size == picked.size && (!isVideoComment || coverSettled)
 
-    /**
-     * Whether the clip's face needs nothing more sent: none is wanted,
-     * or the one standing has its id.
-     */
+    /** Whether the clip's still needs nothing more sent (`settledWith`). */
     val coverSettled: Boolean
-        get() = coverChoice is CoverChoice.None || coverMediaId != null
+        get() = coverChoice.settledWith(coverMediaId)
 
     /**
      * Whether the clip's cover field is the door rather than the row —

@@ -438,13 +438,14 @@ class ReplyWizardViewModelTest {
      * the transcode has finished (`Next` reads `transcoded`, so it must
      * have to do anything at all), but frame extraction is deliberately
      * held open. The author moves on before it resolves, and going
-     * without a cover is always possible (jakob 2026-09-10), so the
-     * clip must publish rather than wait on a face that was never going
-     * to be chosen — and extraction landing late must not reach back and
-     * give it one after the fact (F2-6; #725's own report on this gap).
+     * without a face is always possible (jakob 2026-09-10), so the clip
+     * must publish rather than wait on a face that was never going to be
+     * chosen — standing on its first frame — and extraction landing late
+     * must not reach back and give it a face after the fact (F2-6; #725's
+     * own report on this gap).
      */
     @Test
-    fun aClipWithFramesPublishesBareWhenNothingIsPickedInTime() = runTest(dispatcher) {
+    fun aClipLeftBeforeItsFramesLandedPublishesOnItsFirstFrame() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val gate = CompletableDeferred<Unit>()
         video.framesGate = gate
@@ -459,11 +460,10 @@ class ReplyWizardViewModelTest {
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
 
-        // No "still" in the order: the cover leg never ran.
-        assertThat(media.order).containsExactly("clip")
+        assertThat(media.order).containsExactly("still", "clip").inOrder()
         // A comment's clip names a comment, whose cap the server holds it to.
         assertThat(media.destinations).containsExactly(MediaDestination.COMMENT)
-        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
         assertThat(vm.state.value.uploadsComplete).isTrue()
 
         gate.complete(Unit)
@@ -471,18 +471,18 @@ class ReplyWizardViewModelTest {
         // The author already moved on to the seal — arriving late does
         // not hand them a face they never chose.
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
-        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
     }
 
     /**
      * THE JOURNEY THE OLD NET NEVER WALKED (HT-COVER): frames land
      * while the author is still on the composer, and the author seals
-     * without touching one. The coverless tests either held extraction
-     * open or gave it nothing to find, so the ordinary path — offers
-     * on screen, none taken — went unasked. It is bare.
+     * without touching one. No offer is taken — the clip is stored with
+     * its own first frame (design's ruling 2026-09-24: every face-less
+     * clip is handed to readers with a stored still).
      */
     @Test
-    fun aClipTheAuthorNeverGaveAFaceGoesUpBare() = runTest(dispatcher) {
+    fun aClipTheAuthorNeverGaveAFaceIsStoredWithItsFirstFrame() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val vm = viewModel()
         vm.onBodyChange("Words")
@@ -498,21 +498,22 @@ class ReplyWizardViewModelTest {
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(media.order).containsExactly("clip")
-        assertThat(vm.state.value.coverMediaId).isNull()
-        assertThat(content.lastAttachments.single().coverMediaId).isNull()
+        assertThat(video.firstFrameAsks).isEqualTo(1)
+        assertThat(media.order).containsExactly("still", "clip").inOrder()
+        assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
     }
 
     /**
      * A clip the device could not lift a single frame out of
-     * (`CoverRow`'s no-frames caption — PR #721). With nothing to
-     * auto-settle on, the choice stays [CoverChoice.None] for good, and
-     * the clip still publishes.
+     * (`CoverRow`'s no-frames caption — PR #721): no offer and no frame
+     * 1 either, so it ships without a still — the only still-less clip
+     * — and still publishes.
      */
     @Test
-    fun aClipWithNoFramesPublishesBare() = runTest(dispatcher) {
+    fun aClipWithNoFramesAtAllPublishesBare() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         video.frames = emptyList()
+        video.firstFrame = null
         val vm = viewModel()
         vm.onBodyChange("Words")
         vm.onPicked("clip.mp4")
@@ -524,6 +525,7 @@ class ReplyWizardViewModelTest {
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
 
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
         assertThat(media.order).containsExactly("clip")
         assertThat(vm.state.value.coverMediaId).isNull()
         assertThat(vm.state.value.uploadsComplete).isTrue()
@@ -604,14 +606,15 @@ class ReplyWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(media.order).containsExactly("clip")
+        // Face-less, so stored on its first frame.
+        assertThat(media.order).containsExactly("still", "clip").inOrder()
 
         vm.onSealBack()
         vm.onPickCoverFrame(0)
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(media.order).containsExactly("clip", "still").inOrder()
+        assertThat(media.order).containsExactly("still", "clip", "still").inOrder()
         assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
         assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
         assertThat(vm.state.value.uploadsComplete).isTrue()
@@ -675,15 +678,19 @@ class ReplyWizardViewModelTest {
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
         assertThat(media.order).containsExactly("clip")
         assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
-    /** A clip whose row stood from the start and was declined takes no frame 1. */
+    /**
+     * DECLINING A FACE IS NOT DECLINING A STILL (design's ruling
+     * 2026-09-24): a clip whose row stood from the start and was left
+     * untouched is stored with frame 1 exactly as a vertical one is.
+     */
     @Test
-    fun aWideReplyLeftWithoutAFaceNeverTakesFrameOne() = runTest(dispatcher) {
+    fun aWideReplyLeftWithoutAFaceIsStoredWithFrameOneToo() = runTest(dispatcher) {
         video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val vm = viewModel()
         vm.onBodyChange("Words")
@@ -693,8 +700,10 @@ class ReplyWizardViewModelTest {
         vm.onNext()
         dispatcher.scheduler.advanceUntilIdle()
 
-        assertThat(video.firstFrameAsks).isEqualTo(0)
-        assertThat(media.order).containsExactly("clip")
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(video.firstFrameAsks).isEqualTo(1)
+        assertThat(media.order).containsExactly("still", "clip").inOrder()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
     }
 
     @Test
@@ -739,7 +748,8 @@ class ReplyWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
-        assertThat(media.order).containsExactly("clip", "clip")
+        // Its first frame landed the first time and is not sent again.
+        assertThat(media.order).containsExactly("still", "clip", "clip").inOrder()
     }
 
     /** A frame 1 lost to the network is retried with the clip, and extracted again. */

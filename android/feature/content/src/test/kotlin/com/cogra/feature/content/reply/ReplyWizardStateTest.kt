@@ -400,15 +400,18 @@ class ReplyWizardStateTest {
     }
 
     @Test
-    fun aCoverlessClipIsCompleteOnceItsOwnBytesLand() {
-        // The default: no face was ever chosen, so there is no id to
-        // wait for — going without a cover is always possible.
+    fun aFacelessClipIsCompleteOnceItsBytesAndItsFirstFrameLand() {
+        // No face was ever chosen, but the clip is stored with its first
+        // frame, and the placement cannot name it before it exists.
         val uploaded = composerWithWords()
             .addPick("clip", 1f, durationMs = 18_000)
             .withUpload("clip", AssetUpload.Done("v1"))
 
         assertThat(uploaded.coverChoice).isEqualTo(CoverChoice.None)
-        assertThat(uploaded.uploadsComplete).isTrue()
+        assertThat(uploaded.uploadsComplete).isFalse()
+        assertThat(uploaded.copy(coverMediaId = "frame-1").uploadsComplete).isTrue()
+        // A clip that gave no still at all is complete without one.
+        assertThat(uploaded.copy(coverChoice = CoverChoice.NoStill).uploadsComplete).isTrue()
     }
 
     @Test
@@ -444,7 +447,7 @@ class ReplyWizardStateTest {
     }
 
     @Test
-    fun aWideOrSquareClipWearsTheRowAndCarriesNoStillUnlessChosen() {
+    fun aWideOrSquareClipWearsTheRowWithNoFaceChosen() {
         listOf(16f / 9f, 1f, null).forEach { ratio ->
             val clip = composerWithWords().addPick("clip", ratio, durationMs = 18_000)
             assertWithMessage("door at $ratio").that(clip.coverDoorShowing).isFalse()
