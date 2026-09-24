@@ -2260,14 +2260,25 @@ the name-class fields and post titles: actor `handle` +
 `displayName`, Hashtag `name` (served by the naming-service
 registry — [hashtag.md §1](../instances/hashtag.md#1-identity-and-the-naming-service)),
 Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
-bios, and attachments are not indexed. A Comment carries no
-indexed field and is not a searchable kind — a comment is found
-through its post. Chat messages are excluded from the global
-index — casual conversation doesn't surface to strangers by
-keyword; their search surface is `chatSearch`, and only plaintext
-bodies are searchable — encrypted content never is, since the
-backend only ever holds ciphertext
+bios, and attachments are not indexed. A comment, a chat message
+and an offer carry no indexed field of their own and never appear
+in an unscoped result — casual conversation doesn't surface to
+strangers by keyword; per-chat body search is `chatSearch`'s, and
+only plaintext bodies are searchable there — encrypted content
+never is, since the backend only ever holds ciphertext
 ([chats.md §7](../instances/chats.md#7-encryption-as-the-privacy-mechanism)).
+
+**Scoped queries serve the indirect kinds.** A query carrying a
+scope operator (`@handle <text>`, `#tag <text>`) also returns the
+scoped author's comments, chat messages and offers, matched
+through the indexed fields alone: the remainder is matched against
+the names and titles of the acts' targets — a comment through its
+post's title, a message through its chat's name, an offer through
+its item's name — joined through authorship. No body index exists;
+the join runs against the same global index above. A scoped
+message result reaches any plaintext chat regardless of the
+viewer's membership — chats are public reads (the design record:
+readme §13, "The indirect kinds are scope-served").
 
 **Match semantics.** Name-class fields match case-insensitively
 by prefix and substring; Post titles and chat-message bodies

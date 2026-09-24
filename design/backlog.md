@@ -3469,14 +3469,25 @@ the `ComposePickVideo` docblock, and the `PickTray` contract; the
 drawn board is the landscape case and stands. The client caption
 swap is the implementation session's, relayed as a contract.
 
-### 105 · Search results the index cannot serve · *design + docs* · **open**
+### 105 · Search results the index cannot serve · *design + docs* · **ruled + recorded 2026-09-24**
 
 Found by the chats integration lane 2026-09-24: canonical
 `ExploreSearch` draws a chat-message result row and a comment
 result row, and the search rulings (readme §13, the search
-rulings) make both findable — but api-spec.md excludes both
-kinds from the global index (messages are chat-scoped via
-`chatSearch`; comments are excluded outright). One side must
-move: either the drawn rows and the search rulings narrow, or
-the API's index widens. Design and docs decide together; needs
-jakob.
+rulings) make both findable — but api-spec.md excluded both
+kinds from the global index.
+
+**Ruled (jakob 2026-09-24): the indirect kinds are
+scope-served, and neither side moves.** The 2026-08-28 ruling's
+own mechanics never asked for body search: messages, comments
+and offers surface only in scoped queries (`@handle <text>`,
+`#tag <text>`), matched through the existing name/title index
+joined by authorship — no body is ever indexed, so the mass of
+body words never clogs the default mix, and a scoped message
+result reaches any plaintext chat (public reads), never just
+the viewer's own. `ExploreSearch` already draws exactly this
+state. Recorded in readme §13 ("The indirect kinds are
+scope-served") and api-spec's Search section (the scoped-join
+paragraph). One string still owed: the quiet line an unscoped
+indirect-kind selection shows (copy-voice candidate, awaiting
+blessing).
