@@ -203,6 +203,13 @@ internal fun ColumnScope.PickStage(
  * tray carries the line the picture case leaves to the sheet: "A video is the
  * whole post. Its cover comes next." An absent control explains nothing on
  * its own, so the tray says why nothing else can join and what happens next.
+ *
+ * **THE CAPTION IS THE SHAPE'S** (jakob 2026-09-24, backlog item 104). A
+ * vertical clip skips the cover step ([ComposeWizardState.skipsCoverStep]),
+ * so its second sentence would preview a step that never comes — the tray
+ * wears the trim `content_video_body_caption_vertical` instead, the same
+ * trim the edit screen already wears. Landscape and square clips keep the
+ * full caption above unchanged.
  */
 @Composable
 private fun PickedTray(
@@ -247,7 +254,11 @@ private fun PickedTray(
         }
         if (state.isVideoPost) {
             Text(
-                text = "A video is the whole post. Its cover comes next.",
+                text = if (state.skipsCoverStep) {
+                    stringResource(R.string.content_video_body_caption_vertical)
+                } else {
+                    "A video is the whole post. Its cover comes next."
+                },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("wizard_video_body_caption"),
