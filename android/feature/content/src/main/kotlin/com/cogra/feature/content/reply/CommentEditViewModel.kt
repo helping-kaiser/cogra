@@ -97,6 +97,7 @@ class CommentEditViewModel @Inject constructor(
                             sourceRatio = asset.aspectRatio,
                             altText = asset.altText.orEmpty(),
                             upload = AssetUpload.Done(asset.id),
+                            coverMediaId = asset.cover?.id,
                         )
                     }
                     val body = loaded.comment.content.value.orEmpty()
@@ -290,7 +291,7 @@ class CommentEditViewModel @Inject constructor(
                         content = current.body,
                         attachments = current.picked.mapNotNull { asset ->
                             asset.mediaId?.let {
-                                AttachmentClaim(it, asset.altText.ifBlank { null })
+                                AttachmentClaim(it, asset.altText.ifBlank { null }, asset.coverMediaId)
                             }
                         },
                         // Complete state: whatever the Mark row leaves
