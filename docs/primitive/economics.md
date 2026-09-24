@@ -515,8 +515,8 @@ promise: **settlement inflow against burn outflow**. The pool is
 seeded at genesis and open to top-ups; the seed and top-ups start
 the engine and are reported as a separate public inflow line, so
 the target measures campaign revenue alone. The discipline is on
-what leaves, not what enters. It is one global pot that everyone pays
-into, the team treasury included as a contributor like any
+what leaves, not what enters. It is one global pot that everyone
+pays into, the team treasury included as a contributor like any
 other. A community can leave the global pot and run its own for
 its admission fees — pool splitting, a later stage of its own
 ([open-questions.md Q55](../open-questions.md#q55--community-pool-splitting)).
