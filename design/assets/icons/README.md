@@ -31,6 +31,7 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | image.svg | image | the cover strip's own-picture tile |
 | lock.svg | lock | a locked field (the edit's license); a chat message sent encrypted, and the chat foot's lock toggle on (post-MVP) |
 | add-comment.svg | add_comment | the chats list's floating New chat (post-MVP) |
+| delete.svg | delete | the locked voice recording's discard (post-MVP) |
 | mic.svg | mic | the chat foot's voice note, hold to record — it stands where the send arrow does while the field is empty (post-MVP) |
 | lock-outline.svg | lock_outline | the chat foot's lock toggle off — the state is the fill, `person`'s two-cut precedent (post-MVP) |
 | expand-more.svg / chevron-right.svg | expand_more, chevron_right | a disclosure, and a row that opens |

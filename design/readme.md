@@ -457,6 +457,7 @@ fills is the most common way an icon set starts to look accidental.
 | `lock` / `lock_outline` | a chat message sent encrypted, and the chat foot's lock toggle, whose state is its fill — the post-MVP chats round's; `lock_outline` is the system's own addition, `person`'s two-cut precedent |
 | `add_comment` | the chats list's floating New chat — the post-MVP chats round's, the system's own addition |
 | `mic` | the chat foot's voice note, hold to record, standing where the send arrow stands while the field is empty — the post-MVP chats integration round's, the system's own addition |
+| `delete` | the locked voice recording's discard — the post-MVP chats integration round's, the system's own addition |
 
 **All of them are inlined** — path data in `Icon`, reference copies in
 `assets/icons/`. All but `graph_3` are the classic **filled** 24px
