@@ -194,14 +194,24 @@ input AttachmentInput {
 	altText: String
 	"""
 	The video's poster — an asset this author uploaded, either a frame
-	the client cut out of the clip or a picture chosen instead. Only a
-	video placement takes one, and a video may always go without.
+	the client cut out of the clip or a picture chosen instead, and
+	`coverTaken` says which. Only a video placement takes one, and a
+	video may always go without.
 	
 	Authored here for the same reason `altText` is: it is a fact about
 	this placement, so changing the cover is a new version of the
 	parent rather than a re-upload of the clip.
 	"""
 	coverMediaId: UUID
+	"""
+	True when the cover is a frame taken from the clip rather than a
+	still the author chose; absent or null reads as chosen. The bytes
+	cannot say which, so the author's client states it and the
+	manifest witnesses it beside the cover (data-model.md, per-asset
+	map key 4). Refused without a `coverMediaId`, and refused on a
+	placement that is not a video.
+	"""
+	coverTaken: Boolean
 }
 
 type AuthSession {
@@ -882,6 +892,16 @@ type MediaAttachment {
 	on the asset rather than being restated by whatever points at it.
 	"""
 	coverMedia: MediaAttachment
+	"""
+	True when `coverMedia` is a frame taken from the clip rather than a
+	still its author chose — the authoring fact the version's manifest
+	witnessed beside the cover (data-model.md, per-asset map key 4).
+	
+	Resolved from the junction row, like `coverMedia`, and only ever
+	true where the placement names a cover: false on a chosen cover,
+	on a placement without one, and outside a placement.
+	"""
+	coverTaken: Boolean!
 	"""
 	The account that uploaded the asset.
 	"""

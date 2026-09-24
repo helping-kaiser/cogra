@@ -1524,11 +1524,7 @@ mod promotion_tests {
         let across_families = body(3, Family::Review, mint(author, 3, Family::Publish));
         assert!(!genesis_shape(&across_families).1);
 
-        let other_author = body(
-            3,
-            Family::Publish,
-            mint("someone-else", 3, Family::Publish),
-        );
+        let other_author = body(3, Family::Publish, mint("someone-else", 3, Family::Publish));
         assert!(!genesis_shape(&other_author).1);
     }
 }

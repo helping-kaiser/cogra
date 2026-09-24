@@ -11,13 +11,13 @@
 //! The swap is this trait plus a named list beside it, not this trait
 //! alone. `l1_standin::DevSubstrate` collects the surfaces that are
 //! deliberately *not* the seam and that CoGra reaches for anyway:
-//! crediting a burn (a realization of the burn primitive CoGra does not run), closing an
-//! epoch (a clock the real substrate keeps itself), and reading back a
-//! sealed act (a crash-recovery affordance for the bootstrap). Each needs
-//! its own answer at the swap — a live realization, the substrate's own
-//! close, a resumable bootstrap — so "one new implementation here" is
-//! true of the request path and not of the whole system (roadmap.md "The
-//! stand-in and the swap").
+//! crediting an admission burn (a realization of the burn primitive CoGra
+//! does not run), closing an epoch (a clock the real substrate keeps
+//! itself), and reading back a sealed act (a crash-recovery affordance for
+//! the bootstrap). Each needs its own answer at the swap — a live
+//! realization, the substrate's own close, a resumable bootstrap — so "one
+//! new implementation here" is true of the request path and not of the
+//! whole system (roadmap.md "The stand-in and the swap").
 
 use std::future::Future;
 
@@ -85,8 +85,8 @@ pub trait L1Boundary: Send + Sync {
         after: i64,
     ) -> impl Future<Output = Result<Vec<EpochPackage>, BoundaryError>> + Send;
 
-    /// The B_i export, read-only (consume-only; CoGra never authors a realization's
-    /// records).
+    /// The B_i export, read-only (consume-only; CoGra never authors a
+    /// realization's records).
     fn balance(
         &self,
         address: &str,

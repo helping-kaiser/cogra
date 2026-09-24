@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO post_attachments\n             (post_version_id, attachment_id, display_order, is_cover, alt_text,\n              cover_media_id, cover_taken)\n         SELECT $1, a.id, a.ord, a.ord = 0, a.alt, a.cover, a.taken\n         FROM unnest($2::uuid[], $3::smallint[], $4::text[], $5::uuid[], $6::bool[])\n              AS a(id, ord, alt, cover, taken)\n         ON CONFLICT (post_version_id, attachment_id) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "UuidArray",
+        "Int2Array",
+        "TextArray",
+        "UuidArray",
+        "BoolArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0f9aa2c19d538b00571885ad164f9b0a20fc9215fe81c8dda541ebff6bef4110"
+}
