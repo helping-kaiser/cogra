@@ -3443,3 +3443,15 @@ disc's presence in the stage rotation) should wait for the unveil —
 but autoplay-on-unveil vs cover-at-rest-on-unveil is a real choice,
 and preload is a second knob. Implementation is trivial once ruled
 (gate autoplay/preload on the veil state). Needs jakob.
+
+### 105 · Search results the index cannot serve · *design + docs* · **open**
+
+Found by the chats integration lane 2026-09-24: canonical
+`ExploreSearch` draws a chat-message result row and a comment
+result row, and the search rulings (readme §13, the search
+rulings) make both findable — but api-spec.md excludes both
+kinds from the global index (messages are chat-scoped via
+`chatSearch`; comments are excluded outright). One side must
+move: either the drawn rows and the search rulings narrow, or
+the API's index widens. Design and docs decide together; needs
+jakob.
