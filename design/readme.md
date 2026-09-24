@@ -6124,7 +6124,12 @@ painted a frame.
   cover *in* the video rather than the start of it, so playback
   visibly jumps off it — the exact flash this ruling exists to
   kill. A black or blurry opening frame is the clip's honest face,
-  and an author who wants a prettier one chooses a cover. Reading surfaces are
+  and an author who wants a prettier one chooses a cover. **The
+  preview face is the stored face** (jakob 2026-09-24, backlog
+  item 106): the compose tiles' claim to wear the clip's first
+  frame holds to the same frame 0 — a tray face that differs from
+  what every reader will see is a lie in the one place the author
+  is deciding whether they need a cover. Reading surfaces are
   always handed a stored still, coverless or not, and a loading
   clip loads exactly as a loading picture does. This cannot
   reintroduce the flash the no-cover ruling guards against: the
