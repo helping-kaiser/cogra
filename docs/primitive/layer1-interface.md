@@ -3106,8 +3106,8 @@ objects live only in the boundary ledger** (§3).
 
 | Symbol | Definition | Ref |
 |---|---|---|
-| $B_i$ | The imported frame, fiber-wise: $B_i := A_{\mathrm{key}(i)}$, the network's reading of the magnitude the burn primitive records as destroyed. Non-decreasing at sampling depth, publicly auditable, irrevocable. | `def:comparator:imported-frame` |
-| $B_{\max}$ | Bootstrap capacity bound $B_{\max} := A_{\max}$. | `def:comparator:bootstrap-capacity` |
+| $B_i$ | The imported frame, fiber-wise: $B_i := B(\mathrm{key}(i))$ with $\mathrm{key}(i) \in \mathbb{A}$, the network's reading of the magnitude the burn primitive records as destroyed. Non-decreasing at sampling depth, publicly auditable, irrevocable — all properties of the primitive, none of the network's. **(interface·input)** | `def:comparator:imported-frame` |
+| $B_{\max}$ | Bootstrap capacity bound: the maximum aggregate frame value attainable before a realization opens to external acquisition of burn value; an interface constant the realization publishes (R9) and the network re-derives nowhere. **(interface·input)** | `def:comparator:bootstrap-capacity` |
 | $q$ (act) | Authored act: the atomic public record — unit of formation, admission, ordering, dependency declaration, action counting, θ-debit, and final-set authorship. | `def:graph:authored-act` |
 | $\mathrm{actid}(q)$ | Act identifier $\mathsf{act}(\mathrm{author}, s_q, \mathrm{family})$; no host time, no minted target; mints nodes as $\mathsf{mint}(\mathrm{actid}(q))$. | `def:graph:act-identifier` |
 | $\mathrm{edges}(q)$, roles | Edge projection of an act (one binary edge, or A + T); a projection owns only incidence, role, and rendering. | `def:graph:act-edge-projection` |
@@ -3124,7 +3124,7 @@ objects live only in the boundary ledger** (§3).
 | $m_\theta$ | Chartered margin factor $5/4$: contraction-certificate margin (a rung certifies iff $m_\theta\,\mathcal{K}_k \le 1$), fence slack, escalation clause. | `def:epoch:safety-threshold` |
 | $\beta$, $\eta$ | Inverse temperature $2\ln 2 \approx 1.386$; bleed $0.05$ — binding (both enter the deployed core $Q$). | `ax:epoch:thermodynamic-boundary`, `def:graph:path-view-extraction` |
 | $N_{\text{epoch}}$ | Epoch **target** act budget, denominated in accepted authored acts. | `def:epoch:epoch-act-budget` |
-| $\delta_{\text{pos}}$ | Burn-snapshot buffer (settlement-stability depth); buffers the burn snapshot, not membership. | `post:epoch:final-edge-set` |
+| $\delta_{\text{pos}}$ | Burn-snapshot buffer (settlement-stability depth), chosen to exceed the settlement depth a realization publishes (R4(e)) so the frame is sampled settled; buffers the burn snapshot, not membership. | `post:epoch:final-edge-set` |
 | $M_{\text{payload}}$ | Maximum payload byte length **per act** (aggregate over a hyper-edge's projections); the structural bound is L1·closure, payload bytes terminal. | `def:graph:act-payload-projection` |
 | $L_{\text{hop}}$, $\gamma$ | Chartered transport depth 4, in hops of the conserved transport; and the chartered activation exponent $1/4$, which is deliberately not routed through it. | `def:epoch:standing-depth-mass`, `def:epoch:responsive-vouch-activation` |
 
@@ -3229,13 +3229,16 @@ Word register (closure edition symbol index, *Word Collisions*):
   public record; "edge records" are its projections; an edge projection
   owns only incidence, role, and rendering. A hyper-edge is one act, two
   projections, one payload, one debit, one stamp, one time.
-- **floor** — several distinct objects, one word: the realization's redemption-rate
-  floor | the numéraire $\nu$ (Layer 1 reserve→action unit) | the policy floor
+- **floor** — distinct objects, one word, never an edge-claim: the
+  numéraire $\nu$ (Layer 1 burn-unit→action join) | the policy floor
   $\rho_{\text{pol}}$, the safety floor $\rho_\theta = \theta/\nu$ (the wall),
   the effective floor $\rho_{\text{eff}} = \max(\rho_{\text{pol}}, \rho_\theta)$
   (the door) | the safety price $\theta$ | "through the floor" (the binding
-  axiom). Never conflate the price axis ($\nu$, $\theta$) with the position
-  axis ($\rho_{\text{pol}}, \rho_\theta, \rho_{\text{eff}}$).
+  axiom). Never a redemption floor of a realization's own economy — a
+  distinct object the network never reads
+  (`rem:comparator:surface-readings`). Never conflate the price axis ($\nu$,
+  $\theta$) with the position axis ($\rho_{\text{pol}}, \rho_\theta,
+  \rho_{\text{eff}}$).
 - **tilt rung vs. clip** — the certificate accepts one global tilt strength
   $t_k$ per epoch; "clip" is not normative Layer-1 vocabulary — net stance
   uses interval projection, activation uses the wall clamp, and an
@@ -3259,10 +3262,7 @@ Word register (closure edition symbol index, *Word Collisions*):
   leaves its own row at all. Two axes, never one dial
   (`rem:epoch:tilt-backoff-is-not-export-backoff`).
 - **maturity** — $\tau$ is graph connection-context maturity, a raw
-  (terminal) channel; burn-primitive maturity is a cycle/lead concept, cited only
-  through `PA-` labels. Raw maturity never enters the standing activation.
-- **cycle vs. epoch** — the burn primitive has cycles; Layer 1 has epochs. Never swap
-  the words.
+  (terminal) channel. Raw maturity never enters the standing activation.
 - **Reference vs. referenced** — the edge family (capitalized; Review
   transposed, mints nothing, `edge:nodes:hyper-reference`) vs. the identifier
   status "referenced" ($v \in V$, `def:graph:anchoring`) vs. "reference
@@ -3285,6 +3285,7 @@ coordinate) · $x$ is reserved for reduced standing · $g_{\text{vch}}$
 $W_{\text{loc}}$ (local width) · $\mathfrak{m}_m$ (depth mass) vs $m_\theta$
 (margin factor) vs $m^*$ (supported depth) ·
 $L_{\text{hop}}$ (transport) vs $L$/$L_{\text{feed}}$ (raw) · index $a$
-(an opaque address vs actor label after frame binding). **Full
+(an opaque address in $\mathbb{A}$ vs actor label after frame binding) ·
+$B_{\max}$ vs $B_i$ ("max" subscript). **Full
 (routing tier) vs full mask (stored shape)** remains a prose distinction —
 a Half edge is full-mask but Half-tier.
