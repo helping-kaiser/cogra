@@ -53,8 +53,9 @@ it. One store: **PostgreSQL**, partitioned by truth relationship —
 the L1 record mirror (cached, rebuildable from the published
 ordered sequence), overlay caches of published fold rules, and
 authoritative L2 state (display content, identity association).
-Money lives on the rails — the realization's admission money and the **CGT
-rail** (balances, transfers, payouts); the graph carries
+Money lives on the rails — admission money (burn value, recorded
+beneath L1 and read as `B_i`) and the **CGT rail** (balances,
+transfers, payouts); the graph carries
 pointers, never amounts. See
 [docs/implementation/architecture.md](docs/implementation/architecture.md)
 and, for the rail, [docs/implementation/ledger.md](docs/implementation/ledger.md).
