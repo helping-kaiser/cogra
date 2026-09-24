@@ -1623,16 +1623,15 @@ band leaves at the member's first stance, not their landing — the
 drawn third line is built on both clients and `borrowedView` answers
 the inviter until reciprocation.
 
-### 44 · The sensitive sheet still draws its own switch · *system* · **in progress**
+### 44 · The sensitive sheet still draws its own switch · *system* · **done**
 
 Filed by the settings round 2026-09-09. `ComposeSensitive` drew the
 system's only switch inline, correctly — one instance is a control,
 not a component. There are now several, so `Switch` is a master
 (`components/core/SettingsRow.jsx`), built to the sheet's own
-geometry so the swap moves no pixel. The sheet has not taken it yet,
-because the round's pixel bar admits only the round's own boards.
-Swap it, re-render, and confirm the board is byte-identical; a copy
-is never the answer. The small-rulings batch is taking the swap.
+geometry so the swap moves no pixel. The sheet took the swap — its
+docblock names the master — and the 2026-09-24 gardening pass closed
+the stale status.
 
 ### 45 · What the post-card round could not finish · *design*
 
@@ -2262,14 +2261,15 @@ frames are four distinct foods under one crop shape, the two faces sit
 side by side on the weighted-accounts list, and `clip-lakeside` is the
 9:16 crop case the stream and viewer show whole.
 
-### 63 · The pair formatter floats with the runtime locale · *system*
+### 63 · The pair formatter floats with the runtime locale · *system* · **done 2026-09-24**
 
 Found by the close-out round: `formatDimension` and `formatUnsigned`
-call `Intl.NumberFormat(undefined, …)`, so a German runtime would
+called `Intl.NumberFormat(undefined, …)`, so a German runtime would
 render `+0,40` where §3's fixed `+0.40 / +0.20` allows only the dot.
-Pin the locale (`en-US` or an explicit numbering contract) in both
-formatters and re-render; the U+2212 substitution (item 59, ruled)
-is unaffected.
+Both formatters are pinned to `en-US` (`StanceReadout.jsx` and the
+bundle); the 2026-09-24 gardening pass pinned the last two floaters,
+the anchor-map card sidecars. The U+2212 substitution (item 59,
+ruled) is unaffected.
 
 ### 66 · What the image round found out of scope · *design + system* · **fixed 2026-09-14**
 
@@ -2545,7 +2545,7 @@ bundle exposes components and constants to screens, never a card's
 helpers, so the rule is tied by the docblocks rather than by an import.
 Nothing is drawn differently.
 
-### 74 · The onboarding intro amends the per-control rule · *design* · **drawn 2026-09-17, awaiting canvas iteration**
+### 74 · The onboarding intro amends the per-control rule · *design* · **done for now 2026-09-24**
 
 jakob's ruling (2026-09-14) amends §13's per-control rule
 (design/readme.md §13, "First-time onboarding is per-control, never a
@@ -2587,9 +2587,12 @@ ordinary 390×844 phone again; its topic row is minted locally because the
 tree owned no full-width disclosure anatomy, and the chevron is the `Icon`
 master's `expand_more`.
 
-Status: awaiting jakob's next canvas pass. One DERIVED call rides on it —
-topics toggle independently, so opening a second leaves the first open (the
-FAQ convention), which he has not ruled.
+**Closed by jakob 2026-09-24**: done for now — the iterated drawing
+stands as drawn, including the derived call that FAQ topics toggle
+independently (opening a second leaves the first open). Later
+iterations are per-feature onboardings shown on a feature's first
+open, the pattern the wallet's first-touch onboarding already set —
+a future round, not this item.
 
 ### 75 · The keyboard's own mechanism · *design* · **ruled + recorded**
 
