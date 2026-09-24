@@ -103,10 +103,11 @@ export function CommentAttachments({
   cover?: CoverAsset | null;
   framePreviews?: readonly string[];
   /**
-   * The clip's stored frame 0 — the tile's face while no cover has been
-   * chosen (item 106: "the preview face is the stored face"). Once a cover
-   * IS chosen, the tile keeps showing that choice instead, unchanged from
-   * before this ruling.
+   * The clip's stored frame 0 — the tile's face, always (readme §13, "the
+   * rule holds at both scales", 2026-09-24). A chosen cover no longer
+   * replaces it: the reply composer's tile is an authoring tile like the
+   * post tray's, so the choice rides as `MediaThumb`'s ringed inset instead
+   * (`coverSrc` below), never a face swap.
    */
   clipFace?: string | null;
   capturing?: boolean;
@@ -150,7 +151,15 @@ export function CommentAttachments({
         <ul className="m-0 flex list-none flex-wrap items-start gap-2 p-0">
           <li className="flex-none">
             <MediaThumb
-              src={cover !== null ? (framePreviews[cover.frame] ?? null) : clipFace}
+              // THE RULE HOLDS AT BOTH SCALES (readme §13, 2026-09-24): the
+              // reply tile is an authoring tile like the post tray's — frame
+              // 0 as its face, always, with the chosen frame riding as the
+              // ringed inset `MediaThumb` already draws for `coverSrc`
+              // (media-thumb.tsx's `coverSrc` prop) rather than replacing
+              // the face. The inline cover row below already shows the
+              // chosen frame at full prominence, so the inset needs no more.
+              src={clipFace}
+              coverSrc={cover !== null ? (framePreviews[cover.frame] ?? null) : null}
               altText={clip.altText}
               width={thumbWidth(undefined)}
               height={THUMB_HEIGHT}
