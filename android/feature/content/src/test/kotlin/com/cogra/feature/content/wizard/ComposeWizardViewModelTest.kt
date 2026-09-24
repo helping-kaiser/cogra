@@ -1377,6 +1377,111 @@ class ComposeWizardViewModelTest {
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
+    // -- The vertical path (`publish-a-vertical-video`,
+    // `give-a-vertical-clip-a-cover`) --
+
+    /** Picks a 9:16 clip and walks it pick → details, past no cover step. */
+    private fun ComposeWizardViewModel.toDetailsWithVerticalClip() {
+        start()
+        dispatcher.scheduler.advanceUntilIdle()
+        onTogglePick("tall-clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        onNext() // body -> details: the cover step is skipped
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun aVerticalClipGoesPickToDetailsAndItsJourneyStartsThere() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        // No stage was entered, so no frames were paid for.
+        assertThat(vm.state.value.coverFrames).isEmpty()
+        // "Pictures upload while you write": the clip goes up from details.
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+
+        // Back from details is the pick: there is no step behind it.
+        vm.onBack()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Body)
+    }
+
+    @Test
+    fun theDoorOpensTheSkippedStepAndAFaceChosenThereWins() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        vm.onOpenCoverStep()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
+        // Opening the step pays for its frames exactly as walking into it does.
+        assertThat(vm.state.value.coverFrames).hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
+
+        vm.onPickCoverFrame(2)
+        vm.onNext() // cover -> details, the stage that asked
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(2))
+        // The clip already landed; only its new face went up.
+        assertThat(media.order.count { it == "video" }).isEqualTo(1)
+        assertThat(media.order.last()).isEqualTo("still")
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+
+        vm.onNext() // details -> seal
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId)
+            .isEqualTo(vm.state.value.coverMediaId)
+    }
+
+    @Test
+    fun backingOutOfTheDoorsStepStillSendsTheFaceChosenThere() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+        vm.onOpenCoverStep()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onPickCoverFrame(1)
+        vm.onBack() // cover -> details, not to the pick
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aClipThatWalkedTheStepHasNoDoorToOpen() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        vm.onOpenCoverStep()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+    }
+
+    /**
+     * A grid clip whose header will not read has no shape anyone can
+     * trust — the store's row is pre-rotation — so it takes the step:
+     * the step existing is the safe default.
+     */
+    @Test
+    fun aClipOfUnknownShapeTakesTheCoverStep() = runTest(dispatcher) {
+        deviceMedia.offered = listOf(DeviceMedia("mystery-grid-clip", TALL, durationMs = 42_000))
+        val vm = viewModel()
+        vm.start()
+        vm.onMediaPermissionGranted()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("mystery-grid-clip")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.picked.single().sourceRatio).isNull()
+
+        vm.onNext()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
+    }
+
     @Test
     fun aFileTheStepCannotReadIsRefusedWhereItWasOffered() = runTest(dispatcher) {
         processor.unreadable = true

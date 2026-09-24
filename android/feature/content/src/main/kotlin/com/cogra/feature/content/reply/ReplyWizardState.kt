@@ -140,13 +140,22 @@ data class ReplyWizardState(
      * come back with nothing to offer, or the author may simply move on
      * to the seal before it resolves — every one of those is a settled
      * "no cover" rather than a wait, so `Next` never blocks on this
-     * (jakob 2026-09-10, the video-cover round). Frame extraction
-     * auto-settles [CoverChoice.None] on the first offered frame once it
-     * succeeds, while the author is still on the composer and has not
-     * chosen otherwise.
+     * (jakob 2026-09-10, the video-cover round). Extraction offers and
+     * never chooses. A vertical clip starts at [CoverChoice.FirstFrame]
+     * instead: there is no step to skip at comment scale, so the row is
+     * what gives way, and the clip carries its first frame unless a face
+     * is chosen through the door.
      */
     val coverChoice: CoverChoice = CoverChoice.None,
     val coverMediaId: String? = null,
+
+    /**
+     * Whether a vertical clip's door has been opened onto the cover row
+     * (`ReplyVideoFailed` → `ReplyVideo`: "the row is what the door
+     * opens"). A horizontal or square clip wears the row from the start
+     * and never reads this.
+     */
+    val coverRowOpen: Boolean = false,
 
     /**
      * Files the composer would not take (`ReplyMediaErrors`). Nothing
@@ -242,7 +251,17 @@ data class ReplyWizardState(
      * or the one standing has its id.
      */
     val coverSettled: Boolean
-        get() = coverChoice is CoverChoice.None || coverMediaId != null
+        get() = coverChoice is CoverChoice.None ||
+            coverChoice is CoverChoice.FirstFrame ||
+            coverMediaId != null
+
+    /**
+     * Whether the clip's cover field is the door rather than the row —
+     * a vertical clip's default at comment scale (design/readme.md §13
+     * "Comment scale inherits at its scale"), until the author opens it.
+     */
+    val coverDoorShowing: Boolean
+        get() = video?.isVerticalClip == true && !coverRowOpen
 
     /**
      * The stance pad is parked over the page, not a drawer.
@@ -378,6 +397,7 @@ fun ReplyWizardState.clearedCover(): ReplyWizardState = copy(
     coverFrames = emptyList(),
     coverChoice = CoverChoice.None,
     coverMediaId = null,
+    coverRowOpen = false,
 )
 
 // ---------------------------------------------------------------------
@@ -436,7 +456,14 @@ fun ReplyWizardState.addPick(
     // at comment caps. A clip is the whole body, so it replaces whatever
     // was there rather than being refused beside it: the file the author
     // just chose is the one they meant.
-    if (picking.isVideo) return copy(picked = listOf(picking)).clearedCover()
+    // A vertical clip carries its first frame as its still from the
+    // moment it is staged: the composer opens on the door, and there is
+    // no step to skip, so staging is where the skip happens.
+    if (picking.isVideo) {
+        return copy(picked = listOf(picking)).clearedCover().let {
+            if (picking.isVerticalClip) it.copy(coverChoice = CoverChoice.FirstFrame) else it
+        }
+    }
     if (isVideoComment) return copy(picked = listOf(picking)).clearedCover()
     if (!canAddPicture) return this
     return copy(picked = picked + picking)

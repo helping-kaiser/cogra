@@ -352,7 +352,7 @@ class ReplyWizardViewModelTest {
 
     @Test
     fun aPickedClipTranscodesAtPickAndDoesNotUploadYet() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val vm = viewModel()
 
         vm.onBodyChange("Words")
@@ -368,7 +368,7 @@ class ReplyWizardViewModelTest {
 
     @Test
     fun aClipThatWillNotTranscodeIsRefusedRatherThanStaged() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         video.transcoded = null
         val vm = viewModel()
 
@@ -384,7 +384,7 @@ class ReplyWizardViewModelTest {
     /** The cap is judged on what would be sent, not on what was picked. */
     @Test
     fun aClipStillOverTheCapAfterReEncodingIsRefused() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         video.transcoded = ProcessedVideo(
             "/tmp/clip.mp4",
             1080,
@@ -410,7 +410,7 @@ class ReplyWizardViewModelTest {
      */
     @Test
     fun theCoverIsUploadedBeforeTheClipItFronts() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val vm = viewModel()
         vm.onBodyChange("Words")
         vm.onPicked("clip.mp4")
@@ -436,7 +436,7 @@ class ReplyWizardViewModelTest {
      */
     @Test
     fun aClipWithFramesPublishesBareWhenNothingIsPickedInTime() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val gate = CompletableDeferred<Unit>()
         video.framesGate = gate
         val vm = viewModel()
@@ -474,7 +474,7 @@ class ReplyWizardViewModelTest {
      */
     @Test
     fun aClipTheAuthorNeverGaveAFaceGoesUpBare() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val vm = viewModel()
         vm.onBodyChange("Words")
         vm.onPicked("clip.mp4")
@@ -502,7 +502,7 @@ class ReplyWizardViewModelTest {
      */
     @Test
     fun aClipWithNoFramesPublishesBare() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         video.frames = emptyList()
         val vm = viewModel()
         vm.onBodyChange("Words")
@@ -527,7 +527,7 @@ class ReplyWizardViewModelTest {
      */
     @Test
     fun aDeliberatelyChosenCoverStillUploadsThenAttaches() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val vm = viewModel()
         vm.onBodyChange("Words")
         vm.onPicked("clip.mp4")
@@ -608,9 +608,35 @@ class ReplyWizardViewModelTest {
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
+    /**
+     * A vertical clip opens on the door (`ReplyVideoFailed`), the door
+     * gives way to the row (`ReplyVideo`), and a face chosen there
+     * replaces the first frame the clip was carrying.
+     */
+    @Test
+    fun aVerticalClipsDoorOpensTheRowAndAChosenFaceWins() = runTest(dispatcher) {
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = TALL)
+        val vm = viewModel()
+        vm.onBodyChange("Words")
+        vm.onPicked("clip.mp4")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        assertThat(vm.state.value.coverDoorShowing).isTrue()
+
+        vm.onOpenCoverRow()
+        assertThat(vm.state.value.coverDoorShowing).isFalse()
+        vm.onPickCoverFrame(0)
+        vm.onNext()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(0))
+        assertThat(media.order).containsExactly("still", "clip").inOrder()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+    }
+
     @Test
     fun aRefusedClipCarriesTheServersOwnWords() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         media.clip = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "not H.264")))
         val vm = viewModel()
         vm.onBodyChange("Words")
@@ -764,7 +790,7 @@ class ReplyWizardViewModelTest {
     /** A discarded reply is not coming back for its parts. */
     @Test
     fun leavingGivesBackTheResumableSession() = runTest(dispatcher) {
-        video.info = VideoInfo(durationMs = 4_000, aspectRatio = 0.5625f)
+        video.info = VideoInfo(durationMs = 4_000, aspectRatio = WIDE)
         val vm = viewModel()
         vm.onBodyChange("Words")
         vm.onPicked("clip.mp4")
@@ -795,5 +821,8 @@ class ReplyWizardViewModelTest {
     private companion object {
         /** A 16:9 clip — the shape whose cover row stands from the start. */
         const val WIDE = 16f / 9f
+
+        /** A 9:16 clip — the shape that opens on the door instead. */
+        const val TALL = 9f / 16f
     }
 }

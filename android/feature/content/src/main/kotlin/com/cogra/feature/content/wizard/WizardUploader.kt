@@ -86,7 +86,7 @@ internal class WizardUploader(
         jobs[clip.uri] = scope.launch {
             val choice = state.value.coverChoice
             val coverId = when (choice) {
-                CoverChoice.None -> null
+                CoverChoice.None, CoverChoice.FirstFrame -> null
                 else -> state.value.coverMediaId ?: uploadCover() ?: return@launch
             }
             state.update { it.withCoverIdFor(choice, coverId) }
@@ -145,15 +145,16 @@ internal class WizardUploader(
      * framed to the clip's own shape: a poster that is not the video's
      * shape would letterbox the thing it stands in for.
      *
-     * Never called for [CoverChoice.None] — [startVideoUpload] skips
-     * straight past it — so that branch is unreached in practice; it
-     * fails loudly rather than silently if that invariant ever breaks.
+     * Never called for [CoverChoice.None] or [CoverChoice.FirstFrame] —
+     * [startVideoUpload] routes both elsewhere — so that branch is
+     * unreached in practice; it fails loudly rather than silently if
+     * that invariant ever breaks.
      */
     private suspend fun uploadCover(): String? {
         val current = state.value
         val clip = current.video ?: return null
         val picture = when (val choice = current.coverChoice) {
-            CoverChoice.None -> null
+            CoverChoice.None, CoverChoice.FirstFrame -> null
             is CoverChoice.Frame -> current.coverFrames.getOrNull(choice.index)?.picture
             is CoverChoice.Picture -> processor.process(
                 choice.uri,

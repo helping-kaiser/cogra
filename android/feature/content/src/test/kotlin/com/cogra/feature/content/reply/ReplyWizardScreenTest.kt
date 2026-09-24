@@ -25,6 +25,7 @@ import com.cogra.domain.media.VideoFrame
 import com.cogra.feature.content.ReferenceRow
 import com.cogra.feature.content.ReferenceSectionState
 import com.cogra.feature.content.wizard.AssetUpload
+import com.cogra.feature.content.wizard.CoverChoice
 import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.UploadFailure
@@ -63,6 +64,7 @@ class ReplyWizardScreenTest {
     private var leaves = 0
     private var coverFrames = mutableListOf<Int>()
     private var coverPickers = 0
+    private var coverRowOpens = 0
     private var dismissedRefusals = mutableListOf<Int>()
     private var retriedUploads = mutableListOf<String>()
     private var keeps = 0
@@ -92,6 +94,7 @@ class ReplyWizardScreenTest {
             onAltTextChange = { _, _ -> },
             onPickCoverFrame = { coverFrames += it },
             onOpenCoverPicker = { coverPickers += 1 },
+            onOpenCoverRow = { coverRowOpens += 1 },
             onDismissRefusal = { dismissedRefusals += it },
             onRetryUpload = { retriedUploads += it },
             onKeepWriting = { keeps += 1 },
@@ -654,6 +657,28 @@ class ReplyWizardScreenTest {
         assertThat(coverPickers).isEqualTo(1)
     }
 
+    // A vertical clip opens with the door in the row's place, and the row
+    // is what the door opens (`ReplyVideoFailed` / `ReplyVideo`, design/
+    // readme.md §13 "Comment scale inherits at its scale").
+
+    @Test
+    fun aVerticalClipOpensWithTheDoorInTheRowsPlace() {
+        compose.setContent { Wizard(composerWithVerticalClip()) }
+
+        compose.onNodeWithTag("reply_cover_door").assertIsDisplayed().performClick()
+        assertThat(coverRowOpens).isEqualTo(1)
+        compose.onNodeWithTag("reply_cover_frame_0").assertDoesNotExist()
+        compose.onNodeWithTag("reply_cover_picture").assertDoesNotExist()
+    }
+
+    @Test
+    fun anOpenedDoorGivesWayToTheRow() {
+        compose.setContent { Wizard(composerWithVerticalClip().copy(coverRowOpen = true)) }
+
+        compose.onNodeWithTag("reply_cover_door").assertDoesNotExist()
+        repeat(4) { compose.onNodeWithTag("reply_cover_frame_$it").assertIsDisplayed() }
+    }
+
     // -- Files the composer would not take (`ReplyMediaErrors`) --
 
     @Test
@@ -771,6 +796,14 @@ class ReplyWizardScreenTest {
             VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 108, 108))
         },
     )
+
+    /** A 9:16 clip, carrying the first frame its shape gives it. */
+    private fun composerWithVerticalClip() = composerWithClip().let { state ->
+        state.copy(
+            picked = state.picked.map { it.copy(sourceRatio = 9f / 16f) },
+            coverChoice = CoverChoice.FirstFrame,
+        )
+    }
 
     /** The same composer with the clip's upload spent (`ReplyVideoFailed`). */
     private fun failedClip() = composerWithClip().let { state ->

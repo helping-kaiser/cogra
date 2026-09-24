@@ -484,14 +484,34 @@ class ComposeWizardViewModel @Inject constructor(
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
         // stepping back to Details renders the in-flight rings.
-        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
-        // The video path spends the same stage on the wire, one stage
-        // later: its face is settled on the cover step, and the cover is
-        // what the clip's own upload has to name.
-        if (current.step == WizardStep.Cover) uploader.startVideoUpload()
+        //
+        // The new state lands first: the video journey reads the face
+        // off the state, and a vertical clip only takes its first frame
+        // as it is routed past the cover step.
         _state.value = next
+        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
+        // The video path spends the same stage on the wire: its face is
+        // settled by the time details opens — chosen on the cover step,
+        // or, for a vertical clip, by the step being skipped — and the
+        // face is what the clip's own upload has to name.
+        // A words post whose media half still holds a clip sends no clip.
+        if (next.step == WizardStep.Details && next.mode == BodyMode.Media && next.isVideoPost) {
+            uploader.startVideoUpload()
+        }
         // Entering the cover stage is what pays for the frames.
         if (next.step == WizardStep.Cover) mediaReader.loadCoverFrames()
+    }
+
+    /**
+     * The details door's "Add a cover" (`ComposeDetailsVideo` →
+     * `ComposeCover`): the step a vertical clip skipped, opened on
+     * purpose. Entering it pays for the frames exactly as walking into it
+     * does; its `Next` comes back to details.
+     */
+    fun onOpenCoverStep() {
+        val opened = _state.value.openedCoverStep() ?: return
+        _state.value = opened
+        mediaReader.loadCoverFrames()
     }
 
     /**
@@ -519,8 +539,14 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update { it.copy(outcome = WizardOutcome.DraftKept) }
             return true
         }
-        val back = _state.value.retreated() ?: return false
+        val before = _state.value
+        val back = before.retreated() ?: return false
         _state.value = back
+        // The door's stage returns to details by Back as well as by Next,
+        // and either way whatever face now stands has to go up.
+        if (before.step == WizardStep.Cover && back.step == WizardStep.Details) {
+            uploader.startVideoUpload()
+        }
         return true
     }
 

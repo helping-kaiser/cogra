@@ -11,6 +11,7 @@ import com.cogra.feature.content.wizard.PickedAsset
 import com.cogra.feature.content.wizard.RefusedPick
 import com.cogra.feature.content.wizard.UploadFailure
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 /**
@@ -425,6 +426,40 @@ class ReplyWizardStateTest {
     @Test
     fun aFreshComposerStartsWithNoFaceChosen() {
         assertThat(ReplyWizardState(target = POST_TARGET).coverChoice).isEqualTo(CoverChoice.None)
+    }
+
+    // -- The shape-keyed default at comment scale (design/readme.md §13,
+    // "Comment scale inherits at its scale") --
+
+    @Test
+    fun aVerticalClipOpensOnTheDoorCarryingItsFirstFrame() {
+        val vertical = composerWithWords().addPick("clip", 9f / 16f, durationMs = 18_000)
+        assertThat(vertical.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        assertThat(vertical.coverDoorShowing).isTrue()
+        // The door opens onto the row; the first frame stands until a face
+        // is chosen there.
+        val opened = vertical.copy(coverRowOpen = true)
+        assertThat(opened.coverDoorShowing).isFalse()
+        assertThat(opened.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+    }
+
+    @Test
+    fun aWideOrSquareClipWearsTheRowAndCarriesNoStillUnlessChosen() {
+        listOf(16f / 9f, 1f, null).forEach { ratio ->
+            val clip = composerWithWords().addPick("clip", ratio, durationMs = 18_000)
+            assertWithMessage("door at $ratio").that(clip.coverDoorShowing).isFalse()
+            assertWithMessage("choice at $ratio").that(clip.coverChoice).isEqualTo(CoverChoice.None)
+        }
+    }
+
+    @Test
+    fun aNewClipClosesTheDoorItsPredecessorOpened() {
+        val opened = composerWithWords()
+            .addPick("clip", 9f / 16f, durationMs = 18_000)
+            .copy(coverRowOpen = true)
+        val next = opened.addPick("other", 9f / 16f, durationMs = 9_000)
+        assertThat(next.coverRowOpen).isFalse()
+        assertThat(next.coverDoorShowing).isTrue()
     }
 
     @Test

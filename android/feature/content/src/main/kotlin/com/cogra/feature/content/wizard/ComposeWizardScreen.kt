@@ -152,6 +152,7 @@ fun ComposeWizardRoute(
                 PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
             )
         },
+        onOpenCoverStep = viewModel::onOpenCoverStep,
         onDismissRefusal = viewModel::onDismissRefusal,
         onTitleChange = viewModel::onTitleChange,
         onDescriptionChange = viewModel::onDescriptionChange,
@@ -223,6 +224,7 @@ internal fun ComposeWizardScreen(
     onCropsChanged: (Map<String, CropSpec>) -> Unit,
     onPickCoverFrame: (Int) -> Unit,
     onOpenCoverPicker: () -> Unit,
+    onOpenCoverStep: () -> Unit,
     onDismissRefusal: (Int) -> Unit,
     onTitleChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
@@ -383,9 +385,9 @@ internal fun ComposeWizardScreen(
                             onRemovePick = onRemovePickAt,
                             onManagePictures = onManagePictures,
                             onDescribePictures = onDescribePictures,
-                            // The cover field's two states reach one place:
-                            // the stage behind this one.
-                            onCover = onBack,
+                            // The door opens the step a vertical clip
+                            // skipped (`give-a-vertical-clip-a-cover`).
+                            onCover = onOpenCoverStep,
                             topics = {
                                 // The 2.3 section, embedded rather than
                                 // rebuilt: only its surroundings changed.

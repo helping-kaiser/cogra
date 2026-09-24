@@ -11,6 +11,7 @@ import com.cogra.domain.media.CropWindow
 import com.cogra.feature.content.TagRow
 import com.cogra.feature.content.TagSectionState
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 
 /**
@@ -533,5 +534,102 @@ class ComposeWizardStateTest {
     @Test
     fun aFreshWizardStartsWithNoFaceChosen() {
         assertThat(ComposeWizardState().coverChoice).isEqualTo(CoverChoice.None)
+    }
+
+    // -- The shape-keyed skip (design/backlog.md item 49; readme §13, the
+    // video-cover round; the feed-video rulings 2026-09-23) --
+
+    private fun clipOfRatio(ratio: Float?) = ComposeWizardState(
+        mode = BodyMode.Media,
+        picked = listOf(PickedAsset("clip", ratio, durationMs = 42_000)),
+    )
+
+    /**
+     * SHAPE ALONE DECIDES: taller than wide skips the step; wide and
+     * exactly square keep it, with no band around square. A shape not
+     * known (or not a ratio at all) keeps the step — the safe default.
+     */
+    @Test
+    fun onlyAClipTallerThanWideSkipsTheCoverStep() {
+        val skips = listOf<Pair<Float?, Boolean>>(
+            16f / 9f to false,
+            1f to false,
+            1.0001f to false,
+            0.9999f to true,
+            4f / 5f to true,
+            9f / 16f to true,
+            null to false,
+            0f to false,
+            -1f to false,
+            Float.NaN to false,
+            Float.POSITIVE_INFINITY to false,
+        )
+        skips.forEach { (ratio, skipped) ->
+            val clip = clipOfRatio(ratio)
+            assertWithMessage("skips at $ratio").that(clip.skipsCoverStep).isEqualTo(skipped)
+            assertWithMessage("step at $ratio").that(clip.hasCoverStep).isEqualTo(!skipped)
+        }
+    }
+
+    @Test
+    fun lengthNeverDecides() {
+        val short = clipOfRatio(9f / 16f).copy(picked = listOf(PickedAsset("c", 9f / 16f, durationMs = 1)))
+        val long = clipOfRatio(9f / 16f).copy(picked = listOf(PickedAsset("c", 9f / 16f, durationMs = 3_600_000)))
+        assertThat(short.skipsCoverStep).isTrue()
+        assertThat(long.skipsCoverStep).isTrue()
+    }
+
+    /** `publish-a-vertical-video`: pick → details, frame 1 as the still. */
+    @Test
+    fun aVerticalClipGoesStraightToDetailsCarryingItsFirstFrame() {
+        val next = clipOfRatio(9f / 16f).advanced()
+        assertThat(next?.step).isEqualTo(WizardStep.Details)
+        assertThat(next?.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        // Back from details returns to the pick: there is no step behind it.
+        assertThat(next?.retreated()?.step).isEqualTo(WizardStep.Body)
+    }
+
+    /**
+     * SKIPPED IS NOT DECLINED. A clip that walked the step and left it
+     * without a face keeps no still at all; only the skip takes frame 1.
+     */
+    @Test
+    fun aClipThatWalkedTheStepAndChoseNothingStaysCoverless() {
+        val walked = clipOfRatio(16f / 9f).advanced()?.advanced()
+        assertThat(walked?.step).isEqualTo(WizardStep.Details)
+        assertThat(walked?.coverChoice).isEqualTo(CoverChoice.None)
+    }
+
+    /** `give-a-vertical-clip-a-cover`: the door opens the skipped step. */
+    @Test
+    fun theDoorOpensTheSkippedStepAndBothWaysOutReturnToDetails() {
+        val details = checkNotNull(clipOfRatio(9f / 16f).advanced())
+        val cover = details.openedCoverStep()
+        assertThat(cover?.step).isEqualTo(WizardStep.Cover)
+        assertThat(cover?.advanced()?.step).isEqualTo(WizardStep.Details)
+        assertThat(cover?.retreated()?.step).isEqualTo(WizardStep.Details)
+    }
+
+    @Test
+    fun aClipThatWalkedTheStepHasNoDoorToOpen() {
+        val details = clipOfRatio(16f / 9f).copy(step = WizardStep.Details)
+        assertThat(details.openedCoverStep()).isNull()
+        // Nor does any stage but details.
+        assertThat(clipOfRatio(9f / 16f).openedCoverStep()).isNull()
+    }
+
+    @Test
+    fun aFaceChosenThroughTheDoorSurvivesAWalkBackToThePick() {
+        val chosen = checkNotNull(clipOfRatio(9f / 16f).advanced()).copy(coverChoice = CoverChoice.Frame(1))
+        val again = chosen.retreated()?.advanced()
+        assertThat(again?.step).isEqualTo(WizardStep.Details)
+        assertThat(again?.coverChoice).isEqualTo(CoverChoice.Frame(1))
+    }
+
+    @Test
+    fun aNewClipForgetsTheFirstFrameItsPredecessorCarried() {
+        val skipped = checkNotNull(clipOfRatio(9f / 16f).advanced())
+        val swapped = skipped.togglePick("other", 16f / 9f, durationMs = 1_000)
+        assertThat(swapped.coverChoice).isEqualTo(CoverChoice.None)
     }
 }

@@ -303,7 +303,7 @@ class ReplyWizardViewModel @Inject constructor(
             if (!clipLanded) _state.update { it.withUpload(clip.uri, AssetUpload.Running) }
             val choice = _state.value.coverChoice
             val coverId = when (choice) {
-                CoverChoice.None -> null
+                CoverChoice.None, CoverChoice.FirstFrame -> null
                 else -> _state.value.coverMediaId ?: uploadCover() ?: return@launch
             }
             // An id belongs to the face it was uploaded for: a face chosen
@@ -361,15 +361,16 @@ class ReplyWizardViewModel @Inject constructor(
      * framed to the clip's own shape: a poster that is not the video's
      * shape would letterbox the thing it stands in for.
      *
-     * Never called for [CoverChoice.None] — [startVideoUpload] skips
-     * straight past it — so that branch is unreached in practice; it
-     * fails loudly rather than silently if that invariant ever breaks.
+     * Never called for [CoverChoice.None] or [CoverChoice.FirstFrame] —
+     * [startVideoUpload] routes both elsewhere — so that branch is
+     * unreached in practice; it fails loudly rather than silently if
+     * that invariant ever breaks.
      */
     private suspend fun uploadCover(): String? {
         val state = _state.value
         val clip = state.video ?: return null
         val picture = when (val choice = state.coverChoice) {
-            CoverChoice.None -> null
+            CoverChoice.None, CoverChoice.FirstFrame -> null
             is CoverChoice.Frame -> state.coverFrames.getOrNull(choice.index)?.picture
             is CoverChoice.Picture -> processor.process(
                 choice.uri,
@@ -416,6 +417,13 @@ class ReplyWizardViewModel @Inject constructor(
 
     fun onPickCoverFrame(index: Int) =
         _state.update { it.copy(coverChoice = CoverChoice.Frame(index), coverMediaId = null) }
+
+    /**
+     * A vertical clip's "Add a cover": the door gives way to the row it
+     * stands in for (`ReplyVideoFailed` → `ReplyVideo`). The frames were
+     * lifted at pick, so the row opens already offering them.
+     */
+    fun onOpenCoverRow() = _state.update { it.copy(coverRowOpen = true) }
 
     /**
      * A cover of the author's own. The id is dropped with the choice: a
