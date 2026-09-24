@@ -1025,8 +1025,9 @@ with $\alpha$ an authored-act identifier, classed by outermost constructor:
 **minted** ($\mathsf{mint}$ — Content, Item, Chat, Offer, Comment,
 Message). Class is decidable syntactically, no census lookup
 (`lem:graph:identifier-disjointness`). Two constructors take atoms from
-outside the record set — $\mathsf{addr}$ anchors *mass* from the reserve,
-$\mathsf{name}$ anchors *reference* from the string commons;
+outside the record set — $\mathsf{addr}$ anchors *mass* from the
+primitive's address space $\mathbb{A}$, $\mathsf{name}$ anchors *reference*
+from the string commons;
 $\mathsf{prof}$ is the unique non-atomic grounded constructor (one atom,
 two identifiers — an Actor and its Profile are one anchoring). "A node
 cannot be re-minted" is a property of term formation, not a rule. An
@@ -2208,14 +2209,14 @@ debited at its writing-epoch price and never re-calibrated (the debit
 schedule is the sole vintage object). $r_i \ge 0$, $=0$ iff $b_i = 0$;
 decreasing under action ($\theta$ off the numerator, $+1$ on the
 denominator), non-decreasing in $B_i$. Published per-actor scalars;
-derivable from the public burn record, the committed act count, and
+derivable from the primitive's public record, the committed act count, and
 the published $\theta$-debit schedule without graph traversal. The frame is
 verified by recompute-and-verify-provenance, never scan-and-total
 (`rem:comparator:auditability`).
 
 **Funding is a Layer-2 freedom (`rem:gates:guild-funding`).** Nothing in
-the sustaining frontier assumes who funds an actor's burn-value: an admission
-burn is funder-unconstrained at the surface, and the resulting $B_i$
+the sustaining frontier assumes who funds an actor's burn value: a burn is
+funder-unconstrained and requires no recipient consent, and the resulting $B_i$
 accrues to the actor's address whoever paid for it
 (`def:comparator:imported-frame`). A terminal Layer-2 community may choose,
 under its own policy, to supply a member's sustaining burn — Layer 1
@@ -2674,7 +2675,7 @@ open question (`frontier:source-root-eligibility`).
 endorsement is $\theta$-priced exactly — each ballast action debits
 $\theta$, sustained dilution pressure of $n$ endorsers costs $n\theta$ per
 epoch-action, and total grip is bounded by spent balance$/\theta$
-(capacity per reserve unit $= 1/\theta \approx 18.94$ at the chartered
+(capacity per burn unit $= 1/\theta \approx 18.94$ at the chartered
 value): grip is rented, not owned. Amplification by multiplicity is closed by
 conservation rather than by any per-path rule — a source apportions one unit
 however many acts it authors, so additional acts redistribute that unit
@@ -2753,7 +2754,10 @@ closure, satisfying `post:introduction:epoch-edge-set` with no appeal to
 any global position coordinate. Commitment rates are computed from $B_i$
 and $N_i$ accumulated within $E_k$; the boundary burn state is provided
 alongside, sampled at the settlement-stability depth $\delta_{\text{pos}}$
-— which buffers the *burn snapshot*, not edge membership. Any participant
+— chosen to exceed the settlement depth the realization publishes (R4(e)),
+so every sampled value is order-free and equal to its last pinned value
+(`lem:comparator:frame-stability`). $\delta_{\text{pos}}$ buffers the *burn
+snapshot*, not edge membership. Any participant
 accepting the same $E_k$ (and $\mathcal{Q}_k$) reproduces every epoch-$k$
 quantity from the published constants alone.
 
