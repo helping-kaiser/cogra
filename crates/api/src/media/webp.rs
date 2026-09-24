@@ -263,6 +263,7 @@ pub fn probe(bytes: &[u8]) -> Result<Probe, MediaError> {
         height,
         duration_ms,
         signal: None,
+        audio_aac: true,
     })
 }
 
@@ -629,6 +630,7 @@ mod tests {
                 height: 1,
                 duration_ms: None,
                 signal: None,
+                audio_aac: true,
             })
         );
     }

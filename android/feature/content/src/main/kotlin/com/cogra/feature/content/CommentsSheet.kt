@@ -325,7 +325,9 @@ private fun CommentsList(
     // feed-video rulings"): every clip in it, replies included, competes
     // for one — the playing clip keeps it while past 70%, and the topmost
     // qualifying clip takes it the moment it drops. The sheet is a scroll
-    // surface of its own, so it does not share the stage of the list below.
+    // surface of its own, so it does not share the stage of the list below —
+    // it suspends it: the surface that raised the sheet stops its own clip
+    // while the sheet stands (jakob 2026-09-24).
     ScrollStageHost(listState) {
         LazyColumn(
             state = listState,

@@ -3304,8 +3304,13 @@ says so.
   bytes, never trusted from the declared content type. A still is
   refused if it does not decode — a file that does not decode is
   not an image whatever its header says — and a video is refused
-  unless its tracks are **H.264 video and AAC audio**, the pair
-  the readers are promised.
+  unless its video track is **H.264**, the codec every reader
+  decodes. Its audio track, if it carries one, may be any codec
+  the server's ffmpeg can decode — the ingest transcoder is the
+  universal fallback for a client that could not produce AAC
+  itself — and every stored video's audio is **AAC**, the pair
+  the readers are promised: audio that did not already arrive AAC
+  is re-encoded to it (below).
 - **Video is served at one target, enforced before signing.**
   The target is the Android composer's: 1080 on the short side,
   H.264 at 4 Mbps scaled down so a long clip fits the upload cap,
@@ -3314,16 +3319,18 @@ says so.
   what exceeds it. The probe that validates the upload decides:
   a clip whose short side is within 1080, whose container rate is
   within the target's video-plus-audio budget over the 0.92 cap
-  headroom — the overshoot the composer's own plan allows for — and
+  headroom — the overshoot the composer's own plan allows for —
   whose sequence parameter set states 8-bit 4:2:0 standard dynamic
-  range is stored as it arrived and is `READY` at once, which is
-  every Android upload and every compressed web upload. Anything
-  else is stored `PROCESSING` and re-encoded with ffmpeg
-  (fast-start, no source metadata); only the rendition is kept,
-  validated by the same pipeline an upload runs, and the original
-  is discarded. The budget, the re-encode's rate and the
-  rendition's validation all use the cap of the destination the
-  upload names (below).
+  range, and whose audio is already AAC, is stored as it arrived
+  and is `READY` at once, which is every Android upload and every
+  compressed web upload. Anything else is stored `PROCESSING` and
+  re-encoded with ffmpeg (fast-start, no source metadata): audio is
+  always re-encoded to AAC, and the video track is copied unchanged
+  when it alone was already within target, or re-encoded to it
+  otherwise. Only the rendition is kept, validated by the same
+  pipeline an upload runs, and the original is discarded. The
+  budget, the re-encode's rate and the rendition's validation all
+  use the cap of the destination the upload names (below).
 - **HDR is tone-mapped to SDR.** A clip whose SPS states a PQ
   (SMPTE ST 2084) or HLG (ARIB STD-B67) transfer is re-encoded
   through ffmpeg's `zscale` + `tonemap` recipe — linear light at a

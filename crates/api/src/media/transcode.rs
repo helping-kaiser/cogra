@@ -184,6 +184,26 @@ const BT709_VUI: &str = "h264_metadata=video_full_range_flag=0:colour_primaries=
 const TONE_MAP_FILTERS: [&str; 2] = ["zscale", "tonemap"];
 const TONE_MAP_BSF: &str = "h264_metadata";
 
+/// How the video track is carried into a rendition.
+///
+/// A stream copy and a filter graph are mutually exclusive in ffmpeg —
+/// `-c:v copy` skips exactly the decode a scale or a tone-map step needs
+/// — so copying is only ever offered when the video is already the
+/// served target on its own terms (canvas, rate, and an SDR 8-bit 4:2:0
+/// signal: [`within_target`] plus [`super::video::Signal::is_served`]).
+/// A rendition is reached only because something in the upload was
+/// outside target; when that something was audio alone, the video track
+/// is bytes ffmpeg does not have to touch, and copying it costs nothing
+/// and loses nothing a re-encode would.
+#[derive(Debug, Clone, Copy)]
+pub enum VideoPlan {
+    /// The video stream is copied unchanged (`-c:v copy`).
+    Copy,
+    /// The video stream is re-encoded to `bps`, tone-mapped from
+    /// `transfer` when it states HDR.
+    Encode { bps: u64, transfer: Transfer },
+}
+
 /// The H.264 encoders the server can drive, in order of preference.
 ///
 /// `libx264` is the reference encoder and what a standard ffmpeg build
@@ -311,9 +331,13 @@ impl Ffmpeg {
     ///
     /// - The first video stream and the first audio stream, if there is
     ///   one — the upload's probe already refused any other kind of track.
-    /// - The scale step, then H.264 at the stated rate in 8-bit 4:2:0, the
-    ///   profile every reader decodes.
-    /// - AAC at 128 kbps.
+    /// - **Video, per [`VideoPlan`].** A copy carries no filter graph and
+    ///   no video encoding flags at all — `-vf` and stream copy cannot
+    ///   share an invocation. An encode runs the scale step, then H.264 at
+    ///   the stated rate in 8-bit 4:2:0, the profile every reader decodes.
+    /// - **Audio is always re-encoded to AAC at 128 kbps.** Audio is the
+    ///   one track a rendition may exist purely to fix, so unlike video it
+    ///   is never a candidate for a stream copy.
     /// - **No metadata out.** `-map_metadata -1` and `-map_chapters -1`
     ///   carry nothing of the source's container or streams across, and
     ///   `+bitexact` keeps the muxer from stamping its own version and a
@@ -325,58 +349,72 @@ impl Ffmpeg {
     ///   ([`tone_map_filter`]), and its rendition states BT.709 in the
     ///   container and in the bitstream's own VUI ([`BT709_VUI`]). An SDR
     ///   source's invocation carries neither, and is otherwise the same.
-    pub fn args(
-        &self,
-        input: &Path,
-        output: &Path,
-        video_bps: u64,
-        transfer: Transfer,
-    ) -> Vec<OsString> {
+    ///   Only [`VideoPlan::Encode`] carries a transfer at all: a copied
+    ///   video is, by construction, already the SDR signal readers are
+    ///   served ([`VideoPlan`]).
+    pub fn args(&self, input: &Path, output: &Path, video: VideoPlan) -> Vec<OsString> {
         let mut args: Vec<OsString> =
             ["-nostdin", "-hide_banner", "-loglevel", "error", "-y", "-i"]
                 .into_iter()
                 .map(OsString::from)
                 .collect();
         args.push(input.as_os_str().to_owned());
-        let video_bps = video_bps.to_string();
         let audio_bps = AUDIO_BPS.to_string();
-        let tone_map = tone_map_filter(transfer);
-        let filter = match &tone_map {
-            Some(tone_map) => format!("{SCALE_FILTER},{tone_map}"),
-            None => SCALE_FILTER.to_string(),
-        };
         args.extend(
-            ["-map", "0:v:0", "-map", "0:a:0?", "-vf"]
+            ["-map", "0:v:0", "-map", "0:a:0?"]
                 .into_iter()
                 .map(OsString::from),
         );
-        args.push(filter.into());
-        if tone_map.is_some() {
-            args.extend(
-                [
-                    "-color_primaries",
-                    "bt709",
-                    "-color_trc",
-                    "bt709",
-                    "-colorspace",
-                    "bt709",
-                    "-color_range",
-                    "tv",
-                    "-bsf:v",
-                    BT709_VUI,
-                ]
-                .into_iter()
-                .map(OsString::from),
-            );
+
+        let video_bps;
+        match video {
+            VideoPlan::Copy => {
+                args.extend(["-c:v", "copy"].into_iter().map(OsString::from));
+            }
+            VideoPlan::Encode { bps, transfer } => {
+                video_bps = bps.to_string();
+                let tone_map = tone_map_filter(transfer);
+                let filter = match &tone_map {
+                    Some(tone_map) => format!("{SCALE_FILTER},{tone_map}"),
+                    None => SCALE_FILTER.to_string(),
+                };
+                args.push("-vf".into());
+                args.push(filter.into());
+                if tone_map.is_some() {
+                    args.extend(
+                        [
+                            "-color_primaries",
+                            "bt709",
+                            "-color_trc",
+                            "bt709",
+                            "-colorspace",
+                            "bt709",
+                            "-color_range",
+                            "tv",
+                            "-bsf:v",
+                            BT709_VUI,
+                        ]
+                        .into_iter()
+                        .map(OsString::from),
+                    );
+                }
+                args.extend(
+                    [
+                        "-c:v",
+                        self.h264,
+                        "-b:v",
+                        video_bps.as_str(),
+                        "-pix_fmt",
+                        "yuv420p",
+                    ]
+                    .into_iter()
+                    .map(OsString::from),
+                );
+            }
         }
+
         args.extend(
             [
-                "-c:v",
-                self.h264,
-                "-b:v",
-                video_bps.as_str(),
-                "-pix_fmt",
-                "yuv420p",
                 "-c:a",
                 "aac",
                 "-b:a",
@@ -412,12 +450,11 @@ impl Ffmpeg {
         &self,
         input: &Path,
         output: &Path,
-        video_bps: u64,
-        transfer: Transfer,
+        video: VideoPlan,
         deadline: Duration,
     ) -> Result<(), TranscodeError> {
         let run = tokio::process::Command::new(&self.program)
-            .args(self.args(input, output, video_bps, transfer))
+            .args(self.args(input, output, video))
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
@@ -573,8 +610,10 @@ mod tests {
             .args(
                 Path::new("in.mp4"),
                 Path::new("out.mp4"),
-                1_791_781,
-                Transfer::Sdr,
+                VideoPlan::Encode {
+                    bps: 1_791_781,
+                    transfer: Transfer::Sdr,
+                },
             )
             .into_iter()
             .map(|a| a.to_string_lossy().into_owned())
@@ -597,6 +636,49 @@ mod tests {
         assert_eq!(after("-bsf:v"), None, "an SDR source's VUI is its own");
     }
 
+    /// A copy carries no filter graph and no video encoding flags at all —
+    /// `-c:v copy` alone for the video track, ffmpeg's own reason being
+    /// that a filter graph requires the decode a copy exists to skip —
+    /// while audio is still always re-encoded to the AAC target.
+    ///
+    /// A copied video carries no filter graph, and its audio is still re-encoded to AAC.
+    /// ´claim:media:a-copied-video-carries-no-filter-graph´
+    #[test]
+    fn a_video_copy_carries_no_filter_or_encode_flags() {
+        let ffmpeg = Ffmpeg {
+            program: "ffmpeg".into(),
+            h264: "libx264",
+            tone_map: true,
+        };
+        let args: Vec<String> = ffmpeg
+            .args(Path::new("in.mp4"), Path::new("out.mp4"), VideoPlan::Copy)
+            .into_iter()
+            .map(|a| a.to_string_lossy().into_owned())
+            .collect();
+        let after = |flag: &str| {
+            args.iter()
+                .position(|a| a == flag)
+                .and_then(|i| args.get(i + 1))
+                .map(String::as_str)
+        };
+        assert_eq!(after("-c:v"), Some("copy"));
+        assert_eq!(after("-c:a"), Some("aac"), "audio is still re-encoded");
+        assert_eq!(after("-b:a"), Some("128000"));
+        assert!(
+            !args.iter().any(|a| a == "-vf"),
+            "no filter graph: {args:?}"
+        );
+        assert!(!args.iter().any(|a| a == "-b:v"), "no video rate: {args:?}");
+        assert!(
+            !args.iter().any(|a| a == "-pix_fmt"),
+            "no pixel format: {args:?}"
+        );
+        assert!(
+            !args.iter().any(|a| a == "-bsf:v"),
+            "no bitstream filter: {args:?}"
+        );
+    }
+
     /// An HDR source's invocation scales, then tone-maps from the transfer
     /// the probe found — linear light, float, BT.709 gamut, the curve, back
     /// to BT.709 8-bit 4:2:0 — and states BT.709 in the container and the
@@ -616,8 +698,10 @@ mod tests {
                 .args(
                     Path::new("in.mp4"),
                     Path::new("out.mp4"),
-                    4_000_000,
-                    transfer,
+                    VideoPlan::Encode {
+                        bps: 4_000_000,
+                        transfer,
+                    },
                 )
                 .into_iter()
                 .map(|a| a.to_string_lossy().into_owned())

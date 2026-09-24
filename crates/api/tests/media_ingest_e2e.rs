@@ -373,6 +373,47 @@ async fn camera_original(ffmpeg: &Ffmpeg) -> Vec<u8> {
     tokio::fs::read(&out).await.expect("the fixture")
 }
 
+/// A phone-shaped clip — small canvas, low rate, well within target on
+/// video alone — carrying audio in `audio_codec` rather than AAC. Used to
+/// prove the widened acceptance: the upload queues on audio's account
+/// alone, and the ingest worker's fixed recipe turns whatever this is
+/// into AAC without touching the video, which video alone being in
+/// target lets it copy ([`api::media::transcode::VideoPlan`]).
+async fn non_aac_audio_original(ffmpeg: &Ffmpeg, audio_codec: &str) -> Vec<u8> {
+    let scratch = tempfile::tempdir().expect("scratch");
+    let out = scratch.path().join("original.mp4");
+    let status = tokio::process::Command::new(ffmpeg.program())
+        .args([
+            "-nostdin",
+            "-loglevel",
+            "error",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "testsrc2=size=640x360:rate=30",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=440:sample_rate=48000",
+            "-t",
+            "2",
+            "-c:v",
+            ffmpeg.h264_encoder(),
+            "-b:v",
+            "600000",
+            "-c:a",
+            audio_codec,
+            "-shortest",
+        ])
+        .arg(&out)
+        .status()
+        .await
+        .expect("ffmpeg runs");
+    assert!(status.success(), "the {audio_codec} fixture encodes");
+    tokio::fs::read(&out).await.expect("the fixture")
+}
+
 /// The ffmpeg on `PATH` if it can also tone-map, on the same skip-or-fail
 /// terms as [`ffmpeg_or_skip`]: CI's ffmpeg carries zimg, so a missing
 /// tone map there is a broken gate too.
@@ -541,6 +582,82 @@ async fn an_hdr_upload_is_tone_mapped_to_bt709_sdr(pool: PgPool) {
                 "{zscale_transfer}: ffprobe reads {line}: {described}"
             );
         }
+        assert_eq!(rig.prepare_video_post(&token, &id).await, json!([]));
+    }
+}
+
+/// An upload whose video alone is within target but whose audio is not
+/// AAC still queues, and the ingest worker's fixed recipe turns its
+/// audio into AAC while leaving the video copied — the widened
+/// acceptance a fallback browser upload needs: its remux can leave
+/// audio in whatever the browser produced (PCM, Opus, ...) even when the
+/// video track itself needed no help.
+///
+/// A video whose audio alone is outside target still uploads as PROCESSING and settles with AAC audio.
+/// ´claim:media:non-aac-audio-alone-still-queues-and-settles´
+#[sqlx::test(migrations = "../../migrations")]
+async fn non_aac_audio_alone_queues_and_settles_with_aac(pool: PgPool) {
+    let Some(ffmpeg) = ffmpeg_or_skip("non_aac_audio_alone_queues_and_settles_with_aac").await
+    else {
+        return;
+    };
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let caps = rig.media.caps_for(GalleryKind::Post);
+
+    for audio_codec in ["pcm_s16le", "libopus"] {
+        let original = non_aac_audio_original(&ffmpeg, audio_codec).await;
+        let probe = api::media::video::probe(&original).expect("the fixture probes");
+        assert!(
+            api::media::transcode::within_target(
+                probe.width,
+                probe.height,
+                probe.duration_ms,
+                original.len() as u64,
+                caps.video_bytes as u64,
+            ),
+            "{audio_codec}: the video alone is within target"
+        );
+        assert!(
+            !probe.audio_aac,
+            "{audio_codec}: this is exactly the non-AAC audio under test"
+        );
+
+        let uploaded = rig.upload(&token, &original).await;
+        assert_eq!(
+            uploaded["state"], "PROCESSING",
+            "{audio_codec}: audio alone queues it: {uploaded}"
+        );
+        let id = uploaded["id"].as_str().expect("id").to_string();
+        assert_eq!(rig.ingest(Some(&ffmpeg)).await, Settled::Ready);
+
+        let ready = rig.media_attachment(&token, &id).await;
+        assert_eq!(ready["state"], "READY", "{audio_codec}: {ready}");
+        let key = ready["url"]
+            .as_str()
+            .and_then(|url| url.strip_prefix("https://media.example/bucket/"))
+            .expect("an asset key")
+            .to_string();
+        let stored = rig.blobs.get(&key).await.expect("the rendition is stored");
+
+        let rendition = api::media::video::probe(&stored).expect("the rendition probes");
+        assert!(
+            rendition.audio_aac,
+            "{audio_codec}: the rendition's audio is AAC"
+        );
+        assert_eq!(
+            (rendition.width, rendition.height),
+            (probe.width, probe.height),
+            "{audio_codec}: the video was copied, not rescaled"
+        );
+
+        let processed = api::media::process(&stored, caps).expect("the rendition validates");
+        assert!(
+            !processed.needs_transcode,
+            "{audio_codec}: the rendition is within target"
+        );
+
         assert_eq!(rig.prepare_video_post(&token, &id).await, json!([]));
     }
 }
