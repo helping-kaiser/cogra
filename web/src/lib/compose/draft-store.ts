@@ -109,9 +109,11 @@ function run<T>(
 type StoredAsset = Omit<PickedAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
 /** The video's face travels the same way, and for the same reason. */
 type StoredCover = Omit<CoverAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
-type StoredState = Omit<WizardState, "assets" | "cover"> & {
+type StoredState = Omit<WizardState, "assets" | "cover" | "autoCover"> & {
   assets: readonly StoredAsset[];
   cover: StoredCover | null;
+  /** The silent frame-1 still, stored the same way as a chosen `cover`. */
+  autoCover: StoredCover | null;
 };
 
 type StoredDraft = {
@@ -157,11 +159,13 @@ function afterReload(upload: PickedAsset["upload"]): PickedAsset["upload"] {
  */
 function restored(stored: StoredState): WizardState {
   const base = emptyWizard();
-  // The two fields the stored shape genuinely differs on — `assets` and
-  // `cover` carry bytes rather than blobs — are rebuilt below. Every other
-  // field is read as OPTIONAL, whatever the declared type says: that is the
-  // whole point, since an older draft simply does not have the newer ones.
-  type PlainFields = Omit<WizardState, "assets" | "cover">;
+  // The fields the stored shape genuinely differs on — `assets`, `cover` and
+  // `autoCover` carry bytes rather than blobs — are rebuilt below. Every
+  // other field is read as OPTIONAL, whatever the declared type says: that is
+  // the whole point, since an older draft simply does not have the newer
+  // ones — `stored.autoCover` is `undefined` on every draft saved before this
+  // field existed, and `== null` below reads that exactly as "none".
+  type PlainFields = Omit<WizardState, "assets" | "cover" | "autoCover">;
   const plain = stored as Partial<PlainFields>;
   const take = <K extends keyof PlainFields>(key: K): PlainFields[K] => {
     const value = plain[key];
@@ -183,6 +187,14 @@ function restored(stored: StoredState): WizardState {
             ...stored.cover,
             file: new Blob([stored.cover.bytes], { type: stored.cover.fileType }),
             upload: afterReload(stored.cover.upload),
+          },
+    autoCover:
+      stored.autoCover == null
+        ? null
+        : {
+            ...stored.autoCover,
+            file: new Blob([stored.autoCover.bytes], { type: stored.autoCover.fileType }),
+            upload: afterReload(stored.autoCover.upload),
           },
     shape: take("shape"),
     focused: take("focused"),
@@ -243,11 +255,19 @@ export function createComposeDraftStore(deps: {
               bytes: await state.cover.file.arrayBuffer(),
               fileType: state.cover.file.type,
             };
+      const autoCover: StoredCover | null =
+        state.autoCover === null
+          ? null
+          : {
+              ...state.autoCover,
+              bytes: await state.autoCover.file.arrayBuffer(),
+              fileType: state.autoCover.file.type,
+            };
       if (startedIn !== generation) return;
       const draft: StoredDraft = {
         schema: DRAFT_SCHEMA,
         savedAt: new Date().toISOString(),
-        state: { ...state, assets, cover },
+        state: { ...state, assets, cover, autoCover },
       };
       await run(factory(), "readwrite", (store) => store.put(draft, account));
     },

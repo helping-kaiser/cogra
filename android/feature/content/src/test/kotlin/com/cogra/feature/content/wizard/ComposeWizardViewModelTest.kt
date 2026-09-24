@@ -6,6 +6,7 @@ import com.cogra.domain.AttachmentClaim
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
+import com.cogra.domain.MediaAssetState
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedContentView
@@ -19,6 +20,7 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMedia
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaDestination
+import com.cogra.domain.media.MediaReadiness
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.ProcessedVideo
 import com.cogra.domain.media.UploadProgress
@@ -36,6 +38,7 @@ import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.topics.TagClaim
 import com.google.common.truth.Truth.assertThat
 import java.io.IOException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -104,19 +107,46 @@ class ComposeWizardViewModelTest {
         /** The URI each call is for, in order, so failures can be aimed. */
         var pending = ArrayDeque<String>()
 
+        /**
+         * Assets the next upload should come back PROCESSING for, by the
+         * id it will be minted with (`"m$next"`) — set before the pick
+         * that should be affected.
+         */
+        var processing = mutableSetOf<String>()
+
+        /** What each polled id settles into, and its reason if FAILED. */
+        var pollAnswers = mutableMapOf<String, Pair<MediaAssetState, String?>>()
+        var pollCalls = 0
+
+        /** When set, a still upload blocks here until it is completed. */
+        var stillGate: CompletableDeferred<Unit>? = null
+
+        /** The network failing under the next still uploads. */
+        var stillTransportFault = false
+
         override suspend fun uploadMedia(
             picture: ProcessedPicture,
         ): Outcome<MediaAssetView> {
             uploads += 1
+            stillGate?.await()
+            if (stillTransportFault) return Outcome.Failed(IOException("down"))
             val uri = pending.removeFirstOrNull().orEmpty()
             if (uri in failures) {
                 return Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "too big")))
             }
             next += 1
             order += "still"
+            val id = "m$next"
+            val state = if (id in processing) MediaAssetState.PROCESSING else MediaAssetState.READY
             return Outcome.Success(
-                MediaAssetView("m$next", "https://media/m$next", null, FieldStatus.NORMAL, 1f),
+                MediaAssetView(id, "https://media/$id", null, FieldStatus.NORMAL, 1f, state = state),
             )
+        }
+
+        override suspend fun mediaAttachment(id: String): Outcome<MediaReadiness?> {
+            pollCalls += 1
+            val (state, reason) = pollAnswers[id] ?: (MediaAssetState.READY to null)
+            return Outcome.Success(MediaReadiness(id, state, reason))
         }
 
         /** Every upload in the order it was made — stills and clips alike. */
@@ -242,8 +272,24 @@ class ComposeWizardViewModelTest {
                 List(count) { VideoFrame(it * 1_000, ProcessedPicture(ByteArray(4), 100, 125)) }
             }
 
-        override suspend fun info(uri: String): VideoInfo? =
-            if (uri.startsWith("clip")) VideoInfo(42_000, 0.5625f) else null
+        /** What frame 1 comes back as; null is a clip that gave none. */
+        var firstFrame: ProcessedPicture? = ProcessedPicture(ByteArray(4), 108, 192)
+
+        override suspend fun firstFrame(uri: String): ProcessedPicture? {
+            calls += "firstFrame"
+            return firstFrame
+        }
+
+        /**
+         * `clip*` is a wide 16:9 clip — the shape that walks the cover
+         * step — and `tall-clip*` a 9:16 one, which skips it. Anything
+         * else is not a clip the header can read.
+         */
+        override suspend fun info(uri: String): VideoInfo? = when {
+            uri.startsWith("tall-clip") -> VideoInfo(42_000, TALL)
+            uri.startsWith("clip") -> VideoInfo(42_000, WIDE)
+            else -> null
+        }
     }
 
     private fun viewModel() = ComposeWizardViewModel(
@@ -327,6 +373,72 @@ class ComposeWizardViewModelTest {
         assertThat(media.uploads).isEqualTo(2)
         assertThat(vm.state.value.picked.map { it.upload })
             .containsExactly(AssetUpload.Done("m1"), AssetUpload.Done("m2"))
+        // THE READY-AT-ONCE PATH COSTS NOTHING EXTRA: Android's own
+        // uploads are always within target, so the gate never has reason
+        // to poll `mediaAttachment` at all.
+        assertThat(media.pollCalls).isEqualTo(0)
+    }
+
+    /**
+     * THE BACKSTOP, not the shipped path: a future server-side rule
+     * change could hand back PROCESSING even though Android's own
+     * uploads are always within target. `uploadsComplete` — and the sign
+     * gate riding it — has to stay shut until the poll reads READY.
+     */
+    @Test
+    fun aProcessingPictureHoldsTheGateShutThenOpensOnceThePollReadsReady() = runTest(dispatcher) {
+        media.processing += "m1"
+        media.pollAnswers["m1"] = MediaAssetState.READY to null
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+
+        // The upload answered, but the asset is not attachable yet — the
+        // pick stays "not done" through the wizard's ordinary uploading
+        // mechanics, exactly as a slow `Sending` would.
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+        assertThat(vm.state.value.canSign).isFalse()
+
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.pollCalls).isEqualTo(1)
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("m1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * A PROCESSING asset the server only refused after accepting the
+     * bytes surfaces through the existing failure line, worded with the
+     * server's own reason — and offers no retry, because the identical
+     * bytes already made one round trip into that answer.
+     */
+    @Test
+    fun aProcessingPictureThatFailsSurfacesTheServersReasonWithNoRetry() = runTest(dispatcher) {
+        media.processing += "m1"
+        media.pollAnswers["m1"] = MediaAssetState.FAILED to "not a readable picture"
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onModeChange(BodyMode.Media)
+        vm.onTogglePick("a")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> crop
+        vm.onNext() // crop -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val failed = vm.state.value.picked.single().upload
+        assertThat(failed).isInstanceOf(AssetUpload.Failed::class.java)
+        failed as AssetUpload.Failed
+        assertThat(failed.reason).isEqualTo(UploadFailure.REFUSED_PICTURE)
+        assertThat(failed.serverMessage).isEqualTo("not a readable picture")
+        assertThat(failed.retryable).isFalse()
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+        assertThat(vm.state.value.canSign).isFalse()
     }
 
     /**
@@ -1049,20 +1161,21 @@ class ComposeWizardViewModelTest {
      * tests around this one either raced extraction or forced it to
      * come back empty, so nothing asked what happens on the ordinary
      * path: frames land while the author is on the stage, and the
-     * author presses Next without touching one. That is the default,
-     * and the default is bare — no cover is chosen, none is uploaded,
-     * and the placement names none.
+     * author presses Next without touching one. No face is chosen, and
+     * none of the offers is uploaded — the clip is stored with its own
+     * first frame instead (design's ruling 2026-09-24: every face-less
+     * clip is handed to readers with a stored still).
      */
     @Test
-    fun aClipTheAuthorNeverGaveAFaceGoesUpBare() = runTest(dispatcher) {
+    fun aClipTheAuthorNeverGaveAFaceIsStoredWithItsFirstFrame() = runTest(dispatcher) {
         val vm = viewModel()
         vm.toDetailsWithVideo()
 
         assertThat(vm.state.value.coverFrames)
             .hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
-        assertThat(vm.state.value.coverMediaId).isNull()
-        assertThat(media.order).containsExactly("video")
+        assertThat(video.calls).contains("firstFrame")
+        assertThat(media.order).containsExactly("still", "video").inOrder()
         // A post's clip is sized for a post's cap on the server too.
         assertThat(media.destinations).containsExactly(MediaDestination.POST)
 
@@ -1070,7 +1183,7 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
         vm.onSign()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(content.lastAttachments.single().coverMediaId).isNull()
+        assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
     }
 
     /**
@@ -1078,12 +1191,12 @@ class ComposeWizardViewModelTest {
      * this is deliberately racy: `onNext` is called twice back to back
      * with no `advanceUntilIdle` between them, so the cover stage is
      * left before `loadCoverFrames`'s coroutine has run at all.
-     * Going without a cover is always possible (jakob 2026-09-10), so
-     * this must publish rather than hang on a face that was never
-     * going to be chosen.
+     * Going without a face is always possible (jakob 2026-09-10), so
+     * this must publish rather than hang on a face that was never going
+     * to be chosen — standing on its first frame.
      */
     @Test
-    fun aClipWithFramesPublishesBareWhenNothingIsPicked() = runTest(dispatcher) {
+    fun aClipLeftBeforeItsFramesLandedPublishesOnItsFirstFrame() = runTest(dispatcher) {
         val vm = viewModel()
         vm.start()
         dispatcher.scheduler.advanceUntilIdle()
@@ -1094,26 +1207,26 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
-        assertThat(vm.state.value.coverMediaId).isNull()
-        // No "still" in the order: the cover leg never ran.
-        assertThat(media.order).containsExactly("video")
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+        assertThat(media.order).containsExactly("still", "video").inOrder()
         assertThat(vm.state.value.uploadsComplete).isTrue()
     }
 
     /**
      * A clip the device could not lift a single frame out of
      * (`CoverRow`'s no-frames caption, "…or leave it without one" —
-     * PR #721). With nothing to auto-settle on, the choice stays
-     * [CoverChoice.None] for good, and the clip still publishes.
+     * PR #721): no offer, no frame 1 either, so it ships without a
+     * still — the only still-less clip — and still publishes.
      */
     @Test
-    fun aClipWithNoFramesPublishesBare() = runTest(dispatcher) {
+    fun aClipWithNoFramesAtAllPublishesBare() = runTest(dispatcher) {
         video.noFrames = true
+        video.firstFrame = null
         val vm = viewModel()
         vm.toDetailsWithVideo()
 
         assertThat(vm.state.value.coverFrames).isEmpty()
-        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
         assertThat(vm.state.value.coverMediaId).isNull()
         assertThat(media.order).containsExactly("video")
         assertThat(vm.state.value.uploadsComplete).isTrue()
@@ -1203,6 +1316,326 @@ class ComposeWizardViewModelTest {
             .isEqualTo(CoverChoice.Picture("my-own.jpg"))
         // The uploaded cover is no longer the one the author means.
         assertThat(vm.state.value.coverMediaId).isNull()
+    }
+
+    /**
+     * A NEW FACE NEVER MOVES THE CLIP'S BYTES: the placement names the
+     * face at prepare, so a face chosen after the clip landed goes up on
+     * its own and the clip is not sent a second time.
+     */
+    @Test
+    fun aFaceChosenAfterTheClipLandedGoesUpAlone() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+        // Face-less, so stored on its first frame.
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+
+        vm.onBack() // details -> cover
+        vm.onPickCoverFrame(0)
+        vm.onNext() // cover -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("still", "video", "still").inOrder()
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m2")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aJourneyWithNothingLeftToSendSendsNothing() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo(pickCover = true)
+        vm.onBack() // details -> cover
+        vm.onNext() // cover -> details, the same face standing
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(video.calls.count { it == "transcode" }).isEqualTo(1)
+    }
+
+    /**
+     * AN ID BELONGS TO THE FACE IT WAS UPLOADED FOR. The author leaves
+     * the stage with one face, steps back while it is still going up, and
+     * chooses another; the first upload landing afterwards must not pose
+     * as the second face's id, or the next journey would skip uploading
+     * the face the author actually chose.
+     */
+    @Test
+    fun aFaceReplacedWhileItsPredecessorUploadsNeverInheritsTheOldId() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onNext() // body -> cover
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onPickCoverFrame(0)
+        val gate = CompletableDeferred<Unit>()
+        media.stillGate = gate
+        vm.onNext() // cover -> details: frame 0 starts going up, and blocks
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onBack() // details -> cover
+        vm.onPickCoverFrame(1)
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        // Frame 0 landed as m1, but frame 1 is the face now.
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(1))
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+
+        media.stillGate = null
+        vm.onNext() // cover -> details: the chosen face goes up in its own right
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m2")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    // -- The vertical path (`publish-a-vertical-video`,
+    // `give-a-vertical-clip-a-cover`) --
+
+    /** Picks a 9:16 clip and walks it pick → details, past no cover step. */
+    private fun ComposeWizardViewModel.toDetailsWithVerticalClip() {
+        start()
+        dispatcher.scheduler.advanceUntilIdle()
+        onTogglePick("tall-clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        onNext() // body -> details: the cover step is skipped
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun aVerticalClipGoesPickToDetailsAndItsJourneyStartsThere() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        // No stage was entered, so no frames were paid for.
+        assertThat(vm.state.value.coverFrames).isEmpty()
+        // "Pictures upload while you write": the clip goes up from details.
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+
+        // Back from details is the pick: there is no step behind it.
+        vm.onBack()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Body)
+    }
+
+    @Test
+    fun theDoorOpensTheSkippedStepAndAFaceChosenThereWins() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        vm.onOpenCoverStep()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
+        // Opening the step pays for its frames exactly as walking into it does.
+        assertThat(vm.state.value.coverFrames).hasSize(ComposeWizardViewModel.COVER_FRAME_COUNT)
+
+        vm.onPickCoverFrame(2)
+        vm.onNext() // cover -> details, the stage that asked
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(2))
+        // The clip already landed; only its new face went up.
+        assertThat(media.order.count { it == "video" }).isEqualTo(1)
+        assertThat(media.order.last()).isEqualTo("still")
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+
+        vm.onNext() // details -> seal
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId)
+            .isEqualTo(vm.state.value.coverMediaId)
+    }
+
+    @Test
+    fun backingOutOfTheDoorsStepStillSendsTheFaceChosenThere() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+        vm.onOpenCoverStep()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onPickCoverFrame(1)
+        vm.onBack() // cover -> details, not to the pick
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    @Test
+    fun aClipThatWalkedTheStepHasNoDoorToOpen() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        vm.onOpenCoverStep()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Details)
+    }
+
+    // -- The stored first frame (the feed-video rulings, 2026-09-23) --
+
+    /**
+     * THE SKIPPED STEP STILL TAKES FRAME 1: extracted silently, uploaded
+     * on the face's own leg ahead of the clip, and named at prepare.
+     */
+    @Test
+    fun aSkippedClipIsStoredWithItsFirstFrame() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(video.calls).contains("firstFrame")
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+
+        vm.onNext() // details -> seal
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m1")
+    }
+
+    /**
+     * When extraction fails the post ships without a still, SILENTLY: no
+     * failure reaches the author, and readers meet the neutral tile.
+     */
+    @Test
+    fun aClipThatGivesNoFirstFrameShipsBareAndSilently() = runTest(dispatcher) {
+        video.firstFrame = null
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
+        assertThat(vm.state.value.coverMediaId).isNull()
+        assertThat(media.order).containsExactly("video")
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+
+        vm.onNext()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId).isNull()
+    }
+
+    /** A frame the server will not keep is no still either — still silent. */
+    @Test
+    fun aRefusedFirstFrameShipsBareAndSilently() = runTest(dispatcher) {
+        media.failures.add("") // the still upload names no picked uri
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.NoStill)
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+    }
+
+    /**
+     * DECLINING A FACE IS NOT DECLINING A STILL (design's ruling
+     * 2026-09-24). A clip that walked the step and chose nothing stays
+     * DECLINED in state — no door on details — but is stored with frame 1
+     * exactly as a skipped one is. The offered frames are slice midpoints
+     * that keep off frame 0, so frame 1 is extracted on its own.
+     */
+    @Test
+    fun aClipThatWalkedTheStepAndDeclinedIsStoredWithFrameOneToo() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVideo()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.None)
+        assertThat(vm.state.value.skipsCoverStep).isFalse()
+        assertThat(video.calls).contains("firstFrame")
+        assertThat(media.order).containsExactly("still", "video").inOrder()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+    }
+
+    /** The seal waits for frame 1 exactly as it waits for a chosen face. */
+    @Test
+    fun theSealWaitsForTheFirstFrameToLand() = runTest(dispatcher) {
+        val gate = CompletableDeferred<Unit>()
+        media.stillGate = gate
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+        vm.onNext() // details -> seal
+
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Seal)
+        assertThat(vm.state.value.uploadsComplete).isFalse()
+        assertThat(vm.state.value.canSign).isFalse()
+
+        gate.complete(Unit)
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.uploadsComplete).isTrue()
+        assertThat(vm.state.value.canSign).isTrue()
+    }
+
+    /** CHOSEN COVER WINS: a face from the door replaces the stored frame 1. */
+    @Test
+    fun aFaceChosenThroughTheDoorReplacesTheFirstFrame() = runTest(dispatcher) {
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m1")
+
+        vm.onOpenCoverStep()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onPickCoverFrame(2)
+        vm.onNext() // cover -> details
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.Frame(2))
+        assertThat(vm.state.value.coverMediaId).isEqualTo("m2")
+        assertThat(media.order).containsExactly("still", "video", "still").inOrder()
+
+        vm.onNext()
+        vm.onSign()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(content.lastAttachments.single().coverMediaId).isEqualTo("m2")
+    }
+
+    /**
+     * A network fault under frame 1 is a fault, not an answer: it rides
+     * the clip's own failure line, and the retry extracts again.
+     */
+    @Test
+    fun aFirstFrameLostToTheNetworkIsRetriedWithTheClip() = runTest(dispatcher) {
+        media.stillTransportFault = true
+        val vm = viewModel()
+        vm.toDetailsWithVerticalClip()
+
+        val failed = vm.state.value.picked.single().upload as AssetUpload.Failed
+        assertThat(failed.reason).isEqualTo(UploadFailure.TRANSPORT)
+        assertThat(failed.retryable).isTrue()
+        assertThat(vm.state.value.coverChoice).isEqualTo(CoverChoice.FirstFrame)
+        assertThat(media.order).doesNotContain("video")
+
+        media.stillTransportFault = false
+        vm.onRetryUpload("tall-clip-1")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(video.calls.count { it == "firstFrame" }).isEqualTo(2)
+        assertThat(vm.state.value.coverMediaId).isNotNull()
+        assertThat(vm.state.value.picked.single().upload).isEqualTo(AssetUpload.Done("v1"))
+    }
+
+    /**
+     * A grid clip whose header will not read has no shape anyone can
+     * trust — the store's row is pre-rotation — so it takes the step:
+     * the step existing is the safe default.
+     */
+    @Test
+    fun aClipOfUnknownShapeTakesTheCoverStep() = runTest(dispatcher) {
+        deviceMedia.offered = listOf(DeviceMedia("mystery-grid-clip", TALL, durationMs = 42_000))
+        val vm = viewModel()
+        vm.start()
+        vm.onMediaPermissionGranted()
+        dispatcher.scheduler.advanceUntilIdle()
+        vm.onTogglePick("mystery-grid-clip")
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.picked.single().sourceRatio).isNull()
+
+        vm.onNext()
+        assertThat(vm.state.value.step).isEqualTo(WizardStep.Cover)
     }
 
     @Test
@@ -1403,5 +1836,36 @@ class ComposeWizardViewModelTest {
         vm.onOpenSheet(SealSheet.Stance)
         assertThat(vm.state.value.stagedPDirected)
             .isEqualTo(ComposeWizardState.DEFAULT_P_DIRECTED)
+    }
+
+    /**
+     * MediaStore rows a phone's portrait recording at its STORED
+     * dimensions — 1920×1080, the quarter turn kept in a separate
+     * ORIENTATION column — so the grid's ratio calls it landscape. The
+     * clip's shape decides whether the cover step stands, so it is read
+     * from the clip's own header, which is post-rotation.
+     */
+    @Test
+    fun aGridClipTakesItsShapeFromItsHeaderRatherThanTheStoresRow() = runTest(dispatcher) {
+        deviceMedia.offered = listOf(DeviceMedia("tall-clip-grid", WIDE, durationMs = 42_000))
+        val vm = viewModel()
+        vm.start()
+        vm.onMediaPermissionGranted()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onTogglePick("tall-clip-grid")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val pick = vm.state.value.picked.single()
+        assertThat(pick.isVideo).isTrue()
+        assertThat(pick.sourceRatio).isEqualTo(TALL)
+        // The store's own duration still stands: it is the header's
+        // shape, not its running time, that the row gets wrong.
+        assertThat(pick.durationMs).isEqualTo(42_000)
+    }
+
+    private companion object {
+        const val WIDE = 16f / 9f
+        const val TALL = 9f / 16f
     }
 }

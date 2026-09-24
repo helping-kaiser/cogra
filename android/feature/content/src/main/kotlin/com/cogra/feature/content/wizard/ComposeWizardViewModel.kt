@@ -14,7 +14,6 @@ import com.cogra.domain.media.CropSpec
 import com.cogra.domain.media.DeviceMediaSource
 import com.cogra.domain.media.MediaProcessor
 import com.cogra.domain.media.PICTURE_MAX_BYTES
-import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
@@ -289,22 +288,25 @@ class ComposeWizardViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            // The grid already knows, because `MediaStore` said which
-            // collection the row came from. The system picker hands over
-            // a bare URI, so that one is asked — a header read, not a
+            // The grid already knows the KIND, because `MediaStore` said
+            // which collection the row came from. The system picker hands
+            // over a bare URI, so that one is asked — a header read, not a
             // decode.
             val known = current.deviceMedia.firstOrNull { it.uri == uri }
-            val clip = if (known != null) {
-                known.takeIf { it.isVideo }?.let { VideoInfo(it.durationMs ?: 0, it.aspectRatio) }
-            } else {
-                video.info(uri)
-            }
+            // A CLIP'S SHAPE COMES FROM ITS OWN HEADER, grid or not. The
+            // store's WIDTH/HEIGHT are the stored dimensions, with the
+            // rotation in a separate ORIENTATION column (MediaProvider's
+            // `ModernMediaScanner`), so a phone's portrait recording rows
+            // in as landscape — and the shape decides whether the cover
+            // step stands (`hasCoverStep`). `VideoInfo` is post-rotation.
+            val header = if (known == null || known.isVideo) video.info(uri) else null
+            val isClip = known?.isVideo ?: (header != null)
             // The shared screening (`PickScale.kt`): a file nothing can
             // read is refused where it was offered rather than accepted
             // and failed later (`ComposePickedErrors`). Bytes are weighed
             // after the pass that shrinks them — a still at its upload,
             // a clip after its transcode (see `startVideoUpload`).
-            if (clip == null) {
+            if (!isClip) {
                 val refusal = screenPicture(uri, processor, knownReadable = known != null)
                 if (refusal != null) {
                     _state.update { it.copy(refused = it.refused + refusal) }
@@ -315,8 +317,11 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update {
                 it.togglePick(
                     uri = uri,
-                    sourceRatio = clip?.aspectRatio ?: known?.aspectRatio,
-                    durationMs = clip?.durationMs,
+                    // A grid clip whose header will not read has no
+                    // trustworthy shape: null, which takes the cover
+                    // step — the safe default `hasCoverStep` names.
+                    sourceRatio = if (isClip) header?.aspectRatio else known?.aspectRatio,
+                    durationMs = if (isClip) known?.durationMs ?: header?.durationMs ?: 0 else null,
                 )
             }
             val after = _state.value.picked.size
@@ -324,7 +329,7 @@ class ComposeWizardViewModel @Inject constructor(
             when {
                 // A picture's own ratio is read from its header for the
                 // crop preview; a clip already stated its shape above.
-                after > before && clip == null -> mediaReader.readSourceRatio(uri)
+                after > before && !isClip -> mediaReader.readSourceRatio(uri)
                 // Replaced rather than added: whatever the previous body
                 // was uploading is no longer part of this post.
                 after <= before -> cancelUploadsExcept(uri)
@@ -479,14 +484,34 @@ class ComposeWizardViewModel @Inject constructor(
         // The waiting still shows exactly where the boards draw it:
         // `ComposeSealUploading` gates the seal on `UploadStatusLine`, and
         // stepping back to Details renders the in-flight rings.
-        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
-        // The video path spends the same stage on the wire, one stage
-        // later: its face is settled on the cover step, and the cover is
-        // what the clip's own upload has to name.
-        if (current.step == WizardStep.Cover) uploader.startVideoUpload()
+        //
+        // The new state lands first: the video journey reads the face
+        // off the state, and a vertical clip only takes its first frame
+        // as it is routed past the cover step.
         _state.value = next
+        if (current.step == WizardStep.Crop) startUploads(cropSpecsFor(current))
+        // The video path spends the same stage on the wire: its face is
+        // settled by the time details opens — chosen on the cover step,
+        // or, for a vertical clip, by the step being skipped — and the
+        // face is what the clip's own upload has to name.
+        // A words post whose media half still holds a clip sends no clip.
+        if (next.step == WizardStep.Details && next.mode == BodyMode.Media && next.isVideoPost) {
+            uploader.startVideoUpload()
+        }
         // Entering the cover stage is what pays for the frames.
         if (next.step == WizardStep.Cover) mediaReader.loadCoverFrames()
+    }
+
+    /**
+     * The details door's "Add a cover" (`ComposeDetailsVideo` →
+     * `ComposeCover`): the step a vertical clip skipped, opened on
+     * purpose. Entering it pays for the frames exactly as walking into it
+     * does; its `Next` comes back to details.
+     */
+    fun onOpenCoverStep() {
+        val opened = _state.value.openedCoverStep() ?: return
+        _state.value = opened
+        mediaReader.loadCoverFrames()
     }
 
     /**
@@ -514,8 +539,14 @@ class ComposeWizardViewModel @Inject constructor(
             _state.update { it.copy(outcome = WizardOutcome.DraftKept) }
             return true
         }
-        val back = _state.value.retreated() ?: return false
+        val before = _state.value
+        val back = before.retreated() ?: return false
         _state.value = back
+        // The door's stage returns to details by Back as well as by Next,
+        // and either way whatever face now stands has to go up.
+        if (before.step == WizardStep.Cover && back.step == WizardStep.Details) {
+            uploader.startVideoUpload()
+        }
         return true
     }
 

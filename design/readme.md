@@ -6082,7 +6082,14 @@ painted a frame.
   finger, and so does CoGra. A hard fling needs no clause of its
   own: incumbents succeed each other faster than playback can
   start, so a clip that leaves before painting simply never leaves
-  its still face.
+  its still face. **A sheet over a surface suspends that surface's
+  stage** (jakob 2026-09-24, ruled with the implementation
+  session): a clip behind a sheet is not on screen in the law's
+  sense — the covered surface's incumbent stops rather than
+  playing on under the scrim, and a clip drawn on the sheet
+  competes for the stage by the same law, never by claim
+  accident. The sheet's dismissal lifts the suspension and the
+  stage re-evaluates as if scrolled.
 - **The first frame is stored, not derived.** *"The coverless
   clip's face is its first frame"* was already the rule; what made
   it a 1–3s empty box in practice was that no still existed and
@@ -6099,7 +6106,12 @@ painted a frame.
   QuietNote's "it starts on its own first frame" becomes seamless
   rather than approximate. When silent extraction fails, the post
   ships without a still and *Cover · no frames came back*'s neutral
-  tile already says what stands there. No new boards; both rulings
+  tile already says what stands there. The stored still is what
+  READING surfaces are handed — the chosen cover where one was
+  chosen, the taken frame 1 where none was; the COMPOSE WIZARD's
+  own tiles are a different rule and always wear the clip's first
+  frame, the chosen cover riding as the ringed inset only (the
+  video-cover round). No new boards; both rulings
   land as contracts to the implementation session.
 
 ### The compose last-picture ruling — 2026-09-23

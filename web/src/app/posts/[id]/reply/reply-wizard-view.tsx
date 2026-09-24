@@ -61,7 +61,7 @@ import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
 import { DiscardConfirm } from "@/lib/ui2/compose/discard-confirm";
-import { COVER_FROM_PICTURE } from "@/lib/compose/wizard";
+import { COVER_FROM_PICTURE, effectiveCover } from "@/lib/compose/wizard";
 import { TransportError } from "@/lib/ui/transport-error";
 import { ReplyComposeStep } from "./reply-compose-step";
 import { ReplySealStep, type ReplySheet } from "./reply-seal-step";
@@ -196,15 +196,44 @@ export function ReplyWizard({
   useEffect(() => {
     if (video !== undefined) {
       if (capturing || video.upload.kind !== "waiting" || started.current.has(video.id)) return;
+
+      // THE STORED FRAME, NOT A CHOICE (the feed-video rulings, 2026-09-23).
+      // Nothing was picked and the capture has already settled (the guard
+      // above), so before this clip goes up faceless the offers get one
+      // silent chance to fill it, through the same cover leg a chosen face
+      // would ride. Deciding only while `autoCover` is still null is what
+      // tells "never tried" from "tried and failed".
+      if (cover === null && state.autoCover === null) {
+        const frame = mine?.frames[0];
+        if (frame !== undefined) {
+          // THE RULE IS DISABLED DELIBERATELY, as `previews.ts` already does:
+          // the capture is an external system, and its settled frame set is
+          // exactly what this reads — there is no render-time or event-handler
+          // moment that could make this decision instead.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          dispatch({
+            type: "autoCover",
+            cover: { id: crypto.randomUUID(), file: frame, frame: 0, upload: { kind: "waiting" } },
+          });
+          return;
+        }
+        // No frames came back at all: falls through and uploads faceless,
+        // exactly as an author-skipped cover always has.
+      }
+
+      const effective = effectiveCover(cover, state.autoCover);
       started.current.add(video.id);
-      if (cover !== null) started.current.add(cover.id);
+      if (effective !== null) started.current.add(effective.id);
       void runVideoUpload(
         client,
         guard,
         video,
-        cover,
+        effective,
         (upload) => dispatch({ type: "upload", id: video.id, upload }),
-        (upload) => dispatch({ type: "coverUpload", upload }),
+        // The auto-cover has no row of its own to watch it, so its steps land
+        // on `autoCoverUpload` — never on `coverUpload`, which is what the
+        // (nonexistent) chosen-cover UI would read.
+        (upload) => dispatch({ type: cover !== null ? "coverUpload" : "autoCoverUpload", upload }),
         COMMENT_SCALE,
       );
       return;
@@ -217,7 +246,7 @@ export function ReplyWizard({
         dispatch({ type: "upload", id: asset.id, upload }),
       );
     }
-  }, [state.media, video, cover, capturing, client, guard, dispatch]);
+  }, [state.media, video, cover, state.autoCover, capturing, mine, client, guard, dispatch]);
 
   const chooseCover = (file: Blob, frame: number) => {
     // A new face is a new upload: the old one may already be on the server, and
@@ -320,7 +349,9 @@ export function ReplyWizard({
         license: state.license,
         tags: state.tags,
         references: state.references,
-        attachments: commentAttachmentClaims(state.media, state.cover) ?? undefined,
+        attachments:
+          commentAttachmentClaims(state.media, effectiveCover(state.cover, state.autoCover)) ??
+          undefined,
         stance: state.stance,
         sensitive: state.sensitive,
         sensitiveReason: state.sensitiveReason,
