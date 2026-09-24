@@ -131,6 +131,29 @@ beforeEach(() => {
   Object.defineProperty(URL, "revokeObjectURL", { value: () => {}, configurable: true });
 });
 
+/**
+ * A `createObjectURL` that tells blobs apart, for the tests below that need
+ * to prove the tile's face is specifically `captureFrameZero`'s bytes and not
+ * the row's own `frames[0]` opening offer — the shared mock above deliberately
+ * cannot distinguish them, since every other test only cares that SOME
+ * preview exists.
+ */
+function distinctObjectUrls() {
+  let next = 0;
+  const known = new WeakMap<Blob, string>();
+  Object.defineProperty(URL, "createObjectURL", {
+    value: (blob: Blob) => {
+      const existing = known.get(blob);
+      if (existing !== undefined) return existing;
+      const minted = `blob:${next}`;
+      next += 1;
+      known.set(blob, minted);
+      return minted;
+    },
+    configurable: true,
+  });
+}
+
 afterEach(() => vi.unstubAllGlobals());
 
 /** A real MP4 header, so the container sniff passes for the right reason. */
@@ -239,6 +262,39 @@ describe("a comment's video", () => {
     const counter = await screen.findByTestId("reply-describe-counter");
     expect(counter).toHaveTextContent("Describe the video");
     expect(counter.parentElement).toHaveTextContent("0 of 1 described");
+  });
+
+  // THE PREVIEW FACE IS THE STORED FACE (jakob 2026-09-24, backlog item 106):
+  // the composer's own tile stands the clip on `captureFrameZero`'s own frame
+  // 0 while no cover is chosen, never the row's own `frames[0]` ~1s "opening"
+  // offer — FRAME and FRAME_ZERO are deliberately different blobs above, so
+  // this pins the right bytes for the right reason.
+  it("shows the clip's frame 0 on the composer's own tile, not the row's ~1s offer", async () => {
+    distinctObjectUrls();
+    draw();
+    await pickFiles([aVideo()]);
+    await screen.findByTestId("reply-cover-frame-0");
+
+    const tile = screen.getByTestId(/^reply-media-.*-image$/);
+    expect(tile).toHaveAttribute("src", URL.createObjectURL(FRAME_ZERO));
+    expect(tile.getAttribute("src")).not.toBe(URL.createObjectURL(FRAME));
+  });
+
+  // Same ruling, the describe sheet's own face: it must not fall back to
+  // nothing (or to the row's ~1s offer) while a coverless clip's frame 0 is
+  // sitting right there.
+  it("shows the clip's frame 0 in the describe sheet when no cover is chosen", async () => {
+    distinctObjectUrls();
+    draw();
+    await pickFiles([aVideo()]);
+    await screen.findByTestId("reply-cover-frame-0");
+    fireEvent.click(screen.getByTestId("reply-describe-counter"));
+
+    const sheet = await screen.findByTestId("reply-describe-sheet");
+    const image = sheet.querySelector("img");
+    expect(image).not.toBeNull();
+    expect(image!.getAttribute("src")).toBe(URL.createObjectURL(FRAME_ZERO));
+    expect(image!.getAttribute("src")).not.toBe(URL.createObjectURL(FRAME));
   });
 
   // CW-16 (2026-09-08 UI audit): the sheet the counter opens is the video
