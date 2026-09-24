@@ -620,7 +620,7 @@ pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
     actor_pubkey: &[u8],
-    realization_address: &str,
+    address: &str,
 ) -> Result<AttachOutcome, sqlx::Error> {
     let updated = sqlx::query!(
         "UPDATE actors a
@@ -635,7 +635,7 @@ pub async fn attach_actor_key(
            )",
         account_id,
         actor_pubkey,
-        realization_address,
+        address,
     )
     .execute(pool)
     .await;
@@ -1508,31 +1508,31 @@ pub async fn actor_identity_by_handle(
 /// unknown addresses).
 pub async fn actor_identity_by_address(
     pool: &PgPool,
-    realization_address: &str,
+    address: &str,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
     sqlx::query_as!(
         ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, realization_address, created_at
          FROM actors WHERE realization_address = $1",
-        realization_address,
+        address,
     )
     .fetch_optional(pool)
     .await
 }
 
-/// Every actor among `realization_addresses`, in one round trip — the batched
+/// Every actor among `addresses`, in one round trip — the batched
 /// twin of [`actor_identity_by_address`], for a read holding many
 /// addresses at once (a page of mentions resolving their profiles).
 /// An address nothing answers to is simply absent from the result.
 pub async fn actor_identities_by_addresses(
     pool: &PgPool,
-    realization_addresses: &[String],
+    addresses: &[String],
 ) -> Result<Vec<ActorIdentity>, sqlx::Error> {
     sqlx::query_as!(
         ActorIdentity,
         "SELECT id, kind, handle, actor_pubkey, realization_address, created_at
          FROM actors WHERE realization_address = ANY($1)",
-        realization_addresses,
+        addresses,
     )
     .fetch_all(pool)
     .await
