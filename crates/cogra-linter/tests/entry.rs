@@ -25,6 +25,9 @@ use cogra_linter::graph::{Corpus, EdgeW, NodeKind, NodeW, in_along, nodes_of, ou
 use cogra_linter::registers::{Freshness, Register, RegisterScope, compare, regenerate_all};
 use cogra_linter::{Adoption, Label, Language, OwnerId, ProfileId, Run, SourceFile, check_sources};
 
+mod common;
+use common::track;
+
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -584,24 +587,6 @@ fn temporary(name: &str) -> PathBuf {
     std::fs::write(src.join("lib.rs"), tested("alpha")).expect("one covered asset");
     track(&at);
     at
-}
-
-/// Makes `root` a repository and tracks everything now standing in it: the
-/// carrier is what git lists (´dec:lint:tracked-carrier´).
-fn track(root: &Path) {
-    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
-        let done = std::process::Command::new("git")
-            .arg("-C")
-            .arg(root)
-            .args(args)
-            .output()
-            .expect("git runs");
-        assert!(
-            done.status.success(),
-            "git {args:?}: {}",
-            String::from_utf8_lossy(&done.stderr)
-        );
-    }
 }
 
 /// (´dec:lint:staged-profiles´): the named regeneration writes the register

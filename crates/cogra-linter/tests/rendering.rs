@@ -18,6 +18,8 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+mod common;
+
 /// The registry document, relative to the corpus root.
 const REGISTRY: &str = "crates/cogra-linter/docs/environment-kinds.md";
 
@@ -47,19 +49,7 @@ fn fixture(name: &str) -> PathBuf {
     for one in [REGISTRY, COMPANION] {
         std::fs::copy(root().join(one), at.join(one)).expect("a committed document");
     }
-    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
-        let done = Command::new("git")
-            .arg("-C")
-            .arg(&at)
-            .args(args)
-            .output()
-            .expect("git runs");
-        assert!(
-            done.status.success(),
-            "git {args:?}: {}",
-            String::from_utf8_lossy(&done.stderr)
-        );
-    }
+    common::track(&at);
     at
 }
 
