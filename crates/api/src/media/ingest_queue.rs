@@ -430,6 +430,49 @@ async fn discard(blobs: &dyn BlobStore, key: &str) {
 mod tests {
     use super::*;
 
+    fn probe(width: u32, height: u32, duration_ms: u64, audio_aac: bool) -> Probe {
+        Probe {
+            width,
+            height,
+            duration_ms: Some(duration_ms),
+            signal: None,
+            audio_aac,
+        }
+    }
+
+    /// A source whose own video is already within target — canvas, rate,
+    /// and (no signal at all, here, which reads as served) — is planned
+    /// as a copy whatever its audio is, because copying is a video
+    /// question alone. One outside it, or with no probe to read at all,
+    /// falls back to an encode.
+    ///
+    /// A source video already within target is planned as a copy, never an encode.
+    /// ´claim:media:an-in-target-video-is-planned-as-a-copy´
+    #[test]
+    fn an_in_target_video_is_copied_whatever_its_audio() {
+        const CAP: u64 = 100 * 1024 * 1024;
+        let lean = probe(1080, 1920, 30_000, false);
+        let size = 4_300_000u64 * 30 / 8;
+        assert!(
+            matches!(
+                video_plan_if_in_target(Some(lean), size, CAP),
+                Some(VideoPlan::Copy)
+            ),
+            "a phone-shaped clip is in target on video alone"
+        );
+
+        let wide = probe(2560, 1440, 30_000, true);
+        assert!(
+            video_plan_if_in_target(Some(wide), 1_000_000, CAP).is_none(),
+            "a canvas over 1080 on its short side falls back to an encode"
+        );
+
+        assert!(
+            video_plan_if_in_target(None, size, CAP).is_none(),
+            "no probe to read is no fact to state either way"
+        );
+    }
+
     /// A 150-second clip fits a post at the standard rate, and a comment
     /// only at a lower one: 92 % of 50 MiB is 385 875 968 bits, over 150 s
     /// is 2 572 506 bps, less the 128 000 of audio is 2 444 506. The
