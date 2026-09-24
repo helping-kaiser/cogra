@@ -55,6 +55,11 @@ import { VideoTransport } from "./VideoControls.jsx";
      clip takes it in the same moment. Empty stage, several qualifying: topmost
      wins. A fling needs no clause: incumbents succeed faster than playback can
      start, and a clip that leaves before painting never leaves its still face.
+     THE SENSITIVE VEIL COVERS ITS CLIP THE SAME WAY A SHEET COVERS A SURFACE
+     (jakob 2026-09-24, backlog item 103): a veiled clip sits fully out of the
+     stage rotation — no playback, no sound-disc presence — and the unveil
+     re-elects the stage as a sheet's dismissal does, so it autoplays iff it
+     wins. Preload stays on: invisible, and it makes the unveil instant.
    · A CLIP KEEPS ITS OWN SHAPE, CLAMPED TO TALL (readme §13, the reel round).
      A clip's ratio is not chosen by an author the way a picture's crop is, so
      the crop vocabulary does not govern it: 16:9 and 1:1 clips display true, and

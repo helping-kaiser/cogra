@@ -59,7 +59,7 @@ used across all docs:
 | **The Genesis Moderator** | the operator's own account — the first member; an ordinary Actor + Profile with a self-custodied address, undemotably `moderator` (§9) | the first Registration; the person-vouch Opinions that lift the system actors' standing above their own rate; ordinarily, the first invitations |
 | **The Publisher** | the system actor acting on the Network's behalf, in backend custody ([substrate.md §8](substrate.md#8-system-actors)) | The Charter, platform documents, Network-scope finalizations, role Tags (§9), auto-settlement payloads ([economics.md](economics.md)) |
 | **The Moderator** | the system actor for verdict gestures, in backend custody | Tag verdicts and payload removals ([moderation.md](../instances/moderation.md)) |
-| **The Treasury** | the team's account — destination of the campaign treasury share and funder of system-actor and Collective burns ([economics.md §7](economics.md#7-the-conservation-equation)); keys with the operator | its own Registration, then nothing — it exists to be publicly witnessed |
+| **The Treasury** | the team's account — destination of the campaign treasury share ([economics.md §7](economics.md#7-the-conservation-equation)) and a contributor, like everyone, to the community's admission fund, which carries every ongoing admission burn — members', system actors', and Collectives' ([§7.2](economics.md#72-the-admission-fund)); keys with the operator | its own Registration, then nothing — it exists to be publicly witnessed |
 | **The Charter** | not an actor — the Publisher-authored Content anchor of §3 | — |
 
 The Treasury is registered on Layer 1 deliberately, although it
@@ -78,9 +78,8 @@ project owner; a fork sets its own genesis.
 Genesis begins with money and proceeds so that every record's
 preconditions already stand:
 
-1. **The genesis admission burn.** The operator burns L-BTC (Liquid
-   Bitcoin) into a realization of the burn primitive,
-   funding the addresses of everything in the cast
+1. **The genesis admission burns.** The operator funds admission
+   burns at the addresses of everything in the cast
    ([economics.md §7.2](economics.md#72-the-admission-fund)).
 2. **The Genesis Moderator registers** — the instance's first
    accepted record.
@@ -224,9 +223,10 @@ loss-limited by a pinned bound or by construction, per D4.4's
 "mundane knobs" framing.
 
 - **`reserve_share`** — the campaign-pool fraction carved for the
-  admission fund, genesis default `1%`. Hard-capped by a **pinned
-  ceiling in the published spec** — the ceiling itself is not a
-  parameter, so governance can never gut the contributor pool
+  community's admission fund, genesis default `1%`. Hard-capped by
+  a **pinned ceiling in the published spec** — the ceiling itself
+  is not a parameter, so governance can never gut the contributor
+  pool
   ([economics.md §7](economics.md#7-the-conservation-equation)).
 - **`n_eval_epochs`** — the post-window evaluation delay `N_eval`
   before campaign settlement

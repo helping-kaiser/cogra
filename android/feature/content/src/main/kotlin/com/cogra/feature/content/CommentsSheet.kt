@@ -6,10 +6,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -20,12 +17,10 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,10 +38,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CograSnackbarHost
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.v2.atom.CograSheetHost
+import com.cogra.core.designsystem.v2.atom.CograSheetSurface
 import com.cogra.core.designsystem.v2.atom.LoadingState
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.atom.SheetTitle
-import com.cogra.core.designsystem.v2.atom.sheetCeilingHeight
 import com.cogra.core.designsystem.v2.media.ScrollStageHost
 import com.cogra.core.designsystem.v2.media.ScrollStageRow
 import com.cogra.core.designsystem.v2.media.SensitiveSource
@@ -247,31 +243,26 @@ fun CommentsSheet(
         )
         go()
     }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        // THE TALLEST CLASS, ASKED FOR BY NAME (`BottomSheet.jsx`'s `tallest`,
-        // readme §13 "The sheets-and-video round" 2026-09-22): pinned AT the
-        // ceiling rather than held under it, because a thread is the one
-        // surface with a list to read and a field to write in at once, so the
-        // surface owns the height and the list scrolls inside it.
-        //
-        // THE SHEET CARRIES THE HEIGHT, ITS HANDLE INCLUDED. Capping the
-        // CONTENT instead left Material's drag handle standing above the cap:
-        // the sheet then came to within a handle's height of the top and the
-        // reveal was gone.
-        modifier = Modifier.testTag("comments_sheet").height(sheetCeilingHeight()),
-    ) {
-        // The foot is drawn last and the list carries the weight, so a foot
-        // that grows takes its room from the thread above it and the sheet
-        // stays exactly at its ceiling. The keyboard pads from inside the
-        // same height, for the same reason.
-        Column(Modifier.fillMaxSize().imePadding()) {
+    // THE TALLEST CLASS, ASKED FOR BY NAME (`BottomSheet.jsx`'s `tallest`,
+    // readme §13 "The sheets-and-video round" 2026-09-22): pinned AT the
+    // ceiling rather than held under it, because a thread is the one
+    // surface with a list to read and a field to write in at once, so the
+    // surface owns the height and the list scrolls inside it. The height
+    // rides the drawn surface INSIDE the sheet ([CograSheetSurface]'s
+    // `tallest`), never `ModalBottomSheet`'s own modifier — a height fixed
+    // there collapses Material's expanded anchor and pins the sheet to the
+    // top of the window, the very top of the glass included.
+    CograSheetHost(onDismissRequest = onDismiss) {
+        CograSheetSurface(tallest = true, testTag = "comments_sheet") {
             SheetTitle(
                 text = stringResource(R.string.content_comments_heading),
                 modifier = Modifier.padding(horizontal = Space.x6, vertical = Space.x1),
             )
+            // The foot is drawn last and the list carries the weight, so a
+            // foot that grows takes its room from the thread above it and the
+            // sheet stays exactly at its ceiling. The keyboard pads from
+            // inside the same height ([CograSheetSurface]), for the same
+            // reason.
             CommentsList(
                 state = state,
                 listState = listState,
