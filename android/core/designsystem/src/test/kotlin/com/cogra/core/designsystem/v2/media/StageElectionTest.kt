@@ -11,7 +11,8 @@ import org.junit.Test
  */
 class StageElectionTest {
 
-    private fun at(top: Float, visible: Float, page: Int = 0) = StagePlace(top = top, page = page, visible = visible)
+    private fun at(top: Float, visible: Float, page: Int = 0, veil: StageVeil = StageVeil.None) =
+        StagePlace(top = top, page = page, visible = visible, veil = veil)
 
     // (a) Incumbency.
 
@@ -109,6 +110,76 @@ class StageElectionTest {
     fun aSurfaceWithoutClipsHasNobodyOnStage() {
         assertThat(StageElection.elect<String>(null, emptyMap())).isNull()
         assertThat(StageElection.elect(INCUMBENT, emptyMap())).isNull()
+    }
+
+    // The veil (jakob 2026-09-24, backlog item 103): a veiled clip is out of
+    // the rotation, and the unveil re-elects as a sheet's dismissal does.
+
+    @Test
+    fun aVeiledClipIsNeverElectedHoweverMuchOfItShows() {
+        val places = mapOf(
+            ABOVE to at(top = 0f, visible = 1f, veil = StageVeil.Veiled),
+            BELOW to at(top = 600f, visible = 0.8f),
+        )
+
+        assertThat(StageElection.elect(null, places)).isEqualTo(BELOW)
+        assertThat(StageElection.elect(null, places - BELOW)).isNull()
+    }
+
+    @Test
+    fun anIncumbentTheVeilFallsOverSurrendersTheStage() {
+        val places = mapOf(
+            INCUMBENT to at(top = 0f, visible = 1f, veil = StageVeil.Veiled),
+            BELOW to at(top = 600f, visible = 0.8f),
+        )
+
+        assertThat(StageElection.elect(INCUMBENT, places)).isEqualTo(BELOW)
+    }
+
+    @Test
+    fun anUnveilDecidesTheStageFromEmptyAgainstAnIncumbentThatStillQualifies() {
+        val places = mapOf(
+            ABOVE to at(top = 0f, visible = 0.9f, veil = StageVeil.Lifted),
+            INCUMBENT to at(top = 500f, visible = 1f),
+        )
+
+        assertThat(StageElection.elect(INCUMBENT, places, liftedBefore = emptySet())).isEqualTo(ABOVE)
+    }
+
+    @Test
+    fun anUnveiledClipBelowTheTopmostQualifyingOneDoesNotWin() {
+        val places = mapOf(
+            INCUMBENT to at(top = 0f, visible = 0.9f),
+            BELOW to at(top = 500f, visible = 1f, veil = StageVeil.Lifted),
+        )
+
+        assertThat(StageElection.elect(INCUMBENT, places, liftedBefore = emptySet())).isEqualTo(INCUMBENT)
+    }
+
+    /**
+     * EXACTLY AS A SHEET'S DISMISSAL: the whole stage is decided from empty,
+     * even when the unveiled clip itself stands below the gate — the topmost
+     * qualifying clip takes it, whoever held it.
+     */
+    @Test
+    fun anUnveilBelowTheGateStillDecidesTheStageFromEmpty() {
+        val places = mapOf(
+            ABOVE to at(top = 0f, visible = 0.8f),
+            INCUMBENT to at(top = 400f, visible = 0.9f),
+            BELOW to at(top = 900f, visible = 0.3f, veil = StageVeil.Lifted),
+        )
+
+        assertThat(StageElection.elect(INCUMBENT, places, liftedBefore = emptySet())).isEqualTo(ABOVE)
+    }
+
+    @Test
+    fun aClipThatStoodLiftedAtTheLastDecisionIsNoFreshUnveil() {
+        val places = mapOf(
+            ABOVE to at(top = 0f, visible = 0.9f, veil = StageVeil.Lifted),
+            INCUMBENT to at(top = 500f, visible = 1f),
+        )
+
+        assertThat(StageElection.elect(INCUMBENT, places, liftedBefore = setOf(ABOVE))).isEqualTo(INCUMBENT)
     }
 
     private companion object {

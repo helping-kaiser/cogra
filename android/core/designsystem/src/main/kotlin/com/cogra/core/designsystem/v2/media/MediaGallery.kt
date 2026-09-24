@@ -167,7 +167,13 @@ private fun GalleryFrame(
     // that to the frames it concerns
     // (developer.android.com/develop/ui/compose/performance/bestpractices,
     // "Use derivedStateOf to limit recompositions").
-    val playing by remember(stage, key) { derivedStateOf { stage.holder === key } }
+    val onStage by remember(stage, key) { derivedStateOf { stage.holder === key } }
+    // THE VEIL TAKES THE CLIP OUT OF THE ROTATION (jakob 2026-09-24, backlog
+    // item 103): the stage never elects a veiled frame, and this frame will
+    // not play under one even for the pass before the stage re-decides — no
+    // playback and no sound disc behind the blur the reader chose.
+    val veil = LocalStageVeil.current
+    val playing = onStage && veil != StageVeil.Veiled
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -177,7 +183,13 @@ private fun GalleryFrame(
             .heightIn(min = MediaFrame.MinHeight, max = maxHeight)
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .then(if (videoUrl != null) Modifier.standOn(stage, key, page, LocalScrollStageRow.current) else Modifier),
+            .then(
+                if (videoUrl != null) {
+                    Modifier.standOn(stage, key, page, LocalScrollStageRow.current, veil)
+                } else {
+                    Modifier
+                },
+            ),
     ) {
         // Symptom (b) is about this number on the way back: the clip
         // should resume if it is in the viewport and must not start if
