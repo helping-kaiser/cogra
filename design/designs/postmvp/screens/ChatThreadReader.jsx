@@ -19,27 +19,16 @@
    A GUEST GETS THIS SAME FACE. Reading needs no account, so a guest arriving
    through the explorer reads this thread as drawn — ranked for them from the
    borrowed vantage every guest surface uses (the guest-feed rulings) — and the
-   join is where the guest gate meets them. One board, both readers. */
+   join is where the guest gate meets them. One board, both readers.
+
+   THE TRANSCRIPT IS `HarbourOfficeThread`, shared with the requester's two
+   later moments (`ChatThreadRequested`, `ChatThreadApproved`, the chats
+   governance round). */
 export function Screen() {
   return (
     <>
       <ChatThreadHeader name="Harbour office" backLabel="Back to all chats" />
-      <ChatThreadColumn>
-        <DayDivider>22 September</DayDivider>
-        <ChatBubble author={CHAT_KEL} when="17:45" sealed>
-          <ChatSealedNotice />
-        </ChatBubble>
-        <ChatBubble author={CHAT_MIRA} when="18:02">
-          The lost-and-found has a blue wool hat and one glove. Whose?
-        </ChatBubble>
-        <DayDivider>23 September</DayDivider>
-        <ChatBubble author={CHAT_TOBIAS} when="08:30">
-          Opening at nine this morning, not eight.
-        </ChatBubble>
-        <ChatBubble author={CHAT_JUNO} when="08:44" sealed>
-          <ChatSealedNotice />
-        </ChatBubble>
-      </ChatThreadColumn>
+      <HarbourOfficeThread />
       <ChatJoinFoot policy="request" />
     </>
   );

@@ -18,11 +18,12 @@
      a glyph beside the details door (`ChatThreadHeader`), one tap from the
      thread being searched.
    · OPEN DECISIONS — beside media (jakob), drawn empty: `Nothing is being
-     decided.`
+     decided.` Filled, it is `ChatDetailsDecisions`.
    · MEMBERS — `Add people` heading the list, then the rows, each wearing its
      role. One member is a Collective; one invited person has not joined yet.
      EACH ROLE WORD IS A DOOR (jakob, the fix pass) to the role-change flow —
-     `decision:change_role`'s multi-voice face, round B2's, an intended gap.
+     `decision:change_role`'s multi-voice face, the three roles in a sheet
+     (`ChatRoleSheet`).
      The stance row's split grammar (`RoleDoor`): the person area opens the
      person, the underlined word opens the role. The invitee has neither.
    · THE CHAT'S OWN SETTINGS — mute, and the door to its edit history.
@@ -38,9 +39,9 @@
    alone carries the change is the map's tally, answered at the seal
    (`ChatEditSeal`).
 
-   ADD PEOPLE IS THE INVITATION FLOW INTO AN EXISTING CHAT, and that is round
-   B2's: the door is drawn here and the graph carries it as an intended gap.
-   Any member may invite (an Invitation is a member's public vouch, chats.md
+   ADD PEOPLE IS THE INVITATION FLOW INTO AN EXISTING CHAT — a picker, then a
+   seal counting one invitation per person (`ChatInvitePicker`,
+   `ChatInviteSeal`). Any member may invite (an Invitation is a member's public vouch, chats.md
    §4), so every member sees it.
 
    MUTE STANDS HERE AND ON THE ROW MENU (jakob) — one per-chat setting, two

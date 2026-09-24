@@ -274,6 +274,17 @@ const REASONS = {
     line: "Deleted by the person whose account it was",
     detail: "Their name and profile are gone. What they signed stays on the graph and still credits them.",
   },
+  /* A CHAT'S VERSION, REMOVED BY THE CHAT (the chats governance round,
+     2026-09-23; chats.md §8). A chat has no author, so no single hand empties
+     one of its versions — a passed `decision:redact_version` does. Neither
+     neighbour may stand in: `author` would name a person who does not exist,
+     and `illegal` would dress the members' own choice as a platform verdict.
+     So the fourth mark names the chat as the one who decided. Proposed, not
+     yet blessed (copy-voice, the chats governance round). */
+  chat: {
+    line: "Removed by the chat's decision",
+    detail: "Its members decided to take it down. The decision is public.",
+  },
 };
 
 /**
