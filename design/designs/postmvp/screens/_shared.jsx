@@ -1770,12 +1770,31 @@ function ChatDetailsBody({ chat = COAST_WALKERS, members = COAST_WALKERS_MEMBERS
 
 /* One version of the chat — the details' identity at chronicle scale, the way
    `ProfileVersionCard` is the profile header's. Inert: a chat has no historic
-   detail surface to open (the profile chronicle's precedent). */
-function ChatVersionCard({ name, image, policy, description }) {
+   detail surface to open (the profile chronicle's precedent).
+
+   `pictureDoor` (the governance round's decision page, jakob 2026-09-24): a
+   PROPOSED version's picture must be judgeable before anyone votes on it, so
+   there it rides the card at the details' own 80px — the largest size the
+   chat's picture ever takes, which is how it will actually be seen — and the
+   disc is a door to the fullscreen viewer, the product's second-tap grammar
+   for media. Every other version card keeps the chronicle's inert 64px. */
+function ChatVersionCard({ name, image, policy, description, pictureDoor = false }) {
+  const disc = pictureDoor ? (
+    <button
+      type="button"
+      aria-label="Open the proposed picture"
+      className="cg-state cg-focus"
+      style={{ flex: "none", border: 0, padding: 0, background: "none", borderRadius: "var(--radius-full)", cursor: "pointer" }}
+    >
+      <ChatDisc image={image} size={80} />
+    </button>
+  ) : (
+    <ChatDisc image={image} size={64} />
+  );
   return (
     <Card>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <ChatDisc image={image} size={64} />
+        {disc}
         <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
           <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>{name}</span>
           <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>{CHAT_POLICY_LINE[policy]}</span>
@@ -1971,17 +1990,41 @@ function ApproveAct({ what }) {
    whole (`ChatDecisionDetail`, jakob 2026-09-24), split from the acts
    `RoleDoor`'s way so no control stands inside another. Under them, the count
    line: the people who agree so far, then the vote's two words where the
-   reader has not voted. THE READER'S OWN CARD carries the count only: their
-   agreement was signed with the proposal, and changing it is the decision
-   page's business. Once the reader has voted, the words give way to the
-   quiet `You agreed` or `You disagreed` (stated, not drawn). A card whose gate
-   is one approval (a join request under the default map) carries no count —
-   `0 of 1` is noise, and the first approval settles it.
+   reader has not voted.
+
+   A CARD THE READER HAS VOTED ON WEARS A READOUT, NOT A BUTTON (jakob
+   2026-09-24). The two words give way to the quiet `You agreed` or `You
+   disagreed` — `ChatRowWord`'s finished-act register, `Already removed`'s
+   idiom — and the WHOLE CARD, words and readout together, becomes the one
+   door to the decision page, where changing and taking back a vote live.
+   Cards stay calm; the page is where a vote is revised. THE READER'S OWN CARD
+   is always in this state: their agreement was signed with the proposal. The
+   lane's layout call, flagged: the readout stands where the buttons stood, at
+   the count line's end, so a voted card and an unvoted one keep one shape.
+
+   A card whose gate is one approval (a join request under the default map)
+   carries no count — `0 of 1` is noise, and the first approval settles it.
 
    NO CLOCK. The card is placed by its moment and the day divider dates it; a
    decision is not a message, and a time on it would ask when it ends — it
    never does. */
-function PendingCard({ children, quote, count, act }) {
+function PendingCard({ children, quote, count, act, voted }) {
+  if (voted) {
+    return (
+      <button
+        type="button"
+        aria-label={`${children}, ${count}, ${voted} — see the decision`}
+        className="cg-state cg-focus"
+        style={{ flex: "none", display: "flex", flexDirection: "column", gap: 4, padding: "12px 16px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-large)", background: "none", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
+      >
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{children}</span>
+        <span style={{ alignSelf: "stretch", display: "flex", alignItems: "center", gap: 12, minHeight: 32 }}>
+          <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{count}</span>
+          <ChatRowWord>{voted}</ChatRowWord>
+        </span>
+      </button>
+    );
+  }
   return (
     <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 4, padding: "4px 8px 8px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-large)" }}>
       <button
@@ -2031,8 +2074,10 @@ function DecisionOutcome({ children }) {
    right edge. The two words cannot share the words' line on a phone without
    crushing the sentence to a column, so they take the line under it; the
    door and the acts stay separate targets, never a control inside a control.
-   The door's spoken name says where it goes. The reader's own proposal
-   carries the count only, as its card does. */
+   The door's spoken name says where it goes. A row the reader has voted on
+   — their own proposal always — carries the card's readout (`You agreed`) at
+   the count line's end, INSIDE the door: words and readout open the decision
+   page together, where the vote is revised. */
 function OpenDecisions({ rows }) {
   return (
     <div style={{ flex: "none", display: "flex", flexDirection: "column" }}>
@@ -2041,12 +2086,15 @@ function OpenDecisions({ rows }) {
         <div key={r.what} style={{ display: "flex", flexDirection: "column" }}>
           <button
             type="button"
-            aria-label={`${r.what}, ${r.count} — see the decision`}
+            aria-label={`${r.what}, ${r.count}${r.voted ? `, ${r.voted}` : ""} — see the decision`}
             className="cg-state cg-focus"
             style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 2, minHeight: "var(--touch-target-min)", border: 0, background: "none", padding: "var(--space-2) var(--space-6)", cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left" }}
           >
             <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{r.what}</span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{r.count}</span>
+            <span style={{ alignSelf: "stretch", display: "flex", alignItems: "baseline", gap: 12 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{r.count}</span>
+              {r.voted && <ChatRowWord>{r.voted}</ChatRowWord>}
+            </span>
           </button>
           {r.act && <div style={{ display: "flex", justifyContent: "flex-end", padding: "0 24px 4px" }}>{r.act}</div>}
         </div>
@@ -2057,7 +2105,7 @@ function OpenDecisions({ rows }) {
 
 const SALT_CRUST_DECISIONS = [
   { what: KICK_LINE, count: "2 of 5 so far", act: <VoteActs what={KICK_LINE} /> },
-  { what: CHANGE_LINE, count: "3 of 6 so far" },
+  { what: CHANGE_LINE, count: "3 of 6 so far", voted: "You agreed" },
 ];
 
 /* THE SALT-CRUST THREAD — three days back, because the chats list reads its
@@ -2078,7 +2126,9 @@ function SaltCrustThread() {
       <ChatBubble author={CHAT_ADA} when="10:15">
         Two of the prints smudged overnight — the damp got in.
       </ChatBubble>
-      <PendingCard count="3 of 6 so far">{CHANGE_LINE}</PendingCard>
+      <PendingCard count="3 of 6 so far" voted="You agreed">
+        {CHANGE_LINE}
+      </PendingCard>
       <ChatBubble own when="11:02">
         Most of what we make now are prints — the chat could say so, and show one.
       </ChatBubble>

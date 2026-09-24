@@ -13,10 +13,17 @@
 
    · WHAT WOULD CHANGE, WHOLE. `If it passes` shows the proposed version as the
      chronicle shows a version (`ChatVersionCard`): the picture, the name, who
-     can join and the words, every one of them in full — and under it THE NEW
-     PICTURE WHOLE, at the width a thread gives media (`MediaAttachment`, the
-     bubble's own 220px ceiling), because a 64px disc is how the picture will
-     sit, not enough to judge it by. `The chat now` shows
+     can join and the words, every one of them in full. THE NEW PICTURE RIDES
+     THE CARD AT 80px (jakob 2026-09-24: not inlined whole) — the lane's scale
+     call, flagged: the details' identity disc, the largest the chat's picture
+     is ever drawn and so the size it will really be seen at, one rung above
+     the chronicle's 64px. The post chronicle's full-width picture was not the
+     precedent to take: a chat's picture is a disc, never a body. TAPPING IT
+     OPENS THE VIEWER — the product's second-tap grammar for media — which is
+     canonical's fullscreen viewer: the graph lands the tap on the `canonical`
+     terminal, as `ChatThreadMedia`'s media tap does, and it becomes an
+     ordinary edge when the round migrates (readme §14: a tree's graph stops
+     at the tree). `The chat now` shows
      the current version under it, the same card. Never a diff — the
      change-histories rule: a reader compares two whole versions; the product
      does not mark which change mattered. For a decision about a person (the
@@ -44,8 +51,12 @@
      FOLLOWS GOVERNANCE.MD: api-spec.md's ballot input does not yet accept ZERO,
      and that gap is the implementation's to close — it is already on the
      ledger. Both acts open the vote's small seal (`ChatAgreeSheet`, the nouns
-     swapped); neither signs on the tap. A reader who has not voted meets
-     `Disagree` and `Agree` here instead, the card's pair.
+     swapped); neither signs on the tap. THE CHANGE ACT HAS TWO STATES: it
+     names the other direction, so it reads `Disagree instead` over an
+     agreement, as drawn, and `Agree instead` over a disagreement. A reader
+     who has not voted meets `Disagree` and `Agree` here instead, the card's
+     pair. THIS PAGE IS WHERE A VOTE IS REVISED: a card the reader has voted on
+     shows only the readout (`You agreed`) and opens this page.
 
    THE STATUS LINE says who proposed it and when, and that it is open. A
    settled decision keeps this page — its votes stay public — with `passed on
@@ -53,7 +64,7 @@
 
    Nothing here names a proposal, a ballot or a tally; the numbers of weight
    paint only in geek mode. */
-export const FRAME = { width: 390, height: 1184 };
+export const FRAME = { width: 390, height: 960 };
 
 export function Screen() {
   return (
@@ -70,9 +81,8 @@ export function Screen() {
         </div>
 
         <SectionLabel>If it passes</SectionLabel>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
-          <ChatVersionCard {...SALT_PRINTS} />
-          <MediaAttachment src="comment-camera.jpg" ratio="square" fit="cover" alt="The proposed picture: someone in a red knitted hat raising a film camera" radius="var(--radius-medium)" maxHeight="220px" />
+        <div style={{ padding: "0 16px" }}>
+          <ChatVersionCard {...SALT_PRINTS} pictureDoor />
         </div>
         <SectionLabel>The chat now</SectionLabel>
         <div style={{ padding: "0 16px" }}>

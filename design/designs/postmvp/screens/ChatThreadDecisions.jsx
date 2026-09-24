@@ -15,11 +15,15 @@
      counts toward the quorum and against the share, and enough of them fail
      the decision (the prelude's tally law). Neither signs on the tap: each
      opens the vote's small seal (`ChatAgreeSheet`, the nouns swapped for
-     `Disagree`). Once voted, the words give way to the quiet `You agreed` or
-     `You disagreed` (stated, not drawn).
-   · THE READER'S OWN CARD — their change to the chat's name, picture and
-     description, one decision, `3 of 6 so far`, the count only: their
-     agreement was signed with the proposal. It stands at exactly half each
+     `Disagree`). Once voted, the words give way to the quiet readout, as on
+     the next card.
+   · A CARD THE READER HAS VOTED ON — their own change to the chat's name,
+     picture and description, one decision, `3 of 6 so far` and `You agreed`
+     where the two words would stand: a proposer's agreement is signed with
+     the proposal, so their own card is always in this state (`You disagreed`
+     after a change of mind). A READOUT, NOT A BUTTON (jakob 2026-09-24): the
+     whole card, words and readout, is the one door to the decision page,
+     where changing and taking back the vote live. It stands at exactly half each
      way by role, so the next vote decides it — which only its page shows. It
      is where `ChatEditSeal`'s act lands when the map needs more voices than
      the reader's; a role change or a version's removal that waits lands the

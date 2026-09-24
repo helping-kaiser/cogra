@@ -2499,6 +2499,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Mira Voss<", tag: "button" },
     { n: 3, find: ">Disagree instead</button>", tag: "button" },
     { n: 4, find: ">Take back your vote</button>", tag: "button" },
+    { n: 5, find: 'aria-label="Open the proposed picture"', tag: "button" },
   ],
   ChatDetailsDecisions: [
     { n: 1, find: 'aria-label="Back to the chat"', tag: "a" },

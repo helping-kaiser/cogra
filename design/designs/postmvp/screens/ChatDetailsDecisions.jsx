@@ -6,7 +6,7 @@
    THE SAME CHAT AS `ChatThreadDecisions` — Salt-crust rubbings, the reader a
    plain member — so the two surfaces can be read against each other: the kick
    Mira proposed, awaiting the reader's vote, and the reader's own change to
-   the chat's name, picture and description, count only. The settled
+   the chat's name, picture and description, already voted on. The settled
    decisions are not here: the section holds what is still being decided, and
    Tobias's `Moderator` on the member list is what his settled one left
    behind.
@@ -18,6 +18,10 @@
    has not voted — `Disagree` quiet, `Agree` filled — each opening the vote's
    small seal (`ChatAgreeSheet`), never signing on the tap. The two words take
    a line of their own: beside the sentence they would crush it to a column.
+   A ROW THE READER HAS VOTED ON mirrors its card (jakob 2026-09-24): the quiet
+   `You agreed` at the count line's end, inside the door, so words and readout
+   open the decision page together — the revision surface. The reader's own
+   change is drawn in this state.
 
    A JOIN REQUEST, where one waits, is a row like these with `Approve` alone at
    its edge for an admin or a moderator and no count (one approval settles it
