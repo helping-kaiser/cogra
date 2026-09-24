@@ -6456,6 +6456,137 @@ states, and `RedactedContent` a fourth mark.
   screens and 240 edges. The four intended B2 gaps are resolved; the one
   gap left is a Collective member's own page (§7).
 
+### The chats integration round — 2026-09-24
+
+Round B3 of the chats work, and the round that closes it: what a chat owes
+the rest of the product, and what the rest of the product owes a chat.
+Sixteen boards on the Chats page (`ChatThreadReactions`, `ChatThreadReply`,
+`ChatMessageMenuOwn`, `ChatMessageRemoveConfirm`, `ChatThreadRemoved`,
+`ChatThreadRecording`, `ChatThreadVoice`, `ChatThreadSealedMedia`,
+`ChatThreadPending`, `ChatThreadSentPost`, `ChatSendSheet`, `ChatAskSheet`,
+`ChatNotifications`, `ChatFeedCards`, `ChatSearchResults`, `ChatSaved`), and
+revisions to six already drawn (`PushKinds`, `ChatsExplore`,
+`ChatInviteSeal`, `ChatThreadInvited`, `ChatThreadRequested`,
+`ChatMessageMenu`). The masters (`ReactionTrace`, `BubbleQuote`,
+`ReplyQuoteStrip`, `RemovedBubble`, `VoiceNote`, `NoKeyMedia`, `MicSeal`,
+`ChatFootRecording`, `DidntLand`, `BubbleCitation`, `ChatFeedCard`,
+`MessageFeedCard`) live in the tree's prelude; `ChatBubble` gained `quote`,
+`trace`, `pending`, `removed` and `fill`, each drawing nothing when absent,
+`ChatFoot` the quote strip and the mic, `ChatJoinFoot` the invitation's
+message, and the icon set `mic` (§5).
+
+- **Reactions are the opinions already cast on a message (jakob).** No new
+  record kind and no emoji system: every Opinion → Message already carries
+  a pair, and the twenty faces already read it. WhatsApp's shape — a quiet
+  pill hanging from the bubble, the faces aggregated (each person's opinion
+  read as its nearest face, the most-worn first, three at most) and the
+  count of people beside them. It is a readout, never a picker; a tap opens
+  `Opinions on this`, the message menu's own destination. Geek mode paints
+  each person's pair after the count, the first three then `+N more` —
+  never an average, which would be a number nobody signed.
+- **Voice notes are a chat-scale media kind only (jakob).** Post audio stays
+  parked. The mic stands where the send arrow stands while the field is
+  empty; hold to record, with the slide-to-lock lane over the held mic;
+  release signs and sends, so the mic is a seal as the arrow is. A plain tap
+  starts the locked, hands-free state — the non-drag equivalent (§10). The
+  bubble is play, a scrub line and the length; a note is described like all
+  media, the author's words where given and `Voice message, 0:42` where not.
+- **An encrypted message encrypts its attachments (jakob; chats.md §7).** A
+  keyed reader sees the media with the quiet lock; a no-key reader gets the
+  reserved tile with the lock and one friendly sentence, and no expand to
+  bytes — cipher text is at least characters, cipher pixels are nothing. The
+  tile claims no shape, since the ratio rides the sealed payload. And the
+  implementation's consequence: **client-side processing is the only quality
+  enforcement for encrypted chat blobs** — the server holds no key, so no
+  transcode, resize or thumbnail path exists for them, and the stored still
+  of an encrypted clip is taken on the device before encryption or not at
+  all.
+- **The chat and the message are feed cards (jakob: both declared opt-in
+  kinds, undrawn).** The chat card: identity, description, live-ness (the
+  member count, the last message's age and line), and the opinion face with
+  the join. The message card: its chat's context line first, then the
+  message in a foreign bubble on the card, and the opinion face with `Open in
+  the chat`.
+- **A chat result opens the chat's read surface, for anyone (ruled).** A
+  message is the fourth saveable kind, its Saved row the comment's shape
+  with `in {chat}` on its second line. Canonical's `RefsSheet` gap — the
+  referenced node's own surface — re-wires at migration: its chat and
+  message rows land on the read surface and on the thread at the message.
+- **The foot takes a reply's quote (round A's docblock, drawn).** `QuotedRow`
+  above the field with a × that lets the reply go; landed, the quote rides
+  the bubble's head and scrolls to the message it answers.
+- **Sending a post into a chat (backlog item 23, ruled in).** A post's share
+  opens `Send to a chat`: the reader's chats as choice rows, `Share outside
+  CoGra` one row away, and the chat's own foot — the arrow signs one message
+  citing the post. The sent post reads back as its reference at chat scale.
+  A Reference is never encrypted, so the lock seals the words beside a sent
+  post and never which post it was.
+- **Pending and didn't-land (design.md §9).** A message still settling shows
+  whole with `Still settling ·` before its clock; one that expires leaves
+  every reader's view and its author gets a calm notice where it stood —
+  `Nothing was spent.`, `Dismiss` and `Put it back`.
+- **Removed messages (round A's docblock, drawn).** The author's own `Remove`
+  sits among the acts on their own bubble's menu, behind the post's confirm
+  with the nouns swapped; the removed message is `RedactedContent` where the
+  bubble stood. `Removed by its author` and `Removed under the platform's
+  rules` never read alike. Message disavowal stays with moderation.
+- **Three notification kinds (jakob).** An invitation (`@mira invited you to
+  Night fishing crew` → `ChatThreadInvited`), a request awaiting your approval
+  (→ `ChatRequestApprove`, written only for those the map lets approve), and
+  your request approved (→ `ChatThreadApproved`). No bell row for an
+  ordinary message, ever: unread lives on the chats icon's dot. Push gains the
+  three kinds and a `Chats` group whose `New messages` is on — the push
+  round's forward note, drawn — the one push kind with no bell row, delivering
+  what the thread holds; per-chat mute is its footnote. Whether messages split
+  into 1:1 and group buckets stays undecided.
+- **The two small composers (jakob).** `Ask to join` opens the request's own
+  small sheet — the join seal's shape, with an optional `Message` — instead of
+  sending on the tap; the invitation's optional `Message` stands on the invite
+  seal, one message riding every invitation in the batch. The invitee reads it
+  quoted at the foot, the approver reads the request's on the card.
+- **The explorer's invited word.** An invited reader's row says `You're
+  invited`, in the join's register, and lands on the join's seal.
+- **The lane's calls, flagged for review:** the mic replaces the arrow while
+  the field is empty, rather than standing beside it; the recording's live
+  mark is a `primary` mic, not a red dot; the trace hangs outside the bubble,
+  which bends round A's "nothing on the bubble" only that far; geek mode's
+  trace lists pairs rather than any summary; the no-key tile's fixed height;
+  the chat card has no score, comment count or share, and the message card
+  draws the message as a bubble; only plaintext messages are message-card
+  candidates; the send sheet moves the OS share one tap deeper, sends to one
+  chat at a time, and reads the sent post back without its pair; the approval
+  row names the chat as its actor; the chat rows speak handles, the list's
+  grammar; the three new push kinds default on, by analogy; the invitation's
+  message field sits on the seal; the explorer's word is `You're invited`;
+  `Put it back` returns the words without signing.
+- **Two contradictions, flagged.** design.md shows pending content in full to
+  every reader, where the brief said "to its author" — the board follows the
+  doc. And canonical's `ExploreSearch` draws a chat-message result and a
+  comment result, both of which api-spec.md rules out of the global index;
+  `ChatSearchResults` follows the contract, and canonical's board is the
+  backlog's to reconcile.
+- **The gate**: canonical holds byte-identical — **217 screens · 1568
+  edges · 13 gaps · flows 66/64/2**; the post-MVP tree stands at 74 screens
+  and 349 edges, with the one gap it had: a Collective member's own page
+  (§7). Every destination this round cannot name — canonical's feed,
+  search, Saved, notifications, the share glyph, the opinions sheet, the
+  viewer — is the `canonical` terminal, re-wired at migration.
+
+**The chats work, closed.** Four rounds now cover chats end to end: the list
+with its two faces, the thread and its foot that seals, founding and the
+people picker (the base round and its completion); the details surface, its
+edit and chronicle, search in the chat, media and leaving (B1); every
+multi-voice decision in messenger clothes, the invitation, the three routes
+into a chat and the request's two sides (B2); and what the chat and the rest
+of the product owe each other — reactions, replies, voice, encrypted media,
+pending and removal, sending posts in, feed, search, Saved, notifications
+and push (B3). Deferred, and named: the moderation slice's items — message
+disavowal, starting a kick, withdrawing one's own invitation (De-invite) and
+everything verdict-flavoured; a Collective member's own page, owed since the
+Collective actor variant (§7); stickers, parked; general post audio, parked;
+and backlog item 34's container note — its chat chronicle is drawn (B1's
+`ChatHistory`), and its comment-redaction half stays owed where it was.
+
 ---
 
 ## 14. The canvases
