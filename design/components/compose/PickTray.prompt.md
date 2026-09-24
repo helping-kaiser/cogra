@@ -19,6 +19,8 @@ The band under the pick step's caption: what has been picked, the way to manage 
 
 **Pass the thumbnails as children.** Each board asks `MediaThumb` for something different — a cover badge, a remove X, a video frame at 114×64 with its own remove label — so the tray owns the band and the caller owns the pictures.
 
+**The clip caption is the shape's.** A vertical clip skips the cover step (the shape keys the step; the device takes frame 1 silently), so its tray wears the trim `A video is the whole post.` — the second sentence only stands where a cover step follows (jakob 2026-09-24, backlog item 104). The example above is the landscape case.
+
 **Omit `onShowAll` when there is no set.** One staged video is not something to reorder and its cover is the next step's whole subject, so the tray drops Show all and the count sits alone on its line. `clip` is for the full batch, where ten tiles would otherwise push the band wider than the screen.
 
 `Show all` is a real button — focusable, with the state layer and a 48px target — drawn as `InlineAction size="sm"`, which is its resting look value for value. Never redraw it as a span.

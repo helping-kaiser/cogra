@@ -361,7 +361,12 @@ used to be, once a clip is staged:
 - `A video is the whole comment. Give it a cover below.`
 - `A video is the whole post.` — the edit's trim of the staging
   line: the cover sits on the edit's own screen, so the second
-  sentence goes (blessed 2026-09-14).
+  sentence goes (blessed 2026-09-14). **The vertical pick wears
+  this same trim** (jakob 2026-09-24, backlog item 104): the
+  second sentence previews the cover step, and the vertical path
+  skips it — the shape keys the step (readme §13, the stored
+  first frame) — so the promise would be false there. No vertical
+  line of its own is minted.
 
 **The add control carries the cap** — the established add grammar
 gains the post scale's count (the comment scale already draws its

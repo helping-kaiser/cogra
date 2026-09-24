@@ -6093,7 +6093,16 @@ painted a frame.
   playing on under the scrim, and a clip drawn on the sheet
   competes for the stage by the same law, never by claim
   accident. The sheet's dismissal lifts the suspension and the
-  stage re-evaluates as if scrolled.
+  stage re-evaluates as if scrolled. **The sensitive veil covers
+  its clip the same way** (jakob 2026-09-24, backlog item 103): a
+  veiled clip sits fully out of the stage rotation — no playback,
+  no sound-disc presence — because the veil is the reader's
+  declared not-yet, and a clip playing behind a blur the reader
+  chose contradicts it. Unveiling re-elects the surface's stage
+  exactly as a sheet's dismissal does, so the unveiled clip
+  autoplays iff it wins — no knob of its own. Preloading stays
+  on: it is invisible, leaks nothing the veil hides, and makes
+  the unveil instant.
 - **The first frame is stored, not derived.** *"The coverless
   clip's face is its first frame"* was already the rule; what made
   it a 1–3s empty box in practice was that no still existed and

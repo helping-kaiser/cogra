@@ -9,14 +9,19 @@
    device may no longer hold; the gallery is the one way in, through the
    cover's crop (CoverCrop).
 
-   THIS CLIP IS VERTICAL, SO IT HAS NO COVER (jakob 2026-09-10), and the row
-   says so by being a door rather than a picture: "Add a cover", where a clip
-   that has one wears its face and "Change the cover" (CommentEditVideo draws
-   that half, the same contract at the other scale). An edit must never present
-   a cover row presuming one exists — the field would then show a picture the
-   post does not have, and every path out of it would be a change to something
-   unset. The door is the empty state of the same field, and what it opens is
-   the same gallery, through the same crop.
+   THE DOOR KEYS ON CHOSEN, NOT ON A STILL EXISTING (jakob 2026-09-10, the
+   no-cover ruling; read with the stored first frame, readme §13). Since the
+   stored-still ruling every clip carries a still — this vertical clip's is
+   its taken frame 1 — but a taken still is not a cover anyone picked, and
+   chosen-vs-taken is a STORED AUTHORING FACT the edit reads, never a guess
+   from bytes. So the row is a door rather than a picture: "Add a cover",
+   where a clip whose face was chosen wears it and "Change the cover"
+   (CommentEditVideo draws that half, the same contract at the other scale).
+   An edit must never present a cover row presuming a choice exists — the
+   field would then show a face nobody picked as if someone had, and every
+   path out of it would be a change to something unset. The door is the
+   unchosen state of the same field, and what it opens is the same gallery,
+   through the same crop.
 
    The clip's own move is to leave whole. A post that loses its clip is a post
    with words, the same way a post that loses its pictures is — the body

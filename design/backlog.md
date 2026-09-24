@@ -3428,7 +3428,7 @@ This also files the per-kind muting that readme §13, *The notifications
 round* left as *filed post-MVP* — it is this item, and the nine rows are
 it.
 
-### 103 · The veiled clip's playback state is undrawn · *design* · **open**
+### 103 · The veiled clip's playback state is undrawn · *design* · **ruled + recorded 2026-09-24**
 
 Filed by the implementation session 2026-09-23, surfaced by their
 feed-video preload work (pre-existing behavior their V3 lane made
@@ -3436,13 +3436,38 @@ visible): a sensitive post keeps its media mounted under the veil —
 the revealing-moves-nothing ruling — so a veiled clip already
 **autoplays behind the blur**, and now also gets preloaded. The
 sensitive-veil boards say what the veil looks like; nothing rules
-what the media *does* beneath it. The question: does a veiled clip
-play, or even load, before the reader unveils? Candidate reading:
-the veil is a reader's declared not-yet, so playback (and the sound
-disc's presence in the stage rotation) should wait for the unveil —
-but autoplay-on-unveil vs cover-at-rest-on-unveil is a real choice,
-and preload is a second knob. Implementation is trivial once ruled
-(gate autoplay/preload on the veil state). Needs jakob.
+what the media *does* beneath it.
+
+**Ruled (jakob 2026-09-24): the veil covers its clip the way a
+sheet covers a surface.** A veiled clip sits fully out of the
+stage rotation — no playback, no sound-disc presence — because
+the veil is the reader's declared not-yet. The unveil re-elects
+the surface's stage exactly as the suspension clause does on a
+sheet's dismissal, so the unveiled clip autoplays iff it wins the
+election; autoplay-on-unveil vs cover-at-rest was never a third
+knob. Preload stays on — invisible, leaks nothing, makes the
+unveil instant. Recorded in readme §13 (the stage-law bullet) and
+the `MediaAttachment` docblock; the gating is the implementation
+session's, relayed as a contract.
+
+### 104 · The vertical pick caption promises a step that never comes · *design* · **ruled + recorded 2026-09-24**
+
+Surfaced by the implementation session's Android stored-frame work
+(the filing PR, #845, was closed unmerged, so the item lands here
+already ruled): `ComposePickVideo`'s tray caption — "A video is
+the whole post. Its cover comes next." — is untrue on the vertical
+path, where the shape keys the cover step out of the walk and the
+device takes frame 1 silently (readme §13, the stored first
+frame).
+
+**Ruled (jakob 2026-09-24): the vertical pick wears the
+already-blessed trim** — `A video is the whole post.` (blessed
+2026-09-14 as the edit's trim) — because the second sentence
+exists to preview the cover step, and the vertical path has none.
+No new line is minted. Recorded in copy-voice's staging family,
+the `ComposePickVideo` docblock, and the `PickTray` contract; the
+drawn board is the landscape case and stands. The client caption
+swap is the implementation session's, relayed as a contract.
 
 ### 105 · Search results the index cannot serve · *design + docs* · **open**
 
