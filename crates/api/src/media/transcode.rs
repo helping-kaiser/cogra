@@ -664,7 +664,10 @@ mod tests {
         assert_eq!(after("-c:v"), Some("copy"));
         assert_eq!(after("-c:a"), Some("aac"), "audio is still re-encoded");
         assert_eq!(after("-b:a"), Some("128000"));
-        assert!(!args.iter().any(|a| a == "-vf"), "no filter graph: {args:?}");
+        assert!(
+            !args.iter().any(|a| a == "-vf"),
+            "no filter graph: {args:?}"
+        );
         assert!(!args.iter().any(|a| a == "-b:v"), "no video rate: {args:?}");
         assert!(
             !args.iter().any(|a| a == "-pix_fmt"),

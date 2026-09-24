@@ -46,7 +46,9 @@ use postgres_store::media as store;
 use uuid::Uuid;
 
 use super::transcode::{self, Ffmpeg, TranscodeError, Transfer, VideoPlan, video_bps_for};
-use super::{BlobStore, MediaConfig, Probe, UploadCaps, asset_options, process, storage_key, video};
+use super::{
+    BlobStore, MediaConfig, Probe, UploadCaps, asset_options, process, storage_key, video,
+};
 
 /// How many times a job is claimed before it is failed for good.
 ///
@@ -250,11 +252,12 @@ async fn run_job(
     if transfer.is_hdr() && !ffmpeg.tone_maps() {
         return Err(JobError::Refused(REASON_NO_TONE_MAP));
     }
-    let video_plan = video_plan_if_in_target(source_probe, source.len() as u64, caps.video_bytes as u64)
-        .unwrap_or(VideoPlan::Encode {
-            bps: video_bps,
-            transfer,
-        });
+    let video_plan =
+        video_plan_if_in_target(source_probe, source.len() as u64, caps.video_bytes as u64)
+            .unwrap_or(VideoPlan::Encode {
+                bps: video_bps,
+                transfer,
+            });
     tokio::fs::write(&input, source)
         .await
         .map_err(|e| JobError::Transient(format!("writing the upload to scratch: {e}")))?;
