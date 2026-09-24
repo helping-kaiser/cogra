@@ -24,6 +24,9 @@ use std::sync::OnceLock;
 
 use cogra_linter::{Adoption, Migration, OwnerId, ProfileId, ProfileStatus, migrate};
 
+mod common;
+use common::track;
+
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
 }
@@ -95,24 +98,6 @@ fn temporary(name: &str) -> PathBuf {
     std::fs::write(src.join("alpha.rs"), "pub fn one() {}\n").expect("the backing file");
     track(&at);
     at
-}
-
-/// Makes `root` a repository and tracks everything now standing in it: the
-/// carrier is what git lists (´dec:lint:tracked-carrier´).
-fn track(root: &Path) {
-    for args in [&["init", "-q"][..], &["add", "-A"][..]] {
-        let done = std::process::Command::new("git")
-            .arg("-C")
-            .arg(root)
-            .args(args)
-            .output()
-            .expect("git runs");
-        assert!(
-            done.status.success(),
-            "git {args:?}: {}",
-            String::from_utf8_lossy(&done.stderr)
-        );
-    }
 }
 
 /// (´dec:lint:staged-profiles´): a staged profile is exactly what this run

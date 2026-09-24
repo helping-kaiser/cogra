@@ -20,10 +20,12 @@
 //! Trace convention: every test's doc comment names the clause it traces to.
 
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::sync::OnceLock;
 
 use cogra_linter::{Adoption, ProfileId, Sweep, fix};
+
+mod common;
+use common::git;
 
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
@@ -290,20 +292,6 @@ fn two_sweeps_of_one_corpus_agree() {
     let at = temporary("sweep-determinism");
     assert_eq!(swept(adoption(), &at), swept(adoption(), &at));
     let _ = std::fs::remove_dir_all(&at);
-}
-
-fn git(at: &Path, args: &[&str]) {
-    let done = Command::new("git")
-        .arg("-C")
-        .arg(at)
-        .args(args)
-        .output()
-        .expect("git runs");
-    assert!(
-        done.status.success(),
-        "git {args:?}: {}",
-        String::from_utf8_lossy(&done.stderr)
-    );
 }
 
 /// (´dec:lint:fix-precondition´): a source the sweep would rewrite is dirty
