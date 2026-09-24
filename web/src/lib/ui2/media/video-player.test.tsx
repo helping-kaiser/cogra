@@ -11,6 +11,7 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { intersect, observedThresholds } from "@/test/media-env";
+import { VeilContext } from "./body-veil";
 import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { MediaTile } from "./media-tile";
@@ -81,6 +82,65 @@ describe("autoplay", () => {
 
   it("never carries the native transport — every card wears the sound disc instead", () => {
     expect(player()).not.toHaveAttribute("controls");
+  });
+});
+
+// The sensitive veil covers its clip the same way a sheet suspends the
+// surface behind it (design/readme.md, backlog item 103): "a veiled clip
+// sits fully out of the stage rotation — no playback, no sound-disc
+// presence… Unveiling re-elects the surface's stage exactly as a sheet's
+// dismissal does, so the unveiled clip autoplays iff it wins — no knob of
+// its own. Preloading stays on." `VeilContext` stands in for `BodyVeil`
+// here, the same way these tests drive the stage through bare DOM events
+// rather than mounting a whole feed around the player.
+describe("the sensitive veil (backlog 103)", () => {
+  function veiledPlayer(veiled: boolean, testId = "video-player") {
+    render(
+      <VeilContext.Provider value={veiled}>
+        <VideoPlayer src={CLIP} testId={testId} />
+      </VeilContext.Provider>,
+    );
+    return screen.getByTestId(testId) as HTMLVideoElement;
+  }
+
+  it("does not play while veiled, even at full visibility", () => {
+    const video = veiledPlayer(true);
+    act(() => intersect(true));
+    expect(video.paused).toBe(true);
+  });
+
+  it("shows no sound disc while veiled", () => {
+    veiledPlayer(true);
+    expect(screen.queryByTestId("video-player-sound")).toBeNull();
+  });
+
+  it("plays after reveal, iff still visible at that moment", () => {
+    const { rerender } = render(
+      <VeilContext.Provider value={true}>
+        <VideoPlayer src={CLIP} />
+      </VeilContext.Provider>,
+    );
+    const video = screen.getByTestId("video-player") as HTMLVideoElement;
+
+    // Already past the visibility gate while still veiled — must not play.
+    act(() => intersect(true));
+    expect(video.paused).toBe(true);
+
+    // Unveiling re-runs the autoplay effect, which re-observes and asks the
+    // gate again — no separate election, the same claim it would make on a
+    // fresh mount.
+    rerender(
+      <VeilContext.Provider value={false}>
+        <VideoPlayer src={CLIP} />
+      </VeilContext.Provider>,
+    );
+    expect(screen.getByTestId("video-player-sound")).toBeInTheDocument();
+    act(() => intersect(true));
+    expect(video.paused).toBe(false);
+  });
+
+  it("does not touch preload", () => {
+    expect(veiledPlayer(true)).toHaveAttribute("preload", "metadata");
   });
 });
 

@@ -9,7 +9,7 @@
    membership materialises only from the joiner's own Participant record
    (chats.md §4, *Joining*), and "a Chat membership signal exists only when the
    joining actor authors a Participant edge" (layer1-interface.md §9.8,
-   `rem:nodes:chat-proposals-do-not-participate`). So the reader is still
+   ``rem:nodes:chat-proposals-do-not-participate``). So the reader is still
    outside, and the foot offers the one
    act left to them: `Join`, filled, alone, because the line directly above it
    says why an on-request chat's foot now reads `Join` rather than `Ask to

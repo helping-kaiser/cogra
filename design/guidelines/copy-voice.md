@@ -1868,6 +1868,15 @@ to be opened.
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
 
+## Awaiting blessing — the search-scope line
+
+One string from backlog item 105's ruling (readme §13, the indirect
+kinds are scope-served): with Messages, Comments or Offers selected
+and no scope in the query, the results region carries one quiet line
+where results would stand — the way, not an apology:
+
+- `Found through people and tags — start with @handle or #tag.`
+
 ## Awaiting blessing — the chats round
 
 The words of would-like #3 (post-MVP tree, 2026-09-23: the base boards

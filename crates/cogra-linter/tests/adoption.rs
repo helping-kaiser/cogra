@@ -819,7 +819,7 @@ fn the_citation_index_section_round_trips() {
 #[test]
 fn the_scanned_region_section_round_trips() {
     let scanned = ruled().scanned_regions;
-    assert_eq!(scanned.languages.len(), 4);
+    assert_eq!(scanned.languages.len(), 5);
     let markdown = &scanned.languages[0];
     assert_eq!(markdown.language, Language::new("markdown"));
     assert_eq!(markdown.extensions, vec![Box::from(".md")]);
@@ -833,8 +833,66 @@ fn the_scanned_region_section_round_trips() {
         vec![Box::from(".kt"), Box::from(".kts")],
         "both file shapes are Kotlin, and one grammar root reads them"
     );
-    assert_eq!(scanned.none.len(), 1);
+    assert_eq!(scanned.none.len(), 3);
     assert_eq!(scanned.none[0].languages.len(), 8);
+    assert!(
+        scanned.none[0].names.is_empty(),
+        "names is optional and absent"
+    );
+}
+
+/// The split's rule, over one file of each tracked type: a comment-bearing
+/// type a frontend reads is scanned, and every other type is declared by
+/// extension or, where no extension names it, by whole file name
+/// (´dec:lint:catalogue-totality´).
+///
+/// Every tracked file type is either read by a frontend or declared unscanned.
+/// ´claim:adoption:every-tracked-type-is-catalogued´
+#[test]
+fn every_tracked_type_is_scanned_or_declared() {
+    let scanned = ruled().scanned_regions;
+    for (path, language) in [
+        ("web/scripts/dev.mjs", "javascript"),
+        ("web/vitest.config.mts", "typescript"),
+        ("design/_build/bundle.mjs", "javascript"),
+        ("design/_ds_bundle.js", "javascript"),
+        ("design/designs/entry/screens/Welcome.jsx", "javascript"),
+    ] {
+        assert_eq!(
+            scanned.language_of(Path::new(path)),
+            Some(Language::new(language)),
+            "{path}"
+        );
+    }
+    for path in [
+        "design/thumbnail.html",
+        "design/styles.css",
+        "android/app/src/main/AndroidManifest.xml",
+        "crates/cogra-interchange/tests/corpus/rfc8610-appendix-d-prelude.cddl",
+        "android/app/proguard-rules.pro",
+        "android/gradlew.bat",
+        "Cargo.lock",
+        "Makefile",
+        "android/gradlew",
+        ".gitattributes",
+        "web/.gitignore",
+        ".editorconfig",
+        ".env.example",
+        "design/assets/fonts/figtree-ofl.txt",
+        "design/assets/photos/01-landscape-4x3.jpg",
+        "web/src/app/apple-icon.png",
+        "web/src/app/favicon.ico",
+        "design/assets/fonts/figtree.ttf",
+        "web/.nvmrc",
+        "LICENSE-CODE",
+        "LICENSE-DOCS",
+    ] {
+        assert_eq!(scanned.language_of(Path::new(path)), None, "{path}");
+        assert!(scanned.declares_unscanned(Path::new(path)), "{path}");
+    }
+    for path in ["tools/probe.py", "NotAMakefile", "a.gitignore.bak"] {
+        assert!(!scanned.catalogues(Path::new(path)), "{path}");
+    }
 }
 
 /// A language is named in the scanned regions only where a frontend reads it.
@@ -882,7 +940,7 @@ fn the_head_recognition_section_round_trips() {
     assert_eq!(&*heads.forms[2].id, "title");
     assert_eq!(heads.forms[2].language, Language::new("markdown"));
     assert_eq!(heads.none.len(), 1);
-    assert_eq!(heads.none[0].languages.len(), 3);
+    assert_eq!(heads.none[0].languages.len(), 4);
 }
 
 /// The banned-token section arrives with the values it states.

@@ -507,9 +507,9 @@ admission costs** — is a checkable claim, not a promise. The pool
 is seeded at genesis and open to top-ups; the discipline is on what
 leaves, not what enters. It is one global pot that everyone pays
 into, the team treasury included as a contributor like any
-other. At the federation stage a community can leave the global
-pot and run its own to pay its admission fees
-([open-questions.md Q15](../open-questions.md)).
+other. A community can leave the global pot and run its own for
+its admission fees — pool splitting, a later stage of its own
+([open-questions.md Q55](../open-questions.md#q55--community-pool-splitting)).
 
 ### 7.3 The inviter reward
 
