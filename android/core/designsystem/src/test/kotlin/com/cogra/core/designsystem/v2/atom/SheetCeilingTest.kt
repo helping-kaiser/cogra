@@ -99,6 +99,22 @@ class SheetCeilingTest {
         assertThat(heightOf("sheet")).isLessThan((rootHeight() - SheetCeilingSliver).value)
     }
 
+    // (b) The tallest class is PINNED at the ceiling (`BottomSheet.jsx`'s
+    // `tallest`): with next to nothing to carry, the surface still owns the
+    // whole room below the sliver — the comments thread's shape.
+    @Test
+    fun theTallestClassStandsAtTheCeilingWithLittleToCarry() {
+        compose.setContent {
+            Cogra2PreviewTheme {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                    CograSheetSurface(tallest = true, testTag = "sheet") { Spacer(Modifier) }
+                }
+            }
+        }
+
+        assertThat(heightOf("sheet")).isWithin(1f).of((rootHeight() - SheetCeilingSliver).value)
+    }
+
     // (c) The point of the ceiling: Done is on the screen at every content
     // size, so an author who wrote too much can still leave the sheet.
     @Test

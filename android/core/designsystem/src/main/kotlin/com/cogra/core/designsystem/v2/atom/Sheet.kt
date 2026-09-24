@@ -123,22 +123,45 @@ fun sheetCeilingHeight(): Dp {
  * Geometry is the canonical seal board's: the extra-large (28dp) rung on the
  * top corners only, `surfaceContainerHigh`, a 32×4 handle in `outlineVariant`,
  * and 24dp side padding.
+ *
+ * [tallest] IS THE CLASS ASKED FOR BY NAME (`BottomSheet.jsx`'s `tallest`,
+ * readme §13): the surface is PINNED AT the ceiling rather than held under
+ * it, and it drops the side padding — the drawn tallest sheet pads nothing
+ * horizontally and its children own their own insets (`_shared.jsx`'s
+ * comments sheet). The height must live HERE, on the surface INSIDE the
+ * sheet, never on `ModalBottomSheet`'s own modifier: Material measures its
+ * expanded anchor inside that modifier chain, so a height fixed outside it
+ * becomes the anchor math's whole world — the anchor collapses to zero and
+ * the sheet pins to the top of the window instead of rising to the ceiling.
  */
 @Composable
 fun CograSheetSurface(
     modifier: Modifier = Modifier,
     showHandle: Boolean = true,
+    tallest: Boolean = false,
     testTag: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val side = if (tallest) 0.dp else Space.x6
     Column(
         modifier = modifier
             .fillMaxWidth()
+            // The tag rides ahead of the sizing and padding, so what a test
+            // measures under it is the drawn surface — its height and its
+            // edges — not the padded box inside it.
+            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
             // THE CEILING, ON EVERY SHEET (see [sheetCeilingHeight]). A
             // content-sized sheet grows with what it carries and stops here;
             // the surface never reaches the safe area, so whatever the sheet
-            // stacks at its foot stays on the screen.
-            .heightIn(max = sheetCeilingHeight())
+            // stacks at its foot stays on the screen. The tallest class is
+            // pinned at the ceiling instead.
+            .then(
+                if (tallest) {
+                    Modifier.height(sheetCeilingHeight())
+                } else {
+                    Modifier.heightIn(max = sheetCeilingHeight())
+                },
+            )
             .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             // The surface reaches the screen's edge; only its content steps
@@ -152,14 +175,17 @@ fun CograSheetSurface(
             // pads from INSIDE the ceiling, so a raised keyboard shortens the
             // content instead of pushing the sheet's top edge up.
             .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
-            .padding(start = Space.x6, end = Space.x6, top = Space.x2, bottom = Space.x6)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
-        verticalArrangement = Arrangement.spacedBy(Space.x3),
+            .padding(start = side, end = side, top = Space.x2, bottom = Space.x6),
+        // The drawn surface carries no gap of its own (`BottomSheet.jsx`,
+        // `gap: 0`); the content class's spacing is the seal board's. The
+        // tallest class's handle brings the board's own margin instead.
+        verticalArrangement = if (tallest) Arrangement.Top else Arrangement.spacedBy(Space.x3),
     ) {
         if (showHandle) {
             Spacer(
                 Modifier
                     .align(Alignment.CenterHorizontally)
+                    .padding(bottom = if (tallest) Space.x3 else 0.dp)
                     .width(32.dp)
                     .height(4.dp)
                     .clip(CircleShape)
