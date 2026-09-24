@@ -158,9 +158,9 @@ rail's native asset. Pairing against it adds **no issuer or
 custodian** beyond the chain itself: a USD stablecoin prices CGT
 directly in dollars but depends on a central issuer who can freeze
 or redeem; wrapped or bridged BTC reintroduces a custodian holding
-the real Bitcoin. L-BTC is Bitcoin inside the same federation
-trust floor the burn value already stands on — the only deep
-pair with no extra trust dependency. The consequence:
+the real Bitcoin. L-BTC is Bitcoin inside the federation trust
+floor CGT's own chain already stands on — the only deep pair with
+no extra trust dependency. The consequence:
 **contributor earnings are realised in L-BTC**, so their fiat
 value follows
 `(contributor share) · (CGT/L-BTC trajectory) · (BTC/USD)` — the

@@ -37,16 +37,14 @@ Design history: [Q20 (resolved)](../open-questions.md).
 The chain choice follows the pairing requirement. CGT's base market
 must pair against an asset with **no issuer or custodian beyond the
 chain itself** ([token.md §4.1](../primitive/token.md#41-the-base-pair)),
-and the project's preferred base asset is Bitcoin — the same asset
-family the admission money instantiates as L-BTC. On Liquid, L-BTC
+and the project's preferred base asset is Bitcoin. On Liquid, L-BTC
 *is* the native asset: the pair is CGT/L-BTC with no bridge, no
 wrapped asset, and no second chain anywhere in the money path.
 
 Liquid's operator model satisfies the no-single-operator requirement
 as token.md §1 states it: blocks are signed and the peg is managed
 by an 11-of-15 functionary federation, so no single operator can
-steal funds or permanently censor. The residual trust — a federation
-quorum — is the same floor the burn value already stands on.
+steal funds or permanently censor.
 
 The cost of this choice is named openly: Liquid has no
 concentrated-liquidity DEX and no precedent for a protocol-run
