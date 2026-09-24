@@ -99,6 +99,13 @@ pub struct Probe {
     /// chroma format, transfer. Absent on a still, and on a clip whose
     /// sequence parameter set does not parse.
     pub signal: Option<video::Signal>,
+    /// Whether the container's audio, if it carries one, is already AAC.
+    /// `true` on a still and on a video with no audio track — there is
+    /// nothing about audio for a re-encode to fix. This is a fact, never
+    /// a refusal: [`video::probe`] admits any audio codec, and this is
+    /// what [`process`] reads to decide whether audio alone routes a
+    /// clip to the ingest worker.
+    pub audio_aac: bool,
 }
 
 /// What the byte pipeline can refuse, and why. Every variant is a
@@ -376,9 +383,16 @@ pub struct ProcessedAsset {
     /// a single-frame picture, which is what `durationMs` reads.
     pub duration_ms: Option<u64>,
     /// Whether these bytes must be re-encoded before they may be served:
-    /// a video outside the target [`transcode::within_target`] states.
-    /// Always false on a still.
+    /// a video outside the target [`transcode::within_target`] states, an
+    /// HDR or otherwise unserved signal, or audio that is not already
+    /// AAC. Always false on a still.
     pub needs_transcode: bool,
+    /// Whether the bytes' audio, if any, is already AAC — carried
+    /// through from [`Probe::audio_aac`] so the ingest worker can assert
+    /// its own rendition really is AAC before it is stored
+    /// (`ingest_queue::run_job`), the witness guarantee's last gate.
+    /// Always true on a still.
+    pub audio_aac: bool,
 }
 
 impl ProcessedAsset {
@@ -431,6 +445,9 @@ fn gcd(a: u32, b: u32) -> u32 {
 /// states are all it takes — so a clip already within target costs nothing
 /// beyond this call. A clip that is HDR, deeper than 8 bits, or not 4:2:0
 /// is outside the target whatever its rate: readers are served 8-bit SDR.
+/// Audio that is not already AAC routes a clip to re-encoding the same
+/// way, whatever its rate or canvas: the ingest worker is what turns it
+/// into the AAC readers are promised.
 pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaError> {
     let format = Format::of(bytes).ok_or(MediaError::Unsupported)?;
     let limit = format.cap(caps);
@@ -446,7 +463,8 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
             probe.duration_ms,
             stripped.len() as u64,
             caps.video_bytes as u64,
-        ) || probe.signal.is_some_and(|signal| !signal.is_served()));
+        ) || probe.signal.is_some_and(|signal| !signal.is_served())
+            || !probe.audio_aac);
     Ok(ProcessedAsset {
         digest: Sha256::digest(&stripped).into(),
         bytes: stripped,
@@ -455,6 +473,7 @@ pub fn process(bytes: &[u8], caps: UploadCaps) -> Result<ProcessedAsset, MediaEr
         mime: format.mime,
         duration_ms: probe.duration_ms,
         needs_transcode,
+        audio_aac: probe.audio_aac,
     })
 }
 
@@ -1806,6 +1825,7 @@ mod tests {
             mime: webp::MIME,
             duration_ms: None,
             needs_transcode: false,
+            audio_aac: true,
         }
         .aspect_ratio()
     }

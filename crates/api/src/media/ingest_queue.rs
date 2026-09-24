@@ -15,8 +15,9 @@
 //! **Most uploads never come here.** The byte pipeline decides at upload
 //! whether a clip is within target, from the probe it runs anyway, and a
 //! clip that is — every Android upload, every web upload the browser
-//! could compress — is stored `ready` on the spot. Only an over-target
-//! video is stored `processing` and queued.
+//! could compress — is stored `ready` on the spot. Only a clip outside
+//! the served target — its video, or audio that is not already AAC — is
+//! stored `processing` and queued.
 //!
 //! **The queue is the table.** A `processing` row is a job; a worker
 //! leases one with `FOR UPDATE SKIP LOCKED` and renews the lease while it
@@ -26,8 +27,11 @@
 //! is stateless beyond its row, so more workers — here or on other
 //! machines — are more copies of the same loop.
 //!
-//! **One job, in order:** read the upload, re-encode it with ffmpeg, run
-//! the result through the very byte pipeline an upload runs (sniff, cap,
+//! **One job, in order:** read the upload, run it through ffmpeg — audio
+//! is always re-encoded to AAC, and the video track is copied unchanged
+//! when it is already the served target on its own terms
+//! (`transcode::VideoPlan`) or re-encoded to it otherwise — run the
+//! result through the very byte pipeline an upload runs (sniff, cap,
 //! strip, probe, digest — so the rendition is validated exactly as an
 //! upload is), write the rendition's object, settle the row `ready`
 //! pointing at it, and only then delete the original. A crash between any
@@ -41,8 +45,10 @@ use postgres_store::PgPool;
 use postgres_store::media as store;
 use uuid::Uuid;
 
-use super::transcode::{Ffmpeg, TranscodeError, Transfer, video_bps_for};
-use super::{BlobStore, MediaConfig, UploadCaps, asset_options, process, storage_key, video};
+use super::transcode::{self, Ffmpeg, TranscodeError, Transfer, VideoPlan, video_bps_for};
+use super::{
+    BlobStore, MediaConfig, Probe, UploadCaps, asset_options, process, storage_key, video,
+};
 
 /// How many times a job is claimed before it is failed for good.
 ///
@@ -241,15 +247,22 @@ async fn run_job(
     let output = scratch.path().join("rendition.mp4");
 
     let (caps, video_bps) = plan(config, job.scale, &job.options);
-    let transfer = source_transfer(&source);
+    let source_probe = video::probe(&source).ok();
+    let transfer = transfer_of(source_probe);
     if transfer.is_hdr() && !ffmpeg.tone_maps() {
         return Err(JobError::Refused(REASON_NO_TONE_MAP));
     }
+    let video_plan =
+        video_plan_if_in_target(source_probe, source.len() as u64, caps.video_bytes as u64)
+            .unwrap_or(VideoPlan::Encode {
+                bps: video_bps,
+                transfer,
+            });
     tokio::fs::write(&input, source)
         .await
         .map_err(|e| JobError::Transient(format!("writing the upload to scratch: {e}")))?;
     match ffmpeg
-        .transcode(&input, &output, video_bps, transfer, settings.deadline)
+        .transcode(&input, &output, video_plan, settings.deadline)
         .await
     {
         Ok(()) => {}
@@ -270,6 +283,7 @@ async fn run_job(
             tracing::warn!(id = %job.id, error = %e, "the pipeline refused a rendition");
             JobError::Refused(refusal(&e))
         })?;
+    assert_rendition_is_aac(job.id, &processed)?;
 
     let written = Written {
         key: key.to_string(),
@@ -302,15 +316,42 @@ fn plan(
     (caps, video_bps_for(duration_ms, caps.video_bytes as u64))
 }
 
-/// The transfer the upload's own SPS states — the same header read the
-/// upload ran, repeated here because the job holds the bytes and nothing
-/// else. An upload this probe cannot read was accepted without a signal,
-/// and is re-encoded as the SDR it is taken to be.
-fn source_transfer(source: &[u8]) -> Transfer {
-    video::probe(source)
-        .ok()
+/// The transfer an upload's own SPS states, off the probe the job ran to
+/// plan the video track ([`video_plan_if_in_target`]) — the same header
+/// read the upload ran, repeated here because the job holds the bytes
+/// and nothing else. An upload whose probe failed carries no signal, and
+/// is re-encoded as the SDR it is taken to be.
+fn transfer_of(probe: Option<Probe>) -> Transfer {
+    probe
         .and_then(|probe| probe.signal)
         .map_or(Transfer::Sdr, |signal| signal.transfer)
+}
+
+/// Whether the upload's own video track is already the served target —
+/// canvas, rate, and an SDR 8-bit 4:2:0 signal
+/// ([`transcode::within_target`], [`video::Signal::is_served`]) — in
+/// which case ffmpeg can copy it (`VideoPlan::Copy`) rather than
+/// re-encode it. A rendition is only ever reached because *something*
+/// was outside target; when video was not that something, its bytes are
+/// ones ffmpeg does not have to touch.
+///
+/// `None` when there is nothing to state either way — the probe failed,
+/// or the video itself is outside target — and the caller falls back to
+/// [`VideoPlan::Encode`].
+fn video_plan_if_in_target(
+    probe: Option<Probe>,
+    size_bytes: u64,
+    cap_bytes: u64,
+) -> Option<VideoPlan> {
+    let probe = probe?;
+    let in_target = transcode::within_target(
+        probe.width,
+        probe.height,
+        probe.duration_ms,
+        size_bytes,
+        cap_bytes,
+    ) && probe.signal.is_none_or(|signal| signal.is_served());
+    in_target.then_some(VideoPlan::Copy)
 }
 
 /// The author-facing sentence for a rendition the pipeline refused.
@@ -324,6 +365,22 @@ fn refusal(e: &super::MediaError) -> &'static str {
         super::MediaError::TooLarge { .. } => REASON_TOO_LONG,
         _ => REASON_DID_NOT_ENCODE,
     }
+}
+
+/// The witness guarantee's last gate: a rendition is the bytes a digest
+/// is about to be committed over, and ffmpeg's own recipe
+/// ([`transcode::Ffmpeg::args`]) always re-encodes audio to AAC. If it
+/// ever produced anything else, the encode did not do its job, and the
+/// job fails the same way any other refused rendition does.
+fn assert_rendition_is_aac(
+    job_id: Uuid,
+    processed: &super::ProcessedAsset,
+) -> Result<(), JobError> {
+    if processed.audio_aac {
+        return Ok(());
+    }
+    tracing::warn!(id = %job_id, "ffmpeg's own rendition did not come out AAC");
+    Err(JobError::Refused(REASON_DID_NOT_ENCODE))
 }
 
 /// Points the row at its rendition, then drops the original.
@@ -385,6 +442,49 @@ async fn discard(blobs: &dyn BlobStore, key: &str) {
 mod tests {
     use super::*;
 
+    fn probe(width: u32, height: u32, duration_ms: u64, audio_aac: bool) -> Probe {
+        Probe {
+            width,
+            height,
+            duration_ms: Some(duration_ms),
+            signal: None,
+            audio_aac,
+        }
+    }
+
+    /// A source whose own video is already within target — canvas, rate,
+    /// and (no signal at all, here, which reads as served) — is planned
+    /// as a copy whatever its audio is, because copying is a video
+    /// question alone. One outside it, or with no probe to read at all,
+    /// falls back to an encode.
+    ///
+    /// A source video already within target is planned as a copy, never an encode.
+    /// ´claim:media:an-in-target-video-is-planned-as-a-copy´
+    #[test]
+    fn an_in_target_video_is_copied_whatever_its_audio() {
+        const CAP: u64 = 100 * 1024 * 1024;
+        let lean = probe(1080, 1920, 30_000, false);
+        let size = 4_300_000u64 * 30 / 8;
+        assert!(
+            matches!(
+                video_plan_if_in_target(Some(lean), size, CAP),
+                Some(VideoPlan::Copy)
+            ),
+            "a phone-shaped clip is in target on video alone"
+        );
+
+        let wide = probe(2560, 1440, 30_000, true);
+        assert!(
+            video_plan_if_in_target(Some(wide), 1_000_000, CAP).is_none(),
+            "a canvas over 1080 on its short side falls back to an encode"
+        );
+
+        assert!(
+            video_plan_if_in_target(None, size, CAP).is_none(),
+            "no probe to read is no fact to state either way"
+        );
+    }
+
     /// A 150-second clip fits a post at the standard rate, and a comment
     /// only at a lower one: 92 % of 50 MiB is 385 875 968 bits, over 150 s
     /// is 2 572 506 bps, less the 128 000 of audio is 2 444 506. The
@@ -417,7 +517,7 @@ mod tests {
     async fn an_hdr_upload_without_a_tone_map_is_refused() {
         let blobs = super::super::blob::in_memory();
         let source = video::tests::h264_with_sps(&video::tests::SPS_PQ);
-        assert!(source_transfer(&source).is_hdr());
+        assert!(transfer_of(video::probe(&source).ok()).is_hdr());
         blobs
             .put("ingest/hdr.mp4", source, video::MIME)
             .await
