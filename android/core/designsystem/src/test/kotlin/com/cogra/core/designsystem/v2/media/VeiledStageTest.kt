@@ -33,11 +33,14 @@ import org.robolectric.shadows.ShadowLog
  * covers its clip the same way" a sheet covers a surface.
  *
  * A veiled clip sits fully out of the stage rotation — no playback and no
- * sound disc — and the unveil re-elects the stage exactly as a sheet's
- * dismissal does, from empty, so the unveiled clip plays iff it is then the
- * topmost qualifying clip. Preloading stays on. `StageElectionTest` pins the
- * rule; these pin both faces of the veil wiring it: the post's, which covers
- * its clip in place, and the comment's, which replaces its body.
+ * sound disc. **The unveil is an eligibility change, not a re-election**
+ * (jakob 2026-09-24, correcting a first build that decided the stage from
+ * empty on unveil, as a sheet's dismissal does): the unveiled clip joins the
+ * rotation exactly as a clip scrolling into view, so it plays only if it is
+ * the topmost qualifying clip and no qualifying incumbent already holds the
+ * stage. Preloading stays on. `StageElectionTest` pins the rule; these pin
+ * both faces of the veil wiring it: the post's, which covers its clip in
+ * place, and the comment's, which replaces its body.
  *
  * **The geometry is [ScrollStageTest]'s.** The list is 300 units tall at a
  * density of 1 and every clip is a 200-unit square: A shows whole and B half
@@ -107,20 +110,22 @@ class VeiledStageTest {
     }
 
     /**
-     * The unveil decides the stage from EMPTY, as a sheet's dismissal does:
-     * the unveiled A is the topmost qualifying clip, so it takes the stage
-     * from B, which held it and still qualifies.
+     * NOT A SUSPENSION LIFT: unlike a sheet's dismissal, the unveil never
+     * decides the stage from empty — A joins the rotation exactly as a clip
+     * scrolling into view, so it does not displace B, which holds the stage
+     * and still qualifies.
      */
     @Test
-    fun unveilingTheTopmostQualifyingClipGivesItTheStage() {
+    fun unveilingATopmostClipDoesNotDisplaceTheQualifyingIncumbent() {
         show(A, B, veil = setOf(A))
         scrollTo(HALF_OF_EACH)
         assertHolds(B)
 
         reveal(A)
 
-        assertHolds(A)
-        assertThat(playingFrames()).containsExactly(trace(A))
+        assertHolds(B)
+        assertThat(playingFrames()).containsExactly(trace(B))
+        assertThat(claimsOf(A)).isEqualTo(0)
     }
 
     /** Unveiled below the topmost qualifying clip, it does not win, and the clip above plays on. */
@@ -166,21 +171,21 @@ class VeiledStageTest {
 
     /**
      * THE COMMENT'S VEIL REPLACES ITS BODY, so its clip is not on the stage at
-     * all while veiled — and comes onto it lifted: the stage re-elects from
-     * empty exactly as for the post's veil. The list is tall enough for both
-     * clips to stand whole once A is revealed, so B still qualifies and only
-     * the re-election, not B's falling below the gate, can give A the stage.
+     * all while veiled — and joins it for the first time on the reveal, as an
+     * ordinary place: NOT a suspension lift, so it does not displace B, which
+     * already holds the stage and still qualifies.
      */
     @Test
-    fun theCommentsVeilHoldsItsClipOffStageAndItsRevealReElects() {
+    fun theCommentsVeilRevealJoinsTheRotationWithoutDisplacingTheIncumbent() {
         show(A, B, veil = setOf(A), compact = true, height = TALL)
         assertHolds(B)
         compose.onNodeWithTag(VIDEO_TAG, useUnmergedTree = true).assertExists()
 
         reveal(A)
 
-        assertHolds(A)
-        assertThat(playingFrames()).containsExactly(trace(A))
+        assertHolds(B)
+        assertThat(playingFrames()).containsExactly(trace(B))
+        assertThat(claimsOf(A)).isEqualTo(0)
     }
 
     /**
