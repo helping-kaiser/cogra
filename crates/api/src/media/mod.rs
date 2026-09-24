@@ -1019,6 +1019,9 @@ fn manifest_entry(
         mime: asset.mime_type.clone(),
         alt_text,
         cover: cover.map(manifest_digest).transpose()?,
+        // No caller can request a taken cover yet — wiring that input is
+        // the next lane's job (the envelope codec only, here).
+        cover_taken: false,
     })
 }
 
