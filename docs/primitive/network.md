@@ -59,7 +59,7 @@ used across all docs:
 | **The Genesis Moderator** | the operator's own account — the first member; an ordinary Actor + Profile with a self-custodied address, undemotably `moderator` (§9) | the first Registration; the person-vouch Opinions that lift the system actors' standing above their own rate; ordinarily, the first invitations |
 | **The Publisher** | the system actor acting on the Network's behalf, in backend custody ([substrate.md §8](substrate.md#8-system-actors)) | The Charter, platform documents, Network-scope finalizations, role Tags (§9), auto-settlement payloads ([economics.md](economics.md)) |
 | **The Moderator** | the system actor for verdict gestures, in backend custody | Tag verdicts and payload removals ([moderation.md](../instances/moderation.md)) |
-| **The Treasury** | the team's account — destination of the campaign treasury share ([economics.md §7](economics.md#7-the-conservation-equation)) and a contributor, like everyone, to the community's admission fund, which carries every ongoing admission burn — members', system actors', and Collectives' ([§7.2](economics.md#72-the-admission-fund)); keys with the operator | its own Registration, then nothing — it exists to be publicly witnessed |
+| **The Treasury** | the team's account — destination of the campaign treasury share ([economics.md §7](economics.md#7-the-conservation-equation)) and a contributor, like everyone, to the community's admission fund, which carries every admission burn — members', system actors', and Collectives' ([§7.2](economics.md#72-the-admission-fund)); keys with the operator | its own Registration, then nothing — it exists to be publicly witnessed |
 | **The Charter** | not an actor — the Publisher-authored Content anchor of §3 | — |
 
 The Treasury is registered on Layer 1 deliberately, although it
@@ -78,8 +78,10 @@ project owner; a fork sets its own genesis.
 Genesis begins with money and proceeds so that every record's
 preconditions already stand:
 
-1. **The genesis admission burns.** The operator funds admission
-   burns at the addresses of everything in the cast
+1. **The genesis admission burns.** The operator's genesis funding
+   seeds the community's admission fund — the first community
+   pool — and the fund pays the admission burns at the addresses of
+   everything in the cast
    ([economics.md §7.2](economics.md#72-the-admission-fund)).
 2. **The Genesis Moderator registers** — the instance's first
    accepted record.

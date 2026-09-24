@@ -274,8 +274,8 @@ insolvent actor (W1) restores capacity immediately by committing
 burns; re-crossing the wall (W2a) takes some combination of new
 burns and admissible vouch-positive connections from actors with
 source rates above the current standing — burns alone can
-suffice. Who funds these debits — genesis and the community's
-admission fund — is economics:
+suffice. Who funds these debits — the community's admission
+fund, from genesis on — is economics:
 [economics.md](economics.md).
 
 **Vocabulary.** The L1 admission price is the **θ-debit**, named by
