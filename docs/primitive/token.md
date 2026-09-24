@@ -305,8 +305,11 @@ Two pots receive the campaign equation's platform-side flow, and
 they are deliberately separate: **the team treasury** is the
 project's revenue; **the admission fund** is the community's.
 Separating them keeps each accountable — the team's
-income is not raidable by subsidy policy, and the community's
-self-funding is not a discretionary line in the project's budget.
+income is not raidable by subsidy policy, the one exception being
+the settlement carve of
+[economics.md §7](economics.md#7-the-conservation-equation),
+bounded by the pinned ceiling; and the community's self-funding is
+not a discretionary line in the project's budget.
 
 ### 6.1 The team treasury
 
