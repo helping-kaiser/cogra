@@ -2,7 +2,7 @@
 
 The **User** is a person's account: one PeerNetworks Layer 1
 **Actor + Profile** grounded pair, anchored by the actor's own
-Registration record, plus one address
+Registration record, plus one realization address
 ([substrate-map.md §1](substrate-map.md#1-actors-and-identity)).
 The map from the pair to the person behind it — credentials,
 email, sessions — is CoGra service state, never graph state:
@@ -18,7 +18,7 @@ it ([nodes.md §2](nodes.md#2-accounts-user-and-collective)).
 ## 1. User vs Collective
 
 Both account kinds resolve to the same L1 shape — one Actor +
-Profile pair, one address — and Layer 1 treats them
+Profile pair, one realization address — and Layer 1 treats them
 identically: same record inventory, same intrinsic authorship,
 same pricing. The distinction is what stands behind each on the
 CoGra side.
@@ -104,9 +104,10 @@ fold-ignored
 The payout destination is thereby a public, actor-attributed
 record: it cannot be silently swapped.
 
-The address is not graph state at all — it is the realization
-address the actor burns to, read by L1 only as the scalar `B_i`.
-One account = one address, self-custodied.
+The realization address is not graph state at all — it is the
+address the actor's burns accrue at, which L1 binds to the actor
+and reads only through the scalar `B_i`. One account = one
+realization address, self-custodied.
 
 **In the overlay.**
 
@@ -229,8 +230,8 @@ payload-removal mark** — no L1 deletion gesture exists
   Content-level (opt-in) adds payload removal on authored
   records. What remains is exactly the L1 husk: standing, title,
   and trust edges persist — names and words are gone. The
-  address is self-custodied and untouched. Grace period, email
-  confirmation, archive-first write ordering, and
+  realization address is self-custodied and untouched. Grace
+  period, email confirmation, archive-first write ordering, and
   mention-to-marker resolution live in
   [erasure.md](../instances/erasure.md).
 - **Moderation.** A passed classification against profile content
