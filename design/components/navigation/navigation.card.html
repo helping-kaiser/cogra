@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x640" name="Navigation" subtitle="Page header, the segmented filter, the borrowed-view band, the bar as it ships and as it grows to five slots, the shell glyphs" -->
+<!-- @dsCard group="Components" viewport="700x640" name="Navigation" subtitle="Page header, the segmented filter, the borrowed-view band, the V1.0 bar and its three-slot default, the shell glyphs" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -36,9 +36,9 @@ function Demo(){
     <DeletionBand days={6}/>
     <span className="lbl">The content-level reading — the opt-in named, the same band</span>
     <DeletionBand days={1} content/>
-    <span className="lbl">Bottom bar — what ships today: feed, the compose action, profile</span>
+    <span className="lbl">Bottom bar — the three-slot default, from before V1.0: feed, the compose action, profile</span>
     <div className="bar"><BottomNav inline active={active} onSelect={setActive}/></div>
-    <span className="lbl">Bottom bar — all five slots, once Explore and Wallet have surfaces</span>
+    <span className="lbl">Bottom bar — the V1.0 bar, all five slots; the wallet slot opens its coming-soon door</span>
     <div className="bar"><BottomNav inline slots={ALL_SLOTS} active={active} onSelect={setActive}/></div>
     <span className="lbl">Shell glyphs — all inlined, classic filled 24px. graph_3 (right) is the one Symbols drawing, filled by deriving it — same weight as the rest</span>
     <div style={{display:"flex",gap:16,color:"var(--text-secondary)"}}>

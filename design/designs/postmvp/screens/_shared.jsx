@@ -75,7 +75,24 @@ const {
   NodeMark,
   STANCE_ANCHORS,
   Timeline,
+  MoneyFigure,
+  CgtMark,
+  WalletBalance,
+  LedgerRow,
+  PayoutAddress,
+  PayoutAddressRow,
+  EarnedChart,
+  SegmentedFilter,
+  JoinPrompt,
 } = components;
+
+/* THE WALLET'S MOCK ADDRESSES — the wallet boards came across from canonical
+   in the V1.0 scope cut (readme §13) and brought their two Liquid addresses
+   with them: shape and length of a real confidential address, content
+   invented. The rest, the zero wallet and the publish seal read the first;
+   the change's seal reads both. */
+const SOL_ADDRESS = "lq1qq2xvpcvfup5j8zscjq05eqylmrc6javzn30v78y7255695yz4t9r5v5m8g6snm4gvsvvzp6mzurcem6ms70epwqmwtnw2pex";
+const SOL_ADDRESS_NEW = "lq1qqw7t3xk0zfvljmv2u49h5tld6mfj7z2vhnn0mjcz2q0edgp5yh3l5wxk8m9dqrrf0e2h4t8ur5cem2n970q4wsxm5u8f30a";
 
 function SettingsExcerpt({ children }) {
   return (

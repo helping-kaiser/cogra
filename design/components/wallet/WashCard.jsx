@@ -7,7 +7,9 @@ import { CgtMark } from "../core/MoneyFigure.jsx";
    applicant): the screens that are a person's first look at the money side
    must feel like the brand, not like settings (jakob 2026-08-31). The
    charter holds: the wash dresses a page's ONE moment, never a default card
-   fill — at most one WashCard per screen. */
+   fill — at most one WashCard per screen. The coming-soon door rides it too
+   (`ComingSoonCard`, readme §13 *The V1.0 scope cut*), without the coin: a
+   door is the whole of its page's moment, and it is not money's. */
 
 export function WashCard({ ghost = true, style, children }) {
   return (

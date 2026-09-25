@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x220" name="List states" subtitle="Empty, loading, and error — designed, not blank" -->
+<!-- @dsCard group="Components" viewport="700x380" name="List states" subtitle="Empty, loading, error, and the coming-soon door — designed, not blank" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -8,8 +8,8 @@
 <style>body{padding:16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}.lbl{font-size:var(--text-label-small);color:var(--text-secondary)}</style>
 </head><body><div id="root"></div>
 <script type="text/babel">
-const { EmptyState, LoadingState, TransportError, Button } = window.CoGraDesignSystem_9084ba;
-function Demo(){return (
+const { EmptyState, LoadingState, TransportError, Button, ComingSoonCard } = window.CoGraDesignSystem_9084ba;
+function Demo(){return (<>
 <div className="grid">
   <div className="col">
     <span className="lbl">Empty, with the one action that fills it</span>
@@ -29,6 +29,11 @@ function Demo(){return (
       <Button variant="outline" size="sm">Retry</Button>
     </div>
   </div>
-</div>)}
+</div>
+<div className="col" style={{marginTop:24,alignItems:"stretch",maxWidth:390}}>
+  <span className="lbl">The coming-soon door — a slot's surface drawn after V1.0: the brand wash, headline and one line, no action</span>
+  <ComingSoonCard thing="Chats" line="Your conversations will be here."/>
+</div>
+</>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);
 </script></body></html>

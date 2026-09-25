@@ -1387,13 +1387,16 @@ colour; a comment nobody has answered is not a fault.
 
 ## The coming-soon surfaces
 
-Two places stand in for something drawn after the MVP: the screen the
-band's chats icon opens (`ChatsComingSoon`, backlog item 68) and the
-hero card on Explore (backlog item 16). **Both name the promise the same
-way** — the thing, an em dash, `coming soon`, then one sentence of what
-will be there:
+Three places stand in for something drawn after the MVP: the screen the
+band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
+the bar's wallet slot opens (`WalletComingSoon`, the V1.0 scope cut),
+and the hero card on Explore (backlog item 16). **All name the promise
+the same way** — the thing, an em dash, `coming soon`, then one sentence
+of what will be there:
 
 - `Chats — coming soon. Your conversations will be here.`
+- `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
+  2026-09-25.)*
 - `The Sky — coming soon` · `Your sky — every account a star, sized by
   your own paths to it.`
 
@@ -1408,10 +1411,11 @@ no "next": both sit on the would-like list and the order can change, so
 the words say that something is intended and nothing about when it
 lands.
 
-The card carries the promise in its heading, where its name already was;
-the screen carries it in its one line, under a header that reads
-`Chats`. Neither surface offers an action — nothing a reader can do
-fills either of them yet.
+The Sky card carries the promise in its heading, where its name already
+was; the two doors carry it on the coming-soon card — the promise as the
+headline, the sentence as its one line (`ComingSoonCard`, the
+drawn-anatomy ruling, jakob 2026-09-25). No coming-soon surface offers
+an action — nothing a reader can do fills any of them yet.
 
 
 ## Topics
