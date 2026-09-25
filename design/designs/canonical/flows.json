@@ -4,7 +4,7 @@
     {
       "name": "publish-a-post",
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest", "ApplicantFeed", "ApplicantWaiting", "WalletApplicant", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "pictures — the crop" },
         { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
@@ -148,30 +148,6 @@
       "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
     },
     {
-      "name": "publish-your-payout-address",
-      "description": "The wallet's first open makes the key and signs the payout address onto the record — the wallet then stands at zero, address published.",
-      "start": { "board": "WalletSetup" },
-      "end": { "board": "WalletAddressSeal", "via": 5, "case": "published — the zero wallet, address on record" }
-    },
-    {
-      "name": "change-your-payout-address",
-      "description": "Change on the wallet takes a new address to its own seal; the signed change puts it on record, newest wins.",
-      "start": { "board": "WalletEmpty", "via": 3, "case": "then the seal" },
-      "end": { "board": "WalletChange", "via": 5, "case": "signed — the new address on record, newest wins" }
-    },
-    {
-      "name": "trace-a-payout-to-what-paid-it",
-      "description": "A settling payout row opens the settlement that paid it — the settlement's own view is still owed.",
-      "start": { "board": "Wallet" },
-      "end": { "board": "Wallet", "via": 5 }
-    },
-    {
-      "name": "see-a-campaigns-money",
-      "description": "The wallet's Campaigns door lists what you run and what you took part in; a row opens that campaign's money view.",
-      "start": { "board": "Wallet", "via": 4 },
-      "end": { "board": "WalletCampaigns", "via": 5 }
-    },
-    {
       "name": "take-a-stance-on-a-post",
       "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
       "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting"] },
@@ -257,7 +233,7 @@
     {
       "name": "publish-words",
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest", "ApplicantFeed", "ApplicantWaiting", "WalletApplicant", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeWords", "via": 3, "to": "ComposeDetails" },
@@ -268,7 +244,7 @@
     {
       "name": "publish-a-video",
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest", "ApplicantFeed", "ApplicantWaiting", "WalletApplicant", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a horizontal or square video — its face" },
         { "board": "ComposeCover", "via": 6 },
@@ -279,7 +255,7 @@
     {
       "name": "publish-a-vertical-video",
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "WalletGuest", "ApplicantFeed", "ApplicantWaiting", "WalletApplicant", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a vertical video — no cover step, the door waits on details" },
         { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }

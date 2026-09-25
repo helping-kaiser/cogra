@@ -13,7 +13,7 @@ export function Screen() {
             <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
               Set up your wallet
             </h2>
-            <SystemHelpDot ariaLabel="Your wallet key" />
+            <HelpDot ariaLabel="Your wallet key" />
           </div>
           <p style={{ margin: 0, position: "relative", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
             This is where your reach pays off — payouts and tips, held by your own key, never by CoGra.
