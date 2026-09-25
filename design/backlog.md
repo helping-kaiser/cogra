@@ -3570,3 +3570,17 @@ The application queue, in order:
 
 The audit's master findings (325 entries, 15 clusters) queue behind
 this item's work as their own review rounds with jakob.
+
+### 108 · The applicant mechanism's corrections · *design + docs* · **rulings recorded 2026-09-25, corrections owed**
+
+The scope cut kept once-each staging (item 107; readme §13 carries
+the three mechanism rulings — author-only visibility, sign-at-approval
+in the vouch-in batch, drafts-on-close). What still owes work:
+About's "cannot post, comment, vouch or give an opinion yet" wording
+(new copy — candidates to jakob for blessing), auth.md's
+locked-surface prescription (corrected to once-each staging), and the
+contract's staging surface (relayed to the implementation session as
+a contract need, with the audit's K3 findings). The DeleteAccount
+wallet bullet left V1.0 the same day (the page names what exists);
+About's money section stays by the item-74 ruling — About is the
+fuller version, future features included.

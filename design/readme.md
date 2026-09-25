@@ -6901,10 +6901,16 @@ to compete got their chooser.
 - **The applicant's once-each staging stands** (jakob 2026-09-25). The
   drawn mechanism — a post, an opinion, a topic staged before approval,
   waiting with the application — is the product's ruling; About,
-  auth.md and the contract get corrected to describe it. The mechanism
-  round still owes three rulings: where a staged act is visible
-  meanwhile, when it signs, and its fate when an application closes
-  unapproved.
+  auth.md and the contract get corrected to describe it. **The
+  mechanism's three rulings** (jakob 2026-09-25, as recommended): a
+  staged act is visible only to its author, in their own chronicle —
+  nothing is public before it is signed; it **signs at approval,
+  automatically**, in the same batch the vouch-in lands with — "it
+  arrives with you" is the promise, and a new member re-confirming
+  would break it; on **rejection or expiry the staged acts stay on the
+  device as the account's own drafts**, never sent — the account
+  persists, so a re-application finds them waiting, nothing silently
+  deleted and nothing landing unsigned.
 
 ## 15. Index
 

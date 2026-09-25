@@ -1226,9 +1226,11 @@ as yours — what goes is everything that says it was you.`
   saved items, hidden accounts, what you have read.`
 - `What stays` — `Everything you signed, and everything others signed
   about you. Your posts still route and still credit their author; what
-  is removed leaves a mark saying so.` · `Your wallet and its address.
-  They are held by your key, never by CoGra, so nothing here can touch
-  them.`
+  is removed leaves a mark saying so.` *(The wallet bullet — "Your
+  wallet and its address. They are held by your key, never by CoGra, so
+  nothing here can touch them." — left V1.0 with the wallet, jakob
+  2026-09-25: the page names what exists. It returns when the wallet
+  does.)*
 
 **The content sweep is the reader's own sentence, in the first person.**
 `Also remove what I posted`, with `The words and pictures go out of your
