@@ -181,7 +181,7 @@
       "name": "search-into-a-thread",
       "description": "Typing in Explore brings results as they are typed; a comment result opens the thread that comment sits in.",
       "start": { "board": "Explore", "via": 1, "case": "typing — results as you type" },
-      "end": { "board": "ExploreSearch", "via": 6, "case": "the comment in its thread" }
+      "end": { "board": "ExploreSearch", "via": 5, "case": "the comment in its thread" }
     },
     {
       "name": "narrow-a-search",

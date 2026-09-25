@@ -191,15 +191,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">#tidetables<", tag: "button" },
     { n: 2, find: ">#wellness<", tag: "button" },
   ],
+  /* V1.0's rows only (readme §13, the V1.0 scope cut): posts, a comment, a
+     tag. The rows number in reading order, the bar follows them, and the tag
+     row keeps the last number, where the tag round appended it. */
   ExploreSearch: [
-    { n: 14, find: ">saltmaps<", tag: "button" },
-    ...searchShell("@sol salt", 9),
+    { n: 11, find: ">saltmaps<", tag: "button" },
+    ...searchShell("@sol salt", 6),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
     { n: 4, find: "First try at a rubbing", tag: "button" },
-    { n: 5, find: "Salt-crust rubbing, framed", tag: "button" },
-    { n: 6, find: "The wax-stick ones read like weather charts", tag: "button" },
-    { n: 7, find: "Crust held all the way past the slipway today.", tag: "button" },
-    { n: 8, find: "An offer by @sol", tag: "button" },
+    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },

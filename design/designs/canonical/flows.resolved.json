@@ -566,7 +566,7 @@
       "status": "resolved",
       "steps": [
         "start · Explore · 1 «search field» → ExploreSearch — typing — results as you type",
-        "end · ExploreSearch · 6 «comment result row» → ReplyEntry — the comment in its thread"
+        "end · ExploreSearch · 5 «comment result row» → ReplyEntry — the comment in its thread"
       ],
       "boards": [
         "Explore",
@@ -3087,8 +3087,6 @@
     }
   },
   "gapsOnFlows": [
-    "ExploreSearch/5: the item's surface (not designed)",
-    "ExploreSearch/8: the offer's surface (not designed)",
     "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
   ]
 }
