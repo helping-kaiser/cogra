@@ -504,3 +504,38 @@ How does a split work? Specifically:
 
 Q15 (federation — separately-bootstrapped networks coming
 together; a separate concept from one network's pools splitting).
+
+## Q56 — Swap-time seam exposure of the published interface quantities
+
+**Status:** open (deferred — until the real Layer 1 swap)
+
+### Context
+
+The v0.25.0 interface has the realization publish three quantities
+beyond the burn values and addresses CoGra already reads through the
+seam: the capacity bound $B_{\max}$ (R9), the unit-cost projection
+$c_{\mathrm{u}}$ (R10), and the settlement depth (R4(e)) — see
+[layer1-interface.md §"The interface"](primitive/layer1-interface.md).
+The `L1Boundary` trait does not surface them; the stand-in holds its
+equivalents internally, and the seam's shape was deliberately left
+unchanged by the v0.25.0 update.
+
+### The question
+
+At swap time, does `L1Boundary` expose the published quantities, and
+in what form?
+
+- **Consumers.** The burn-snapshot buffer $\delta_{\text{pos}}$ must
+  exceed the published settlement depth; bootstrap UX and economics
+  displays could consume $B_{\max}$ and $c_{\mathrm{u}}$ instead of
+  configuration.
+- **Shape.** Interface constants read once, per-epoch reads, or
+  change events — the docs treat them as published values a
+  realization may revise.
+- **Fallback.** What the seam reports while a realization publishes
+  no value (the stand-in today publishes none).
+
+### Related
+
+Q55 (community pools consume admission economics that
+$c_{\mathrm{u}}$ prices).
