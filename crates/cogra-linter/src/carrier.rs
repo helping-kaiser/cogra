@@ -29,6 +29,19 @@
 //! symlink policy this walk has to fix for itself anyway
 //! (´dec:lint:refused-dependencies´).
 //!
+//! # A tracked-exclusive universe holds the checkout to the index
+//!
+//! Under `[carrier] universe = "tracked-exclusive"` the base set stays the
+//! index, and the checkout is asked the two questions a tracked base leaves
+//! open (´dec:lint:tracked-exclusive´). A path the checkout holds and git does
+//! not track is [`UNTRACKED_PATH`] unless a carrier row or an optional root
+//! declares it, and a tracked path the checkout lacks is [`MISSING_TRACKED_PATH`]
+//! — reported once, carried unread, and never also an unreadable source. Git
+//! answers the first: `ls-files --others --exclude-standard --directory` names
+//! each untracked region once, a directory as one entry, and the repository's
+//! committed ignore files are the declaration a literal row cannot restate.
+//! The walk answers the second from the read each tracked source gets anyway.
+//!
 //! # The link policy
 //!
 //! A link — POSIX symbolic link or Windows junction, the same reparse point
@@ -64,7 +77,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use crate::adopt::{Adoption, Language, OwnerId, relative_str};
+use crate::adopt::{Adoption, Language, OwnerId, Universe, relative_str};
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, RuleId, Severity};
 
 /// A tree that could not be read, or a root whose tracked set git would not
@@ -83,12 +96,23 @@ pub const UNMATCHED_ROOT: RuleId = RuleId::new("carrier-unmatched-root");
 /// `[[scanned-regions.none]]` row declares (´dec:lint:catalogue-totality´).
 pub const UNCATALOGUED_TYPE: RuleId = RuleId::new("carrier-uncatalogued-type");
 
+/// A path the checkout holds that git does not track and no carrier row or
+/// optional root declares, under a `tracked-exclusive` universe
+/// (´dec:lint:tracked-exclusive´).
+pub const UNTRACKED_PATH: RuleId = RuleId::new("carrier-untracked-path");
+
+/// A path git tracks that the checkout does not hold, under a
+/// `tracked-exclusive` universe (´dec:lint:tracked-exclusive´).
+pub const MISSING_TRACKED_PATH: RuleId = RuleId::new("carrier-missing-tracked-path");
+
 /// Every rule this module can report, for the diagnostic inventory.
-pub const RULES: [RuleId; 4] = [
+pub const RULES: [RuleId; 6] = [
     UNREADABLE_TREE,
     UNREADABLE_SOURCE,
     UNMATCHED_ROOT,
     UNCATALOGUED_TYPE,
+    UNTRACKED_PATH,
+    MISSING_TRACKED_PATH,
 ];
 
 /// One carrier source, with everything the harvest needs about it.
@@ -210,12 +234,7 @@ pub fn unmatched_roots(a: &Adoption, sources: &[SourceFile]) -> Vec<Diagnostic> 
 pub fn uncatalogued(a: &Adoption, sources: &[SourceFile]) -> Vec<Diagnostic> {
     let mut first: BTreeMap<String, (&Path, usize)> = BTreeMap::new();
     for src in sources {
-        let walked = a
-            .partition
-            .rules
-            .iter()
-            .any(|rule| rule.optional && rule.path.matches(&src.path));
-        if walked || a.scanned_regions.catalogues(&src.path) {
+        if a.partition.is_walked(&src.path) || a.scanned_regions.catalogues(&src.path) {
             continue;
         }
         first
@@ -241,6 +260,99 @@ pub fn uncatalogued(a: &Adoption, sources: &[SourceFile]) -> Vec<Diagnostic> {
             ),
         })
         .collect()
+}
+
+/// The checkout's untracked regions no declaration answers for, one finding
+/// each (´dec:lint:tracked-exclusive´).
+///
+/// Asked only under a `tracked-exclusive` universe; under `git-tracked` an
+/// untracked path is simply not a member and nothing is reported. Git lists
+/// the regions: `ls-files --others --exclude-standard --directory`, so what
+/// the repository's committed ignore files already remove is never asked,
+/// and a directory git holds nothing under arrives as one entry rather than
+/// as every file inside it. An entry is declared when a carrier row removes
+/// all of it or it is an optional root, whose trees are walked on disk by
+/// design. A directory some row reaches strictly beneath is opened one level
+/// at a time, so a row naming part of it declares that part and no more.
+///
+/// A root git will not list is reported once, by the walk
+/// ([`UNREADABLE_TREE`]); this answers nothing further for it. Enforcement is
+/// the region's own path against the failing set, like every located finding.
+///
+/// Provenance: the question is the L1 author's `tracked-exclusive` universe
+/// (orchestration-linter 0.1.0, commit f6b263a, `plan.rs`,
+/// `tracked_exclusive`), AGPL-3.0-only like this crate. Adapted: git walks the
+/// checkout instead of a filesystem walk compared against the index, and the
+/// ignore relation is the carrier's literal rows beside the committed ignore
+/// files rather than ABNF-patterned rows alone.
+#[must_use]
+pub fn untracked(a: &Adoption, root: &Path) -> Vec<Diagnostic> {
+    if a.carrier.universe != Universe::TrackedExclusive {
+        return Vec::new();
+    }
+    let Ok(listed) = git_paths(
+        root,
+        &[
+            "ls-files",
+            "-z",
+            "--others",
+            "--exclude-standard",
+            "--directory",
+        ],
+    ) else {
+        return Vec::new();
+    };
+    let mut found = Vec::new();
+    for entry in listed {
+        undeclared(a, root, &entry, &mut found);
+    }
+    found.sort();
+    found
+}
+
+/// One untracked entry, `/`-terminated for a directory: declared, opened, or
+/// reported.
+fn undeclared(a: &Adoption, root: &Path, entry: &str, found: &mut Vec<Diagnostic>) {
+    let directory = entry.ends_with('/');
+    let path = Path::new(entry.trim_end_matches('/'));
+    if a.partition.is_walked(path) {
+        return;
+    }
+    if directory {
+        if a.carrier.excludes_tree(path) {
+            return;
+        }
+        if a.carrier.reaches_beneath(path)
+            && let Ok(entries) = fs::read_dir(root.join(path))
+        {
+            let mut children: Vec<(String, bool)> = entries
+                .filter_map(Result::ok)
+                .map(|child| {
+                    let opened = child.file_type().is_ok_and(|kind| kind.is_dir());
+                    (child.file_name().to_string_lossy().into_owned(), opened)
+                })
+                .collect();
+            children.sort();
+            for (name, opened) in children {
+                let slash = if opened { "/" } else { "" };
+                undeclared(a, root, &format!("{entry}{name}{slash}"), found);
+            }
+            return;
+        }
+    } else if a.carrier.excludes(path) {
+        return;
+    }
+    let at = PathBuf::from(relative_str(path));
+    found.push(Diagnostic {
+        rule: UNTRACKED_PATH,
+        severity: Severity::Error,
+        enforcement: a.enforcement.enforcement_for(&at),
+        primary: Location::new(at, ByteSpan::new(0, 0), 1, 1),
+        related: Vec::new(),
+        message: format!(
+            "the checkout holds {entry}, which git does not track and no carrier row declares; track it, remove it, or declare it in [carrier]"
+        ),
+    });
 }
 
 /// A file's type as a finding names it: the extension from the last dot of
@@ -344,6 +456,17 @@ impl<'a> Walk<'a> {
     /// source some reader consumes is opened, exactly as in a walked tree,
     /// so a tracked file that is gone from disk is reported where it is
     /// read and carried empty where nothing would have read it.
+    ///
+    /// Under a `tracked-exclusive` universe a tracked path the checkout does
+    /// not hold is carried unread and reported once as
+    /// [`MISSING_TRACKED_PATH`]: it stays a member of the corpus, so the count
+    /// does not move, and no reader reports the same repair a second time as
+    /// an unreadable source. The question is answered by the read a source
+    /// gets anyway, and for the sources nothing reads by one
+    /// `symlink_metadata` each, asked on a few threads because on the WSL
+    /// crossing each waits on latency rather than on work. `git ls-files
+    /// --deleted` answers it too, and measured on this corpus over that
+    /// crossing it took 14–20 s.
     fn tracked(&self, sources: &mut Vec<SourceFile>, failures: &mut Vec<Diagnostic>) {
         let listed = match tracked_entries(&self.root) {
             Ok(listed) => listed,
@@ -352,24 +475,86 @@ impl<'a> Walk<'a> {
                 return;
             }
         };
+        let mut kept = Vec::with_capacity(listed.len());
         for entry in listed {
-            let relative = match entry {
-                Tracked::Link => continue,
-                Tracked::File(relative) => relative,
-                Tracked::NotText(lossy) => {
-                    failures.push(self.failure(
-                        UNREADABLE_SOURCE,
-                        Path::new(&lossy),
-                        "the tracked path is not UTF-8, so no path rule can decide it",
-                    ));
-                    continue;
+            match entry {
+                Tracked::Link => {}
+                Tracked::File(relative) => {
+                    if !self.adoption.carrier.excludes(&relative) {
+                        kept.push(relative);
+                    }
                 }
-            };
-            if self.adoption.carrier.excludes(&relative) {
-                continue;
+                Tracked::NotText(lossy) => failures.push(self.failure(
+                    UNREADABLE_SOURCE,
+                    Path::new(&lossy),
+                    "the tracked path is not UTF-8, so no path rule can decide it",
+                )),
             }
-            self.file(&self.root.join(&relative), &relative, sources, failures);
         }
+        if self.adoption.carrier.universe != Universe::TrackedExclusive {
+            for relative in kept {
+                self.file(&self.root.join(&relative), &relative, sources, failures);
+            }
+            return;
+        }
+        let absent = self.absent_unread(&kept);
+        for relative in kept {
+            let held = if self.is_read(&relative) {
+                fs::read(self.root.join(&relative))
+            } else if absent.contains(&relative) {
+                Err(io::Error::from(io::ErrorKind::NotFound))
+            } else {
+                Ok(Vec::new())
+            };
+            match held {
+                Ok(bytes) => sources.push(self.source(&relative, bytes)),
+                Err(problem) if problem.kind() == io::ErrorKind::NotFound => {
+                    sources.push(self.source(&relative, Vec::new()));
+                    failures.push(self.failure(
+                        MISSING_TRACKED_PATH,
+                        &relative,
+                        "git tracks this path and the checkout does not hold it; restore it, or commit its removal",
+                    ));
+                }
+                Err(problem) => failures.push(self.failure(
+                    UNREADABLE_SOURCE,
+                    &relative,
+                    &format!("cannot read the source: {problem}"),
+                )),
+            }
+        }
+    }
+
+    /// The kept tracked paths no reader opens that the checkout does not
+    /// hold, each asked by one `symlink_metadata`, the list split across a
+    /// few scoped threads.
+    fn absent_unread(&self, kept: &[PathBuf]) -> HashSet<PathBuf> {
+        let unread: Vec<&PathBuf> = kept.iter().filter(|one| !self.is_read(one)).collect();
+        let lanes = std::thread::available_parallelism().map_or(1, |n| n.get().min(8));
+        let chunk = unread.len().div_ceil(lanes).max(1);
+        std::thread::scope(|scope| {
+            let asked: Vec<_> = unread
+                .chunks(chunk)
+                .map(|part| {
+                    scope.spawn(move || {
+                        part.iter()
+                            .filter(|one| {
+                                fs::symlink_metadata(self.root.join(one))
+                                    .is_err_and(|problem| problem.kind() == io::ErrorKind::NotFound)
+                            })
+                            .map(|one| (*one).clone())
+                            .collect::<Vec<PathBuf>>()
+                    })
+                })
+                .collect();
+            asked
+                .into_iter()
+                .flat_map(|lane| {
+                    lane.join()
+                        .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+                })
+                .collect()
+        })
     }
 
     /// One entry of a walked tree, whose kind the caller has already asked.
@@ -407,6 +592,7 @@ impl<'a> Walk<'a> {
         });
         match kind {
             Ok((_, true)) if !self.adoption.partition.is_optional_root(relative) => {}
+            Ok((kind, _)) if kind.is_dir() && self.adoption.carrier.excludes_tree(relative) => {}
             Ok((kind, linked)) if kind.is_dir() => {
                 self.descend(path, linked, sources, failures, entered);
             }
@@ -561,12 +747,16 @@ const MODE_GITLINK: &[u8] = b"160000";
 /// unmerged path is listed once per stage, and the caller's sort-and-dedup
 /// by path takes it once.
 fn tracked_entries(root: &Path) -> Result<Vec<Tracked>, String> {
-    let output = match Command::new("git")
-        .arg("-C")
-        .arg(root)
-        .args(["ls-files", "-z", "--stage"])
-        .output()
-    {
+    Ok(git_records(root, &["ls-files", "-z", "--stage"])?
+        .iter()
+        .filter_map(|record| tracked_entry(record))
+        .collect())
+}
+
+/// The NUL-terminated records a `git -C <root>` listing prints, or git's own
+/// account of why it printed none, prefixed `git ls-files: `.
+fn git_records(root: &Path, args: &[&str]) -> Result<Vec<Vec<u8>>, String> {
+    let output = match Command::new("git").arg("-C").arg(root).args(args).output() {
         Ok(output) if output.status.success() => output.stdout,
         Ok(output) => {
             return Err(format!(
@@ -579,7 +769,16 @@ fn tracked_entries(root: &Path) -> Result<Vec<Tracked>, String> {
     Ok(output
         .split(|&byte| byte == 0)
         .filter(|record| !record.is_empty())
-        .filter_map(tracked_entry)
+        .map(<[u8]>::to_vec)
+        .collect())
+}
+
+/// A listing's records as paths, spelled lossily where a path is not UTF-8:
+/// such a path decides no row either way, and the finding still names it.
+fn git_paths(root: &Path, args: &[&str]) -> Result<Vec<String>, String> {
+    Ok(git_records(root, args)?
+        .iter()
+        .map(|record| String::from_utf8_lossy(record).into_owned())
         .collect())
 }
 

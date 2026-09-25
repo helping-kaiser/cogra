@@ -194,10 +194,19 @@ impl BuildDirExclusion {
     /// `path` itself matches when its own final component is `name` — the
     /// excluded directory is excluded as a tree, not merely its contents —
     /// exactly as `PathPrefix`'s own tree semantics already work.
+    ///
+    /// The root is a tree or the empty prefix. A root spelled as a file holds
+    /// no directory, so it matches nothing, rather than reaching `androidx/`
+    /// from `android` by cutting a name short; the adoption data refuses such
+    /// a root at load ([`AdoptionError::MalformedBuildDirRoot`]).
     #[must_use]
     pub fn matches(&self, path: &Path) -> bool {
+        let root = self.root.as_str();
+        if !root.is_empty() && !root.ends_with('/') {
+            return false;
+        }
         let relative = relative_str(path);
-        let Some(under_root) = relative.strip_prefix(self.root.as_str()) else {
+        let Some(under_root) = relative.strip_prefix(root) else {
             return false;
         };
         under_root
@@ -566,9 +575,82 @@ pub struct Meta {
     pub schema_version: [u32; 3],
 }
 
+/// Which base set the carrier is taken from, and whether the checkout is held
+/// to it (´dec:lint:tracked-exclusive´).
+///
+/// Two answers rather than a boolean, each spelled as the L1 author's linter
+/// spells its universe kinds (orchestration-linter 0.1.0, commit f6b263a,
+/// `universe.rs`): the base is what version control tracks either way, and
+/// the second answer also asks the checkout whether it holds anything else,
+/// or lacks anything tracked. A third upstream answer, `as-written`, takes the
+/// filesystem as the base; this corpus is versioned, and the answer is not
+/// adopted.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Universe {
+    /// The tracked set, and nothing asked of the checkout beside it. The
+    /// answer when the adoption data states none.
+    #[default]
+    GitTracked,
+    /// The tracked set, with the checkout held to it after the declared
+    /// exclusions: an untracked path no row declares is
+    /// `carrier-untracked-path`, and a tracked path the checkout lacks is
+    /// `carrier-missing-tracked-path`, so one declaration gives one count on
+    /// every machine.
+    TrackedExclusive,
+}
+
+impl Universe {
+    /// The answer's spelling, as the adoption data writes it.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Universe::GitTracked => "git-tracked",
+            Universe::TrackedExclusive => "tracked-exclusive",
+        }
+    }
+
+    /// Read a declared answer. A third spelling reads as nothing rather than
+    /// as a default: a misspelling that fell back would hand the corpus a
+    /// universe it did not declare.
+    #[must_use]
+    pub fn parse(text: &str) -> Option<Universe> {
+        match text {
+            "git-tracked" => Some(Universe::GitTracked),
+            "tracked-exclusive" => Some(Universe::TrackedExclusive),
+            _ => None,
+        }
+    }
+}
+
+/// One `[[carrier.ignore]]` row: a region of the checkout removed from the
+/// corpus, with a name a reader can cite it by.
+///
+/// The row is the upstream ignore relation in this file's literal terms
+/// (orchestration-linter 0.1.0, commit f6b263a, `universe.rs`): a declared
+/// name and a path, where upstream matches an ABNF pattern and this file
+/// matches a [`PathPrefix`]. Removal is a union, so row order decides nothing
+/// and two rows reaching one path is no conflict; names are unique and held to
+/// the label name grammar, `word ("-" word)*` over `[a-z0-9]+`.
+///
+/// A removed path is removed everywhere the carrier is asked: from the tracked
+/// listing, from the walk of an optional root, and from the checkout
+/// `tracked-exclusive` holds to the tracked set.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Deserialize)]
+pub struct IgnoreRow {
+    /// The row's declared name.
+    pub name: Box<str>,
+    /// The region it removes.
+    pub path: PathPrefix,
+}
+
 /// What the corpus IS: the exclusions that fix Ω's domain.
 #[derive(Clone, Debug, serde::Deserialize)]
 pub struct Carrier {
+    /// The base set and what the checkout is held to.
+    pub universe: Universe,
+    /// Named regions removed from the corpus wherever it is read.
+    pub ignore: Vec<IgnoreRow>,
     /// Version-control internals, build outputs, dependency trees.
     pub exclude_trees: Vec<PathPrefix>,
     /// Build-tool output directories excluded by literal name, recurring at
@@ -590,15 +672,48 @@ impl Carrier {
     #[must_use]
     pub fn excludes(&self, path: &Path) -> bool {
         let relative = relative_str(path);
-        self.exclude_trees
-            .iter()
-            .chain(&self.vendored_trees)
-            .chain(&self.vendored_files)
-            .any(|prefix| prefix.matches_str(&relative))
+        self.rows().any(|prefix| prefix.matches_str(&relative))
             || self
                 .exclude_build_dirs
                 .iter()
                 .any(|exclusion| exclusion.matches(path))
+    }
+
+    /// Whether everything beneath the directory `path` lies outside the
+    /// carrier: a tree row holds it, or a build-dir row names one of its own
+    /// components. A file row never does, a file holding no directory.
+    #[must_use]
+    pub fn excludes_tree(&self, path: &Path) -> bool {
+        let directory = format!("{}/", relative_str(path));
+        self.rows().any(|prefix| {
+            let row = prefix.as_str();
+            (row.is_empty() || row.ends_with('/')) && directory.starts_with(row)
+        }) || self
+            .exclude_build_dirs
+            .iter()
+            .any(|exclusion| exclusion.matches(path))
+    }
+
+    /// Whether some row reaches strictly beneath the directory `path`, so
+    /// that part of it, and not all, may lie outside the carrier.
+    #[must_use]
+    pub fn reaches_beneath(&self, path: &Path) -> bool {
+        let directory = format!("{}/", relative_str(path));
+        self.rows().any(|prefix| {
+            prefix.as_str().len() > directory.len() && prefix.as_str().starts_with(&directory)
+        }) || self.exclude_build_dirs.iter().any(|exclusion| {
+            let root = exclusion.root.as_str();
+            root.starts_with(&directory) || directory.starts_with(root)
+        })
+    }
+
+    /// Every literal row that removes paths from the carrier.
+    fn rows(&self) -> impl Iterator<Item = &PathPrefix> {
+        self.exclude_trees
+            .iter()
+            .chain(&self.vendored_trees)
+            .chain(&self.vendored_files)
+            .chain(self.ignore.iter().map(|row| &row.path))
     }
 
     /// Whether `path` is a committed generated file.
@@ -806,6 +921,33 @@ impl Partition {
             .iter()
             .filter(|rule| rule.optional)
             .any(|rule| rule.path.as_str().trim_end_matches('/') == relative)
+    }
+
+    /// Whether `path` is one of the roots a rule marks optional or lies
+    /// beneath one: the working notes, walked on disk and absent from a
+    /// clean clone, whose counts a run therefore keeps apart from the
+    /// corpus's own (´dec:lint:notes-apart´).
+    ///
+    /// ```
+    /// use cogra_linter::Adoption;
+    /// use std::path::Path;
+    ///
+    /// # let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-adoption.toml");
+    /// # let adoption = Adoption::load(Path::new(path)).expect("ruled adoption data");
+    /// let omega = &adoption.partition;
+    ///
+    /// assert!(omega.is_walked(Path::new("tmp_dev")));
+    /// assert!(omega.is_walked(Path::new("tmp_dev/notes.md")));
+    /// assert!(!omega.is_walked(Path::new("tmp_devx/notes.md")));
+    /// assert!(!omega.is_walked(Path::new("docs/README.md")));
+    /// ```
+    #[must_use]
+    pub fn is_walked(&self, path: &Path) -> bool {
+        let relative = relative_str(path);
+        self.rules.iter().filter(|rule| rule.optional).any(|rule| {
+            let root = rule.path.as_str();
+            rule.path.matches_str(&relative) || root.trim_end_matches('/') == relative
+        })
     }
 }
 
@@ -1747,6 +1889,9 @@ impl RawMeta {
 /// `[carrier]`, with each prefix's row kept for the spelling check.
 #[derive(serde::Deserialize)]
 struct RawCarrier {
+    universe: Option<Spanned<Box<str>>>,
+    #[serde(default)]
+    ignore: Vec<RawIgnoreRow>,
     exclude_trees: Vec<Spanned<PathPrefix>>,
     #[serde(default)]
     exclude_build_dirs: Vec<RawBuildDirExclusion>,
@@ -1762,6 +1907,73 @@ struct RawCarrier {
 struct RawBuildDirExclusion {
     root: Spanned<PathPrefix>,
     name: Spanned<Box<str>>,
+}
+
+/// One `[[carrier.ignore]]` row, both fields spanned: `path` joins the
+/// spelling check, and `name` carries its row for the grammar and uniqueness
+/// refusals.
+#[derive(serde::Deserialize)]
+struct RawIgnoreRow {
+    name: Spanned<Box<str>>,
+    path: Spanned<PathPrefix>,
+}
+
+/// Whether `text` is `word ("-" word)*` over `[a-z0-9]+`, the name grammar a
+/// label's own name is held to.
+fn is_declared_name(text: &str) -> bool {
+    !text.is_empty()
+        && text.split('-').all(|word| {
+            !word.is_empty()
+                && word
+                    .bytes()
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit())
+        })
+}
+
+impl RawCarrier {
+    /// The universe answer, absent reading as `git-tracked`.
+    fn universe(&self, source: &str, origin: &Path) -> Result<Universe, AdoptionError> {
+        let Some(declared) = &self.universe else {
+            return Ok(Universe::GitTracked);
+        };
+        Universe::parse(declared.as_ref()).ok_or_else(|| AdoptionError::UnknownUniverse {
+            at: row(declared, source, origin),
+            found: declared.as_ref().to_string(),
+        })
+    }
+
+    /// The ignore rows, each name well-formed and none repeated.
+    fn ignore(
+        &self,
+        source: &str,
+        origin: &Path,
+        configured: &mut Vec<ConfiguredPath>,
+    ) -> Result<Vec<IgnoreRow>, AdoptionError> {
+        let mut seen: BTreeMap<&str, &PathPrefix> = BTreeMap::new();
+        let mut rows = Vec::with_capacity(self.ignore.len());
+        for raw in &self.ignore {
+            let name = raw.name.as_ref().as_ref();
+            if !is_declared_name(name) {
+                return Err(AdoptionError::MalformedIgnoreName {
+                    at: row(&raw.name, source, origin),
+                    name: name.to_string(),
+                });
+            }
+            if let Some(first) = seen.insert(name, raw.path.as_ref()) {
+                return Err(AdoptionError::DuplicateIgnoreName {
+                    at: row(&raw.name, source, origin),
+                    name: name.to_string(),
+                    regions: format!("{first} and {}", raw.path.as_ref()),
+                });
+            }
+            keep(configured, "[carrier] ignore", &raw.path, source, origin);
+            rows.push(IgnoreRow {
+                name: Box::from(name),
+                path: raw.path.as_ref().clone(),
+            });
+        }
+        Ok(rows)
+    }
 }
 
 /// `[enforcement]`, likewise.
@@ -1914,6 +2126,8 @@ impl RawAdoption {
                 keep(&mut configured, section, prefix, source, origin);
             }
         }
+        let universe = self.carrier.universe(source, origin)?;
+        let ignore = self.carrier.ignore(source, origin, &mut configured)?;
         let mut exclude_build_dirs = Vec::with_capacity(self.carrier.exclude_build_dirs.len());
         for raw in self.carrier.exclude_build_dirs {
             keep(
@@ -1923,6 +2137,13 @@ impl RawAdoption {
                 source,
                 origin,
             );
+            let root = raw.root.as_ref().as_str();
+            if !root.is_empty() && !root.ends_with('/') {
+                return Err(AdoptionError::MalformedBuildDirRoot {
+                    at: row(&raw.root, source, origin),
+                    root: root.to_string(),
+                });
+            }
             let name = raw.name.as_ref();
             if name.is_empty() || name.contains('/') {
                 return Err(AdoptionError::MalformedBuildDirName {
@@ -1940,6 +2161,8 @@ impl RawAdoption {
         Ok(Adoption {
             meta,
             carrier: Carrier {
+                universe,
+                ignore,
                 exclude_trees: inner(self.carrier.exclude_trees),
                 exclude_build_dirs,
                 generated_files: inner(self.carrier.generated_files),
@@ -2449,5 +2672,56 @@ mod tests {
         let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "*");
         assert!(!exclusion.matches(Path::new("android/core/crypto/build/reports/detekt.md")));
         assert!(exclusion.matches(Path::new("android/*/reports/detekt.md")));
+    }
+
+    /// A spelling followed by more is where a reach begins, never the name of
+    /// the file that spelling would be on its own. A row names a file or a tree
+    /// by its own final `/`, so nothing downstream infers which of the two it
+    /// is, and a place is always cut at a component boundary: `é` reaches
+    /// neither `é.md` nor `éx/`, and a build-dir root is a tree wherever it
+    /// is written.
+    ///
+    /// The upstream linter's ABNF engine fixed this confusion in its opening
+    /// reader (commit 7ccb6ae6); literal rows carry no opening to read, and
+    /// this test holds them to the same answer.
+    /// A spelling followed by more is a reach, and a file row names only its file.
+    /// ´claim:paths:a-spelling-followed-by-more-is-a-reach´
+    #[test]
+    fn a_spelling_followed_by_more_is_a_reach_not_a_file() {
+        let file = PathPrefix::new("docs/\u{e9}");
+        assert!(file.matches(Path::new("docs/\u{e9}")));
+        for longer in ["docs/\u{e9}/x.md", "docs/\u{e9}x", "docs/\u{e9}.md"] {
+            assert!(!file.matches(Path::new(longer)), "{longer}");
+        }
+
+        let tree = PathPrefix::new("docs/\u{e9}/");
+        assert!(tree.matches(Path::new("docs/\u{e9}/x.md")));
+        assert!(!tree.matches(Path::new("docs/\u{e9}")));
+        assert!(!tree.matches(Path::new("docs/\u{e9}x/y.md")));
+
+        let file_root = BuildDirExclusion::new(PathPrefix::new("android"), "build");
+        assert!(!file_root.matches(Path::new("androidx/build/report.md")));
+        assert!(!file_root.matches(Path::new("android-old/build/report.md")));
+    }
+
+    /// A spelling admitted more than once is not the spelling admitted once.
+    /// A repetition in a literal row is only ever the characters written, and
+    /// admitting more than a file's own name takes a tree row: `a` is not
+    /// `aa`, and a build-dir name repeated is another directory. The upstream
+    /// engine fixed the same question for repeated openings (commit 68da06f4).
+    /// A literal row admits its spelling once, and more only as a tree.
+    /// ´claim:paths:a-spelling-is-admitted-once´
+    #[test]
+    fn a_spelling_admitted_once_is_not_its_repetition() {
+        let file = PathPrefix::new("a");
+        assert!(file.matches(Path::new("a")));
+        assert!(!file.matches(Path::new("aa")));
+        assert!(!file.matches(Path::new("a/a")));
+        assert!(PathPrefix::new("a/").matches(Path::new("a/a")));
+
+        let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "build");
+        assert!(!exclusion.matches(Path::new("android/buildbuild/x.md")));
+        assert!(!exclusion.matches(Path::new("android/app/build.gradle.kts")));
+        assert!(exclusion.matches(Path::new("android/build/build/x.md")));
     }
 }

@@ -85,12 +85,30 @@ schema_version   = [1, 0, 0]
 # dec:lint:tracked-carrier): the carrier is `git ls-files` at the root,
 # cut by the rows below, plus the optional roots of [partition], which
 # are walked on disk. An untracked file is outside the carrier with no
-# row naming it, so the rows below that name trees git never tracks
-# (target/, node_modules/, the worktrees, per-module build/) reach
-# nothing and stand as records of what the carrier excludes.
+# row naming it.
+#
+# THE CHECKOUT IS HELD TO THE INDEX (design.md, dec:lint:tracked-exclusive;
+# the L1 author's tracked-exclusive universe, orchestration-linter 0.1.0
+# commit f6b263a). universe = "tracked-exclusive" keeps the tracked base
+# and asks the checkout two more questions: a path it holds that git does
+# not track, that the repository's committed .gitignore files do not
+# ignore, and that no row below and no optional root declares, is
+# carrier-untracked-path; a tracked path it lacks is
+# carrier-missing-tracked-path, reported once. So the rows below that name
+# trees git never tracks (target/, node_modules/, the worktrees,
+# per-module build/) are declarations the check reads: a nested worktree
+# under .claude/worktrees/ is not gitignored, and the row is what says so.
+# "git-tracked", the answer when the key is absent, asks neither question.
+#
+# The working notes are the one untracked material the corpus walks. They
+# are checked when present, and counted apart from the corpus
+# (dec:lint:notes-apart), so a checkout carrying them and a clean clone
+# print the same corpus line.
 ####################################################################
 
 [carrier]
+
+universe = "tracked-exclusive"
 
 # Version-control internals, build outputs, dependency trees.
 #
@@ -201,6 +219,29 @@ vendored_files = [
 [[carrier.exclude_build_dirs]]
 root = "android/"
 name = "build"
+
+# Named regions removed from the corpus wherever it is read — the
+# tracked listing, the walk of an optional root, the checkout the
+# universe is held to. Literal paths, as everywhere in this file; the
+# rows are a union and their order decides nothing; each name is unique
+# and spelled word("-"word)* over [a-z0-9].
+#
+# ADDED 2026-09-25 (issue #2): the unpacked third-party archives the
+# working notes hold. Each is a whole foreign corpus under its own label
+# discipline, and walked as NOTES it read as some 11,400 findings against
+# ours on a machine carrying the notes. Removing them keeps the notes'
+# own count about the notes. A new unpacked archive needs a row here.
+[[carrier.ignore]]
+name = "linter-edition-f6b263a"
+path = "tmp_research_files/2026-09-25-linter-f6b263a/unpacked/"
+
+[[carrier.ignore]]
+name = "linter-edition-416b136"
+path = "tmp_research_files/2026-09-24-l1-update-review/linter-0.1.0/"
+
+[[carrier.ignore]]
+name = "l1-specification-markdown"
+path = "tmp_research_files/Layer0_and_1_Rebase/md_versions/"
 
 
 ####################################################################
