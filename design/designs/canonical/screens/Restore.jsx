@@ -1,6 +1,7 @@
 /* Restore — brings a signing key onto a device that doesn't have it
-   (readme §13, entry): reached from KeyElsewhere, the wallet's key-absent
-   states, and the pad's key-absent state. The wording chip flips the body
+   (readme §13, entry): reached from KeyElsewhere and every key-absent state
+   that offers the restore — the composer's seal, the pad, the backup settings
+   and Your key. The wording chip flips the body
    copy between the browser and the installed app, same as KeyElsewhere. */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `restoreBody: this.props.wording === "app" ? "Enter your recovery code to bring your signing key into this app." : "Enter your recovery code to bring your signing key onto this browser."`;

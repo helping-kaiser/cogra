@@ -211,9 +211,10 @@ title, at most two short paragraphs, Close. The texts, verbatim
 - **How signing works** (the seal, post and reply): Each piece of a
   post — the post itself, every tag, every citation — is signed on
   its own, in your name. They sign together: all of them land, or
-  none does. / You don't pay for these — a shared community pool
-  covers members' signings. The pool is real and finite, so each one
-  still counts.
+  none does. / Each signing is paid for — the cost is real, so each
+  one still counts. *(Payer-neutral by the V1.0 scope cut, jakob
+  2026-09-25: no copy names who pays until a pool that pays and
+  members who pay past it exist.)*
 - **The license**: Terms for anyone who reuses what you publish —
   credit, and a public record of use. They are not a statement about
   how you made it. / The license is set when the post is first signed
@@ -263,8 +264,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   both reading modes, the digits only when the reader has asked for
   them (readme §13), and a screen-reader twin says both either way.*
 - **Editing**: An edit signs a full new version on top; earlier
-  versions stay public under "Edited" unless you remove them. An edit
-  never bumps the post as new. / Tag and citation changes ride the same signing,
+  versions stay public under "Edited". An edit
+  never bumps it as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
 - **Citing**: A citation is its own signed action and carries your
   opinion of what you cite. You can cite anything on CoGra — start
@@ -1219,19 +1220,21 @@ Heading `Delete account`; then `This takes your name off CoGra. What you
 signed stays on the graph, because it is other people's record as much
 as yours — what goes is everything that says it was you.`
 
-- `What goes` — `Your profile — display name, bio, picture and cover.` ·
+- `What goes` — `Your profile — display name, bio and picture.` ·
   `The link between you and this account. Nothing left here points back
   to you.` · `Your sessions, and what this account kept for you alone:
   saved items, hidden accounts, what you have read.`
 - `What stays` — `Everything you signed, and everything others signed
   about you. Your posts still route and still credit their author; what
-  is removed leaves a mark saying so.` · `Your wallet and its address.
-  They are held by your key, never by CoGra, so nothing here can touch
-  them.`
+  is removed leaves a mark saying so.` *(The wallet bullet — "Your
+  wallet and its address. They are held by your key, never by CoGra, so
+  nothing here can touch them." — left V1.0 with the wallet, jakob
+  2026-09-25: the page names what exists. It returns when the wallet
+  does.)*
 
 **The content sweep is the reader's own sentence, in the first person.**
 `Also remove what I posted`, with `The words and pictures go out of your
-posts, comments and messages, each leaving its mark. Leave this off and
+posts and comments, each leaving its mark. Leave this off and
 they stay as you wrote them.` under it. *Also* is what makes it an
 addition to a decision already made rather than a second question.
 
@@ -1386,13 +1389,16 @@ colour; a comment nobody has answered is not a fault.
 
 ## The coming-soon surfaces
 
-Two places stand in for something drawn after the MVP: the screen the
-band's chats icon opens (`ChatsComingSoon`, backlog item 68) and the
-hero card on Explore (backlog item 16). **Both name the promise the same
-way** — the thing, an em dash, `coming soon`, then one sentence of what
-will be there:
+Three places stand in for something drawn after the MVP: the screen the
+band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
+the bar's wallet slot opens (`WalletComingSoon`, the V1.0 scope cut),
+and the hero card on Explore (backlog item 16). **All name the promise
+the same way** — the thing, an em dash, `coming soon`, then one sentence
+of what will be there:
 
 - `Chats — coming soon. Your conversations will be here.`
+- `Wallet — coming soon. Your earnings will be here.` *(Ruled by jakob
+  2026-09-25.)*
 - `The Sky — coming soon` · `Your sky — every account a star, sized by
   your own paths to it.`
 
@@ -1407,10 +1413,11 @@ no "next": both sit on the would-like list and the order can change, so
 the words say that something is intended and nothing about when it
 lands.
 
-The card carries the promise in its heading, where its name already was;
-the screen carries it in its one line, under a header that reads
-`Chats`. Neither surface offers an action — nothing a reader can do
-fills either of them yet.
+The Sky card carries the promise in its heading, where its name already
+was; the two doors carry it on the coming-soon card — the promise as the
+headline, the sentence as its one line (`ComingSoonCard`, the
+drawn-anatomy ruling, jakob 2026-09-25). No coming-soon surface offers
+an action — nothing a reader can do fills any of them yet.
 
 
 ## Topics

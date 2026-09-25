@@ -89,7 +89,7 @@ export function Screen() {
 
         <div style={INSET}>
           <span style={CAPTION}>What goes</span>
-          <p style={LINE}>Your profile — display name, bio, picture and cover.</p>
+          <p style={LINE}>Your profile — display name, bio and picture.</p>
           <p style={LINE}>The link between you and this account. Nothing left here points back to you.</p>
           <p style={LINE}>Your sessions, and what this account kept for you alone: saved items, hidden accounts, what you have read.</p>
         </div>
@@ -100,13 +100,12 @@ export function Screen() {
             Everything you signed, and everything others signed about you. Your posts still route and
             still credit their author; what is removed leaves a mark saying so.
           </p>
-          <p style={LINE}>Your wallet and its address. They are held by your key, never by CoGra, so nothing here can touch them.</p>
         </div>
 
         <div style={{ marginTop: 24 }}>
           <Checkbox id="delete-content" label="Also remove what I posted" />
           <p style={{ ...LINE, marginTop: "var(--space-1)", paddingLeft: 30, color: "var(--text-secondary)" }}>
-            The words and pictures go out of your posts, comments and messages, each leaving its mark.
+            The words and pictures go out of your posts and comments, each leaving its mark.
             Leave this off and they stay as you wrote them.
           </p>
         </div>

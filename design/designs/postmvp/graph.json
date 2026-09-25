@@ -36,9 +36,16 @@
     "ChatNotifications": "the band's bell — canonical's Notifications list, which this graph cannot name; the three chat kinds are drawn in its place here",
     "ChatFeedCards": "the feed, with Chats and Messages turned on in its filter — canonical's Feed, which this graph cannot name",
     "ChatSearchResults": "Explore's search, a query matching a chat's name — canonical's ExploreSearch, which this graph cannot name",
-    "ChatSaved": "Saved, from the own profile's ⋮ — canonical's list, which this graph cannot name; the message row is drawn in its place here"
+    "ChatSaved": "Saved, from the own profile's ⋮ — canonical's list, which this graph cannot name; the message row is drawn in its place here",
+    "WalletSetup": "the wallet tab's first open — no rail key, no address yet",
+    "Wallet": "the bar's wallet slot, for a member whose wallet holds funds — canonical's bottom bar, which this graph cannot name",
+    "WalletKeyAbsent": "the bar's wallet slot, for a member whose key is elsewhere — canonical's bottom bar, which this graph cannot name",
+    "WalletGuest": "the bar's wallet slot, for a guest — canonical's bottom bar, which this graph cannot name",
+    "WalletApplicant": "the bar's wallet slot, for an applicant — canonical's bottom bar, which this graph cannot name"
   },
-  "boardKinds": {},
+  "boardKinds": {
+    "Money": "reference"
+  },
   "edges": [
     {
       "from": "PushSettings",
@@ -2903,6 +2910,288 @@
       "kind": "advance",
       "label": "Show the encrypted text",
       "to": [{ "terminal": "self", "case": "the bubble expands in place to the raw encrypted text" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — What is CGT?",
+      "to": [{ "terminal": "canonical", "case": "the ? dialog carrying the What-is-CGT text — canonical's HelpDialog (master); the text stands on this page's help note" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 2,
+      "kind": "advance",
+      "label": "payout address row",
+      "to": [{ "gap": "the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 3,
+      "kind": "advance",
+      "label": "earned-chart bars",
+      "to": [{ "gap": "the settlement's public record view (not boarded — the traceability promise)" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 4,
+      "kind": "advance",
+      "label": "Campaigns door",
+      "to": [{ "board": "WalletCampaigns" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 5,
+      "kind": "advance",
+      "label": "payout · settling row",
+      "to": [{ "gap": "the paying settlement's view (not boarded — every line opens what paid it)" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 6,
+      "kind": "advance",
+      "label": "payout · settled row",
+      "to": [{ "gap": "the paying settlement's view (not boarded — every line opens what paid it)" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 7,
+      "kind": "advance",
+      "label": "campaign return row",
+      "to": [{ "board": "WalletCampaign", "case": "your campaign's money view" }]
+    },
+    {
+      "from": "Wallet",
+      "via": 8,
+      "kind": "advance",
+      "label": "tip row",
+      "to": [{ "gap": "the tipping act's view (not boarded — every line opens what paid it)" }]
+    },
+    {
+      "from": "WalletEmpty",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — What is CGT?",
+      "to": [{ "terminal": "canonical", "case": "the ? dialog carrying the What-is-CGT text — canonical's HelpDialog (master); the text stands on this page's help note" }]
+    },
+    {
+      "from": "WalletEmpty",
+      "via": 2,
+      "kind": "advance",
+      "label": "copy the address",
+      "to": [{ "terminal": "self", "case": "the address lands on the clipboard" }]
+    },
+    {
+      "from": "WalletEmpty",
+      "via": 3,
+      "kind": "advance",
+      "label": "Change",
+      "to": [
+        { "gap": "the new-address input stage (not boarded)", "case": "first" },
+        { "board": "WalletChange", "case": "then the seal" }
+      ]
+    },
+    {
+      "from": "WalletSetup",
+      "via": 1,
+      "kind": "detour",
+      "label": "? — Your wallet key",
+      "to": [{ "terminal": "canonical", "case": "the ? dialog carrying the Your-wallet-key text — canonical's HelpDialog (master); the text stands on this page's help note" }]
+    },
+    {
+      "from": "WalletSetup",
+      "via": 2,
+      "kind": "advance",
+      "label": "Create and publish",
+      "to": [{ "board": "WalletAddressSeal" }]
+    },
+    {
+      "from": "WalletAddressSeal",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "board": "WalletSetup", "case": "one stage back" }]
+    },
+    {
+      "from": "WalletAddressSeal",
+      "via": 2,
+      "kind": "cancel",
+      "label": "X — leave",
+      "to": [{ "board": "WalletSetup", "case": "the flow left — the wallet still waits for setup" }]
+    },
+    {
+      "from": "WalletAddressSeal",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — Signed actions",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog — canonical's HelpDialog with the Signed-actions text" }]
+    },
+    {
+      "from": "WalletAddressSeal",
+      "via": 4,
+      "kind": "advance",
+      "label": "copy the address",
+      "to": [{ "terminal": "self", "case": "the address lands on the clipboard" }]
+    },
+    {
+      "from": "WalletAddressSeal",
+      "via": 5,
+      "kind": "advance",
+      "label": "Sign and publish",
+      "to": [
+        { "board": "WalletEmpty", "case": "published — the zero wallet, address on record" },
+        { "terminal": "canonical", "case": "offline — canonical's network-error board (master)" }
+      ]
+    },
+    {
+      "from": "WalletAddressSeal",
+      "via": 6,
+      "kind": "back",
+      "label": "Back",
+      "to": [{ "board": "WalletSetup", "case": "one stage back" }]
+    },
+    {
+      "from": "WalletChange",
+      "via": 1,
+      "kind": "back",
+      "label": "back arrow",
+      "to": [{ "terminal": "back", "case": "one stage back — where Change was tapped" }]
+    },
+    {
+      "from": "WalletChange",
+      "via": 2,
+      "kind": "cancel",
+      "label": "X — leave",
+      "to": [{ "terminal": "back", "case": "leaves the flow, draft kept" }]
+    },
+    {
+      "from": "WalletChange",
+      "via": 3,
+      "kind": "detour",
+      "label": "? — Signed actions",
+      "to": [{ "terminal": "canonical", "case": "the seal's own dialog — canonical's HelpDialog with the Signed-actions text" }]
+    },
+    {
+      "from": "WalletChange",
+      "via": 4,
+      "kind": "advance",
+      "label": "copy the new address",
+      "to": [{ "terminal": "self", "case": "the address lands on the clipboard" }]
+    },
+    {
+      "from": "WalletChange",
+      "via": 5,
+      "kind": "advance",
+      "label": "Sign the change",
+      "to": [
+        { "board": "Wallet", "case": "signed — the new address on record, newest wins" },
+        { "terminal": "canonical", "case": "offline — canonical's network-error board (master)" }
+      ]
+    },
+    {
+      "from": "WalletChange",
+      "via": 6,
+      "kind": "back",
+      "label": "Back",
+      "to": [{ "terminal": "back", "case": "one stage back — where Change was tapped" }]
+    },
+    {
+      "from": "WalletKeyAbsent",
+      "via": 1,
+      "kind": "advance",
+      "label": "Restore the key",
+      "to": [{ "terminal": "canonical", "case": "restoring the key — canonical's Restore" }]
+    },
+    {
+      "from": "WalletKeyAbsent",
+      "via": 2,
+      "kind": "detour",
+      "label": "? — What is CGT?",
+      "to": [{ "terminal": "canonical", "case": "the ? dialog carrying the What-is-CGT text — canonical's HelpDialog (master); the text stands on this page's help note" }]
+    },
+    {
+      "from": "WalletKeyAbsent",
+      "via": 3,
+      "kind": "advance",
+      "label": "payout row",
+      "to": [{ "gap": "the paying settlement's view (not boarded — every line opens what paid it)" }]
+    },
+    {
+      "from": "WalletKeyAbsent",
+      "via": 4,
+      "kind": "advance",
+      "label": "tip row",
+      "to": [{ "gap": "the tipping act's view (not boarded — every line opens what paid it)" }]
+    },
+    {
+      "from": "WalletGuest",
+      "via": 1,
+      "kind": "back",
+      "label": "Keep browsing",
+      "to": [{ "terminal": "back", "case": "back to the feed they came from" }]
+    },
+    {
+      "from": "WalletGuest",
+      "via": 2,
+      "kind": "advance",
+      "label": "Sign in or join",
+      "to": [{ "terminal": "canonical", "case": "sign in — canonical's SignIn" }]
+    },
+    {
+      "from": "WalletCampaign",
+      "via": 1,
+      "kind": "back",
+      "label": "back — to the wallet",
+      "to": [{ "board": "Wallet" }]
+    },
+    {
+      "from": "WalletCampaign",
+      "via": 2,
+      "kind": "advance",
+      "label": "campaign deposit row",
+      "to": [{ "gap": "the rail record's view (not boarded — the traceability promise)" }]
+    },
+    {
+      "from": "WalletCampaigns",
+      "via": 1,
+      "kind": "back",
+      "label": "back — to the wallet",
+      "to": [{ "board": "Wallet" }]
+    },
+    {
+      "from": "WalletCampaigns",
+      "via": 2,
+      "kind": "advance",
+      "label": "Start a campaign",
+      "to": [{ "gap": "the campaign creation flow (future item — the console stays out of the wallet)" }]
+    },
+    {
+      "from": "WalletCampaigns",
+      "via": 3,
+      "kind": "advance",
+      "label": "Yours (segment)",
+      "to": [{ "terminal": "self", "case": "swaps the list" }]
+    },
+    {
+      "from": "WalletCampaigns",
+      "via": 4,
+      "kind": "advance",
+      "label": "You took part (segment)",
+      "to": [{ "terminal": "self", "case": "swaps the list" }]
+    },
+    {
+      "from": "WalletCampaigns",
+      "via": 5,
+      "kind": "advance",
+      "label": "open campaign row",
+      "to": [{ "board": "WalletCampaign" }]
+    },
+    {
+      "from": "WalletCampaigns",
+      "via": 6,
+      "kind": "advance",
+      "label": "past campaign rows",
+      "to": [{ "board": "WalletCampaign", "case": "the money view of a settled campaign" }]
     }
   ]
 }

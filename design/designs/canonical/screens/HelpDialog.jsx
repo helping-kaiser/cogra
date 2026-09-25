@@ -28,8 +28,7 @@ export function Screen() {
             sign together: all of them land, or none does.
           </p>
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            You don't pay for these — a shared community pool covers members' signings. The pool is real and finite, so each
-            one still counts.
+            Each signing is paid for — the cost is real, so each one still counts.
           </p>
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <Button>Close</Button>

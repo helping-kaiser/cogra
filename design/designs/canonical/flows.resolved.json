@@ -52,13 +52,10 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -115,10 +112,7 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ]
     },
     {
@@ -304,11 +298,10 @@
       "startsOn": [
         "FeedBare",
         "GuestGate",
-        "Main",
-        "WalletGuest"
+        "Main"
       ],
       "steps": [
-        "start · «Sign in or join» on 4 boards → SignIn",
+        "start · «Sign in or join» on 3 boards → SignIn",
         "SignIn · 8 «New here? Enter your invite» → InviteEntry",
         "InviteEntry · 3 «Continue» → Join — the link checks out",
         "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
@@ -320,8 +313,7 @@
         "ApplicantFeed",
         "FeedBare",
         "GuestGate",
-        "Main",
-        "WalletGuest"
+        "Main"
       ]
     },
     {
@@ -439,11 +431,10 @@
         "KeyElsewhere",
         "PadKeyAbsent",
         "SettingsBackupKeyAbsent",
-        "WalletKeyAbsent",
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 6 boards → Restore",
+        "start · «Restore the key» on 5 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
@@ -452,64 +443,7 @@
         "KeyElsewhere",
         "PadKeyAbsent",
         "SettingsBackupKeyAbsent",
-        "WalletKeyAbsent",
         "YourKeyAbsent"
-      ]
-    },
-    {
-      "name": "publish-your-payout-address",
-      "description": "The wallet's first open makes the key and signs the payout address onto the record — the wallet then stands at zero, address published.",
-      "status": "resolved",
-      "steps": [
-        "start · WalletSetup",
-        "WalletSetup · 2 «Create and publish» → WalletAddressSeal",
-        "end · WalletAddressSeal · 5 «Sign and publish» → WalletEmpty — published — the zero wallet, address on record"
-      ],
-      "boards": [
-        "WalletSetup",
-        "WalletAddressSeal",
-        "WalletEmpty"
-      ]
-    },
-    {
-      "name": "change-your-payout-address",
-      "description": "Change on the wallet takes a new address to its own seal; the signed change puts it on record, newest wins.",
-      "status": "resolved",
-      "steps": [
-        "start · WalletEmpty · 3 «Change» → WalletChange — then the seal",
-        "end · WalletChange · 5 «Sign the change» → Wallet — signed — the new address on record, newest wins"
-      ],
-      "boards": [
-        "WalletEmpty",
-        "WalletChange",
-        "Wallet"
-      ]
-    },
-    {
-      "name": "trace-a-payout-to-what-paid-it",
-      "description": "A settling payout row opens the settlement that paid it — the settlement's own view is still owed.",
-      "status": "blocked by gap",
-      "blockedBy": "the paying settlement's view (not boarded — every line opens what paid it)",
-      "steps": [
-        "start · Wallet",
-        "end · Wallet · 5 «payout · settling row» → gap: the paying settlement's view (not boarded — every line opens what paid it)"
-      ],
-      "boards": [
-        "Wallet"
-      ]
-    },
-    {
-      "name": "see-a-campaigns-money",
-      "description": "The wallet's Campaigns door lists what you run and what you took part in; a row opens that campaign's money view.",
-      "status": "resolved",
-      "steps": [
-        "start · Wallet · 4 «Campaigns door» → WalletCampaigns",
-        "end · WalletCampaigns · 5 «open campaign row» → WalletCampaign"
-      ],
-      "boards": [
-        "Wallet",
-        "WalletCampaigns",
-        "WalletCampaign"
       ]
     },
     {
@@ -784,13 +718,10 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -847,10 +778,7 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ]
     },
     {
@@ -904,13 +832,10 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -967,10 +892,7 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ]
     },
     {
@@ -1024,13 +946,10 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 47 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1085,10 +1004,7 @@
         "SavedEmpty",
         "SavedUndo",
         "VouchBack",
-        "Wallet",
-        "WalletEmpty",
-        "WalletKeyAbsent",
-        "WalletSetup"
+        "WalletComingSoon"
       ]
     },
     {
@@ -3154,89 +3070,14 @@
       ],
       "endpoint": []
     },
-    "Wallet": {
-      "flows": [
-        "change-your-payout-address",
-        "publish-a-post",
-        "publish-a-vertical-video",
-        "publish-a-video",
-        "publish-words",
-        "see-a-campaigns-money",
-        "trace-a-payout-to-what-paid-it"
-      ],
-      "endpoint": [
-        "change-your-payout-address",
-        "see-a-campaigns-money",
-        "trace-a-payout-to-what-paid-it"
-      ]
-    },
-    "WalletAddressSeal": {
-      "flows": [
-        "publish-your-payout-address"
-      ],
-      "endpoint": []
-    },
-    "WalletCampaign": {
-      "flows": [
-        "see-a-campaigns-money"
-      ],
-      "endpoint": [
-        "see-a-campaigns-money"
-      ]
-    },
-    "WalletCampaigns": {
-      "flows": [
-        "see-a-campaigns-money"
-      ],
-      "endpoint": []
-    },
-    "WalletChange": {
-      "flows": [
-        "change-your-payout-address"
-      ],
-      "endpoint": []
-    },
-    "WalletEmpty": {
-      "flows": [
-        "change-your-payout-address",
-        "publish-a-post",
-        "publish-a-vertical-video",
-        "publish-a-video",
-        "publish-words",
-        "publish-your-payout-address"
-      ],
-      "endpoint": [
-        "change-your-payout-address",
-        "publish-your-payout-address"
-      ]
-    },
-    "WalletGuest": {
-      "flows": [
-        "guest-turns-applicant"
-      ],
-      "endpoint": []
-    },
-    "WalletKeyAbsent": {
+    "WalletComingSoon": {
       "flows": [
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words",
-        "restore-your-key"
+        "publish-words"
       ],
       "endpoint": []
-    },
-    "WalletSetup": {
-      "flows": [
-        "publish-a-post",
-        "publish-a-vertical-video",
-        "publish-a-video",
-        "publish-words",
-        "publish-your-payout-address"
-      ],
-      "endpoint": [
-        "publish-your-payout-address"
-      ]
     },
     "YourKeyAbsent": {
       "flows": [
@@ -3248,16 +3089,6 @@
   "gapsOnFlows": [
     "ExploreSearch/5: the item's surface (not designed)",
     "ExploreSearch/8: the offer's surface (not designed)",
-    "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
-    "Wallet/2: the full address card as a state of the rest wallet (ruled one-tap-away; the card itself is drawn on the zero board)",
-    "Wallet/3: the settlement's public record view (not boarded — the traceability promise)",
-    "Wallet/5: the paying settlement's view (not boarded — every line opens what paid it)",
-    "Wallet/6: the paying settlement's view (not boarded — every line opens what paid it)",
-    "Wallet/8: the tipping act's view (not boarded — every line opens what paid it)",
-    "WalletCampaign/2: the rail record's view (not boarded — the traceability promise)",
-    "WalletCampaigns/2: the campaign creation flow (future item — the console stays out of the wallet)",
-    "WalletEmpty/3: the new-address input stage (not boarded)",
-    "WalletKeyAbsent/3: the paying settlement's view (not boarded — every line opens what paid it)",
-    "WalletKeyAbsent/4: the tipping act's view (not boarded — every line opens what paid it)"
+    "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
   ]
 }

@@ -137,73 +137,13 @@ export const FLOW_MARKERS = {
   ],
 };
 
-// The Money & Wallet page. PageHeader/WizardHeader backs render as <a href>;
-// nav ports the shared helper (the active tab's edge is `self` in graph.json).
+// The Money & Wallet page. In V1.0 it holds the wallet slot's door alone (the
+// V1.0 scope cut: the eleven wallet boards live in the post-MVP tree, their
+// markers with the post-MVP rounds below). The door has no controls of its
+// own, so it numbers like `WalletApplicant` did: the bar first, then the band's
+// chats and bell in the sweeps further down (the active tab's edge is `self`).
 Object.assign(FLOW_MARKERS, {
-  Wallet: [
-    { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
-    { n: 2, find: "Payouts land at", tag: "button" },
-    { n: 3, find: 'aria-label="Settlement', tag: "button", all: true },
-    { n: 4, find: "1 open · start a new one", tag: "button" },
-    { n: 5, find: "Payout · settling", tag: "button" },
-    { n: 6, find: "Campaign settled", tag: "button" },
-    { n: 7, find: "Campaign return ·", tag: "button" },
-    { n: 8, find: "Tip from @tobias", tag: "button" },
-    ...nav(9),
-  ],
-  WalletEmpty: [
-    { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
-    { n: 2, find: 'aria-label="Copy the address"', tag: "button" },
-    { n: 3, find: ">Change</button>", tag: "button" },
-    ...nav(4),
-  ],
-  WalletSetup: [
-    { n: 1, find: 'aria-label="Your wallet key"', tag: "button" },
-    { n: 2, find: ">Create and publish</button>", tag: "button" },
-    ...nav(3),
-  ],
-  WalletAddressSeal: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave"', tag: "button" },
-    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
-    { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
-    { n: 5, find: ">Sign and publish</button>", tag: "button" },
-    { n: 6, find: ">Back</button>", tag: "button" },
-  ],
-  WalletChange: [
-    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
-    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
-    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
-    { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
-    { n: 5, find: ">Sign the change</button>", tag: "button" },
-    { n: 6, find: ">Back</button>", tag: "button" },
-  ],
-  WalletKeyAbsent: [
-    { n: 1, find: ">Restore the key</button>", tag: "button" },
-    { n: 2, find: 'aria-label="What is CGT?"', tag: "button" },
-    { n: 3, find: "Campaign settled", tag: "button" },
-    { n: 4, find: "Tip from @tobias", tag: "button" },
-    ...nav(5),
-  ],
-  WalletGuest: [
-    { n: 1, find: ">Keep browsing</button>", tag: "button" },
-    { n: 2, find: ">Sign in or join</button>", tag: "button" },
-    ...nav(3),
-  ],
-  WalletApplicant: [...nav(1)],
-  WalletCampaign: [
-    { n: 1, find: 'aria-label="Back to the wallet"', tag: "a" },
-    { n: 2, find: "Campaign deposit", tag: "button" },
-  ],
-  WalletCampaigns: [
-    { n: 1, find: 'aria-label="Back to the wallet"', tag: "a" },
-    { n: 2, find: ">Start a campaign</button>", tag: "button" },
-    { n: 3, find: ">Yours</button>", tag: "button" },
-    { n: 4, find: ">You took part</button>", tag: "button" },
-    { n: 5, find: "In escrow · ends in 6 days", tag: "button" },
-    { n: 6, find: "Settled 3d", tag: "button" },
-    { n: 6, find: "Settled 12.07.2026", tag: "button" },
-  ],
+  WalletComingSoon: [...nav(1)],
 });
 
 // The Feed & Search page. Signed-in post cards carry standings, so the stance
@@ -1904,8 +1844,7 @@ const BAND_CHATS = {
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
   FeedGallery: 15, FeedCover: 17,
-  Wallet: 14, WalletEmpty: 9, WalletSetup: 8, WalletKeyAbsent: 10,
-  WalletGuest: 8, WalletApplicant: 6,
+  WalletComingSoon: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Chats"', tag: "button" });
@@ -1924,8 +1863,7 @@ const BAND_BELL = {
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
   FeedCover: 19,
-  Wallet: 15, WalletEmpty: 10, WalletSetup: 9, WalletKeyAbsent: 11,
-  WalletApplicant: 7,
+  WalletComingSoon: 7,
   Profile: 15, ProfileApplicant: 15,
 };
 for (const [board, n] of Object.entries(BAND_BELL)) {
@@ -2809,5 +2747,75 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Unsave"', tag: "button", all: true },
     { n: 4, find: ">Salt maps of the coast road<", tag: "button" },
     { n: 4, find: ">The third headland light is real<", tag: "button" },
+  ],
+});
+
+/* THE WALLET (post-MVP since the V1.0 scope cut, readme §13). The eleven
+   boards came across from canonical's Money & Wallet page with the numbers
+   they carried there, minus the shell's: the bottom bar and the band's chats
+   and bell are canonical's controls, and a tree's graph stops at the tree
+   (readme §14), so on this side they carry no numbers — the push round's rule,
+   "only the round's own controls are numbered". The wallet's own controls keep
+   theirs unchanged, which is why no board here was renumbered: the shell's
+   numbers always came after them. `WalletApplicant` has no control of its own
+   and so no entry. PageHeader/WizardHeader backs render as <a href>. */
+Object.assign(FLOW_MARKERS, {
+  Wallet: [
+    { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
+    { n: 2, find: "Payouts land at", tag: "button" },
+    { n: 3, find: 'aria-label="Settlement', tag: "button", all: true },
+    { n: 4, find: "1 open · start a new one", tag: "button" },
+    { n: 5, find: "Payout · settling", tag: "button" },
+    { n: 6, find: "Campaign settled", tag: "button" },
+    { n: 7, find: "Campaign return ·", tag: "button" },
+    { n: 8, find: "Tip from @tobias", tag: "button" },
+  ],
+  WalletEmpty: [
+    { n: 1, find: 'aria-label="What is CGT?"', tag: "button" },
+    { n: 2, find: 'aria-label="Copy the address"', tag: "button" },
+    { n: 3, find: ">Change</button>", tag: "button" },
+  ],
+  WalletSetup: [
+    { n: 1, find: 'aria-label="Your wallet key"', tag: "button" },
+    { n: 2, find: ">Create and publish</button>", tag: "button" },
+  ],
+  WalletAddressSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
+    { n: 5, find: ">Sign and publish</button>", tag: "button" },
+    { n: 6, find: ">Back</button>", tag: "button" },
+  ],
+  WalletChange: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: 'aria-label="Copy the address"', tag: "button" },
+    { n: 5, find: ">Sign the change</button>", tag: "button" },
+    { n: 6, find: ">Back</button>", tag: "button" },
+  ],
+  WalletKeyAbsent: [
+    { n: 1, find: ">Restore the key</button>", tag: "button" },
+    { n: 2, find: 'aria-label="What is CGT?"', tag: "button" },
+    { n: 3, find: "Campaign settled", tag: "button" },
+    { n: 4, find: "Tip from @tobias", tag: "button" },
+  ],
+  WalletGuest: [
+    { n: 1, find: ">Keep browsing</button>", tag: "button" },
+    { n: 2, find: ">Sign in or join</button>", tag: "button" },
+  ],
+  WalletCampaign: [
+    { n: 1, find: 'aria-label="Back to the wallet"', tag: "a" },
+    { n: 2, find: "Campaign deposit", tag: "button" },
+  ],
+  WalletCampaigns: [
+    { n: 1, find: 'aria-label="Back to the wallet"', tag: "a" },
+    { n: 2, find: ">Start a campaign</button>", tag: "button" },
+    { n: 3, find: ">Yours</button>", tag: "button" },
+    { n: 4, find: ">You took part</button>", tag: "button" },
+    { n: 5, find: "In escrow · ends in 6 days", tag: "button" },
+    { n: 6, find: "Settled 3d", tag: "button" },
+    { n: 6, find: "Settled 12.07.2026", tag: "button" },
   ],
 });

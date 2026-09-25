@@ -1,0 +1,29 @@
+{
+  "$doc": "The post-MVP tree's user flows — the same intent layer and the same grammar canonical's flows.json carries (read that file's $doc for the full shape), resolved by `check-flows.mjs` against THIS tree's graph and blessed into this tree's flows.resolved.json. A journey here runs only through this tree's boards, because a tree's graph stops at the tree (readme §14): a leg that would cross into canonical is not a leg this file can declare. The wallet's four journeys came across with its boards in the V1.0 scope cut (readme §13) and move back with them when the rail's slice is the work. FORMATTING: one flow per block, one waypoint per line, hand-edited. Never let a script rewrite this file.",
+  "flows": [
+    {
+      "name": "publish-your-payout-address",
+      "description": "The wallet's first open makes the key and signs the payout address onto the record — the wallet then stands at zero, address published.",
+      "start": { "board": "WalletSetup" },
+      "end": { "board": "WalletAddressSeal", "via": 5, "case": "published — the zero wallet, address on record" }
+    },
+    {
+      "name": "change-your-payout-address",
+      "description": "Change on the wallet takes a new address to its own seal; the signed change puts it on record, newest wins.",
+      "start": { "board": "WalletEmpty", "via": 3, "case": "then the seal" },
+      "end": { "board": "WalletChange", "via": 5, "case": "signed — the new address on record, newest wins" }
+    },
+    {
+      "name": "trace-a-payout-to-what-paid-it",
+      "description": "A settling payout row opens the settlement that paid it — the settlement's own view is still owed.",
+      "start": { "board": "Wallet" },
+      "end": { "board": "Wallet", "via": 5 }
+    },
+    {
+      "name": "see-a-campaigns-money",
+      "description": "The wallet's Campaigns door lists what you run and what you took part in; a row opens that campaign's money view.",
+      "start": { "board": "Wallet", "via": 4 },
+      "end": { "board": "WalletCampaigns", "via": 5 }
+    }
+  ]
+}

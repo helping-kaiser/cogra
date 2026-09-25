@@ -1,4 +1,4 @@
-Use `WashCard` for a wallet screen's ONE moment — the hero (via `WalletBalance`), the set-up card, the guest and applicant cards. Never as a general card fill, and never twice on a screen.
+Use `WashCard` for a wallet screen's ONE moment — the hero (via `WalletBalance`), the set-up card, the guest and applicant cards — and for the coming-soon door (via `ComingSoonCard`, `ghost={false}`). Never as a general card fill, and never twice on a screen.
 
 ```jsx
 <WashCard>
