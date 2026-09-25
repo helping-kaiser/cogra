@@ -3584,3 +3584,17 @@ a contract need, with the audit's K3 findings). The DeleteAccount
 wallet bullet left V1.0 the same day (the page names what exists);
 About's money section stays by the item-74 ruling — About is the
 fuller version, future features included.
+
+### 109 · The ? contents note lags copy-voice · *system + tooling* · **filed 2026-09-25**
+
+The canvas note "THE ? CONTENTS" claims to carry the ? dialogs'
+copy verbatim, but it drifts: the scope-cut close-out found and
+fixed seven ruled lags (the payer-neutral signing line, the removal
+clause, the citable kinds, two stand-ban phrasings, the search
+kinds, the picture seal's pool line) — and smaller wording drift
+against copy-voice remains ("its own signed action, written in
+your name" vs the blessed "signed on its own, in your name";
+"every topic" vs "every tag"). Two jobs: (1) rebuild the note as a
+true mirror of the blessed strings; (2) better, make the gate
+check the mirror — a lint obligation that diffs the note's
+sections against copy-voice would end the drift class for good.
