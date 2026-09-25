@@ -1026,7 +1026,7 @@
     { "from": "ReferencePicker", "via": 1, "kind": "back", "label": "back — to the composer", "to": [{ "terminal": "back", "case": "the composer it was opened from" }] },
     { "from": "ReferencePicker", "via": 2, "kind": "detour", "label": "? — How searching works", "to": [{ "board": "HelpDialog", "case": "the Citing text" }] },
     { "from": "ReferencePicker", "via": 3, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing — everything citable" }] },
-    { "from": "ReferencePicker", "via": 4, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter", "case": "the filter sheet (master on the Feed & Search page)" }] },
+    { "from": "ReferencePicker", "via": 4, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter", "case": "the filter sheet (master on the Feed & Search page) — here it holds the three citable kinds, Posts, Comments and Profiles" }] },
     { "from": "ReferencePicker", "via": 5, "kind": "advance", "label": "result rows", "to": [{ "terminal": "back", "case": "the pick lands in the composer's references" }] },{ "from": "TagPicker", "via": 1, "kind": "back", "label": "back — to the composer", "to": [{ "terminal": "back", "case": "the composer it was opened from" }] },
     { "from": "TagPicker", "via": 2, "kind": "detour", "label": "? — How tagging works", "to": [{ "board": "HelpDialog", "case": "the Tagging text" }] },
     { "from": "TagPicker", "via": 3, "kind": "advance", "label": "the name field", "to": [{ "board": "TagPickerTyping", "case": "typing — the name canonicalized as it goes" }, { "board": "TagPickerRefused", "case": "a character no name may carry — the field refuses it where it was typed" }] },

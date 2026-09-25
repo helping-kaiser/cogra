@@ -411,11 +411,6 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="What the search shows"', tag: "button" },
     { n: 5, find: ">Salt maps of the coast road<", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
-    { n: 5, find: ">Salt cellar, hand-carved<", tag: "button" },
-    { n: 5, find: ">Keep the salt flats path open<", tag: "button" },
-    { n: 5, find: ">Salt marsh survey crew<", tag: "button" },
-    { n: 5, find: ">Sea salt collective — autumn run<", tag: "button" },
-    { n: 5, find: "Offer on Salt cellar, hand-carved", tag: "button" },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
