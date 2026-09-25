@@ -37,10 +37,10 @@
 //! not track is [`UNTRACKED_PATH`] unless a carrier row or an optional root
 //! declares it, and a tracked path the checkout lacks is [`MISSING_TRACKED_PATH`]
 //! — reported once, carried unread, and never also an unreadable source. Git
-//! answers both: `ls-files --others --exclude-standard --directory` names each
-//! untracked region once, a directory as one entry, and the repository's
-//! committed ignore files are the declaration a literal row cannot restate;
-//! `ls-files --deleted` names what the checkout lost.
+//! answers the first: `ls-files --others --exclude-standard --directory` names
+//! each untracked region once, a directory as one entry, and the repository's
+//! committed ignore files are the declaration a literal row cannot restate.
+//! The walk answers the second from the read each tracked source gets anyway.
 //!
 //! # The link policy
 //!
@@ -457,11 +457,14 @@ impl<'a> Walk<'a> {
     /// so a tracked file that is gone from disk is reported where it is
     /// read and carried empty where nothing would have read it.
     ///
-    /// Under a `tracked-exclusive` universe the index's entries the checkout
-    /// no longer holds are asked of git first, and each is carried unread and
-    /// reported once as [`MISSING_TRACKED_PATH`]: it stays a member of the
-    /// corpus, so the count does not move, and no reader opens it to report
-    /// the same repair a second time.
+    /// Under a `tracked-exclusive` universe a tracked path the checkout does
+    /// not hold is carried unread and reported once as
+    /// [`MISSING_TRACKED_PATH`]: it stays a member of the corpus, so the count
+    /// does not move, and no reader reports the same repair a second time as
+    /// an unreadable source. The question is answered by the read a source
+    /// gets anyway, and by one `symlink_metadata` for a source nothing reads —
+    /// `git ls-files --deleted` answers it too, and measured on this corpus
+    /// over the WSL crossing it took 14–20 s where the reads take nothing more.
     fn tracked(&self, sources: &mut Vec<SourceFile>, failures: &mut Vec<Diagnostic>) {
         let listed = match tracked_entries(&self.root) {
             Ok(listed) => listed,
@@ -470,18 +473,7 @@ impl<'a> Walk<'a> {
                 return;
             }
         };
-        let missing: HashSet<PathBuf> =
-            if self.adoption.carrier.universe == Universe::TrackedExclusive {
-                match git_paths(&self.root, &["ls-files", "-z", "--deleted"]) {
-                    Ok(paths) => paths.into_iter().map(PathBuf::from).collect(),
-                    Err(problem) => {
-                        failures.push(self.failure(UNREADABLE_TREE, Path::new(""), &problem));
-                        return;
-                    }
-                }
-            } else {
-                HashSet::new()
-            };
+        let exclusive = self.adoption.carrier.universe == Universe::TrackedExclusive;
         for entry in listed {
             let relative = match entry {
                 Tracked::Link => continue,
@@ -498,16 +490,33 @@ impl<'a> Walk<'a> {
             if self.adoption.carrier.excludes(&relative) {
                 continue;
             }
-            if missing.contains(&relative) {
-                sources.push(self.source(&relative, Vec::new()));
-                failures.push(self.failure(
-                    MISSING_TRACKED_PATH,
-                    &relative,
-                    "git tracks this path and the checkout does not hold it; restore it, or commit its removal",
-                ));
+            let path = self.root.join(&relative);
+            if !exclusive {
+                self.file(&path, &relative, sources, failures);
                 continue;
             }
-            self.file(&self.root.join(&relative), &relative, sources, failures);
+            let held = if self.is_read(&relative) {
+                fs::read(&path).map(|bytes| sources.push(self.source(&relative, bytes)))
+            } else {
+                fs::symlink_metadata(&path)
+                    .map(|_| sources.push(self.source(&relative, Vec::new())))
+            };
+            match held {
+                Ok(()) => {}
+                Err(absent) if absent.kind() == io::ErrorKind::NotFound => {
+                    sources.push(self.source(&relative, Vec::new()));
+                    failures.push(self.failure(
+                        MISSING_TRACKED_PATH,
+                        &relative,
+                        "git tracks this path and the checkout does not hold it; restore it, or commit its removal",
+                    ));
+                }
+                Err(problem) => failures.push(self.failure(
+                    UNREADABLE_SOURCE,
+                    &relative,
+                    &format!("cannot read the source: {problem}"),
+                )),
+            }
         }
     }
 
