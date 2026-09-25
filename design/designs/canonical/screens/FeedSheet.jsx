@@ -1,7 +1,11 @@
-/* The feed's filter sheet, open — the whole control lives here: ten kinds that
+/* The feed's filter sheet, open — the whole control lives here: four kinds that
    combine, the one topic that does not, forms of post, the Order section with
    the seen toggle (shared with search), what else is admitted, and Reset. It
    applies live; dismissal is not a decision.
+
+   THE FOUR ARE THE KINDS V1.0 SERVES (readme §13, the V1.0 scope cut,
+   2026-09-25): Posts, Comments, Profiles, Tags. A kind list follows the
+   staging rule, so no chip stands for a kind the release does not carry.
 
    THE TOPIC FEED IS A SECTION OF THIS SHEET (jakob, 2026-09-14: "a topic feed
    is just another feed setting"). It is not a tab, not a second feed, and not a
