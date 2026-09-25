@@ -412,9 +412,9 @@
     },
     {
       "name": "follow-a-citation",
-      "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — that node's own surface is still owed.",
+      "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — a cited post opens its own detail view.",
       "start": { "control": "reference count" },
-      "end": { "board": "RefsSheet", "via": 2 }
+      "end": { "board": "RefsSheet", "via": 3 }
     },
     {
       "name": "search-and-open-a-post",
@@ -434,6 +434,7 @@
       "start": { "control": "Cite in a new post" },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
+        { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },
         { "board": "ComposeCited" }
       ]
     },
@@ -443,6 +444,7 @@
       "start": { "control": "Mention in a new post" },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
+        { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },
         { "board": "ComposeCited" }
       ]
     },

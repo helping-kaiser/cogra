@@ -417,20 +417,17 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Sea salt collective — autumn run<", tag: "button" },
     { n: 5, find: "Offer on Salt cellar, hand-carved", tag: "button" },
   ],
+  /* A reference row per V1.0 kind, each its own edge to its own board (readme
+     §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
+     reading order, the scrim last. */
   RefsSheet: [
     { n: 1, find: ">photography<", tag: "button" },
     { n: 1, find: ">coastroad<", tag: "button" },
     { n: 2, find: ">Mira Voss<", tag: "button" },
-    { n: 2, find: ">Salt maps of the coast road<", tag: "button" },
-    { n: 2, find: ">Low tide at six tomorrow — anyone walking the flats?<", tag: "button" },
-    { n: 2, find: ">That stretch after the second bend…<", tag: "button" },
-    { n: 2, find: ">Mark the flooded dip on the coast road<", tag: "button" },
-    { n: 2, find: ">Salt-crust rubbing, framed<", tag: "button" },
-    { n: 2, find: ">Coast road cleanup week<", tag: "button" },
-    { n: 2, find: "Offer on: Salt-crust rubbing, framed", tag: "button" },
-    { n: 2, find: ">Coast walkers<", tag: "button" },
-    { n: 2, find: "Crust held all the way past the slipway today.", tag: "button" },
-    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: ">Salt maps of the coast road<", tag: "button" },
+    { n: 3, find: ">Low tide at six tomorrow — anyone walking the flats?<", tag: "button" },
+    { n: 4, find: ">That stretch after the second bend…<", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   RemoveMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },

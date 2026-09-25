@@ -23,17 +23,23 @@
    cannot.
 
    THE COUNT IS THE LIST'S LENGTH (jakob's ruling, 2026-09-10). A reference
-   counts whatever kind of node it points at — a chat message is cited exactly
-   as a post is — so the card's number and the rows under References are the
-   same ten. A count that quietly dropped a kind would tell a reader the sheet
+   counts whatever kind of node it points at — a comment is cited exactly as a
+   post is — so the card's number and the rows under References are the same
+   four. A count that quietly dropped a kind would tell a reader the sheet
    holds less than it does, and this sheet is the only place the number can be
-   checked. */
+   checked.
+
+   A V1.0 REFERENCE POINTS AT A PERSON, A POST OR A COMMENT (readme §13, the
+   V1.0 scope cut, 2026-09-25 — the contract's `ReferenceTarget` union, read
+   as the ruling). So those are the rows, and each opens its own board: a
+   person their profile, a post its detail, a comment its thread. The settling
+   citation rides the comment row, the section's last. */
 export function Screen() {
   return (
     <>
       <DetailHeader items={READER_POST_MENU} />
       <DetailColumn>
-        <PostCard {...ADA_POST} variant="detail" references={10} />
+        <PostCard {...ADA_POST} variant="detail" references={4} />
       </DetailColumn>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
@@ -47,13 +53,7 @@ export function Screen() {
           <ReferenceRow kind="person" name="Mira Voss" src="inviter.jpg" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
           <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" pair={{ pDirected: 0.55, pInterest: 0.2 }} onOpen={() => {}} />
           <ReferenceRow kind="post" name="Low tide at six tomorrow — anyone walking the flats?" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
-          <ReferenceRow kind="comment" name="That stretch after the second bend…" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
-          <ReferenceRow kind="proposal" name="Mark the flooded dip on the coast road" pair={{ pDirected: 0.25, pInterest: 0.15 }} onOpen={() => {}} />
-          <ReferenceRow kind="item" name="Salt-crust rubbing, framed" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
-          <ReferenceRow kind="campaign" name="Coast road cleanup week" pair={{ pDirected: 0.4, pInterest: 0.4 }} onOpen={() => {}} />
-          <ReferenceRow kind="offer" name="Offer on: Salt-crust rubbing, framed" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
-          <ReferenceRow kind="chat" name="Coast walkers" pair={{ pDirected: 0.1, pInterest: 0.1 }} onOpen={() => {}} />
-          <ReferenceRow kind="message" name="Crust held all the way past the slipway today." sub="in Coast walkers" pair={{ pDirected: 0.1, pInterest: 0.1 }} pending onOpen={() => {}} />
+          <ReferenceRow kind="comment" name="That stretch after the second bend…" pair={{ pDirected: 0.1, pInterest: 0.1 }} pending onOpen={() => {}} />
         </div>
       </BottomSheet>
     </>

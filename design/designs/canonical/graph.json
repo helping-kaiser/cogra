@@ -1100,8 +1100,10 @@
     { "from": "YourTopics", "via": 2, "kind": "advance", "label": "topic rows", "to": [{ "board": "TagPageHeld", "case": "the topic's own page — held, which every row on this list is" }] },
 
     { "from": "RefsSheet", "via": 1, "kind": "advance", "label": "tag rows", "to": [{ "board": "TagPage" }] },
-    { "from": "RefsSheet", "via": 2, "kind": "advance", "label": "reference rows", "to": [{ "gap": "the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)" }] },
-    { "from": "RefsSheet", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "RefsSheet", "via": 2, "kind": "advance", "label": "person reference row", "to": [{ "board": "ProfileOther", "case": "their profile" }] },
+    { "from": "RefsSheet", "via": 3, "kind": "advance", "label": "post reference rows", "to": [{ "board": "PostDetail", "case": "the cited post opens" }] },
+    { "from": "RefsSheet", "via": 4, "kind": "advance", "label": "comment reference row", "to": [{ "board": "ReplyEntry", "case": "the comment in its thread" }] },
+    { "from": "RefsSheet", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "RemoveMenu", "via": 1, "kind": "advance", "label": "Save", "to": [{ "terminal": "self", "case": "your own post is kept too — the sheet closes, the snackbar confirms, and the row reads Unsave next time" }] },
     { "from": "RemoveMenu", "via": 2, "kind": "advance", "label": "Edit", "to": [{ "board": "EditCompose" }] },
