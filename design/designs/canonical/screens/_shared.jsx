@@ -20,6 +20,7 @@ const {
   ProfileHeader,
   EmptyState,
   LoadingState,
+  ComingSoonCard,
   Snackbar,
   StanceControl,
   TopicChip,
