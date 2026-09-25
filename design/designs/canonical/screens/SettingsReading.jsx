@@ -6,7 +6,7 @@
    *Your default lives in settings*, and the feed's own snackbar says a change
    made there *lasts until you change it, on this device only*. This is the
    other end, and it is the same sheet — `FeedFilterSheet`, the half of
-   `FeedFilter` that is not the pill. A settings page that redrew the ten kinds
+   `FeedFilter` that is not the pill. A settings page that redrew the kinds
    in rows of its own would be a second filter to keep in step with the first.
 
    THE ROW IS THE TRIGGER. Search takes `FilterTrigger` because it owns its

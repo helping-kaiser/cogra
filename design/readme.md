@@ -622,9 +622,9 @@ paper over:
   reflows every label in the row as the reader picks).
 - `FeedFilter` (+ `FilterTrigger`, `OrderSection`, `FilterSection`) —
   **what the feed actually needs**, and the reason the
-  segmented row was the wrong control. Ten kinds of ranked content that
-  combine (posts, comments, chats, messages, profiles, proposals, tags,
-  items, campaigns, offers — `FEED_KINDS`, one list shared with search),
+  segmented row was the wrong control. Kinds of ranked content that
+  combine (the four V1.0 serves — posts, comments, profiles, tags, §13's
+  scope cut — `FEED_KINDS`, one list shared with search),
   forms of post that combine (photos and video with no text posts is a
   legitimate feed), an order that does not (ranked, the default, or
   newest) with the seen toggle riding in the same section (`OrderSection`,

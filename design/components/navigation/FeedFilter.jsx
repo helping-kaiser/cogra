@@ -7,7 +7,7 @@ import { HelpDot } from "../core/HelpDot.jsx";
 
 /* The feed filter (backlog item 4, second pass; grown by item 19).
 
-   THE SET IS TEN KINDS THAT COMBINE, and an opinion is not one of them: it is
+   THE SET IS FOUR KINDS THAT COMBINE, and an opinion is not one of them: it is
    not a thing that gets ranked. A segmented row cannot express a combination, so
    it is the wrong control for this job, not a badly drawn one. Sorting, forms of
    post, and what the feed also admits pile on top; none of it fits in a row of
@@ -44,18 +44,18 @@ import { HelpDot } from "../core/HelpDot.jsx";
    THE VALUE IS THE RECORD'S WORD, THE LABEL IS THE SCREEN'S (the naming law,
    readme §13, the tag round). `topics` keys the kind the graph carries and
    `Tags` is what the reader is shown. The two never have to agree, and this
-   list is the one place the difference is assigned. */
+   list is the one place the difference is assigned.
+
+   ONLY THE KINDS V1.0 SERVES (readme §13, the V1.0 scope cut, 2026-09-25). A
+   kind list follows the staging rule — a door belongs to a slot, never to a
+   list — so it shows served kinds and never a dead chip. A kind joins this
+   list in the round that ships its surface, and because the list is one,
+   the feed and search gain it together. */
 export const FEED_KINDS = [
   { value: "posts", label: "Posts" },
   { value: "comments", label: "Comments" },
-  { value: "chats", label: "Chats" },
-  { value: "messages", label: "Messages" },
   { value: "profiles", label: "Profiles" },
-  { value: "proposals", label: "Proposals" },
   { value: "topics", label: "Tags" },
-  { value: "items", label: "Items" },
-  { value: "campaigns", label: "Campaigns" },
-  { value: "offers", label: "Offers" },
 ];
 
 export const FEED_FORMS = [
@@ -137,8 +137,8 @@ export function measureTriggerText(text) {
    spelled while they fit and collapse to a count of changes when they stop.
 
    THE BUDGET IS PIXELS. A character count cannot tell a wide word from a narrow
-   one — "Campaigns · showing seen" and "Proposals · text + video" run the same
-   24 characters and 20px apart, one of them past the band — and what overflows
+   one — "Comments · text + photos" and "Profiles · text + photos" run the same
+   24 characters and 22px apart, one of them past the band — and what overflows
    is a width. So the summary measures itself in the type it renders in and
    collapses at the real edge — which makes the budget self-enforcing: a longer
    label or a new kind cannot quietly push the pill past its room. "Far from the
@@ -228,7 +228,7 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    committed, and the sheet takes the Done row the license sheets take: a
    hairline, the reading, the button, inside the sheet's own inset.
 
-   A SHEET WITH A FOOT OWNS ITS HEIGHT. Ten kinds and four sections already
+   A SHEET WITH A FOOT OWNS ITS HEIGHT. Four kinds and four sections already
    outrun 88% of the screen, so a commitment appended after them would sit
    below the fold — the one control that must always be reachable, reachable
    only by scrolling. So the sections scroll inside the sheet and the foot is
@@ -305,7 +305,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
   );
 
   return (
-    /* Ten kinds plus four sections outgrow the sheet's 62% default — the
+    /* Four kinds plus four sections outgrow the sheet's 62% default — the
        filter opens taller so the whole control is present; it still scrolls
        on shorter screens. The sheet carries its own "?" (like the pads):
        the dialog explains the filter and names the settings default. */

@@ -467,7 +467,7 @@ function subsetsInOrder(items) {
   return out;
 }
 
-const kindsSubsets = subsetsInOrder(ds.FEED_KINDS); // 2^10
+const kindsSubsets = subsetsInOrder(ds.FEED_KINDS); // 2^4 — the four V1.0 serves
 const formsSubsets = subsetsInOrder(ds.FEED_FORMS); // 2^3
 const alsoSubsets = subsetsInOrder(ds.FEED_ALSO); // 2^2
 const orderValues = ds.FEED_ORDER.map((o) => o.value); // ["ranked", "newest"]

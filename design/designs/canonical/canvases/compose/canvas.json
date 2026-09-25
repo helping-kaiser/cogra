@@ -563,7 +563,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 2867,
+      "h": 2901,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -705,7 +705,7 @@
       "x": 2880,
       "y": 0,
       "w": 290,
-      "text": "Citing — reached from Details. Searches everything citable: posts by title, people by name/handle, items by name, proposals by title, chats by name, campaigns by anchor, offers via their item. Comments and chat messages are cited from themselves — every content's overflow menu carries 'Cite in a new post'. These result rows are the seed of item 9's search.",
+      "text": "Citing — reached from Details. Searches what a V1.0 reference can point at — posts, comments and people (readme §13, the V1.0 scope cut): posts by title, people by name/handle. Comments are cited from themselves too — every content's overflow menu carries 'Cite in a new post'. These result rows are the seed of item 9's search.",
       "page": "compose"
     },
     {

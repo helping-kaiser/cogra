@@ -3544,10 +3544,12 @@ The application queue, in order:
    `ChatsComingSoon`'s bare text and faces the wallet slot's door;
    ~48 nav edges rewire; wallet strings and the CGT help leave
    V1.0 copy.
-3. **The kind trims**: feed + search filters down to the four
+3. **The kind trims** *(landed with this PR, the history doors
+   excepted)*: feed + search filters down to the four
    served kinds; item/offer/message rows leave `ExploreSearch`;
    `RefsSheet` and `ReferencePicker` down to person/post/comment,
-   each row wired; the masters' history doors leave canonical.
+   each row wired; the masters' history doors leave canonical —
+   held for jakob's ruling on their post-MVP dependency.
 4. **The copy round**: deletion page ("cover", "messages" out),
    editing help (removal clause out, scale-neutral rewording),
    payer-neutral signing copy — new strings to copy-voice for

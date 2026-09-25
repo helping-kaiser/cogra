@@ -101,8 +101,9 @@ export interface FilterTriggerProps {
 
 export declare function FilterTrigger(props: FilterTriggerProps): JSX.Element;
 
-/** Every kind the network ranks — one list, shared by the feed and search;
- *  the word is "Profiles" everywhere. */
+/** Every kind the network ranks and V1.0 serves — Posts, Comments, Profiles,
+ *  Tags (readme §13, the V1.0 scope cut). One list, shared by the feed and
+ *  search; the word is "Profiles" everywhere. */
 export declare const FEED_KINDS: readonly { value: string; label: string }[];
 export declare const FEED_FORMS: readonly { value: string; label: string }[];
 export declare const FEED_ORDER: readonly { value: string; label: string }[];

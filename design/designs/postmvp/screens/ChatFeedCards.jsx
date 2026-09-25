@@ -2,10 +2,11 @@
    (round B3 of the chats work, the integration round; rebuilt on jakob's
    canvas review, the fix pass, 2026-09-24).
 
-   BOTH KINDS WERE DECLARED AND NEVER DRAWN. The feed's filter has listed
-   `Chats` and `Messages` since its one list (`FEED_KINDS`), off by default; a
-   reader who turns them on meets these cards. The trigger reads the kinds back
-   as it always does — the filter's own summary, nothing added.
+   BOTH KINDS ARRIVE WITH THIS ROUND. Canonical's one list (`FEED_KINDS`)
+   carries only the kinds V1.0 serves (readme §13, the V1.0 scope cut);
+   `Chats` and `Messages` join it when chats ship, off by default, and a reader
+   who turns them on meets these cards. The trigger reads the kinds back as it
+   always does — the filter's own summary, nothing added.
 
    REAL CARDS, NOTHING HAND-BUILT (the componentization law). Both are the
    feed's own `PostCard`, mounted (`ChatFeedCard`, `MessageFeedCard`): its
@@ -40,10 +41,10 @@
    a lineage as one candidate (chats.md §3), a message as the first-class
    content it is (§1).
 
-   THE MIGRATION NOTE: the feed is canonical's (`Feed`), whose filter draws
-   the two kinds as switches that change nothing drawn yet. At migration these
-   cards join the feed's card set and this excerpt goes; the post below the two
-   is this tree's own fixture standing for canonical's cards. */
+   THE MIGRATION NOTE: the feed is canonical's (`Feed`). At migration the two
+   kinds join `FEED_KINDS` — and so search's filter too, the list being one —
+   these cards join the feed's card set, and this excerpt goes; the post below
+   the two is this tree's own fixture standing for canonical's cards. */
 export function Screen() {
   return (
     <>

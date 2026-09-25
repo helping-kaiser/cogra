@@ -1,7 +1,12 @@
 /* Citing — the reference explorer, wearing the search UI (readme §13): the
    same bar, the same worded trigger, the same rows. No Sky entry — citing is a
    task, not the tab. The rows' edge is the ADD mark: the whole row's tap picks
-   the reference; ranking still orders the list. */
+   the reference; ranking still orders the list.
+
+   IT OFFERS POSTS, COMMENTS AND PROFILES (readme §13, the V1.0 scope cut,
+   2026-09-25): a V1.0 reference points at a person, a post or a comment — the
+   contract's `ReferenceTarget` union, read as the ruling — so no row offers a
+   kind that cannot be cited, and its filter holds those three kinds. */
 export function Screen() {
   return (
     <>
@@ -15,15 +20,6 @@ export function Screen() {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="item" name="Salt cellar, hand-carved" sub="offered by @tobias" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="proposal" name="Keep the salt flats path open" sub="open for votes" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="chat" name="Salt marsh survey crew" sub="12 people" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="campaign" name="Sea salt collective — autumn run" sub="by @seasaltco" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="offer" name="Offer on Salt cellar, hand-carved" sub="by @ada" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <div style={{ flex: 1 }} />
-        <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
-          @handle and #tag reach comments and messages too.
-        </p>
       </div>
     </>
   );

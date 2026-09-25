@@ -2584,7 +2584,7 @@
       "via": 1,
       "kind": "advance",
       "label": "the feed's filter trigger",
-      "to": [{ "terminal": "canonical", "case": "canonical's filter sheet — Chats and Messages among its kinds" }]
+      "to": [{ "terminal": "canonical", "case": "canonical's filter sheet — Chats and Messages join its kinds when this round migrates (readme §13, the V1.0 scope cut)" }]
     },
     {
       "from": "ChatFeedCards",
