@@ -1308,10 +1308,10 @@
     },
     {
       "file": "MapMoney.dc.html",
-      "x": -1870,
+      "x": -980,
       "y": 0,
-      "w": 1450,
-      "h": 1361,
+      "w": 560,
+      "h": 632,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },

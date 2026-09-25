@@ -2,10 +2,14 @@ import React from "react";
 import { Icon } from "./Icon.jsx";
 
 /* The app's frame (design.md §6). Five slots left to right — feed, search, create
-   post, wallet, profile — each arriving with the slice that builds its surface.
-   The product ships THREE today (feed, the compose action, profile); pass `slots`
-   to render the full five, which is where the bar is going and what any new
-   layout should be checked against.
+   post, wallet, profile — and V1.0 carries all five (readme §13, *The V1.0
+   scope cut*, jakob 2026-09-25). A slot whose absence would deform the shell
+   keeps its place even while its surface is drawn after V1.0, and opens a
+   coming-soon door instead: the wallet slot opens `WalletComingSoon`
+   (`ComingSoonCard`). A thinner bar reads wrong, and re-adding a slot later
+   costs every reader the muscle memory twice. A door belongs to a slot, never
+   to a list — a kind list follows the staging rule. Boards pass
+   `slots={ALL_SLOTS}`; the three-slot default is the bar before V1.0.
 
    The centre slot is the compose ACTION, not a destination — a deliberate
    deviation from M3's destinations-only navigation-bar guidance, accepted for the
@@ -33,7 +37,7 @@ import { Icon } from "./Icon.jsx";
    indicator pill. */
 
 const DEFAULT_SLOTS = ["feed", "compose", "profile"];
-/** Where the bar is going, once search and wallet have surfaces. */
+/** The V1.0 bar: all five slots — the wallet's opens its coming-soon door. */
 export const ALL_SLOTS = ["feed", "search", "compose", "wallet", "profile"];
 
 /* The bar's labels. The discovery slot is keyed `search` (its route, its glyph)

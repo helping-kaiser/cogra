@@ -827,6 +827,15 @@
       "w": 390,
       "h": 844,
       "page": "wallet"
+    },
+    {
+      "file": "MapWallet.dc.html",
+      "x": -1870,
+      "y": 0,
+      "w": 1450,
+      "h": 1037,
+      "page": "wallet",
+      "title": "Money & Wallet · flow map"
     }
   ],
   "annotations": [

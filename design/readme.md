@@ -6780,9 +6780,10 @@ round.
 
 The fifth is the post-MVP tree's own —
 [CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
-id `postmvp`, serving the Push notifications, Change histories and Chats
-pages and opening on the first. It lives in the successor canvas tooling
-(the Design Artifact type): the same seed manifests, published as the
+id `postmvp`, serving the Push notifications, Change histories, Chats
+and Money & Wallet pages and opening on the first. It lives in the
+successor canvas tooling (the Design Artifact type): the same seed
+manifests, published as the
 artifact's own board files rather than through the old seeded editor.
 Its predecessor artifact stands frozen with the pre-migration
 versions in its picker.
