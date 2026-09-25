@@ -12,20 +12,19 @@
    guest (`ChatThreadReader`), the member's own thread for a member. Chats are
    public reads, so no result needs a gate before it is read.
 
-   WHAT IS NOT HERE, AND A CONTRADICTION FLAGGED. Messages are not a global
+   WHAT IS NOT HERE. Messages are not a global
    search kind: api-spec.md excludes chat messages from the global index —
    "casual conversation doesn't surface to strangers by keyword" — and gives
-   them the scoped `chatSearch` (`ChatSearchIn`). Canonical's `ExploreSearch`
-   draws a message row (`in Coast walkers`), and a comment row, which the same
-   paragraph also rules out ("a comment ... is not a searchable kind"). This
-   board follows the contract and draws no message row; canonical's board is
-   the design backlog's to reconcile, not this round's to edit.
+   them the scoped `chatSearch` (`ChatSearchIn`). Backlog item 105 settled it
+   (readme §13, the indirect kinds are scope-served): a message result exists
+   only in a scoped query. This board's query is unscoped, so it draws no
+   message row.
 
-   THE MIGRATION NOTE: the search surface is canonical's. At migration the chat
-   row joins `ExploreSearch` and this excerpt goes — and canonical's
-   `RefsSheet` gap re-wires with it: its chat and message rows point at "the
-   referenced node's own surface (… chat — not designed)", and at migration
-   those two rows land on the chat's read surface and on the thread scrolled to
+   THE MIGRATION NOTE: the search surface is canonical's. V1.0's
+   `ExploreSearch` and `RefsSheet` carry no chat or message rows (readme §13,
+   the V1.0 scope cut). At migration the chat row joins `ExploreSearch` and
+   this excerpt goes — and chat and message rows join canonical's `RefsSheet`
+   with it, landing on the chat's read surface and on the thread scrolled to
    the message, the destinations this round's rows already take. */
 function SearchTriggerRow() {
   return (
