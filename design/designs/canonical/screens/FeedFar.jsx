@@ -3,9 +3,9 @@
    count of changes: "3 kinds · 4 changes". Which four ways is what the sheet
    is for.
 
-   THE THIRD KIND IS PROFILES (readme §13, the V1.0 scope cut, 2026-09-25):
-   the filter lists only the four kinds V1.0 serves, so the fixture turns on
-   three of those four and the pill reads the same. */
+   THREE OF THE FOUR SERVED KINDS (readme §13, the V1.0 scope cut,
+   2026-09-25): the filter lists only the kinds V1.0 serves, so the fixture's
+   three are drawn from those four. */
 const FAR = { kinds: ["posts", "comments", "profiles"], forms: ["photos"], order: "newest", seen: true, also: ["sensitive"] };
 
 export function Screen() {
