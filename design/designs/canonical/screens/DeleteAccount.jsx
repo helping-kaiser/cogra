@@ -100,7 +100,6 @@ export function Screen() {
             Everything you signed, and everything others signed about you. Your posts still route and
             still credit their author; what is removed leaves a mark saying so.
           </p>
-          <p style={LINE}>Your wallet and its address. They are held by your key, never by CoGra, so nothing here can touch them.</p>
         </div>
 
         <div style={{ marginTop: 24 }}>
