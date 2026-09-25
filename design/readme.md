@@ -527,7 +527,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `CitedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
-| `components/states/` | `EmptyState`, `LoadingState` |
+| `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
 | `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
