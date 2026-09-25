@@ -462,9 +462,11 @@ impl<'a> Walk<'a> {
     /// [`MISSING_TRACKED_PATH`]: it stays a member of the corpus, so the count
     /// does not move, and no reader reports the same repair a second time as
     /// an unreadable source. The question is answered by the read a source
-    /// gets anyway, and by one `symlink_metadata` for a source nothing reads —
-    /// `git ls-files --deleted` answers it too, and measured on this corpus
-    /// over the WSL crossing it took 14–20 s where the reads take nothing more.
+    /// gets anyway, and for the sources nothing reads by one
+    /// `symlink_metadata` each, asked on a few threads because on the WSL
+    /// crossing each waits on latency rather than on work. `git ls-files
+    /// --deleted` answers it too, and measured on this corpus over that
+    /// crossing it took 14–20 s.
     fn tracked(&self, sources: &mut Vec<SourceFile>, failures: &mut Vec<Diagnostic>) {
         let listed = match tracked_entries(&self.root) {
             Ok(listed) => listed,
@@ -473,37 +475,40 @@ impl<'a> Walk<'a> {
                 return;
             }
         };
-        let exclusive = self.adoption.carrier.universe == Universe::TrackedExclusive;
+        let mut kept = Vec::with_capacity(listed.len());
         for entry in listed {
-            let relative = match entry {
-                Tracked::Link => continue,
-                Tracked::File(relative) => relative,
-                Tracked::NotText(lossy) => {
-                    failures.push(self.failure(
-                        UNREADABLE_SOURCE,
-                        Path::new(&lossy),
-                        "the tracked path is not UTF-8, so no path rule can decide it",
-                    ));
-                    continue;
+            match entry {
+                Tracked::Link => {}
+                Tracked::File(relative) => {
+                    if !self.adoption.carrier.excludes(&relative) {
+                        kept.push(relative);
+                    }
                 }
-            };
-            if self.adoption.carrier.excludes(&relative) {
-                continue;
+                Tracked::NotText(lossy) => failures.push(self.failure(
+                    UNREADABLE_SOURCE,
+                    Path::new(&lossy),
+                    "the tracked path is not UTF-8, so no path rule can decide it",
+                )),
             }
-            let path = self.root.join(&relative);
-            if !exclusive {
-                self.file(&path, &relative, sources, failures);
-                continue;
+        }
+        if self.adoption.carrier.universe != Universe::TrackedExclusive {
+            for relative in kept {
+                self.file(&self.root.join(&relative), &relative, sources, failures);
             }
+            return;
+        }
+        let absent = self.absent_unread(&kept);
+        for relative in kept {
             let held = if self.is_read(&relative) {
-                fs::read(&path).map(|bytes| sources.push(self.source(&relative, bytes)))
+                fs::read(self.root.join(&relative))
+            } else if absent.contains(&relative) {
+                Err(io::Error::from(io::ErrorKind::NotFound))
             } else {
-                fs::symlink_metadata(&path)
-                    .map(|_| sources.push(self.source(&relative, Vec::new())))
+                Ok(Vec::new())
             };
             match held {
-                Ok(()) => {}
-                Err(absent) if absent.kind() == io::ErrorKind::NotFound => {
+                Ok(bytes) => sources.push(self.source(&relative, bytes)),
+                Err(problem) if problem.kind() == io::ErrorKind::NotFound => {
                     sources.push(self.source(&relative, Vec::new()));
                     failures.push(self.failure(
                         MISSING_TRACKED_PATH,
@@ -518,6 +523,38 @@ impl<'a> Walk<'a> {
                 )),
             }
         }
+    }
+
+    /// The kept tracked paths no reader opens that the checkout does not
+    /// hold, each asked by one `symlink_metadata`, the list split across a
+    /// few scoped threads.
+    fn absent_unread(&self, kept: &[PathBuf]) -> HashSet<PathBuf> {
+        let unread: Vec<&PathBuf> = kept.iter().filter(|one| !self.is_read(one)).collect();
+        let lanes = std::thread::available_parallelism().map_or(1, |n| n.get().min(8));
+        let chunk = unread.len().div_ceil(lanes).max(1);
+        std::thread::scope(|scope| {
+            let asked: Vec<_> = unread
+                .chunks(chunk)
+                .map(|part| {
+                    scope.spawn(move || {
+                        part.iter()
+                            .filter(|one| {
+                                fs::symlink_metadata(self.root.join(one))
+                                    .is_err_and(|problem| problem.kind() == io::ErrorKind::NotFound)
+                            })
+                            .map(|one| (*one).clone())
+                            .collect::<Vec<PathBuf>>()
+                    })
+                })
+                .collect();
+            asked
+                .into_iter()
+                .flat_map(|lane| {
+                    lane.join()
+                        .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+                })
+                .collect()
+        })
     }
 
     /// One entry of a walked tree, whose kind the caller has already asked.

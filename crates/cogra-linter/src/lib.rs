@@ -260,6 +260,12 @@ impl Run {
 /// reads the root's own build manifests, which [`Adoption::load`] never
 /// sees. See [`Adoption::verify_package_roster`].
 ///
+/// The checkout's untracked regions are asked here too, on a thread beside
+/// the walk ([`carrier::untracked`]): the listing is git's own walk of the
+/// checkout and shares nothing with the carrier walk but the disk, and on
+/// the WSL crossing, where both wait on latency, overlapping them hides the
+/// listing's two seconds.
+///
 /// # Errors
 ///
 /// [`RunError::Walk`] when `root` is not a directory, and
@@ -278,11 +284,17 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
     a.verify_package_roster(root)?;
     a.verify_reach_against_manifests(root)?;
     let walking = Instant::now();
-    let (sources, failures) = match Walk::new(a, root).sources() {
-        Ok(sources) => (sources, Vec::new()),
-        Err(outcome) => (outcome.sources, outcome.failures),
-    };
-    let untracked = crate::carrier::untracked(a, root);
+    let ((sources, failures), untracked) = std::thread::scope(|scope| {
+        let listing = scope.spawn(|| crate::carrier::untracked(a, root));
+        let walked = match Walk::new(a, root).sources() {
+            Ok(sources) => (sources, Vec::new()),
+            Err(outcome) => (outcome.sources, outcome.failures),
+        };
+        let listed = listing
+            .join()
+            .unwrap_or_else(|panic| std::panic::resume_unwind(panic));
+        (walked, listed)
+    });
     let walked = walking.elapsed();
     let roots = crate::carrier::unmatched_roots(a, &sources);
     let uncatalogued = crate::carrier::uncatalogued(a, &sources);
