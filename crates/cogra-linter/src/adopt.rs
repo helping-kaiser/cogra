@@ -194,10 +194,19 @@ impl BuildDirExclusion {
     /// `path` itself matches when its own final component is `name` — the
     /// excluded directory is excluded as a tree, not merely its contents —
     /// exactly as `PathPrefix`'s own tree semantics already work.
+    ///
+    /// The root is a tree or the empty prefix. A root spelled as a file holds
+    /// no directory, so it matches nothing, rather than reaching `androidx/`
+    /// from `android` by cutting a name short; the adoption data refuses such
+    /// a root at load ([`AdoptionError::MalformedBuildDirRoot`]).
     #[must_use]
     pub fn matches(&self, path: &Path) -> bool {
+        let root = self.root.as_str();
+        if !root.is_empty() && !root.ends_with('/') {
+            return false;
+        }
         let relative = relative_str(path);
-        let Some(under_root) = relative.strip_prefix(self.root.as_str()) else {
+        let Some(under_root) = relative.strip_prefix(root) else {
             return false;
         };
         under_root
@@ -1923,6 +1932,13 @@ impl RawAdoption {
                 source,
                 origin,
             );
+            let root = raw.root.as_ref().as_str();
+            if !root.is_empty() && !root.ends_with('/') {
+                return Err(AdoptionError::MalformedBuildDirRoot {
+                    at: row(&raw.root, source, origin),
+                    root: root.to_string(),
+                });
+            }
             let name = raw.name.as_ref();
             if name.is_empty() || name.contains('/') {
                 return Err(AdoptionError::MalformedBuildDirName {
@@ -2449,5 +2465,56 @@ mod tests {
         let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "*");
         assert!(!exclusion.matches(Path::new("android/core/crypto/build/reports/detekt.md")));
         assert!(exclusion.matches(Path::new("android/*/reports/detekt.md")));
+    }
+
+    /// A spelling followed by more is where a reach begins, never the name of
+    /// the file that spelling would be on its own. A row names a file or a tree
+    /// by its own final `/`, so nothing downstream infers which of the two it
+    /// is, and a place is always cut at a component boundary: `é` reaches
+    /// neither `é.md` nor `éx/`, and a build-dir root is a tree wherever it
+    /// is written.
+    ///
+    /// The upstream linter's ABNF engine fixed this confusion in its opening
+    /// reader (commit 7ccb6ae6); literal rows carry no opening to read, and
+    /// this test holds them to the same answer.
+    /// A spelling followed by more is a reach, and a file row names only its file.
+    /// ´claim:paths:a-spelling-followed-by-more-is-a-reach´
+    #[test]
+    fn a_spelling_followed_by_more_is_a_reach_not_a_file() {
+        let file = PathPrefix::new("docs/\u{e9}");
+        assert!(file.matches(Path::new("docs/\u{e9}")));
+        for longer in ["docs/\u{e9}/x.md", "docs/\u{e9}x", "docs/\u{e9}.md"] {
+            assert!(!file.matches(Path::new(longer)), "{longer}");
+        }
+
+        let tree = PathPrefix::new("docs/\u{e9}/");
+        assert!(tree.matches(Path::new("docs/\u{e9}/x.md")));
+        assert!(!tree.matches(Path::new("docs/\u{e9}")));
+        assert!(!tree.matches(Path::new("docs/\u{e9}x/y.md")));
+
+        let file_root = BuildDirExclusion::new(PathPrefix::new("android"), "build");
+        assert!(!file_root.matches(Path::new("androidx/build/report.md")));
+        assert!(!file_root.matches(Path::new("android-old/build/report.md")));
+    }
+
+    /// A spelling admitted more than once is not the spelling admitted once.
+    /// A repetition in a literal row is only ever the characters written, and
+    /// admitting more than a file's own name takes a tree row: `a` is not
+    /// `aa`, and a build-dir name repeated is another directory. The upstream
+    /// engine fixed the same question for repeated openings (commit 68da06f4).
+    /// A literal row admits its spelling once, and more only as a tree.
+    /// ´claim:paths:a-spelling-is-admitted-once´
+    #[test]
+    fn a_spelling_admitted_once_is_not_its_repetition() {
+        let file = PathPrefix::new("a");
+        assert!(file.matches(Path::new("a")));
+        assert!(!file.matches(Path::new("aa")));
+        assert!(!file.matches(Path::new("a/a")));
+        assert!(PathPrefix::new("a/").matches(Path::new("a/a")));
+
+        let exclusion = BuildDirExclusion::new(PathPrefix::new("android/"), "build");
+        assert!(!exclusion.matches(Path::new("android/buildbuild/x.md")));
+        assert!(!exclusion.matches(Path::new("android/app/build.gradle.kts")));
+        assert!(exclusion.matches(Path::new("android/build/build/x.md")));
     }
 }

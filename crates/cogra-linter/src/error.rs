@@ -309,6 +309,20 @@ pub enum AdoptionError {
         /// The name as written.
         name: String,
     },
+    /// A `[[carrier.exclude_build_dirs]]` row's `root` names a file.
+    ///
+    /// The directories are sought beneath the root, so the root is a tree
+    /// (ending in `/`) or the empty prefix. A root spelled as a file holds no
+    /// directory and would match nothing; read as a bare string it would
+    /// reach past its own name, `android` into `androidx/`. It is refused at
+    /// load rather than left to do either.
+    #[error("carrier exclude_build_dirs root {root} names a file and not a tree")]
+    MalformedBuildDirRoot {
+        /// The row the root sits in.
+        at: Location,
+        /// The root as written.
+        root: String,
+    },
     /// The file's schema major version is not the one this build reads.
     #[error(
         "adoption data states schema major version {found}, and this build reads major version {expected}"
@@ -339,6 +353,7 @@ impl AdoptionError {
             | AdoptionError::RuleOrderMismatch { at, .. }
             | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::MalformedBuildDirName { at, .. }
+            | AdoptionError::MalformedBuildDirRoot { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
             | AdoptionError::ActivationScopeUnknown { at, .. }
@@ -454,6 +469,10 @@ mod tests {
             AdoptionError::MalformedBuildDirName {
                 at: row(),
                 name: String::from("core/build"),
+            },
+            AdoptionError::MalformedBuildDirRoot {
+                at: row(),
+                root: String::from("android"),
             },
             AdoptionError::ProfileIncomplete {
                 at: row(),

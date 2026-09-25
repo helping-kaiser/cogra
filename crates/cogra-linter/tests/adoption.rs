@@ -538,6 +538,21 @@ fn a_build_dir_exclusion_name_carrying_a_slash_is_refused() {
     assert_eq!(row(&source, &error), "name = \"core/build\"");
 }
 
+/// An `exclude_build_dirs` `root` spelled as a file holds no directory, so it
+/// is refused at load rather than reaching past its own name.
+/// A build-dir root spelled as a file is refused at load.
+/// ´claim:adoption:a-build-dir-root-spelled-as-a-file-is-refused´
+#[test]
+fn a_build_dir_exclusion_root_spelled_as_a_file_is_refused() {
+    let source = format!(
+        "{}\n[[carrier.exclude_build_dirs]]\nroot = \"android\"\nname = \"build\"\n",
+        document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+    );
+    let error = load(&source).expect_err("a root naming a file holds no directory");
+    assert!(matches!(error, AdoptionError::MalformedBuildDirRoot { .. }));
+    assert_eq!(row(&source, &error), "root = \"android\"");
+}
+
 /// The signature section arrives with the values it states.
 /// ´claim:adoption:the-signature-section-round-trips´
 #[test]
