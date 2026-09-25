@@ -268,13 +268,13 @@ title, at most two short paragraphs, Close. The texts, verbatim
   never bumps it as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
 - **Citing**: A citation is its own signed action and carries your
-  opinion of what you cite. You can cite anything on CoGra — start
-  with @handle or #tag to reach comments, messages, and offers. /
-  Comments and chat messages can also be cited from themselves —
-  open one and choose "Cite in a new post".
+  opinion of what you cite. You can cite a post, a comment or a
+  person. / A comment can also be cited from itself — open its menu
+  and choose "Cite in a new post". *(Trimmed to V1.0's citable kinds,
+  jakob 2026-09-25; the end-state wording returns with its kinds.)*
 - **Searching** (the Explore tab's results): Search reads names and
   titles, never bodies. Start with @handle to search one person's
-  work — including their comments and offers, found through what
+  work — including their comments, found through what
   they point at. Start with #tag to search inside a tag. /
   Results put what's closest to you first — the numbers are your
   view, no one else's. Below the line, what's still beyond your
@@ -1878,7 +1878,8 @@ to be opened.
 ## The search-scope line
 
 From backlog item 105's ruling (readme §13, the indirect kinds are
-scope-served): with Messages, Comments or Offers selected and no
+scope-served): with Comments — V1.0's indirect kind; Messages and
+Offers rejoin it with their slices — selected and no
 scope in the query, the results region carries one quiet line where
 results would stand — the way, not an apology:
 
