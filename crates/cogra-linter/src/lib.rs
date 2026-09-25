@@ -66,11 +66,11 @@ pub mod timing;
 pub use adopt::{
     Activation, Adoption, Area, BannedToken, BannedTokens, BuildDirExclusion, Carrier, Census,
     CitationIndexes, Claims, Classification, Collision, ConfiguredPath, EnforcementPartition,
-    HeadForm, HeadMatching, HeadRecognition, HeadlessLanguages, Kind, KindEvidence, KindExtensions,
-    KindGenerator, KindRegister, KindStatuses, KindsAdoption, Language, Matrix, Meta,
-    NameTransformation, OwnerId, Partition, PartitionRule, PathPrefix, Place, PrefixFamily,
+    HeadForm, HeadMatching, HeadRecognition, HeadlessLanguages, IgnoreRow, Kind, KindEvidence,
+    KindExtensions, KindGenerator, KindRegister, KindStatuses, KindsAdoption, Language, Matrix,
+    Meta, NameTransformation, OwnerId, Partition, PartitionRule, PathPrefix, Place, PrefixFamily,
     Profile, ProfileId, ProfileStatus, Profiles, Reach, ReachRow, ReservedKinds, ScannedLanguage,
-    ScannedRegions, Signature, Statement, TypedData, UnscannedLanguages,
+    ScannedRegions, Signature, Statement, TypedData, Universe, UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
@@ -195,6 +195,33 @@ impl Run {
     pub fn is_clean(&self) -> bool {
         self.failing().next().is_none()
     }
+
+    /// The run's counts, the corpus's first and the working notes' second
+    /// (´dec:lint:notes-apart´).
+    ///
+    /// A source or a finding under a root the partition marks `optional` is
+    /// counted in the second half: those trees are walked on disk, exist on
+    /// some machines and not in a clean clone, and folding them into one
+    /// number made the corpus's count a property of the machine. Nothing is
+    /// dropped — the notes are checked as before, their findings listed, and
+    /// a failing one still fails the run; only the count keeps them apart. A
+    /// finding with no path is the corpus's.
+    #[must_use]
+    pub fn counts(&self, a: &Adoption) -> (render::Counts, render::Counts) {
+        let (notes, corpus): (Vec<&Diagnostic>, Vec<&Diagnostic>) = self
+            .findings
+            .iter()
+            .partition(|one| a.partition.is_walked(&one.primary.path));
+        let walked = self
+            .sources
+            .keys()
+            .filter(|path| a.partition.is_walked(path))
+            .count();
+        (
+            render::Counts::of(corpus, self.sources.len() - walked),
+            render::Counts::of(notes, walked),
+        )
+    }
 }
 
 /// Check one corpus root under one adoption.
@@ -255,6 +282,7 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
         Ok(sources) => (sources, Vec::new()),
         Err(outcome) => (outcome.sources, outcome.failures),
     };
+    let untracked = crate::carrier::untracked(a, root);
     let walked = walking.elapsed();
     let roots = crate::carrier::unmatched_roots(a, &sources);
     let uncatalogued = crate::carrier::uncatalogued(a, &sources);
@@ -262,6 +290,7 @@ pub fn check(a: &Adoption, root: &Path) -> Result<Run, RunError> {
     let mut run = check_sources(a, sources);
     run.timing.record(Phase::Harvest, walked);
     run.findings.extend(failures);
+    run.findings.extend(untracked);
     run.findings.extend(roots);
     run.findings.extend(uncatalogued);
     run.findings.sort();

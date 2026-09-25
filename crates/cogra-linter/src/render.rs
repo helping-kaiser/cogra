@@ -101,12 +101,73 @@ pub fn report(findings: &[&Diagnostic]) -> String {
 /// ```
 #[must_use]
 pub fn summary(findings: &[Diagnostic], sources: usize) -> String {
-    let failing = findings
-        .iter()
-        .filter(|one| one.enforcement == Enforcement::Failing)
-        .count();
-    let advisory = findings.len() - failing;
-    format!("{sources} sources · {failing} failing · {advisory} advisory",)
+    counts(Counts::of(findings, sources), Counts::default())
+}
+
+/// One half of a run's count: its sources, and its findings by enforcement.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Counts {
+    /// The sources counted.
+    pub sources: usize,
+    /// The findings inside the failing set.
+    pub failing: usize,
+    /// The findings outside it.
+    pub advisory: usize,
+}
+
+impl Counts {
+    /// The count of `findings` beside `sources` sources.
+    #[must_use]
+    pub fn of<'d>(findings: impl IntoIterator<Item = &'d Diagnostic>, sources: usize) -> Counts {
+        let mut counted = Counts {
+            sources,
+            ..Counts::default()
+        };
+        for one in findings {
+            match one.enforcement {
+                Enforcement::Failing => counted.failing += 1,
+                Enforcement::Advisory => counted.advisory += 1,
+            }
+        }
+        counted
+    }
+}
+
+/// The corpus's count, and the working notes' on a line of their own where a
+/// run walked any (´dec:lint:notes-apart´).
+///
+/// The first line is the one a clean clone and a checkout carrying the notes
+/// agree on; the second says what the notes added, so the difference is
+/// visible rather than folded in.
+///
+/// ```
+/// use cogra_linter::render::{Counts, counts};
+///
+/// let corpus = Counts { sources: 869, failing: 0, advisory: 0 };
+/// assert_eq!(counts(corpus, Counts::default()), "869 sources · 0 failing · 0 advisory");
+/// let notes = Counts { sources: 12, failing: 0, advisory: 3 };
+/// assert_eq!(
+///     counts(corpus, notes),
+///     "869 sources · 0 failing · 0 advisory\n\
+///      working notes, counted apart: 12 sources · 0 failing · 3 advisory",
+/// );
+/// ```
+#[must_use]
+pub fn counts(corpus: Counts, notes: Counts) -> String {
+    let line = |one: Counts| {
+        format!(
+            "{} sources · {} failing · {} advisory",
+            one.sources, one.failing, one.advisory
+        )
+    };
+    if notes == Counts::default() {
+        return line(corpus);
+    }
+    format!(
+        "{}\nworking notes, counted apart: {}",
+        line(corpus),
+        line(notes)
+    )
 }
 
 /// The per-phase report every run prints beside its findings

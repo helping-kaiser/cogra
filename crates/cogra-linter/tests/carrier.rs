@@ -466,9 +466,10 @@ fn a_tracked_type_no_row_answers_for_fails_once_per_type() {
     );
 }
 
-/// The index lists a file the checkout no longer holds; a source some reader
-/// consumes is reported where the read fails, exactly as an unreadable file
-/// of a walked tree is.
+/// The index lists a file the checkout no longer holds; under the
+/// `git-tracked` universe, which asks the checkout nothing, a source some
+/// reader consumes is reported where the read fails, exactly as an
+/// unreadable file of a walked tree is.
 ///
 /// A tracked source that is gone from disk is reported where it is read.
 /// ´claim:walk:a-tracked-source-gone-from-disk-is-reported´
@@ -476,7 +477,7 @@ fn a_tracked_type_no_row_answers_for_fails_once_per_type() {
 fn a_tracked_source_gone_from_disk_is_reported_where_it_is_read() {
     let root = tree("carrier-gone", &["README.md", "docs/gone.md"]);
     fs::remove_file(root.join("docs/gone.md")).expect("the fixture file is removable");
-    let adoption = ruled();
+    let adoption = under("git-tracked");
 
     let outcome = Walk::new(&adoption, &root)
         .sources()
@@ -488,6 +489,250 @@ fn a_tracked_source_gone_from_disk_is_reported_where_it_is_read() {
         outcome.failures[0].primary.path,
         PathBuf::from("docs/gone.md")
     );
+}
+
+/// The ruled adoption with its universe answer replaced.
+fn under(universe: &str) -> Adoption {
+    let at = Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../corpus-adoption.toml"
+    ));
+    let text = fs::read_to_string(at).expect("the adoption data is readable");
+    let stated = "\nuniverse = \"tracked-exclusive\"\n";
+    assert!(
+        text.contains(stated),
+        "the ruled answer is tracked-exclusive"
+    );
+    let replaced = text.replacen(stated, &format!("\nuniverse = \"{universe}\"\n"), 1);
+    Adoption::from_str(&replaced, Path::new("corpus-adoption.toml"))
+        .expect("the other answer loads")
+}
+
+/// The paths of a finding list, spelled as the adoption data spells them.
+fn located(found: &[cogra_linter::Diagnostic]) -> Vec<String> {
+    found
+        .iter()
+        .map(|one| one.primary.path.to_string_lossy().into_owned())
+        .collect()
+}
+
+/// Under the tracked-exclusive universe a stray the index does not hold is
+/// named, one finding per region: git lists a directory it holds nothing
+/// under as one entry, and what a carrier row, an optional root, or the
+/// repository's own ignore file declares is not asked. Its enforcement is
+/// its path against the failing set, as every located finding's is.
+///
+/// A path the checkout holds and nothing declares is one untracked-path finding per region.
+/// ´claim:walk:an-undeclared-untracked-path-is-reported´
+#[test]
+fn an_untracked_path_nothing_declares_is_reported_once_per_region() {
+    let root = tree(
+        "carrier-untracked-exclusive",
+        &["README.md", ".gitignore", "crates/api/src/lib.rs"],
+    );
+    fs::write(root.join(".gitignore"), "/scratch.log\n").expect("the ignore file");
+    common::track(&root);
+    written(
+        &root,
+        &[
+            "crates/api/src/draft.rs",
+            "stray/one.md",
+            "stray/deeper/two.md",
+            "scratch.log",
+            "target/debug/junk.txt",
+            ".claude/worktrees/agent-x/README.md",
+            "android/app/build/reports/r.md",
+            "tmp_dev/notes.md",
+        ],
+    );
+    let adoption = ruled();
+
+    let found = carrier::untracked(&adoption, &root);
+    assert_eq!(
+        located(&found),
+        vec![
+            String::from("crates/api/src/draft.rs"),
+            String::from("stray")
+        ],
+        "{found:?}"
+    );
+    assert!(found.iter().all(|one| one.rule == carrier::UNTRACKED_PATH));
+    assert_eq!(found[0].enforcement, cogra_linter::Enforcement::Failing);
+    assert_eq!(found[1].enforcement, cogra_linter::Enforcement::Advisory);
+    assert!(found[1].message.contains("stray/,"), "{}", found[1].message);
+
+    assert!(
+        carrier::untracked(&under("git-tracked"), &root).is_empty(),
+        "the tracked universe asks the checkout nothing"
+    );
+}
+
+/// A row reaching strictly beneath an untracked directory declares that part
+/// of it and no more: the directory is opened, and what the row does not
+/// hold is still named.
+///
+/// A row naming part of an untracked directory declares that part only.
+/// ´claim:walk:a-row-beneath-an-untracked-directory-declares-its-part´
+#[test]
+fn a_row_beneath_an_untracked_directory_declares_its_part_only() {
+    let root = tree("carrier-untracked-partial", &["README.md"]);
+    written(
+        &root,
+        &[".claude/worktrees/agent-x/README.md", ".claude/launch.json"],
+    );
+    let found = carrier::untracked(&ruled(), &root);
+    assert_eq!(
+        located(&found),
+        vec![String::from(".claude/launch.json")],
+        "{found:?}"
+    );
+}
+
+/// A tracked path the checkout lacks is reported once, as the checkout's
+/// disagreement with the index and never also as a source nobody could
+/// read; it stays in the carrier, owned and unread, so the count the corpus
+/// reports does not move with it.
+///
+/// A tracked path the checkout lacks is reported once and stays counted.
+/// ´claim:walk:a-missing-tracked-path-is-reported-once´
+#[test]
+fn a_missing_tracked_path_is_reported_once_and_stays_counted() {
+    let root = tree(
+        "carrier-missing-tracked",
+        &["README.md", "docs/gone.md", "migrations/1.sql"],
+    );
+    fs::remove_file(root.join("docs/gone.md")).expect("the fixture file is removable");
+    fs::remove_file(root.join("migrations/1.sql")).expect("the fixture file is removable");
+    let adoption = ruled();
+
+    let outcome = Walk::new(&adoption, &root)
+        .sources()
+        .expect_err("the checkout disagrees with the index");
+    assert_eq!(
+        paths_of(&outcome.sources),
+        vec![
+            String::from("README.md"),
+            String::from("docs/gone.md"),
+            String::from("migrations/1.sql"),
+        ]
+    );
+    let missing = found(&outcome.sources, "docs/gone.md");
+    assert!(missing.bytes.is_empty());
+    assert_eq!(missing.owner, OwnerId::new("tree.docs-root"));
+    assert_eq!(
+        located(&outcome.failures),
+        vec![
+            String::from("docs/gone.md"),
+            String::from("migrations/1.sql")
+        ]
+    );
+    assert!(
+        outcome
+            .failures
+            .iter()
+            .all(|one| one.rule == carrier::MISSING_TRACKED_PATH),
+        "{:?}",
+        outcome.failures
+    );
+}
+
+/// A declared ignore row removes its region wherever the carrier is read:
+/// here inside a walked optional root, where an unpacked archive would
+/// otherwise be read as working notes.
+///
+/// An ignore row removes its region from a walked optional root.
+/// ´claim:walk:an-ignore-row-removes-its-region-from-a-walked-root´
+#[test]
+fn an_ignore_row_removes_its_region_from_a_walked_root() {
+    let root = tree("carrier-ignored-archive", &["README.md"]);
+    written(
+        &root,
+        &[
+            "tmp_research_files/2026-09-25-linter-f6b263a/run-notes.md",
+            "tmp_research_files/2026-09-25-linter-f6b263a/unpacked/README.md",
+            "tmp_research_files/2026-09-25-linter-f6b263a/unpacked/src/lib.rs",
+        ],
+    );
+    let sources = Walk::new(&ruled(), &root)
+        .sources()
+        .expect("a readable tree");
+    assert_eq!(
+        paths_of(&sources),
+        vec![
+            String::from("README.md"),
+            String::from("tmp_research_files/2026-09-25-linter-f6b263a/run-notes.md"),
+        ]
+    );
+}
+
+/// The two shapes one commit is linted in — a clean clone, and a checkout
+/// carrying the working notes, an unpacked archive among them, a build
+/// tree, and the repository's own ignored files — print one corpus count.
+/// The notes are still checked and counted, on a line of their own; the
+/// archive a row removes is read by nobody; and a stray nothing declares
+/// moves the corpus count by exactly its one finding.
+///
+/// A clean clone and a checkout carrying declared untracked material give one corpus count.
+/// ´claim:walk:one-declaration-gives-one-count´
+#[test]
+fn a_clean_clone_and_a_carrying_checkout_give_one_corpus_count() {
+    const COMMIT: [&str; 3] = ["README.md", "docs/a.md", "crates/api/src/lib.rs"];
+    let clean = tree("carrier-count-clean", &COMMIT);
+    let carrying = tree("carrier-count-carrying", &COMMIT);
+    written(
+        &carrying,
+        &[
+            "tmp_dev/notes.md",
+            "tmp_research_files/2026-09-25-linter-f6b263a/unpacked/src/lib.rs",
+            "tmp_research_files/2026-09-25-linter-f6b263a/unpacked/README.md",
+            "target/debug/junk.txt",
+            "android/app/build/reports/r.md",
+        ],
+    );
+    fs::write(
+        carrying.join("tmp_dev/notes.md"),
+        "# Notes\n\nThis cites (`nowhere:notes:missing`).\n",
+    )
+    .expect("a note with a finding of its own");
+    let adoption = ruled();
+
+    let of_clean = cogra_linter::check(&adoption, &clean).expect("a corpus root");
+    let of_carrying = cogra_linter::check(&adoption, &carrying).expect("a corpus root");
+    let (corpus_clean, notes_clean) = of_clean.counts(&adoption);
+    let (corpus_carrying, notes_carrying) = of_carrying.counts(&adoption);
+
+    assert_eq!(
+        corpus_clean, corpus_carrying,
+        "one corpus count on both shapes"
+    );
+    assert_eq!(corpus_clean.sources, COMMIT.len());
+    assert_eq!(notes_clean, cogra_linter::render::Counts::default());
+    assert_eq!(
+        notes_carrying.sources, 1,
+        "the notes are walked, the archive is not"
+    );
+    assert!(notes_carrying.advisory > 0, "the notes are still checked");
+    assert!(
+        !of_carrying
+            .sources
+            .keys()
+            .any(|path| path.starts_with("tmp_research_files")),
+        "a row-removed archive is read by nobody"
+    );
+    assert_eq!(
+        cogra_linter::render::counts(corpus_clean, cogra_linter::render::Counts::default()),
+        cogra_linter::render::counts(corpus_carrying, notes_carrying)
+            .lines()
+            .next()
+            .expect("the corpus line")
+    );
+
+    written(&carrying, &["stray.txt"]);
+    let of_stray = cogra_linter::check(&adoption, &carrying).expect("a corpus root");
+    let (corpus_stray, _) = of_stray.counts(&adoption);
+    assert_eq!(corpus_stray.advisory, corpus_clean.advisory + 1);
+    assert_eq!(corpus_stray.failing, corpus_clean.failing);
+    assert_eq!(corpus_stray.sources, corpus_clean.sources);
 }
 
 /// The ruled adoption with one more root configured: absent from every tree

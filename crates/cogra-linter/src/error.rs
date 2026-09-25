@@ -323,6 +323,38 @@ pub enum AdoptionError {
         /// The root as written.
         root: String,
     },
+    /// `[carrier] universe` states an answer this build does not read.
+    ///
+    /// A misspelling is refused rather than read as the default, which would
+    /// hand the corpus a universe it did not declare.
+    #[error("carrier universe {found} is neither git-tracked nor tracked-exclusive")]
+    UnknownUniverse {
+        /// The row the answer sits in.
+        at: Location,
+        /// The answer as written.
+        found: String,
+    },
+    /// A `[[carrier.ignore]]` row's name is outside the name grammar.
+    #[error("carrier ignore name {name} is not lowercase words joined by single hyphens")]
+    MalformedIgnoreName {
+        /// The row the name sits in.
+        at: Location,
+        /// The name as written.
+        name: String,
+    },
+    /// Two `[[carrier.ignore]]` rows answer to one name.
+    ///
+    /// The message carries both paths, because the repair is a choice between
+    /// two regions and the name alone does not say which two.
+    #[error("carrier ignore name {name} names two rows, {regions}")]
+    DuplicateIgnoreName {
+        /// The row of the second name.
+        at: Location,
+        /// The repeated name.
+        name: String,
+        /// Both rows' paths, the first row's first: `<first> and <second>`.
+        regions: String,
+    },
     /// The file's schema major version is not the one this build reads.
     #[error(
         "adoption data states schema major version {found}, and this build reads major version {expected}"
@@ -354,6 +386,9 @@ impl AdoptionError {
             | AdoptionError::PathSpelling { at, .. }
             | AdoptionError::MalformedBuildDirName { at, .. }
             | AdoptionError::MalformedBuildDirRoot { at, .. }
+            | AdoptionError::UnknownUniverse { at, .. }
+            | AdoptionError::MalformedIgnoreName { at, .. }
+            | AdoptionError::DuplicateIgnoreName { at, .. }
             | AdoptionError::ProfileIncomplete { at, .. }
             | AdoptionError::UngovernedKindNotReserved { at, .. }
             | AdoptionError::ActivationScopeUnknown { at, .. }
@@ -473,6 +508,19 @@ mod tests {
             AdoptionError::MalformedBuildDirRoot {
                 at: row(),
                 root: String::from("android"),
+            },
+            AdoptionError::UnknownUniverse {
+                at: row(),
+                found: String::from("as-written"),
+            },
+            AdoptionError::MalformedIgnoreName {
+                at: row(),
+                name: String::from("Archives"),
+            },
+            AdoptionError::DuplicateIgnoreName {
+                at: row(),
+                name: String::from("archives"),
+                regions: String::from("tmp_dev/a/ and tmp_dev/b/"),
             },
             AdoptionError::ProfileIncomplete {
                 at: row(),

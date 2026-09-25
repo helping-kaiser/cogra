@@ -182,7 +182,8 @@ fn check(a: &Adoption, root: &Path, advisory: bool) -> Result<u8> {
         checked.failing().collect()
     };
     let body = render::report(&listed);
-    let summary = render::summary(&checked.findings, checked.sources.len());
+    let (corpus, notes) = checked.counts(a);
+    let summary = render::counts(corpus, notes);
     checked.timing.record(Phase::Render, rendering.elapsed());
 
     if !body.is_empty() {

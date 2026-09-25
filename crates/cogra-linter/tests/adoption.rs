@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 
 use cogra_linter::{
     Activation, Adoption, AdoptionError, BuildDirExclusion, Enforcement, HeadMatching, Kind,
-    Language, OwnerId, PathPrefix, Prefix, ProfileId, ProfileStatus,
+    Language, OwnerId, PathPrefix, Prefix, ProfileId, ProfileStatus, Universe,
 };
 
 fn corpus_adoption_path() -> PathBuf {
@@ -536,6 +536,96 @@ fn a_build_dir_exclusion_name_carrying_a_slash_is_refused() {
     let error = load(&source).expect_err("a name carrying a slash names no single path component");
     assert!(matches!(error, AdoptionError::MalformedBuildDirName { .. }));
     assert_eq!(row(&source, &error), "name = \"core/build\"");
+}
+
+/// The ruled universe and ignore rows arrive as the file states them, and a
+/// file stating no universe reads as the tracked one.
+/// The universe answer and the ignore rows round-trip, and an absent answer is git-tracked.
+/// ´claim:adoption:the-universe-and-ignore-rows-round-trip´
+#[test]
+fn the_universe_and_the_ignore_rows_round_trip() {
+    let carrier = ruled().carrier;
+    assert_eq!(carrier.universe, Universe::TrackedExclusive);
+    assert_eq!(carrier.universe.as_str(), "tracked-exclusive");
+    assert!(
+        carrier
+            .ignore
+            .iter()
+            .any(|row| &*row.name == "linter-edition-f6b263a"
+                && row.path.as_str() == "tmp_research_files/2026-09-25-linter-f6b263a/unpacked/")
+    );
+    let unstated = load(&document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K))
+        .expect("a file stating no universe");
+    assert_eq!(unstated.carrier.universe, Universe::GitTracked);
+    assert!(unstated.carrier.ignore.is_empty());
+}
+
+/// A universe answer this build does not read is refused where it is
+/// written, rather than read as the default.
+/// An unknown universe answer is refused at load.
+/// ´claim:adoption:an-unknown-universe-is-refused´
+#[test]
+fn an_unknown_universe_answer_is_refused() {
+    let source = document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K).replacen(
+        "[carrier]\n",
+        "[carrier]\nuniverse = \"as-written\"\n",
+        1,
+    );
+    let error = load(&source).expect_err("as-written is not an answer this corpus reads");
+    assert!(matches!(error, AdoptionError::UnknownUniverse { .. }));
+    assert_eq!(row(&source, &error), "universe = \"as-written\"");
+}
+
+/// An ignore row's name is held to the name grammar, and two rows answering
+/// to one name are refused with both paths, the repair being a choice
+/// between two regions. Two differently named rows removing one path are no
+/// defect: removal is a union.
+/// An ignore row's name is well-formed and unique, and its region is not.
+/// ´claim:adoption:an-ignore-name-is-well-formed-and-unique´
+#[test]
+fn an_ignore_name_is_well_formed_and_unique_and_its_region_is_not() {
+    let with = |rows: &str| {
+        format!(
+            "{}\n{rows}",
+            document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+        )
+    };
+    let row_of = |name: &str, path: &str| {
+        format!("[[carrier.ignore]]\nname = \"{name}\"\npath = \"{path}\"\n")
+    };
+
+    let malformed = with(&row_of("Archives", "tmp_dev/a/"));
+    let error = load(&malformed).expect_err("an uppercase name");
+    assert!(matches!(error, AdoptionError::MalformedIgnoreName { .. }));
+    assert_eq!(row(&malformed, &error), "name = \"Archives\"");
+    for bad in ["", "a--b", "-a", "a-", "a_b", "a b"] {
+        let error = load(&with(&row_of(bad, "tmp_dev/a/"))).expect_err(bad);
+        assert!(
+            matches!(error, AdoptionError::MalformedIgnoreName { .. }),
+            "{bad:?}"
+        );
+    }
+
+    let repeated = with(&format!(
+        "{}{}",
+        row_of("archives", "tmp_dev/a/"),
+        row_of("archives", "tmp_dev/b/")
+    ));
+    let error = load(&repeated).expect_err("one name, two rows");
+    assert!(matches!(error, AdoptionError::DuplicateIgnoreName { .. }));
+    let message = error.to_string();
+    assert!(
+        message.contains("tmp_dev/a/") && message.contains("tmp_dev/b/"),
+        "{message}"
+    );
+
+    let overlapping = with(&format!(
+        "{}{}",
+        row_of("archive-one", "tmp_dev/a/"),
+        row_of("archive-two", "tmp_dev/a/")
+    ));
+    let adoption = load(&overlapping).expect("two names over one region");
+    assert!(adoption.carrier.excludes(Path::new("tmp_dev/a/x.md")));
 }
 
 /// An `exclude_build_dirs` `root` spelled as a file holds no directory, so it
