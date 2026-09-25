@@ -1,8 +1,12 @@
 /* Far from the default — more flips than a pill can spell. The kinds still
    show (three collapse to a count of their own) and everything else becomes a
    count of changes: "3 kinds · 4 changes". Which four ways is what the sheet
-   is for. */
-const FAR = { kinds: ["posts", "comments", "chats"], forms: ["photos"], order: "newest", seen: true, also: ["sensitive"] };
+   is for.
+
+   THREE OF THE FOUR SERVED KINDS (readme §13, the V1.0 scope cut,
+   2026-09-25): the filter lists only the kinds V1.0 serves, so the fixture's
+   three are drawn from those four. */
+const FAR = { kinds: ["posts", "comments", "profiles"], forms: ["photos"], order: "newest", seen: true, also: ["sensitive"] };
 
 export function Screen() {
   return (

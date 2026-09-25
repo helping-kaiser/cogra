@@ -566,7 +566,7 @@
       "status": "resolved",
       "steps": [
         "start · Explore · 1 «search field» → ExploreSearch — typing — results as you type",
-        "end · ExploreSearch · 6 «comment result row» → ReplyEntry — the comment in its thread"
+        "end · ExploreSearch · 5 «comment result row» → ReplyEntry — the comment in its thread"
       ],
       "boards": [
         "Explore",
@@ -1503,9 +1503,8 @@
     },
     {
       "name": "follow-a-citation",
-      "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — that node's own surface is still owed.",
-      "status": "blocked by gap",
-      "blockedBy": "the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)",
+      "description": "The reference count, wherever a post is drawn, opens the topics-and-references sheet; a reference row opens what was cited — a cited post opens its own detail view.",
+      "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
         "ApplicantRejected",
@@ -1526,10 +1525,11 @@
       ],
       "steps": [
         "start · «reference count» on 16 boards → RefsSheet",
-        "end · RefsSheet · 2 «reference rows» → gap: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
+        "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
         "RefsSheet",
+        "PostDetail",
         "ApplicantFeed",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -2482,6 +2482,7 @@
     },
     "PostDetail": {
       "flows": [
+        "follow-a-citation",
         "open-a-posts-pictures",
         "open-the-viewer",
         "publish-a-post",
@@ -2496,6 +2497,7 @@
         "who-holds-an-opinion-on-this"
       ],
       "endpoint": [
+        "follow-a-citation",
         "open-a-posts-pictures",
         "open-the-viewer",
         "search-and-open-a-post",
@@ -3086,9 +3088,5 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": [
-    "ExploreSearch/5: the item's surface (not designed)",
-    "ExploreSearch/8: the offer's surface (not designed)",
-    "RefsSheet/2: the referenced node's own surface (profile / post detail / item / campaign / chat — not designed)"
-  ]
+  "gapsOnFlows": []
 }

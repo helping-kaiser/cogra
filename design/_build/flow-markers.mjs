@@ -191,15 +191,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">#tidetables<", tag: "button" },
     { n: 2, find: ">#wellness<", tag: "button" },
   ],
+  /* V1.0's rows only (readme §13, the V1.0 scope cut): posts, a comment, a
+     tag. The rows number in reading order, the bar follows them, and the tag
+     row keeps the last number, where the tag round appended it. */
   ExploreSearch: [
-    { n: 14, find: ">saltmaps<", tag: "button" },
-    ...searchShell("@sol salt", 9),
+    { n: 11, find: ">saltmaps<", tag: "button" },
+    ...searchShell("@sol salt", 6),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
     { n: 4, find: "First try at a rubbing", tag: "button" },
-    { n: 5, find: "Salt-crust rubbing, framed", tag: "button" },
-    { n: 6, find: "The wax-stick ones read like weather charts", tag: "button" },
-    { n: 7, find: "Crust held all the way past the slipway today.", tag: "button" },
-    { n: 8, find: "An offer by @sol", tag: "button" },
+    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -411,26 +411,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="What the search shows"', tag: "button" },
     { n: 5, find: ">Salt maps of the coast road<", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
-    { n: 5, find: ">Salt cellar, hand-carved<", tag: "button" },
-    { n: 5, find: ">Keep the salt flats path open<", tag: "button" },
-    { n: 5, find: ">Salt marsh survey crew<", tag: "button" },
-    { n: 5, find: ">Sea salt collective — autumn run<", tag: "button" },
-    { n: 5, find: "Offer on Salt cellar, hand-carved", tag: "button" },
   ],
+  /* A reference row per V1.0 kind, each its own edge to its own board (readme
+     §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
+     reading order, the scrim last. */
   RefsSheet: [
     { n: 1, find: ">photography<", tag: "button" },
     { n: 1, find: ">coastroad<", tag: "button" },
     { n: 2, find: ">Mira Voss<", tag: "button" },
-    { n: 2, find: ">Salt maps of the coast road<", tag: "button" },
-    { n: 2, find: ">Low tide at six tomorrow — anyone walking the flats?<", tag: "button" },
-    { n: 2, find: ">That stretch after the second bend…<", tag: "button" },
-    { n: 2, find: ">Mark the flooded dip on the coast road<", tag: "button" },
-    { n: 2, find: ">Salt-crust rubbing, framed<", tag: "button" },
-    { n: 2, find: ">Coast road cleanup week<", tag: "button" },
-    { n: 2, find: "Offer on: Salt-crust rubbing, framed", tag: "button" },
-    { n: 2, find: ">Coast walkers<", tag: "button" },
-    { n: 2, find: "Crust held all the way past the slipway today.", tag: "button" },
-    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: ">Salt maps of the coast road<", tag: "button" },
+    { n: 3, find: ">Low tide at six tomorrow — anyone walking the flats?<", tag: "button" },
+    { n: 4, find: ">That stretch after the second bend…<", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   RemoveMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },

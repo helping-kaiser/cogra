@@ -2,7 +2,13 @@
    combine, and the one Order section shared with the feed's filter (item 19:
    `OrderSection`, ruled identical on both). The kind list is `FEED_KINDS` —
    one list, "Profiles" everywhere; here nothing is narrowed, so no chip is
-   selected and the search reads everything. */
+   selected and the search reads everything.
+
+   FOUR KINDS, THE FEED'S FOUR (readme §13, the V1.0 scope cut, 2026-09-25):
+   Posts, Comments, Profiles, Tags. The list is one, so the two filters trim
+   together. The results beneath the sheet are `ExploreSearch`'s first two
+   rows, the post and the tag — search returns no item, offer or message rows
+   in V1.0. */
 export function Screen() {
   return (
     <>
@@ -12,7 +18,7 @@ export function Screen() {
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} />
-        <ReferenceRow kind="item" name="Salt-crust rubbing, framed" rank="4.30" onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} />
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline />
 

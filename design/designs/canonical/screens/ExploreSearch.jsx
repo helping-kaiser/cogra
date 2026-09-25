@@ -1,9 +1,13 @@
 /* Explore, searching — an @-scoped query. The band has given way to the field;
    ONE trigger reads the view back in words (the FeedFilter idiom) beside the
    screen's one "?"; ranked rows carry the graph glyph, the seam marks where
-   ranking ends, and the tail carries ages. The comment, the tag and the offer
-   are INDIRECT hits — found through their target's name, said on the second
+   ranking ends, and the tail carries ages. The comment and the tag are
+   INDIRECT hits — found through their target's name, said on the second
    line.
+
+   THE ROWS ARE V1.0'S KINDS (readme §13, the V1.0 scope cut, 2026-09-25):
+   search returns no item, offer or message rows in V1.0, so every row here
+   is a post, a comment or a tag, and each opens a drawn board.
 
    THE TAG IS A RESULT KIND (readme §13, the tag round). `FEED_KINDS` has
    admitted it since the filter's one list, and Hashtag `name` is an indexed
@@ -33,12 +37,9 @@ export function Screen() {
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} />
-        <ReferenceRow kind="item" name="Salt-crust rubbing, framed" rank="4.30" onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} />
         <ReferenceRow kind="comment" name="The wax-stick ones read like weather charts…" sub="on Salt flats at first light" rank="2.10" onOpen={() => {}} />
-        <ReferenceRow kind="message" name="Crust held all the way past the slipway today." sub="in Coast walkers" rank="1.80" onOpen={() => {}} />
         <Seam />
-        <ReferenceRow kind="offer" name="An offer by @sol" sub="on Salt shaker, glazed ceramic" value="2d" onOpen={() => {}} />
         <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} />
       </div>
       <BottomNav active="search" slots={ALL_SLOTS} inline />
