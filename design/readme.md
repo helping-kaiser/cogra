@@ -6838,67 +6838,6 @@ graph describes. It gets its edges when it migrates.
 
 ---
 
-## 15. Index
-
-**Root**
-- `styles.css` — the entry point consumers link. `@import` lines only.
-- `readme.md` — this file.
-- `backlog.md` — the ordered queue sessions pull from.
-- `SKILL.md` — the Agent Skills wrapper.
-- `thumbnail.html` — the homepage tile.
-- `_build/bundle.mjs` — regenerates `_ds_bundle.js` (which the `@dsCard`
-  HTMLs load) from the component sources after any `.jsx` edit:
-  `npm install` once in `_build/`, then `node _build/bundle.mjs`.
-  `_ds_manifest.json` is the claude.ai Design app's own metadata and is
-  refreshed only by that app, on an explicit sync-back.
-- `_build/trees.mjs` — the generated trees, named once (§13, *The
-  post-MVP separation*). The stages below read this list; the ideation
-  canvases are deliberately not on it.
-- `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
-  `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
-  `check-readouts.mjs`, `report-summaries.mjs` — the board pipeline
-  (§13, *Canvas pages and flows*): render the screens, stamp
-  the flow numbers, generate the maps, seed the per-canvas manifests
-  (§14), gate the result. Run all seven after any
-  screen, component, or graph.json edit. A screen whose state is not a
-  portrait phone exports `FRAME` and the shell builds that artboard
-  instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
-  the gate's user-flow half (§13, *The user-flow layer*): it resolves
-  `flows.json` and blesses `flows.resolved.json`.
-
-**`tokens/`** — `fonts.css`, `colors.css`, `typography.css`,
-`shape.css`, `spacing.css`, `motion.css`, `transitions.css`,
-`semantic.css`, `states.css`, `base.css`.
-
-**`guidelines/`** — foundation specimen cards (Colors, Type, Spacing,
-Shape, Motion, Brand, Stance) plus `stance-control.md`, `copy-voice.md`,
-and `iconography.md` for the deeper dives.
-
-**`assets/`** — `cogra-mark.svg` (source of truth), `icon.svg`,
-`apple-icon.png`, `favicon.ico`, `fonts/figtree.ttf`,
-`fonts/figtree-ofl.txt`, `icons/*.svg` (every exported glyph),
-`photos/*.jpg` (ten real photographs at true ratios, mock material — see
-§4, *Imagery*).
-
-**`components/`** — see §7: `core/`, `content/`, `forms/`, `navigation/`,
-`compose/`, `media/`, `wallet/`, `people/`, `states/`, `honesty/`,
-`stance/`, `proposed/`.
-
-**`designs/canonical/`** — the drawn app itself: the rendered
-`.dc.html` boards, `canvas.json` (the master layout: coordinates,
-pages, annotations), `graph.json` and the flow layer beside it (§13),
-`canvases.json` + `canvases/<id>/` (the canvas map and per-canvas seed
-manifests, §14), and `img/` (the photographs the boards carry).
-
-**`designs/postmvp/`** — the same shape, one tree over: rounds drawn
-before their slice is the work, reviewed on the fifth canvas, and moved
-into canonical when they become current (§13, *The post-MVP
-separation*). Its own `screens/`, `_shared.jsx`, `canvas.json`,
-`graph.json`, `canvases.json` and `img/`; the same `components/`. Its
-photographs are its own copies — the budgets are per-canvas (§14), and
-a tree that reached into another's `img/` would seed a canvas from two
-places.
-
 ### The V1.0 scope cut — 2026-09-25
 
 The verdict round of the V1.0 audit (the full trail, findings and
@@ -6966,3 +6905,64 @@ to compete got their chooser.
   round still owes three rulings: where a staged act is visible
   meanwhile, when it signs, and its fate when an application closes
   unapproved.
+
+## 15. Index
+
+**Root**
+- `styles.css` — the entry point consumers link. `@import` lines only.
+- `readme.md` — this file.
+- `backlog.md` — the ordered queue sessions pull from.
+- `SKILL.md` — the Agent Skills wrapper.
+- `thumbnail.html` — the homepage tile.
+- `_build/bundle.mjs` — regenerates `_ds_bundle.js` (which the `@dsCard`
+  HTMLs load) from the component sources after any `.jsx` edit:
+  `npm install` once in `_build/`, then `node _build/bundle.mjs`.
+  `_ds_manifest.json` is the claude.ai Design app's own metadata and is
+  refreshed only by that app, on an explicit sync-back.
+- `_build/trees.mjs` — the generated trees, named once (§13, *The
+  post-MVP separation*). The stages below read this list; the ideation
+  canvases are deliberately not on it.
+- `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
+  `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
+  `check-readouts.mjs`, `report-summaries.mjs` — the board pipeline
+  (§13, *Canvas pages and flows*): render the screens, stamp
+  the flow numbers, generate the maps, seed the per-canvas manifests
+  (§14), gate the result. Run all seven after any
+  screen, component, or graph.json edit. A screen whose state is not a
+  portrait phone exports `FRAME` and the shell builds that artboard
+  instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
+  the gate's user-flow half (§13, *The user-flow layer*): it resolves
+  `flows.json` and blesses `flows.resolved.json`.
+
+**`tokens/`** — `fonts.css`, `colors.css`, `typography.css`,
+`shape.css`, `spacing.css`, `motion.css`, `transitions.css`,
+`semantic.css`, `states.css`, `base.css`.
+
+**`guidelines/`** — foundation specimen cards (Colors, Type, Spacing,
+Shape, Motion, Brand, Stance) plus `stance-control.md`, `copy-voice.md`,
+and `iconography.md` for the deeper dives.
+
+**`assets/`** — `cogra-mark.svg` (source of truth), `icon.svg`,
+`apple-icon.png`, `favicon.ico`, `fonts/figtree.ttf`,
+`fonts/figtree-ofl.txt`, `icons/*.svg` (every exported glyph),
+`photos/*.jpg` (ten real photographs at true ratios, mock material — see
+§4, *Imagery*).
+
+**`components/`** — see §7: `core/`, `content/`, `forms/`, `navigation/`,
+`compose/`, `media/`, `wallet/`, `people/`, `states/`, `honesty/`,
+`stance/`, `proposed/`.
+
+**`designs/canonical/`** — the drawn app itself: the rendered
+`.dc.html` boards, `canvas.json` (the master layout: coordinates,
+pages, annotations), `graph.json` and the flow layer beside it (§13),
+`canvases.json` + `canvases/<id>/` (the canvas map and per-canvas seed
+manifests, §14), and `img/` (the photographs the boards carry).
+
+**`designs/postmvp/`** — the same shape, one tree over: rounds drawn
+before their slice is the work, reviewed on the fifth canvas, and moved
+into canonical when they become current (§13, *The post-MVP
+separation*). Its own `screens/`, `_shared.jsx`, `canvas.json`,
+`graph.json`, `canvases.json` and `img/`; the same `components/`. Its
+photographs are its own copies — the budgets are per-canvas (§14), and
+a tree that reached into another's `img/` would seed a canvas from two
+places.

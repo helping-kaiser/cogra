@@ -3537,7 +3537,8 @@ coming-soon door.
 The application queue, in order:
 
 1. **This records PR** — the §13 entry and this item.
-2. **The wallet move + the coming-soon master**: the eleven wallet
+2. **The wallet move + the coming-soon master** *(landed with this
+   PR)*: the eleven wallet
    boards leave canonical for the post-MVP domain; one coming-soon
    card master (cogra wash, headline + one line) replaces
    `ChatsComingSoon`'s bare text and faces the wallet slot's door;
