@@ -230,7 +230,14 @@ name = "build"
 # working notes hold. Each is a whole foreign corpus under its own label
 # discipline, and walked as NOTES it read as some 11,400 findings against
 # ours on a machine carrying the notes. Removing them keeps the notes'
-# own count about the notes. A new unpacked archive needs a row here.
+# own count about the notes. The convention: a new archive unpacks
+# under tmp_research_files/unpacked-archives/<name>/, which the one
+# row below removes — no new row per archive. The dated rows cover
+# the archives unpacked before the convention and stay literal.
+[[carrier.ignore]]
+name = "unpacked-archives-convention"
+path = "tmp_research_files/unpacked-archives/"
+
 [[carrier.ignore]]
 name = "linter-edition-f6b263a"
 path = "tmp_research_files/2026-09-25-linter-f6b263a/unpacked/"
