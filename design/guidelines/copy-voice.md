@@ -211,9 +211,10 @@ title, at most two short paragraphs, Close. The texts, verbatim
 - **How signing works** (the seal, post and reply): Each piece of a
   post — the post itself, every tag, every citation — is signed on
   its own, in your name. They sign together: all of them land, or
-  none does. / You don't pay for these — a shared community pool
-  covers members' signings. The pool is real and finite, so each one
-  still counts.
+  none does. / Each signing is paid for — the cost is real, so each
+  one still counts. *(Payer-neutral by the V1.0 scope cut, jakob
+  2026-09-25: no copy names who pays until a pool that pays and
+  members who pay past it exist.)*
 - **The license**: Terms for anyone who reuses what you publish —
   credit, and a public record of use. They are not a statement about
   how you made it. / The license is set when the post is first signed
@@ -263,8 +264,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   both reading modes, the digits only when the reader has asked for
   them (readme §13), and a screen-reader twin says both either way.*
 - **Editing**: An edit signs a full new version on top; earlier
-  versions stay public under "Edited" unless you remove them. An edit
-  never bumps the post as new. / Tag and citation changes ride the same signing,
+  versions stay public under "Edited". An edit
+  never bumps it as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
 - **Citing**: A citation is its own signed action and carries your
   opinion of what you cite. You can cite anything on CoGra — start
@@ -1219,7 +1220,7 @@ Heading `Delete account`; then `This takes your name off CoGra. What you
 signed stays on the graph, because it is other people's record as much
 as yours — what goes is everything that says it was you.`
 
-- `What goes` — `Your profile — display name, bio, picture and cover.` ·
+- `What goes` — `Your profile — display name, bio and picture.` ·
   `The link between you and this account. Nothing left here points back
   to you.` · `Your sessions, and what this account kept for you alone:
   saved items, hidden accounts, what you have read.`
@@ -1231,7 +1232,7 @@ as yours — what goes is everything that says it was you.`
 
 **The content sweep is the reader's own sentence, in the first person.**
 `Also remove what I posted`, with `The words and pictures go out of your
-posts, comments and messages, each leaving its mark. Leave this off and
+posts and comments, each leaving its mark. Leave this off and
 they stay as you wrote them.` under it. *Also* is what makes it an
 addition to a decision already made rather than a second question.
 
