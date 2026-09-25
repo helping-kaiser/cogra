@@ -242,7 +242,9 @@ fn regenerate(a: &Adoption, root: &Path, owner: Option<&str>, dry_run: bool) -> 
 /// (´dec:lint:regenerate-precondition´).
 ///
 /// The disagreeing findings are the carrier module's: a configured root the
-/// walk found nothing under, and a tree or file it could not read. Under any
+/// walk found nothing under, a tree or file it could not read, a file type
+/// the catalogue does not answer for, and a checkout that disagrees with the
+/// index — an untracked path nothing declares, a tracked path gone. Under any
 /// of them the registers would be generated from a carrier the run could not
 /// account for, and a writer that proceeded would record as current a
 /// conclusion drawn from a question the corpus had not answered. Every other
