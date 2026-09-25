@@ -23,12 +23,16 @@
    chats door's shape.
 
    ONE DOOR FOR EVERY READER STATE (§13: "it serves every reader state with one
-   face"). A member, a member whose key is elsewhere and an applicant all land
-   here and meet the same card — nothing on a door depends on who is looking.
-   What the reader state still decides is where the bar and the band go next,
-   which is the graph's `case` work, not a second drawing. A guest's wallet tap
-   gates to `GuestGate` instead, as a guest's chats tap already does (§13, the
-   shell round): a guest has no wallet to come back to.
+   face"). A member, a member whose key is elsewhere, an applicant — and a
+   guest (jakob 2026-09-25) — all land here and meet the same card: a door
+   promises a feature, not the reader's own data, so there is nothing to gate,
+   which is where it differs from the chats icon (a guest has no chats to come
+   back to; a coming-soon wallet is the same news for everyone). A rejected
+   applicant is an applicant here — a created account that still needs to be
+   vouched in (jakob 2026-09-25). What the reader state still decides is where
+   the bar and the band go next, which is the graph's `case` work, not a
+   second drawing. The line `Your earnings will be here.` is blessed
+   (copy-voice, the coming-soon surfaces; jakob 2026-09-25).
 
    NO ACTION, so no "keep browsing" (the audit's F38 finding). A door has
    nothing a reader can do in it, and the bar is already the way on; were an
