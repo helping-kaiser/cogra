@@ -6897,3 +6897,71 @@ separation*). Its own `screens/`, `_shared.jsx`, `canvas.json`,
 photographs are its own copies — the budgets are per-canvas (§14), and
 a tree that reached into another's `img/` would seed a canvas from two
 places.
+
+### The V1.0 scope cut — 2026-09-25
+
+The verdict round of the V1.0 audit (the full trail, findings and
+candidates list live in the dev-state audit directory,
+`2026-09-24-mvp-audit/`): every affordance canonical drew beyond what
+the first release serves got a ruling, and the two precedents that used
+to compete got their chooser.
+
+- **A door belongs to a slot, never to a list** (jakob 2026-09-25). The
+  staging rule (§2) and the coming-soon door (`ChatsComingSoon`, the Sky
+  card) were two answers with no rule picking between them. Now there is
+  one: a **slot or icon whose absence would deform the shell keeps its
+  place and opens a coming-soon door** — the bottom bar carries all five
+  icons because a thinner bar reads wrong and re-adding one later costs
+  every reader the muscle memory twice — while a **kind list or row set
+  follows the staging rule** and shows only served kinds, never a dead
+  chip. Hints of coming features are deliberate and few; the app is not
+  crowded with placeholders.
+- **The coming-soon door is a drawn anatomy, not bare words** (jakob
+  2026-09-25): a card on the cogra wash — headline and one line — so the
+  door reads intentional rather than broken. One master; both the chats
+  door and the wallet door wear it, and it serves every reader state
+  with one face.
+- **The wallet slot opens the door in V1.0** (jakob 2026-09-24/25). The
+  eleven wallet boards move to the post-MVP domain; the slot stays.
+- **The feed and search filters show four kinds: Posts, Comments,
+  Profiles, Tags** — the kinds V1.0 serves. The six chips beyond them
+  (chats, messages, proposals, items, campaigns, offers) leave both
+  filters. The comment-in-feed, profile-in-feed and tag-in-feed cards
+  are V1.0 surfaces and get drawn in rounds of their own — the chips
+  are right, the cards are owed.
+- **Search returns no item, offer or message rows in V1.0**; those rows
+  leave `ExploreSearch` with their kinds.
+- **A V1.0 reference points at a person, a post or a comment** — the
+  contract's union, read as the ruling. `RefsSheet` and
+  `ReferencePicker` carry those three kinds only, each row wired to its
+  own board; the picker's footnote drops `#tag` and messages.
+- **V1.0 passes no history door** (jakob 2026-09-25): the `Edited`
+  marker is a plain marker, the stance readout carries no built-tail,
+  and a `StanceRow` value opens nothing — a control that answers
+  nothing reads buggy. The masters' door anatomies leave canonical with
+  the change-histories round and return when it ships.
+- **Money words are payer-neutral** (jakob 2026-09-25): copy may say a
+  signed thing is paid for, and no V1.0 copy names who pays — neither
+  the member nor a pool — until a pool that pays and members who pay
+  past it exist. The signing help's pool sentence gets its payer-neutral
+  rewording in the copy round.
+- **The deletion page names what exists**: no "cover" (the profile has
+  none), no "messages" (chats are not in V1.0).
+- **The editing help promises no version removal**: V1.0 removal
+  targets the whole post, and the removal clause returns with the
+  histories round.
+- **Removing your own comment is V1.0** (jakob 2026-09-25): the comment
+  menu carries Remove, the confirm speaks at comment scale, and a
+  thread draws the removed comment's mark — the erasure half of the
+  roadmap's slice 8, mandated at launch.
+- **`Still settling` joins the filter's "Also show", default on** — the
+  landed-only control the slice-3 rework promises.
+- **Topic follow ships whole** — the tag page's row, `YourTopics` and
+  Explore's door are slice-3 sequencing inside V1.0, not scope.
+- **The applicant's once-each staging stands** (jakob 2026-09-25). The
+  drawn mechanism — a post, an opinion, a topic staged before approval,
+  waiting with the application — is the product's ruling; About,
+  auth.md and the contract get corrected to describe it. The mechanism
+  round still owes three rulings: where a staged act is visible
+  meanwhile, when it signs, and its fate when an application closes
+  unapproved.

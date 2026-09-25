@@ -3522,3 +3522,48 @@ frame 0 — web's preview extraction changes to match the stored
 still. Recorded in readme §13 (the stored first frame) and the
 `MediaAttachment` docblock; the web change is the implementation
 session's, relayed as a contract.
+
+### 107 · The V1.0 audit's scope cut — the application queue · *design + system* · **verdicts ruled 2026-09-25, application in progress**
+
+The V1.0 audit (2026-09-24, seven lanes over all 218 canonical
+boards plus the docs and an external UX rubric; trail in dev-state
+`cogra/tmp_dev/2026-09-24-mvp-audit/`) produced a candidates list of
+everything canonical draws that the first release may not serve.
+jakob ruled all fifteen candidates 2026-09-25; readme §13 *The V1.0
+scope cut* carries the rulings, including the door-belongs-to-a-slot
+principle that now chooses between the staging rule and the
+coming-soon door.
+
+The application queue, in order:
+
+1. **This records PR** — the §13 entry and this item.
+2. **The wallet move + the coming-soon master**: the eleven wallet
+   boards leave canonical for the post-MVP domain; one coming-soon
+   card master (cogra wash, headline + one line) replaces
+   `ChatsComingSoon`'s bare text and faces the wallet slot's door;
+   ~48 nav edges rewire; wallet strings and the CGT help leave
+   V1.0 copy.
+3. **The kind trims**: feed + search filters down to the four
+   served kinds; item/offer/message rows leave `ExploreSearch`;
+   `RefsSheet` and `ReferencePicker` down to person/post/comment,
+   each row wired; the masters' history doors leave canonical.
+4. **The copy round**: deletion page ("cover", "messages" out),
+   editing help (removal clause out, scale-neutral rewording),
+   payer-neutral signing copy — new strings to copy-voice for
+   blessing.
+5. **New drawings**: comment removal at comment scale (menu row,
+   confirm, the removed comment's mark in a thread); the `Still
+   settling` chip under "Also show".
+6. **The three feed cards** (comment, profile, tag in the feed) —
+   briefed drawing rounds with canvas iteration, sequenced after
+   the mechanical work.
+7. **The post-MVP split**: the post-MVP domain restructures into
+   future features vs future updates of existing features —
+   proposal to jakob before any move.
+8. **The applicant mechanism round** (once-each staging kept):
+   About/auth.md/contract corrections plus the three owed rulings
+   (visibility of a staged act, its signing moment, its fate on an
+   unapproved close).
+
+The audit's master findings (325 entries, 15 clusters) queue behind
+this item's work as their own review rounds with jakob.
