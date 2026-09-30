@@ -343,8 +343,11 @@ outlined button). Nothing carries a 2px border.
 ### Motion
 
 **M3 standard easing and durations. Motion clarifies where something
-came from; it never performs.** Reduced-motion preferences are honoured
-on both platforms. The two motions that exist in the product:
+came from; it never performs.** **Reduced motion is a house quality
+bar** (jakob, the key-loss round): WCAG places it at AAA, and the house
+holds every surface to it anyway — on both platforms, under the OS's
+own preference, every motion either stops travelling and fading or
+does not run. The two motions that exist in the product:
 
 - the collapsing top's 200ms `translateY(-110%)` exit — it hides only
   once half its own slot has scrolled past, and returns only after about
@@ -392,7 +395,10 @@ rule covers all three button variants:
   ground and on the loud surface alike, in both themes. Nothing removes it.
 - **Disabled** — **38%** opacity on the whole control (Material's value,
   and the one place the AA guarantee is waived by convention: a disabled
-  control is not an available target).
+  control is not an available target). **A submit that cannot go yet is
+  visible-but-disabled, with the reason on screen** (jakob, the key-loss
+  round): never hidden, and never left live only to refuse on press — the
+  reader sees the commitment exists and reads what it is waiting for.
 - **Selected** — colour only: the bottom bar's active slot moves from
   `onSurfaceVariant` to `onSurface` and to the filled icon cut; the
   chronicle filter swaps an outlined button for a filled one. No
@@ -401,6 +407,17 @@ rule covers all three button variants:
 Every pressable component carries `class="cg-state cg-focus"`, so
 anything a consumer builds gets the same behaviour by adding those two
 classes.
+
+### Loading
+
+**M3's ladder, and nothing else** (jakob, the key-loss round). A wait
+under **200ms** shows nothing — an indicator that flashes is noise. From
+200ms to **5s** the wait is indeterminate: `LoadingState` stands in the
+slot the content will take, so nothing moves when it arrives. Past 5s
+the wait is determinate — progress that says how far along it is. The
+**pull-to-refresh spinner** is the one named exception: it answers the
+gesture at once, because the pull itself asked for it.
+
 ### Imagery
 
 **An avatar is the actor's picture where they have one**, and a
@@ -807,7 +824,8 @@ Nothing vanishes silently, and none of these use `error` colouring.
 
 Part of the bar from day one. Every `on`-pair meets AA. Colour never
 carries meaning alone — stance is always accompanied by words. 48px
-minimum targets. Every icon-only control is labelled. **Every drag
+minimum targets — the platform bar (48dp, 44pt), which the house holds
+over WCAG AA's 24px floor. Every icon-only control is labelled. **Every drag
 gesture has a non-drag equivalent.** Both themes are designed.
 
 ---
