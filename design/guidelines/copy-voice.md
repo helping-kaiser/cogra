@@ -295,9 +295,9 @@ title, at most two short paragraphs, Close. The texts, verbatim
   change to it stays on your public record.
 - **Changing your picture** (the profile-picture seal): Your profile
   is a public record, and changes to it are signed actions in your
-  name — the picture changes the moment yours lands. / The community
-  pool covers the signing, like your posts. The record that you
-  changed it stays, like every signed action.
+  name — the picture changes the moment yours lands. / The signing is
+  paid for, like your posts. The record that you changed it stays,
+  like every signed action.
 - **The filter** (the feed's and search's filter sheets): What you
   let in, and in what order — the kinds combine freely, ranked or
   newest is one choice, and what you've already seen stays out
