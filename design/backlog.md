@@ -3592,7 +3592,7 @@ wallet bullet left V1.0 the same day (the page names what exists);
 About's money section stays by the item-74 ruling — About is the
 fuller version, future features included.
 
-### 109 · The ? contents note lags copy-voice · *system + tooling* · **filed 2026-09-25**
+### 109 · The ? contents note lags copy-voice · *system + tooling* · **done 2026-09-30**
 
 The canvas note "THE ? CONTENTS" claims to carry the ? dialogs'
 copy verbatim, but it drifts: the scope-cut close-out found and
@@ -3605,3 +3605,62 @@ your name" vs the blessed "signed on its own, in your name";
 true mirror of the blessed strings; (2) better, make the gate
 check the mirror — a lint obligation that diffs the note's
 sections against copy-voice would end the drift class for good.
+
+1. **The mirror** *(landed with the behavior-home PR, 2026-09-30)*:
+   every section of canonical's `help-contents` carries its
+   dialog's copy-voice text — the seal's dialog under its drawn
+   title, *How signing works*, and the vouch-back pad's *Your first
+   opinion*, which no note carried, joins. Copy-voice's own picture
+   seal still named the pool; its payer-neutral line is the note's,
+   per the scope cut's money-words ruling.
+2. **The gate** *(landed with the same PR)*: `check-help-notes.mjs`,
+   a design-pipeline stage, diffs every section of both "? contents"
+   notes (canonical and the post-MVP wallet's) against the
+   copy-voice dialog it names, and fails any dialog no note carries;
+   `--write` rebuilds the notes from copy-voice. It rides the
+   pipeline beside `check-behavior`, the behavior sidecars' grammar
+   lint.
+
+### 110 · The already-published marker has no board · *design* · **filed 2026-09-30**
+
+The duplicate-media ruling (jakob 2026-09-30) is written and blessed
+— copy-voice, *The already-published marker*, and the lines in
+`designs/canonical/behavior/ComposeDetails.md` — but undrawn: no
+Details board wears the marker line under its media row or its
+tappable form. A briefed drawing round for jakob: the line in the
+honesty-marker ink under `PickedRow`, its door state, which Details
+boards carry it (the rule covers any media kind, so
+`ComposeDetailsVideo`'s media row is in reach too), and the door's
+accessible name, which copy-voice does not carry yet. Nothing here
+gates the implementation session: the lines and the copy are the
+contract meanwhile.
+
+### 111 · The behavior lint's node check · *tooling* · **filed 2026-09-30**
+
+`check-behavior.mjs` checks the sidecars' syntax only. The
+grammar's element rule — a full data-node path wherever a node
+exists, plain words only for concepts with none — needs the node-ID
+registry, so it activates per screen as the registry lands: once a
+screen's IDs are registered, its sidecar's plain words for those
+elements become node paths in the same change, and the check holds
+that screen's lines to the rule from then on. The calibration
+screens first (`Feed`, `PostDetail`, `ComposeDetails` — the
+calibration-ID PR), then each round of the ID sweep. The grammar and
+the activation plan are the design ⇄ impl seam's entries 002 and 004
+(dev-state `cogra/tmp_dev/design-impl-seam.md`).
+
+### 112 · Copy-voice residues of the behavior home · *copy* · **filed 2026-09-30**
+
+Two threads the behavior-home round (#24) surfaced and jakob's
+merge did not close. First: *Ages* still reads as if every
+timestamp follows the ladder and then `06.09.2024`, while *The
+already-published marker* now uses the chronicle's dateline form
+("12 September") by jakob's ruling — *Ages* should name the
+marker as the exception, or the general rule should say which
+surfaces the dateline form owns. Second: *Describing pictures*
+carries a "flagged for review" annotation (2026-09-02) on its
+video sentence, and the rebuilt "? contents" note now mirrors
+that sentence verbatim — jakob blesses the sentence and the
+annotation goes, or he rewords it and the note follows through
+`check-help-notes --write`. Both are one-line rulings; fold them
+into the next copy round's brief.

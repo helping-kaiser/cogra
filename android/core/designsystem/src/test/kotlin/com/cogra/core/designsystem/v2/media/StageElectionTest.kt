@@ -112,6 +112,36 @@ class StageElectionTest {
         assertThat(StageElection.elect(INCUMBENT, emptyMap())).isNull()
     }
 
+    // (e) The hard top re-elects — the feed's and the thread's (jakob 2026-09-30).
+
+    /** The found bug's shape: both clips whole at the top, the lower one still on stage. */
+    @Test
+    fun landingAtTheHardTopHandsTheStageToTheFirstQualifyingClipOverAQualifyingIncumbent() {
+        val places = mapOf(ABOVE to at(top = 0f, visible = 1f), INCUMBENT to at(top = 400f, visible = 1f))
+
+        assertThat(StageElection.elect(INCUMBENT, places, landedAtHardTop = true)).isEqualTo(ABOVE)
+        // Resting there without landing again is plain incumbency.
+        assertThat(StageElection.elect(INCUMBENT, places, landedAtHardTop = false)).isEqualTo(INCUMBENT)
+    }
+
+    @Test
+    fun landingAtTheHardTopPassesOverAVeiledFirstClip() {
+        val places = mapOf(
+            ABOVE to at(top = 0f, visible = 1f, veiled = true),
+            INCUMBENT to at(top = 400f, visible = 1f),
+            BELOW to at(top = 800f, visible = 0.2f),
+        )
+
+        assertThat(StageElection.elect(INCUMBENT, places, landedAtHardTop = true)).isEqualTo(INCUMBENT)
+    }
+
+    @Test
+    fun landingAtTheHardTopWithNothingQualifyingLeavesTheStageEmpty() {
+        val places = mapOf(ABOVE to at(top = 0f, visible = 0.5f), BELOW to at(top = 600f, visible = 0.1f))
+
+        assertThat(StageElection.elect(INCUMBENT, places, landedAtHardTop = true)).isNull()
+    }
+
     // The veil (jakob 2026-09-24, backlog item 103): a veiled clip is out of
     // the rotation. The unveil is an eligibility change, not a re-election
     // (jakob 2026-09-24, correcting a first build that decided the stage from

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE media_attachments j\n        SET state       = 'merged',\n            merged_into = held.id,\n            lease_until = NULL\n        FROM (\n            SELECT id FROM media_attachments\n            WHERE author_id = $2 AND digest = $3 AND state = 'ready'\n        ) held\n        WHERE j.id = $1 AND j.state = 'processing'\n        RETURNING held.id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5aa42a7cd6a55c11e87486639b67f19c030d9766add79b75f14c9802e785ae7c"
+}
