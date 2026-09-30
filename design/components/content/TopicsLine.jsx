@@ -114,10 +114,12 @@ function visibleChips(topics, references) {
   return [];
 }
 
-export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferences }) {
+export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferences, node }) {
   if (topics.length === 0 && references === 0) return null;
   const visible = visibleChips(topics, references);
   const counts = countsText(topics.length - visible.length, references);
+  const tag = node && "tag";
+  const countsNode = node && "counts";
 
   if (onOpen) {
     return (
@@ -136,19 +138,24 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
           fontFamily: "var(--font-sans)",
           textAlign: "left",
         }}
+        data-node={node}
       >
         {visible.map((topic) => (
-          <TopicChip key={topic} topic={topic} inert style={CHIP_STYLE} />
+          <TopicChip key={topic} topic={topic} inert style={CHIP_STYLE} node={tag} nodeKey={tag && topic.replace(/^#/, "")} />
         ))}
-        {counts && <span style={COUNT_STYLE}>{counts}</span>}
+        {counts && (
+          <span style={COUNT_STYLE} data-node={countsNode}>
+            {counts}
+          </span>
+        )}
       </button>
     );
   }
 
   return (
-    <div style={LINE}>
+    <div style={LINE} data-node={node}>
       {visible.map((topic) => (
-        <TopicChip key={topic} topic={topic} style={CHIP_STYLE} />
+        <TopicChip key={topic} topic={topic} style={CHIP_STYLE} node={tag} nodeKey={tag && topic.replace(/^#/, "")} />
       ))}
       {counts &&
         (onOpenReferences ? (
@@ -157,11 +164,14 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
             onClick={onOpenReferences}
             className="cg-state cg-focus"
             style={{ flex: "none", border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)" }}
+            data-node={countsNode}
           >
             <span style={COUNT_STYLE}>{counts}</span>
           </button>
         ) : (
-          <span style={COUNT_STYLE}>{counts}</span>
+          <span style={COUNT_STYLE} data-node={countsNode}>
+            {counts}
+          </span>
         ))}
     </div>
   );

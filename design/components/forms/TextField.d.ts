@@ -13,6 +13,8 @@ export interface FieldLabelProps {
   corner?: string;
   /** Truthy puts the word in `--error`; `TextField` passes its own message. */
   error?: string;
+  /** The data-node name its placer gives the label's name (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `corner`. */
+  node?: string;
 }
 
 export declare function FieldLabel(props: FieldLabelProps): JSX.Element;
@@ -88,6 +90,8 @@ export interface TextFieldProps {
   cap?: number;
   /** The whole length, where the field is drawn as the tail of a longer body. */
   used?: number;
+  /** The data-node name its placer gives this field (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `corner`, `input`. */
+  node?: string;
 }
 
 export declare function TextField(props: TextFieldProps): JSX.Element;

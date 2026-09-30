@@ -15,6 +15,8 @@ export interface ActorChipProps {
    * rather than invented. `displayName`, `handle` and `avatarSrc` are ignored.
    */
   redacted?: boolean;
+  /** The data-node name its placer gives this chip (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `avatar`, `name`, `handle`. */
+  node?: string;
 }
 
 export declare function ActorChip(props: ActorChipProps): JSX.Element;
@@ -45,6 +47,8 @@ export interface MonogramAvatarProps {
   /** A redacted actor: the disc reserved and empty — there is no name to take
    *  a monogram from, and a glyph would be imagery with no source. */
   redacted?: boolean;
+  /** The data-node name its placer gives this avatar (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function MonogramAvatar(props: MonogramAvatarProps): JSX.Element;

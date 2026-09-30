@@ -18,6 +18,8 @@ export interface ButtonProps {
   /** Extra classes; the state-layer and focus classes are applied for you. */
   className?: string;
   style?: React.CSSProperties;
+  /** The data-node name its placer gives this button (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function Button(props: ButtonProps): JSX.Element;
@@ -44,6 +46,8 @@ export interface InlineActionProps {
   /** Extra classes; the state-layer and focus classes are applied for you. */
   className?: string;
   style?: React.CSSProperties;
+  /** The data-node name its placer gives this action (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function InlineAction(props: InlineActionProps): JSX.Element;

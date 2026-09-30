@@ -44,6 +44,10 @@ export interface MediaThumbProps {
   /** Renders the X, top-right. Hidden on a failed tile (its ways out are in the line). */
   onRemove?: () => void;
   removeLabel?: string;
+  /** The data-node name its placer gives this thumbnail (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
+  /** The thumbnail's content key — its position in the set, from 1. */
+  nodeKey?: string;
 }
 
 export declare function MediaThumb(props: MediaThumbProps): JSX.Element;

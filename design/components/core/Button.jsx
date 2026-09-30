@@ -122,6 +122,7 @@ export function InlineAction({
   ariaLabel,
   className,
   style,
+  node,
 }) {
   const rung = INLINE_SIZES[size] ?? INLINE_SIZES.lg;
   return (
@@ -147,6 +148,7 @@ export function InlineAction({
         flex: size === "sm" ? undefined : "none",
         ...style,
       }}
+      data-node={node}
     >
       {children}
     </button>
@@ -164,6 +166,7 @@ export function Button({
   ariaLabel,
   className,
   style,
+  node,
 }) {
   return (
     <button
@@ -173,6 +176,7 @@ export function Button({
       aria-label={ariaLabel}
       className={className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS}
       style={{ ...buttonStyle({ variant, size, selfStart, disabled }), ...style }}
+      data-node={node}
     >
       {children}
     </button>

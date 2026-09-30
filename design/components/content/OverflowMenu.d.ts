@@ -29,6 +29,8 @@ export interface OverflowMenuProps {
    * target kept through `cg-hit`.
    */
   placement?: "header" | "row";
+  /** The data-node name its placer gives the ⋮ button (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function OverflowMenu(props: OverflowMenuProps): JSX.Element | null;

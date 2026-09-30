@@ -175,7 +175,7 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_C
 
 /* The worded trigger alone — for surfaces that own their sheet (search draws
    its own, with its own kind semantics) but must wear the same pill. */
-export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "What this shows" }) {
+export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "What this shows", node }) {
   return (
     <button
       type="button"
@@ -203,6 +203,7 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
         overflow: "hidden",
         textOverflow: "ellipsis",
       }}
+      data-node={node}
     >
       {reading}
     </button>
@@ -329,12 +330,12 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
   );
 }
 
-export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics }) {
+export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics, node }) {
   const [open, setOpen] = React.useState(defaultOpen);
 
   return (
     <>
-      <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} />
+      <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} node={node} />
       <FeedFilterSheet
         value={value}
         onChange={onChange}

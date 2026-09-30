@@ -14,6 +14,8 @@ export interface PickedRowProps {
   /** Opens the Show all sheet. */
   onManage?: () => void;
   manageLabel?: string;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `thumb` per picture, keyed by its position from 1; `caption`. */
+  node?: string;
 }
 
 export declare function PickedRow(props: PickedRowProps): JSX.Element;
@@ -28,6 +30,8 @@ export interface DescribeCounterProps {
    * ONE description for the whole clip; its cover takes none of its own.
    */
   subject?: "pictures" | "video";
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `describe`, `count`, `reason`. */
+  node?: string;
 }
 
 export declare function DescribeCounter(props: DescribeCounterProps): JSX.Element;

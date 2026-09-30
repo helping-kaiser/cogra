@@ -174,7 +174,7 @@ export function FieldSupport({ id, countId, hint, error, value, cap, used }) {
    a `<label>` with no `for` is a label in name only (HTML Living Standard
    §4.10.4), and a topic tray is not a labelable control. */
 
-export function FieldLabel({ children, htmlFor, corner, error }) {
+export function FieldLabel({ children, htmlFor, corner, error, node }) {
   const Name = htmlFor ? "label" : "span";
   return (
     <div style={{ display: "flex", alignItems: "baseline", gap: "var(--space-2)" }}>
@@ -188,6 +188,7 @@ export function FieldLabel({ children, htmlFor, corner, error }) {
           fontWeight: "var(--text-label-large--font-weight)",
           color: error ? "var(--error)" : undefined,
         }}
+        data-node={node}
       >
         {children}
       </Name>
@@ -200,6 +201,7 @@ export function FieldLabel({ children, htmlFor, corner, error }) {
             lineHeight: "var(--text-label-small--line-height)",
             color: "var(--text-secondary)",
           }}
+          data-node={node && "corner"}
         >
           {corner}
         </span>
@@ -223,6 +225,7 @@ export function TextField({
   error,
   cap,
   used,
+  node,
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
@@ -250,8 +253,8 @@ export function TextField({
     // that whole for flow-markers.mjs to find and stamp (jakob's ruling A9,
     // backlog item 40), the same way `data-axis` lets it stamp `LicenseAxis`'s
     // row rather than its own hidden radio.
-    <div data-field={label} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
-      <FieldLabel htmlFor={fieldId} corner={corner} error={error}>
+    <div data-field={label} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }} data-node={node}>
+      <FieldLabel htmlFor={fieldId} corner={corner} error={error} node={node && "label"}>
         {label}
       </FieldLabel>
       {rows ? (
@@ -264,6 +267,7 @@ export function TextField({
           aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}
           style={shared}
+          data-node={node && "input"}
         />
       ) : (
         <input
@@ -276,6 +280,7 @@ export function TextField({
           aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}
           style={shared}
+          data-node={node && "input"}
         />
       )}
       <FieldSupport id={supportId} countId={countId} hint={hint} error={error} value={value} cap={cap} used={used} />
