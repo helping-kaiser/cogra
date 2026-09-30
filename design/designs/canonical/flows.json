@@ -466,7 +466,7 @@
     {
       "name": "trace-a-score-to-its-records",
       "description": "The Post score, wherever a post is drawn, opens why the post reached this reader: the paths from their own opinions to it, strongest first. A path opens its steps, a step opens what carries it, and behind that step stand the signed records themselves — the floor of the whole claim, and a reading journey that concludes on reaching them. The stream's score is excepted: on the rail it is the detail door and not this one.",
-      "start": { "control": "Post Score", "except": ["Reel"] },
+      "start": { "control": "Post Score", "except": ["Reel", "ReelSensitive"] },
       "waypoints": [
         { "board": "FeedEntry", "via": 2 },
         { "board": "RankPath", "via": 2 },

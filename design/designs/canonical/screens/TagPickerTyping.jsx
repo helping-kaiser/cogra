@@ -10,6 +10,15 @@
    surprise §9 exists to prevent. The preview says what will actually be
    signed, before it is.
 
+   THE PREVIEW IS THE LIST'S FIRST ROW, AND THE ACTION KEY STAGES IT (jakob's
+   ruling, 2026-09-30, the V1.0 audit's K14.1). The first row is always the
+   canonicalized typed name, drawn as the `ReferenceRow` every row is, with
+   `Signs as #saltmaps` as its second line — so the promise about the record
+   and the gesture that makes it are one thing. A tap on it stages it, and so
+   does the name field's keyboard action key. Here the typed name is also a
+   name in use, and it is that one row: a name is never listed twice. Rows the
+   index matches sit under it (`TagPicker`).
+
    THE GATE IS STATED, NOT DISCOVERED. A legal name is exactly an L1 identifier
    atom — ASCII letters, digits, `.`, `_`, `-`, 1 to 128 bytes
    (hashtag.md §1, layer1-interface.md §8.1) — and a string outside it names no
@@ -20,9 +29,9 @@
    changes what a name means while leaving it looking the same, in the one
    identifier meant to stay human-legible.
 
-   IT IS THE SAME BOARD AS `TagPicker`, ONE STATE ON. Only the field, the
-   preview line and the list narrow; the header, the footnote and the row shape
-   do not move, because they are the same picker.
+   IT IS THE SAME BOARD AS `TagPicker`, ONE STATE ON. Only the field, the rule
+   line and the list narrow; the header, the footnote and the row shape do not
+   move, because they are the same picker.
 
    A STRING OUTSIDE THE GATE IS REFUSED AT THE FIELD, and `TagPickerRefused` is
    that state: the bar takes the error ring and this line carries the refusal
@@ -35,16 +44,13 @@ export function Screen() {
       <div style={{ flex: "none" }}>
         <SearchBar query="#SaltMaps" placeholder="Name a tag" />
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Signs as <strong style={{ fontWeight: "var(--text-title-medium--font-weight)" }}>#saltmaps</strong>
-          </p>
           <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
             Letters, digits, dot, dash and underscore. Capitals become lowercase.
           </p>
         </div>
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltmaps" sub="Signs as #saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <div style={{ flex: 1 }} />
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.

@@ -48,6 +48,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -109,6 +110,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -207,6 +209,7 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -248,6 +251,7 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -491,13 +495,14 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 23 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 24 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -521,6 +526,7 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -735,6 +741,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -796,6 +803,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -851,6 +859,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -912,6 +921,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -967,6 +977,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -1026,6 +1037,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -1363,6 +1375,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -1398,6 +1411,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -2814,6 +2828,18 @@
         "reel-to-detail",
         "watch-the-stream"
       ]
+    },
+    "ReelSensitive": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "ReferencePicker": {
       "flows": [

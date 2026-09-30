@@ -39,6 +39,12 @@ export interface SensitiveVeilProps {
    * beside a square neighbour.
    */
   radius?: string;
+  /**
+   * The media face's side clearance for its words, applied to both sides so the
+   * face stays centred. Defaults to `var(--space-6)`; a surface that lays its own
+   * chrome over the veil (the stream's rail) widens it to keep the words clear.
+   */
+  faceGutter?: string;
 }
 
 export declare function SensitiveVeil(props: SensitiveVeilProps): JSX.Element;
