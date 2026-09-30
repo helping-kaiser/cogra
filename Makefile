@@ -115,7 +115,7 @@ constants: ## Regenerate client-constants.json (the caps, page size, registratio
 fold-vectors: ## Regenerate stance-fold-vectors.json (the local stance fold both clients re-implement) from common
 	UPDATE_STANCE_FOLD_VECTORS=1 $(CARGO) test -p common --test stance_fold_vectors
 
-tokens: ## Regenerate design-tokens.json (the colour contract both clients pin to) from design.md §2.2
+tokens: ## Regenerate design/tokens/scheme.json (the M3 scheme design/tokens/colors.css transcribes) from design.md §2.2
 	cd web && UPDATE_DESIGN_TOKENS=1 npx vitest run src/lib/ui/design-tokens.test.ts
 
 sqlx-prepare: ## Regenerate the committed .sqlx/ offline metadata (needs a live, migrated DB)
@@ -292,11 +292,11 @@ web-ci: ## Run the web CI checks (mirrors the web job in ci.yml)
 # exists to make that gate reproducible before a push.
 # Budget: 25–35 s on a quiet machine at ~190 boards (npm ci excluded).
 # render-screens is ~two-thirds of it and scales with board count; the
-# other six stages are ≤3 s each. Concurrent lanes can double the total —
+# other seven stages are ≤3 s each. Concurrent lanes can double the total —
 # judge regressions from quiet runs only.
 design-ci: ## Render the design tree and check the committed outputs are current (mirrors the design job in ci.yml; needs Node 24)
 	cd design/_build && npm ci
-	cd design/_build && node bundle.mjs && node render-screens.mjs && node gen-maps.mjs && node gen-canvases.mjs && node check-flows.mjs && node check-readouts.mjs && node report-summaries.mjs
+	cd design/_build && node bundle.mjs && node export-tokens.mjs && node render-screens.mjs && node gen-maps.mjs && node gen-canvases.mjs && node check-flows.mjs && node check-readouts.mjs && node report-summaries.mjs
 	git add --intent-to-add -- design
 	git diff --exit-code -- design
 

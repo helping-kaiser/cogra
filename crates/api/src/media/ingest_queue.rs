@@ -80,8 +80,6 @@ pub const REASON_TOO_LONG: &str =
 pub const REASON_NO_TONE_MAP: &str = "the server cannot convert HDR video right now";
 /// The job was claimed [`MAX_ATTEMPTS`] times without settling.
 pub const REASON_GAVE_UP: &str = "processing did not finish after several attempts";
-/// The rendition is byte-identical to a live asset this author holds.
-pub const REASON_DUPLICATE: &str = "an identical video is already among your uploads";
 
 /// How the ingest worker runs.
 #[derive(Debug, Clone, Copy)]
@@ -116,6 +114,9 @@ pub enum Settled {
     Idle,
     /// The job's asset is `ready`.
     Ready,
+    /// The rendition is bytes its author already holds, and the job's
+    /// asset now resolves to that asset.
+    Merged(Uuid),
     /// The job's asset is `failed`, for this reason.
     Failed(String),
     /// The job hit a fault worth retrying and was handed back.
@@ -202,7 +203,7 @@ pub async fn ingest_once(
     };
 
     match outcome {
-        Ok(rendition) => settle_ready(pool, blobs, &job, rendition).await,
+        Ok(rendition) => settle_ready(pool, blobs, &job, rendition, settings).await,
         Err(JobError::Refused(why)) => fail(pool, blobs, &job, why).await,
         Err(JobError::Transient(detail)) => {
             tracing::warn!(id = %job.id, attempt = job.attempts, detail, "media ingest will retry");
@@ -384,11 +385,27 @@ fn assert_rendition_is_aac(
 }
 
 /// Points the row at its rendition, then drops the original.
+///
+/// **A rendition that is bytes its author already holds is that asset.**
+/// Two uploads of one clip rarely arrive byte-identical — a phone
+/// re-encodes on every pick — but they re-encode to identical renditions,
+/// and `(author, digest)` names one asset. The upload path answers such a
+/// re-upload with the asset it already is; this is the same answer given
+/// late, because the row's id was handed out before its rendition existed.
+/// The row merges into the held asset, both objects this job wrote go,
+/// and the client's id reads as that asset from then on. Reusing a clip
+/// in a second post is never refused for being a clip its author has
+/// already posted.
+///
+/// A held asset that has gone by the time the merge runs — the sweep took
+/// it between the two statements — leaves nothing to merge into. The job
+/// is handed back, and its next attempt settles `ready` in its place.
 async fn settle_ready(
     pool: &PgPool,
     blobs: &dyn BlobStore,
     job: &store::IngestJob,
     written: Written,
+    settings: IngestSettings,
 ) -> Result<Settled, sqlx::Error> {
     let rendition = store::Rendition {
         digest: &written.digest,
@@ -407,7 +424,16 @@ async fn settle_ready(
         }
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => {
             discard(blobs, &written.key).await;
-            fail(pool, blobs, job, REASON_DUPLICATE).await
+            match store::merge_ingest(pool, job.id, job.author_id, &written.digest).await? {
+                Some(held) => {
+                    discard(blobs, &job.storage_key).await;
+                    Ok(Settled::Merged(held))
+                }
+                None => {
+                    store::release_ingest(pool, job.id, settings.retry_after.as_secs_f64()).await?;
+                    Ok(Settled::Retrying)
+                }
+            }
         }
         Err(e) => Err(e),
     }
