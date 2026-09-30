@@ -1261,7 +1261,10 @@ dialog (the *DiscardConfirm* board) reading "Discard this reply?"
 or, from an edit, "Discard this edit?", body "Nothing is kept.", a
 quiet *Discard* beside a filled *Keep writing* — the safe answer
 carries the weight, as it does everywhere else. An empty composer leaves
-at once — a confirm with nothing to lose is noise. Signing exits to
+at once — a confirm with nothing to lose is noise. For the same reason
+a reply meets the key-absent notice at its door, before a word is
+written, and a key lost mid-write leaves its seal only restore or
+discard (*The reply pack*, below). Signing exits to
 the post's own detail view wearing *Still settling*, with the
 snackbar "Signed — it's in the thread now, still settling." An act
 that expires unlanded gets a calm notice card in the shell: content
@@ -2709,7 +2712,8 @@ a master, and every master is one component with variants as props
   one add-row pair, drawn once in the prelude, and one "+ Cite
   something" between them where the bare board had spelled the kinds
   out. `ReplyPad` **takes** `StancePad`: a reply's stance is toward
-  somebody else's post, so both parameters are the author's and the
+  what it answers — somebody else's post or comment — so both
+  parameters are the author's and the
   square is the right value space — the refusal above is about one's
   own post, not about pads. `NetworkError` is `ComposeSeal` unsent,
   so its stance row took the same pair correction the seal's did.
@@ -2857,7 +2861,7 @@ could close. These are the answers, and what each one moved.
   passes `fullscreen` through for it and every other board renders
   byte-identical.
 - **The reply seal earns the orphaned line.** "Replying also signs
-  your opinion on the post it answers." stands as a `QuietNote`
+  an opinion on what it answers." stands as a `QuietNote`
   beneath the ruled block — `FactRow` grows no note slot, because
   the line is a fact about replying rather than about any one row.
   It lands on both states of the seal: they are one surface, and a
@@ -3038,7 +3042,7 @@ an answer — and where two apps invent, they disagree.
 - **The reply pad's "?" opens its own topic.** The copy was never
   missing: **Toward what you answer** has been in `copy-voice.md` since
   the compose-session rulings, and it says the true thing — a reply's
-  stance is toward the post it answers, both axes, on the reply's own
+  stance is toward what it answers, both axes, on the reply's own
   signature. What was missing was a board drawing it and an edge
   pointing there; `ReplyPad`'s "?" led to the seal's Signed-actions
   dialog. Android left the dot out rather than open the post pad's
@@ -7083,6 +7087,45 @@ key, with nothing on screen saying so.
   or a badge — `SettingsBackup`, `YourKeyAbsent`, and the scrim badge on
   `KeyConfirm`, `KeyDecline` and `PadKeyAbsent` — plus the four maps
   that follow the edges.
+
+### The reply pack — 2026-09-30
+
+Three rulings from the V1.0 audit's K5 and K6 clusters (jakob, the
+fifteen-first round). The reply surfaces were worded and wired for a
+post; a reply answers a post or a comment.
+
+- **A reply's surfaces name their target, and say nothing else about
+  it.** The composer and the seal are one surface each; only the lines
+  that name what is answered differ. A post is quoted by its title and
+  its author's handle, a comment — which has no title — by its author's
+  handle over its first words (`QuotedRow`); the seal reads back
+  `Reply to @tobias` and the act `Reply to @tobias's comment`
+  (`ReplyComposeComment`, `ReplySealComment`). Everything else is
+  target-neutral: the pad reads `Toward what you answer`, one pad for
+  both, keeping its default start. The composer pre-fills nothing — a
+  typed handle is text, never a record.
+- **The word is "opinion", never "your opinion".** `Replying also signs
+  an opinion on what it answers.` under the seal, and the pad's "?" in
+  the same words: the reply's own opinion starts at the default and
+  rides the reply, and "your opinion" reads as overwriting the one the
+  reader already gave.
+- **The key's absence is met at the reply's door.** A reply keeps no
+  draft, so Reply and Add a comment raise the key notice over the
+  thread before a word is written (`ReplyKeyAbsent`) — `PadKeyAbsent`'s
+  card without the pad, `Not now` its way out, nothing kept. A key lost
+  mid-write reaches the seal's fallback (`ReplySealKeyAbsent`): every row
+  unchanged, the notice where the footer stood, restore or discard. The
+  seal's key-absent outcome points there, not at the post's seal.
+- **The thread's order** is written where the thread's rules live
+  (*Comments live in a sheet*), and the drawn fixtures read by it.
+  `ReplySettled` keeps its landed reply above the older ones for now: by
+  the rule it ends its branch, and where the landing then scrolls is
+  still to be ruled.
+- **The gate**: 218 → **222 screens**, 1536 → **1558 edges**, 1 gap,
+  **flows 63**, every one resolved. The witness was re-blessed once,
+  deliberately: `reply-to-a-comment` now walks the comment-targeted
+  composer and seal, and the `Restore the key` and `+ Cite something`
+  censuses grew by the new boards.
 
 ## 15. Index
 
