@@ -51,7 +51,7 @@ from a screenshot.
 |---|---|
 | `cogra/` (attached local codebase, read-only mount) | the whole system |
 | `cogra/docs/implementation/design.md` (928 lines) | the written design system — §2 colour, §3 type, §4 shape/spacing/motion, §5 iconography, §6 components, §7 copy, §8 the stance control, §9 honesty surfaces, §10 accessibility, §11 the mark |
-| `cogra/design-tokens.json` | the generated palette contract both clients pin to |
+| `cogra/design-tokens.json` | the generated palette — the generator's committed output, today `design/tokens/scheme.json` |
 | `cogra/web/src/app/globals.css` | the web token layer — palette, the fifteen type roles, the five radius rungs |
 | `cogra/web/src/lib/ui/*.tsx` (23 components) | the component inventory and its exact class strings |
 | `cogra/web/src/lib/stance/*.ts` | the stance model, anchor table, pad geometry, parking |
