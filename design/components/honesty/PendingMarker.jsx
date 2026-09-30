@@ -21,7 +21,10 @@ export function PendingMarker({ label = "Still settling", inline = false }) {
 }
 
 /** The edit marker: a soft marker with an optional tap onto the edit history —
-    every version whole, newest first, never a diff. Friendly, not forensic. */
+    every version whole, newest first, never a diff. Friendly, not forensic.
+    V1.0 PASSES NO HISTORY DOOR (readme §13, the scope cut's F-1): no canonical
+    screen hands `onInspect`, so the marker renders as plain text and no door
+    exists in V1.0. The change-histories round wires it. */
 export function EditedMarker({ label = "Edited", onInspect }) {
   if (!onInspect) {
     return <p style={{ margin: 0, fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>{label}</p>;

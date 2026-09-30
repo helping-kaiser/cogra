@@ -1,11 +1,18 @@
 {
   "canvases": [
     {
-      "id": "postmvp",
+      "id": "futures",
       "url": "https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2",
-      "title": "CoGra · Post-MVP rounds",
-      "pages": ["push", "histories", "chats", "wallet"],
-      "launch": "push"
+      "title": "CoGra · Future features",
+      "pages": ["chats", "wallet"],
+      "launch": "chats"
+    },
+    {
+      "id": "updates",
+      "url": "https://claude.ai/artifact/VVa5C7xUzrtEN8nFcQEUFW",
+      "title": "CoGra · Surface updates",
+      "pages": ["push", "histories"],
+      "launch": "histories"
     }
   ]
 }

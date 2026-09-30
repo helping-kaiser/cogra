@@ -3544,13 +3544,16 @@ The application queue, in order:
    `ChatsComingSoon`'s bare text and faces the wallet slot's door;
    ~48 nav edges rewire; wallet strings and the CGT help leave
    V1.0 copy.
-3. **The kind trims** *(landed with this PR, the history doors
-   excepted)*: feed + search filters down to the four
+3. **The kind trims** *(landed with this PR; the history doors
+   ruled 2026-09-30)*: feed + search filters down to the four
    served kinds; item/offer/message rows leave `ExploreSearch`;
    `RefsSheet` and `ReferencePicker` down to person/post/comment,
-   each row wired; the masters' history doors leave canonical —
-   held for jakob's ruling on their post-MVP dependency.
-4. **The copy round**: deletion page ("cover", "messages" out),
+   each row wired; the masters' history doors stay as prop-gated
+   anatomy the post-MVP history boards render — no canonical
+   screen passes `onOpenHistory`/`onInspect`, so V1.0 draws no
+   door, and the three masters' docblocks declare it.
+4. **The copy round** *(landed 2026-09-25, all strings blessed)*:
+   deletion page ("cover", "messages" out),
    editing help (removal clause out, scale-neutral rewording),
    payer-neutral signing copy — new strings to copy-voice for
    blessing.
@@ -3560,9 +3563,13 @@ The application queue, in order:
 6. **The three feed cards** (comment, profile, tag in the feed) —
    briefed drawing rounds with canvas iteration, sequenced after
    the mechanical work.
-7. **The post-MVP split**: the post-MVP domain restructures into
-   future features vs future updates of existing features —
-   proposal to jakob before any move.
+7. **The post-MVP split** *(landed 2026-09-30, jakob's ruling)*: the
+   one post-MVP domain now serves two canvases via `canvases.json` —
+   `futures` ("CoGra · Future features": chats + wallet, the original
+   artifact retitled) and `updates` ("CoGra · Surface updates":
+   push + histories, minted new). The domain — screens, graph,
+   flows — stays whole; a later re-split (chats alone, when it
+   crowds) is the same canvases.json gesture again.
 8. **The applicant mechanism round** (once-each staging kept):
    About/auth.md/contract corrections plus the three owed rulings
    (visibility of a staged act, its signing moment, its fate on an
