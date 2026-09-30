@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes,\n               options AS \"options!: serde_json::Value\",\n               state AS \"state: AssetState\", failure_reason,\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = $1\n        ",
+  "query": "\n        SELECT id, author_id, digest, digest_algo, storage_key,\n               mime_type, size_bytes,\n               options AS \"options!: serde_json::Value\",\n               state AS \"state: AssetState\", failure_reason,\n               redaction_reason, redacted_at, created_at\n        FROM media_attachments\n        WHERE id = (\n            SELECT COALESCE(merged_into, id)\n            FROM media_attachments\n            WHERE author_id = $1\n              AND state <> 'failed'\n              AND (digest = $2 OR source_digest = $2)\n            ORDER BY created_at\n            LIMIT 1\n        )\n        ",
   "describe": {
     "columns": [
       {
@@ -71,7 +71,8 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid"
+        "Uuid",
+        "Bytea"
       ]
     },
     "nullable": [
@@ -90,5 +91,5 @@
       false
     ]
   },
-  "hash": "7e24e91a002728a9e19aec8c008736b36be95ab4e809dcd19f0dbc113ad6ba0c"
+  "hash": "7a31c25e73f6718615e9ec11c3743584188c53d4a3f93bd5564a1e0123f7f8bd"
 }
