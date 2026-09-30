@@ -866,6 +866,11 @@ means signed and not yet ordered.
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`
 
+**Your key, with the key elsewhere** (`YourKeyAbsent`) keeps `YourKey`'s
+paragraph with one clause changed, so it does not contradict the notice
+above it: `This key signs everything you publish, and it lives only on
+the device it was made on.`
+
 **The key behind its gate** (`YourKeyGate`, a browser whose seed is
 sealed): `On this browser your key is sealed inside its backup. Enter
 your recovery code to open it and see the key.` — the field `Current
