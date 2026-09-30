@@ -24,7 +24,11 @@ import { StanceValue } from "../stance/StanceReadout.jsx";
    split: the person area opens the person, and the value opens the timeline
    the value was summed from. The split is `ContentRow`'s, for its reason — a
    control inside a control is not markup — and a row handed no history stays
-   the single element every existing list already draws. */
+   the single element every existing list already draws.
+
+   V1.0 PASSES NO HISTORY DOOR (readme §13, the scope cut's F-1): no canonical
+   screen hands `onOpenHistory`, so every V1.0 row is the single element and
+   no door exists. The change-histories round wires it. */
 
 /* What the value's own target is called. A readout names its value, never its
    destination, so the door needs a spoken name of its own; `HISTORY_DOOR_TAIL`

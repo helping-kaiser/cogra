@@ -94,7 +94,11 @@ export const PICK_LABEL = "Your pick";
    summed from: a reader whose standing reads +1.00 / +1.00 cannot tell from the
    face whether one record or twenty-seven built it. So the label carries the
    promise of the timeline rather than a second control beside it — the readout
-   IS the door, and the tail is the only ink the door costs. */
+   IS the door, and the tail is the only ink the door costs.
+
+   V1.0 PASSES NO HISTORY DOOR (readme §13, the scope cut's F-1): no canonical
+   screen hands `onOpenHistory`, so the label renders as a plain span and no
+   door exists in V1.0. The change-histories round wires it. */
 export const HISTORY_DOOR_TAIL = " · see how it built";
 
 export const SEVERED_LABEL = "Walked back";
