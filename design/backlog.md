@@ -3704,3 +3704,18 @@ their plain words, which item 111's node check then holds. Approved
 by jakob on 2026-09-30; the grammar and the plan are the design ⇄
 impl seam's entry 002 (dev-state `cogra/tmp_dev/design-impl-seam.md`)
 and the calibration-ID PR, #30.
+
+### 115 · Ranked comment order, once ranking exists · *design* · **filed 2026-09-30** · **future**
+
+The thread's order is ruled for now (jakob 2026-09-30, the V1.0
+audit's K5.1): top-level comments newest-first, and the replies in a
+branch oldest-first, on the api's ordering argument. The direction
+after that is ranked: once the ranker serves comments, the thread's
+default becomes what is closest to the reader — "the general
+consensus for our GRAPH-network is that you see whats close to you
+and not whats globaly newest so i think this is the better default
+once we have ranked" (jakob). Possibly with a reader setting between
+new and close. A briefed round when ranking lands: the default, the
+setting's words and home, and what the thread shows for comments the
+ranker cannot score — the feed's and search's unranked tail are the
+precedents.
