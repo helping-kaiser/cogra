@@ -19,18 +19,29 @@
    tag with an empty page (`TagPageEmpty`), and signing is what puts the first
    thing on it.
 
-   THE CANDIDATE LIST IS THE END STATE. Hashtag `name` is an indexed field in
+   THE FIRST ROW IS THE TYPED NAME, ALWAYS (jakob's ruling, 2026-09-30, the
+   V1.0 audit's K14.1). The list's first row is the canonicalized form of what
+   is typed, whether or not rows match below it, and the name field's keyboard
+   action key stages it — the same pick as a tap on it. It is a row, not a
+   "Create" button: the `Signs as #salt` preview made tappable, the
+   `ReferenceRow` every other row is, its preview on the row's second line. It
+   names a Type that already exists; it creates nothing. A name in use that is
+   the typed name is that row, never listed twice. So a name nobody has used is
+   exactly as pickable as one everybody has, which is the footnote's promise
+   kept by the list itself.
+
+   THE ROWS UNDER IT ARE THE INDEX'S. Hashtag `name` is an indexed field in
    the global search index (api-spec.md, "What is indexed"), and slice 2.7 is
-   what lands that index. Until then there is no candidate field at all —
+   what lands that index. Until then there are no rows under the first —
    `referenceCandidates` explicitly refuses to offer topics ("A topic is never
    offered — it is tagged, not referenced — which is why a #-typed query finds
-   nothing"), so the apps ship type-only and this list arrives with search.
-   Same staging shape as the Sky's, and the register carries it.
+   nothing") — and the first row alone carries every pick. Same staging shape
+   as the Sky's, and the register carries it.
 
-   RANKING ORDERS THE LIST AND THE EDGE GOES TO THE ACT, which is
-   `ReferenceRow`'s own rule and `ReferencePicker`'s drawing: where the whole
+   RANKING ORDERS THE ROWS UNDER THE FIRST AND THE EDGE GOES TO THE ACT, which
+   is `ReferenceRow`'s own rule and `ReferencePicker`'s drawing: where the whole
    row's tap picks, the right edge is the add mark and the number yields to it.
-   So a candidate row carries no figure at all.
+   So no row carries a figure at all, the first included.
 
    AND CERTAINLY NOT A USE COUNT. Instagram and Tumblr both hang "12k posts"
    off a tag; §3 refuses it — it is nobody's view in particular and it is not
@@ -38,9 +49,10 @@
    viewer-relative rank, on a search result row (`ExploreSearch`), and it
    arrives with 2.7's index and slice 3's ranker together.
 
-   THE ROWS ARE ALREADY-USED NAMES, which is what an index can offer. That is
-   not a contradiction of the paragraph above: the picker helps you find a name
-   others reach for, and it never stops you naming one they do not.
+   THE ROWS UNDER THE FIRST ARE ALREADY-USED NAMES, which is what an index can
+   offer. That is not a contradiction of the paragraphs above: the picker helps
+   you find a name others reach for, and its first row never stops you naming
+   one they do not.
 
    NO SKY ENTRY AND NO BOTTOM NAV — picking is a task, not the tab, which is
    `ReferencePicker`'s own reason. */
@@ -52,6 +64,7 @@ export function Screen() {
         <SearchBar query="salt" placeholder="Name a tag" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltmarsh" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />

@@ -1956,6 +1956,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">salt<", tag: "div" },
+    { n: 4, find: ">Signs as #salt<", tag: "button" },
     { n: 4, find: ">saltmaps<", tag: "button" },
     { n: 4, find: ">saltmarsh<", tag: "button" },
     { n: 4, find: ">saltcrust<", tag: "button" },
