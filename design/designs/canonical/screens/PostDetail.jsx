@@ -21,15 +21,27 @@
    in the same register and for the same reason. The tags line above says what
    this post points AT; this says what points BACK. Two lists, two counts,
    neither folded into the other: the references count is the tags-and-
-   references sheet's length and stays exactly that. */
+   references sheet's length and stays exactly that.
+
+   A CALIBRATION SCREEN (design ⇄ impl seam 002): `NODE` registers the board,
+   so its named elements carry `postDetail.…` data-node paths into the built
+   board and `nodes.json`. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
-      <DetailHeader items={READER_POST_MENU} />
+      <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...MIRA_GALLERY_POST} variant="detail" onOpenOpinions={() => {}} citedBy={CITING_ARTIFACTS.length} onOpenCitedBy={() => {}} />
+        <PostCard
+          {...MIRA_GALLERY_POST}
+          variant="detail"
+          onOpenOpinions={() => {}}
+          citedBy={CITING_ARTIFACTS.length}
+          onOpenCitedBy={() => {}}
+          node="card"
+        />
       </DetailColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

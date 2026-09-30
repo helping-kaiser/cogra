@@ -371,8 +371,15 @@ function KeyPledge() {
 /* The detail surface's header: back plus the ONE overflow. On a detail view the
    menu lives up here and the card's own dot yields (PostCard hides it in
    detail) — two dots would be two menus for one post. */
-function DetailHeader({ items }) {
-  return <PageHeader backHref="#" backLabel="Back to feed" action={<OverflowMenu items={items} ariaLabel="More on this post" />} />;
+function DetailHeader({ items, node }) {
+  return (
+    <PageHeader
+      backHref="#"
+      backLabel="Back to feed"
+      action={<OverflowMenu items={items} ariaLabel="More on this post" node={node && "menu"} />}
+      node={node}
+    />
+  );
 }
 
 /* What the one menu holds — the author's post vs someone else's.
@@ -1462,32 +1469,38 @@ function ComposeDetailsBody({
   descriptionError,
   nextDisabled = false,
 }) {
+  /* The element names are `ComposeDetails`'s calibration IDs (seam 002). They
+     reach a built board only where the screen is registered (`NODE`); every
+     other board this body stands on renders them stripped. */
   return (
     <>
-      <WizardHeader title="Details" />
+      <WizardHeader title="Details" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <PickedRow
           items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
           caption="2 pictures — the body"
           onManage={() => {}}
+          node="mediaRow"
         />
-        <DescribeCounter described={0} total={2} onDescribe={() => {}} />
+        <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
 
-        <TextField label="Title" corner="Optional" cap={100} value={title} error={titleError} />
+        <TextField label="Title" corner="Optional" cap={100} value={title} error={titleError} node="title" />
 
-        <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} />
+        <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} node="description" />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Tags</FieldLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
+          <FieldLabel node="label">Tags</FieldLabel>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
-            <TopicRemovable topic="coastroad" onEdit={() => {}} />
+            <TopicRemovable topic="fieldnotes" onEdit={() => {}} node="tag" />
+            <TopicRemovable topic="coastroad" onEdit={() => {}} node="tag" />
           </div>
-          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+          <InlineAction size="sm" selfStart node="add">
+            + Add a tag
+          </InlineAction>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>References</FieldLabel>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="references">
+          <FieldLabel node="label">References</FieldLabel>
           <StagedReference
             kind="post"
             name="The long way home — @ada"
@@ -1495,13 +1508,19 @@ function ComposeDetailsBody({
             src="post-photo.jpg"
             pair={{ pDirected: 0.1, pInterest: 0.1 }}
             onEdit={() => {}}
+            node="stagedReference"
+            nodeKey="1"
           />
-          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+          <InlineAction size="sm" selfStart node="add">
+            + Cite something
+          </InlineAction>
         </div>
 
         <div style={{ flex: 1 }} />
 
-        <Button style={{ width: "100%" }} disabled={nextDisabled}>Next</Button>
+        <Button style={{ width: "100%" }} disabled={nextDisabled} node="next">
+          Next
+        </Button>
       </div>
     </>
   );
