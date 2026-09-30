@@ -155,6 +155,7 @@ export function StanceControl({
      the walk-away and changes nothing else. Additive — off by default, every
      existing use renders exactly as before. */
   firstConnection = false,
+  node,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -285,6 +286,7 @@ export function StanceControl({
       style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-1)", width: wide ? "100%" : undefined }}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
+      data-node={node}
     >
       {/* OVER MEDIA THE ROW SPENDS NO GAP: the skip-link beside the anchor is a
           hairline the eye never sees, but its gap pushes the anchor off the
@@ -347,6 +349,7 @@ export function StanceControl({
                 opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
                 filter: restingFace === null ? "grayscale(1)" : "none",
               }}
+              data-node={node && "face"}
             >
               {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
             </span>
@@ -370,6 +373,7 @@ export function StanceControl({
               className="cg-exact"
               aria-hidden="true"
               style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+              data-node={node && "exact"}
             >
               {formatStancePair(restingPair)}
             </span>

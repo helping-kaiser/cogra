@@ -26,6 +26,10 @@ export interface StagedReferenceProps {
    * button named "<name> — set how it relates"; without it the row is inert.
    */
   onEdit?: () => void;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `kind`, `pair` (`face`, `exact`), `remove`. */
+  node?: string;
+  /** The row's content key — its position in the staged set, from 1. */
+  nodeKey?: string;
 }
 
 export declare function StagedReference(props: StagedReferenceProps): JSX.Element;

@@ -45,6 +45,8 @@ export interface FeedFilterProps {
   topics?: readonly string[];
   /** Opens the full "Your topics" list — everything held, including against. */
   onOpenTopics?: () => void;
+  /** The data-node name its placer gives the filter's trigger (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function FeedFilter(props: FeedFilterProps): JSX.Element;
@@ -97,6 +99,8 @@ export interface FilterTriggerProps {
   onOpen?: () => void;
   expanded?: boolean;
   ariaLabel?: string;
+  /** The data-node name its placer gives this trigger (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function FilterTrigger(props: FilterTriggerProps): JSX.Element;

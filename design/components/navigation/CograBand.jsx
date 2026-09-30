@@ -57,13 +57,14 @@ import { Icon } from "./Icon.jsx";
    screen's own control too little room, and the feed's filter trigger — the
    one control whose width carries words — ellipsised on the boards that
    narrow the feed. The target never shrank; only the box did. */
-export function BandIcon({ name, label, size = 24, dot = false }) {
+export function BandIcon({ name, label, size = 24, dot = false, node }) {
   return (
     <button
       type="button"
       aria-label={label}
       className="cg-state cg-focus cg-hit"
       style={{ display: "grid", placeItems: "center", height: "40px", width: "40px", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0, flex: "none" }}
+      data-node={node}
     >
       <span style={{ position: "relative", display: "grid", placeItems: "center" }}>
         <Icon name={name} size={size} />
@@ -78,18 +79,20 @@ export function BandIcon({ name, label, size = 24, dot = false }) {
   );
 }
 
-export function CograBand({ trailing, chats = true, bell = true, unread = false, children }) {
+export function CograBand({ trailing, chats = true, bell = true, unread = false, children, node }) {
   return (
-    <div style={{ flex: "none" }}>
+    <div style={{ flex: "none" }} data-node={node}>
       <div style={{ height: "48px", display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "0 var(--space-4)" }}>
-        <span style={{ display: "inline-flex", color: "var(--primary)" }} aria-hidden="true">
+        <span style={{ display: "inline-flex", color: "var(--primary)" }} aria-hidden="true" data-node={node && "mark"}>
           <Icon name="mark" size={24} pickColor="var(--primary-container)" />
         </span>
-        <span style={{ fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: 600 }}>cogra</span>
+        <span style={{ fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: 600 }} data-node={node && "wordmark"}>
+          cogra
+        </span>
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", minWidth: 0 }}>
           {trailing}
-          {chats && <BandIcon name="forum" label="Chats" size={22} />}
-          {bell && <BandIcon name="notifications" label={unread ? "Notifications — something new" : "Notifications"} size={22} dot={unread} />}
+          {chats && <BandIcon name="forum" label="Chats" size={22} node={node && "chats"} />}
+          {bell && <BandIcon name="notifications" label={unread ? "Notifications — something new" : "Notifications"} size={22} dot={unread} node={node && "bell"} />}
         </div>
       </div>
       {children}

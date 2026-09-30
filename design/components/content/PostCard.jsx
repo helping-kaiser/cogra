@@ -124,6 +124,7 @@ export function PostCard({
      renders exactly as before. */
   lead,
   main,
+  node,
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -168,6 +169,7 @@ export function PostCard({
         fontWeight: detail ? "var(--text-headline-small--font-weight)" : "var(--text-title-medium--font-weight)",
         ...(detail ? {} : { ...CLAMP(1), wordBreak: "break-word" }),
       }}
+      data-node={node && "title"}
     >
       {title}
     </h2>
@@ -200,8 +202,8 @@ export function PostCard({
   // is the card's own gap: two fields, one visible join.
   const caption = (
     <>
-      {words && veiledParagraph(<p style={contentStyle}>{words}</p>)}
-      {description && veiledParagraph(<p style={descriptionStyle}>{description}</p>)}
+      {words && veiledParagraph(<p style={contentStyle} data-node={node && "body"}>{words}</p>)}
+      {description && veiledParagraph(<p style={descriptionStyle} data-node={node && "description"}>{description}</p>)}
     </>
   );
 
@@ -232,6 +234,7 @@ export function PostCard({
           fontWeight: "var(--text-label-medium--font-weight)",
           color: "var(--text-secondary)",
         }}
+        data-node={node && "opener"}
       >
         {open ? "Less" : "More"}
       </button>
@@ -265,14 +268,14 @@ export function PostCard({
   const body = (
     <>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
-        {lead ?? (author && <ActorChip handle={author.handle} displayName={author.displayName} />)}
+        {lead ?? (author && <ActorChip handle={author.handle} displayName={author.displayName} node={node && "authorChip"} />)}
         <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
-          {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
+          {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }} data-node={node && "timestamp"}>{timestamp}</span>}
           {/* ON A DETAIL SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW — a dot in
               the header and another in the card would be two menus for one post.
               The summary card keeps its own: in a feed there is no header to
               carry it. */}
-          {!detail && <OverflowMenu items={items} ariaLabel="More on this post" />}
+          {!detail && <OverflowMenu items={items} ariaLabel="More on this post" node={node && "menu"} />}
         </div>
       </div>
       {hasMedia && heading}
@@ -293,13 +296,14 @@ export function PostCard({
               else setViewing(0);
             }
           }}
+          data-node={node && "media"}
         >
           {veil ? (
             <SensitiveVeil kind="media" reason={veil.reason} source={veil.source} radius="0px">
-              <MediaGallery items={media} radius="0px" />
+              <MediaGallery items={media} radius="0px" node={node && "media"} />
             </SensitiveVeil>
           ) : (
-            <MediaGallery items={media} radius="0px" />
+            <MediaGallery items={media} radius="0px" node={node && "media"} />
           )}
         </div>
       )}
@@ -315,6 +319,7 @@ export function PostCard({
           references={references}
           onOpen={detail ? (onOpenReferences ?? (() => {})) : undefined}
           onOpenReferences={onOpenReferences}
+          node={node && "tagsLine"}
         />
       )}
       {/* WHO HOLDS AN OPINION ON THIS, on the detail surface only (backlog item
@@ -360,6 +365,7 @@ export function PostCard({
             color: "var(--text-secondary)",
             textAlign: "left",
           }}
+          data-node={node && "opinions"}
         >
           <span aria-hidden="true">
             {opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`}
@@ -407,6 +413,7 @@ export function PostCard({
             color: "var(--text-secondary)",
             textAlign: "left",
           }}
+          data-node={node && "citedBy"}
         >
           <span aria-hidden="true">Cited by {citedBy}</span>
         </button>
@@ -438,7 +445,7 @@ export function PostCard({
           drawn — `cg-hit` grows the TARGET around it, so a spread row cannot
           turn wider spacing into smaller aim. */}
       {(showStance || score !== undefined || comments !== undefined || actions) && (
-        <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)", width: "100%", minWidth: 0 }}>
+        <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)", width: "100%", minWidth: 0 }} data-node={node && "actionRow"}>
           {/* `taught` and `onCommit` belong to the SHELL, not the card: "the first
               tap ever" is a fact about the reader, and a card in a feed of twenty
               cannot know it. Default true so a lone card teaches nothing.
@@ -463,10 +470,11 @@ export function PostCard({
               padInset={stancePadInset}
               defaultPick={stanceDefaultPick}
               onOpenHistory={stanceOnOpenHistory}
+              node={node && "stance"}
             />
           )}
           {score !== undefined && (
-            <ExplainableNumber glyph="graph" label="Post score" value={score} onOpenDetail={onOpenScore ?? (() => {})} />
+            <ExplainableNumber glyph="graph" label="Post score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
           {/* COMMENTS get their own affordance rather than living behind a tap on
               the card, because "read the replies" is a different intent from
@@ -496,9 +504,10 @@ export function PostCard({
                 fontWeight: "var(--text-label-large--font-weight)",
                 cursor: "pointer",
               }}
+              data-node={node && "comments"}
             >
               <Icon name="chat_bubble" size={18} />
-              {comments > 0 && <span aria-hidden="true">{comments}</span>}
+              {comments > 0 && <span aria-hidden="true" data-node={node && "count"}>{comments}</span>}
             </button>
           )}
           {/* SHARE CLOSES THE ROW. The order here is the order of importance —
@@ -507,7 +516,7 @@ export function PostCard({
               the ⋮ menu, and the row gives way from its end. Anything added
               later is ranked against what is already reachable before it earns a
               slot; a row that grows by arrival order stops meaning anything. */}
-          {showShare && <ShareButton targetLabel={targetLabel} onShare={onShare} />}
+          {showShare && <ShareButton targetLabel={targetLabel} onShare={onShare} node={node && "share"} />}
           {actions}
         </div>
       )}
@@ -518,7 +527,7 @@ export function PostCard({
      the card instead of floating beside its curve (jakob's review, the tag
      round). */
   return (
-    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined}>
+    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} node={node} nodeKey={node && author?.handle}>
       {veil ? <SensitiveScope>{body}</SensitiveScope> : body}
     </Card>
   );

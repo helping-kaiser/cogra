@@ -50,6 +50,7 @@ export function WizardHeader({
   help,
   onHelp,
   action,
+  node,
 }) {
   return (
     <PageHeader
@@ -57,6 +58,7 @@ export function WizardHeader({
       backHref={backHref}
       backLabel={backLabel}
       onBack={onBack}
+      node={node}
       action={
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
           <button
@@ -77,6 +79,7 @@ export function WizardHeader({
               flex: "none",
               padding: 0,
             }}
+            data-node={node && "leave"}
           >
             <Icon name="close" />
           </button>

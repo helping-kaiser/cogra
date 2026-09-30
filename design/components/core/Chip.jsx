@@ -128,7 +128,7 @@ export function Chip({ label, selected = false, onToggle, ariaLabel, disabled = 
    without it reads as a name. It navigates — always to the tag's own page, on
    every surface (jakob's ruling, the tag round: a chip tap is never a reveal) —
    so it is an anchor. */
-export function TopicChip({ topic, href, onClick, inert = false, size = "md", style: override }) {
+export function TopicChip({ topic, href, onClick, inert = false, size = "md", style: override, node, nodeKey }) {
   const name = topic.replace(/^#/, "");
   const style = {
     ...pill(size),
@@ -140,9 +140,14 @@ export function TopicChip({ topic, href, onClick, inert = false, size = "md", st
   // The inert cut: the same pill inside a larger tap target (the detail card's
   // topics line is ONE control opening the sheet) — a link nested in a button
   // is two controls fighting over one press, and invalid markup besides.
-  if (inert) return <span style={style}>#{name}</span>;
+  if (inert)
+    return (
+      <span style={style} data-node={node} data-node-key={nodeKey}>
+        #{name}
+      </span>
+    );
   return (
-    <a href={href ?? `/t/${name}`} onClick={onClick} className="cg-state cg-focus cg-hit" style={style}>
+    <a href={href ?? `/t/${name}`} onClick={onClick} className="cg-state cg-focus cg-hit" style={style} data-node={node} data-node-key={nodeKey}>
       #{name}
     </a>
   );

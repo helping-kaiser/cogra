@@ -12,7 +12,7 @@ import { MediaThumb } from "./MediaThumb.jsx";
    Back reaches it, and a duplicate entrance to the same step is the two-menus
    pattern the system refuses elsewhere. */
 
-export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage the pictures" }) {
+export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage the pictures", node }) {
   return (
     <button
       type="button"
@@ -33,9 +33,10 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
         color: "var(--on-surface)",
         textAlign: "left",
       }}
+      data-node={node}
     >
       {items.map((item, index) => (
-        <MediaThumb key={item.src ?? index} {...item} size={48} />
+        <MediaThumb key={item.src ?? index} {...item} size={48} node={node && "thumb"} nodeKey={node && String(index + 1)} />
       ))}
       {caption && (
         <span
@@ -46,6 +47,7 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
             letterSpacing: "var(--text-label-small--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node={node && "caption"}
         >
           {caption}
         </span>
@@ -75,18 +77,21 @@ export function PickedRow({ items = [], caption, onManage, manageLabel = "Manage
    own type, so `inherit` and the rung's tokens are the same measurement said
    two ways. The counting half of the line is a plain span — it is not
    pressable, and only the verb is. */
-export function DescribeCounter({ described, total, onDescribe, subject = "pictures" }) {
+export function DescribeCounter({ described, total, onDescribe, subject = "pictures", node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }} data-node={node}>
       <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)" }}>
-        <InlineAction size="sm" onClick={onDescribe} style={{ fontSize: "inherit", lineHeight: "inherit" }}>
+        <InlineAction size="sm" onClick={onDescribe} style={{ fontSize: "inherit", lineHeight: "inherit" }} node={node && "describe"}>
           Describe the {subject}
         </InlineAction>{" "}
-        <span style={{ color: "var(--text-secondary)" }}>
+        <span style={{ color: "var(--text-secondary)" }} data-node={node && "count"}>
           · {described} of {total} described
         </span>
       </p>
-      <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+      <p
+        style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
+        data-node={node && "reason"}
+      >
         Read aloud to people who can&apos;t see it.
       </p>
     </div>

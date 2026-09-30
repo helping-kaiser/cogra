@@ -188,6 +188,8 @@ export interface PostCardProps {
    * card. Defaults to false.
    */
   attach?: boolean;
+  /** The data-node name its placer gives this card — keyed by the author's handle (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `authorChip` (`avatar`, `name`, `handle`), `timestamp`, `menu`, `title`, `media` (`frame` per picture, keyed by its position from 1; `dots`), `description`, `body`, `opener`, `tagsLine` (`tag` keyed by name, `counts`), `opinions`, `citedBy`, `actionRow` (`stance`, `score`, `comments` with its `count`, `share`). */
+  node?: string;
 }
 
 export declare function PostCard(props: PostCardProps): JSX.Element;

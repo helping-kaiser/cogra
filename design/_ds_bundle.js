@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"3877946a8a13","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"5bbdf0056f47","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"947836ad201f","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"e47373d76959","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"e36e24c12cfb","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"f1ad3e7f28e4","components/content/CommentCard.jsx":"d5f7cca6dd3c","components/content/OverflowMenu.jsx":"1850244ef737","components/content/PostCard.jsx":"961ea1b451e9","components/content/ReferenceRow.jsx":"4911549e49f3","components/content/ShareButton.jsx":"45265b425904","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6b9e07b63f21","components/core/BottomSheet.jsx":"38703661022c","components/core/Button.jsx":"49115256e31e","components/core/Card.jsx":"82801ce21353","components/core/Chip.jsx":"c0fe5f63cbb7","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"7aa476569aba","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"e690c934605e","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"c41bdab8cd56","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"fa0183f36991","components/media/MediaViewer.jsx":"b66a3e63536f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"2b8d1b95fbb9","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"2341df4ec848","components/navigation/BottomNav.jsx":"4a3260f63254","components/navigation/CograBand.jsx":"b56086c8634f","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"2daa86d1c334","components/navigation/Icon.jsx":"2e976eb71d18","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"3c09e57d65f9","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"6341cd3f1066","components/people/ProfileHeader.jsx":"9569b330a08e","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"9c309fa9a858","components/stance/SeveranceConfirm.jsx":"358c564f974f","components/stance/StanceAlternates.jsx":"ef4123c4f82d","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"68eff6bb3e97","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"d7308f628504","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"3877946a8a13","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"5b3fc77b1704","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"d5f7cca6dd3c","components/content/OverflowMenu.jsx":"c8bc58ab9716","components/content/PostCard.jsx":"ee395c90cd5f","components/content/ReferenceRow.jsx":"2cbbc7ce53a4","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"fcccf43e1b48","components/core/BottomSheet.jsx":"38703661022c","components/core/Button.jsx":"2abf5b60cec2","components/core/Card.jsx":"2809bdee6885","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"7aa476569aba","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"4b2891ae44f0","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"c41bdab8cd56","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"1c969987f2bb","components/media/MediaViewer.jsx":"b66a3e63536f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"2b8d1b95fbb9","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"2341df4ec848","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"53b9da8680db","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"1ef7af623c30","components/navigation/Icon.jsx":"2e976eb71d18","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"63d50d3782ad","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"9569b330a08e","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"d1407b1120e9","components/stance/SeveranceConfirm.jsx":"358c564f974f","components/stance/StanceAlternates.jsx":"ef4123c4f82d","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"d8137b9d5847","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"d7308f628504","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -154,7 +154,8 @@ function InlineAction({
   type = "button",
   ariaLabel,
   className,
-  style
+  style,
+  node
 }) {
   const rung = INLINE_SIZES[size] ?? INLINE_SIZES.lg;
   return /*#__PURE__*/React.createElement("button", {
@@ -178,7 +179,8 @@ function InlineAction({
       opacity: disabled ? "var(--state-disabled)" : undefined,
       flex: size === "sm" ? undefined : "none",
       ...style
-    }
+    },
+    "data-node": node
   }, children);
 }
 function Button({
@@ -191,7 +193,8 @@ function Button({
   onClick,
   ariaLabel,
   className,
-  style
+  style,
+  node
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: type,
@@ -207,7 +210,8 @@ function Button({
         disabled
       }),
       ...style
-    }
+    },
+    "data-node": node
   }, children);
 }
 __ds_scope.buttonStyle = buttonStyle;
@@ -2050,7 +2054,8 @@ function MonogramAvatar({
   name,
   size = "sm",
   src,
-  redacted = false
+  redacted = false,
+  node
 }) {
   const [failed, setFailed] = React.useState(false);
   const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
@@ -2084,7 +2089,8 @@ function MonogramAvatar({
       background: redacted ? "var(--surface-container-high)" : "var(--secondary-container)",
       color: "var(--on-secondary-container)",
       fontWeight: 500
-    }
+    },
+    "data-node": node
   }, src && !failed && !redacted ? /*#__PURE__*/React.createElement("img", {
     src: src,
     alt: "",
@@ -2113,7 +2119,8 @@ function ActorChip({
   href,
   onClick,
   avatarSrc,
-  redacted = false
+  redacted = false,
+  node
 }) {
   const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
   const clip = {
@@ -2135,11 +2142,13 @@ function ActorChip({
       color: "var(--on-surface)",
       textDecoration: "none",
       borderRadius: "var(--radius-full)"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement(MonogramAvatar, {
     name: name,
     src: avatarSrc,
-    redacted: redacted
+    redacted: redacted,
+    node: node && "avatar"
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       ...clip,
@@ -2147,14 +2156,16 @@ function ActorChip({
       fontSize: "var(--text-label-large)",
       fontWeight: "var(--text-label-large--font-weight)",
       color: redacted ? "var(--text-secondary)" : undefined
-    }
+    },
+    "data-node": node && "name"
   }, name), !redacted && /*#__PURE__*/React.createElement("span", {
     style: {
       ...clip,
       flexShrink: 1,
       fontSize: "var(--text-label-medium)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "handle"
   }, "@", handle));
 }
 __ds_scope.REDACTED_ACTOR_NAME = REDACTED_ACTOR_NAME;
@@ -2299,12 +2310,14 @@ const { Icon, NODE_GLYPHS, MonogramAvatar, PendingMarker, formatStancePair, form
 function NodeMark({
   kind,
   name,
-  src
+  src,
+  node
 }) {
   if (kind === "person") return /*#__PURE__*/React.createElement(MonogramAvatar, {
     name: name,
     src: src,
-    size: "md"
+    size: "md",
+    node: node
   });
   const tile = {
     height: "32px",
@@ -2320,7 +2333,8 @@ function NodeMark({
   if (kind === "post" && src) {
     return /*#__PURE__*/React.createElement("span", {
       style: tile,
-      "aria-hidden": "true"
+      "aria-hidden": "true",
+      "data-node": node
     }, /*#__PURE__*/React.createElement("img", {
       src: src,
       alt: "",
@@ -2339,7 +2353,8 @@ function NodeMark({
       fontSize: "var(--text-title-medium)",
       fontWeight: "var(--text-title-medium--font-weight)"
     },
-    "aria-hidden": "true"
+    "aria-hidden": "true",
+    "data-node": node
   }, letter ?? /*#__PURE__*/React.createElement(Icon, {
     name: NODE_GLYPHS[kind],
     size: 18
@@ -2541,14 +2556,16 @@ function Body({
   name,
   sub,
   src,
-  pair
+  pair,
+  node
 }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? nearestAnchor(pair) : null;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(NodeMark, {
     kind: kind,
     name: name,
-    src: src
+    src: src,
+    node: node && "mark"
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
@@ -2563,13 +2580,15 @@ function Body({
       whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis"
-    }
+    },
+    "data-node": node && "name"
   }, name), sub && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-small)",
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "kind"
   }, sub)), exact && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true",
     style: {
@@ -2581,14 +2600,17 @@ function Body({
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)",
       whiteSpace: "nowrap"
-    }
+    },
+    "data-node": node && "pair"
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-body-medium)",
       lineHeight: 1
-    }
+    },
+    "data-node": node && "face"
   }, anchor.emoji), /*#__PURE__*/React.createElement("span", {
-    className: "cg-exact"
+    className: "cg-exact",
+    "data-node": node && "exact"
   }, exact)), /*#__PURE__*/React.createElement("span", {
     style: SR_ONLY
   }, exact)));
@@ -2600,14 +2622,17 @@ function StagedReference({
   src,
   pair,
   onRemove,
-  onEdit
+  onEdit,
+  node,
+  nodeKey
 }) {
   const body = /*#__PURE__*/React.createElement(Body, {
     kind: kind,
     name: name,
     sub: sub,
     src: src,
-    pair: pair
+    pair: pair,
+    node: node
   });
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2619,7 +2644,9 @@ function StagedReference({
       borderRadius: "var(--radius-small)",
       background: "var(--surface-container-highest)",
       boxSizing: "border-box"
-    }
+    },
+    "data-node": node,
+    "data-node-key": nodeKey
   }, onEdit ? /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": `${name} — set how it relates`,
@@ -2658,7 +2685,8 @@ function StagedReference({
       color: "var(--text-secondary)",
       cursor: "pointer",
       padding: 0
-    }
+    },
+    "data-node": node && "remove"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "close",
     size: 18
@@ -3199,7 +3227,8 @@ function FieldLabel({
   children,
   htmlFor,
   corner,
-  error
+  error,
+  node
 }) {
   const Name = htmlFor ? "label" : "span";
   return /*#__PURE__*/React.createElement("div", {
@@ -3217,13 +3246,15 @@ function FieldLabel({
       letterSpacing: "var(--text-label-large--letter-spacing)",
       fontWeight: "var(--text-label-large--font-weight)",
       color: error ? "var(--error)" : undefined
-    }
+    },
+    "data-node": node
   }, children), corner && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: "var(--text-label-small)",
       lineHeight: "var(--text-label-small--line-height)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "corner"
   }, corner));
 }
 function TextField({
@@ -3240,7 +3271,8 @@ function TextField({
   hint,
   error,
   cap,
-  used
+  used,
+  node
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
@@ -3275,11 +3307,13 @@ function TextField({
         display: "flex",
         flexDirection: "column",
         gap: "var(--space-1)"
-      }
+      },
+      "data-node": node
     }, /*#__PURE__*/React.createElement(FieldLabel, {
       htmlFor: fieldId,
       corner: corner,
-      error: error
+      error: error,
+      node: node && "label"
     }, label), rows ? /*#__PURE__*/React.createElement("textarea", {
       id: fieldId,
       rows: rows,
@@ -3288,7 +3322,8 @@ function TextField({
       "aria-describedby": described,
       "aria-invalid": error ? "true" : undefined,
       onChange: event => onChange && onChange(event.target.value),
-      style: shared
+      style: shared,
+      "data-node": node && "input"
     }) : /*#__PURE__*/React.createElement("input", {
       id: fieldId,
       type: type,
@@ -3298,7 +3333,8 @@ function TextField({
       "aria-describedby": described,
       "aria-invalid": error ? "true" : undefined,
       onChange: event => onChange && onChange(event.target.value),
-      style: shared
+      style: shared,
+      "data-node": node && "input"
     }), /*#__PURE__*/React.createElement(FieldSupport, {
       id: supportId,
       countId: countId,
@@ -3541,7 +3577,9 @@ function MediaThumb({
   duration,
   label,
   onRemove,
-  removeLabel = "Remove this picture"
+  removeLabel = "Remove this picture",
+  node,
+  nodeKey
 }) {
   const w = width ?? size;
   const h = height ?? size;
@@ -3566,7 +3604,9 @@ function MediaThumb({
       display: "flex",
       alignItems: "center",
       justifyContent: "center"
-    }
+    },
+    "data-node": node,
+    "data-node-key": nodeKey
   }, src && /*#__PURE__*/React.createElement("img", {
     src: src,
     alt: alt,
@@ -3881,7 +3921,8 @@ function PickedRow({
   items = [],
   caption,
   onManage,
-  manageLabel = "Manage the pictures"
+  manageLabel = "Manage the pictures",
+  node
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -3901,11 +3942,14 @@ function PickedRow({
       fontFamily: "var(--font-sans)",
       color: "var(--on-surface)",
       textAlign: "left"
-    }
+    },
+    "data-node": node
   }, items.map((item, index) => /*#__PURE__*/React.createElement(MediaThumb, _extends({
     key: item.src ?? index
   }, item, {
-    size: 48
+    size: 48,
+    node: node && "thumb",
+    nodeKey: node && String(index + 1)
   }))), caption && /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
@@ -3913,7 +3957,8 @@ function PickedRow({
       lineHeight: "var(--text-label-small--line-height)",
       letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "caption"
   }, caption));
 }
 
@@ -3942,14 +3987,16 @@ function DescribeCounter({
   described,
   total,
   onDescribe,
-  subject = "pictures"
+  subject = "pictures",
+  node
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
       gap: "var(--space-1)"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
@@ -3963,11 +4010,13 @@ function DescribeCounter({
     style: {
       fontSize: "inherit",
       lineHeight: "inherit"
-    }
+    },
+    node: node && "describe"
   }, "Describe the ", subject), " ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "count"
   }, "\xB7 ", described, " of ", total, " described")), /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
@@ -3975,7 +4024,8 @@ function DescribeCounter({
       lineHeight: "var(--text-label-small--line-height)",
       letterSpacing: "var(--text-label-small--letter-spacing)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "reason"
   }, "Read aloud to people who can't see it."));
 }
 __ds_scope.PickedRow = PickedRow;
@@ -4384,7 +4434,8 @@ function TopicRemovable({
   topic,
   pair,
   onRemove,
-  onEdit
+  onEdit,
+  node
 }) {
   return /*#__PURE__*/React.createElement("span", {
     style: {
@@ -4400,7 +4451,9 @@ function TopicRemovable({
       lineHeight: "var(--text-label-large--line-height)",
       fontWeight: "var(--text-label-large--font-weight)",
       letterSpacing: "var(--text-label-large--letter-spacing)"
-    }
+    },
+    "data-node": node,
+    "data-node-key": node && topic.replace(/^#/, "")
   }, onEdit ? /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": `#${topic} — set how it relates`,
@@ -4437,7 +4490,8 @@ function TopicRemovable({
       borderRadius: "var(--radius-full)",
       color: "inherit",
       cursor: "pointer"
-    }
+    },
+    "data-node": node && "remove"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "close",
     size: 16
@@ -4575,7 +4629,8 @@ function PageHeader({
   backHref,
   backLabel,
   onBack,
-  action
+  action,
+  node
 }) {
   return /*#__PURE__*/React.createElement("header", {
     style: {
@@ -4585,7 +4640,8 @@ function PageHeader({
       gap: "var(--space-3)",
       minHeight: "48px",
       padding: "0 var(--space-3)"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -4606,7 +4662,8 @@ function PageHeader({
       color: "var(--text-secondary)",
       textDecoration: "none",
       flex: "none"
-    }
+    },
+    "data-node": node && "back"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "arrow_back"
   })), title !== undefined && /*#__PURE__*/React.createElement("h1", {
@@ -4619,7 +4676,8 @@ function PageHeader({
       // steals the content's first row (seen on the seals, where the
       // trailing group is widest).
       whiteSpace: "nowrap"
-    }
+    },
+    "data-node": node && "title"
   }, title)), action);
 }
 __ds_scope.PageHeader = PageHeader;
@@ -4674,13 +4732,15 @@ function WizardHeader({
   stageLabel,
   help,
   onHelp,
-  action
+  action,
+  node
 }) {
   return /*#__PURE__*/React.createElement(PageHeader, {
     title: title,
     backHref: backHref,
     backLabel: backLabel,
     onBack: onBack,
+    node: node,
     action: /*#__PURE__*/React.createElement("span", {
       style: {
         display: "flex",
@@ -4704,7 +4764,8 @@ function WizardHeader({
         cursor: "pointer",
         flex: "none",
         padding: 0
-      }
+      },
+      "data-node": node && "leave"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "close"
     })), stageLabel ? /*#__PURE__*/React.createElement("span", {
@@ -4744,7 +4805,9 @@ function Card({
   children,
   as = "section",
   ariaLabel,
-  style
+  style,
+  node,
+  nodeKey
 }) {
   const Tag = as;
   return /*#__PURE__*/React.createElement(Tag, {
@@ -4758,7 +4821,9 @@ function Card({
       color: "var(--on-surface)",
       padding: "var(--card-padding)",
       ...style
-    }
+    },
+    "data-node": node,
+    "data-node-key": nodeKey
   }, children);
 }
 __ds_scope.Card = Card;
@@ -6347,7 +6412,8 @@ function StanceControl({
      not a relationship yet, so there is nothing to walk back: the mode omits
      the walk-away and changes nothing else. Additive — off by default, every
      existing use renders exactly as before. */
-  firstConnection = false
+  firstConnection = false,
+  node
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -6485,7 +6551,8 @@ function StanceControl({
       width: wide ? "100%" : undefined
     },
     onClick: event => event.stopPropagation(),
-    onPointerDown: event => event.stopPropagation()
+    onPointerDown: event => event.stopPropagation(),
+    "data-node": node
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -6540,7 +6607,8 @@ function StanceControl({
       lineHeight: 1,
       opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
       filter: restingFace === null ? "grayscale(1)" : "none"
-    }
+    },
+    "data-node": node && "face"
   }, restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji), wide && restingPair === null &&
   /*#__PURE__*/
   /* The wide anchor's words — only where there is no pair to show. */
@@ -6565,7 +6633,8 @@ function StanceControl({
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)",
       whiteSpace: "nowrap"
-    }
+    },
+    "data-node": node && "exact"
   }, formatStancePair(restingPair))), signedIn && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: () => {
@@ -6819,7 +6888,8 @@ function OverflowMenu({
   ariaLabel = "More",
   align = "right",
   presentation = "sheet",
-  placement = "header"
+  placement = "header",
+  node
 }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
@@ -6857,7 +6927,8 @@ function OverflowMenu({
       borderRadius: "var(--radius-full)",
       color: "var(--text-secondary)",
       cursor: "pointer"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "more_vert"
   })), presentation === "sheet" && /*#__PURE__*/React.createElement(BottomSheet, {
@@ -7066,7 +7137,9 @@ function TopicChip({
   onClick,
   inert = false,
   size = "md",
-  style: override
+  style: override,
+  node,
+  nodeKey
 }) {
   const name = topic.replace(/^#/, "");
   const style = {
@@ -7080,13 +7153,17 @@ function TopicChip({
   // topics line is ONE control opening the sheet) — a link nested in a button
   // is two controls fighting over one press, and invalid markup besides.
   if (inert) return /*#__PURE__*/React.createElement("span", {
-    style: style
+    style: style,
+    "data-node": node,
+    "data-node-key": nodeKey
   }, "#", name);
   return /*#__PURE__*/React.createElement("a", {
     href: href ?? `/t/${name}`,
     onClick: onClick,
     className: "cg-state cg-focus cg-hit",
-    style: style
+    style: style,
+    "data-node": node,
+    "data-node-key": nodeKey
   }, "#", name);
 }
 __ds_scope.Chip = Chip;
@@ -7205,11 +7282,14 @@ function TopicsLine({
   topics = [],
   references = 0,
   onOpen,
-  onOpenReferences
+  onOpenReferences,
+  node
 }) {
   if (topics.length === 0 && references === 0) return null;
   const visible = visibleChips(topics, references);
   const counts = countsText(topics.length - visible.length, references);
+  const tag = node && "tag";
+  const countsNode = node && "counts";
   if (onOpen) {
     return /*#__PURE__*/React.createElement("button", {
       type: "button",
@@ -7225,22 +7305,29 @@ function TopicsLine({
         cursor: "pointer",
         fontFamily: "var(--font-sans)",
         textAlign: "left"
-      }
+      },
+      "data-node": node
     }, visible.map(topic => /*#__PURE__*/React.createElement(TopicChip, {
       key: topic,
       topic: topic,
       inert: true,
-      style: CHIP_STYLE
+      style: CHIP_STYLE,
+      node: tag,
+      nodeKey: tag && topic.replace(/^#/, "")
     })), counts && /*#__PURE__*/React.createElement("span", {
-      style: COUNT_STYLE
+      style: COUNT_STYLE,
+      "data-node": countsNode
     }, counts));
   }
   return /*#__PURE__*/React.createElement("div", {
-    style: LINE
+    style: LINE,
+    "data-node": node
   }, visible.map(topic => /*#__PURE__*/React.createElement(TopicChip, {
     key: topic,
     topic: topic,
-    style: CHIP_STYLE
+    style: CHIP_STYLE,
+    node: tag,
+    nodeKey: tag && topic.replace(/^#/, "")
   })), counts && (onOpenReferences ? /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenReferences,
@@ -7254,9 +7341,11 @@ function TopicsLine({
       fontFamily: "var(--font-sans)"
     }
   }, /*#__PURE__*/React.createElement("span", {
-    style: COUNT_STYLE
+    style: COUNT_STYLE,
+    "data-node": countsNode
   }, counts)) : /*#__PURE__*/React.createElement("span", {
-    style: COUNT_STYLE
+    style: COUNT_STYLE,
+    "data-node": countsNode
   }, counts)));
 }
 __ds_scope.TopicsLine = TopicsLine;
@@ -7775,7 +7864,9 @@ function MediaAttachment({
   elapsed = "0:00",
   duration = "0:00",
   progress = 0,
-  fullscreen = true
+  fullscreen = true,
+  node,
+  nodeKey
 }) {
   const [muted, setMuted] = useGlobalMute();
   const videoRef = React.useRef(null);
@@ -7813,7 +7904,9 @@ function MediaAttachment({
       overflow: "hidden",
       borderRadius: radius,
       background: "var(--surface-container-high)"
-    }
+    },
+    "data-node": node,
+    "data-node-key": nodeKey
   }, src && video && !resting ? /*#__PURE__*/React.createElement("video", {
     ref: videoRef,
     src: src,
@@ -7926,7 +8019,8 @@ const DOT_TONES = {
 function PagerDots({
   count,
   current,
-  tone = "card"
+  tone = "card",
+  node
 }) {
   if (count < 2) return null;
   const palette = DOT_TONES[tone] ?? DOT_TONES.card;
@@ -7945,7 +8039,8 @@ function PagerDots({
       justifyContent: "center",
       gap: `${DOT_FULL}px`,
       filter: palette.filter
-    }
+    },
+    "data-node": node
   }, slots.map((index, offset) => {
     const edge = offset === 0 && moreBefore || offset === window - 1 && moreAfter;
     const size = edge ? DOT_EDGE : DOT_FULL;
@@ -7986,7 +8081,8 @@ function MediaGallery({
   items = [],
   ratio,
   radius,
-  maxHeight
+  maxHeight,
+  node
 }) {
   const [page, setPage] = React.useState(0);
   const stripRef = React.useRef(null);
@@ -7995,7 +8091,9 @@ function MediaGallery({
     return /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, items[0], {
       ratio: items[0].ratio ?? ratio ?? "wide",
       radius: radius ?? items[0].radius,
-      maxHeight: maxHeight ?? items[0].maxHeight
+      maxHeight: maxHeight ?? items[0].maxHeight,
+      node: node && "frame",
+      nodeKey: node && "1"
     }));
   }
   const frameRatio = ratio ?? items[0].ratio ?? "wide";
@@ -8029,14 +8127,17 @@ function MediaGallery({
   }, /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, item, {
     ratio: frameRatio,
     radius: radius ?? item.radius,
-    maxHeight: maxHeight ?? item.maxHeight
+    maxHeight: maxHeight ?? item.maxHeight,
+    node: node && "frame",
+    nodeKey: node && String(index + 1)
   }))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "8px 0 0"
     }
   }, /*#__PURE__*/React.createElement(PagerDots, {
     count: items.length,
-    current: page
+    current: page,
+    node: node && "dots"
   })));
 }
 __ds_scope.clipFrame = clipFrame;
@@ -8715,7 +8816,8 @@ function ExplainableNumber({
   unit,
   glyph,
   onOpenDetail,
-  overMedia = false
+  overMedia = false,
+  node
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -8740,7 +8842,8 @@ function ExplainableNumber({
       ...(overMedia ? {
         filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
       } : null)
-    }
+    },
+    "data-node": node
   }, glyph ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
     name: glyph,
     size: 18
@@ -8750,7 +8853,8 @@ function ExplainableNumber({
     style: {
       color: overMedia ? "#fff" : "var(--on-surface)",
       fontWeight: 500
-    }
+    },
+    "data-node": node && "value"
   }, value, unit ? /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--text-secondary)",
@@ -8971,7 +9075,8 @@ const { Icon } = __ds_scope;
 
 function ShareButton({
   onShare,
-  targetLabel = "this post"
+  targetLabel = "this post",
+  node
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -8987,7 +9092,8 @@ function ShareButton({
       padding: "6px 8px",
       color: "var(--text-secondary)",
       cursor: "pointer"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "share",
     size: 18
@@ -9108,7 +9214,8 @@ function PostCard({
      message's row), inside the same door. Additive: given neither, the card
      renders exactly as before. */
   lead,
-  main
+  main,
+  node
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -9157,7 +9264,8 @@ function PostCard({
         ...CLAMP(1),
         wordBreak: "break-word"
       })
-    }
+    },
+    "data-node": node && "title"
   }, title) : null;
 
   // WORDS XOR MEDIA: the picture is the body, so a media post draws no
@@ -9190,9 +9298,11 @@ function PostCard({
   // BODY FIRST, DESCRIPTION UNDER IT, on both kinds. The 4px seam between them
   // is the card's own gap: two fields, one visible join.
   const caption = /*#__PURE__*/React.createElement(React.Fragment, null, words && veiledParagraph(/*#__PURE__*/React.createElement("p", {
-    style: contentStyle
+    style: contentStyle,
+    "data-node": node && "body"
   }, words)), description && veiledParagraph(/*#__PURE__*/React.createElement("p", {
-    style: descriptionStyle
+    style: descriptionStyle,
+    "data-node": node && "description"
   }, description)));
 
   // Only where there is something folded away. "More" is a text control, not a
@@ -9216,7 +9326,8 @@ function PostCard({
       fontSize: "var(--text-label-medium)",
       fontWeight: "var(--text-label-medium--font-weight)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "opener"
   }, open ? "Less" : "More") : null;
   const textBlock = /*#__PURE__*/React.createElement("div", {
     style: {
@@ -9248,7 +9359,8 @@ function PostCard({
     }
   }, lead ?? (author && /*#__PURE__*/React.createElement(ActorChip, {
     handle: author.handle,
-    displayName: author.displayName
+    displayName: author.displayName,
+    node: node && "authorChip"
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -9260,10 +9372,12 @@ function PostCard({
     style: {
       fontSize: "var(--text-body-small)",
       color: "var(--text-secondary)"
-    }
+    },
+    "data-node": node && "timestamp"
   }, timestamp), !detail && /*#__PURE__*/React.createElement(OverflowMenu, {
     items: items,
-    ariaLabel: "More on this post"
+    ariaLabel: "More on this post",
+    node: node && "menu"
   }))), hasMedia && heading, hasMedia &&
   /*#__PURE__*/
   // FULL-BLEED. The media cancels the card's own 16px padding so it runs to
@@ -9282,7 +9396,8 @@ function PostCard({
         event.preventDefault();
         if (onOpenMedia) onOpenMedia(0);else setViewing(0);
       }
-    }
+    },
+    "data-node": node && "media"
   }, veil ? /*#__PURE__*/React.createElement(SensitiveVeil, {
     kind: "media",
     reason: veil.reason,
@@ -9290,10 +9405,12 @@ function PostCard({
     radius: "0px"
   }, /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
-    radius: "0px"
+    radius: "0px",
+    node: node && "media"
   })) : /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
-    radius: "0px"
+    radius: "0px",
+    node: node && "media"
   })), viewing !== null && /*#__PURE__*/React.createElement(MediaViewer, {
     items: media,
     index: viewing,
@@ -9302,7 +9419,8 @@ function PostCard({
     topics: topics,
     references: references,
     onOpen: detail ? onOpenReferences ?? (() => {}) : undefined,
-    onOpenReferences: onOpenReferences
+    onOpenReferences: onOpenReferences,
+    node: node && "tagsLine"
   }), !redacted && detail && opinions > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenOpinions ?? (() => {}),
@@ -9321,7 +9439,8 @@ function PostCard({
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)",
       textAlign: "left"
-    }
+    },
+    "data-node": node && "opinions"
   }, /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
   }, opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`)), !redacted && detail && citedBy > 0 && /*#__PURE__*/React.createElement("button", {
@@ -9342,7 +9461,8 @@ function PostCard({
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)",
       textAlign: "left"
-    }
+    },
+    "data-node": node && "citedBy"
   }, /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
   }, "Cited by ", citedBy)), edited && /*#__PURE__*/React.createElement(EditedMarker, {
@@ -9356,7 +9476,8 @@ function PostCard({
       gap: "var(--space-2)",
       width: "100%",
       minWidth: 0
-    }
+    },
+    "data-node": node && "actionRow"
   }, showStance && /*#__PURE__*/React.createElement(StanceControl, {
     targetLabel: targetLabel,
     bundle: bundle ?? undefined,
@@ -9366,12 +9487,14 @@ function PostCard({
     defaultOpen: stanceOpen,
     padInset: stancePadInset,
     defaultPick: stanceDefaultPick,
-    onOpenHistory: stanceOnOpenHistory
+    onOpenHistory: stanceOnOpenHistory,
+    node: node && "stance"
   }), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
     glyph: "graph",
     label: "Post score",
     value: score,
-    onOpenDetail: onOpenScore ?? (() => {})
+    onOpenDetail: onOpenScore ?? (() => {}),
+    node: node && "score"
   }), comments !== undefined && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenComments ?? onOpen,
@@ -9390,15 +9513,18 @@ function PostCard({
       fontSize: "var(--text-label-large)",
       fontWeight: "var(--text-label-large--font-weight)",
       cursor: "pointer"
-    }
+    },
+    "data-node": node && "comments"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "chat_bubble",
     size: 18
   }), comments > 0 && /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
+    "aria-hidden": "true",
+    "data-node": node && "count"
   }, comments)), showShare && /*#__PURE__*/React.createElement(ShareButton, {
     targetLabel: targetLabel,
-    onShare: onShare
+    onShare: onShare,
+    node: node && "share"
   }), actions));
 
   /* `attach` squares the top-left corner so a row flag (TaggedRow) fuses with
@@ -9407,7 +9533,9 @@ function PostCard({
   return /*#__PURE__*/React.createElement(Card, {
     style: attach ? {
       borderTopLeftRadius: 0
-    } : undefined
+    } : undefined,
+    node: node,
+    nodeKey: node && author?.handle
   }, veil ? /*#__PURE__*/React.createElement(SensitiveScope, null, body) : body);
 }
 __ds_scope.PostCard = PostCard;
@@ -11457,7 +11585,8 @@ function BottomNav({
   slots = DEFAULT_SLOTS,
   onSelect,
   inline = false,
-  glyphs
+  glyphs,
+  node
 }) {
   const item = {
     display: "flex",
@@ -11497,9 +11626,11 @@ function BottomNav({
       borderTop: "1px solid var(--border-hairline)",
       background: "var(--surface-bar)",
       paddingBottom: inline ? 0 : "env(safe-area-inset-bottom)"
-    }
+    },
+    "data-node": node
   }, slots.map(slot => {
     const selected = active === slot;
+    const slotNode = node && `${slot}Slot`;
     if (slot === "compose") {
       return /*#__PURE__*/React.createElement("button", {
         key: slot,
@@ -11507,7 +11638,8 @@ function BottomNav({
         "aria-label": LABELS.compose,
         onClick: () => onSelect && onSelect(slot),
         className: "cg-state cg-focus",
-        style: item
+        style: item,
+        "data-node": slotNode
       }, /*#__PURE__*/React.createElement("span", {
         "aria-hidden": "true",
         style: {
@@ -11538,7 +11670,8 @@ function BottomNav({
       style: {
         ...item,
         color: tone(selected)
-      }
+      },
+      "data-node": slotNode
     }, /*#__PURE__*/React.createElement(Icon, {
       name: glyph
     }), LABELS[slot]);
@@ -11611,7 +11744,8 @@ function BandIcon({
   name,
   label,
   size = 24,
-  dot = false
+  dot = false,
+  node
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -11629,7 +11763,8 @@ function BandIcon({
       cursor: "pointer",
       padding: 0,
       flex: "none"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       position: "relative",
@@ -11659,12 +11794,14 @@ function CograBand({
   chats = true,
   bell = true,
   unread = false,
-  children
+  children,
+  node
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
       flex: "none"
-    }
+    },
+    "data-node": node
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       height: "48px",
@@ -11678,7 +11815,8 @@ function CograBand({
       display: "inline-flex",
       color: "var(--primary)"
     },
-    "aria-hidden": "true"
+    "aria-hidden": "true",
+    "data-node": node && "mark"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "mark",
     size: 24,
@@ -11688,7 +11826,8 @@ function CograBand({
       fontSize: "var(--text-title-large)",
       lineHeight: "var(--text-title-large--line-height)",
       fontWeight: 600
-    }
+    },
+    "data-node": node && "wordmark"
   }, "cogra"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginLeft: "auto",
@@ -11699,12 +11838,14 @@ function CograBand({
   }, trailing, chats && /*#__PURE__*/React.createElement(BandIcon, {
     name: "forum",
     label: "Chats",
-    size: 22
+    size: 22,
+    node: node && "chats"
   }), bell && /*#__PURE__*/React.createElement(BandIcon, {
     name: "notifications",
     label: unread ? "Notifications — something new" : "Notifications",
     size: 22,
-    dot: unread
+    dot: unread,
+    node: node && "bell"
   }))), children);
 }
 __ds_scope.BandIcon = BandIcon;
@@ -12231,7 +12372,8 @@ function FilterTrigger({
   reading,
   onOpen,
   expanded = false,
-  ariaLabel = "What this shows"
+  ariaLabel = "What this shows",
+  node
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -12258,7 +12400,8 @@ function FilterTrigger({
       whiteSpace: "nowrap",
       overflow: "hidden",
       textOverflow: "ellipsis"
-    }
+    },
+    "data-node": node
   }, reading);
 }
 
@@ -12413,14 +12556,16 @@ function FeedFilter({
   defaultOpen = false,
   ariaLabel = "What your feed shows",
   topics = [],
-  onOpenTopics
+  onOpenTopics,
+  node
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(FilterTrigger, {
     reading: feedFilterSummary(value),
     onOpen: () => setOpen(true),
     expanded: open,
-    ariaLabel: ariaLabel
+    ariaLabel: ariaLabel,
+    node: node
   }), /*#__PURE__*/React.createElement(FeedFilterSheet, {
     value: value,
     onChange: onChange,

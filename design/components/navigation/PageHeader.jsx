@@ -18,9 +18,9 @@ import { Icon } from "./Icon.jsx";
    centred glyph in a 48px target puts the arrow exactly on the 24px screen
    gutter without depending on anyone. */
 
-export function PageHeader({ title, backHref, backLabel, onBack, action }) {
+export function PageHeader({ title, backHref, backLabel, onBack, action, node }) {
   return (
-    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)", minHeight: "48px", padding: "0 var(--space-3)" }}>
+    <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-3)", minHeight: "48px", padding: "0 var(--space-3)" }} data-node={node}>
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         {(backHref || onBack) && (
           <a
@@ -38,6 +38,7 @@ export function PageHeader({ title, backHref, backLabel, onBack, action }) {
               textDecoration: "none",
               flex: "none",
             }}
+            data-node={node && "back"}
           >
             <Icon name="arrow_back" />
           </a>
@@ -54,6 +55,7 @@ export function PageHeader({ title, backHref, backLabel, onBack, action }) {
               // trailing group is widest).
               whiteSpace: "nowrap",
             }}
+            data-node={node && "title"}
           >
             {title}
           </h1>

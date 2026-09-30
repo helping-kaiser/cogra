@@ -61,8 +61,8 @@ import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ON
 
 /** A node kind's mark, on any surface: avatar, cover, T, #, or the kind's
  *  glyph from the ONE semantic assignment (`NODE_GLYPHS`, the glyph atoms). */
-export function NodeMark({ kind, name, src }) {
-  if (kind === "person") return <MonogramAvatar name={name} src={src} size="md" />;
+export function NodeMark({ kind, name, src, node }) {
+  if (kind === "person") return <MonogramAvatar name={name} src={src} size="md" node={node} />;
   const tile = {
     height: "32px",
     width: "32px",
@@ -76,14 +76,14 @@ export function NodeMark({ kind, name, src }) {
   };
   if (kind === "post" && src) {
     return (
-      <span style={tile} aria-hidden="true">
+      <span style={tile} aria-hidden="true" data-node={node}>
         <img src={src} alt="" style={{ height: "100%", width: "100%", objectFit: "cover" }} />
       </span>
     );
   }
   const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
   return (
-    <span style={{ ...tile, fontFamily: "var(--font-sans)", fontSize: "var(--text-title-medium)", fontWeight: "var(--text-title-medium--font-weight)" }} aria-hidden="true">
+    <span style={{ ...tile, fontFamily: "var(--font-sans)", fontSize: "var(--text-title-medium)", fontWeight: "var(--text-title-medium--font-weight)" }} aria-hidden="true" data-node={node}>
       {letter ?? <Icon name={NODE_GLYPHS[kind]} size={18} />}
     </span>
   );

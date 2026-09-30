@@ -47,7 +47,7 @@ export const ALL_SLOTS = ["feed", "search", "compose", "wallet", "profile"];
 const LABELS = { feed: "Feed", search: "Explore", compose: "New post", wallet: "Wallet", profile: "Profile" };
 const GLYPHS = { feed: "dynamic_feed", search: "search", wallet: "wallet" };
 
-export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, inline = false, glyphs }) {
+export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, inline = false, glyphs, node }) {
   const item = {
     display: "flex",
     flex: 1,
@@ -88,9 +88,11 @@ export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, in
         background: "var(--surface-bar)",
         paddingBottom: inline ? 0 : "env(safe-area-inset-bottom)",
       }}
+      data-node={node}
     >
       {slots.map((slot) => {
         const selected = active === slot;
+        const slotNode = node && `${slot}Slot`;
         if (slot === "compose") {
           return (
             <button
@@ -100,6 +102,7 @@ export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, in
               onClick={() => onSelect && onSelect(slot)}
               className="cg-state cg-focus"
               style={item}
+              data-node={slotNode}
             >
               <span
                 aria-hidden="true"
@@ -134,6 +137,7 @@ export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, in
             onClick={() => onSelect && onSelect(slot)}
             className="cg-state cg-focus"
             style={{ ...item, color: tone(selected) }}
+            data-node={slotNode}
           >
             <Icon name={glyph} />
             {LABELS[slot]}
