@@ -858,6 +858,10 @@ application's key was made on another device. Restore it here with your
 recovery code, or make a new key — until you're approved, a new one
 costs nothing.` — `Restore the key` · `Make a new key`.
 
+**A pick kept pending** wears `Waiting for your key` under the post's
+anchor, in `PendingMarker`'s quiet type — never `Still settling`, which
+means signed and not yet ordered.
+
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`
 

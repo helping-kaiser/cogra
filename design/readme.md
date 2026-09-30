@@ -2141,8 +2141,9 @@ that no single page owned.
   guest's tap on `New post` or the stance face now starts the gate
   rather than the journey — so Main, FeedBare and WalletGuest leave
   those selectors. KeyElsewhere leaves the stance-face selector for
-  the same reason: its face diverges, the pad on press-and-hold and
-  the key gate on a tap. The applicant gaps stay in the census; their
+  the same reason: its face diverges — a tap and a press-and-hold both
+  open the pad carrying the key notice, so nothing signs without the
+  key. The applicant gaps stay in the census; their
   boards are still owed.
 
 ### The video conform round — 2026-09-03

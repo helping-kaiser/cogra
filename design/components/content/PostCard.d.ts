@@ -89,6 +89,11 @@ export interface PostCardProps {
    */
   stanceOnOpenHistory?: () => void;
   /**
+   * A pick kept pending with the key elsewhere (the key-loss round).
+   * Pass-through to `StanceControl`'s `pendingPick`.
+   */
+  stancePendingPick?: { pDirected: number; pInterest: number };
+  /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
    * explanation is item 13's Post score drill-down, still undesigned.

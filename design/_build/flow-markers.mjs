@@ -1618,6 +1618,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Your key"', tag: "button" },
     { n: 2, find: ">Restore the key</button>", tag: "button", all: true },
     { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
+    // The wash is the outside press, and the system's Back rides it: both
+    // drop the pick — only the text button keeps (the key-loss round).
+    { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The pad's one irreversible gesture. scanExempt like every dialog board, so
   // only the dialog's own pair and the scrim it sits on carry numbers.

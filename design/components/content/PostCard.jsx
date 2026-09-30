@@ -95,6 +95,7 @@ export function PostCard({
   stancePadInset = 16,
   stanceDefaultPick,
   stanceOnOpenHistory,
+  stancePendingPick,
   score,
   onOpenScore,
   comments,
@@ -463,6 +464,7 @@ export function PostCard({
               padInset={stancePadInset}
               defaultPick={stanceDefaultPick}
               onOpenHistory={stanceOnOpenHistory}
+              pendingPick={stancePendingPick}
             />
           )}
           {score !== undefined && (

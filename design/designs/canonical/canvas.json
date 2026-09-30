@@ -1362,9 +1362,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
+      "w": 2030,
       "h": 533,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -1647,6 +1647,15 @@
       "w": 390,
       "h": 844,
       "page": "profile"
+    },
+    {
+      "file": "PadPending.dc.html",
+      "title": "Key absent · a pick kept pending",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
     },
     {
       "file": "YourKeyGate.dc.html",

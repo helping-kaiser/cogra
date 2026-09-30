@@ -125,6 +125,7 @@
     "LadderMax": "reference",
     "LadderStates": "reference",
     "LadderTopics": "reference",
+    "PadPending": "reference",
     "FeedShapes": "reference",
     "MapOverview": "reference",
     "MapEntry": "reference",
@@ -259,7 +260,7 @@
     { "from": "KeyElsewhere", "via": 6, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
     { "from": "KeyElsewhere", "via": 7, "kind": "advance", "label": "tag chip", "to": [{ "board": "TagPage" }] },
     { "from": "KeyElsewhere", "via": 8, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
-    { "from": "KeyElsewhere", "via": 9, "kind": "advance", "label": "stance face", "to": [{ "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }, { "board": "PadKeyAbsent", "case": "tap with the key elsewhere — the pad carries the notice" }] },
+    { "from": "KeyElsewhere", "via": 9, "kind": "advance", "label": "stance face", "to": [{ "board": "PadKeyAbsent", "case": "a tap or a press-and-hold — both open the pad carrying the key notice, so nothing signs without the key" }] },
     { "from": "KeyElsewhere", "via": 10, "kind": "detour", "label": "Post Score", "to": [{ "board": "FeedEntry" }] },
     { "from": "KeyElsewhere", "via": 11, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
     { "from": "KeyElsewhere", "via": 12, "kind": "nav", "label": "nav · Feed", "to": [{ "terminal": "self", "case": "scrolled — back to the top" }, { "terminal": "self", "case": "at the top — the feed refreshes" }] },
@@ -370,7 +371,7 @@
     { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }, { "board": "ApplicantKeyElsewhere", "case": "an applicant — their own home is the applicant shell, carrying the same card" }] },
     { "from": "Restore", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Restore", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
-    { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "board": "RestoreError", "case": "the code doesn't check out" }, { "board": "RestoreLength", "case": "the code is the wrong length once folded — the one shape a reader can fix" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "gap": "the kept picks' review — picks kept pending on this device sign together, in one batch the reader reviews first", "case": "key restored, with picks kept pending" },{ "board": "RestoreError", "case": "the code doesn't check out" }, { "board": "RestoreLength", "case": "the code is the wrong length once folded — the one shape a reader can fix" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
     { "from": "RestoreError", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }, { "board": "ApplicantKeyElsewhere", "case": "an applicant — their own home is the applicant shell, carrying the same card" }] },
     { "from": "RestoreError", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -1472,7 +1473,8 @@
 
     { "from": "PadKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
     { "from": "PadKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
-    { "from": "PadKeyAbsent", "via": 3, "kind": "cancel", "label": "Keep it pending, restore later", "to": [{ "terminal": "back", "case": "leaves — the stance waits on the key" }] },
+    { "from": "PadKeyAbsent", "via": 3, "kind": "back", "label": "Keep it pending, restore later", "to": [{ "terminal": "back", "case": "kept — the pick waits on this device, and the post's anchor wears it (the PadPending plate)" }] },
+    { "from": "PadKeyAbsent", "via": 4, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "nothing is kept — the pick is dropped, as StanceControl's outside press drops one" }] },
 
     { "from": "HelpDialog", "via": 1, "kind": "back", "label": "Close", "to": [{ "terminal": "back", "case": "the dialog closes — back to the screen that asked" }] },
     { "from": "HelpDialog", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes" }] },

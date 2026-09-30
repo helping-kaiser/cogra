@@ -7,6 +7,7 @@ import { StancePad, STANCE_AXES } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
 import { StanceCoachMark, padHelp, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
+import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import {
   bundleReadout,
   clampPair,
@@ -155,6 +156,13 @@ export function StanceControl({
      the walk-away and changes nothing else. Additive — off by default, every
      existing use renders exactly as before. */
   firstConnection = false,
+  /* A PICK KEPT PENDING (the key-loss round, `PadKeyAbsent`'s text button).
+     With the key elsewhere nothing is signed, so the bundle is unchanged —
+     but the reader made a pick and kept it, and the anchor has to say so or
+     the pick reads as lost. The face shows the kept pick, and the honesty
+     marker's quiet line under it says what it waits on. Additive — absent,
+     the control renders exactly as before. */
+  pendingPick,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -277,7 +285,7 @@ export function StanceControl({
     }, LONG_PRESS_MS);
   };
 
-  const restingPair = bundle.records === 0 && !bundle.severed ? null : bundle.current;
+  const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
   const restingFace = restingPair === null ? null : bundleReadout(restingPair);
 
   return (
@@ -296,7 +304,9 @@ export function StanceControl({
           aria-label={
             restingFace === null
               ? `Give your opinion on ${targetLabel}`
-              : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
+              : pendingPick
+                ? `Your opinion on ${targetLabel}, waiting for your key: ${restingFace.label}, ${formatStancePair(restingPair)}.`
+                : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
           }
           onClick={onTap}
           onPointerDown={onPointerDown}
@@ -405,6 +415,7 @@ export function StanceControl({
           </button>
         )}
       </div>
+      {pendingPick && <PendingMarker label="Waiting for your key" />}
 
       {open && (
         <>
