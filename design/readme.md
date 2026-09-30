@@ -2853,7 +2853,7 @@ could close. These are the answers, and what each one moved.
   passes `fullscreen` through for it and every other board renders
   byte-identical.
 - **The reply seal earns the orphaned line.** "Replying also signs
-  your opinion on the post it answers." stands as a `QuietNote`
+  an opinion on the post it answers." stands as a `QuietNote`
   beneath the ruled block — `FactRow` grows no note slot, because
   the line is a fact about replying rather than about any one row.
   It lands on both states of the seal: they are one surface, and a
