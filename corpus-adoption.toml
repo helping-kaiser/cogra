@@ -142,7 +142,7 @@ generated_files = [
   "schema.graphql",             # exported, CI-diffed (CLAUDE.md)
   "Cargo.lock",
   "web/package-lock.json",
-  "design-tokens.json",
+  "design/tokens/scheme.json",
   "client-crypto-vectors.json",
   "client-constants.json",
   "stance-fold-vectors.json",
@@ -1138,7 +1138,7 @@ reserved_ungoverned = [
 #     discipline; only the word is shared". No invention available.
 #   * schema.graphql type/field names — generated artifact, and no
 #     documentation owner mints matching labels.
-#   * migrations/*.sql filenames, design-tokens.json keys,
+#   * migrations/*.sql filenames, design/tokens/scheme.json keys,
 #     client-crypto-vectors.json ids — nothing mints them either.
 # THE REVISIT CONDITION is exact: designations follow once inventory
 # profiles derive mints for those asset classes — a migrations profile
