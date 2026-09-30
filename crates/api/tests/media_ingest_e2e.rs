@@ -21,6 +21,10 @@ use api::media::transcode::Ffmpeg;
 use api::media::{BlobStore, GalleryKind};
 use axum::body::Body;
 use axum::http::Request;
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
+use common::l1::client::ActorKey;
+use common::l1::wire;
 use http_body_util::BodyExt;
 use postgres_store::PgPool;
 use serde_json::{Value, json};
@@ -83,9 +87,10 @@ impl Rig {
     }
 
     /// A member funded with enough θ for the prepares below: one that
-    /// passes the gallery rules is then priced like any other act.
-    async fn seed_member(&self, handle: &str, email: &str) -> Uuid {
-        let key = common::l1::client::ActorKey::generate();
+    /// passes the gallery rules is then priced like any other act. The key
+    /// is the device's, for the tests that sign what they prepare.
+    async fn seed_member(&self, handle: &str, email: &str) -> (Uuid, ActorKey) {
+        let key = ActorKey::generate();
         let id = Uuid::new_v4();
         let mut conn = self.pool.acquire().await.expect("conn");
         postgres_store::genesis::insert_actor(
@@ -111,7 +116,101 @@ impl Rig {
             .credit_burn(&key.address(), 10_000_000)
             .await
             .expect("burn");
-        id
+        (id, key)
+    }
+
+    /// A video post naming one asset, signed on the device and landed,
+    /// returning the post's id.
+    async fn land_video_post(&self, token: &str, key: &ActorKey, media_id: &str) -> String {
+        let data = self
+            .gql(
+                Some(token),
+                "mutation($input: PreparePostInput!) { preparePost(input: $input) { \
+                   node writes { id canonicalProposal } userErrors { code message field } } }",
+                json!({ "input": {
+                    "title": "A clip",
+                    "license": { "attribution": 1.0, "provenance": 0.0 },
+                    "attachments": [{ "mediaId": media_id, "displayOrder": 0 }],
+                }}),
+            )
+            .await;
+        let prepared = &data["preparePost"];
+        assert_eq!(prepared["userErrors"], json!([]), "{prepared}");
+        self.sign_prepared(token, key, &prepared["writes"]).await;
+        self.standin.close_epoch().await.expect("closes");
+        let outcome = api::ingest::ingest_pending(
+            &api::l1::StandInBoundary(self.standin.clone()),
+            &self.pool,
+            8,
+        )
+        .await
+        .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
+        prepared["node"].as_str().expect("node id").to_string()
+    }
+
+    /// The device's two signing steps over a prepare's writes, through the
+    /// session-authorized relay mutations.
+    async fn sign_prepared(&self, token: &str, key: &ActorKey, writes: &Value) {
+        let host_key = self.standin.host_public_key().await.expect("host key");
+        for write in writes.as_array().expect("writes") {
+            let id = write["id"].as_str().expect("id");
+            let proposal = wire::decode_proposal(
+                &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+                    .expect("b64"),
+            )
+            .expect("decodes");
+            let pre = key.pre_sign(proposal);
+            let sealed = self
+                .gql(
+                    Some(token),
+                    "mutation($input: SubmitProposalsInput!) {
+                       submitProposals(input: $input) {
+                         stagedWrites { id verifiedAct } userErrors { code message }
+                       }
+                     }",
+                    json!({ "input": { "proposals": [{
+                        "stagedWriteId": id,
+                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                    }]}}),
+                )
+                .await;
+            let staged = &sealed["submitProposals"]["stagedWrites"][0];
+            let act = wire::decode_verified_act(
+                &B64.decode(staged["verifiedAct"].as_str().expect("sealed"))
+                    .expect("b64"),
+            )
+            .expect("decodes");
+            let witness = key.approve(&pre, &act, &host_key).expect("approves");
+            self.gql(
+                Some(token),
+                "mutation($input: ApproveActsInput!) {
+                   approveActs(input: $input) {
+                     stagedWrites { state } userErrors { code message }
+                   }
+                 }",
+                json!({ "input": { "approvals": [{
+                    "stagedWriteId": id,
+                    "signature": B64.encode(witness.approval_signature),
+                }]}}),
+            )
+            .await;
+        }
+    }
+
+    /// The gallery a post serves to an anonymous reader.
+    async fn gallery_of(&self, post: &str) -> Value {
+        self.gql(
+            None,
+            "query($id: UUID!) { post(id: $id) { attachments { id url state } } }",
+            json!({ "id": post }),
+        )
+        .await["post"]["attachments"]
+            .clone()
     }
 
     async fn gql(&self, token: Option<&str>, query: &str, variables: Value) -> Value {
@@ -1007,4 +1106,264 @@ async fn an_upload_ffmpeg_refuses_fails_in_the_authors_words(pool: PgPool) {
         Settled::Failed(ingest::REASON_DID_NOT_ENCODE.into())
     );
     assert_eq!(rig.media_attachment(&token, &id).await["state"], "FAILED");
+}
+
+/// The ruling this pins: an author reposting media from their own earlier
+/// post is never refused, whichever way the media comes back. The same
+/// bytes are the same asset, attached again. A re-pick that arrives as
+/// different bytes but re-encodes to the held clip — what a phone that
+/// re-encodes every pick produces — merges into it, and the id its upload
+/// was handed then reads, attaches and serves as that clip. Three landed
+/// posts, one asset, every gallery serving it; and the sweep collects only
+/// the upload that merged, never the clip the posts stand on.
+///
+/// The merge itself is driven here by the two statements the ingest
+/// worker's settle runs, so the contract is pinned without an encoder;
+/// the worker's own path is pinned with one below.
+///
+/// Media an author already posted attaches to a new post of theirs without refusal, whether it comes back as the same bytes or as an upload that re-encodes to them.
+/// ´claim:media:reusing-own-posted-media-never-refuses´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_clip_from_an_earlier_post_posts_again(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let (author, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let clip = h264_movie(1080, 1920, 2_500);
+    let first = rig.upload(&token, &clip).await;
+    assert_eq!(first["state"], "READY", "within target: {first}");
+    let held = first["id"].as_str().expect("id").to_string();
+    let first_post = rig.land_video_post(&token, &key, &held).await;
+
+    let again = rig.upload(&token, &clip).await;
+    assert_eq!(again["id"], first["id"], "the author's bytes are one asset");
+    let second_post = rig.land_video_post(&token, &key, &held).await;
+
+    let repick = rig.upload(&token, &h264_movie(2560, 1440, 2_500)).await;
+    assert_eq!(repick["state"], "PROCESSING", "{repick}");
+    let repick_id = repick["id"].as_str().expect("id").to_string();
+    let job = postgres_store::media::claim_ingest(&rig.pool, 60.0)
+        .await
+        .expect("claim")
+        .expect("the re-pick's job");
+    assert_eq!(job.id.to_string(), repick_id);
+    let held_row = postgres_store::media::by_id(&rig.pool, held.parse().expect("uuid"))
+        .await
+        .expect("read")
+        .expect("the held clip");
+    let collided = postgres_store::media::finish_ingest(
+        &rig.pool,
+        job.id,
+        postgres_store::media::Rendition {
+            digest: &held_row.digest,
+            storage_key: "rendition.mp4",
+            size_bytes: 1,
+            options: &json!({ "v": 1 }),
+        },
+    )
+    .await;
+    assert!(
+        matches!(&collided, Err(sqlx::Error::Database(e)) if e.is_unique_violation()),
+        "a rendition that is the held clip collides with it: {collided:?}"
+    );
+    let merged = postgres_store::media::merge_ingest(&rig.pool, job.id, author, &held_row.digest)
+        .await
+        .expect("merge")
+        .expect("there is a held clip to merge into");
+    assert_eq!(merged.to_string(), held);
+
+    let polled = rig.media_attachment(&token, &repick_id).await;
+    assert_eq!(polled["state"], "READY", "{polled}");
+    assert_eq!(
+        polled["id"],
+        held.as_str(),
+        "the upload reads as the held clip"
+    );
+    let third_post = rig.land_video_post(&token, &key, &repick_id).await;
+
+    for post in [&first_post, &second_post, &third_post] {
+        let gallery = rig.gallery_of(post).await;
+        assert_eq!(gallery[0]["id"], held.as_str(), "{post}: {gallery}");
+        assert_eq!(gallery[0]["state"], "READY");
+        let object = gallery[0]["url"]
+            .as_str()
+            .and_then(|url| url.strip_prefix("https://media.example/bucket/"))
+            .expect("an asset key");
+        assert!(
+            rig.blobs.exists(object).await.expect("head"),
+            "{post}: the clip it serves is stored"
+        );
+    }
+
+    let swept: Vec<Uuid> = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
+        .await
+        .expect("sweep")
+        .iter()
+        .map(|a| a.id)
+        .collect();
+    assert_eq!(
+        swept,
+        vec![job.id],
+        "only the merged upload is unreferenced; the clip stands on three posts"
+    );
+    assert!(
+        postgres_store::media::by_id(&rig.pool, held_row.id)
+            .await
+            .expect("read")
+            .is_some()
+    );
+}
+
+/// An upload that merged is a reference to its asset: the sweep leaves the
+/// asset standing while the upload's id could still be attached, even
+/// with no post carrying it, and takes it on the pass after the upload
+/// itself ages out. A merge with nothing held to merge into changes
+/// nothing and says so.
+///
+/// An asset an upload merged into is not swept while that upload stands.
+/// ´claim:media:a-merged-into-asset-outlives-the-upload´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_asset_is_not_swept_while_a_merged_upload_names_it(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let (author, _) = rig.seed_member("author", "author@example.com").await;
+    let options = json!({ "v": 1, "aspect_ratio": "9:16", "duration_ms": 2_500 });
+
+    let held = Uuid::new_v4();
+    postgres_store::media::insert(
+        &rig.pool,
+        held,
+        author,
+        &[5; 32],
+        "sha256",
+        &format!("{held}.mp4"),
+        "video/mp4",
+        1024,
+        &options,
+        postgres_store::media::MediaScale::Post,
+    )
+    .await
+    .expect("the held clip");
+    let upload = Uuid::new_v4();
+    postgres_store::media::insert_processing(
+        &rig.pool,
+        upload,
+        author,
+        &[6; 32],
+        "sha256",
+        &format!("ingest/{upload}.mp4"),
+        "video/mp4",
+        4096,
+        &options,
+        postgres_store::media::MediaScale::Post,
+    )
+    .await
+    .expect("the upload");
+
+    assert_eq!(
+        postgres_store::media::merge_ingest(&rig.pool, upload, author, &[7; 32])
+            .await
+            .expect("merge"),
+        None,
+        "no held asset has these bytes"
+    );
+    assert_eq!(
+        postgres_store::media::merge_ingest(&rig.pool, upload, author, &[5; 32])
+            .await
+            .expect("merge"),
+        Some(held)
+    );
+
+    let first: Vec<Uuid> = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
+        .await
+        .expect("sweep")
+        .iter()
+        .map(|a| a.id)
+        .collect();
+    assert_eq!(first, vec![upload], "the merged upload names the clip");
+    let second: Vec<Uuid> = postgres_store::media::sweep_orphans(&rig.pool, 0.0, 100)
+        .await
+        .expect("sweep")
+        .iter()
+        .map(|a| a.id)
+        .collect();
+    assert_eq!(
+        second,
+        vec![held],
+        "with nothing naming it, it is an orphan"
+    );
+}
+
+/// The same clip twice from a phone, as the worker meets it: two uploads
+/// that differ only in how their container is laid out, both queued for
+/// their audio, re-encoded to one rendition. The second settles by merging
+/// into the first — its original released, its id reading as the first
+/// clip, a retry of its file handed that clip without another encode —
+/// and a post attaching it is accepted.
+///
+/// A re-encode whose rendition is a clip its author already holds merges into that clip.
+/// ´claim:media:a-matching-re-encode-merges´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_re_encode_that_matches_a_held_clip_merges_into_it(pool: PgPool) {
+    let Some(ffmpeg) = ffmpeg_or_skip("a_re_encode_that_matches_a_held_clip_merges_into_it").await
+    else {
+        return;
+    };
+    let rig = Rig::new(pool);
+    rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+
+    let original = non_aac_audio_original(&ffmpeg, "pcm_s16le").await;
+    let relaid = fast_start_remux(&ffmpeg, &original).await;
+    assert_ne!(original, relaid, "the two picks arrive as different bytes");
+
+    let first = rig.upload(&token, &original).await;
+    assert_eq!(first["state"], "PROCESSING", "{first}");
+    let held = first["id"].as_str().expect("id").to_string();
+    assert_eq!(rig.ingest(Some(&ffmpeg)).await, Settled::Ready);
+
+    let second = rig.upload(&token, &relaid).await;
+    assert_eq!(second["state"], "PROCESSING", "{second}");
+    let second_id = second["id"].as_str().expect("id").to_string();
+    assert_ne!(second_id, held, "not yet known to be the same clip");
+    assert_eq!(
+        rig.ingest(Some(&ffmpeg)).await,
+        Settled::Merged(held.parse().expect("uuid"))
+    );
+    assert!(
+        !rig.blobs
+            .exists(&format!("ingest/{second_id}.mp4"))
+            .await
+            .expect("head"),
+        "the merged upload's original is released"
+    );
+
+    let polled = rig.media_attachment(&token, &second_id).await;
+    assert_eq!(polled["state"], "READY", "{polled}");
+    assert_eq!(polled["id"], held.as_str());
+
+    let retried = rig.upload(&token, &relaid).await;
+    assert_eq!(retried["id"], held.as_str(), "a retry is handed the clip");
+    assert_eq!(rig.ingest(Some(&ffmpeg)).await, Settled::Idle);
+
+    assert_eq!(rig.prepare_video_post(&token, &second_id).await, json!([]));
+}
+
+/// The same movie with its header moved ahead of its media — a stream
+/// copy, so every sample is untouched and only the container's layout
+/// differs, the way two exports of one clip differ.
+async fn fast_start_remux(ffmpeg: &Ffmpeg, bytes: &[u8]) -> Vec<u8> {
+    let scratch = tempfile::tempdir().expect("scratch");
+    let input = scratch.path().join("in.mp4");
+    let out = scratch.path().join("out.mp4");
+    tokio::fs::write(&input, bytes).await.expect("scratch file");
+    let status = tokio::process::Command::new(ffmpeg.program())
+        .args(["-nostdin", "-loglevel", "error", "-y", "-i"])
+        .arg(&input)
+        .args(["-c", "copy", "-movflags", "+faststart"])
+        .arg(&out)
+        .status()
+        .await
+        .expect("ffmpeg runs");
+    assert!(status.success(), "the remux runs");
+    tokio::fs::read(&out).await.expect("the remux")
 }
