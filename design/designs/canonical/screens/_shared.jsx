@@ -1950,8 +1950,15 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `Settings` frames the whole scroll; a sheet board keeps the phone's 844 and
    lets the page run past it, which is what a scrolling page under a sheet does.
    The three boards therefore differ in what covers the page and in nothing
-   else. */
-function SettingsBody() {
+   else.
+
+   Two states of the account reach it (the key-loss round): `backup="none"`
+   is a reader who declined the backup — the Recovery code row reads
+   `Not made yet` and opens `SettingsBackupNone`, and the group's footnote
+   stops promising a way back that does not exist — and `forget` is the
+   don't-remember switch turned on. Both default to the page every other
+   board draws. */
+function SettingsBody({ backup = "made", forget = false } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
@@ -2050,9 +2057,13 @@ function SettingsBody() {
 
         <SettingsGroup
           label="Key backup"
-          footnote="Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
+          footnote={
+            backup === "none"
+              ? "Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back."
+              : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
+          }
         >
-          <SettingsRow label="Recovery code" status="Last created 12.08.2026" onOpen={() => {}} />
+          <SettingsRow label="Recovery code" status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"} onOpen={() => {}} />
           <SettingsRow label="Your key" onOpen={() => {}} />
         </SettingsGroup>
 
@@ -2108,7 +2119,7 @@ function SettingsBody() {
 
         <SettingsGroup ariaLabel="Sign out">
           <SettingsRow
-            checked={false}
+            checked={forget}
             label="Don't remember this account on this device"
             status="Your key and your draft are cleared from this browser when you sign out."
             onOpen={() => {}}

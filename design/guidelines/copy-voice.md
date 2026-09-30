@@ -831,6 +831,15 @@ speaks in; Android's own clip confirmation answers there. A code made
 or replaced from settings returns to settings with
 `Your key is backed up with the new code.`
 
+**The backup made late** (`SettingsBackupNone`): the Recovery code row
+reads `Not made yet`, and the Key backup footnote stops promising a way
+back — `Your key signs everything you publish and lives only in this
+browser. Until you make a recovery code, it can't be brought back.` The
+screen is `Make a recovery code`, with KeyDecline's consequence word for
+word, the ceremony's `Create my recovery code`, and last: `The code is
+shown once and never stored. Have somewhere to write it down before you
+go on.`
+
 **No screen lock** (Android, in front of every reveal or replace):
 `This phone has no screen lock` / `Anyone who picks it up could see your
 key or replace your recovery code. You can go on, or set a screen lock

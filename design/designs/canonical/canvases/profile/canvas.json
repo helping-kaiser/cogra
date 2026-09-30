@@ -32,7 +32,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 4534,
+      "h": 4573,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -256,6 +256,15 @@
       "file": "DeleteAccountMail.dc.html",
       "title": "Delete account · check your mail",
       "x": 1920,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackupNone.dc.html",
+      "title": "Settings · make a recovery code, none made yet",
+      "x": 2400,
       "y": 2988,
       "w": 390,
       "h": 844,

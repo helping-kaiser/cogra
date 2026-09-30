@@ -105,6 +105,15 @@
       "end": { "board": "RecoveryCode", "via": 3, "case": "code confirmed — returns where the ceremony began" }
     },
     {
+      "name": "make-a-recovery-code-later",
+      "description": "A reader who declined the backup opens the Recovery code row, makes the code on the ceremony's own board, types it back, and lands in settings with the key backed up.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackupNone" },
+      "waypoints": [
+        { "board": "SettingsBackupNone", "via": 2, "to": "RecoveryCode" }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "case": "a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so" }
+    },
+    {
       "name": "vouch-back-for-your-inviter",
       "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
       "start": { "board": "VouchBack", "via": 3 },
