@@ -1358,7 +1358,7 @@ function ReplySealBody({ cited = 0 }) {
         {/* The opinion the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
-        <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
+        <QuietNote>Replying also signs an opinion on the post it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
