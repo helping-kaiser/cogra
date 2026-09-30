@@ -7080,6 +7080,33 @@ key, with nothing on screen saying so.
   `KeyConfirm`, `KeyDecline` and `PadKeyAbsent` — plus the four maps
   that follow the edges.
 
+### The typed-name row — 2026-09-30
+
+The V1.0 audit's K14.1 (E22), a blocker: the tag picker had no
+creation row by ruling, its rows came only from slice 2.7's index, and
+nothing staged what was typed — so before the index, and for any name
+nobody had used, no tag could be added. jakob's ruling: **"yes — the
+canonicalized typed name is always the list's first row, the action key
+stages it."**
+
+- **The first row is the typed name, canonicalized, always** — whether
+  or not rows match below it. It is the `ReferenceRow` every row is,
+  with the `Signs as #saltmaps` preview as its second line: the preview
+  made tappable, a row and never a `Create` button, because it names a
+  Type that already exists. A name in use that is the typed name is
+  that row, never listed twice; the index's rows sit under it.
+- **The name field's keyboard action key stages the first row** — the
+  same pick as a tap on it, landing in the composer's tags. On a
+  refused name there is no first row, so the key stages nothing and the
+  refusal holds.
+- **Drawn**: `TagPicker` gains the `salt` row above the four matches;
+  `TagPickerTyping`'s preview moves from under the field onto its row;
+  `TagPickerRefused`'s drawing stands, and it says why the row goes. The
+  graph's name-field edges carry the action key, and
+  `behavior/TagPicker.md` holds the ordering and the key's two outcomes.
+- **The gate**: 218 screens and 1536 edges unchanged, flows 63/63; the
+  compose map and the two drawn boards moved.
+
 ## 15. Index
 
 **Root**
