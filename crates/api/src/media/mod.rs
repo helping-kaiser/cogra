@@ -739,23 +739,66 @@ fn gallery_path(index: usize, field: &str) -> Vec<String> {
 /// Posters are read in the same round trip as the assets they cover: both
 /// answer to the same three rules, so splitting the read would buy a
 /// second query for nothing.
+///
+/// **An asset already placed elsewhere is not a refusal.** Nothing here
+/// asks whether an asset sits in another parent: an asset is "reusable
+/// across the uploader's own parents" (data-model.md "Why parents point at
+/// attachments"), and an author reusing media from their own earlier post
+/// is two placements of one asset. An id that
+/// merged into an asset the author already held is read as that asset
+/// ([`canonical_entries`]), so a client attaching the id its upload was
+/// handed attaches what that upload became.
 pub async fn plan_gallery(
     pool: &PgPool,
     author: Uuid,
     kind: GalleryKind,
     drafts: &[AttachmentDraft],
 ) -> Result<PlannedGallery, GalleryPlanError> {
-    let Some(entries) = gallery_entries(kind, drafts)? else {
+    let Some(mut entries) = gallery_entries(kind, drafts)? else {
         return Ok(PlannedGallery::default());
     };
     let ids: Vec<Uuid> = entries
         .iter()
         .flat_map(|entry| std::iter::once(entry.id).chain(entry.cover))
         .collect();
-    let rows = store::assets_by_ids(pool, &ids)
+    let resolved = store::resolve_assets(pool, &ids)
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
+    canonical_entries(&mut entries, &resolved)?;
+    let rows: Vec<store::MediaAttachment> = resolved.into_iter().map(|r| r.asset).collect();
     resolve_gallery(author, kind, &entries, &rows)
+}
+
+/// Rewrites every id the client named to the asset it resolves to, then
+/// runs the one duplicate rule that could only be seen after resolving:
+/// two entries that named different ids for the same asset.
+///
+/// An id the read did not find is left as named, so the anti-hijack
+/// read's "no such asset" still names it.
+fn canonical_entries(
+    entries: &mut [EntryDraft],
+    resolved: &[store::ResolvedAsset],
+) -> Result<(), GalleryError> {
+    let canonical = |id: Uuid| {
+        resolved
+            .iter()
+            .find(|r| r.requested == id)
+            .map_or(id, |r| r.asset.id)
+    };
+    let mut seen: Vec<Uuid> = Vec::with_capacity(entries.len());
+    for (i, entry) in entries.iter_mut().enumerate() {
+        let id = canonical(entry.id);
+        if seen.contains(&id) {
+            return Err(GalleryError::at(
+                gallery_path(i, "mediaId"),
+                "this asset is already in the gallery",
+            ));
+        }
+        seen.push(id);
+        entry.id = id;
+        entry.cover = entry.cover.map(canonical);
+    }
+    Ok(())
 }
 
 /// One gallery entry as the client stated it, after the checks that need
@@ -1093,11 +1136,11 @@ pub async fn plan_profile_image(
     let Some(id) = chosen else {
         return Ok(Some(None));
     };
-    let rows = store::assets_by_ids(pool, std::slice::from_ref(&id))
+    let resolved = store::resolve_assets(pool, std::slice::from_ref(&id))
         .await
         .map_err(|e| GalleryPlanError::Internal(e.to_string()))?;
     Ok(Some(Some(checked_profile_image(
-        rows.first(),
+        resolved.first().map(|r| &r.asset),
         author,
         field,
     )?)))
@@ -1424,6 +1467,56 @@ mod planning_tests {
             GalleryPlanError::BadInput(e) => e.path.clone(),
             GalleryPlanError::Internal(e) => panic!("expected a field refusal, got {e}"),
         }
+    }
+
+    /// An id that merged into a held asset is planned as that asset — the
+    /// entry and a poster alike — while an id naming a serving asset, or
+    /// nothing, is left as named. Two ids for one asset in one gallery are
+    /// the same asset twice, refused at the second.
+    ///
+    /// A gallery reads an id that merged into a held asset as that asset, and two ids for one asset as a duplicate.
+    /// ´claim:media:a-merged-id-plans-as-its-asset´
+    #[test]
+    fn a_merged_id_is_planned_as_the_asset_it_names() {
+        let author = Uuid::new_v4();
+        let held = asset(author, video::MIME);
+        let poster = asset(author, webp::MIME);
+        let merged = Uuid::new_v4();
+        let missing = Uuid::new_v4();
+        let resolved = [
+            store::ResolvedAsset {
+                requested: merged,
+                asset: held.clone(),
+            },
+            store::ResolvedAsset {
+                requested: poster.id,
+                asset: poster.clone(),
+            },
+        ];
+
+        let mut entries = vec![entry(merged, Some(poster.id))];
+        canonical_entries(&mut entries, &resolved).expect("a merged id is no refusal");
+        assert_eq!(entries[0].id, held.id, "the entry is the held asset");
+        assert_eq!(entries[0].cover, Some(poster.id), "a serving id stays");
+
+        let mut unknown = vec![entry(missing, None)];
+        canonical_entries(&mut unknown, &resolved).expect("left for the ownership read");
+        assert_eq!(unknown[0].id, missing);
+
+        let with_held = [
+            store::ResolvedAsset {
+                requested: held.id,
+                asset: held.clone(),
+            },
+            resolved[0].clone(),
+        ];
+        let mut twice = vec![entry(held.id, None), entry(merged, None)];
+        assert_eq!(
+            canonical_entries(&mut twice, &with_held)
+                .expect_err("one asset under two ids")
+                .path,
+            gallery_path(1, "mediaId")
+        );
     }
 
     /// An empty gallery is not a refusal; a gallery past the kind's
