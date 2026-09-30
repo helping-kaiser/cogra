@@ -864,6 +864,25 @@ own no-external-request rule.
 
 ### Dialogs
 
+**Whether an act asks first is one rule, with three answers** (jakob,
+the key-loss round):
+
+- **Undo** for an act that is reversible and private — hiding someone,
+  unsaving a post. It happens on the press, and the snackbar carries the
+  way back.
+- **A think-twice dialog** for an act that is irreversible, or public
+  and consequential for someone else — removing a post, discarding a
+  draft, walking an opinion all the way back, closing an application,
+  declining a backup, changing the handle (a freed handle is claimable
+  and its links die), and signing out of a device set to forget the
+  account while it holds the only copy of the key.
+- **Nothing** for an act the reader undoes by doing it again — a switch
+  flipped back, a pick made over.
+
+An act is placed by what it costs, never by how often it happens: a
+dialog in front of a cheap, private act teaches the reader to press
+through dialogs, and that habit is what the costly ones then meet.
+
 **Emphasis goes to the outcome a distracted reader should land on.** M3's
 dialog vocabulary is text buttons only, and the source follows it, which
 weights every choice equally. Instead:
