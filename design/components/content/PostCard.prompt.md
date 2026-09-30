@@ -25,4 +25,6 @@ Everything a post grows beyond its content goes in the **affordance row**: **one
 
 `summary` clamps the title to one line, the description to two and the text body to 18 — 360px of words, the scale of the crops a media post puts in the same place, so a feed of both kinds keeps one rhythm — and makes the text region the link; `More` opens what is folded. `detail` sets the body at `body-large`, clamps nothing, and puts the title at `headline-small`. In both, the **author leads** — people first, so the chip is above the content, never a byline under it. The stance control sits outside the link region because it acts rather than navigates. Media is full-bleed via `media` (`MediaGallery`) and stands at its true shape, full width, clamped only to 4:5.
 
+**Other feed kinds ride this shell** (`lead`, `main`, `menuLabel`, `stanceAxes`, all additive). A profile or a tag in the feed is `PostCard`, mounted: its lead stands where the author chip stands, its body inside the same door, and its ⋮ and opinion say what they act on — `More about @mira`, and a tag's Affinity with its own four ends. Given none of them, the card is the post card.
+
 **A row flag can fuse with the card.** `attach` squares the top-left corner so `TaggedRow`'s claim flag (the tag page) and the card paint as one folder-tab silhouette; every other surface leaves it off.
