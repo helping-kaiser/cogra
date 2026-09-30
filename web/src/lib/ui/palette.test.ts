@@ -1,8 +1,9 @@
 // @vitest-environment node
-// Pins globals.css to `design-tokens.json` (repo root) — the cross-platform
-// colour contract (`make tokens`). design-tokens.test.ts generates and
-// contrast-checks the values; this asserts the stylesheet actually carries
-// them, in both themes, and exposes each as a Tailwind role.
+// Pins globals.css to `design/tokens/scheme.json` — the generated M3 scheme
+// (`make tokens`) that design/tokens/colors.css transcribes into the token
+// contract. design-tokens.test.ts generates and contrast-checks the values;
+// this asserts the stylesheet actually carries every role of the scheme, in
+// both themes, and exposes each as a Tailwind role.
 //
 // Without this the CSS is the one copy of the palette nothing verifies, and a
 // hand-edited hex would diverge from Android silently.
@@ -12,7 +13,7 @@ import { describe, expect, it } from "vitest";
 
 const CSS = readFileSync(new URL("../../app/globals.css", import.meta.url), "utf-8");
 const TOKENS = JSON.parse(
-  readFileSync(new URL("../../../../design-tokens.json", import.meta.url), "utf-8"),
+  readFileSync(new URL("../../../../design/tokens/scheme.json", import.meta.url), "utf-8"),
 ) as { light: Record<string, string>; dark: Record<string, string> };
 
 /** `onSurfaceVariant` is `on-surface-variant`; the CSS side is kebab-case. */
