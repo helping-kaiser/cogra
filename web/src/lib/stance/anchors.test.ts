@@ -1,6 +1,6 @@
 // @vitest-environment node
 // Pins the readout to design.md §8.4, the way palette.test.ts pins colour
-// to design-tokens.json: the doc's table is the contract both clients
+// to design/tokens/scheme.json: the doc's table is the contract both clients
 // read, so it is parsed here rather than transcribed. A row edited in the
 // doc and not in the code — or the reverse — fails.
 //
