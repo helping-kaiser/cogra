@@ -160,7 +160,8 @@ The three that decide the shape of a session:
 
 ### The contract artifacts
 
-Four generated files sit at the repo root, and they all work the same
+Five generated files carry these contracts — four at the repo root, the
+palette's scheme under `design/tokens/` — and they all work the same
 way: the side that owns the fact writes the file, every consumer pins to
 it by test, and nothing transcribes a value out of it into code. A
 regeneration that changes a byte fails the exporter's own drift test and
@@ -173,7 +174,7 @@ server about a number it enforces.
 | `client-crypto-vectors.json` | `common::l1` | `make vectors` |
 | `client-constants.json` | `api` — caps, page size, registration grammar, write-handshake constants | `make constants` |
 | `stance-fold-vectors.json` | `common::l1::fold` | `make fold-vectors` |
-| `design-tokens.json` | design.md §2.2, via web | `make tokens` |
+| `design/tokens/scheme.json` | design.md §2.2, via web | `make tokens` |
 
 ### What the gates cost
 

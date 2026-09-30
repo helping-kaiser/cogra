@@ -13,9 +13,9 @@ import java.io.File
 import java.util.Locale
 
 /**
- * The preview palette is a second reader of the repo-root `design-tokens.json`
- * contract, not a second opinion about the colour. `:app`'s `ColorSchemeTest`
- * pins the shipped theme to that file; this pins the preview theme to it, so a
+ * The preview palette is a second reader of the `design/tokens.json` contract,
+ * not a second opinion about the colour. `:app`'s `ColorSchemeTest` pins the
+ * shipped theme to that file; this pins the preview theme to it, so a
  * regenerated palette cannot leave the two drawing different pictures.
  *
  * If this fails after `make tokens`, the fix is to copy the new values across
@@ -23,10 +23,22 @@ import java.util.Locale
  */
 class PreviewThemeTokensTest {
 
-    private val tokens: JsonObject =
-        Json.parseToJsonElement(File("../../../design-tokens.json").readText()).jsonObject
+    /** The colors.css half of the contract: context `tokens` is light, `dark` is dark. */
+    private val colors: JsonObject =
+        Json.parseToJsonElement(File("../../../design/tokens.json").readText()).jsonObject
+            .getValue("files").jsonObject.getValue("colors.css").jsonObject
 
-    private fun theme(name: String) = tokens.getValue(name).jsonObject
+    /**
+     * The contract's hex for an M3 role in [theme] (`light` or `dark`). The
+     * contract names roles as kebab-case custom properties and writes hex in
+     * lowercase; [hex] formats uppercase, so the contract value is uppercased.
+     */
+    private fun token(theme: String, role: String): String {
+        val context = if (theme == "light") "tokens" else theme
+        val property = "--" + role.replace(Regex("[A-Z]")) { "-" + it.value.lowercase(Locale.ROOT) }
+        return colors.getValue(context).jsonObject.getValue(property).jsonObject
+            .getValue("resolved").jsonPrimitive.content.uppercase(Locale.ROOT)
+    }
 
     private fun Color.hex(): String {
         val argb = toArgb()
@@ -85,19 +97,15 @@ class PreviewThemeTokensTest {
 
     @Test
     fun previewLightMatchesTheCommittedTokens() {
-        val expected = theme("light")
         for ((role, read) in roles) {
-            assertThat(read(PreviewLightColors).hex())
-                .isEqualTo(expected.getValue(role).jsonPrimitive.content)
+            assertThat(read(PreviewLightColors).hex()).isEqualTo(token("light", role))
         }
     }
 
     @Test
     fun previewDarkMatchesTheCommittedTokens() {
-        val expected = theme("dark")
         for ((role, read) in roles) {
-            assertThat(read(PreviewDarkColors).hex())
-                .isEqualTo(expected.getValue(role).jsonPrimitive.content)
+            assertThat(read(PreviewDarkColors).hex()).isEqualTo(token("dark", role))
         }
     }
 }
