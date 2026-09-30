@@ -2131,7 +2131,10 @@ Object.assign(FLOW_MARKERS, {
    rest of their shell being wired on the board that owns it (readme §13,
    Canvas pages and flows — the pattern-exemplar rule). */
 Object.assign(FLOW_MARKERS, {
-  KeyCeremonyUnsupported: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
+  KeyCeremonyUnsupported: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'href="/downloads/app-debug.apk"', tag: "a" },
+  ],
   ApplicantKeyElsewhere: [
     { n: 1, find: ">Restore the key</button>", tag: "button" },
     { n: 2, find: ">Make a new key</button>", tag: "button" },

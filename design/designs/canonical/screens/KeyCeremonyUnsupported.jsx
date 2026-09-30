@@ -11,9 +11,16 @@
 
    NO COMMITMENT, so nothing is drawn that cannot be done. The ceremony's two
    paragraphs and its two buttons all describe a key made on this browser;
-   the notice takes their place, and the back arrow is the whole way out —
-   back to the task card, which stays until the key is made somewhere that
-   can hold it. */
+   the notice takes their place, and the back arrow is the way back — to the
+   task card, which stays until the key is made somewhere that can hold it.
+
+   THE APP IS A REAL DOOR, NOT A NAME (jakob, the key-loss round's review). The
+   web login landing already serves the APK — `/downloads/app-debug.apk`, a
+   plain download anchor reading `On Android? Download the app (APK)` — so the
+   notice carries that same link in the same words, underlined in the panel's
+   own ink: it leaves the app for the browser's download, which is a link's
+   job, not a button's. Both are replaced together when CoGra is served from
+   a real host. */
 export function Screen() {
   return (
     <>
@@ -36,6 +43,14 @@ export function Screen() {
           <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
             Open CoGra in a current Chrome, Firefox or Safari, or in the Android app.
           </p>
+          <a
+            href="/downloads/app-debug.apk"
+            download
+            className="cg-state cg-focus"
+            style={{ alignSelf: "flex-start", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "inherit", textDecoration: "underline" }}
+          >
+            On Android? Download the app (APK)
+          </a>
         </div>
       </div>
     </>

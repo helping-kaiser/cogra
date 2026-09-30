@@ -321,6 +321,7 @@
     { "from": "KeyCeremony", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed" }, { "board": "ApplicantKeyElsewhere", "case": "opened from the key-elsewhere card — back to it, the attached key untouched" }] },
     { "from": "KeyCeremony", "via": 2, "kind": "advance", "label": "Create my recovery code", "to": [{ "board": "KeyConfirm" }] },
     { "from": "KeyCeremony", "via": 3, "kind": "cancel", "label": "Not now", "to": [{ "board": "KeyDecline" }] },
+    { "from": "KeyCeremonyUnsupported", "via": 2, "kind": "advance", "label": "Download the app (APK)", "to": [{ "terminal": "os", "case": "the browser downloads the APK — the login landing's own link" }] },
     { "from": "KeyCeremonyUnsupported", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed", "case": "nothing was made — the task card stays until a browser or the app that can hold a key makes it" }, { "board": "ApplicantKeyElsewhere", "case": "opened from the key-elsewhere card — back to it, the attached key untouched" }] },
 
     { "from": "KeyConfirm", "via": 1, "kind": "cancel", "label": "Cancel", "to": [{ "board": "KeyCeremony" }] },

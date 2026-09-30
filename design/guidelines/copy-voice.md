@@ -826,6 +826,12 @@ The key-loss round's lines (2026-09-30): the ceremony's exits, the
 backup made late or replaced, the key revealed, restored, or absent
 with no backup to restore from.
 
+**A browser that can't hold a key** (`KeyCeremonyUnsupported`) is told
+so in the key-absent notice's voice, never a fault's: `This browser
+can't hold a key` / `Open CoGra in a current Chrome, Firefox or Safari,
+or in the Android app.` — and the app is a door, the login landing's own
+link in its own words: `On Android? Download the app (APK)`.
+
 **Declining the backup** says what it made, because the task card the
 reader came from leaves the feed with it:
 `Key made — no backup yet. You can make a code in settings.`
