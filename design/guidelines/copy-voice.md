@@ -840,6 +840,13 @@ word, the ceremony's `Create my recovery code`, and last: `The code is
 shown once and never stored. Have somewhere to write it down before you
 go on.`
 
+**The key behind its gate** (`YourKeyGate`, a browser whose seed is
+sealed): `On this browser your key is sealed inside its backup. Enter
+your recovery code to open it and see the key.` — the field `Current
+recovery code`, the commitment `Show my key`, a refused code in
+Restore's line. Either copy on `YourKey` answers with the snackbar
+`Copied`.
+
 **No screen lock** (Android, in front of every reveal or replace):
 `This phone has no screen lock` / `Anyone who picks it up could see your
 key or replace your recovery code. You can go on, or set a screen lock

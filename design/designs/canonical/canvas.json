@@ -1374,7 +1374,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 4573,
+      "h": 4612,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1616,6 +1616,15 @@
       "file": "SettingsBackupError.dc.html",
       "title": "Settings · a new recovery code, the current one refused",
       "x": 2880,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKeyGate.dc.html",
+      "title": "Settings · your key, behind the browser's gate",
+      "x": 3840,
       "y": 2988,
       "w": 390,
       "h": 844,

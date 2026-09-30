@@ -19,7 +19,18 @@
 
    EACH BLOCK'S COPY NAMES WHAT IT COPIES. Two controls reading "Copy" a
    thumb's width apart tell a listener the verb and not the object, the same
-   reason the share control is "Share this post". */
+   reason the share control is "Share this post".
+
+   A COPY IS A SECRET ON THE CLIPBOARD, AND IS TREATED AS ONE (the key-loss
+   round). On Android both copies are flagged `EXTRA_IS_SENSITIVE`, as the
+   recovery code's copy already is, so the system's clip confirmation masks
+   the key instead of showing it; the snackbar answers every copy with
+   `Copied`. This window keeps `FLAG_SECURE` (auth.md): it shows the key
+   itself, which is the deliberate difference from the recovery-code screen,
+   where jakob ruled screenshots stay possible.
+
+   THE GATE IN FRONT OF IT on a browser whose seed is sealed is
+   `YourKeyGate`. */
 
 function SecretBlock({ label, value, copyLabel }) {
   return (
