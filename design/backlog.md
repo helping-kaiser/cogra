@@ -3563,9 +3563,13 @@ The application queue, in order:
 6. **The three feed cards** (comment, profile, tag in the feed) —
    briefed drawing rounds with canvas iteration, sequenced after
    the mechanical work.
-7. **The post-MVP split**: the post-MVP domain restructures into
-   future features vs future updates of existing features —
-   proposal to jakob before any move.
+7. **The post-MVP split** *(landed 2026-09-30, jakob's ruling)*: the
+   one post-MVP domain now serves two canvases via `canvases.json` —
+   `futures` ("CoGra · Future features": chats + wallet, the original
+   artifact retitled) and `updates` ("CoGra · Surface updates":
+   push + histories, minted new). The domain — screens, graph,
+   flows — stays whole; a later re-split (chats alone, when it
+   crowds) is the same canvases.json gesture again.
 8. **The applicant mechanism round** (once-each staging kept):
    About/auth.md/contract corrections plus the three owed rulings
    (visibility of a staged act, its signing moment, its fate on an
