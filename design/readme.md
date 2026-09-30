@@ -7140,6 +7140,23 @@ in-flight state, and the only fault the seal knew was "offline".
   is paid for, and there is only so much to go around at a time. The
   panel is `NoticePanel`, the first master of the tertiary notice that
   the key-absent boards still draw by hand.
+- **Every write the law names has its outcome.** Five pads' `Set` reach
+  `PadFailed`. Thirty-six hold edges name the `RowSigning` row, and
+  `Walk it back` keeps its dialog with `Retry`. Nineteen consequential
+  writes reach `NetworkError`: remove, close, create and revoke, the
+  credential changes, the deletion link and its cancel, the resends,
+  sign out everywhere else, and the key's attach. Sixteen comfort
+  controls revert on the row. Thirteen seal commits reach
+  `WriteRuleFailed`, and so does `NetworkError`'s own `Retry`. The ten
+  seals that can stage a citation reach `SealFaultRow`.
+- **The gate**: 218 → **223 screens**, 1536 → **1557 edges**, 1 gap
+  (the kept picks' review, unchanged), **flows 63**, every one resolved.
+  The witness was not re-blessed. Two flows now pin their success
+  outcome where a failure outcome joined the edge they walk:
+  `send-someone-an-invite` at `InviteNew`, and `remove-your-post` at its
+  end. `NetworkError` stands on `ComposeSealBody` and renders
+  byte-identical. The maps follow the edges. `Feed.md` gains the hold's
+  lines, and `ComposeSeal.md` opens with the commit in flight.
 
 ## 15. Index
 
