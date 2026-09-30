@@ -31,6 +31,7 @@ within a phase, order is flexible.
 | 3. Miner rollout phase | 1 | **Q25** | Standing miner delegation — a scoped credential or miner-held seen-list over the v1 push model. Deferred until delegated miners are real; shares the trigger with miner incentives ([miner-api.md "Out of scope"](implementation/miner-api.md#out-of-scope--miner-selection-and-incentives)). |
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 | 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `admission_fund` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
+| 6. If Layer 1 cannot land a batch whole | 1 | **Q57** | Batch atomicity — how the seals' land-together guarantee holds if Layer 1 never backs it, without breaking the mirror. Deferred: the product builds to the guarantee. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -539,3 +540,49 @@ in what form?
 
 Q55 (community pools consume admission economics that
 $c_{\mathrm{u}}$ prices).
+
+## Q57 — Batch atomicity if Layer 1 cannot back it
+
+**Where it shows up:**
+[api-spec.md "Conventions"](implementation/api-spec.md) (a prepare
+may stage a batch),
+[design/guidelines/copy-voice.md](../design/guidelines/copy-voice.md)
+(the seals' `They land together, or none does.`)
+**Status:** open (deferred — until Layer 1 shows it cannot land a
+batch whole)
+
+### Context
+
+Every seal that signs more than one act — a post with its tags and
+citations, a reply with its citations, an edit's batch — promises
+`They land together, or none does.` That promise **stands as a
+guarantee** (jakob, 2026-09-30): the product is built to it, on the
+expectation that the L1 team crafts batching of its own. The
+contract today lands each act on its own ("no cross-record
+atomicity"), and the Q43 pre-check prices a batch whole without
+reserving anything, so the substrate does not yet back the promise.
+
+One constraint holds whatever the answer: **the mirror mirrors
+every L1 record**. "We shouldnt break the guarantee that we mirror
+L1" (jakob) — a fallback may never keep a landed record out of the
+mirror.
+
+### The question
+
+If Layer 1 ends up unable to land a batch whole, how does CoGra keep
+the promise? Two answers are on record (jakob, 2026-09-30):
+
+- **The fallback concept.** The db marks each record as part of a
+  bundle of N, and CoGra does not show a bundle until all N have
+  landed — the mirror holds every record, and only what is shown
+  waits for the whole bundle.
+- **The copy retreats.** The seals stop promising what the
+  substrate cannot back, then and not before.
+
+"Not a bridge we need to cross right now" — the question opens only
+when Layer 1's batching is known.
+
+### Related
+
+Q43 (resolved — a batch is priced whole before any of it is staged;
+a pre-check, never a reservation).
