@@ -2084,7 +2084,7 @@
       "x": -340,
       "y": 2120,
       "w": 290,
-      "text": "ENTRY · Your key\n\nCreated on this device, never held by CoGra. 'Create my recovery code' first opens the think-twice dialog — Cancel falls back to Your key, 'Show my code' commits. The code screen is a TRAP: no back arrow, the only way out is the code typed or pasted back ('I've written it down'). Copy stays — pasting into a password manager is a legitimate keeping. Declining backup is a destructive dialog whose SAFE action is filled.",
+      "text": "ENTRY · Your key\n\nCreated on this device, never held by CoGra. 'Create my recovery code' first opens the think-twice dialog — Cancel falls back to Your key, 'Show my code' commits. The code screen is a TRAP: no back arrow, the only way out is the code typed or pasted back ('I've written it down'). Copy stays — pasting into a password manager is a legitimate keeping. Declining backup is a destructive dialog whose SAFE action is filled, and accepting the risk answers with a snackbar. Both dialogs' scrim and Back take the safe answer. The key exists only once the ceremony ends — attached, and its backup uploaded, at the typed-back confirmation, or attached alone at 'I accept the risk'; every other exit leaves nothing. A browser without WebCrypto Ed25519 meets the refusal board instead of the ceremony.",
       "page": "entry"
     },
     {
@@ -2092,7 +2092,7 @@
       "x": -340,
       "y": 3180,
       "w": 290,
-      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (hold a face; a plain tap signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance.",
+      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (a tap opens it; press and hold signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance.",
       "page": "entry"
     },
     {
@@ -2100,7 +2100,7 @@
       "x": -340,
       "y": 4240,
       "w": 290,
-      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key.",
+      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key. The code is read folded (case, dashes and I/L/O never matter); a wrong length is named, every other failure is one line. An account with no backup gets a card with no restore — the way the key can come instead; an applicant whose key was made elsewhere may restore it or make a new one.",
       "page": "entry"
     },
     {

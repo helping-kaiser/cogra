@@ -2135,7 +2135,8 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
             does not need to be argued with.
 
             IT IS A NAVIGATING ROW, NOT AN ACTION ROW. Sign out happens on the
-            press; this opens a surface, and the chevron is the system's one
+            press — asking first only when it would take the only copy of an
+            unbacked key (`SignOutConfirm`); this opens a surface, and the chevron is the system's one
             promise that it does. That is also why the label is a verb phrase
             where `SettingsRow`'s own note asks for a noun: the row names a task
             rather than a setting, and `Account deletion` would be the page's
