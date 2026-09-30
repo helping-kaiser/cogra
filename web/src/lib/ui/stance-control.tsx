@@ -227,6 +227,21 @@ export function StanceControl({
     readBundle();
   }, [readBundle]);
 
+  // Nothing this control started may answer after it is gone: an armed
+  // hold would open a pad on nothing, and an in-flight standing read
+  // would set state on an unmounted tree (past teardown, the document
+  // itself is gone). Bumping the generation drops every pending read.
+  useEffect(
+    () => () => {
+      if (holdTimer.current !== null) {
+        clearTimeout(holdTimer.current);
+        holdTimer.current = null;
+      }
+      bundleRead.current += 1;
+    },
+    [],
+  );
+
   /**
    * Where the pick lands the bundle, folded locally against the SERVED
    * raw sums and recomputed on every pointer move (§8.3). There is no
