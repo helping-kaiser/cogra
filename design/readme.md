@@ -7107,6 +7107,34 @@ stages it."**
 - **The gate**: 218 screens and 1536 edges unchanged, flows 63/63; the
   compose map and the two drawn boards moved.
 
+### The veiled reel — 2026-09-30
+
+The V1.0 audit's K7.1: the stream drew no sensitive state, so a
+veiled clip's shape there was undesigned. jakob's amended ruling:
+**"the veiled reel is FULL SCREEN, looking exactly like any other
+reel in the scroller, blurred and not playing, with the standard
+veil anatomy exactly as everywhere else (chip + reason on the blur,
+tap-to-reveal session-scoped, then it plays). One board:
+ReelSensitive."**
+
+- **One board, `ReelSensitive`** — the stream full screen, the clip
+  blurred and not playing, the standard veil face centred on the
+  blur; back arrow, rail, caption and bottom bar exactly as on
+  `Reel`. The caption's words veil with `Show`, per `SensitiveVeil`'s
+  law: the title stays readable, the description veils.
+- **No sound disc and no seek line** — they are playback's rung of
+  the control ladder, and a veiled clip has no playback (item 103's
+  rule); everything that isn't playback stays, and the rail's acts
+  stay live over the veil.
+- **The reveal**: a tap on either veil face reveals — session-scoped,
+  as everywhere — and the screen is `Reel`, playing; a swipe passes
+  to the next clip. The score leads to `PostDetailVideoSensitive`,
+  the sensitive detail. `ReelSensitive` is a declared entry, the
+  state the record brings, wired as `PostDetailVideoSensitive` is.
+- **Drawn**: the one new board; `SensitiveVeil` gained a `faceGutter`
+  prop so the face clears the rail (default unchanged); the sensitive
+  video detail board moved aside on the canvas, content untouched.
+
 ## 15. Index
 
 **Root**

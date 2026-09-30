@@ -1,4 +1,5 @@
 import React from "react";
+import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
 /* THE STREAM'S CAPTION (readme §13, the reel round) — the post's words along the
    bottom of the clip, in the card's own budget: the handle, the title, and the
@@ -13,9 +14,18 @@ import React from "react";
    lead in this product and the rail is where the acts on a person begin.
 
    THE WORDS ARE THE DESCRIPTION, never a body: a clip post's body is its media,
-   so the words beside it are the caption (post.md's words-XOR-media). */
+   so the words beside it are the caption (post.md's words-XOR-media).
 
-export function ReelCaption({ handle, title, description, bottom = 86, onMore }) {
+   A SENSITIVE POST'S CAPTION VEILS THE WAY A CARD'S DOES (`SensitiveVeil`'s
+   law, `PostCard`'s idiom): the description blurs in place behind the
+   `text` veil, the handle and the title stay readable so choosing to look is
+   informed, and the reveal belongs to the post's one `SensitiveScope` — the
+   same tap that unveils the clip unveils these words. */
+
+export function ReelCaption({ handle, title, description, bottom = 86, onMore, sensitive = false }) {
+  // The veil wraps the clamped line, never the text inside it — the clamp clips
+  // first, so the blur's halo stays soft on every side (PostCard's reason).
+  const veiled = (node) => (sensitive ? <SensitiveVeil kind="text">{node}</SensitiveVeil> : node);
   return (
     <div
       style={{
@@ -45,7 +55,7 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore })
           {title}
         </span>
       )}
-      {description && (
+      {description && veiled(
         <span
           style={{
             fontSize: "var(--text-body-small)",
