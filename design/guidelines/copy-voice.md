@@ -89,7 +89,8 @@ happen; the confirmation says what happened.**
 
 Sentence case everywhere. No title case, no all-caps, no exclamation
 marks outside a genuine welcome (`Approved! Your registration is
-landing`). Em dashes carry asides; `…` marks work in progress.
+landing`). Em dashes carry asides; `…` marks work in progress (*In-flight
+labels*).
 
 ## Emoji
 
@@ -480,6 +481,29 @@ of opening the real surface again; one line per kind, same shape:
 - `Your post waits with your application — it arrives with you.`
 - `Your opinion waits with your application — it arrives with you.`
 
+## In-flight labels
+
+The failure pack (jakob, 2026-09-30). A commit whose answer has not
+come back says what is happening in its own label. The verb takes its
+present participle, the rest of the label stays, and `…` closes it.
+The control goes inert, never dimmed, and no spinner is added. The
+swap waits until the answer is 200ms late (readme §4, *Loading*), so
+a quick answer never flashes a word.
+
+- `Signing and publishing…` — the post seal's `Sign and publish`.
+  **Drawn** on `SealSigning`.
+- `Setting…` — the pad's `Set`, carried by `StanceControl`.
+- `Walking it back…` and `Disconnecting…` — the severance dialog's
+  commitment, in each family's own words.
+- `Signing…` — the line under the face while a press-and-hold signs.
+  A hold has no label to swap, so the target's row carries it, in the
+  pending marker's quiet register. **Drawn** on `RowSigning`.
+
+Every other commit follows the same construction and needs no separate
+entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
+`Signing in…`, and `Create account` becomes `Creating account…`. *(All
+of these are new with the failure pack and flagged for blessing.)*
+
 ## Field errors
 
 The lines the errored entry and profile boards carry — a field's own
@@ -627,6 +651,112 @@ that was no, and no answer at all:
   arrive, on `ProfileMoreFailed`: the fact at body-medium
   `text-secondary` (rows are already on screen, so the missing page
   means stale, not gone), the way out an `InlineAction` ending the line.
+
+## Faults by code
+
+The failure pack (jakob, 2026-09-30). Every `ErrorCode` the contract
+can return (api-spec, *Errors are tiered*) has one vehicle, which is
+where the fault is said, and one sentence. The vehicles follow
+`NetworkError`'s grammar: a fault is said where the thing it is about
+stands, and the rest of the surface stays readable.
+
+- **In place** — a fault about the whole act takes the commit's place,
+  with `Retry`. On a seal that is the foot (`NetworkError`). On a pad
+  the line stands above the commit row and `Retry` takes Set's slot
+  (`PadFailed`). A dialog keeps its pair and its commitment reads
+  `Retry`. A form keeps its fields and the line takes SignInError's
+  slot.
+- **On the row** — a fault about one staged act is said on that act's
+  row, with `Remove it` and no Retry (`SealFaultRow`). A hold, which
+  has no surface of its own, says its fault on the target's row
+  (`RowSigning`).
+- **On the field** — a field's own line (*Field errors*, *Caps and
+  their refusals*).
+- **The surface** — a fault that leaves nothing to act on takes the
+  whole screen (`ProfileNotFound`, `VerifyExpired`, `JoinInvalid`).
+- **A notice** — not a fault at all: nothing was staged or spent, so
+  the tertiary panel stands in the commit's place and no Retry is
+  offered (`WriteRuleFailed`).
+
+Lines marked *new* arrived with the failure pack and are flagged for
+blessing. Unmarked lines are already blessed or already drawn.
+
+**No answer at all** (offline; not a code):
+
+- Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
+  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it.
+- A hold's row: `That didn't sign.` with `Retry`. **Drawn** on
+  `RowSigning`. *New.*
+- A read with nothing loaded: `Can't reach the server. Check your
+  connection and try again.` A read with content on screen is written
+  per surface (*Missing and unreachable*).
+
+**Transport faults:**
+
+- `UNAUTHENTICATED`, `REFRESH_TOKEN_INVALID` mid-session — the
+  surface: the sign-in screen, with the draft and any picks kept on
+  the device. `You've been signed out. Sign in again to carry on.`
+  *New; copy-only — its board is owed.*
+- `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
+  again.` The house line says "can't reach the server", which is false
+  for a fault the server answered. *New.*
+- `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
+  is in your inbox.` The client gates acting on verification, so this
+  is the rare case that slips past the gate. *New; copy-only.*
+- `RATE_LIMITED` — in place, in SignInError's slot: `Too many tries.
+  Wait a little, then try again.` The submit stays. *New; copy-only.*
+- `NOT_FOUND` — the surface. For a profile: `This profile doesn't
+  exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
+  same construction: `This post doesn't exist.` and `This comment
+  doesn't exist.` *New; copy-only — the boards are owed.*
+- `BAD_INPUT` — on the field, in the field's own words. Where no field
+  is named, in place: `That didn't go through. Try again.`
+
+**Expected refusals:**
+
+- `INVALID_CREDENTIALS` — in place: `That email and password don't
+  match.` **Drawn** on `SignInError`.
+- `HANDLE_TAKEN` — on the field: `That handle is taken.` **Drawn** on
+  `JoinErrors`.
+- `EMAIL_IN_USE` — on the field: `That email already has an account.`
+  *New; copy-only.*
+- `WEAK_PASSWORD` — on the field. The length half is `A password is at
+  least 12 characters.` The breach half is `That password has turned up
+  in a data breach — pick another one.` *The breach half is new;
+  copy-only.*
+- `INVITE_UNUSABLE` — the surface: `This invite can't be used anymore`
+  (`JoinInvalid`).
+- `ASK_LINK_UNUSABLE` — the surface, in `JoinInvalid`'s construction.
+  Its words are owed.
+- `VERIFICATION_TOKEN_INVALID` — the surface: `This link doesn't work
+  anymore` (`VerifyExpired`).
+- `RESET_TOKEN_INVALID` — the surface, in `VerifyExpired`'s words. That
+  is its own audit entry and is not ruled here.
+- `ACTOR_KEY_IN_USE` — in place: `A signing key can only ever back one
+  account, so this account needs its own.`
+- `CHALLENGE_EXPIRED` — in place, on the backup's upload, as a
+  `NetworkError` outcome: `That didn't go through. Try again.` Retry
+  asks for a fresh challenge.
+- `SIGNATURE_INVALID` — in place: `That didn't go through. Try again.`
+  Retry signs again.
+- `STAGED_WRITE_EXPIRED` — the did-not-land notice in the shell: `Your
+  post didn't land` (`ComposeExpired`).
+- `WRITE_RULE_FAILED` — a notice. On a seal it is `You can't sign
+  right now` over `Each signing is paid for, and there's only so much
+  to go around at a time. Nothing was signed or spent — your draft is
+  kept.`, with `Keep the draft, sign later` under it. **Drawn** on
+  `WriteRuleFailed`. *New.* The words name no payer (the V1.0 scope
+  cut). On a pad the same panel takes Set's place in `PadKeyAbsent`'s
+  shape. On a hold's row the quiet line reads `You can't sign right
+  now`, with no Retry. *New; copy-only — neither is drawn.*
+- **One staged act refused** — a citation whose target nothing answers
+  to any more (the field-level refusal on `references.<index>.target`):
+  on the row, `This can't be cited anymore.` with `Remove it`. **Drawn**
+  on `SealFaultRow`. *New.*
+
+**A read-side comfort that fails** (save, unsave, hide, undo, unhide;
+not a code): it reverts, and the target's row says `That didn't go
+through.` with `Retry`, in the hold's vehicle. *New; copy-only.*
 
 ## The reset and verify landings
 
