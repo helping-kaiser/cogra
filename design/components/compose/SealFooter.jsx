@@ -21,12 +21,19 @@ import { Button } from "../core/Button.jsx";
    `disabled` IS THE UPLOAD'S GATE, not a validation state. Nothing signs until
    the content it signs exists, so the seal that is still uploading wears it
    and the words above the pair say why. A disabled button with no line
-   explaining it is the one shape this must never take. */
+   explaining it is the one shape this must never take.
 
-export function SealFooter({ signLabel, backLabel = "Back", disabled = false, onSign, onBack }) {
+   `busy` IS THE SIGNING IN FLIGHT (jakob, the failure pack). The commit is
+   the one control a slow answer leaves pressable twice, so it goes inert and
+   its label reads `busyLabel` — the verb's present participle, "Signing and
+   publishing…" — through `Button`'s own `busy`. Everything above the foot
+   stays as it was: the fault, if one comes, takes the commit's place
+   (`NetworkError`), and a success leaves the seal. */
+
+export function SealFooter({ signLabel, busyLabel, backLabel = "Back", disabled = false, busy = false, onSign, onBack }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <Button disabled={disabled} onClick={onSign} style={{ width: "100%" }}>
+      <Button disabled={disabled} busy={busy} busyLabel={busyLabel} onClick={onSign} style={{ width: "100%" }}>
         {signLabel}
       </Button>
       <Button variant="text" onClick={onBack} style={{ width: "100%" }}>

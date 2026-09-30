@@ -9,6 +9,11 @@ export interface SealFooterProps {
   /** The upload's gate: nothing signs until the content it signs exists. Pair
    *  it with the line that says why, never on its own. */
   disabled?: boolean;
+  /** The signing is in flight (past 200ms): the commit reads `busyLabel`
+   *  and goes inert — not dimmed, no spinner. */
+  busy?: boolean;
+  /** The commit's present participle — "Signing and publishing…". */
+  busyLabel?: string;
   onSign?: () => void;
   onBack?: () => void;
 }
