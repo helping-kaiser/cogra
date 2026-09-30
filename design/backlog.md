@@ -3648,3 +3648,19 @@ screens first (`Feed`, `PostDetail`, `ComposeDetails` — the
 calibration-ID PR), then each round of the ID sweep. The grammar and
 the activation plan are the design ⇄ impl seam's entries 002 and 004
 (dev-state `cogra/tmp_dev/design-impl-seam.md`).
+
+### 112 · Copy-voice residues of the behavior home · *copy* · **filed 2026-09-30**
+
+Two threads the behavior-home round (#24) surfaced and jakob's
+merge did not close. First: *Ages* still reads as if every
+timestamp follows the ladder and then `06.09.2024`, while *The
+already-published marker* now uses the chronicle's dateline form
+("12 September") by jakob's ruling — *Ages* should name the
+marker as the exception, or the general rule should say which
+surfaces the dateline form owns. Second: *Describing pictures*
+carries a "flagged for review" annotation (2026-09-02) on its
+video sentence, and the rebuilt "? contents" note now mirrors
+that sentence verbatim — jakob blesses the sentence and the
+annotation goes, or he rewords it and the note follows through
+`check-help-notes --write`. Both are one-line rulings; fold them
+into the next copy round's brief.
