@@ -2129,6 +2129,12 @@ Object.assign(FLOW_MARKERS, {
    Canvas pages and flows — the pattern-exemplar rule). */
 Object.assign(FLOW_MARKERS, {
   KeyCeremonyUnsupported: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
+  RestoreLength: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Recovery code"', tag: "div" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
+    { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
   YourKeyGate: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: 'data-field="Current recovery code"', tag: "div" },

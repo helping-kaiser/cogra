@@ -153,7 +153,7 @@
     {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
-      "start": { "control": "Restore the key", "except": ["Restore"] },
+      "start": { "control": "Restore the key", "except": ["Restore", "RestoreError", "RestoreLength"] },
       "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
     },
     {

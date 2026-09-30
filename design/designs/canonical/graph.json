@@ -366,12 +366,17 @@
     { "from": "Restore", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }] },
     { "from": "Restore", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Restore", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
-    { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "board": "RestoreError", "case": "the code doesn't check out" }] },
+    { "from": "Restore", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "board": "RestoreError", "case": "the code doesn't check out" }, { "board": "RestoreLength", "case": "the code is the wrong length once folded — the one shape a reader can fix" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
     { "from": "RestoreError", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }] },
     { "from": "RestoreError", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "RestoreError", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
-    { "from": "RestoreError", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
+    { "from": "RestoreError", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "terminal": "self", "case": "still failing — the line updates in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+
+    { "from": "RestoreLength", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "KeyElsewhere", "case": "the arrow is a link, not history — restore is reached signed in with the key absent, so up is that reader's own home" }] },
+    { "from": "RestoreLength", "via": 2, "kind": "advance", "label": "Recovery code field", "to": [{ "terminal": "self", "case": "typing — the line stays until the next press" }] },
+    { "from": "RestoreLength", "via": 3, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
+    { "from": "RestoreLength", "via": 4, "kind": "advance", "label": "Restore the key", "to": [{ "terminal": "back", "case": "key restored — returns where restore began" }, { "terminal": "self", "case": "still the wrong length — the line stays" }, { "board": "RestoreError", "case": "the right length, and the code doesn't check out" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
     { "from": "OnboardingSteps", "via": 1, "kind": "cancel", "label": "Skip", "to": [{ "board": "ApplicantFeed", "case": "the intro is left for the feed it opened over — applicant days" }, { "board": "Feed", "case": "already a member" }] },
     { "from": "OnboardingSteps", "via": 2, "kind": "advance", "label": "Next", "to": [{ "board": "OnboardingShape" }] },

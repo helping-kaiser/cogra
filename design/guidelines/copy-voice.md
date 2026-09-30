@@ -492,7 +492,12 @@ doesn't know which field is wrong.
   local format failure.
 - `That email and password don't match.` — SignIn's form-level fault
   line, in the failure voice the register already writes in.
-- `That code doesn't check out.` — Restore's recovery-code field.
+- `That code doesn't check out.` — Restore's recovery-code field, and
+  every other field that asks for the current code (`SettingsBackup`,
+  `YourKeyGate`).
+- `A recovery code is 26 characters.` — Restore's recovery-code field,
+  when the code is the wrong length once folded: the one shape problem a
+  reader can act on (auth.md). Drawn on `RestoreLength`.
 - `That doesn't match the code above.` — the key ceremony's confirm
   field, on RecoveryCodeMismatch.
 
@@ -839,6 +844,9 @@ screen is `Make a recovery code`, with KeyDecline's consequence word for
 word, the ceremony's `Create my recovery code`, and last: `The code is
 shown once and never stored. Have somewhere to write it down before you
 go on.`
+
+**A restore that worked** says where the key is now, in the platform
+noun: `Your key is on this browser now.` · `Your key is in this app now.`
 
 **The key behind its gate** (`YourKeyGate`, a browser whose seed is
 sealed): `On this browser your key is sealed inside its backup. Enter
