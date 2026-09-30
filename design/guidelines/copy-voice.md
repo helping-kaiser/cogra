@@ -1752,6 +1752,35 @@ tap on it used to reach nothing, and now it raises this:
   new post` — what a screen reader meets where a sighted reader meets a
   dimmed grid.
 
+## The already-published marker
+
+**Reusing media never blocks** (jakob 2026-09-30). An author may publish
+media that already stands in one of their own published posts, any
+media kind; the composer's Details step marks it instead, with one soft
+line under the media row in the honesty-marker ink `Edited` and `Still
+settling` wear:
+
+- `Already in your post from 12 September.` — the date is the matched
+  post's publication date, always present, so the line never leans on
+  that post having a title.
+- The line is a door, in the tappable-marker form `Edited` wears
+  (underline, quiet ink), and opens the post it names. Checking costs
+  one tap, and nothing asks a question: no dialog, no confirm step, no
+  gate.
+- Where several published posts match, the line names and opens the
+  **earliest** — the origin, and stable: a later repost never repoints
+  it.
+- Only the author's own published posts count. A match in drafts alone,
+  or in someone else's post, draws nothing.
+- **The date reads the way the chronicle's datelines do** (*Change
+  histories*): day and month in the viewer's locale conventions on the
+  clients, English on the boards — `12 September` — with the year
+  appended only when the post's year differs from the current one:
+  `12 September 2025`.
+
+The lines stand in `designs/canonical/behavior/ComposeDetails.md`; the
+board is owed (backlog item 110).
+
 ## Change histories
 
 The words of would-like #2 (post-MVP tree, 2026-09-22). Two kinds of
