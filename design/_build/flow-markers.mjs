@@ -2129,6 +2129,18 @@ Object.assign(FLOW_MARKERS, {
    Canvas pages and flows — the pattern-exemplar rule). */
 Object.assign(FLOW_MARKERS, {
   KeyCeremonyUnsupported: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
+  SettingsBackupError: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
+    { n: 3, find: ">Create a new recovery code</button>", tag: "button" },
+  ],
+  // scanExempt like every dialog board: the backup screen beneath is wired on
+  // `SettingsBackup`, so only the warning's pair and its scrim carry numbers.
+  NoScreenLock: [
+    { n: 1, find: ">Go on anyway</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
 });
 
 /* THE POST-MVP TREE'S BOARDS (the push round, 2026-09-22).

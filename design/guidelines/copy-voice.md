@@ -724,8 +724,12 @@ you sign out.`
 always uses the newest one. Your current code was made on 12.08.2026.`,
 the field `Current recovery code`, the commitment `Create a new recovery
 code`, and last: `The new code is shown once and never stored. Have
-somewhere to write it down before you go on — the old code stops working
-as soon as the new one exists.`
+somewhere to write it down before you go on — the old code keeps working
+until the new one is confirmed.` A refused current code wears Restore's
+line, `That code doesn't check out.`, and under the field a browser that
+lost its code is told where to go instead of retrying forever: `Lost it?
+This browser can't make a new code without the current one. If the
+Android app holds your key, make the new code there.`
 
 **Your key** (`YourKey`) keeps web's body verbatim, and names the
 formats exactly, which is §7's stated exception: `Your actor key` ·
@@ -826,6 +830,11 @@ swallowing it: `Type the code back to finish`. A copy that worked says
 speaks in; Android's own clip confirmation answers there. A code made
 or replaced from settings returns to settings with
 `Your key is backed up with the new code.`
+
+**No screen lock** (Android, in front of every reveal or replace):
+`This phone has no screen lock` / `Anyone who picks it up could see your
+key or replace your recovery code. You can go on, or set a screen lock
+first.` — `Go on anyway` · `Cancel`.
 
 ## The profile save
 
