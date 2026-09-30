@@ -32,7 +32,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 4612,
+      "h": 4720,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -283,6 +283,15 @@
       "file": "YourKeyGate.dc.html",
       "title": "Settings · your key, behind the browser's gate",
       "x": 3840,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SignOutConfirm.dc.html",
+      "title": "Settings · signing out without a backup",
+      "x": 4320,
       "y": 2988,
       "w": 390,
       "h": 844,

@@ -2156,6 +2156,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
     { n: 3, find: ">Create a new recovery code</button>", tag: "button" },
   ],
+  // The settings page beneath is wired on `Settings`; the dialog's three
+  // answers and its scrim carry this board's numbers.
+  SignOutConfirm: [
+    { n: 1, find: ">Make a recovery code</button>", tag: "button" },
+    { n: 2, find: ">Sign out, keep it locked</button>", tag: "button" },
+    { n: 3, find: ">Erase it and sign out</button>", tag: "button" },
+    { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   // scanExempt like every dialog board: the backup screen beneath is wired on
   // `SettingsBackup`, so only the warning's pair and its scrim carry numbers.
   NoScreenLock: [

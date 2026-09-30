@@ -872,6 +872,14 @@ recovery code`, the commitment `Show my key`, a refused code in
 Restore's line. Either copy on `YourKey` answers with the snackbar
 `Copied`.
 
+**Signing out without a backup** (`SignOutConfirm`, the don't-remember
+switch on and no recovery code): `Sign out without a backup?` / `This
+browser holds the only copy of your key. Signing out leaves it here,
+locked until you sign in on this browser again. Erase it instead, and no
+one — including CoGra — can bring it back.` — `Make a recovery code` ·
+`Sign out, keep it locked` · `Erase it and sign out`. The app renders
+the platform noun as `This app` and `in this app`.
+
 **No screen lock** (Android, in front of every reveal or replace):
 `This phone has no screen lock` / `Anyone who picks it up could see your
 key or replace your recovery code. You can go on, or set a screen lock
