@@ -2120,6 +2120,15 @@ Object.assign(FLOW_MARKERS, {
   OnboardingVouch: introCard("Start reading"),
 });
 
+/* THE KEY-LOSS ROUND'S BOARDS (2026-09-30). Each copies the anatomy of the
+   board it is a state of, so its markers reuse that board's `find` patterns;
+   the two shell exemplars number only the card that is their subject, the
+   rest of their shell being wired on the board that owns it (readme §13,
+   Canvas pages and flows — the pattern-exemplar rule). */
+Object.assign(FLOW_MARKERS, {
+  KeyCeremonyUnsupported: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
+});
+
 /* THE POST-MVP TREE'S BOARDS (the push round, 2026-09-22).
 
    THIS TABLE IS KEYED BY BOARD NAME ACROSS EVERY TREE, which is why a

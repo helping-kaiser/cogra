@@ -97,7 +97,7 @@
     {
       "name": "make-your-key",
       "description": "Create my key runs the ceremony — the recovery code shown, written down, confirmed — and hands the applicant back where it began.",
-      "start": { "board": "ApplicantFeed", "via": 3 },
+      "start": { "board": "ApplicantFeed", "via": 3, "to": "KeyCeremony" },
       "waypoints": [
         { "board": "KeyCeremony", "via": 2 },
         { "board": "KeyConfirm", "via": 2 }

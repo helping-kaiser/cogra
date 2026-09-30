@@ -174,7 +174,7 @@
 
     { "from": "ApplicantFeed", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "ApplicantFeed", "via": 2, "kind": "advance", "label": "Resend the link", "to": [{ "terminal": "self", "case": "the verification mail goes out again" }] },
-    { "from": "ApplicantFeed", "via": 3, "kind": "advance", "label": "Create my key", "to": [{ "board": "KeyCeremony" }] },
+    { "from": "ApplicantFeed", "via": 3, "kind": "advance", "label": "Create my key", "to": [{ "board": "KeyCeremony" }, { "board": "KeyCeremonyUnsupported", "case": "a browser without WebCrypto Ed25519 — the ceremony says so before minting anything" }] },
     { "from": "ApplicantFeed", "via": 4, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "ApplicantFeed", "via": 5, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
     { "from": "ApplicantFeed", "via": 6, "kind": "advance", "label": "post media", "to": [{ "board": "PostDetail", "case": "pictures — the post opens" }, { "board": "PostDetailVideo", "case": "a clip wider than tall — the post opens" }, { "board": "Reel", "case": "a portrait clip — the stream opens" }] },
@@ -314,6 +314,7 @@
     { "from": "KeyCeremony", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed" }] },
     { "from": "KeyCeremony", "via": 2, "kind": "advance", "label": "Create my recovery code", "to": [{ "board": "KeyConfirm" }] },
     { "from": "KeyCeremony", "via": 3, "kind": "cancel", "label": "Not now", "to": [{ "board": "KeyDecline" }] },
+    { "from": "KeyCeremonyUnsupported", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed", "case": "nothing was made — the task card stays until a browser or the app that can hold a key makes it" }] },
 
     { "from": "KeyConfirm", "via": 1, "kind": "cancel", "label": "Cancel", "to": [{ "board": "KeyCeremony" }] },
     { "from": "KeyConfirm", "via": 2, "kind": "advance", "label": "Show my code", "to": [{ "board": "RecoveryCode" }] },

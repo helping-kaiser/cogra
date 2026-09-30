@@ -101,6 +101,15 @@
       "page": "entry"
     },
     {
+      "file": "KeyCeremonyUnsupported.dc.html",
+      "title": "Your key · this browser can't hold one",
+      "x": 1920,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ApplicantFeed.dc.html",
       "title": "Applicant · first steps",
       "x": 0,
@@ -393,7 +402,7 @@
       "x": -2160,
       "y": 0,
       "w": 1740,
-      "h": 4074,
+      "h": 4095,
       "page": "entry",
       "title": "Entry · flow map"
     },
