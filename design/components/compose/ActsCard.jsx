@@ -1,6 +1,7 @@
 import React from "react";
 import { InlineAction, BUTTON_CLASS } from "../core/Button.jsx";
 import { SR_ONLY } from "../stance/StanceReadout.jsx";
+import { UploadErrorLine } from "./UploadNotice.jsx";
 
 /* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
    second seal needed it: the profile-picture seal joined the post's and the
@@ -48,7 +49,16 @@ import { SR_ONLY } from "../stance/StanceReadout.jsx";
    count and the noun, the same place `countNoun` comes from and for the same
    reason. The plural is the regular one this card adds, said again in the
    board's own words because the bundle hands screens components and
-   constants, never a card's helpers. */
+   constants, never a card's helpers.
+
+   A REFUSED ACT IS SAID ON ITS OWN ROW (jakob, the failure pack: the seal's
+   faults speak `NetworkError`'s grammar). When the signing is refused because
+   of one staged act — a cited post or person nothing answers to any more — the
+   fault sits where that act is read back, not at the foot: the refused-file
+   line's shape, `UploadErrorLine`, with the fact in the failure voice and
+   `Remove it` as the only way out, because signing again cannot change the
+   answer. It stands under the row's value, aligned with it, inside the row's
+   own hairline, so the row still reads as one act. `fault` on a fact row. */
 
 const ROW = {
   display: "flex",
@@ -139,6 +149,17 @@ export function ActsCard({ rows = [], total, note }) {
             <span style={VALUE}>{row.value}</span>
             <Count count={row.count} noun={row.countNoun} />
           </button>
+        ) : row.fault ? (
+          <div key={index} style={{ borderBottom: ROW.borderBottom, paddingBottom: "var(--space-2)" }}>
+            <div style={{ ...ROW, borderBottom: 0 }}>
+              <span style={LABEL}>{row.label}</span>
+              <span style={VALUE}>{row.value}</span>
+              <Count count={row.count} noun={row.countNoun} />
+            </div>
+            <div style={{ paddingLeft: `calc(${LABEL.width} + var(--space-2))` }}>
+              <UploadErrorLine message={row.fault.message} onRemove={row.fault.onRemove} />
+            </div>
+          </div>
         ) : (
           <div key={index} style={ROW}>
             <span style={LABEL}>{row.label}</span>

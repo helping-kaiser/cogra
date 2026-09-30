@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"3877946a8a13","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"8ae25f70da98","components/compose/StagedReference.jsx":"5b3fc77b1704","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"d5f7cca6dd3c","components/content/OverflowMenu.jsx":"c8bc58ab9716","components/content/PostCard.jsx":"f7104e0521ad","components/content/ReferenceRow.jsx":"2cbbc7ce53a4","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"38703661022c","components/core/Button.jsx":"2abf5b60cec2","components/core/Card.jsx":"2809bdee6885","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"7aa476569aba","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"c41bdab8cd56","components/honesty/TransportError.jsx":"2f66269a8f3c","components/media/MediaAttachment.jsx":"1c969987f2bb","components/media/MediaViewer.jsx":"b66a3e63536f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"2b8d1b95fbb9","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"2341df4ec848","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"1ef7af623c30","components/navigation/Icon.jsx":"2e976eb71d18","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"63d50d3782ad","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"9569b330a08e","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"d1407b1120e9","components/stance/SeveranceConfirm.jsx":"358c564f974f","components/stance/StanceAlternates.jsx":"ef4123c4f82d","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"35b497267db4","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"d7308f628504","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"3c6e9d426e62","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"dedfaa55b260","components/compose/StagedReference.jsx":"5b3fc77b1704","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"d5f7cca6dd3c","components/content/OverflowMenu.jsx":"c8bc58ab9716","components/content/PostCard.jsx":"db5f9399dad0","components/content/ReferenceRow.jsx":"2cbbc7ce53a4","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"38703661022c","components/core/Button.jsx":"e0c9031720e8","components/core/Card.jsx":"2809bdee6885","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"7aa476569aba","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"0f57be65250d","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/NoticePanel.jsx":"061075d67146","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"c41bdab8cd56","components/honesty/TransportError.jsx":"7bd4768896ec","components/media/MediaAttachment.jsx":"1c969987f2bb","components/media/MediaViewer.jsx":"b66a3e63536f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"23ee38f6f736","components/media/ReelRail.jsx":"2b8d1b95fbb9","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"2341df4ec848","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"1ef7af623c30","components/navigation/Icon.jsx":"2e976eb71d18","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"63d50d3782ad","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"9569b330a08e","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"d1407b1120e9","components/stance/SeveranceConfirm.jsx":"b660196cb7d9","components/stance/StanceAlternates.jsx":"ef4123c4f82d","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"6a2d21b61f6b","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"45ceb657cd0f","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -65,7 +65,8 @@ function buttonStyle({
   variant = "primary",
   size = "lg",
   selfStart = false,
-  disabled = false
+  disabled = false,
+  busy = false
 } = {}) {
   return {
     ...(VARIANTS[variant] ?? VARIANTS.primary),
@@ -78,7 +79,7 @@ function buttonStyle({
     letterSpacing: "var(--text-label-large--letter-spacing)",
     fontWeight: "var(--text-label-large--font-weight)",
     opacity: disabled ? "var(--state-disabled)" : 1,
-    cursor: disabled ? "default" : "pointer",
+    cursor: disabled || busy ? "default" : "pointer",
     textDecoration: "none",
     display: "inline-flex",
     alignItems: "center",
@@ -183,12 +184,30 @@ function InlineAction({
     "data-node": node
   }, children);
 }
+
+/* IN FLIGHT, THE LABEL SAYS WHAT IS HAPPENING (jakob, the failure pack).
+   A commit whose answer has not come back is `busy`: its label swaps to the
+   present participle the caller passes as `busyLabel` — the verb takes -ing,
+   the rest of the label stays, and `…` closes it ("Sign and publish" →
+   "Signing and publishing…") — and the control goes INERT, not dimmed. It is
+   still the one committing action on the surface, and 40% opacity would say
+   it could not be pressed for a reason the reader has to go and find. No
+   spinner: the word is the indicator, the way `LoadingState` is text.
+
+   THE 200MS LAW IS THE CALLER'S CLOCK (readme §4, *Loading*). The control is
+   inert from the press — that is the double-submit guard, and it shows
+   nothing — and `busy` turns on only once the wait passes 200ms, so a quick
+   answer never flashes a word. `aria-busy` rides along for a listener;
+   `aria-disabled` rather than `disabled` keeps the control in the focus order
+   while it refuses a second press. */
 function Button({
   children,
   variant = "primary",
   size = "lg",
   selfStart = false,
   disabled = false,
+  busy = false,
+  busyLabel,
   type = "button",
   onClick,
   ariaLabel,
@@ -199,20 +218,23 @@ function Button({
   return /*#__PURE__*/React.createElement("button", {
     type: type,
     disabled: disabled,
-    onClick: onClick,
+    onClick: busy ? undefined : onClick,
     "aria-label": ariaLabel,
+    "aria-busy": busy || undefined,
+    "aria-disabled": busy || undefined,
     className: className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS,
     style: {
       ...buttonStyle({
         variant,
         size,
         selfStart,
-        disabled
+        disabled,
+        busy
       }),
       ...style
     },
     "data-node": node
-  }, children);
+  }, busy && busyLabel ? busyLabel : children);
 }
 __ds_scope.buttonStyle = buttonStyle;
 __ds_scope.BUTTON_CLASS = BUTTON_CLASS;
@@ -366,6 +388,8 @@ const NO_STANDING_LABEL = "No opinion yet";
 const STANCE_SEVERANCE_WORDS = {
   /** The pad's standing control, and the confirming button in its dialog. */
   control: "Walk it back",
+  /** The confirming button's label while its signing is in flight. */
+  busy: "Walking it back…",
   title: () => "Walk it all back?",
   effect: targetLabel => `Your opinion of ${targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`,
   sum: (targetLabel, total) => `Everything you've said about ${targetLabel} adds up to ${total}, and that is what this walks back.`,
@@ -1191,9 +1215,116 @@ __ds_scope.StanceStanding = StanceStanding;
 __ds_scope.StanceLandingLine = StanceLandingLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceReadout.jsx", error: String((e && e.message) || e) }); }
 
+// components/compose/UploadNotice.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* The two upload notices (media slice, 2026-08-31). Upload runs in the
+   background from the moment a picture has its crop (the crop happens on the
+   device; only the cropped export is uploaded), so most posts never see
+   either — these appear only when the author outruns the network.
+
+   `UploadStatusLine` is THE SEAL'S GATE: while it shows, the sign button is
+   disabled, because nothing signs until the content it signs exists.
+   `UploadErrorLine` is the failure's words — the tile wears the badge
+   (`MediaThumb failed`), this line carries Retry and Remove, in error colour
+   for the fact and primary for the ways out. Direction-by-words, as always.
+
+   THE WAYS OUT FOLLOW THE FAILURE. A network failure can be retried, so it
+   offers both. A file the surface refuses — too big for its cap, or a format
+   nothing here can read — cannot be retried into working, so it offers only
+   Remove it: `onRetry` omitted drops the link rather than dangling a control
+   that would fail the same way twice. */
+
+function Ring({
+  progress = 0.55,
+  size = 18
+}) {
+  const r = 11;
+  const c = 2 * Math.PI * r;
+  return /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 28 28",
+    width: size,
+    height: size,
+    "aria-hidden": "true",
+    style: {
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "var(--border-hairline)",
+    strokeWidth: "3"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "14",
+    cy: "14",
+    r: r,
+    fill: "none",
+    stroke: "var(--primary)",
+    strokeWidth: "3",
+    strokeLinecap: "round",
+    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
+    transform: "rotate(-90 14 14)"
+  }));
+}
+function UploadStatusLine({
+  done,
+  total,
+  progress
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement(Ring, {
+    progress: progress ?? (total ? done / total : 0.5)
+  }), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: "var(--text-body-medium)",
+      lineHeight: "var(--text-body-medium--line-height)",
+      color: "var(--text-secondary)"
+    }
+  }, "Uploading ", done, " of ", total, " \u2014 signing waits for the pictures."));
+}
+function UploadErrorLine({
+  message = "One picture didn't upload.",
+  onRetry,
+  onRemove
+}) {
+  return /*#__PURE__*/React.createElement("p", {
+    style: {
+      margin: 0,
+      fontSize: "var(--text-label-small)",
+      lineHeight: "var(--text-label-small--line-height)",
+      letterSpacing: "var(--text-label-small--letter-spacing)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--error)"
+    }
+  }, message), " ", onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onRetry
+  }, "Retry"), " ", /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--text-secondary)"
+    }
+  }, "\xB7"), " "), /*#__PURE__*/React.createElement(InlineAction, {
+    size: "sm",
+    onClick: onRemove
+  }, "Remove it"));
+}
+__ds_scope.UploadStatusLine = UploadStatusLine;
+__ds_scope.UploadErrorLine = UploadErrorLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/UploadNotice.jsx", error: String((e && e.message) || e) }); }
+
 // components/compose/ActsCard.jsx
 try { (() => {
-const { InlineAction, BUTTON_CLASS, SR_ONLY } = __ds_scope;
+const { InlineAction, BUTTON_CLASS, SR_ONLY, UploadErrorLine } = __ds_scope;
 /* The seal's acts card (media slice, 2026-08-31 — extracted the moment a
    second seal needed it: the profile-picture seal joined the post's and the
    reply's). The container-highest card listing what one signature commits:
@@ -1240,7 +1371,16 @@ const { InlineAction, BUTTON_CLASS, SR_ONLY } = __ds_scope;
    count and the noun, the same place `countNoun` comes from and for the same
    reason. The plural is the regular one this card adds, said again in the
    board's own words because the bundle hands screens components and
-   constants, never a card's helpers. */
+   constants, never a card's helpers.
+
+   A REFUSED ACT IS SAID ON ITS OWN ROW (jakob, the failure pack: the seal's
+   faults speak `NetworkError`'s grammar). When the signing is refused because
+   of one staged act — a cited post or person nothing answers to any more — the
+   fault sits where that act is read back, not at the foot: the refused-file
+   line's shape, `UploadErrorLine`, with the fact in the failure voice and
+   `Remove it` as the only way out, because signing again cannot change the
+   answer. It stands under the row's value, aligned with it, inside the row's
+   own hairline, so the row still reads as one act. `fault` on a fact row. */
 
 const ROW = {
   display: "flex",
@@ -1355,7 +1495,32 @@ function ActsCard({
   }, row.value), /*#__PURE__*/React.createElement(Count, {
     count: row.count,
     noun: row.countNoun
-  })) : /*#__PURE__*/React.createElement("div", {
+  })) : row.fault ? /*#__PURE__*/React.createElement("div", {
+    key: index,
+    style: {
+      borderBottom: ROW.borderBottom,
+      paddingBottom: "var(--space-2)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      ...ROW,
+      borderBottom: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: LABEL
+  }, row.label), /*#__PURE__*/React.createElement("span", {
+    style: VALUE
+  }, row.value), /*#__PURE__*/React.createElement(Count, {
+    count: row.count,
+    noun: row.countNoun
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      paddingLeft: `calc(${LABEL.width} + var(--space-2))`
+    }
+  }, /*#__PURE__*/React.createElement(UploadErrorLine, {
+    message: row.fault.message,
+    onRemove: row.fault.onRemove
+  }))) : /*#__PURE__*/React.createElement("div", {
     key: index,
     style: ROW
   }, /*#__PURE__*/React.createElement("span", {
@@ -4157,113 +4322,6 @@ function PickedSheet({
 __ds_scope.PickedSheet = PickedSheet;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/PickedSheet.jsx", error: String((e && e.message) || e) }); }
 
-// components/compose/UploadNotice.jsx
-try { (() => {
-const { InlineAction } = __ds_scope;
-/* The two upload notices (media slice, 2026-08-31). Upload runs in the
-   background from the moment a picture has its crop (the crop happens on the
-   device; only the cropped export is uploaded), so most posts never see
-   either — these appear only when the author outruns the network.
-
-   `UploadStatusLine` is THE SEAL'S GATE: while it shows, the sign button is
-   disabled, because nothing signs until the content it signs exists.
-   `UploadErrorLine` is the failure's words — the tile wears the badge
-   (`MediaThumb failed`), this line carries Retry and Remove, in error colour
-   for the fact and primary for the ways out. Direction-by-words, as always.
-
-   THE WAYS OUT FOLLOW THE FAILURE. A network failure can be retried, so it
-   offers both. A file the surface refuses — too big for its cap, or a format
-   nothing here can read — cannot be retried into working, so it offers only
-   Remove it: `onRetry` omitted drops the link rather than dangling a control
-   that would fail the same way twice. */
-
-function Ring({
-  progress = 0.55,
-  size = 18
-}) {
-  const r = 11;
-  const c = 2 * Math.PI * r;
-  return /*#__PURE__*/React.createElement("svg", {
-    viewBox: "0 0 28 28",
-    width: size,
-    height: size,
-    "aria-hidden": "true",
-    style: {
-      flex: "none"
-    }
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "var(--border-hairline)",
-    strokeWidth: "3"
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "14",
-    cy: "14",
-    r: r,
-    fill: "none",
-    stroke: "var(--primary)",
-    strokeWidth: "3",
-    strokeLinecap: "round",
-    strokeDasharray: `${Math.max(0.02, Math.min(1, progress)) * c} ${c}`,
-    transform: "rotate(-90 14 14)"
-  }));
-}
-function UploadStatusLine({
-  done,
-  total,
-  progress
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "var(--space-2)"
-    }
-  }, /*#__PURE__*/React.createElement(Ring, {
-    progress: progress ?? (total ? done / total : 0.5)
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "var(--text-body-medium)",
-      lineHeight: "var(--text-body-medium--line-height)",
-      color: "var(--text-secondary)"
-    }
-  }, "Uploading ", done, " of ", total, " \u2014 signing waits for the pictures."));
-}
-function UploadErrorLine({
-  message = "One picture didn't upload.",
-  onRetry,
-  onRemove
-}) {
-  return /*#__PURE__*/React.createElement("p", {
-    style: {
-      margin: 0,
-      fontSize: "var(--text-label-small)",
-      lineHeight: "var(--text-label-small--line-height)",
-      letterSpacing: "var(--text-label-small--letter-spacing)"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--error)"
-    }
-  }, message), " ", onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(InlineAction, {
-    size: "sm",
-    onClick: onRetry
-  }, "Retry"), " ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--text-secondary)"
-    }
-  }, "\xB7"), " "), /*#__PURE__*/React.createElement(InlineAction, {
-    size: "sm",
-    onClick: onRemove
-  }, "Remove it"));
-}
-__ds_scope.UploadStatusLine = UploadStatusLine;
-__ds_scope.UploadErrorLine = UploadErrorLine;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/UploadNotice.jsx", error: String((e && e.message) || e) }); }
-
 // components/compose/RefusedFile.jsx
 try { (() => {
 const { MediaThumb, UploadErrorLine } = __ds_scope;
@@ -4344,12 +4402,21 @@ const { Button } = __ds_scope;
    `disabled` IS THE UPLOAD'S GATE, not a validation state. Nothing signs until
    the content it signs exists, so the seal that is still uploading wears it
    and the words above the pair say why. A disabled button with no line
-   explaining it is the one shape this must never take. */
+   explaining it is the one shape this must never take.
+
+   `busy` IS THE SIGNING IN FLIGHT (jakob, the failure pack). The commit is
+   the one control a slow answer leaves pressable twice, so it goes inert and
+   its label reads `busyLabel` — the verb's present participle, "Signing and
+   publishing…" — through `Button`'s own `busy`. Everything above the foot
+   stays as it was: the fault, if one comes, takes the commit's place
+   (`NetworkError`), and a success leaves the seal. */
 
 function SealFooter({
   signLabel,
+  busyLabel,
   backLabel = "Back",
   disabled = false,
+  busy = false,
   onSign,
   onBack
 }) {
@@ -4361,6 +4428,8 @@ function SealFooter({
     }
   }, /*#__PURE__*/React.createElement(Button, {
     disabled: disabled,
+    busy: busy,
+    busyLabel: busyLabel,
     onClick: onSign,
     style: {
       width: "100%"
@@ -6249,15 +6318,18 @@ function SeveranceConfirm({
     }
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    disabled: busy || alreadySevered,
-    onClick: onConfirm,
+    disabled: alreadySevered,
+    onClick: busy ? undefined : onConfirm,
+    "aria-busy": busy || undefined,
+    "aria-disabled": busy || undefined,
     className: BUTTON_CLASS,
     style: buttonStyle({
       variant: "text",
       size: "sm",
-      disabled: busy || alreadySevered
+      disabled: alreadySevered,
+      busy
     })
-  }, sever.control), /*#__PURE__*/React.createElement("button", {
+  }, busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onCancel,
     className: BUTTON_CLASS,
@@ -6270,9 +6342,93 @@ function SeveranceConfirm({
 __ds_scope.SeveranceConfirm = SeveranceConfirm;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/SeveranceConfirm.jsx", error: String((e && e.message) || e) }); }
 
+// components/honesty/TransportError.jsx
+try { (() => {
+const { InlineAction } = __ds_scope;
+/* The house connectivity alert, and the signing-didn't-finish line. These DO carry
+   `error` colouring, because they are genuine failures — unlike the honesty
+   markers beside them.
+
+   Where a fault surfaces matters: a failed refresh sits on a banner above the
+   content, a failed page fetch sits in place of the load-more control. With posts
+   already on screen the fault means "stale", not "gone", so the wording changes and
+   the loaded content stays readable underneath. */
+
+function TransportError({
+  message
+}) {
+  return /*#__PURE__*/React.createElement("p", {
+    role: "alert",
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-medium)",
+      color: "var(--text-failure)"
+    }
+  }, message ?? "Can't reach the server. Check your connection and try again.");
+}
+
+/* Honest about who acts next: with the key absent the write waits on the reader
+   restoring it, not on time passing — "stays pending" alone read as
+   wait-and-it-happens.
+
+   `row` IS THE LINE A TARGET'S ROW CARRIES (jakob, the failure pack: vehicle
+   (b), the Snackbar charter untouched). A press-and-hold signs with no
+   surface of its own to re-raise when it fails, so the fault stands where
+   the gesture was given — under the face, on the target's own affordance
+   row, in the slot the pending marker uses. The row is one line of controls
+   by rule, so the words are the short ones and the type is the pending
+   marker's `label-small`: the fact in `--text-failure`, then `Retry` as a
+   bare word at the end of the line (`InlineAction`, the upload error's
+   shape). Where retrying cannot change the answer — the write rule's
+   refusal — `onRetry` is omitted and the word is gone, never disabled. */
+function SigningPending({
+  needsKey = false,
+  restoreHref = "/restore",
+  row = false,
+  message,
+  onRetry
+}) {
+  if (row) {
+    return /*#__PURE__*/React.createElement("p", {
+      role: "alert",
+      style: {
+        margin: 0,
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        fontWeight: "var(--text-label-small--font-weight)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
+        whiteSpace: "nowrap"
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        color: "var(--text-failure)"
+      }
+    }, message ?? "That didn't sign."), onRetry && /*#__PURE__*/React.createElement(React.Fragment, null, " ", /*#__PURE__*/React.createElement(InlineAction, {
+      size: "sm",
+      onClick: onRetry
+    }, "Retry")));
+  }
+  return /*#__PURE__*/React.createElement("p", {
+    role: "alert",
+    style: {
+      margin: 0,
+      fontSize: "var(--text-body-medium)",
+      color: "var(--text-failure)"
+    }
+  }, needsKey ? /*#__PURE__*/React.createElement(React.Fragment, null, "Signing needs your key, which isn't in this browser \u2014 the write waits as pending.", " ", /*#__PURE__*/React.createElement("a", {
+    href: restoreHref,
+    style: {
+      color: "inherit"
+    }
+  }, "Restore your key"), " ", "to finish it.") : "Signing did not finish — the write stays pending.");
+}
+__ds_scope.TransportError = TransportError;
+__ds_scope.SigningPending = SigningPending;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/TransportError.jsx", error: String((e && e.message) || e) }); }
+
 // components/stance/StanceControl.jsx
 try { (() => {
-const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE_AXES, StanceAlternates, StanceCoachMark, padHelp, HelpLine, helpKey, SeveranceConfirm, PendingMarker, bundleReadout, clampPair, formatStancePair, localLanding, ORIGIN, RESTING_FACE_EMOJI, severanceWords, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT } = __ds_scope;
+const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE_AXES, StanceAlternates, StanceCoachMark, padHelp, HelpLine, helpKey, SeveranceConfirm, PendingMarker, SigningPending, TransportError, bundleReadout, clampPair, formatStancePair, localLanding, ORIGIN, RESTING_FACE_EMOJI, severanceWords, signedLine, StanceLandingLine, StanceStanding, TAP_DEFAULT } = __ds_scope;
 /* CoGra's SIGNATURE INTERACTION (design.md §8). Everything in this file is a rule
    from that section, not a preference:
 
@@ -6291,10 +6447,21 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE
    signature is the one that takes a held finger, and the gesture nobody gives by
    mistake is the only one allowed to act by itself.
 
-   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new opinion at
-   once and a snackbar confirms the signature: a gesture that stages a priced act
-   must never be silent, because silence reads as failure and invites the same act
-   again.
+   THE HOLD IS NEVER SILENT, AND IT WAITS FOR ITS SIGNATURE (jakob, the failure
+   pack: signed acts are pessimistic). A gesture that stages a priced act must
+   never be silent, because silence reads as failure and invites the same act
+   again — so the anchor goes inert at the hold, and once the wait passes 200ms
+   the target's row says `Signing…` under the face. The resting target moves to
+   the new opinion when the signature is taken, and a snackbar confirms it. If
+   it is not taken, the face never moved: the row carries `SigningPending`'s
+   row line with `Retry` — the hold has no surface of its own to re-raise, and
+   the Snackbar charter keeps errors off the snackbar.
+
+   SET WAITS THE SAME WAY. The pad stays open until the signature is taken:
+   past 200ms `Set` reads `Setting…` and goes inert, never dimmed. A signing
+   that fails leaves the pad where it was, at the pick, with the fault line
+   above the commit row and `Retry`, outlined, in Set's slot — a failed signed
+   act re-raises its own surface, and here the surface never went away.
 
    THE PAD IS THE TEACHER. The one-time coach mark rides the FIRST OPEN, inside
    the pad it explains, and what it teaches is the shortcut — a reader who has
@@ -6311,8 +6478,10 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE
    IT NEVER PREVENTS A CHOICE. The whole square is reachable, corners included. A
    pick that nets the bundle to (0, 0) is confirmed, not refused.
 
-   This recreation folds locally and keeps its own bundle in state; the product
-   asks the backend for the authoritative projection before signing. */
+   This recreation folds locally and keeps its own bundle in state, so it
+   answers at once — there is no backend here to wait for. The product asks the
+   backend for the authoritative projection before signing, and its answer is
+   what the in-flight states above wait on; `signing` draws them. */
 
 const LONG_PRESS_MS = 500;
 
@@ -6420,6 +6589,13 @@ function StanceControl({
      marker's quiet line under it says what it waits on. Additive — absent,
      the control renders exactly as before. */
   pendingPick,
+  /* A SIGNED ACT IN FLIGHT, OR ONE THAT DID NOT GO THROUGH (the failure
+     pack). `"busy"` is the wait past 200ms, `"failed"` the signing that did
+     not complete. With the pad closed it is the hold's, and the target's row
+     carries it under the face; with the pad open it is Set's, and the pad's
+     commit row carries it. Additive — absent, the control renders exactly as
+     before. */
+  signing,
   node
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
@@ -6549,6 +6725,11 @@ function StanceControl({
   };
   const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
   const restingFace = restingPair === null ? null : bundleReadout(restingPair);
+  /* Whose state `signing` is: the pad's while it is open, the row's while it
+     is not. An anchor whose hold is still signing refuses a second hold. */
+  const rowSigning = open ? undefined : signing;
+  const padSigning = open ? signing : undefined;
+  const anchorBusy = rowSigning === "busy";
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: "relative",
@@ -6570,8 +6751,9 @@ function StanceControl({
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": restingFace === null ? `Give your opinion on ${targetLabel}` : pendingPick ? `Your opinion on ${targetLabel}, waiting for your key: ${restingFace.label}, ${formatStancePair(restingPair)}.` : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`,
-    onClick: onTap,
-    onPointerDown: onPointerDown,
+    onClick: anchorBusy ? undefined : onTap,
+    onPointerDown: anchorBusy ? undefined : onPointerDown,
+    "aria-busy": anchorBusy || undefined,
     onPointerUp: clearHold,
     onPointerCancel: clearHold,
     onContextMenu: event => event.preventDefault(),
@@ -6657,6 +6839,14 @@ function StanceControl({
     }
   }, "Choose your opinion on ", targetLabel)), pendingPick && /*#__PURE__*/React.createElement(PendingMarker, {
     label: "Waiting for your key"
+  }), rowSigning === "busy" && /*#__PURE__*/React.createElement(PendingMarker, {
+    label: "Signing\u2026"
+  }), rowSigning === "failed" && /*#__PURE__*/React.createElement(SigningPending, {
+    row: true,
+    onRetry: () => {
+      setSigned(null);
+      commitChecked(TAP_DEFAULT);
+    }
   }), open && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     "aria-hidden": "true",
     onPointerDown: event => {
@@ -6769,7 +6959,9 @@ function StanceControl({
   }), padNote, /*#__PURE__*/React.createElement(StanceLandingLine, {
     landing: landing,
     names: axes
-  })), /*#__PURE__*/React.createElement("div", {
+  })), padSigning === "failed" && /*#__PURE__*/React.createElement(TransportError, {
+    message: "That didn't send. Try again."
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -6798,14 +6990,17 @@ function StanceControl({
   }, "Cancel"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     disabled: explaining,
-    onClick: () => commitChecked(pick),
+    onClick: padSigning === "busy" ? undefined : () => commitChecked(pick),
+    "aria-busy": padSigning === "busy" || undefined,
+    "aria-disabled": padSigning === "busy" || undefined,
     className: BUTTON_CLASS,
     style: buttonStyle({
-      variant: "primary",
+      variant: padSigning === "failed" ? "outline" : "primary",
       size: "sm",
-      disabled: explaining
+      disabled: explaining,
+      busy: padSigning === "busy"
     })
-  }, "Set")))), alternates && /*#__PURE__*/React.createElement(StanceAlternates, {
+  }, padSigning === "busy" ? "Setting…" : padSigning === "failed" ? "Retry" : "Set")))), alternates && /*#__PURE__*/React.createElement(StanceAlternates, {
     pick: pick,
     onPick: setPick,
     onCommit: () => commitChecked(pick),
@@ -9197,6 +9392,7 @@ function PostCard({
   stanceDefaultPick,
   stanceOnOpenHistory,
   stancePendingPick,
+  stanceSigning,
   score,
   onOpenScore,
   comments,
@@ -9500,6 +9696,7 @@ function PostCard({
     defaultPick: stanceDefaultPick,
     onOpenHistory: stanceOnOpenHistory,
     pendingPick: stancePendingPick,
+    signing: stanceSigning,
     node: node && "stance"
   }), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
     glyph: "graph",
@@ -11079,54 +11276,86 @@ function SearchBar({
 __ds_scope.SearchBar = SearchBar;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/forms/SearchBar.jsx", error: String((e && e.message) || e) }); }
 
-// components/honesty/TransportError.jsx
+// components/honesty/NoticePanel.jsx
 try { (() => {
-/* The house connectivity alert, and the signing-didn't-finish line. These DO carry
-   `error` colouring, because they are genuine failures — unlike the honesty
-   markers beside them.
+const { HelpDot } = __ds_scope;
+/* THE NOTICE PANEL (the failure pack, 2026-09-30) — the `tertiary-container`
+   block a surface wears when the one act it exists for cannot happen right
+   now, and nothing failed. Nothing was staged, nothing was signed, nothing
+   was spent: the state is a notice, not a fault, so it never takes `error`.
 
-   Where a fault surfaces matters: a failed refresh sits on a banner above the
-   content, a failed page fetch sits in place of the load-more control. With posts
-   already on screen the fault means "stale", not "gone", so the wording changes and
-   the loaded content stays readable underneath. */
+   IT IS THE KEY-ABSENT BOARDS' PANEL, PROMOTED. `ComposeKeyAbsent`,
+   `PadKeyAbsent`, `SettingsBackupKeyAbsent`, `YourKeyAbsent` and
+   `KeyCeremonyUnsupported` each draw this block by hand; the write rule's
+   restoration surface was the sixth, and the componentization law says a
+   sixth copy is a master owed. Those five still draw their own and move onto
+   this one in a round of their own.
 
-function TransportError({
-  message
+   ITS ANATOMY IS THEIRS: the title in `title-medium`, the panel's one "?" in
+   `HelpDot`'s `inverse` beside it when the panel has something to explain,
+   the body in `body-medium`, and what the reader can do about it last — a
+   filled button in `Button`'s `inverse`, never `primary`, because a primary
+   fill inside a tonal panel is a second colour family arguing with the
+   panel's own. `corner` is the one thing the copies disagree on: the seal's
+   panel sits beside the acts card and takes its `medium` rung; a page's
+   panel leads the page and takes `large`. */
+function NoticePanel({
+  title,
+  helpLabel,
+  onHelp,
+  corner = "medium",
+  children
+}) {
+  const body = React.Children.toArray(children);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+      borderRadius: corner === "large" ? "var(--radius-large)" : "var(--radius-medium)",
+      background: "var(--tertiary-container)",
+      color: "var(--on-tertiary-container)",
+      padding: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      margin: 0,
+      flex: 1,
+      fontSize: "var(--text-title-medium)",
+      lineHeight: "var(--text-title-medium--line-height)",
+      fontWeight: "var(--text-title-medium--font-weight)",
+      letterSpacing: "var(--text-title-medium--letter-spacing)"
+    }
+  }, title), helpLabel && /*#__PURE__*/React.createElement(HelpDot, {
+    ariaLabel: helpLabel,
+    onOpen: onHelp,
+    variant: "inverse"
+  })), body);
+}
+
+/* The panel's sentence — `body-medium` in the panel's own ink. */
+function NoticeLine({
+  children
 }) {
   return /*#__PURE__*/React.createElement("p", {
-    role: "alert",
     style: {
       margin: 0,
       fontSize: "var(--text-body-medium)",
-      color: "var(--text-failure)"
+      lineHeight: "var(--text-body-medium--line-height)",
+      fontWeight: "var(--text-body-medium--font-weight)",
+      letterSpacing: "var(--text-body-medium--letter-spacing)"
     }
-  }, message ?? "Can't reach the server. Check your connection and try again.");
+  }, children);
 }
-
-/* Honest about who acts next: with the key absent the write waits on the reader
-   restoring it, not on time passing — "stays pending" alone read as
-   wait-and-it-happens. */
-function SigningPending({
-  needsKey = false,
-  restoreHref = "/restore"
-}) {
-  return /*#__PURE__*/React.createElement("p", {
-    role: "alert",
-    style: {
-      margin: 0,
-      fontSize: "var(--text-body-medium)",
-      color: "var(--text-failure)"
-    }
-  }, needsKey ? /*#__PURE__*/React.createElement(React.Fragment, null, "Signing needs your key, which isn't in this browser \u2014 the write waits as pending.", " ", /*#__PURE__*/React.createElement("a", {
-    href: restoreHref,
-    style: {
-      color: "inherit"
-    }
-  }, "Restore your key"), " ", "to finish it.") : "Signing did not finish — the write stays pending.");
-}
-__ds_scope.TransportError = TransportError;
-__ds_scope.SigningPending = SigningPending;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/TransportError.jsx", error: String((e && e.message) || e) }); }
+__ds_scope.NoticePanel = NoticePanel;
+__ds_scope.NoticeLine = NoticeLine;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/honesty/NoticePanel.jsx", error: String((e && e.message) || e) }); }
 
 // components/media/PinnedClip.jsx
 try { (() => {
@@ -13821,6 +14050,10 @@ __ds_ns.FieldSupport = __ds_scope.FieldSupport;
 __ds_ns.FieldLabel = __ds_scope.FieldLabel;
 
 __ds_ns.TextField = __ds_scope.TextField;
+
+__ds_ns.NoticePanel = __ds_scope.NoticePanel;
+
+__ds_ns.NoticeLine = __ds_scope.NoticeLine;
 
 __ds_ns.PendingMarker = __ds_scope.PendingMarker;
 
