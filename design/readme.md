@@ -1830,13 +1830,19 @@ entry first". What stands:
   node export-tokens.mjs && node render-screens.mjs && node gen-maps.mjs
   && node gen-canvases.mjs && node check-flows.mjs &&
   node check-readouts.mjs && node check-behavior.mjs &&
-  node report-summaries.mjs`.
+  node check-help-notes.mjs && node report-summaries.mjs`.
 - **`_build/check-behavior.mjs` holds the behavior sidecars to their
   grammar**: every line of `designs/canonical/behavior/<Screen>.md`
   parses as a WHEN or an ALWAYS line, or the gate fails with its file
   and line. The sidecars are the contract the implementation side's
   conformance harness compiles; their README carries the grammar and
   what the check does not see.
+- **`_build/check-help-notes.mjs` holds the "? contents" notes to
+  copy-voice** (item 109): each note section names a dialog of
+  copy-voice's *The "?" dialogs* and must carry its blessed text, and
+  every dialog there lives in exactly one note — canonical's
+  `help-contents` or the post-MVP tree's `wallet-help-contents`. A
+  reworded dialog is rebuilt into its note with `--write`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
@@ -6950,12 +6956,14 @@ to compete got their chooser.
   canvases are deliberately not on it.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
   `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
-  `check-readouts.mjs`, `check-behavior.mjs`, `report-summaries.mjs` —
-  the board pipeline (§13, *Canvas pages and flows*): render the
-  screens, stamp the flow numbers, generate the maps, seed the
-  per-canvas manifests (§14), gate the result — `check-behavior` holds
-  the behavior sidecars to their grammar. Run all of them after any
-  screen, component, graph.json or sidecar edit. A screen whose state is not a
+  `check-readouts.mjs`, `check-behavior.mjs`, `check-help-notes.mjs`,
+  `report-summaries.mjs` — the board pipeline (§13, *Canvas pages and
+  flows*): render the screens, stamp the flow numbers, generate the
+  maps, seed the per-canvas manifests (§14), gate the result —
+  `check-behavior` holds the behavior sidecars to their grammar,
+  `check-help-notes` the "? contents" notes to copy-voice. Run all of
+  them after any screen, component, graph.json, sidecar or "?" copy
+  edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
   instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
   the gate's user-flow half (§13, *The user-flow layer*): it resolves
