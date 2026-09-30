@@ -34,6 +34,9 @@ Where each sidecar's words come from:
   *Comments live in a sheet*).
 - `ComposeDetails.md` — the already-published marker (copy-voice, *The
   already-published marker*), on the Details step's media row.
+- `TagPicker.md` — the typed-name row (readme §13, *The typed-name
+  row*): the canonicalized typed name as the list's first row, and what
+  the keyboard's action key stages.
 
 ## The grammar
 

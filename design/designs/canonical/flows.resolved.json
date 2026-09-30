@@ -21,6 +21,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -47,6 +48,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -55,7 +57,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 47 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -81,6 +83,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -107,6 +110,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -193,6 +197,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedTopic",
@@ -204,13 +209,14 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 28 boards → ReplyEntry",
+        "start · «comment count» on 30 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -233,6 +239,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedTopic",
@@ -244,6 +251,7 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -491,13 +499,14 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 23 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 24 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -521,6 +530,7 @@
         "PostDetailVideoSensitive",
         "ProfilePosts",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -708,6 +718,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -734,6 +745,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -742,7 +754,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 47 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -768,6 +780,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -794,6 +807,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -822,6 +836,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -848,6 +863,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -856,7 +872,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 47 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -882,6 +898,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -908,6 +925,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -936,6 +954,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -962,6 +981,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -970,7 +990,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 47 boards → ComposePick",
+        "start · «nav · New post» on 49 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -994,6 +1014,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedNothing",
         "FeedScrolled",
@@ -1020,6 +1041,7 @@
         "RankPath",
         "RankRecords",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "Saved",
         "SavedEmpty",
@@ -1348,6 +1370,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedTopic",
@@ -1358,13 +1381,14 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 27 boards → ProfileOther",
+        "start · «author chip» on 29 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1382,6 +1406,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedTopic",
@@ -1392,6 +1417,7 @@
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Reel",
+        "ReelSensitive",
         "Removed",
         "TagPage",
         "TagPageHeld",
@@ -1414,6 +1440,7 @@
         "FeedDeleting",
         "FeedFar",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
@@ -1423,7 +1450,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 18 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 19 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
@@ -1439,6 +1466,7 @@
         "FeedDeleting",
         "FeedFar",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
@@ -1464,6 +1492,7 @@
         "FeedDeleting",
         "FeedFar",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
@@ -1473,7 +1502,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 18 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 19 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -1489,6 +1518,7 @@
         "FeedDeleting",
         "FeedFar",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
@@ -1676,6 +1706,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedTopic",
@@ -1692,7 +1723,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Post Score» on 27 boards → FeedEntry",
+        "start · «Post Score» on 28 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1716,6 +1747,7 @@
         "FeedFar",
         "FeedGallery",
         "FeedHidden",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedTopic",
@@ -2290,6 +2322,20 @@
       ],
       "endpoint": []
     },
+    "FeedKinds": {
+      "flows": [
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": []
+    },
     "FeedNarrowed": {
       "flows": [
         "follow-a-citation",
@@ -2788,6 +2834,18 @@
         "reel-to-detail",
         "watch-the-stream"
       ]
+    },
+    "ReelSensitive": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "ReferencePicker": {
       "flows": [

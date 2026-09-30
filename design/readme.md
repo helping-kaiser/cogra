@@ -6958,8 +6958,7 @@ to compete got their chooser.
   Profiles, Tags** — the kinds V1.0 serves. The six chips beyond them
   (chats, messages, proposals, items, campaigns, offers) leave both
   filters. The comment-in-feed, profile-in-feed and tag-in-feed cards
-  are V1.0 surfaces and get drawn in rounds of their own — the chips
-  are right, the cards are owed.
+  are V1.0 surfaces, drawn in *The three feed cards*.
 - **Search returns no item, offer or message rows in V1.0**; those rows
   leave `ExploreSearch` with their kinds.
 - **A V1.0 reference points at a person, a post or a comment** — the
@@ -7087,6 +7086,102 @@ key, with nothing on screen saying so.
   or a badge — `SettingsBackup`, `YourKeyAbsent`, and the scrim badge on
   `KeyConfirm`, `KeyDecline` and `PadKeyAbsent` — plus the four maps
   that follow the edges.
+
+### The three feed cards — 2026-09-30
+
+jakob's ruling from the fifteen-first round, executed: **the four served
+kinds — Posts, Comments, Profiles, Tags — everywhere, feed and search
+alike**, and later kinds join with their features. The filter already
+offered the four; this round draws the three cards a reader meets once
+they turn a kind on, on one new board, `FeedKinds`.
+
+- **A board of its own, not new cards on `Feed`.** The everyday feed is
+  drawn at the filter's default, `Posts` alone, so the kinds arrive the way
+  the post-MVP chat and message cards did (`ChatFeedCards`): the kinds
+  turned on, the trigger reading `4 kinds`, the new cards leading and a post
+  below them. The filter sheet's way out lands on it.
+- **Each kind keeps the idiom it already wears** (`_shared.jsx`, the V1.0
+  feed kinds). The comment is `CommentCard` in its out-of-thread shape — the
+  target pointer leading, as on `ProfileComments` and `TagPage` — with
+  `Reply` and its replies line. The profile and the tag ride `PostCard`'s
+  `lead` and `main`, the chat cards' mounting: a person's lead is their
+  picture, name and handle over their bio, their menu the profile's own less
+  the share the row carries; a tag's lead is the `#` tile and its name over
+  the newest thing tagged with it, as a preview row, its opinion the
+  topic's Affinity, and no ⋮ and no share, because a Type has no license,
+  is never cited or saved, and its page shares nothing. Every tap lands on a
+  board that exists: the comment's thread, the person's profile, the tag's
+  page.
+- **`PostCard` gained `menuLabel` and `stanceAxes`**, both additive, so the
+  ⋮ can say whose menu it is and a tag's pad can speak its own four ends;
+  every other board renders unchanged.
+- **The lane's calls, flagged for review:** the separate board rather than
+  `Feed`; the comment's `Reply` and replies line kept (`ProfileComments`'
+  shape, not `TagPage`'s doorway); the two-line lead for the person and the
+  tag, so neither reads as a text post; the tag card's body as its newest
+  claim, with that claim's age as the card's timestamp; the face at the
+  feed row's anchor size on both, rather than a profile's wide one; no
+  figures, no `Message` and no score on the profile card; `FeedFar`, which
+  turns comments and profiles on, still draws only posts, because whether
+  its `photos` form admits a text comment or a person is unruled;
+  `FeedKinds` is not a registered screen, so `nodes.json` does not change.
+- **The gate**: 218 → **219 screens**, 1536 → **1561 edges**, **1 gap**,
+  flows **63**, every one resolved. The witness was re-blessed once,
+  deliberately: nine control-selector censuses each grew by the one board.
+### The typed-name row — 2026-09-30
+
+The V1.0 audit's K14.1 (E22), a blocker: the tag picker had no
+creation row by ruling, its rows came only from slice 2.7's index, and
+nothing staged what was typed — so before the index, and for any name
+nobody had used, no tag could be added. jakob's ruling: **"yes — the
+canonicalized typed name is always the list's first row, the action key
+stages it."**
+
+- **The first row is the typed name, canonicalized, always** — whether
+  or not rows match below it. It is the `ReferenceRow` every row is,
+  with the `Signs as #saltmaps` preview as its second line: the preview
+  made tappable, a row and never a `Create` button, because it names a
+  Type that already exists. A name in use that is the typed name is
+  that row, never listed twice; the index's rows sit under it.
+- **The name field's keyboard action key stages the first row** — the
+  same pick as a tap on it, landing in the composer's tags. On a
+  refused name there is no first row, so the key stages nothing and the
+  refusal holds.
+- **Drawn**: `TagPicker` gains the `salt` row above the four matches;
+  `TagPickerTyping`'s preview moves from under the field onto its row;
+  `TagPickerRefused`'s drawing stands, and it says why the row goes. The
+  graph's name-field edges carry the action key, and
+  `behavior/TagPicker.md` holds the ordering and the key's two outcomes.
+- **The gate**: 218 screens and 1536 edges unchanged, flows 63/63; the
+  compose map and the two drawn boards moved.
+
+### The veiled reel — 2026-09-30
+
+The V1.0 audit's K7.1: the stream drew no sensitive state, so a
+veiled clip's shape there was undesigned. jakob's amended ruling:
+**"the veiled reel is FULL SCREEN, looking exactly like any other
+reel in the scroller, blurred and not playing, with the standard
+veil anatomy exactly as everywhere else (chip + reason on the blur,
+tap-to-reveal session-scoped, then it plays). One board:
+ReelSensitive."**
+
+- **One board, `ReelSensitive`** — the stream full screen, the clip
+  blurred and not playing, the standard veil face centred on the
+  blur; back arrow, rail, caption and bottom bar exactly as on
+  `Reel`. The caption's words veil with `Show`, per `SensitiveVeil`'s
+  law: the title stays readable, the description veils.
+- **No sound disc and no seek line** — they are playback's rung of
+  the control ladder, and a veiled clip has no playback (item 103's
+  rule); everything that isn't playback stays, and the rail's acts
+  stay live over the veil.
+- **The reveal**: a tap on either veil face reveals — session-scoped,
+  as everywhere — and the screen is `Reel`, playing; a swipe passes
+  to the next clip. The score leads to `PostDetailVideoSensitive`,
+  the sensitive detail. `ReelSensitive` is a declared entry, the
+  state the record brings, wired as `PostDetailVideoSensitive` is.
+- **Drawn**: the one new board; `SensitiveVeil` gained a `faceGutter`
+  prop so the face clears the rail (default unchanged); the sensitive
+  video detail board moved aside on the canvas, content untouched.
 
 ### The reply pack — 2026-09-30
 

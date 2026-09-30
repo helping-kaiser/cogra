@@ -16,6 +16,12 @@ export interface ReelCaptionProps {
   /** Distance from the surface's bottom edge, clearing the bottom bar and the seek line. */
   bottom?: number;
   onMore?: () => void;
+  /**
+   * The post is sensitive and unrevealed: the description blurs in place behind
+   * the `text` veil while the handle and title stay readable. The reveal is the
+   * post's one `SensitiveScope`, so wrap the stream's clip and caption in it.
+   */
+  sensitive?: boolean;
 }
 
 export declare function ReelCaption(props: ReelCaptionProps): JSX.Element;

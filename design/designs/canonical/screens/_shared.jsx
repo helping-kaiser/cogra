@@ -2101,7 +2101,7 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
         <SettingsGroup
           label="Writing"
-          footnote="Everything you sign is paid for separately. A post's license is settled when it is first signed and never changes."
+          footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
         >
           <SettingsRow
             checked
@@ -2829,6 +2829,115 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
         </TaggedRow>
       </div>
     </>
+  );
+}
+
+/* ── THE V1.0 FEED KINDS (the three-feed-cards round, 2026-09-30) ──────────
+   jakob's ruling (the fifteen-first round): the four served kinds — Posts,
+   Comments, Profiles, Tags — everywhere, feed and search alike. The filter
+   already offered all four; these are the three cards a reader meets once
+   they turn a kind on. Each is a real master, mounted — nothing hand-built
+   (the componentization law) — and each follows the idiom its kind already
+   wears somewhere else, so none of them is new anatomy.
+
+   THE COMMENT KEEPS ITS OWN MASTER. A comment met away from its thread is
+   already drawn — `CommentCard` in the out-of-thread shape `ProfileComments`
+   and `TagPage` draw, leading with the target pointer that says what it
+   answers and opens it. `TagPage`'s mixed list set the rule this follows:
+   each kind keeps its own master, and a comment is never re-dressed as a
+   post. It keeps `Reply` and its replies line, `ProfileComments`' shape
+   rather than `TagPage`'s doorway, because the feed is where a reader acts,
+   not a place that only lists.
+
+   THE PROFILE AND THE TAG RIDE `PostCard`, as the post-MVP chat and message
+   cards do (the chats integration round): the card's header and ⋮, its
+   action row, and the card itself as the door. The lead has the chat card's
+   geometry — the kind's own mark, its name, one quiet line — so neither card
+   reads as a text post. The marks are `NodeMark`'s: a person is their
+   picture, a tag the `#` tile its chip wears. */
+function FeedLeadName({ children }) {
+  return <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{children}</span>;
+}
+const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
+
+function CommentFeedCard({ author, content, timestamp, target, topics = [], references = 0, replyCount = 0, bundle }) {
+  return (
+    <CommentCard
+      author={author}
+      content={content}
+      timestamp={timestamp}
+      target={target}
+      onOpenTarget={() => {}}
+      bundle={bundle}
+      topics={topics}
+      references={references}
+      replyCount={replyCount}
+      onOpenReplies={() => {}}
+      onReply={() => {}}
+      license={{ attribution: 0, provenance: 0 }}
+      menuItems={CARD_MENU}
+    />
+  );
+}
+
+/* THE PROFILE CARD. The lead is the person — picture, name, handle — and the
+   body their bio, the two things `ProfileHeader` opens on; the card opens
+   their profile. The row keeps the feed card's order and drops what a person
+   does not have: the opinion on them leads, the share closes it, and there is
+   no score and no comments. Its ⋮ is the profile's own menu, less the share
+   row the action row already carries. */
+const FEED_PROFILE_MENU = (handle) => [
+  SAVE_ROW,
+  { label: "Mention in a new post", onSelect: () => {} },
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {} },
+];
+
+function ProfileFeedCard({ person, src, bio, bundle }) {
+  return (
+    <PostCard
+      lead={
+        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <MonogramAvatar name={person.displayName} src={src} size={32} />
+          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <FeedLeadName>{person.displayName}</FeedLeadName>
+            <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+          </span>
+        </span>
+      }
+      main={<p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>}
+      targetLabel={"@" + person.handle}
+      bundle={bundle}
+      menuItems={FEED_PROFILE_MENU(person.handle)}
+      menuLabel={"More about @" + person.handle}
+      onOpen={() => {}}
+    />
+  );
+}
+
+/* THE TAG CARD. The lead is the `#` tile and the tag's name; the body is the
+   newest thing tagged with it, as a preview row — the chat card's
+   last-message row, and the first thing the tag's page opens on — with its
+   age where a card's timestamp stands. The opinion is the topic's Affinity,
+   with the tag page's own four ends. A Type has no license, is never cited
+   and is not saved, and the tag page offers no share, so the card carries no
+   ⋮ and no share — only what a tag has. The card opens the tag's page. */
+function TagFeedCard({ name, newest, age, bundle }) {
+  return (
+    <PostCard
+      lead={
+        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <NodeMark kind="topic" />
+          <FeedLeadName>{name}</FeedLeadName>
+        </span>
+      }
+      main={<ContentRow variant="chronicle" chevron={false} inert title={newest.author.displayName} name={newest.author.displayName} second={newest.words} />}
+      timestamp={age}
+      targetLabel={name}
+      bundle={bundle}
+      stanceAxes={AFFINITY_AXES}
+      showShare={false}
+      onOpen={() => {}}
+    />
   );
 }
 
