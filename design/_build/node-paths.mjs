@@ -23,6 +23,13 @@
 // instances join their keys outermost first with `/` (`ada/photography`).
 // Two nodes with one (path, key) on one board fail the build.
 //
+// Because a path follows the annotated ancestry, two rules keep paths stable
+// once registered. A wrapper that holds named nodes is named when they are, or
+// never: naming it later renames every node inside it, which render-screens'
+// append-only guard refuses. And no node wraps named content in only some
+// states — a veil drawn around a gallery would move the gallery's paths with
+// the state; an element like that is named as a leaf beside what it covers.
+//
 // The markup is React's static render, which is regular enough to walk with a
 // tokenizer: every non-void element is closed, attribute values are quoted and
 // escaped (no raw `<`, `>` or `"` inside one), and no comments are emitted. The
