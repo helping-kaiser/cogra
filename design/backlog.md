@@ -3621,7 +3621,11 @@ sections against copy-voice would end the drift class for good.
    pipeline beside `check-behavior`, the behavior sidecars' grammar
    lint.
 
-### 110 · The already-published marker has no board · *design* · **filed 2026-09-30**
+### 110 · The already-published marker has no board · *design* · **filed 2026-09-30** · **deprioritized 2026-09-30**
+
+**Deprioritized** (jakob 2026-09-30, ruled on the implementation
+side): the marker is a late quality-of-life feature, so this drawing
+round queues far back. The law and the copy stand as written.
 
 The duplicate-media ruling (jakob 2026-09-30) is written and blessed
 — copy-voice, *The already-published marker*, and the lines in
@@ -3664,3 +3668,28 @@ that sentence verbatim — jakob blesses the sentence and the
 annotation goes, or he rewords it and the note follows through
 `check-help-notes --write`. Both are one-line rulings; fold them
 into the next copy round's brief.
+
+### 113 · The kept picks' review board · *design* · **filed 2026-09-30**
+
+The key-loss round ruled a kept pick's life (readme §13, *The
+key-loss round*; `PadKeyAbsent`'s docblock): picks kept pending with
+the key elsewhere wait on the device and, once the key is restored,
+sign together in one batch the reader reviews first — never
+silently. jakob blessed those semantics on 2026-09-30. The review
+itself is undrawn, and it is the canonical tree's one gap:
+`Restore/4`, the "key restored, with picks kept pending" outcome. A
+drawing round: the review surface (which posts, each kept pick's
+face and pair, dropping one before signing), what it signs as and
+what the snackbar says, and where the reader lands after. Drawing it
+closes the gap.
+
+### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30**
+
+Register a feed board that draws a clip — `FeedShapes` or
+`FeedCover` — under the `feed` node prefix, as the first round of the
+ID sweep after the calibration screens. It gives the stage-law lines
+in `designs/canonical/behavior/Feed.md` real node paths in place of
+their plain words, which item 111's node check then holds. Approved
+by jakob on 2026-09-30; the grammar and the plan are the design ⇄
+impl seam's entry 002 (dev-state `cogra/tmp_dev/design-impl-seam.md`)
+and the calibration-ID PR, #30.
