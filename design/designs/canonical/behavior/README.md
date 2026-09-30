@@ -27,7 +27,13 @@ Where each sidecar's words come from:
   clip *qualifies* at 70% visibility or more and unveiled, the
   *incumbent* is the playing clip, the *stage* is the one clip a scroll
   surface plays, and the *hard top* is where the surface cannot scroll
-  further up.
+  further up. Its hold lines are the failure pack's (readme §13, *The
+  failure pack*): a signed act waits for its signature, the 200ms law
+  decides when the row says `Signing…`, and a hold that fails says so
+  on the target's row, never on the snackbar.
+- `ComposeSeal.md` — the failure pack's commit in flight: the label
+  swap after 200ms, the inert commit, and the fault in the commit's
+  place, in the words of readme §13 and copy-voice (*In-flight labels*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words.
