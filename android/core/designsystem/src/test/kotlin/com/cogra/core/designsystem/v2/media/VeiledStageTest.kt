@@ -189,6 +189,24 @@ class VeiledStageTest {
     }
 
     /**
+     * The hard top re-elects on LANDING there (jakob 2026-09-30), never while
+     * resting there: an unveil at the top is still an eligibility change, so
+     * A, topmost and whole, does not displace B.
+     */
+    @Test
+    fun anUnveilWhileRestingAtTheHardTopStillStealsNothing() {
+        show(A, B, veil = setOf(A), height = TALL, hardTopReelects = true)
+        assertHolds(B)
+        assertThat(list.canScrollBackward).isFalse()
+
+        reveal(A)
+
+        assertHolds(B)
+        assertThat(playingFrames()).containsExactly(trace(B))
+        assertThat(claimsOf(A)).isEqualTo(0)
+    }
+
+    /**
      * PRELOADING STAYS ON: invisible, it leaks nothing the veil hides, and it
      * makes the unveil instant. The list's clips reach the preload manager
      * whether or not a veil covers one of them.
@@ -207,6 +225,7 @@ class VeiledStageTest {
         compact: Boolean = false,
         preload: Boolean = false,
         height: Dp = HEIGHT,
+        hardTopReelects: Boolean = false,
     ) {
         veil.forEach { veiled[it] = true }
         this.compact = compact
@@ -215,7 +234,7 @@ class VeiledStageTest {
                 Cogra2PreviewTheme {
                     list = rememberLazyListState()
                     if (preload) PreloadClips(clips = rows.map(::url), focus = { 0 })
-                    ScrollStageHost(list) {
+                    ScrollStageHost(list, hardTopReelects = hardTopReelects) {
                         LazyColumn(state = list, modifier = Modifier.size(WIDTH, height)) {
                             items(rows.toList(), key = { it }) { row ->
                                 ScrollStageRow(row) { VeiledClip(row, compact) }
