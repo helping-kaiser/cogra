@@ -218,9 +218,11 @@ impl Query {
 
     /// One of the viewer's own uploads — how a client learns that an
     /// asset it uploaded as PROCESSING has become READY (or FAILED).
-    /// Polled the way `stagedWrite` is. Null for an unknown id, for
-    /// somebody else's asset, and without a session: an upload is
-    /// nobody else's business until a parent carries it.
+    /// Polled the way `stagedWrite` is. An upload whose re-encode came
+    /// out as bytes the viewer already holds answers as that asset,
+    /// READY under its own id; attaching either id attaches it. Null for
+    /// an unknown id, for somebody else's asset, and without a session:
+    /// an upload is nobody else's business until a parent carries it.
     async fn media_attachment(
         &self,
         ctx: &Context<'_>,
