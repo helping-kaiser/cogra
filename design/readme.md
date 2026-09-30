@@ -6950,8 +6950,7 @@ to compete got their chooser.
   Profiles, Tags** — the kinds V1.0 serves. The six chips beyond them
   (chats, messages, proposals, items, campaigns, offers) leave both
   filters. The comment-in-feed, profile-in-feed and tag-in-feed cards
-  are V1.0 surfaces and get drawn in rounds of their own — the chips
-  are right, the cards are owed.
+  are V1.0 surfaces, drawn in *The three feed cards*.
 - **Search returns no item, offer or message rows in V1.0**; those rows
   leave `ExploreSearch` with their kinds.
 - **A V1.0 reference points at a person, a post or a comment** — the
@@ -7079,6 +7078,48 @@ key, with nothing on screen saying so.
   or a badge — `SettingsBackup`, `YourKeyAbsent`, and the scrim badge on
   `KeyConfirm`, `KeyDecline` and `PadKeyAbsent` — plus the four maps
   that follow the edges.
+
+### The three feed cards — 2026-09-30
+
+jakob's ruling from the fifteen-first round, executed: **the four served
+kinds — Posts, Comments, Profiles, Tags — everywhere, feed and search
+alike**, and later kinds join with their features. The filter already
+offered the four; this round draws the three cards a reader meets once
+they turn a kind on, on one new board, `FeedKinds`.
+
+- **A board of its own, not new cards on `Feed`.** The everyday feed is
+  drawn at the filter's default, `Posts` alone, so the kinds arrive the way
+  the post-MVP chat and message cards did (`ChatFeedCards`): the kinds
+  turned on, the trigger reading `4 kinds`, the new cards leading and a post
+  below them. The filter sheet's way out lands on it.
+- **Each kind keeps the idiom it already wears** (`_shared.jsx`, the V1.0
+  feed kinds). The comment is `CommentCard` in its out-of-thread shape — the
+  target pointer leading, as on `ProfileComments` and `TagPage` — with
+  `Reply` and its replies line. The profile and the tag ride `PostCard`'s
+  `lead` and `main`, the chat cards' mounting: a person's lead is their
+  picture, name and handle over their bio, their menu the profile's own less
+  the share the row carries; a tag's lead is the `#` tile and its name over
+  the newest thing tagged with it, as a preview row, its opinion the
+  topic's Affinity, and no ⋮ and no share, because a Type has no license,
+  is never cited or saved, and its page shares nothing. Every tap lands on a
+  board that exists: the comment's thread, the person's profile, the tag's
+  page.
+- **`PostCard` gained `menuLabel` and `stanceAxes`**, both additive, so the
+  ⋮ can say whose menu it is and a tag's pad can speak its own four ends;
+  every other board renders unchanged.
+- **The lane's calls, flagged for review:** the separate board rather than
+  `Feed`; the comment's `Reply` and replies line kept (`ProfileComments`'
+  shape, not `TagPage`'s doorway); the two-line lead for the person and the
+  tag, so neither reads as a text post; the tag card's body as its newest
+  claim, with that claim's age as the card's timestamp; the face at the
+  feed row's anchor size on both, rather than a profile's wide one; no
+  figures, no `Message` and no score on the profile card; `FeedFar`, which
+  turns comments and profiles on, still draws only posts, because whether
+  its `photos` form admits a text comment or a person is unruled;
+  `FeedKinds` is not a registered screen, so `nodes.json` does not change.
+- **The gate**: 218 → **219 screens**, 1536 → **1561 edges**, **1 gap**,
+  flows **63**, every one resolved. The witness was re-blessed once,
+  deliberately: nine control-selector censuses each grew by the one board.
 
 ## 15. Index
 

@@ -3560,9 +3560,9 @@ The application queue, in order:
 5. **New drawings**: comment removal at comment scale (menu row,
    confirm, the removed comment's mark in a thread); the `Still
    settling` chip under "Also show".
-6. **The three feed cards** (comment, profile, tag in the feed) —
-   briefed drawing rounds with canvas iteration, sequenced after
-   the mechanical work.
+6. **The three feed cards** (comment, profile, tag in the feed)
+   *(drawn 2026-09-30, jakob's fifteen-first ruling; `FeedKinds`,
+   readme §13 *The three feed cards*, calls flagged for his review)*.
 7. **The post-MVP split** *(landed 2026-09-30, jakob's ruling)*: the
    one post-MVP domain now serves two canvases via `canvases.json` —
    `futures` ("CoGra · Future features": chats + wallet, the original
