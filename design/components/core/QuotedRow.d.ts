@@ -6,10 +6,12 @@
  * reader is already inside what it names.
  */
 export interface QuotedRowProps {
-  /** The post and its author — "The long way home — @ada". Never ellipsized:
-   *  losing its end loses who. */
+  /** What is answered and whose it is — a post as its title and author,
+   *  "The long way home — @ada"; a comment, which has no title, as its
+   *  author's handle, "@tobias". Never ellipsized: losing its end loses who. */
   title: React.ReactNode;
-  /** How the post starts. One line, ellipsized — a taste, not the text. */
+  /** How the post or comment starts. One line, ellipsized — a taste, not the
+   *  text. */
   snippet?: React.ReactNode;
   /** The author's display name, for the monogram when there is no picture. */
   name?: string;

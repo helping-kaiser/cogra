@@ -1,11 +1,12 @@
-/* THE OPINION PAD ON THE POST YOU ANSWER (legacy conversion, lane C): what the
-   reply seal's "Adjust" opens. The wash covers the seal; only the parked pad is
-   live, which is what the board's `scanExempt` line says.
+/* THE OPINION PAD ON WHAT YOU ANSWER (legacy conversion, lane C): what the
+   reply seal's "Adjust" opens, whether the reply answers a post or a comment.
+   The wash covers the seal; only the parked pad is live, which is what the
+   board's `scanExempt` line says.
 
    THE FIELD IS THE MASTER, both axes. Unlike `ComposePad` — where the author's
    own post always reaches them in full, so only one parameter is theirs to pick
-   — a reply's stance is toward somebody else's post: for or against it, and how
-   much of them reaches you. Both are choices, so the value space is the square
+   — a reply's stance is toward what it answers, somebody else's post or
+   comment: for or against it, and how much of them reaches you. Both are choices, so the value space is the square
    `StancePad` draws, and the pad reads from it rather than drawing its own.
 
    IT KEEPS THE HAND BOARD'S 240px FIELD, centred, rather than letting the
@@ -14,9 +15,12 @@
    the four named directions, the knob and where it sits for +0.10 / +0.10 — is
    now the master's.
 
-   THE READOUT NAMES ITS TARGET where `ComposePad`'s says "Your pick": on your
-   own post there is only one thing a pick could be about, and here there are
-   two — the post being answered, and the comment being written.
+   THE READOUT SAYS WHAT THE PICK IS TOWARD where `ComposePad`'s says "Your
+   pick": on your own post there is only one thing a pick could be about, and
+   here there are two — what is being answered, and the reply being written.
+   It reads `Toward what you answer`, the seal's own row label, so one pad
+   serves a post and a comment alike (the reply pack, jakob 2026-09-30) and
+   the knob keeps its default start either way.
 
    THE SEAL BENEATH IS THE SEAL — `ReplySealBody`, the same body `ReplySeal`
    draws. What a wash covers is inert, not shortened, so the acts card keeps its

@@ -446,11 +446,13 @@
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
+        "ReplyKeyAbsent",
+        "ReplySealKeyAbsent",
         "SettingsBackupKeyAbsent",
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 6 boards → Restore",
+        "start · «Restore the key» on 8 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
@@ -459,6 +461,8 @@
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
+        "ReplyKeyAbsent",
+        "ReplySealKeyAbsent",
         "SettingsBackupKeyAbsent",
         "YourKeyAbsent"
       ]
@@ -609,14 +613,14 @@
       "description": "Reply on a comment opens the same composer pre-targeted at it — one commenting mechanism over many targets, each target declaring its own start and end.",
       "status": "resolved",
       "steps": [
-        "start · ReplyEntry · 5 «Reply» → ReplyCompose — the composer, pre-targeted at that comment",
-        "ReplyCompose · 3 «Next» → ReplySeal",
-        "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
+        "start · ReplyEntry · 5 «Reply» → ReplyComposeComment — the composer, pre-targeted at that comment",
+        "ReplyComposeComment · 3 «Next» → ReplySealComment",
+        "end · ReplySealComment · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyEntry",
-        "ReplyCompose",
-        "ReplySeal",
+        "ReplyComposeComment",
+        "ReplySealComment",
         "ReplySettled"
       ]
     },
@@ -1056,10 +1060,11 @@
         "EditComposeUnchanged",
         "ReplyCited",
         "ReplyCitedMany",
-        "ReplySeal"
+        "ReplySeal",
+        "ReplySealComment"
       ],
       "steps": [
-        "start · «+ Cite something» on 11 boards → ReferencePicker",
+        "start · «+ Cite something» on 12 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
       ],
       "boards": [
@@ -1074,7 +1079,8 @@
         "EditComposeUnchanged",
         "ReplyCited",
         "ReplyCitedMany",
-        "ReplySeal"
+        "ReplySeal",
+        "ReplySealComment"
       ]
     },
     {
@@ -2843,10 +2849,15 @@
     },
     "ReplyCompose": {
       "flows": [
-        "reply-to-a-comment",
         "reply-to-a-post",
         "reply-with-a-video",
         "reply-with-pictures"
+      ],
+      "endpoint": []
+    },
+    "ReplyComposeComment": {
+      "flows": [
+        "reply-to-a-comment"
       ],
       "endpoint": []
     },
@@ -2867,6 +2878,12 @@
         "reply-with-pictures",
         "search-into-a-thread"
       ]
+    },
+    "ReplyKeyAbsent": {
+      "flows": [
+        "restore-your-key"
+      ],
+      "endpoint": []
     },
     "ReplyMedia": {
       "flows": [
@@ -2905,10 +2922,22 @@
       "flows": [
         "cite-something",
         "reply-from-the-browser",
-        "reply-to-a-comment",
         "reply-to-a-post",
         "reply-with-a-video",
         "reply-with-pictures"
+      ],
+      "endpoint": []
+    },
+    "ReplySealComment": {
+      "flows": [
+        "cite-something",
+        "reply-to-a-comment"
+      ],
+      "endpoint": []
+    },
+    "ReplySealKeyAbsent": {
+      "flows": [
+        "restore-your-key"
       ],
       "endpoint": []
     },

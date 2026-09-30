@@ -116,8 +116,11 @@ glyph used as punctuation.
 - `A signing key can only ever back one account, so this account needs
   its own.`
 - `This is the only way to restore your key.`
-- `Replying also signs your opinion on the post it answers.` — the
-  reply seal's note, under the ruled block on both its states.
+- `Replying also signs an opinion on what it answers.` — the reply
+  seal's note, under the ruled block in every state, at a post or a
+  comment. *An* opinion, never *your* opinion (jakob, 2026-09-30): the
+  reply's own starts at the default and rides the reply, and "your
+  opinion" reads as overwriting the one the reader already gave.
 
 ## Naming
 
@@ -252,7 +255,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
   until Set. Prefer sliders or exact numbers? Swap the input in
   settings.
 - **Toward what you answer** (the reply's two-axis pad): Replying also
-  signs your opinion on the post you answer — for or against, and
+  signs an opinion on what you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
   and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.

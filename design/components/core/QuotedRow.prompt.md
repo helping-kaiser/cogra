@@ -1,4 +1,4 @@
-Use `QuotedRow` at the top of every reply composer — the post being answered, held above the answer.
+Use `QuotedRow` at the top of every reply composer — what is being answered, a post or a comment, held above the answer.
 
 ```jsx
 <QuotedRow
@@ -8,6 +8,8 @@ Use `QuotedRow` at the top of every reply composer — the post being answered, 
   src="comment-camera.jpg"
 />
 ```
+
+- **A comment has no title**, so its row's first line is its author's handle alone — `title="@tobias"`, the comment's words as the `snippet`. The row is the same row; only what names the target differs.
 
 - **It is contained and the composer's words are not.** The body below sits on the page's own ground with no box; the box is the whole signal that this block is quoted rather than written. Do not put the composer in one too.
 - **It is inert.** The reader is already inside what it names, and a row that navigated away from a composer holding unsent words would be a trap. Never make it a button.

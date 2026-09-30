@@ -2,8 +2,10 @@ import React from "react";
 import { MonogramAvatar } from "../people/ActorChip.jsx";
 
 /* THE THING BEING ANSWERED, held above the answer. Every reply composer opens
-   with it: whose post this is and how it starts, on a tone of its own so the
-   words the reader is about to type are visibly not part of it.
+   with it: what is answered — a post or a comment — whose it is, and how it
+   starts, on a tone of its own so the words the reader is about to type are
+   visibly not part of it. A post's title line is its title and its author's
+   handle; a comment has no title, so its line is the author's handle alone.
 
    It is CONTAINED and it is INERT. Contained, because the composer's own body
    sits on the page's ground with no box at all — the box is the whole signal

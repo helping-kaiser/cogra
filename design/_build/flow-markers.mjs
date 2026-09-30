@@ -1512,7 +1512,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ReplyPad: [
     { n: 1, find: 'aria-label="Toward what you answer"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion pad for the post you answer"', tag: "div" },
+    { n: 2, find: 'aria-label="Opinion pad for what you answer"', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
@@ -1529,6 +1529,42 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Mark</button>", tag: "button" },
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
+  ],
+  // The composer and the seal answering a comment (the reply pack): the same
+  // surfaces as `ReplyCompose` and `ReplySeal`, so the same numbers.
+  ReplyComposeComment: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "The third headland light is real", tag: "p" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+  ],
+  ReplySealComment: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+  ],
+  // The key elsewhere at the reply's door: the notice's own three, and the
+  // wash it sits on. The thread beneath is `ReplyEntry`'s, wired there.
+  ReplyKeyAbsent: [
+    { n: 1, find: 'aria-label="Your key"', tag: "button" },
+    { n: 2, find: ">Restore the key</button>", tag: "button" },
+    { n: 3, find: ">Not now</button>", tag: "button" },
+    { n: 4, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The seal's key-absent fallback, a pattern exemplar: only the notice and
+  // the discard under it carry numbers; the rest is `ReplySeal`'s.
+  ReplySealKeyAbsent: [
+    { n: 1, find: 'aria-label="Your key"', tag: "button" },
+    { n: 2, find: ">Restore the key</button>", tag: "button" },
+    { n: 3, find: ">Discard the reply</button>", tag: "button" },
   ],
   EditCompose: [
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },

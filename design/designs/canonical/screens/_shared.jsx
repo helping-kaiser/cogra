@@ -156,6 +156,10 @@ const TOBIAS = { handle: "tobias", displayName: "Tobias Lindqvist" };
 const SOL = { handle: "sol", displayName: "Sol Ferreira" };
 const MIRA = { handle: "mira", displayName: "Mira Voss" };
 
+/* @tobias's comment at the thread's top — spelled once, because the thread
+   draws it and the reply composer aimed at it quotes it. */
+const TOBIAS_COMMENT = "That stretch after the second bend is the reason I keep a camera in the glovebox.";
+
 /* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
    same menu on every content (readme §13), and so does saving (the private-
@@ -889,17 +893,42 @@ function ProfileDeletedBody() {
    this same composer under its dialog, and a body on a second board stops being
    board-local. Drawn once, the two boards cannot disagree about what the
    composer's "+ Add" offers, which is exactly what the hand copies had done. */
-function ReplyDraft() {
+/* WHAT A REPLY ANSWERS, AS ITS SURFACES NAME IT (the reply pack, jakob
+   2026-09-30). A reply answers a post or a comment, and the substrate is the
+   same either way — the reply reviews what it answers, and its stance is
+   toward that — so the composer and the seal are one surface each, and only
+   the lines that NAME the target differ. Every other word on them is
+   target-neutral.
+
+   A post is named by its title and its author's handle. A comment has no
+   title, so it is named by its author's handle alone, and its words are the
+   quote's taste. The composer pre-fills nothing — a typed @handle is text,
+   never a record, and the thread shows what a reply answers by where it
+   stands. */
+const REPLY_TARGETS = {
+  post: {
+    quoted: {
+      title: "The long way home — @ada",
+      snippet: "The light does something at the third headland that I have never managed…",
+      name: "Ada Okonkwo",
+      src: "comment-camera.jpg",
+    },
+    note: 'Reply to "The long way home"',
+    act: "Reply to @ada's post",
+  },
+  comment: {
+    quoted: { title: "@tobias", snippet: TOBIAS_COMMENT, name: "Tobias Lindqvist" },
+    note: "Reply to @tobias",
+    act: "Reply to @tobias's comment",
+  },
+};
+
+function ReplyDraft({ target = "post" } = {}) {
   return (
     <>
       <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuotedRow
-          title="The long way home — @ada"
-          snippet="The light does something at the third headland that I have never managed…"
-          name="Ada Okonkwo"
-          src="comment-camera.jpg"
-        />
+        <QuotedRow {...REPLY_TARGETS[target].quoted} />
 
         <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
           The third headland light is real — I have a print from 2019 that almost catches it. Almost.
@@ -1261,7 +1290,7 @@ function ReplyPadBody() {
             readout clears the corner the "?" sits in. */}
         <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            Toward "The long way home"
+            Toward what you answer
           </span>
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
@@ -1272,7 +1301,7 @@ function ReplyPadBody() {
           </span>
         </div>
 
-        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "stretch" }}>
+        <div role="group" aria-label="Opinion pad for what you answer" style={{ alignSelf: "stretch" }}>
           <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
 
@@ -1319,25 +1348,32 @@ const replyCitedRow = () => ({
 /* THE REPLY'S SEAL IS ONE SURFACE IN THREE STATES, and `cited` is which one:
    nothing staged, the one citation read back, or the count and its door. A
    comment's seal is also its details stage, so the add-rows ride along in every
-   state — what could still be added, lined up with what has been. */
-function ReplySealBody({ cited = 0 }) {
+   state — what could still be added, lined up with what has been.
+
+   `target` is what the reply answers (`REPLY_TARGETS`): only the read-back
+   line and the act row's value name it. `keyAbsent` is the seal with the key
+   elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
+   the footer stood, and the header's "?" given up to the notice's, because a
+   screen spends one dot. */
+function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
+  const named = REPLY_TARGETS[target];
   return (
     <>
       <WizardHeader
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help="How signing works"
+        help={keyAbsent ? undefined : "How signing works"}
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
+        <QuietNote>{named.note} — 89 characters.</QuietNote>
 
         {/* The all-or-nothing subline appears the moment a signature carries
             more than one thing (`ActsCard`'s rule), so the bare comment —
             one act signed — draws neither it nor the plural total. */}
         <ActsCard
           rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1", countNoun: "comment" },
+            { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
             ...(cited === 1 ? [replyCitedRow()] : cited > 1 ? [citedRow(cited)] : []),
             ...ADD_ROWS,
           ]}
@@ -1358,13 +1394,44 @@ function ReplySealBody({ cited = 0 }) {
         {/* The opinion the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
-        <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
+        <QuietNote>Replying also signs an opinion on what it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
-        <SealFooter signLabel="Sign comment" />
+        {keyAbsent ? (
+          <>
+            <KeyAbsentNotice line="A reply can't wait as pending — restore the key to sign this one." />
+            <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
+          </>
+        ) : (
+          <SealFooter signLabel="Sign comment" />
+        )}
       </div>
     </>
+  );
+}
+
+/* THE KEY NOTICE AT REPLY SCALE — `ComposeKeyAbsent`'s panel, which is
+   `WalletKeyAbsent`'s and `PadKeyAbsent`'s: a `tertiary-container` block (a
+   waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
+   key, one line, and the restore button in `Button`'s `inverse`. Written once
+   here because the reply's door and the reply's seal both draw it.
+
+   For a reader with no backup it takes `KeyElsewhereNoBackup`'s two changes,
+   like every key-absent notice: the line becomes that card's no-backup
+   sentence, and the restore button is not drawn. */
+function KeyAbsentNotice({ line }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-medium)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
+          Your key isn't on this browser
+        </h2>
+        <HelpDot ariaLabel="Your key" variant="inverse" />
+      </div>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{line}</p>
+      <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
+    </div>
   );
 }
 
@@ -1734,7 +1801,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
     <CommentsSheet scrolledBy={scrolledBy}>
       <CommentCard
         author={TOBIAS}
-        content="That stretch after the second bend is the reason I keep a camera in the glovebox."
+        content={TOBIAS_COMMENT}
         timestamp="1h"
         bundle={mkBundle(0.1, 0.1)}
         onReply={() => {}}
