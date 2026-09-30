@@ -3560,9 +3560,9 @@ The application queue, in order:
 5. **New drawings**: comment removal at comment scale (menu row,
    confirm, the removed comment's mark in a thread); the `Still
    settling` chip under "Also show".
-6. **The three feed cards** (comment, profile, tag in the feed) —
-   briefed drawing rounds with canvas iteration, sequenced after
-   the mechanical work.
+6. **The three feed cards** (comment, profile, tag in the feed)
+   *(drawn 2026-09-30, jakob's fifteen-first ruling; `FeedKinds`,
+   readme §13 *The three feed cards*, calls flagged for his review)*.
 7. **The post-MVP split** *(landed 2026-09-30, jakob's ruling)*: the
    one post-MVP domain now serves two canvases via `canvases.json` —
    `futures` ("CoGra · Future features": chats + wallet, the original
@@ -3578,16 +3578,16 @@ The application queue, in order:
 The audit's master findings (325 entries, 15 clusters) queue behind
 this item's work as their own review rounds with jakob.
 
-### 108 · The applicant mechanism's corrections · *design + docs* · **rulings recorded 2026-09-25, corrections owed**
+### 108 · The applicant mechanism's corrections · *design + docs* · **corrected 2026-09-30, About's lines await blessing**
 
 The scope cut kept once-each staging (item 107; readme §13 carries
 the three mechanism rulings — author-only visibility, sign-at-approval
-in the vouch-in batch, drafts-on-close). What still owes work:
-About's "cannot post, comment, vouch or give an opinion yet" wording
-(new copy — candidates to jakob for blessing), auth.md's
-locked-surface prescription (corrected to once-each staging), and the
-contract's staging surface (relayed to the implementation session as
-a contract need, with the audit's K3 findings). The DeleteAccount
+in the vouch-in batch, drafts-on-close). auth.md's applicant
+paragraph describes once-each staging and the three rulings; About's
+*Getting in, and being let in* says what an applicant can write and
+what becomes of it — new copy, candidates to jakob for blessing. The
+contract's staging surface is relayed to the implementation session
+as a contract need, with the audit's K3 findings. The DeleteAccount
 wallet bullet left V1.0 the same day (the page names what exists);
 About's money section stays by the item-74 ruling — About is the
 fuller version, future features included.
@@ -3705,7 +3705,33 @@ by jakob on 2026-09-30; the grammar and the plan are the design ⇄
 impl seam's entry 002 (dev-state `cogra/tmp_dev/design-impl-seam.md`)
 and the calibration-ID PR, #30.
 
-### 115 · What the failure pack left owed · *design* · **filed 2026-09-30**
+### 115 · Ranked comment order, once ranking exists · *design* · **filed 2026-09-30** · **future**
+
+The thread's order is ruled for now (jakob 2026-09-30, the V1.0
+audit's K5.1): top-level comments newest-first, and the replies in a
+branch oldest-first, on the api's ordering argument. The direction
+after that is ranked: once the ranker serves comments, the thread's
+default becomes what is closest to the reader — "the general
+consensus for our GRAPH-network is that you see whats close to you
+and not whats globaly newest so i think this is the better default
+once we have ranked" (jakob). Possibly with a reader setting between
+new and close. A briefed round when ranking lands: the default, the
+setting's words and home, and what the thread shows for comments the
+ranker cannot score — the feed's and search's unranked tail are the
+precedents.
+
+### 116 · The settled reply's landing needs a redraw · *design* · **filed 2026-09-30**
+
+The thread-order rule (newest first at the top level, oldest first in
+a branch) puts a landed reply at the end of its branch — and at
+`ReplySettled`'s drawn offset the reader's own words then fall below
+the sheet's foot, which breaks "show the content you just wrote". The
+board keeps its old position and its docblock says so. A briefed
+choice for jakob: the landing scrolls the thread to the new card
+(K6.6's direction), or the board takes a larger offset that keeps the
+card in view. Drawn once ruled.
+
+### 117 · What the failure pack left owed · *design* · **filed 2026-09-30**
 
 The failure pack (readme §13, *The failure pack*) recorded the three
 K4 laws and drew five boards. Every vehicle the laws name is written

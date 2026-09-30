@@ -22,7 +22,7 @@ export function Screen() {
         <CommentCard
           author={TOBIAS}
           content="Eighteen seconds of the same headland, if the light comes through at all."
-          timestamp="1h"
+          timestamp="30m"
           media={[
             {
               kind: "video",
@@ -41,7 +41,7 @@ export function Screen() {
         <CommentCard
           author={SOL}
           content="Two from the stand by the sea wall, before the crowd came."
-          timestamp="30m"
+          timestamp="1h"
           media={[
             { src: "gallery-market.jpg", ratio: "4 / 3", fit: "cover", alt: "Crates of strawberries on a market stand." },
             { src: "gallery-honey.jpg", ratio: "1 / 1", fit: "cover", alt: "A jar of honey in low sun." },

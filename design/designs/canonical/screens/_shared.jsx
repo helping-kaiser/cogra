@@ -158,6 +158,10 @@ const TOBIAS = { handle: "tobias", displayName: "Tobias Lindqvist" };
 const SOL = { handle: "sol", displayName: "Sol Ferreira" };
 const MIRA = { handle: "mira", displayName: "Mira Voss" };
 
+/* @tobias's comment at the thread's top — spelled once, because the thread
+   draws it and the reply composer aimed at it quotes it. */
+const TOBIAS_COMMENT = "That stretch after the second bend is the reason I keep a camera in the glovebox.";
+
 /* Genesis content always declares a license, so every card has at least that
    menu entry — without one the dot vanishes, and it must not. Citing rides the
    same menu on every content (readme §13), and so does saving (the private-
@@ -891,17 +895,42 @@ function ProfileDeletedBody() {
    this same composer under its dialog, and a body on a second board stops being
    board-local. Drawn once, the two boards cannot disagree about what the
    composer's "+ Add" offers, which is exactly what the hand copies had done. */
-function ReplyDraft() {
+/* WHAT A REPLY ANSWERS, AS ITS SURFACES NAME IT (the reply pack, jakob
+   2026-09-30). A reply answers a post or a comment, and the substrate is the
+   same either way — the reply reviews what it answers, and its stance is
+   toward that — so the composer and the seal are one surface each, and only
+   the lines that NAME the target differ. Every other word on them is
+   target-neutral.
+
+   A post is named by its title and its author's handle. A comment has no
+   title, so it is named by its author's handle alone, and its words are the
+   quote's taste. The composer pre-fills nothing — a typed @handle is text,
+   never a record, and the thread shows what a reply answers by where it
+   stands. */
+const REPLY_TARGETS = {
+  post: {
+    quoted: {
+      title: "The long way home — @ada",
+      snippet: "The light does something at the third headland that I have never managed…",
+      name: "Ada Okonkwo",
+      src: "comment-camera.jpg",
+    },
+    note: 'Reply to "The long way home"',
+    act: "Reply to @ada's post",
+  },
+  comment: {
+    quoted: { title: "@tobias", snippet: TOBIAS_COMMENT, name: "Tobias Lindqvist" },
+    note: "Reply to @tobias",
+    act: "Reply to @tobias's comment",
+  },
+};
+
+function ReplyDraft({ target = "post" } = {}) {
   return (
     <>
       <WizardHeader title="Reply" leaveLabel="Leave — the reply is discarded" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuotedRow
-          title="The long way home — @ada"
-          snippet="The light does something at the third headland that I have never managed…"
-          name="Ada Okonkwo"
-          src="comment-camera.jpg"
-        />
+        <QuotedRow {...REPLY_TARGETS[target].quoted} />
 
         <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
           The third headland light is real — I have a print from 2019 that almost catches it. Almost.
@@ -1297,7 +1326,7 @@ function ReplyPadBody() {
             readout clears the corner the "?" sits in. */}
         <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            Toward "The long way home"
+            Toward what you answer
           </span>
           <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: 8 }}>
             <span style={{ fontSize: "var(--text-title-large)", lineHeight: 1.2 }}>🙂</span>
@@ -1308,7 +1337,7 @@ function ReplyPadBody() {
           </span>
         </div>
 
-        <div role="group" aria-label="Opinion pad for the post you answer" style={{ alignSelf: "stretch" }}>
+        <div role="group" aria-label="Opinion pad for what you answer" style={{ alignSelf: "stretch" }}>
           <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
         </div>
 
@@ -1355,25 +1384,32 @@ const replyCitedRow = () => ({
 /* THE REPLY'S SEAL IS ONE SURFACE IN THREE STATES, and `cited` is which one:
    nothing staged, the one citation read back, or the count and its door. A
    comment's seal is also its details stage, so the add-rows ride along in every
-   state — what could still be added, lined up with what has been. */
-function ReplySealBody({ cited = 0 }) {
+   state — what could still be added, lined up with what has been.
+
+   `target` is what the reply answers (`REPLY_TARGETS`): only the read-back
+   line and the act row's value name it. `keyAbsent` is the seal with the key
+   elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
+   the footer stood, and the header's "?" given up to the notice's, because a
+   screen spends one dot. */
+function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
+  const named = REPLY_TARGETS[target];
   return (
     <>
       <WizardHeader
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help="How signing works"
+        help={keyAbsent ? undefined : "How signing works"}
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Reply to "The long way home" — 89 characters.</QuietNote>
+        <QuietNote>{named.note} — 89 characters.</QuietNote>
 
         {/* The all-or-nothing subline appears the moment a signature carries
             more than one thing (`ActsCard`'s rule), so the bare comment —
             one act signed — draws neither it nor the plural total. */}
         <ActsCard
           rows={[
-            { label: "Comment", value: "Reply to @ada's post", count: "1", countNoun: "comment" },
+            { label: "Comment", value: named.act, count: "1", countNoun: "comment" },
             ...(cited === 1 ? [replyCitedRow()] : cited > 1 ? [citedRow(cited)] : []),
             ...ADD_ROWS,
           ]}
@@ -1394,13 +1430,44 @@ function ReplySealBody({ cited = 0 }) {
         {/* The opinion the reply carries is a fact about replying, not about
             this row — so it stands under the ruled block rather than inside
             it, where `FactRow` has no slot for it. */}
-        <QuietNote>Replying also signs your opinion on the post it answers.</QuietNote>
+        <QuietNote>Replying also signs an opinion on what it answers.</QuietNote>
 
         <div style={{ flex: 1 }} />
 
-        <SealFooter signLabel="Sign comment" />
+        {keyAbsent ? (
+          <>
+            <KeyAbsentNotice line="A reply can't wait as pending — restore the key to sign this one." />
+            <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
+          </>
+        ) : (
+          <SealFooter signLabel="Sign comment" />
+        )}
       </div>
     </>
+  );
+}
+
+/* THE KEY NOTICE AT REPLY SCALE — `ComposeKeyAbsent`'s panel, which is
+   `WalletKeyAbsent`'s and `PadKeyAbsent`'s: a `tertiary-container` block (a
+   waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
+   key, one line, and the restore button in `Button`'s `inverse`. Written once
+   here because the reply's door and the reply's seal both draw it.
+
+   For a reader with no backup it takes `KeyElsewhereNoBackup`'s two changes,
+   like every key-absent notice: the line becomes that card's no-backup
+   sentence, and the restore button is not drawn. */
+function KeyAbsentNotice({ line }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-medium)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
+          Your key isn't on this browser
+        </h2>
+        <HelpDot ariaLabel="Your key" variant="inverse" />
+      </div>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{line}</p>
+      <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
+    </div>
   );
 }
 
@@ -1743,7 +1810,14 @@ const TOBIAS_REPLIES = [
    reply-return ruling): the parent's collapsed count has become its replies,
    and the reply just signed sits in `CommentCard`'s reserved `children` slot —
    the slot the composer stood in, which is why the words land where the reader
-   left them. */
+   left them.
+
+   THE THREAD'S ORDER IS THE RULE'S (readme §13, *Comments live in a sheet*):
+   top-level comments newest first — @tobias 1h, @mira 2h, @sol 3h — and the
+   replies in a branch oldest first. The landed reply is the one place this
+   sheet does not follow it yet: by the rule it ends its branch, and moving it
+   there puts its words below the frame at the kept offset — which way the
+   landing brings it into view is still to be ruled, so the drawing waits. */
 function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
@@ -1763,7 +1837,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
     <CommentsSheet scrolledBy={scrolledBy}>
       <CommentCard
         author={TOBIAS}
-        content="That stretch after the second bend is the reason I keep a camera in the glovebox."
+        content={TOBIAS_COMMENT}
         timestamp="1h"
         bundle={mkBundle(0.1, 0.1)}
         onReply={() => {}}
@@ -1786,7 +1860,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
       <CommentCard
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
-        timestamp="10m"
+        timestamp="2h"
         media={[
           { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "cover", alt: "A stretch of shingle at low tide." },
           { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "cover", alt: "Gulls on the tideline." },
@@ -1799,7 +1873,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
       <CommentCard
         author={SOL}
         content="Which headland is the third one, counting from the ferry landing?"
-        timestamp="45m"
+        timestamp="3h"
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={CARD_MENU}
@@ -2063,7 +2137,7 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
         <SettingsGroup
           label="Writing"
-          footnote="Everything you sign is paid for separately. A post's license is settled when it is first signed and never changes."
+          footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
         >
           <SettingsRow
             checked
@@ -2792,6 +2866,115 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
         </TaggedRow>
       </div>
     </>
+  );
+}
+
+/* ── THE V1.0 FEED KINDS (the three-feed-cards round, 2026-09-30) ──────────
+   jakob's ruling (the fifteen-first round): the four served kinds — Posts,
+   Comments, Profiles, Tags — everywhere, feed and search alike. The filter
+   already offered all four; these are the three cards a reader meets once
+   they turn a kind on. Each is a real master, mounted — nothing hand-built
+   (the componentization law) — and each follows the idiom its kind already
+   wears somewhere else, so none of them is new anatomy.
+
+   THE COMMENT KEEPS ITS OWN MASTER. A comment met away from its thread is
+   already drawn — `CommentCard` in the out-of-thread shape `ProfileComments`
+   and `TagPage` draw, leading with the target pointer that says what it
+   answers and opens it. `TagPage`'s mixed list set the rule this follows:
+   each kind keeps its own master, and a comment is never re-dressed as a
+   post. It keeps `Reply` and its replies line, `ProfileComments`' shape
+   rather than `TagPage`'s doorway, because the feed is where a reader acts,
+   not a place that only lists.
+
+   THE PROFILE AND THE TAG RIDE `PostCard`, as the post-MVP chat and message
+   cards do (the chats integration round): the card's header and ⋮, its
+   action row, and the card itself as the door. The lead has the chat card's
+   geometry — the kind's own mark, its name, one quiet line — so neither card
+   reads as a text post. The marks are `NodeMark`'s: a person is their
+   picture, a tag the `#` tile its chip wears. */
+function FeedLeadName({ children }) {
+  return <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{children}</span>;
+}
+const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
+
+function CommentFeedCard({ author, content, timestamp, target, topics = [], references = 0, replyCount = 0, bundle }) {
+  return (
+    <CommentCard
+      author={author}
+      content={content}
+      timestamp={timestamp}
+      target={target}
+      onOpenTarget={() => {}}
+      bundle={bundle}
+      topics={topics}
+      references={references}
+      replyCount={replyCount}
+      onOpenReplies={() => {}}
+      onReply={() => {}}
+      license={{ attribution: 0, provenance: 0 }}
+      menuItems={CARD_MENU}
+    />
+  );
+}
+
+/* THE PROFILE CARD. The lead is the person — picture, name, handle — and the
+   body their bio, the two things `ProfileHeader` opens on; the card opens
+   their profile. The row keeps the feed card's order and drops what a person
+   does not have: the opinion on them leads, the share closes it, and there is
+   no score and no comments. Its ⋮ is the profile's own menu, less the share
+   row the action row already carries. */
+const FEED_PROFILE_MENU = (handle) => [
+  SAVE_ROW,
+  { label: "Mention in a new post", onSelect: () => {} },
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {} },
+];
+
+function ProfileFeedCard({ person, src, bio, bundle }) {
+  return (
+    <PostCard
+      lead={
+        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <MonogramAvatar name={person.displayName} src={src} size={32} />
+          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <FeedLeadName>{person.displayName}</FeedLeadName>
+            <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+          </span>
+        </span>
+      }
+      main={<p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>}
+      targetLabel={"@" + person.handle}
+      bundle={bundle}
+      menuItems={FEED_PROFILE_MENU(person.handle)}
+      menuLabel={"More about @" + person.handle}
+      onOpen={() => {}}
+    />
+  );
+}
+
+/* THE TAG CARD. The lead is the `#` tile and the tag's name; the body is the
+   newest thing tagged with it, as a preview row — the chat card's
+   last-message row, and the first thing the tag's page opens on — with its
+   age where a card's timestamp stands. The opinion is the topic's Affinity,
+   with the tag page's own four ends. A Type has no license, is never cited
+   and is not saved, and the tag page offers no share, so the card carries no
+   ⋮ and no share — only what a tag has. The card opens the tag's page. */
+function TagFeedCard({ name, newest, age, bundle }) {
+  return (
+    <PostCard
+      lead={
+        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <NodeMark kind="topic" />
+          <FeedLeadName>{name}</FeedLeadName>
+        </span>
+      }
+      main={<ContentRow variant="chronicle" chevron={false} inert title={newest.author.displayName} name={newest.author.displayName} second={newest.words} />}
+      timestamp={age}
+      targetLabel={name}
+      bundle={bundle}
+      stanceAxes={AFFINITY_AXES}
+      showShare={false}
+      onOpen={() => {}}
+    />
   );
 }
 

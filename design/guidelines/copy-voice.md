@@ -117,8 +117,11 @@ glyph used as punctuation.
 - `A signing key can only ever back one account, so this account needs
   its own.`
 - `This is the only way to restore your key.`
-- `Replying also signs your opinion on the post it answers.` — the
-  reply seal's note, under the ruled block on both its states.
+- `Replying also signs an opinion on what it answers.` — the reply
+  seal's note, under the ruled block in every state, at a post or a
+  comment. *An* opinion, never *your* opinion (jakob, 2026-09-30): the
+  reply's own starts at the default and rides the reply, and "your
+  opinion" reads as overwriting the one the reader already gave.
 
 ## Naming
 
@@ -155,6 +158,16 @@ opinion`, `Your opinion on this post`, `Current opinion`, `Resulting
 opinion`, `How opinions work`, `Opinion pad`, `Opinions on you`,
 `Opinions by you`, `No opinion yet`, and the chronicle's `Gave an
 opinion`. The verb is *give*, never *take*.
+
+**An opinion that rides another act is *an* opinion, never *your*
+opinion** (jakob's ruling, 2026-09-30). A reply and a citation each
+sign a stance of their own, starting at the gentle default, and it is
+not the opinion the reader's face shows on that post; `your opinion`
+there reads as that one, or as overwriting it. So the reply's note,
+its pad's "?" and the citing "?" say `an opinion`. *Your opinion*
+stays where it IS the reader's own: the face and its control, the
+opinion a vouch or an approval signs, one's own post or message, the
+chat seals' pad, and every readout of an opinion already signed.
 
 **"Standing" leaves the screen entirely.** `Current opinion` and
 `Resulting opinion` say what it said, in the word a reader owns.
@@ -253,10 +266,11 @@ title, at most two short paragraphs, Close. The texts, verbatim
   until Set. Prefer sliders or exact numbers? Swap the input in
   settings.
 - **Toward what you answer** (the reply's two-axis pad): Replying also
-  signs your opinion on the post you answer — for or against, and
+  signs an opinion on what you answer — for or against, and
   how much of it reaches you. It starts at a gentle 🙂 *(+0.10 / +0.10)*
   and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
+  *(An opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
 - **Your first opinion** (the vouch-back pad): Vouching back signs your
   opinion of the person who vouched you in — your first one, and
   your feed grows from it. / The pad is how you shape what reaches you —
@@ -269,11 +283,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   versions stay public under "Edited". An edit
   never bumps it as new. / Tag and citation changes ride the same signing,
   each as its own signed action. The license never changes.
-- **Citing**: A citation is its own signed action and carries your
+- **Citing**: A citation is its own signed action and carries an
   opinion of what you cite. You can cite a post, a comment or a
   person. / A comment can also be cited from itself — open its menu
   and choose "Cite in a new post". *(Trimmed to V1.0's citable kinds,
-  jakob 2026-09-25; the end-state wording returns with its kinds.)*
+  jakob 2026-09-25; the end-state wording returns with its kinds. An
+  opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
 - **Searching** (the Explore tab's results): Search reads names and
   titles, never bodies. Start with @handle to search one person's
   work — including their comments, found through what
@@ -1128,12 +1143,15 @@ you sign* puts the act where it really is.
 A picker that said *Search tags* would promise that a name it cannot
 show you is a name you cannot have.
 
-**Canonicalization is previewed, never silent.** `Signs as #saltmaps`
-under the field while `#SaltMaps` is typed, and under that the shape a
-name may take: `Letters, digits, dot, dash and underscore. Capitals
-become lowercase.` A reader is choosing a permanent public endpoint;
-one that quietly becomes a different string is the surprise §9 exists
-to stop.
+**Canonicalization is previewed, never silent.** While `#SaltMaps` is
+typed, the list's first row is always the typed name canonicalized —
+`saltmaps`, with `Signs as #saltmaps` as its second line — and the
+keyboard's action key stages it. Under the field sits the shape a name
+may take: `Letters, digits, dot, dash and underscore. Capitals become
+lowercase.` A reader is choosing a permanent public endpoint; one that
+quietly becomes a different string is the surprise §9 exists to stop.
+The preview is the row that picks, so the promise and the gesture are
+one thing, and it is a row, never a `Create` button.
 
 **The pair editor names its axes in the reader's words.** `How much it
 is about this` with `Barely` / `Entirely`, and `How sure you are` with

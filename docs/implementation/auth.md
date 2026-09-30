@@ -258,7 +258,8 @@ applicant | member`, a column on the credentials row
   enum; no flow creates one yet.
 - **`applicant`** — registered through an invite link, not yet
   landed. Reads everything; the only signing it does is its own
-  admission handshake.
+  admission handshake and the once-each acts that land with it
+  ("Application" below).
 - **`member`** — the Registration confirmed; the account fronts a
   full actor on the graph.
 
@@ -464,16 +465,24 @@ link puts them back, one application at a time ("The ask link"
 above), and that second look is what the link is for.
 
 An applicant can already **read** — the shared graph is public —
-but cannot act. Approval latency is a UX cost, not a correctness
+and **stages each kind of act once**: a post, an Opinion and an
+Affinity. Approval latency is a UX cost, not a correctness
 problem. Clients take that literally: an applicant lands in the
 same shell as a member and browses the read surfaces
 immediately, with the application riding along as cards and
 dismissible hints — the actionable email-verification step, the
-approval wait, the landing — and only *acting* gated. A gated
-acting surface stays visible but locked: styled as disabled yet
-still tappable, with the tap explaining that approval unlocks
-it. Account management — settings, sign-out, password change —
-is never gated; the applicant is an ordinary logged-in account.
+approval wait, the landing. The first tap of a kind opens the
+real surface and stages the act; the next tap of a staged kind
+answers in place that it waits with the application. A staged
+act is visible only to its author, in their own chronicle —
+nothing is public before it is signed. It **signs at approval,
+automatically**, in the batch the vouch-in lands with; on
+rejection or expiry it stays on the device as the account's own
+draft, never sent. Every other acting surface stays visible but
+locked: styled as disabled yet still tappable, with the tap
+explaining that approval unlocks it. Account management —
+settings, sign-out, password change — is never gated; the
+applicant is an ordinary logged-in account.
 The waiting state is never a wall, and the poll/sign loop that
 advances the application runs app-scoped, above any one screen.
 

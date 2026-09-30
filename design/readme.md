@@ -1261,7 +1261,10 @@ dialog (the *DiscardConfirm* board) reading "Discard this reply?"
 or, from an edit, "Discard this edit?", body "Nothing is kept.", a
 quiet *Discard* beside a filled *Keep writing* — the safe answer
 carries the weight, as it does everywhere else. An empty composer leaves
-at once — a confirm with nothing to lose is noise. Signing exits to
+at once — a confirm with nothing to lose is noise. For the same reason
+a reply meets the key-absent notice at its door, before a word is
+written, and a key lost mid-write leaves its seal only restore or
+discard (*The reply pack*, below). Signing exits to
 the post's own detail view wearing *Still settling*, with the
 snackbar "Signed — it's in the thread now, still settling." An act
 that expires unlanded gets a calm notice card in the shell: content
@@ -1327,6 +1330,10 @@ the detail view is just about the post.
   the rounded corners keep a strip of the surface behind visible.
   The entry row (avatar + "Add a comment") is pinned at its foot.
 - **Replies arrive collapsed** behind a "View n replies" line.
+- **The order** (jakob, 2026-09-30): top-level comments newest first,
+  and the replies in a branch oldest first — a branch reads as a
+  conversation, so a reply just signed ends its branch. Newest first
+  at the top level holds until ranking can order the thread.
 - **The thread is two levels deep on screen**: a comment and its
   replies, indented once. A reply to a reply flattens into the same
   level and opens with the @handle it answers — the mention is the
@@ -2705,7 +2712,8 @@ a master, and every master is one component with variants as props
   one add-row pair, drawn once in the prelude, and one "+ Cite
   something" between them where the bare board had spelled the kinds
   out. `ReplyPad` **takes** `StancePad`: a reply's stance is toward
-  somebody else's post, so both parameters are the author's and the
+  what it answers — somebody else's post or comment — so both
+  parameters are the author's and the
   square is the right value space — the refusal above is about one's
   own post, not about pads. `NetworkError` is `ComposeSeal` unsent,
   so its stance row took the same pair correction the seal's did.
@@ -2853,7 +2861,7 @@ could close. These are the answers, and what each one moved.
   passes `fullscreen` through for it and every other board renders
   byte-identical.
 - **The reply seal earns the orphaned line.** "Replying also signs
-  your opinion on the post it answers." stands as a `QuietNote`
+  an opinion on what it answers." stands as a `QuietNote`
   beneath the ruled block — `FactRow` grows no note slot, because
   the line is a fact about replying rather than about any one row.
   It lands on both states of the seal: they are one surface, and a
@@ -3034,7 +3042,7 @@ an answer — and where two apps invent, they disagree.
 - **The reply pad's "?" opens its own topic.** The copy was never
   missing: **Toward what you answer** has been in `copy-voice.md` since
   the compose-session rulings, and it says the true thing — a reply's
-  stance is toward the post it answers, both axes, on the reply's own
+  stance is toward what it answers, both axes, on the reply's own
   signature. What was missing was a board drawing it and an edge
   pointing there; `ReplyPad`'s "?" led to the seal's Signed-actions
   dialog. Android left the dot out rather than open the post pad's
@@ -6950,8 +6958,7 @@ to compete got their chooser.
   Profiles, Tags** — the kinds V1.0 serves. The six chips beyond them
   (chats, messages, proposals, items, campaigns, offers) leave both
   filters. The comment-in-feed, profile-in-feed and tag-in-feed cards
-  are V1.0 surfaces and get drawn in rounds of their own — the chips
-  are right, the cards are owed.
+  are V1.0 surfaces, drawn in *The three feed cards*.
 - **Search returns no item, offer or message rows in V1.0**; those rows
   leave `ExploreSearch` with their kinds.
 - **A V1.0 reference points at a person, a post or a comment** — the
@@ -7079,6 +7086,141 @@ key, with nothing on screen saying so.
   or a badge — `SettingsBackup`, `YourKeyAbsent`, and the scrim badge on
   `KeyConfirm`, `KeyDecline` and `PadKeyAbsent` — plus the four maps
   that follow the edges.
+
+### The three feed cards — 2026-09-30
+
+jakob's ruling from the fifteen-first round, executed: **the four served
+kinds — Posts, Comments, Profiles, Tags — everywhere, feed and search
+alike**, and later kinds join with their features. The filter already
+offered the four; this round draws the three cards a reader meets once
+they turn a kind on, on one new board, `FeedKinds`.
+
+- **A board of its own, not new cards on `Feed`.** The everyday feed is
+  drawn at the filter's default, `Posts` alone, so the kinds arrive the way
+  the post-MVP chat and message cards did (`ChatFeedCards`): the kinds
+  turned on, the trigger reading `4 kinds`, the new cards leading and a post
+  below them. The filter sheet's way out lands on it.
+- **Each kind keeps the idiom it already wears** (`_shared.jsx`, the V1.0
+  feed kinds). The comment is `CommentCard` in its out-of-thread shape — the
+  target pointer leading, as on `ProfileComments` and `TagPage` — with
+  `Reply` and its replies line. The profile and the tag ride `PostCard`'s
+  `lead` and `main`, the chat cards' mounting: a person's lead is their
+  picture, name and handle over their bio, their menu the profile's own less
+  the share the row carries; a tag's lead is the `#` tile and its name over
+  the newest thing tagged with it, as a preview row, its opinion the
+  topic's Affinity, and no ⋮ and no share, because a Type has no license,
+  is never cited or saved, and its page shares nothing. Every tap lands on a
+  board that exists: the comment's thread, the person's profile, the tag's
+  page.
+- **`PostCard` gained `menuLabel` and `stanceAxes`**, both additive, so the
+  ⋮ can say whose menu it is and a tag's pad can speak its own four ends;
+  every other board renders unchanged.
+- **The lane's calls, flagged for review:** the separate board rather than
+  `Feed`; the comment's `Reply` and replies line kept (`ProfileComments`'
+  shape, not `TagPage`'s doorway); the two-line lead for the person and the
+  tag, so neither reads as a text post; the tag card's body as its newest
+  claim, with that claim's age as the card's timestamp; the face at the
+  feed row's anchor size on both, rather than a profile's wide one; no
+  figures, no `Message` and no score on the profile card; `FeedFar`, which
+  turns comments and profiles on, still draws only posts, because whether
+  its `photos` form admits a text comment or a person is unruled;
+  `FeedKinds` is not a registered screen, so `nodes.json` does not change.
+- **The gate**: 218 → **219 screens**, 1536 → **1561 edges**, **1 gap**,
+  flows **63**, every one resolved. The witness was re-blessed once,
+  deliberately: nine control-selector censuses each grew by the one board.
+### The typed-name row — 2026-09-30
+
+The V1.0 audit's K14.1 (E22), a blocker: the tag picker had no
+creation row by ruling, its rows came only from slice 2.7's index, and
+nothing staged what was typed — so before the index, and for any name
+nobody had used, no tag could be added. jakob's ruling: **"yes — the
+canonicalized typed name is always the list's first row, the action key
+stages it."**
+
+- **The first row is the typed name, canonicalized, always** — whether
+  or not rows match below it. It is the `ReferenceRow` every row is,
+  with the `Signs as #saltmaps` preview as its second line: the preview
+  made tappable, a row and never a `Create` button, because it names a
+  Type that already exists. A name in use that is the typed name is
+  that row, never listed twice; the index's rows sit under it.
+- **The name field's keyboard action key stages the first row** — the
+  same pick as a tap on it, landing in the composer's tags. On a
+  refused name there is no first row, so the key stages nothing and the
+  refusal holds.
+- **Drawn**: `TagPicker` gains the `salt` row above the four matches;
+  `TagPickerTyping`'s preview moves from under the field onto its row;
+  `TagPickerRefused`'s drawing stands, and it says why the row goes. The
+  graph's name-field edges carry the action key, and
+  `behavior/TagPicker.md` holds the ordering and the key's two outcomes.
+- **The gate**: 218 screens and 1536 edges unchanged, flows 63/63; the
+  compose map and the two drawn boards moved.
+
+### The veiled reel — 2026-09-30
+
+The V1.0 audit's K7.1: the stream drew no sensitive state, so a
+veiled clip's shape there was undesigned. jakob's amended ruling:
+**"the veiled reel is FULL SCREEN, looking exactly like any other
+reel in the scroller, blurred and not playing, with the standard
+veil anatomy exactly as everywhere else (chip + reason on the blur,
+tap-to-reveal session-scoped, then it plays). One board:
+ReelSensitive."**
+
+- **One board, `ReelSensitive`** — the stream full screen, the clip
+  blurred and not playing, the standard veil face centred on the
+  blur; back arrow, rail, caption and bottom bar exactly as on
+  `Reel`. The caption's words veil with `Show`, per `SensitiveVeil`'s
+  law: the title stays readable, the description veils.
+- **No sound disc and no seek line** — they are playback's rung of
+  the control ladder, and a veiled clip has no playback (item 103's
+  rule); everything that isn't playback stays, and the rail's acts
+  stay live over the veil.
+- **The reveal**: a tap on either veil face reveals — session-scoped,
+  as everywhere — and the screen is `Reel`, playing; a swipe passes
+  to the next clip. The score leads to `PostDetailVideoSensitive`,
+  the sensitive detail. `ReelSensitive` is a declared entry, the
+  state the record brings, wired as `PostDetailVideoSensitive` is.
+- **Drawn**: the one new board; `SensitiveVeil` gained a `faceGutter`
+  prop so the face clears the rail (default unchanged); the sensitive
+  video detail board moved aside on the canvas, content untouched.
+
+### The reply pack — 2026-09-30
+
+Three rulings from the V1.0 audit's K5 and K6 clusters (jakob, the
+fifteen-first round). The reply surfaces were worded and wired for a
+post; a reply answers a post or a comment.
+
+- **A reply's surfaces name their target, and say nothing else about
+  it.** The composer and the seal are one surface each; only the lines
+  that name what is answered differ. A post is quoted by its title and
+  its author's handle, a comment — which has no title — by its author's
+  handle over its first words (`QuotedRow`); the seal reads back
+  `Reply to @tobias` and the act `Reply to @tobias's comment`
+  (`ReplyComposeComment`, `ReplySealComment`). Everything else is
+  target-neutral: the pad reads `Toward what you answer`, one pad for
+  both, keeping its default start. The composer pre-fills nothing — a
+  typed handle is text, never a record.
+- **The word is "opinion", never "your opinion".** `Replying also signs
+  an opinion on what it answers.` under the seal, and the pad's "?" in
+  the same words: the reply's own opinion starts at the default and
+  rides the reply, and "your opinion" reads as overwriting the one the
+  reader already gave.
+- **The key's absence is met at the reply's door.** A reply keeps no
+  draft, so Reply and Add a comment raise the key notice over the
+  thread before a word is written (`ReplyKeyAbsent`) — `PadKeyAbsent`'s
+  card without the pad, `Not now` its way out, nothing kept. A key lost
+  mid-write reaches the seal's fallback (`ReplySealKeyAbsent`): every row
+  unchanged, the notice where the footer stood, restore or discard. The
+  seal's key-absent outcome points there, not at the post's seal.
+- **The thread's order** is written where the thread's rules live
+  (*Comments live in a sheet*), and the drawn fixtures read by it.
+  `ReplySettled` keeps its landed reply above the older ones for now: by
+  the rule it ends its branch, and where the landing then scrolls is
+  still to be ruled.
+- **The gate**: 218 → **222 screens**, 1536 → **1558 edges**, 1 gap,
+  **flows 63**, every one resolved. The witness was re-blessed once,
+  deliberately: `reply-to-a-comment` now walks the comment-targeted
+  composer and seal, and the `Restore the key` and `+ Cite something`
+  censuses grew by the new boards.
 
 ### The failure pack — 2026-09-30
 

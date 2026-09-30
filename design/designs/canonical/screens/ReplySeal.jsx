@@ -17,7 +17,9 @@
    landed. The picker's own screen is where the kinds are enumerated.
 
    THE BODY IS `_shared.jsx`'s `ReplySealBody`, because the reply's stance pad
-   stands on this seal and draws it whole. */
+   stands on this seal and draws it whole. It is drawn answering the post;
+   `ReplySealComment` is it answering a comment, and `ReplySealKeyAbsent` it
+   with the key gone mid-write. */
 export function Screen() {
   return <ReplySealBody />;
 }

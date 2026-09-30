@@ -92,6 +92,7 @@ export function SensitiveVeil({
   source = "author",
   revealLabel = "Show",
   radius,
+  faceGutter = "var(--space-6)",
 }) {
   const scope = React.useContext(RevealContext);
   const [local, setLocal] = React.useState(false);
@@ -227,14 +228,17 @@ export function SensitiveVeil({
             this exact moment, so the reader has met it before. Fixed white,
             deliberately theme-independent: the wash is dark in both themes.
             The second, smaller line names whose mark this is, and carries the
-            reason after it when there is one. */}
+            reason after it when there is one. `faceGutter` is the words'
+            side clearance: a surface that lays its own chrome over the veil —
+            the stream's rail — widens it on both sides alike, so the words keep
+            clear of that chrome and the face stays centred. */}
         <span
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             gap: "var(--space-2)",
-            padding: "0 var(--space-6)",
+            padding: `0 ${faceGutter}`,
             color: "#fff",
             fontFamily: "var(--font-sans)",
             textAlign: "center",

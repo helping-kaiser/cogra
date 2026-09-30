@@ -36,9 +36,13 @@ Where each sidecar's words come from:
   place, in the words of readme §13 and copy-voice (*In-flight labels*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
-  order, in the same words.
+  order, in the same words; and thread order itself (readme §13,
+  *Comments live in a sheet*).
 - `ComposeDetails.md` — the already-published marker (copy-voice, *The
   already-published marker*), on the Details step's media row.
+- `TagPicker.md` — the typed-name row (readme §13, *The typed-name
+  row*): the canonicalized typed name as the list's first row, and what
+  the keyboard's action key stages.
 
 ## The grammar
 

@@ -195,6 +195,17 @@ export interface PostCardProps {
    */
   main?: React.ReactNode;
   /**
+   * The ⋮'s accessible name, for a feed kind whose menu is not a post's — a
+   * person's `More about @ada`. Defaults to "More on this post". Additive.
+   */
+  menuLabel?: string;
+  /**
+   * The pad's four ends, for a target whose opinion is not a stance on content
+   * — a tag's Affinity. Pass-through to `StanceControl`'s `axes`; defaults to
+   * the control's own. Additive.
+   */
+  stanceAxes?: import("../stance/StancePad").PadAxes;
+  /**
    * Squares the top-left corner so a row flag (TaggedRow) fuses with the
    * card. Defaults to false.
    */

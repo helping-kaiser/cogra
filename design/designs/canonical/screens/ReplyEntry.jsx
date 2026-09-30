@@ -5,6 +5,10 @@
    post. The second comment carries a sensitive mark: the whole body veils as
    one comment-scale block, the frame around it still readable.
 
+   THE ORDER: top-level comments newest first, the replies in a branch oldest
+   first (readme §13, *Comments live in a sheet*). The fixtures' times say it —
+   @tobias 1h over @mira 2h over @sol 3h, and @sol's branch 40m before 22m.
+
    The thread and the detail beneath it are `_shared.jsx` helpers, because the
    comment's own overflow menu draws this same board with one more sheet on it. */
 export function Screen() {

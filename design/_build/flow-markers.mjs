@@ -293,6 +293,44 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(11),
   ],
+  /* The feed with all four kinds on (the three-feed-cards round). Numbered in
+     reading order down the column: each card's own door takes its own number
+     because each lands somewhere different, and what the cards repeat — the
+     author chip, the tag chips, the share — takes one number each (`all`).
+     The faces share one via with their skip-links, the feed's convention,
+     except the topic's: its pad is an Affinity's, so it keeps its own number
+     the way `TagPage`'s does. The band's chats and bell close the list rather
+     than joining the sweeps below, since this board has no older numbering
+     for a sweep to extend. */
+  FeedKinds: [
+    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 2, find: ">On “", tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 5, find: '<a href="/t/', tag: "a", all: true },
+    { n: 6, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 6, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 6, find: ">Choose your opinion on @mira</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Your opinion on this post', tag: "button" },
+    { n: 6, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 7, find: ">Reply</button>", tag: "button" },
+    { n: 8, find: "View 2 replies", tag: "button" },
+    { n: 9, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 10, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 11, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 12, find: ">Low tide at six tomorrow", tag: "a" },
+    { n: 13, find: 'aria-label="Give your opinion on #saltmaps"', tag: "button" },
+    { n: 13, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
+    { n: 14, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 15, find: ">More</button>", tag: "button" },
+    { n: 16, find: "scroll-snap-type:x mandatory", tag: "div" },
+    { n: 17, find: ">Post score</span>", tag: "button" },
+    { n: 18, find: 'aria-label="2 comments"', tag: "button" },
+    ...nav(19),
+    { n: 24, find: 'aria-label="Chats"', tag: "button" },
+    { n: 25, find: 'aria-label="Notifications"', tag: "button" },
+  ],
 });
 
 // The Comments page. Sheet boards are scanExempt; badges stamped on under-scrim
@@ -959,6 +997,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 10, find: 'aria-label="Seek"', tag: "div" },
     ...nav(11),
   ],
+  ReelSensitive: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "button" },
+    { n: 2, find: '<a href="/u/', tag: "a" },
+    { n: 3, find: 'aria-label="Give your opinion on this post"', tag: "button" },
+    { n: 3, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 4, find: 'aria-label="2 comments"', tag: "button" },
+    { n: 5, find: 'aria-label="Share this post"', tag: "button" },
+    { n: 6, find: ">Post score</span>", tag: "button" },
+    { n: 7, find: ">More</button>", tag: "button" },
+    { n: 8, find: ">Show</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Sensitive — tap to view.', tag: "button" },
+    ...nav(10),
+  ],
   PostDetail: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More on this post"', tag: "button" },
@@ -1512,7 +1563,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ReplyPad: [
     { n: 1, find: 'aria-label="Toward what you answer"', tag: "button" },
-    { n: 2, find: 'aria-label="Opinion pad for the post you answer"', tag: "div" },
+    { n: 2, find: 'aria-label="Opinion pad for what you answer"', tag: "div" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
     { n: 4, find: ">Set</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
@@ -1529,6 +1580,42 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: ">Mark</button>", tag: "button" },
     { n: 9, find: ">Sign comment</button>", tag: "button" },
     { n: 10, find: ">Back</button>", tag: "button" },
+  ],
+  // The composer and the seal answering a comment (the reply pack): the same
+  // surfaces as `ReplyCompose` and `ReplySeal`, so the same numbers.
+  ReplyComposeComment: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 4, find: "The third headland light is real", tag: "p" },
+    { n: 5, find: "+ Add pictures or a video", tag: "button" },
+  ],
+  ReplySealComment: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
+    { n: 5, find: "+ Cite something", tag: "button" },
+    { n: 6, find: ">Adjust</button>", tag: "button" },
+    { n: 7, find: ">Change</button>", tag: "button" },
+    { n: 8, find: ">Mark</button>", tag: "button" },
+    { n: 9, find: ">Sign comment</button>", tag: "button" },
+    { n: 10, find: ">Back</button>", tag: "button" },
+  ],
+  // The key elsewhere at the reply's door: the notice's own three, and the
+  // wash it sits on. The thread beneath is `ReplyEntry`'s, wired there.
+  ReplyKeyAbsent: [
+    { n: 1, find: 'aria-label="Your key"', tag: "button" },
+    { n: 2, find: ">Restore the key</button>", tag: "button" },
+    { n: 3, find: ">Not now</button>", tag: "button" },
+    { n: 4, find: "place-items:center;background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The seal's key-absent fallback, a pattern exemplar: only the notice and
+  // the discard under it carry numbers; the rest is `ReplySeal`'s.
+  ReplySealKeyAbsent: [
+    { n: 1, find: 'aria-label="Your key"', tag: "button" },
+    { n: 2, find: ">Restore the key</button>", tag: "button" },
+    { n: 3, find: ">Discard the reply</button>", tag: "button" },
   ],
   EditCompose: [
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
@@ -1989,6 +2076,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">salt<", tag: "div" },
+    { n: 4, find: ">Signs as #salt<", tag: "button" },
     { n: 4, find: ">saltmaps<", tag: "button" },
     { n: 4, find: ">saltmarsh<", tag: "button" },
     { n: 4, find: ">saltcrust<", tag: "button" },
