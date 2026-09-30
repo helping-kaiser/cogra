@@ -12,6 +12,18 @@ export interface ButtonProps {
   /** Layout, not look: a button in a flex column passes this so it doesn't stretch. */
   selfStart?: boolean;
   disabled?: boolean;
+  /**
+   * The commit is in flight: the label reads `busyLabel` and the control is
+   * inert — not dimmed, no spinner. Turn it on only once the wait passes
+   * 200ms (readme §4, *Loading*); the press itself already refuses a second
+   * press without showing anything.
+   */
+  busy?: boolean;
+  /**
+   * The label's present participle — the verb takes -ing, the rest stays,
+   * `…` closes it: "Sign and publish" → "Signing and publishing…".
+   */
+  busyLabel?: string;
   type?: "button" | "submit";
   onClick?: () => void;
   ariaLabel?: string;
@@ -58,6 +70,7 @@ export declare function buttonStyle(options?: {
   size?: "sm" | "lg";
   selfStart?: boolean;
   disabled?: boolean;
+  busy?: boolean;
 }): React.CSSProperties;
 
 /** The state-layer + focus classes every pressable control wears. */

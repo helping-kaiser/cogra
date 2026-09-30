@@ -8,6 +8,7 @@ import { StanceAlternates } from "./StanceAlternates.jsx";
 import { StanceCoachMark, padHelp, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
+import { SigningPending, TransportError } from "../honesty/TransportError.jsx";
 import {
   bundleReadout,
   clampPair,
@@ -40,10 +41,21 @@ import {
    signature is the one that takes a held finger, and the gesture nobody gives by
    mistake is the only one allowed to act by itself.
 
-   THE HOLD ANSWERS IMMEDIATELY. The resting target moves to the new opinion at
-   once and a snackbar confirms the signature: a gesture that stages a priced act
-   must never be silent, because silence reads as failure and invites the same act
-   again.
+   THE HOLD IS NEVER SILENT, AND IT WAITS FOR ITS SIGNATURE (jakob, the failure
+   pack: signed acts are pessimistic). A gesture that stages a priced act must
+   never be silent, because silence reads as failure and invites the same act
+   again — so the anchor goes inert at the hold, and once the wait passes 200ms
+   the target's row says `Signing…` under the face. The resting target moves to
+   the new opinion when the signature is taken, and a snackbar confirms it. If
+   it is not taken, the face never moved: the row carries `SigningPending`'s
+   row line with `Retry` — the hold has no surface of its own to re-raise, and
+   the Snackbar charter keeps errors off the snackbar.
+
+   SET WAITS THE SAME WAY. The pad stays open until the signature is taken:
+   past 200ms `Set` reads `Setting…` and goes inert, never dimmed. A signing
+   that fails leaves the pad where it was, at the pick, with the fault line
+   above the commit row and `Retry`, outlined, in Set's slot — a failed signed
+   act re-raises its own surface, and here the surface never went away.
 
    THE PAD IS THE TEACHER. The one-time coach mark rides the FIRST OPEN, inside
    the pad it explains, and what it teaches is the shortcut — a reader who has
@@ -60,8 +72,10 @@ import {
    IT NEVER PREVENTS A CHOICE. The whole square is reachable, corners included. A
    pick that nets the bundle to (0, 0) is confirmed, not refused.
 
-   This recreation folds locally and keeps its own bundle in state; the product
-   asks the backend for the authoritative projection before signing. */
+   This recreation folds locally and keeps its own bundle in state, so it
+   answers at once — there is no backend here to wait for. The product asks the
+   backend for the authoritative projection before signing, and its answer is
+   what the in-flight states above wait on; `signing` draws them. */
 
 export const LONG_PRESS_MS = 500;
 
@@ -163,6 +177,13 @@ export function StanceControl({
      marker's quiet line under it says what it waits on. Additive — absent,
      the control renders exactly as before. */
   pendingPick,
+  /* A SIGNED ACT IN FLIGHT, OR ONE THAT DID NOT GO THROUGH (the failure
+     pack). `"busy"` is the wait past 200ms, `"failed"` the signing that did
+     not complete. With the pad closed it is the hold's, and the target's row
+     carries it under the face; with the pad open it is Set's, and the pad's
+     commit row carries it. Additive — absent, the control renders exactly as
+     before. */
+  signing,
   node,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
@@ -288,6 +309,11 @@ export function StanceControl({
 
   const restingPair = pendingPick ?? (bundle.records === 0 && !bundle.severed ? null : bundle.current);
   const restingFace = restingPair === null ? null : bundleReadout(restingPair);
+  /* Whose state `signing` is: the pad's while it is open, the row's while it
+     is not. An anchor whose hold is still signing refuses a second hold. */
+  const rowSigning = open ? undefined : signing;
+  const padSigning = open ? signing : undefined;
+  const anchorBusy = rowSigning === "busy";
 
   return (
     <div
@@ -310,8 +336,9 @@ export function StanceControl({
                 ? `Your opinion on ${targetLabel}, waiting for your key: ${restingFace.label}, ${formatStancePair(restingPair)}.`
                 : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
           }
-          onClick={onTap}
-          onPointerDown={onPointerDown}
+          onClick={anchorBusy ? undefined : onTap}
+          onPointerDown={anchorBusy ? undefined : onPointerDown}
+          aria-busy={anchorBusy || undefined}
           onPointerUp={clearHold}
           onPointerCancel={clearHold}
           onContextMenu={(event) => event.preventDefault()}
@@ -421,6 +448,18 @@ export function StanceControl({
         )}
       </div>
       {pendingPick && <PendingMarker label="Waiting for your key" />}
+      {/* THE ROW LINE (vehicle (b)): the hold's wait, quiet, and its failure,
+          in the failure voice with the way to ask again. */}
+      {rowSigning === "busy" && <PendingMarker label="Signing…" />}
+      {rowSigning === "failed" && (
+        <SigningPending
+          row
+          onRetry={() => {
+            setSigned(null);
+            commitChecked(TAP_DEFAULT);
+          }}
+        />
+      )}
 
       {open && (
         <>
@@ -542,7 +581,13 @@ export function StanceControl({
             {/* One row: the walk-away on the left, the two decisions on the right.
                 SEVER NEEDS SOMETHING TO SEVER — with no records and nothing
                 severed there is no relationship to walk away from, and the button
-                led only to a dialog saying so. It arrives with the first stance. */}
+                led only to a dialog saying so. It arrives with the first stance.
+
+                A SIGNING THAT DID NOT GO THROUGH says so above this row, in
+                `NetworkError`'s words, and Set's slot becomes the outlined
+                `Retry` — not a new commitment, the same one asked again. The
+                pick, the field and the way out are exactly as they were. */}
+            {padSigning === "failed" && <TransportError message="That didn't send. Try again." />}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
               {!firstConnection && (bundle.records > 0 || bundle.severed === true) && (
                 <button
@@ -560,11 +605,18 @@ export function StanceControl({
               <button
                 type="button"
                 disabled={explaining}
-                onClick={() => commitChecked(pick)}
+                onClick={padSigning === "busy" ? undefined : () => commitChecked(pick)}
+                aria-busy={padSigning === "busy" || undefined}
+                aria-disabled={padSigning === "busy" || undefined}
                 className={BUTTON_CLASS}
-                style={buttonStyle({ variant: "primary", size: "sm", disabled: explaining })}
+                style={buttonStyle({
+                  variant: padSigning === "failed" ? "outline" : "primary",
+                  size: "sm",
+                  disabled: explaining,
+                  busy: padSigning === "busy",
+                })}
               >
-                Set
+                {padSigning === "busy" ? "Setting…" : padSigning === "failed" ? "Retry" : "Set"}
               </button>
             </div>
           </div>

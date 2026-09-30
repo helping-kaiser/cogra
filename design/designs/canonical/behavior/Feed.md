@@ -29,3 +29,13 @@ ALWAYS a veiled clip has no playback and no sound-disc presence
 WHEN a veiled clip unveils GIVEN the incumbent still qualifies -> NEVER the stage changes hands
 
 WHEN a veiled clip unveils GIVEN the stage is empty -> the topmost qualifying clip takes the stage
+
+WHEN a press-and-hold on feed.card.actionRow.stance.anchor signs -> feed.card.actionRow.stance.anchor refuses a second press-and-hold until the signing answers AND NEVER feed.card.actionRow.stance.anchor.face moves before the signature is taken
+
+WHEN the hold's signing has not answered 200ms after the hold -> the line under feed.card.actionRow.stance.anchor.face reads Signing… AND NEVER a spinner appears
+
+WHEN the hold's signing answers within 200ms of the hold -> NEVER the line Signing… appears
+
+WHEN the hold's signing is taken -> feed.card.actionRow.stance.anchor.face moves to the new opinion AND the snackbar confirms the signature
+
+WHEN the hold's signing does not go through -> feed.card.actionRow.stance.anchor.face stays where it was AND the line under it reads That didn't sign. followed by Retry AND NEVER the snackbar carries the failure

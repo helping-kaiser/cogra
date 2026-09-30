@@ -39,6 +39,14 @@ export interface ActsCardRow {
    * "References". Omit it where the count is already words ("1 more").
    */
   countNoun?: string;
+  /**
+   * The signing was refused because of this act — a cited post or person
+   * nothing answers to any more. The row reads back as before, and under its
+   * value the refused-file line (`UploadErrorLine`) says why, with `Remove it`
+   * as the only way out. Fact rows only; words from copy-voice, *Faults by
+   * code*.
+   */
+  fault?: { message: string; onRemove?: () => void };
 }
 
 export interface ActsCardProps {

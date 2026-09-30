@@ -429,7 +429,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4173,
+      "h": 4199,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -447,7 +447,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 533,
+      "h": 1117,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -456,6 +456,51 @@
       "title": "Key absent · a pick kept pending",
       "x": 2880,
       "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealSigning.dc.html",
+      "title": "Seal · signing",
+      "x": 480,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealFaultRow.dc.html",
+      "title": "Seal · one thing can't be signed",
+      "x": 960,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "WriteRuleFailed.dc.html",
+      "title": "Seal · you can't sign right now",
+      "x": 1440,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "PadFailed.dc.html",
+      "title": "Pad · the signing didn't go through",
+      "x": 1920,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "RowSigning.dc.html",
+      "title": "Signing · on the target's row",
+      "x": 2880,
+      "y": 964,
       "w": 390,
       "h": 844,
       "page": "patterns"

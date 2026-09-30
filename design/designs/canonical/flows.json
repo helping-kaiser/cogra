@@ -128,7 +128,7 @@
       "start": { "board": "Profile", "via": 7, "to": "Invites" },
       "waypoints": [
         { "board": "Invites", "via": 2 },
-        { "board": "InviteNew", "via": 3 }
+        { "board": "InviteNew", "via": 3, "to": "InviteCreated" }
       ],
       "end": { "board": "InviteCreated", "via": 2, "case": "the platform's own share sheet" }
     },
@@ -319,7 +319,7 @@
       "waypoints": [
         { "board": "RemoveMenu", "via": 4 }
       ],
-      "end": { "board": "RemoveConfirm", "via": 1 }
+      "end": { "board": "RemoveConfirm", "via": 1, "to": "Removed" }
     },
     {
       "name": "set-the-cover-and-order",

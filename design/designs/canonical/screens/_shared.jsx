@@ -77,6 +77,8 @@ const {
   TAG_RANGES,
   TaggedRow,
   TransportError,
+  NoticePanel,
+  NoticeLine,
   SensitiveVeil,
   SensitiveScope,
   RedactedContent,
@@ -1183,8 +1185,26 @@ const REPLY_CITATION = "Tide tables and the third headland";
    `scanExempt` lines — so nothing here is wired; it is drawn. */
 
 /* THE POST'S SEAL, whole — `ComposeSeal` itself, and what the opinion pad, the
-   license sheet, the sensitive sheet and the "?" dialog stand on. */
-function ComposeSealBody({ cited = 1, tags = SEAL_TAGS }) {
+   license sheet, the sensitive sheet and the "?" dialog stand on.
+
+   `state` IS WHAT BECAME OF THE COMMIT (the failure pack, jakob 2026-09-30).
+   One body, so the seal a fault is drawn on is the seal the reader was on:
+   - `signing` — past 200ms without an answer: the commit reads its present
+     participle and goes inert (`SealSigning`).
+   - `offline` — no answer at all: the fault takes the commit's place,
+     `TransportError`'s line over an outlined Retry and the same way back
+     (`NetworkError`).
+   - `refused` — one staged act refused: its row says so with Remove it, and
+     the commit stays, because nothing was staged (`SealFaultRow`).
+   - `writeRule` — the write rule's refusal: nothing failed and nothing was
+     spent, so the commit's place takes `NoticePanel`, and the way out keeps
+     the draft (`WriteRuleFailed`). */
+const SEAL_REFUSED_CITATION = "This can't be cited anymore.";
+const WRITE_RULE_TITLE = "You can't sign right now";
+const WRITE_RULE_FACT =
+  "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your draft is kept.";
+
+function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
   return (
     <>
       <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
@@ -1223,6 +1243,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS }) {
                     </span>
                   ),
                   count: "1",
+                  ...(state === "refused" ? { fault: { message: SEAL_REFUSED_CITATION, onRemove: () => {} } } : null),
                 },
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
@@ -1243,7 +1264,22 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS }) {
 
         <div style={{ flex: 1 }} />
 
-        <SealFooter signLabel="Sign and publish" />
+        {state === "offline" ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <TransportError message="That didn't send. Try again." />
+            <Button variant="outline" style={{ width: "100%" }}>Retry</Button>
+            <Button variant="text" style={{ width: "100%" }}>Back</Button>
+          </div>
+        ) : state === "writeRule" ? (
+          <>
+            <NoticePanel title={WRITE_RULE_TITLE}>
+              <NoticeLine>{WRITE_RULE_FACT}</NoticeLine>
+            </NoticePanel>
+            <Button variant="text" style={{ width: "100%" }}>Keep the draft, sign later</Button>
+          </>
+        ) : (
+          <SealFooter signLabel="Sign and publish" busy={state === "signing"} busyLabel="Signing and publishing…" />
+        )}
       </div>
     </>
   );
@@ -2753,6 +2789,7 @@ const POST_OPINION_HOLDERS = [
    every profile, post and comment pad exactly as before. */
 const AFFINITY_SEVERANCE = {
   control: "Disconnect",
+  busy: "Disconnecting…",
   title: (name) => `Disconnect from ${name}?`,
   effect: (name) =>
     `You end up with no opinion towards ${name}. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`,

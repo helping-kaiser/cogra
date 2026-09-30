@@ -3730,3 +3730,32 @@ board keeps its old position and its docblock says so. A briefed
 choice for jakob: the landing scrolls the thread to the new card
 (K6.6's direction), or the board takes a larger offset that keeps the
 card in view. Drawn once ruled.
+
+### 117 · What the failure pack left owed · *design* · **filed 2026-09-30**
+
+The failure pack (readme §13, *The failure pack*) recorded the three
+K4 laws and drew five boards. Every vehicle the laws name is written
+in copy-voice, *Faults by code*. These are still owed a board or a
+ruling:
+
+- **Boards for copy-only vehicles.** The session-expired sign-in
+  screen, `This post doesn't exist.` and `This comment doesn't exist.`,
+  the write rule's notice on a pad (`PadKeyAbsent`'s shape) and its
+  quiet line on a hold's row, a comfort's revert on the target's row,
+  and the words for a dead ask link.
+- **What else locks while a seal signs** (lane C's C26, unruled). Only
+  the commit goes inert. Whether Back, the header's X and the fact
+  rows' actions lock too, and what the reader sees if they leave
+  mid-signing, are open. So is the resumption of a signing interrupted
+  between the pre-sign and the approval.
+- **Past 5s.** The loading law asks for determinate progress past 5s,
+  and a label swap has no progress to show. Whether a slow signing
+  names its steps or keeps the participle is open.
+- **The write rule's second gate.** One code carries W1 (solvency) and
+  W2a (the stamp wall). The drawn words fit the first, which is the
+  pool-exhaustion fact. A member below the wall is not short of
+  payment, and the contract cannot yet tell the surface which gate
+  refused.
+- **The key-absent boards onto `NoticePanel`.** Five boards still draw
+  the tertiary panel by hand. They also disagree on the corner and drop
+  the title's letter-spacing.

@@ -11,8 +11,11 @@ export interface SeveranceConfirmProps {
   records?: number;
   /** The fold reports nothing left to walk back; severing would be a no-op. */
   alreadySevered?: boolean;
+  /** The signing is in flight (past 200ms): the confirm reads the family's
+   *  present participle ("Walking it back…") and goes inert, never dimmed. */
   busy?: boolean;
-  /** The signing pass did not complete; the dialog stays open and says so. */
+  /** The signing did not go through; the dialog stays open, says so above
+   *  the pair, and the confirm's slot reads `Retry`. */
   failed?: boolean;
   onConfirm?: () => void;
   onCancel?: () => void;

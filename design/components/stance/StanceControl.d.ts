@@ -78,6 +78,15 @@ export interface StanceControlProps {
    * unchanged — nothing is signed until the key is restored. Off by default.
    */
   pendingPick?: StancePair;
+  /**
+   * A signed act in flight (`"busy"`, past 200ms) or one that did not go
+   * through (`"failed"`). Pad closed, it is the hold's: the anchor is inert
+   * while busy, and the target's row carries `Signing…` or `SigningPending`'s
+   * row line with `Retry` under the face, which has not moved. Pad open, it
+   * is Set's: `Setting…`, inert; then the fault line above the commit row and
+   * an outlined `Retry` in Set's slot. Off by default.
+   */
+  signing?: "busy" | "failed";
   /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`. */
   node?: string;
 }

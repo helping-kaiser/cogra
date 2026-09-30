@@ -33,7 +33,7 @@ const SIZES = {
   lg: { padding: "10px 24px" },
 };
 
-export function buttonStyle({ variant = "primary", size = "lg", selfStart = false, disabled = false } = {}) {
+export function buttonStyle({ variant = "primary", size = "lg", selfStart = false, disabled = false, busy = false } = {}) {
   return {
     ...VARIANTS[variant] ?? VARIANTS.primary,
     ...SIZES[size] ?? SIZES.lg,
@@ -45,7 +45,7 @@ export function buttonStyle({ variant = "primary", size = "lg", selfStart = fals
     letterSpacing: "var(--text-label-large--letter-spacing)",
     fontWeight: "var(--text-label-large--font-weight)",
     opacity: disabled ? "var(--state-disabled)" : 1,
-    cursor: disabled ? "default" : "pointer",
+    cursor: disabled || busy ? "default" : "pointer",
     textDecoration: "none",
     display: "inline-flex",
     alignItems: "center",
@@ -155,12 +155,29 @@ export function InlineAction({
   );
 }
 
+/* IN FLIGHT, THE LABEL SAYS WHAT IS HAPPENING (jakob, the failure pack).
+   A commit whose answer has not come back is `busy`: its label swaps to the
+   present participle the caller passes as `busyLabel` — the verb takes -ing,
+   the rest of the label stays, and `…` closes it ("Sign and publish" →
+   "Signing and publishing…") — and the control goes INERT, not dimmed. It is
+   still the one committing action on the surface, and 40% opacity would say
+   it could not be pressed for a reason the reader has to go and find. No
+   spinner: the word is the indicator, the way `LoadingState` is text.
+
+   THE 200MS LAW IS THE CALLER'S CLOCK (readme §4, *Loading*). The control is
+   inert from the press — that is the double-submit guard, and it shows
+   nothing — and `busy` turns on only once the wait passes 200ms, so a quick
+   answer never flashes a word. `aria-busy` rides along for a listener;
+   `aria-disabled` rather than `disabled` keeps the control in the focus order
+   while it refuses a second press. */
 export function Button({
   children,
   variant = "primary",
   size = "lg",
   selfStart = false,
   disabled = false,
+  busy = false,
+  busyLabel,
   type = "button",
   onClick,
   ariaLabel,
@@ -172,13 +189,15 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      onClick={onClick}
+      onClick={busy ? undefined : onClick}
       aria-label={ariaLabel}
+      aria-busy={busy || undefined}
+      aria-disabled={busy || undefined}
       className={className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS}
-      style={{ ...buttonStyle({ variant, size, selfStart, disabled }), ...style }}
+      style={{ ...buttonStyle({ variant, size, selfStart, disabled, busy }), ...style }}
       data-node={node}
     >
-      {children}
+      {busy && busyLabel ? busyLabel : children}
     </button>
   );
 }

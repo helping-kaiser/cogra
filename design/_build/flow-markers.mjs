@@ -1697,6 +1697,39 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   NetworkError: [{ n: 1, find: ">Retry</button>", tag: "button" }],
+  /* THE FAILURE PACK'S WIRED BOARDS (2026-09-30). The two seal states are
+     `ComposeSeal`'s body, so they take its numbering — header, facts, commit,
+     Back — with the refused row's `Remove it` next, and the notice's way out
+     in the commit's slot. `PadFailed` is `PadStanding` with Set's slot
+     reading Retry, so it takes that board's five numbers. */
+  SealFaultRow: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Sign and publish</button>", tag: "button" },
+    { n: 8, find: ">Back</button>", tag: "button" },
+    { n: 9, find: ">Remove it</button>", tag: "button" },
+  ],
+  WriteRuleFailed: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Keep the draft, sign later</button>", tag: "button" },
+  ],
+  PadFailed: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 3, find: ">Walk it back</button>", tag: "button" },
+    { n: 4, find: ">Cancel</button>", tag: "button" },
+    { n: 5, find: ">Retry</button>", tag: "button" },
+  ],
   // TWO "Restore the key" buttons stand on this board — the feed's own card
   // beneath the wash and the pad's notice above it — and both take the number,
   // the way the guest gate's two asks do: one edge covers them, because both

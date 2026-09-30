@@ -117,20 +117,31 @@ export function SeveranceConfirm({
       <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)" }}>
         {alreadySevered ? "You are already at nothing here." : cost}
       </p>
+      {/* A FAILED SIGNING RE-RAISES ITS OWN SURFACE WITH RETRY (jakob, the
+          failure pack). The dialog never closed — the act waits for its
+          answer — so the fault line stands above the pair and the
+          commitment's own slot reads `Retry`: the same act, asked again, from
+          where it was asked. The safe action keeps its place. */}
       {failed && (
         <p role="alert" style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", color: "var(--text-failure)" }}>
           That didn&apos;t send. Try again.
         </p>
       )}
       <div style={{ marginTop: "var(--space-6)", display: "flex", justifyContent: "flex-end", gap: "var(--space-2)" }}>
+        {/* IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING (jakob, the failure
+            pack): the family's own present participle — "Walking it back…",
+            "Disconnecting…" — and the control inert, never dimmed. Dimming is
+            kept for the one true refusal, a bundle already at nothing. */}
         <button
           type="button"
-          disabled={busy || alreadySevered}
-          onClick={onConfirm}
+          disabled={alreadySevered}
+          onClick={busy ? undefined : onConfirm}
+          aria-busy={busy || undefined}
+          aria-disabled={busy || undefined}
           className={BUTTON_CLASS}
-          style={buttonStyle({ variant: "text", size: "sm", disabled: busy || alreadySevered })}
+          style={buttonStyle({ variant: "text", size: "sm", disabled: alreadySevered, busy })}
         >
-          {sever.control}
+          {busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control}
         </button>
         <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary", size: "sm" })}>
           Keep it

@@ -11,4 +11,6 @@ The foot of every signing surface: the commit and the way back.
 
 **`disabled` is the upload's gate, never a validation state.** Nothing signs until the content it signs exists, so a seal still uploading wears it — with `UploadStatusLine` directly above saying why. A disabled commit with no line explaining it is the one shape this must never take.
 
+**`busy` is the signing in flight.** Past 200ms without an answer the commit reads its present participle and goes inert — `<SealFooter signLabel="Sign and publish" busy busyLabel="Signing and publishing…"/>` — never dimmed, never a spinner. A fault that comes back takes the commit's place (`NetworkError`); a success leaves the seal.
+
 Put the acts above it: `ActsCard` where the surface has room, `ActsFooter` where it does not.

@@ -545,7 +545,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
-| `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
+| `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
 | `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
@@ -7221,6 +7221,84 @@ post; a reply answers a post or a comment.
   deliberately: `reply-to-a-comment` now walks the comment-targeted
   composer and seal, and the `Restore the key` and `+ Cite something`
   censuses grew by the new boards.
+
+### The failure pack — 2026-09-30
+
+The V1.0 audit's first three K4 entries (failure, in-flight and the
+refusal map), ruled by jakob in the fifteen-first round. The network
+fault was drawn only for the seals and the entry forms. Everywhere
+else a write had no failure outcome, no commit button had an
+in-flight state, and the only fault the seal knew was "offline".
+
+- **Read-side comforts answer at once; signed acts wait** (jakob, as
+  recommended). Save, unsave, hide, undo and unhide change only what
+  this reader sees, so they show their result at the tap. Every signed
+  act waits for its answer. The pad stays open on `Set`, a dialog stays
+  up on its commitment, the seal stays on its commit, and a hold moves
+  the face only once the signature is taken. The account's other
+  consequential writes wait the same way: remove, revoke, close, create
+  an invite, and the handle, password and email changes. A comfort that
+  fails reverts.
+- **A failed signed act re-raises its own surface, with `Retry`.**
+  Nothing the reader chose is lost. The pad is still open at the pick,
+  the dialog still up, the seal still readable. The fault takes the
+  place of the commit, which is `NetworkError`'s grammar:
+  `TransportError`'s line, then an outlined `Retry` where the commit
+  stood (`PadFailed`). A dialog keeps its pair and its commitment reads
+  `Retry`.
+- **A hold has no surface to re-raise, so the target's row carries it**
+  (jakob: vehicle (b), the Snackbar charter untouched). While the hold
+  signs, the row under the face reads `Signing…` in the pending
+  marker's quiet register. If it fails, the row carries
+  `SigningPending`'s line with `Retry` beside it, and the face never
+  moved. On success the face moves and the snackbar confirms, as
+  before (`RowSigning`). A comfort that fails reverts and says so in
+  the same place.
+- **In flight, the label says what is happening** (jakob). The commit's
+  label swaps to its present participle: the verb takes `-ing`, the
+  rest of the label stays, and `…` closes it. `Sign and publish` reads
+  `Signing and publishing…`, and `Set` reads `Setting…`. The control goes
+  inert without dimming, and no spinner is added. The loading law
+  governs (§4, *Loading*). The control is inert from the press, which is
+  the double-submit guard. The label swaps only once the wait passes
+  200ms, so a quick answer never flashes a word. `Button`'s `busy`,
+  `SealFooter`'s `busy`, `SeveranceConfirm`'s `busy` and
+  `StanceControl`'s `signing` carry it (`SealSigning`).
+- **The seal's faults speak `NetworkError`'s grammar** (jakob). A fault
+  about the whole signing takes the commit's place, as drawn. When one
+  staged act is refused, the refusal is said on that act's row, in the
+  refused-file line's shape: the fact, then `Remove it`
+  (`SealFaultRow`). Nothing was staged, so the commit stays. Each
+  code's vehicle and words live in copy-voice, *Faults by code*.
+- **The write rule's refusal is a restoration surface, not a fault**
+  (jakob; `WriteRuleFailed`, the V1.0 home of the pool-exhaustion
+  fact). A refused pre-check stages nothing and spends nothing, so the
+  state is a notice rather than a failure. It is drawn the way the
+  missing key is (`ComposeKeyAbsent`): a tertiary panel in place of the
+  commit, then the way out that keeps the draft. It offers no `Retry`,
+  because an immediate retry meets the same answer, and a control that
+  fails the same way twice is not a way out (`RefusedFile`'s rule). Its
+  words follow the payer-neutral rule (*The V1.0 scope cut*): signing
+  is paid for, and there is only so much to go around at a time. The
+  panel is `NoticePanel`, the first master of the tertiary notice that
+  the key-absent boards still draw by hand.
+- **Every write the law names has its outcome.** Five pads' `Set` reach
+  `PadFailed`. Thirty-six hold edges name the `RowSigning` row, and
+  `Walk it back` keeps its dialog with `Retry`. Nineteen consequential
+  writes reach `NetworkError`: remove, close, create and revoke, the
+  credential changes, the deletion link and its cancel, the resends,
+  sign out everywhere else, and the key's attach. Sixteen comfort
+  controls revert on the row. Thirteen seal commits reach
+  `WriteRuleFailed`, and so does `NetworkError`'s own `Retry`. The ten
+  seals that can stage a citation reach `SealFaultRow`.
+- **The gate**: 218 → **223 screens**, 1536 → **1557 edges**, 1 gap
+  (the kept picks' review, unchanged), **flows 63**, every one resolved.
+  The witness was not re-blessed. Two flows now pin their success
+  outcome where a failure outcome joined the edge they walk:
+  `send-someone-an-invite` at `InviteNew`, and `remove-your-post` at its
+  end. `NetworkError` stands on `ComposeSealBody` and renders
+  byte-identical. The maps follow the edges. `Feed.md` gains the hold's
+  lines, and `ComposeSeal.md` opens with the commit in flight.
 
 ## 15. Index
 
