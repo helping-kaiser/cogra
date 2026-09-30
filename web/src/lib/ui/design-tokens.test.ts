@@ -1,8 +1,10 @@
 // @vitest-environment node
-// Exports `design-tokens.json` (repo root) — the cross-platform colour
-// contract both clients pin their themes to, generated from the recipe in
-// design.md §2.2 rather than transcribed. Mirrors the crypto vectors:
-// `make tokens` rewrites it, every other run asserts it is not stale.
+// Emits `design/tokens/scheme.json` — the committed M3 colour scheme,
+// generated from the recipe in design.md §2.2 rather than hand-picked.
+// Mirrors the crypto vectors: `make tokens` rewrites it, every other run
+// asserts it is not stale. `design/tokens/colors.css` transcribes it and
+// `design/_build/export-tokens.mjs` gates that transcription; the token
+// contract impl pins is `design/tokens.json`.
 import { readFileSync, writeFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
@@ -15,7 +17,7 @@ import {
   Variant,
 } from "@material/material-color-utilities";
 
-const TOKENS_PATH = new URL("../../../../design-tokens.json", import.meta.url);
+const TOKENS_PATH = new URL("../../../../design/tokens/scheme.json", import.meta.url);
 
 const SEED = 0xffef6c1a;
 
@@ -167,7 +169,7 @@ describe("design tokens", () => {
       return;
     }
     const committed = readFileSync(TOKENS_PATH, "utf-8");
-    expect(committed, "design-tokens.json is stale — run `make tokens`").toBe(rendered);
+    expect(committed, "design/tokens/scheme.json is stale — run `make tokens`").toBe(rendered);
   });
 
   // design.md §2.1: "A palette change that fails that check does not ship."

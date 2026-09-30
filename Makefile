@@ -115,7 +115,7 @@ constants: ## Regenerate client-constants.json (the caps, page size, registratio
 fold-vectors: ## Regenerate stance-fold-vectors.json (the local stance fold both clients re-implement) from common
 	UPDATE_STANCE_FOLD_VECTORS=1 $(CARGO) test -p common --test stance_fold_vectors
 
-tokens: ## Regenerate design-tokens.json (the colour contract both clients pin to) from design.md §2.2
+tokens: ## Regenerate design/tokens/scheme.json (the M3 scheme design/tokens/colors.css transcribes) from design.md §2.2
 	cd web && UPDATE_DESIGN_TOKENS=1 npx vitest run src/lib/ui/design-tokens.test.ts
 
 sqlx-prepare: ## Regenerate the committed .sqlx/ offline metadata (needs a live, migrated DB)
