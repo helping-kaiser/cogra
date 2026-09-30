@@ -20,6 +20,7 @@
     "NoScreenLock": "the no-screen-lock warning covers the backup screen — the arrow and the commitment beneath the scrim are inactive in this state, and wired on `SettingsBackup`; only the dialog (and its scrim) is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
     "PadStanding": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
+    "PadFailed": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
     "TagPageHeldPad": "the scrim wash covers the tag page — the back arrow, the two posts' and the comment's own controls, and the topic row's own anchor beneath it are inactive in this state; only the parked pad is live, and every one of those controls is wired on `TagPageHeld`",
     "FeedSheet": "the filter sheet covers the feed — the trigger, post cards, and nav beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "SettingsLicense": "the license sheet covers the settings page — every row beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
@@ -127,6 +128,8 @@
     "LadderStates": "reference",
     "LadderTopics": "reference",
     "PadPending": "reference",
+    "SealSigning": "reference",
+    "RowSigning": "reference",
     "FeedShapes": "reference",
     "MapOverview": "reference",
     "MapEntry": "reference",
@@ -243,13 +246,13 @@
     { "from": "VouchBackPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
     { "from": "VouchBackPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "VouchBack", "case": "nothing staged" }] },
-    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }] },
+    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }] },
 
     { "from": "PadStanding", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "PadStanding", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick, and the landing line reads what it would come to" }] },
     { "from": "PadStanding", "via": 3, "kind": "advance", "label": "Walk it back", "to": [{ "board": "SeveranceConfirm", "case": "the explicit route — the same dialog the pick route raises, without the pick line, since nothing was picked" }] },
     { "from": "PadStanding", "via": 4, "kind": "cancel", "label": "Cancel", "to": [{ "terminal": "back", "case": "the pad closes — nothing staged, the standing opinion is what it was" }] },
-    { "from": "PadStanding", "via": 5, "kind": "advance", "label": "Set", "to": [{ "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets the standing bundle to nothing — severance, confirmed with its cost and never refused" }] },
+    { "from": "PadStanding", "via": 5, "kind": "advance", "label": "Set", "to": [{ "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets the standing bundle to nothing — severance, confirmed with its cost and never refused" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }] },
 
     { "from": "VouchedIn", "via": 1, "kind": "advance", "label": "Go to your feed", "to": [{ "board": "Feed" }] },
 
@@ -672,7 +675,7 @@
     { "from": "CommentEdit", "via": 9, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "CommentEdit", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEdit", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
-    { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the edit settling on its card" },{ "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "CommentEdit", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the edit settling on its card" },{ "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "CommentEdit", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "CommentEdit", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
@@ -687,7 +690,7 @@
     { "from": "CommentEditVideo", "via": 9, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "CommentEditVideo", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "CommentEditVideo", "via": 11, "kind": "detour", "label": "This creates 2 signed actions", "to": [{ "board": "CommentEditActs" }] },
-    { "from": "CommentEditVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the edit settling on its card, the new cover pointed at" },{ "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "CommentEditVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the edit settling on its card, the new cover pointed at" },{ "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "CommentEditVideo", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "CommentEditVideo", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
@@ -760,7 +763,7 @@
     { "from": "ReplySeal", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplySeal", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplySeal", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplySeal", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }] },
     { "from": "ReplySeal", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
 
     { "from": "ReplyCited", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
@@ -771,7 +774,7 @@
     { "from": "ReplyCited", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyCited", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplyCited", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its reference settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplyCited", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its reference settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "ReplyCited", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the reference still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
     { "from": "ReplyCited", "via": 11, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the comment stops carrying it" }] },
     { "from": "ReplyCited", "via": 12, "kind": "advance", "label": "staged reference name", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
@@ -784,7 +787,7 @@
     { "from": "ReplyCitedMany", "via": 6, "kind": "advance", "label": "Adjust (the stance)", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyCitedMany", "via": 7, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense", "case": "the license sheet (master on the compose page)" }] },
     { "from": "ReplyCitedMany", "via": 8, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
-    { "from": "ReplyCitedMany", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its references settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ReplyCitedMany", "via": 9, "kind": "advance", "label": "Sign comment", "to": [{ "board": "ReplySettled", "case": "signed — the thread reopened where it was left, the reply and its references settling on its parent" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "ReplyCitedMany", "via": 10, "kind": "back", "label": "Back", "to": [{ "board": "ReplyCompose", "case": "one stage back — the words, the references still staged" }, { "board": "ReplyPictures", "case": "…or the pictures state" }, { "board": "ReplyVideo", "case": "…or the video state" }] },
     { "from": "ReplyCitedMany", "via": 11, "kind": "advance", "label": "References row", "to": [{ "board": "ComposeCitations", "case": "the staged-citations sheet (master on the compose page)" }] },
 
@@ -892,7 +895,7 @@
     { "from": "ComposeSeal", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSeal", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSeal", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSeal", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ComposeSeal", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "ComposeSeal", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeDetails", "case": "one stage back" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
 
     { "from": "ComposeSealCited", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back — the citations still staged" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
@@ -901,7 +904,7 @@
     { "from": "ComposeSealCited", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealCited", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealCited", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealCited", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ComposeSealCited", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "ComposeSealCited", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeDetails", "case": "one stage back — the citations still staged" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
     { "from": "ComposeSealCited", "via": 9, "kind": "advance", "label": "References row", "to": [{ "board": "ComposeCitations", "case": "the count opens what it counts" }] },
 
@@ -911,7 +914,7 @@
     { "from": "ComposeSealTagged", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealTagged", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealTagged", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealTagged", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ComposeSealTagged", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "signed — the detail view, still settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "ComposeSealTagged", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeDetails", "case": "one stage back — the tags still staged" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
     { "from": "ComposeSealTagged", "via": 9, "kind": "advance", "label": "Tags row", "to": [{ "board": "ComposeTags", "case": "the count opens what it counts — the staged-tags sheet over the seal, the References row's own kind of door (backlog item 95)" }] },
 
@@ -982,7 +985,7 @@
     { "from": "EditCompose", "via": 9, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation withdraws — a signed act in the batch" }] },
     { "from": "EditCompose", "via": 10, "kind": "advance", "label": "+ Cite something", "to": [{ "board": "ReferencePicker" }] },
     { "from": "EditCompose", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
-    { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "EditCompose", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "EditCompose", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "EditCompose", "via": 15, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
     { "from": "EditCompose", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
@@ -1019,7 +1022,7 @@
     { "from": "EditWords", "via": 7, "kind": "advance", "label": "tag chip ×", "to": [{ "terminal": "self", "case": "the tag withdraws — a signed act in the batch" }] },
     { "from": "EditWords", "via": 8, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "EditWords", "via": 9, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
-    { "from": "EditWords", "via": 10, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling, its body now words" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "EditWords", "via": 10, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling, its body now words" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "EditWords", "via": 11, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
     { "from": "EditWords", "via": 12, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
 
@@ -1034,7 +1037,7 @@
     { "from": "EditComposeVideo", "via": 9, "kind": "advance", "label": "tag chip ×", "to": [{ "terminal": "self", "case": "the tag withdraws — a signed act in the batch" }] },
     { "from": "EditComposeVideo", "via": 10, "kind": "advance", "label": "+ Add a tag", "to": [{ "board": "TagPicker" }] },
     { "from": "EditComposeVideo", "via": 11, "kind": "detour", "label": "This creates 3 signed actions", "to": [{ "board": "EditActs" }] },
-    { "from": "EditComposeVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling, the new cover pointed at" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "EditComposeVideo", "via": 12, "kind": "advance", "label": "Sign the edit", "to": [{ "terminal": "back", "case": "signed — the post, the edit settling, the new cover pointed at" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "one staged act refused — a cited post or person nothing answers to any more: its row says so, with Remove it (master)" }] },
     { "from": "EditComposeVideo", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "EditComposeVideo", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
 
@@ -1108,7 +1111,7 @@
     { "from": "TagPageHeldPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick, and the landing line reads what it would come to" }] },
     { "from": "TagPageHeldPad", "via": 3, "kind": "advance", "label": "Disconnect", "to": [{ "board": "SeveranceConfirm", "case": "the explicit route out of a held topic — the master dialog in the topic family's own words, titled `Disconnect from #saltmaps?`, without the pick line since nothing was picked; the fixture the master board draws is a person's, and the arithmetic is this topic's own" }] },
     { "from": "TagPageHeldPad", "via": 4, "kind": "cancel", "label": "Cancel", "to": [{ "terminal": "back", "case": "the pad closes — nothing staged, the topic is held exactly as it was" }] },
-    { "from": "TagPageHeldPad", "via": 5, "kind": "advance", "label": "Set", "to": [{ "terminal": "back", "case": "signed — the Affinity joins the bundle, back on the tag page" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets the held bundle to nothing — severance, confirmed with its cost and never refused" }] },
+    { "from": "TagPageHeldPad", "via": 5, "kind": "advance", "label": "Set", "to": [{ "terminal": "back", "case": "signed — the Affinity joins the bundle, back on the tag page" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "SeveranceConfirm", "case": "the pick nets the held bundle to nothing — severance, confirmed with its cost and never refused" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }] },
 
     { "from": "TagPageEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names that origin by the noun table (readme, the tag-page smalls) — `Back to Explore`, `Back to the search`, `Back to Your topics`, `Back to feed`, `Back to the post`, `Back to the comments`, `Back to the profile`, `Back to #<thattag>`; a cold entry with no history falls back to `Back to Explore`, the state the family's boards draw" }] },
     { "from": "TagPageEmpty", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on the topic's own stance — the page has no other" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
@@ -1465,13 +1468,34 @@
     { "from": "AvatarSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
     { "from": "AvatarSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
     { "from": "AvatarSeal", "via": 3, "kind": "detour", "label": "? — Changing your picture", "to": [{ "board": "HelpDialog", "case": "the Changing-your-picture text" }] },
-    { "from": "AvatarSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — shown everywhere you appear" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "AvatarSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — shown everywhere you appear" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }] },
     { "from": "AvatarSeal", "via": 5, "kind": "back", "label": "Back", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
 
     { "from": "GuestGate", "via": 1, "kind": "back", "label": "Keep browsing", "to": [{ "terminal": "back", "case": "the ask closes — the read stays where it was" }] },
     { "from": "GuestGate", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
 
-    { "from": "NetworkError", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ComposeLanded", "case": "reaches this time — the exemplar's signed landing" }, { "terminal": "self", "case": "still offline — the fault stays in place", "info": true }] },
+    { "from": "NetworkError", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ComposeLanded", "case": "reaches this time — the exemplar's signed landing" }, { "terminal": "self", "case": "still offline — the fault stays in place", "info": true }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }] },
+    { "from": "SealFaultRow", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
+    { "from": "SealFaultRow", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
+    { "from": "SealFaultRow", "via": 3, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
+    { "from": "SealFaultRow", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
+    { "from": "SealFaultRow", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
+    { "from": "SealFaultRow", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
+    { "from": "SealFaultRow", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "board": "ComposeLanded", "case": "the refused act removed first — signed, the detail view, still settling" }, { "terminal": "self", "case": "signed with the refused act still staged — the same row line comes back", "info": true }, { "board": "ComposeKeyAbsent", "case": "key elsewhere" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }] },
+    { "from": "SealFaultRow", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeDetails", "case": "one stage back" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
+    { "from": "SealFaultRow", "via": 9, "kind": "advance", "label": "Remove it", "to": [{ "terminal": "self", "case": "the citation leaves the staged set — the row goes, the count and the total fall by one, and the seal is ready to sign again" }] },
+    { "from": "WriteRuleFailed", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
+    { "from": "WriteRuleFailed", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
+    { "from": "WriteRuleFailed", "via": 3, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text" }] },
+    { "from": "WriteRuleFailed", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
+    { "from": "WriteRuleFailed", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
+    { "from": "WriteRuleFailed", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
+    { "from": "WriteRuleFailed", "via": 7, "kind": "cancel", "label": "Keep the draft, sign later", "to": [{ "terminal": "back", "case": "leaves — the draft stays on this device and is offered back the next time you compose" }] },
+    { "from": "PadFailed", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
+    { "from": "PadFailed", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap moves the pick — Retry then signs the pick the pad shows" }] },
+    { "from": "PadFailed", "via": 3, "kind": "advance", "label": "Walk it back", "to": [{ "board": "SeveranceConfirm", "case": "the explicit route — the walk-away is its own act, untouched by the failed one" }] },
+    { "from": "PadFailed", "via": 4, "kind": "cancel", "label": "Cancel", "to": [{ "terminal": "back", "case": "the pad closes — nothing signed, the standing opinion is what it was" }] },
+    { "from": "PadFailed", "via": 5, "kind": "advance", "label": "Retry", "to": [{ "terminal": "back", "case": "signed this time — the stance lands, back where the pad bloomed" }, { "terminal": "self", "case": "still not signed — the fault stays in place", "info": true }] },
 
     { "from": "PadKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
     { "from": "PadKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
@@ -1571,7 +1595,7 @@
     { "from": "ProfileEditSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ProfileEdit", "case": "one stage back" }] },
     { "from": "ProfileEditSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — nothing signed" }] },
     { "from": "ProfileEditSeal", "via": 3, "kind": "detour", "label": "? — Changing your profile", "to": [{ "board": "HelpDialog", "case": "the Changing-your-profile text — panel still owed on the help board" }] },
-    { "from": "ProfileEditSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — the profile updates" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "ProfileEditSeal", "via": 4, "kind": "advance", "label": "Sign the change", "to": [{ "terminal": "back", "case": "signed — the profile updates" }, { "board": "ComposeKeyAbsent", "case": "key elsewhere — the key-absent seal (master)" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }] },
     { "from": "ProfileEditSeal", "via": 5, "kind": "back", "label": "Back", "to": [{ "board": "ProfileEdit", "case": "one stage back" }] },
 
     { "from": "ProfileApplicant", "via": 1, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
@@ -1826,7 +1850,7 @@
     { "from": "ApprovePad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "ApprovePad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — it opens at the standing low default, never at a value the link carried" }] },
     { "from": "ApprovePad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "Invites", "case": "nothing signed — the application is still waiting" }] },
-    { "from": "ApprovePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }] },
+    { "from": "ApprovePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }] },
 
     { "from": "RejectConfirm", "via": 1, "kind": "advance", "label": "Close it", "to": [{ "board": "Invites", "case": "the row leaves this inviter's list and the applicant is told — their account stays a signed-in reader, and any other member can still vouch them in" }] },
     { "from": "RejectConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the application is still waiting" }] },
@@ -1862,6 +1886,6 @@
     { "from": "VouchAskPad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "VouchAskPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — the same standing low default the queue's own pad opens at" }] },
     { "from": "VouchAskPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "VouchAsk", "case": "the pad closes — nothing signed, and the ask is still there to answer" }] },
-    { "from": "VouchAskPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands and the person is now this member's to have vouched in" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }] }
+    { "from": "VouchAskPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands and the person is now this member's to have vouched in" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }] }
   ]
 }

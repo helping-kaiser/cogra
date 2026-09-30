@@ -2,11 +2,13 @@
    transport failure, drawn where one actually happens: the post's seal, after
    Sign and publish didn't reach anything.
 
-   IT IS `ComposeSeal`, UNSENT. Same header slots, same acts card, same three
-   facts — because the whole point of the pattern is that nothing is taken away
-   when a send fails. What the author signed is still exactly what they read a
-   moment ago, still there to check, and the fault is added at the foot rather
-   than replacing the surface with an error screen.
+   IT IS `ComposeSeal`, UNSENT — and now literally so: the board is
+   `ComposeSealBody` in its `offline` state (the failure pack, 2026-09-30,
+   componentized before it was altered). Same header slots, same acts card,
+   same three facts, because the whole point of the pattern is that nothing is
+   taken away when a send fails. What the author signed is still exactly what
+   they read a moment ago, still there to check, and the fault is added at the
+   foot rather than replacing the surface with an error screen.
 
    THE ALERT IS `TransportError`, which is where the system keeps its failure
    voice — the one place `--error` is spent on a line of prose, and the reason
@@ -15,62 +17,25 @@
    THE FOOT IS NOT `SealFooter`. That footer's pair is commit-and-go-back, and
    there is nothing to commit until the send works: what stands here instead is
    the retry, outlined because it is not a new commitment, over the same way
-   back the seal has. */
+   back the seal has.
+
+   THE GRAMMAR, WHOLE (jakob, the failure pack — the seal's faults speak it).
+   A fault is said where the thing it is about stands, and the rest of the
+   surface stays readable:
+   - a fault about the WHOLE SIGNING — no answer, a server fault, a signature
+     that did not verify — takes the commit's place, as drawn here, in its
+     code's words (copy-voice, *Faults by code*); Retry asks the same thing
+     again;
+   - a refusal of ONE STAGED ACT — a cited post or person nothing answers to
+     any more — is said on that act's row, with Remove it and no Retry, and
+     the commit stays, because a refusal stages nothing (`SealFaultRow`);
+   - the WRITE RULE's refusal is not a fault at all: nothing was staged or
+     spent, so the commit's place takes the notice panel and the way out keeps
+     the draft (`WriteRuleFailed`).
+   Off the seal the grammar holds unchanged: a form keeps its fields and the
+   fault takes the submit's place, a pad keeps its pick with the fault above
+   its commit row (`PadFailed`), and a hold, which has no surface to re-raise,
+   says it on the target's row (`RowSigning`). */
 export function Screen() {
-  return (
-    <>
-      <WizardHeader title="What you sign" stageLabel="Last step" help="How signing works" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
-        <QuietNote>Salt maps of the coast road — 2 pictures.</QuietNote>
-
-        <ActsCard
-          rows={[
-            { label: "Post", value: "Salt maps of the coast road", count: "1", countNoun: "post" },
-            {
-              label: "Tags",
-              value: (
-                <span style={{ display: "flex", gap: 6, overflow: "hidden", alignItems: "center" }}>
-                  <Chip label="#fieldnotes" tone="readout" />
-                  <Chip label="#coastroad" tone="readout" />
-                </span>
-              ),
-              count: "2",
-              countNoun: "tag",
-            },
-            {
-              label: "References",
-              value: (
-                <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>The long way home — @ada</span>
-                  <StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />
-                </span>
-              ),
-              count: "1",
-              countNoun: "citation",
-            },
-          ]}
-          total="4 things, signed together"
-          note="They land together, or none does."
-        />
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" action="Change" />
-          <FactRow
-            label="Your opinion"
-            value={<OwnStanceReadout pDirected={0.1} />}
-            action="Adjust"
-          />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
-        </div>
-
-        <div style={{ flex: 1 }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <TransportError message="That didn't send. Try again." />
-          <Button variant="outline" style={{ width: "100%" }}>Retry</Button>
-          <Button variant="text" style={{ width: "100%" }}>Back</Button>
-        </div>
-      </div>
-    </>
-  );
+  return <ComposeSealBody state="offline" />;
 }
