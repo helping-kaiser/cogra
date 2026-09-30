@@ -35,7 +35,7 @@ import androidx.compose.ui.platform.InspectorInfo
  *   past the 70% gate. Nothing takes the stage from a clip that still
  *   qualifies: a second clip scrolling into view changes nothing, and
  *   scrolling back up past a playing clip never ricochets playback to the
- *   one above.
+ *   one above — anywhere below the feed's hard top (clause (e)).
  * - **(b) Instant succession.** The moment the incumbent falls below the
  *   gate — or leaves the list outright — the stage is re-decided, mid-scroll
  *   with the finger still down. Nothing waits for the scroll to settle:
@@ -44,6 +44,16 @@ import androidx.compose.ui.platform.InspectorInfo
  * - **(c) Topmost when empty.** An empty stage goes to the topmost
  *   qualifying clip in list order. No most-visible arithmetic.
  * - **(d) Nothing qualifies, nothing plays** until something does.
+ * - **(e) The feed's hard top re-elects** (jakob 2026-09-30, worded by
+ *   design for the Feed behavior sidecar): when the scroll settles at the
+ *   hard top — where the surface cannot scroll further up, an overscroll
+ *   settling back included, a settle 1px below not — the stage goes to the
+ *   first qualifying clip in feed order, even over an incumbent that still
+ *   qualifies. It is the one boundary of (a): two clips that both fit on
+ *   screen at the top would otherwise leave the lower one on stage forever,
+ *   since it never leaves the gate, and the first could never play again.
+ *   It fires on *landing* there, not while resting there, so an unveil at
+ *   the top still steals nothing.
  *
  * A fling needs no clause of its own: incumbents succeed each other faster
  * than playback can start, and a clip that leaves before painting never
@@ -91,14 +101,18 @@ internal object StageElection {
      * @param incumbent the clip on stage before this decision, or null.
      * @param places every clip on the surface, by its key. A clip that left
      *   the list is simply absent.
+     * @param landedAtHardTop whether the scroll has just settled at the
+     *   feed's hard top — clause (e) — so the stage is decided afresh.
      */
-    fun <K : Any> elect(incumbent: K?, places: Map<K, StagePlace>): K? {
+    fun <K : Any> elect(incumbent: K?, places: Map<K, StagePlace>, landedAtHardTop: Boolean = false): K? {
         // (a) The incumbent keeps the stage while it qualifies. A clip
         // joining the rotation — scrolled into view, or its veil lifting —
-        // changes nothing here.
-        if (incumbent != null && places[incumbent]?.qualifies == true) return incumbent
-        // (b), (c), (d): otherwise the stage goes to the topmost qualifying
-        // clip — decided now, whatever the scroll is doing — or to nobody.
+        // changes nothing here. (e) Landing at the hard top is the one
+        // boundary: there the incumbent's claim lapses.
+        if (!landedAtHardTop && incumbent != null && places[incumbent]?.qualifies == true) return incumbent
+        // (b), (c), (d), (e): otherwise the stage goes to the topmost
+        // qualifying clip — decided now, whatever the scroll is doing — or to
+        // nobody.
         return places.entries
             .filter { it.value.qualifies }
             .minWithOrNull(compareBy<Map.Entry<K, StagePlace>>({ it.value.top }, { it.value.page }))
@@ -170,15 +184,28 @@ internal data class StagePlace(
  * suspension lifts, the stage is decided afresh from an empty stage — the
  * law's topmost qualifying clip, claiming the player anew.
  *
+ * **Landing at the hard top re-decides it** (clause (e) of [StageElection]).
+ * "Settles" is the list's own word for it: no scroll in progress — no drag,
+ * no fling, no programmatic scroll — and nothing left to scroll backward
+ * (`ScrollableState.isScrollInProgress`, `canScrollBackward`). An overscroll
+ * pull at the top is a drag the list could not consume, so letting it go is
+ * a landing too; the list's own offset never left zero, which is what makes
+ * it count. The election fires on the edge into that state, never while
+ * resting in it.
+ *
  * @param placedRows the keys of the rows the list placed in its latest pass,
  *   read inside the election's snapshot; null for a stage with no list.
  * @param suspended whether a sheet covers the surface, read inside the same
  *   snapshot.
+ * @param restingAtHardTop whether the list is at rest at its hard top, read
+ *   inside the same snapshot; null for a surface whose hard top re-elects
+ *   nothing.
  */
 @Stable
 internal class ScrollStage(
     private val placedRows: (() -> Set<Any>)? = null,
     private val suspended: () -> Boolean = { false },
+    private val restingAtHardTop: (() -> Boolean)? = null,
 ) {
 
     private val places = mutableStateMapOf<Any, StagePlace>()
@@ -213,13 +240,26 @@ internal class ScrollStage(
 
     /**
      * Re-decides the stage every time a clip's place, its veil, the list's
-     * rows, or the suspension change — and holds nobody while the surface is
-     * suspended.
+     * rows, the suspension, or the rest at the hard top change — and holds
+     * nobody while the surface is suspended.
      */
     suspend fun run() {
-        snapshotFlow { if (suspended()) null else standing() }
-            .collect { places -> holder = places?.let { StageElection.elect(holder, it) } }
+        var wasResting = false
+        snapshotFlow {
+            Reading(
+                places = if (suspended()) null else standing(),
+                resting = restingAtHardTop?.invoke() == true,
+            )
+        }
+            .collect { now ->
+                val landed = now.resting && !wasResting
+                wasResting = now.resting
+                holder = now.places?.let { StageElection.elect(holder, it, landedAtHardTop = landed) }
+            }
     }
+
+    /** One consistent read of the surface: who stands where, and whether the list rests at its hard top. */
+    private data class Reading(val places: Map<Any, StagePlace>?, val resting: Boolean)
 
     /** The places that count now: all of them, less those whose row the list did not place. */
     private fun standing(): Map<Any, StagePlace> {
@@ -253,18 +293,25 @@ internal val LocalStageVeil = compositionLocalOf { false }
 /**
  * A stage, and the election that keeps it decided for as long as it is
  * composed. With [list], only clips in the rows it placed may hold it; while
- * [suspended], none may.
+ * [suspended], none may; with [hardTopReelects], landing at the list's hard
+ * top decides it afresh.
  */
 @Composable
-internal fun rememberScrollStage(list: LazyListState? = null, suspended: Boolean = false): ScrollStage {
+internal fun rememberScrollStage(
+    list: LazyListState? = null,
+    suspended: Boolean = false,
+    hardTopReelects: Boolean = false,
+): ScrollStage {
     // The latest answer, read by the long-lived election rather than restarting
     // it (developer.android.com/develop/ui/compose/side-effects,
     // `rememberUpdatedState`): the stage keeps its places across a suspension.
     val covered = rememberUpdatedState(suspended)
-    val stage = remember(list) {
+    val stage = remember(list, hardTopReelects) {
         ScrollStage(
             placedRows = list?.let { { it.layoutInfo.visibleItemsInfo.mapTo(HashSet()) { item -> item.key } } },
             suspended = { covered.value },
+            restingAtHardTop = list?.takeIf { hardTopReelects }
+                ?.let { { !it.isScrollInProgress && !it.canScrollBackward } },
         )
     }
     LaunchedEffect(stage) { stage.run() }
@@ -290,10 +337,23 @@ internal fun rememberScrollStage(list: LazyListState? = null, suspended: Boolean
  * stage then decides by the law what plays — not whichever player happened to
  * claim last. Dismissing the sheet lifts it, and the stage is decided again
  * as if the list had scrolled.
+ *
+ * **The feed passes [hardTopReelects]** (clause (e) of [StageElection], jakob
+ * 2026-09-30, ruled for "the feed's hard top"): settling at the top of the
+ * list hands the stage to the first qualifying clip, even over an incumbent
+ * that still qualifies. Other surfaces keep plain incumbency.
  */
 @Composable
-fun ScrollStageHost(list: LazyListState, suspended: Boolean = false, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalScrollStage provides rememberScrollStage(list, suspended), content = content)
+fun ScrollStageHost(
+    list: LazyListState,
+    suspended: Boolean = false,
+    hardTopReelects: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    CompositionLocalProvider(
+        LocalScrollStage provides rememberScrollStage(list, suspended, hardTopReelects),
+        content = content,
+    )
 }
 
 /**

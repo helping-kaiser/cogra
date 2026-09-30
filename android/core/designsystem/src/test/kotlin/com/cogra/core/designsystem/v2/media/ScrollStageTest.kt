@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.media
 
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -26,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -65,6 +69,8 @@ class ScrollStageTest {
     val compose = createComposeRule()
 
     private lateinit var list: LazyListState
+
+    private lateinit var scope: CoroutineScope
 
     @Before
     fun captureLogs() {
@@ -226,9 +232,87 @@ class ScrollStageTest {
         assertOnStage(A)
     }
 
-    private fun show(vararg rows: String, height: Dp = 300.dp) {
+    /**
+     * (e) THE FOUND BUG (jakob 2026-09-30): the feed's first two clips both
+     * fit on screen at the top. Scrolled down, the second takes the stage;
+     * scrolled back, it never leaves the gate, so without the hard-top clause
+     * the first could never play again. Settling at the hard top hands it back.
+     */
+    @Test
+    fun settlingAtTheFeedsHardTopHandsTheStageToTheFirstQualifyingClip() {
+        show(A, B, C, D, height = 400.dp, hardTopReelects = true)
+        assertOnStage(A)
+        // A at 50/200: B takes the stage.
+        settleAt(150f)
+        assertOnStage(B)
+        // A at 150/200 again, B whole — no ricochet on the way up.
+        settleAt(50f)
+        assertOnStage(B)
+
+        settleAt(0f)
+
+        assertThat(list.canScrollBackward).isFalse()
+        assertOnStage(A)
+    }
+
+    /**
+     * (e) An overscroll at the hard top — dragged past it, then let go — counts
+     * as settling there: the list's offset never left zero. While the finger
+     * is still down the scroll has not settled, so the incumbent plays on.
+     */
+    @Test
+    fun anOverscrollAtTheHardTopSettlingBackCountsAsTheHardTop() {
+        show(A, B, C, D, height = 400.dp, hardTopReelects = true)
+        settleAt(150f)
+        settleAt(50f)
+        assertOnStage(B)
+
+        compose.onNodeWithTag(LIST).performTouchInput {
+            down(center)
+            // 50 units to the top, the rest pulls past it.
+            repeat(DRAG_STEPS) { moveBy(Offset(0f, OVERSCROLL_STEP)) }
+        }
+        compose.waitForIdle()
+
+        assertThat(list.firstVisibleItemIndex).isEqualTo(0)
+        assertThat(list.firstVisibleItemScrollOffset).isEqualTo(0)
+        assertOnStage(B)
+
+        compose.onNodeWithTag(LIST).performTouchInput { up() }
+        compose.waitForIdle()
+
+        assertOnStage(A)
+    }
+
+    /** (a) at its boundary: a settle one unit below the hard top never re-elects upward. */
+    @Test
+    fun settlingOnePixelBelowTheHardTopNeverReelectsUpward() {
+        show(A, B, C, D, height = 400.dp, hardTopReelects = true)
+        settleAt(150f)
+        assertOnStage(B)
+
+        // A at 199/200, B whole: both qualify, and the incumbent keeps it.
+        settleAt(1f)
+
+        assertThat(list.canScrollBackward).isTrue()
+        assertOnStage(B)
+    }
+
+    /** The clause is the feed's (ruled for "the feed's hard top"): a surface without it keeps plain incumbency. */
+    @Test
+    fun aSurfaceWithoutTheHardTopClauseKeepsItsIncumbentAtTheTop() {
+        show(A, B, C, D, height = 400.dp)
+        settleAt(150f)
+        assertOnStage(B)
+
+        settleAt(0f)
+
+        assertOnStage(B)
+    }
+
+    private fun show(vararg rows: String, height: Dp = 300.dp, hardTopReelects: Boolean = false) {
         compose.setContent {
-            OneSurface(height = height) {
+            OneSurface(height = height, hardTopReelects = hardTopReelects) {
                 LazyColumn(state = list, modifier = Modifier.size(WIDTH, height).testTag(LIST)) {
                     items(rows.toList(), key = { it }) { row ->
                         if (row == GAP) {
@@ -249,11 +333,12 @@ class ScrollStageTest {
      * host theirs.
      */
     @Composable
-    private fun OneSurface(height: Dp, content: @Composable () -> Unit) {
+    private fun OneSurface(height: Dp, hardTopReelects: Boolean = false, content: @Composable () -> Unit) {
         list = rememberLazyListState()
+        scope = rememberCoroutineScope()
         CompositionLocalProvider(LocalDensity provides Density(1f)) {
             Cogra2PreviewTheme {
-                ScrollStageHost(list) {
+                ScrollStageHost(list, hardTopReelects = hardTopReelects) {
                     Column(Modifier.size(WIDTH, height)) { content() }
                 }
             }
@@ -275,6 +360,22 @@ class ScrollStageTest {
             list.dispatchRawDelta(offset - current)
         }
         compose.waitForIdle()
+    }
+
+    /**
+     * A scroll that runs and then settles at [offset], the way a fling or a
+     * scroll-to-top does: in progress for its frames, at rest at the end.
+     * [scrollTo] moves the list without ever being in progress, which is
+     * the wrong instrument for a clause about settling.
+     */
+    private fun settleAt(offset: Float) {
+        compose.runOnIdle {
+            val current = list.firstVisibleItemIndex * ROW + list.firstVisibleItemScrollOffset
+            scope.launch { list.animateScrollBy(offset - current) }
+        }
+        compose.waitForIdle()
+        assertThat(list.isScrollInProgress).isFalse()
+        assertThat(list.firstVisibleItemIndex * ROW + list.firstVisibleItemScrollOffset).isEqualTo(offset.toInt())
     }
 
     private fun assertOnStage(name: String) {
@@ -312,6 +413,9 @@ class ScrollStageTest {
 
         const val DRAG_STEPS = 10
         const val DRAG_STEP = 15f
+
+        /** Ten of these carry the list well past its top from an offset of 50, touch slop and all. */
+        const val OVERSCROLL_STEP = 20f
 
         /** Past this, A shows under half of itself. */
         const val SCROLLED_PAST_A = 100

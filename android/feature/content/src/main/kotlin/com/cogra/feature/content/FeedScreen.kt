@@ -357,8 +357,12 @@ fun FeedScreen(
                         // same rulings): a card under the sheet is not on
                         // screen in the law's sense, however much of it the
                         // window still measures, and the thread's own stage
-                        // decides what plays until it drops.
-                        ScrollStageHost(listState, suspended = commentsFor != null) {
+                        // decides what plays until it drops. Settling at the
+                        // feed's hard top hands the stage to the first
+                        // qualifying clip (jakob 2026-09-30): two clips that
+                        // both fit at the top would otherwise keep the lower
+                        // one on stage for good.
+                        ScrollStageHost(listState, suspended = commentsFor != null, hardTopReelects = true) {
                             // A feed post spans the screen edge to edge,
                             // and 8dp of surface between cards is the seam
                             // (design/readme.md §13). Only the rows that are
