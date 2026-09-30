@@ -155,6 +155,9 @@ export declare const STANCE_AXIS_NAMES: AxisNames;
 export interface SeveranceWords {
   /** The pad's standing control, and the confirming button in its dialog. */
   control: string;
+  /** The confirming button while its signing is in flight — the control's
+   *  present participle, "Walking it back…". */
+  busy?: string;
   title: (targetLabel: string) => string;
   effect: (targetLabel: string) => string;
   sum: (targetLabel: string, total: string) => string;

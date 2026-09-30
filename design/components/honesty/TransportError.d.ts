@@ -14,6 +14,17 @@ export interface SigningPendingProps {
   /** The key is absent from this device, so the reader must restore it. */
   needsKey?: boolean;
   restoreHref?: string;
+  /**
+   * The line a target's affordance row carries under the face when a
+   * press-and-hold did not sign — short, `label-small`, with `Retry` at its
+   * end. The hold has no surface of its own to re-raise.
+   */
+  row?: boolean;
+  /** The row line's words, where the code says something else — the write
+   *  rule's "You can't sign right now." Defaults to "That didn't sign." */
+  message?: string;
+  /** The row line's Retry. Omit where retrying cannot change the answer. */
+  onRetry?: () => void;
 }
 
 export declare function SigningPending(props: SigningPendingProps): JSX.Element;

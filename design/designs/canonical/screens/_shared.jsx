@@ -2679,6 +2679,7 @@ const POST_OPINION_HOLDERS = [
    every profile, post and comment pad exactly as before. */
 const AFFINITY_SEVERANCE = {
   control: "Disconnect",
+  busy: "Disconnecting…",
   title: (name) => `Disconnect from ${name}?`,
   effect: (name) =>
     `You end up with no opinion towards ${name}. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`,

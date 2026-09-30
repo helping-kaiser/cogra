@@ -123,6 +123,8 @@ export const NO_STANDING_LABEL = "No opinion yet";
 export const STANCE_SEVERANCE_WORDS = {
   /** The pad's standing control, and the confirming button in its dialog. */
   control: "Walk it back",
+  /** The confirming button's label while its signing is in flight. */
+  busy: "Walking it back…",
   title: () => "Walk it all back?",
   effect: (targetLabel) =>
     `Your opinion of ${targetLabel} drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`,

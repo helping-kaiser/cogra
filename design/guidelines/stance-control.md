@@ -161,7 +161,15 @@ the same button, held, signs the gentle default outright.
 
 ## Confirmation
 
-**The hold answers immediately.** The resting target updates to the new
-opinion at once, and a snackbar confirms the signature. A gesture that
-stages a priced act must never be silent: silence reads as failure and
-invites the same act again.
+**The hold is never silent, and it waits for its signature** (the
+failure pack). A gesture that stages a priced act must never be
+silent: silence reads as failure and invites the same act again. The
+anchor goes inert at the hold, and past 200ms the target's row says
+`Signing…` under the face. Once the signature is taken, the resting
+target updates to the new opinion and a snackbar confirms it — before
+the record lands, which is what `Still settling` is for. A hold that
+did not sign leaves the face where it was, and the row says `That
+didn't sign.` with `Retry`. The snackbar never carries a failure.
+`Set` waits the same way: the pad stays open, `Setting…`, until the
+signature is taken, and a failure keeps it open at the pick with the
+fault above its commit row.

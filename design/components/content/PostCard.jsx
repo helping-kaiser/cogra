@@ -96,6 +96,7 @@ export function PostCard({
   stanceDefaultPick,
   stanceOnOpenHistory,
   stancePendingPick,
+  stanceSigning,
   score,
   onOpenScore,
   comments,
@@ -472,6 +473,7 @@ export function PostCard({
               defaultPick={stanceDefaultPick}
               onOpenHistory={stanceOnOpenHistory}
               pendingPick={stancePendingPick}
+              signing={stanceSigning}
               node={node && "stance"}
             />
           )}

@@ -94,6 +94,12 @@ export interface PostCardProps {
    */
   stancePendingPick?: { pDirected: number; pInterest: number };
   /**
+   * A signed act on this post in flight or failed — the hold's row line with
+   * the pad closed, Set's state with it open. Pass-through to
+   * `StanceControl`'s `signing`.
+   */
+  stanceSigning?: "busy" | "failed";
+  /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
    * explanation is item 13's Post score drill-down, still undesigned.
