@@ -7007,8 +7007,9 @@ key, with nothing on screen saying so.
   application allows (`ApplicantKeyElsewhere`).
 - **Forget-and-sign-out asks, when it would take the only key** — the
   undo-vs-confirm rule's instance (§11, *Dialogs*). `SignOutConfirm`
-  leads with `Make a recovery code`; signing out leaves the unbacked key
-  on the device, sealed; erasing it stays one press away, because the
+  leads with `Make a recovery code` and names everything the opt-in
+  would clear — the key, the draft, the picks kept pending; signing out
+  leaves them on the device, sealed; erasing them stays one press away, because the
   don't-remember opt-in exists for shared devices and a shared device
   needs a clean exit. The handle change is the rule's other named
   instance; its dialog is drawn with the handle's own round.

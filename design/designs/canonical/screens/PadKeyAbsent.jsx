@@ -41,7 +41,9 @@
    - Several can wait at once, one per post. When the key is restored they
      sign together, in one batch the reader reviews first — never silently.
    - A remembered sign-out keeps them, as it keeps everything on the device.
-     A sign-out that forgets the account clears them with the draft.
+     A sign-out that forgets the account clears them with the draft — and
+     where it would also take an unbacked key, `SignOutConfirm` names all
+     three and keeps them sealed unless the reader erases them.
    - A session invalidated from elsewhere — `Sign out everywhere else` on
      another device, a password changed or reset there, a reused token
      caught — never destroys

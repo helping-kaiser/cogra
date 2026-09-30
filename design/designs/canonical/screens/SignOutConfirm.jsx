@@ -11,8 +11,11 @@
    think-twice case, so the Sign out row raises this dialog instead of
    signing out.
 
-   WHAT IT SAYS, AND WHAT IT OFFERS. The unbacked key is not erased by
-   default: signing out leaves it on this device, sealed — unusable by
+   WHAT IT SAYS, AND WHAT IT OFFERS. It names all three things the opt-in
+   would clear — the key, the draft, and any picks kept pending (jakob's
+   ruling on the review) — because a reader deciding what to lose must see
+   everything that goes. None is erased by default: signing out leaves them
+   on this device, sealed with the key — unusable by
    anyone until this account signs in here again, online, with its current
    credentials. That is the same fate the key meets when the session is ended
    from somewhere else (below), so the two paths never disagree about what
@@ -64,8 +67,9 @@ export function Screen() {
             color: "var(--text-secondary)",
           }}
         >
-          This browser holds the only copy of your key. Signing out leaves it here, locked until you sign in on this
-          browser again. Erase it instead, and no one — including CoGra — can bring it back.
+          This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you
+          kept pending here, locked until you sign in on this browser again. Erase them instead, and no one — including
+          CoGra — can bring them back.
         </p>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, marginTop: 24 }}>
           <Button size="sm">Make a recovery code</Button>
