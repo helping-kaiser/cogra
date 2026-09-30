@@ -237,11 +237,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   under the title and under the row: **`Read aloud to people who
   can't see it.`** — the "?" is for the reader who wants the rest,
   not for the one who needs to know why the field is there.
-- **Your key** (key absent at the seal and at the stance pad): Signing needs your key, and
-  it isn't on this browser. Nothing is signed or sent without it — the
-  draft stays on this device. / Restore the key with your recovery
-  code to finish. Restoring here is the only way to complete this
-  write.
+- **Your key** (key absent — the seal, the stance pad, and the two
+  settings screens): Signing needs your key, and it isn't on this
+  browser — nothing is signed without it. / A recovery code brings the
+  key to any device. Until it's here, anything waiting on it stays on
+  this device. *(One text for all four key-absent surfaces, the key-loss
+  round: nothing in it assumes a write in progress.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
