@@ -101,6 +101,42 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantKeyElsewhere.dc.html",
+      "title": "Applicant · the key made elsewhere",
+      "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeyElsewhereNoBackup.dc.html",
+      "title": "Key elsewhere · no backup to restore from",
+      "x": 1920,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "RestoreLength.dc.html",
+      "title": "Restore · the code is the wrong length",
+      "x": 1920,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeyCeremonyUnsupported.dc.html",
+      "title": "Your key · this browser can't hold one",
+      "x": 1920,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "ApplicantFeed.dc.html",
       "title": "Applicant · first steps",
       "x": 0,
@@ -1272,10 +1308,10 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
-      "h": 4074,
+      "w": 2030,
+      "h": 4173,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1326,9 +1362,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
+      "w": 2030,
       "h": 533,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -1365,7 +1401,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 4456,
+      "h": 4733,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1589,6 +1625,60 @@
       "file": "DeleteAccountMail.dc.html",
       "title": "Delete account · check your mail",
       "x": 1920,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackupNone.dc.html",
+      "title": "Settings · make a recovery code, none made yet",
+      "x": 2400,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackupError.dc.html",
+      "title": "Settings · a new recovery code, the current one refused",
+      "x": 2880,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "PadPending.dc.html",
+      "title": "Key absent · a pick kept pending",
+      "x": 2880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "YourKeyGate.dc.html",
+      "title": "Settings · your key, behind the browser's gate",
+      "x": 3840,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SignOutConfirm.dc.html",
+      "title": "Settings · signing out without a backup",
+      "x": 4320,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "NoScreenLock.dc.html",
+      "title": "Settings · no screen lock (Android)",
+      "x": 3360,
       "y": 2988,
       "w": 390,
       "h": 844,
@@ -1994,7 +2084,7 @@
       "x": -340,
       "y": 2120,
       "w": 290,
-      "text": "ENTRY · Your key\n\nCreated on this device, never held by CoGra. 'Create my recovery code' first opens the think-twice dialog — Cancel falls back to Your key, 'Show my code' commits. The code screen is a TRAP: no back arrow, the only way out is the code typed or pasted back ('I've written it down'). Copy stays — pasting into a password manager is a legitimate keeping. Declining backup is a destructive dialog whose SAFE action is filled.",
+      "text": "ENTRY · Your key\n\nCreated on this device, never held by CoGra. 'Create my recovery code' first opens the think-twice dialog — Cancel falls back to Your key, 'Show my code' commits. The code screen is a TRAP: no back arrow, the only way out is the code typed or pasted back ('I've written it down'). Copy stays — pasting into a password manager is a legitimate keeping. Declining backup is a destructive dialog whose SAFE action is filled, and accepting the risk answers with a snackbar. Both dialogs' scrim and Back take the safe answer. The key exists only once the ceremony ends — attached, and its backup uploaded, at the typed-back confirmation, or attached alone at 'I accept the risk'; every other exit leaves nothing. A browser without WebCrypto Ed25519 meets the refusal board instead of the ceremony.",
       "page": "entry"
     },
     {
@@ -2002,7 +2092,7 @@
       "x": -340,
       "y": 3180,
       "w": 290,
-      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (hold a face; a plain tap signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance.",
+      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (a tap opens it; press and hold signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance.",
       "page": "entry"
     },
     {
@@ -2010,7 +2100,7 @@
       "x": -340,
       "y": 4240,
       "w": 290,
-      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key.",
+      "text": "ENTRY · Sign in & restore\n\nSign in (with the APK line), password reset (no account enumeration; reset revokes every session), restoring the key, and the key-elsewhere banner. 'Restore your key' and 'Key elsewhere' carry a wording tweak: browser ('on this browser') vs app ('in this app') — the Android app says app, the web says browser. Login restores the service session; only the recovery code restores the key. The code is read folded (case, dashes and I/L/O never matter); a wrong length is named, every other failure is one line. An account with no backup gets a card with no restore — the way the key can come instead; an applicant whose key was made elsewhere may restore it or make a new one.",
       "page": "entry"
     },
     {
@@ -2066,7 +2156,7 @@
       "x": -340,
       "y": 0,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal and the stance pad): Signing needs your key, and it isn't on this browser. Nothing is signed or sent without it — the draft stays on this device. / Restore the key with your recovery code to finish. Restoring here is the only way to complete this write.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs your opinion on the post you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your first opinion': Vouching back signs your opinion of the person who vouched you in — your first one, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries your opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal, the stance pad, and the two settings screens): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs your opinion on the post you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your first opinion': Vouching back signs your opinion of the person who vouched you in — your first one, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries your opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
       "page": "patterns"
     },
     {

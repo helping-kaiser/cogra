@@ -3,7 +3,15 @@
    it: the sign-in survives, and a code can still be made later while the key
    exists. THE SAFE ACTION IS THE FILLED ONE, as on every think-twice dialog:
    Go back wears the filled button, and accepting the risk stays a text button
-   the reader has to mean. */
+   the reader has to mean.
+
+   THE SCRIM AND BACK TAKE THE SAFE ANSWER (the key-loss round): a press
+   outside, or the system's Back, is Go back — nothing is made.
+
+   ACCEPTING SAYS SO. The task card the reader came from completes and leaves
+   the feed, so a silent close would read as nothing having happened; the
+   snackbar names what did — `Key made — no backup yet. You can make a code in
+   settings.` — which is also where `SettingsBackupNone` waits. */
 export function Screen() {
   return (
     <>

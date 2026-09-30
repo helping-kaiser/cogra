@@ -1463,15 +1463,17 @@ Object.assign(FLOW_MARKERS, {
   ],
   // The ceremony's two dialogs. Both are scanExempt: the arrow and the words
   // beneath the scrim are inactive while the ask is open, so only the
-  // dialog's own pair carries a number — the hand boards stamped exactly
-  // these two and left the arrow bare.
+  // dialog's own pair and the scrim it sits on carry numbers — the scrim
+  // (and system Back with it) takes the safe answer (the key-loss round).
   KeyConfirm: [
     { n: 1, find: ">Cancel</button>", tag: "button" },
     { n: 2, find: ">Show my code</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   KeyDecline: [
     { n: 1, find: ">I accept the risk</button>", tag: "button" },
     { n: 2, find: ">Go back</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
   // Neither draws a back arrow: a mail link has no previous screen of ours.
@@ -1616,6 +1618,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Your key"', tag: "button" },
     { n: 2, find: ">Restore the key</button>", tag: "button", all: true },
     { n: 3, find: ">Keep it pending, restore later</button>", tag: "button" },
+    // The wash is the outside press, and the system's Back rides it: both
+    // drop the pick — only the text button keeps (the key-loss round).
+    { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // The pad's one irreversible gesture. scanExempt like every dialog board, so
   // only the dialog's own pair and the scrim it sits on carry numbers.
@@ -2118,6 +2123,57 @@ Object.assign(FLOW_MARKERS, {
   OnboardingPublic: introCard("Next"),
   OnboardingLayers: introCard("Next"),
   OnboardingVouch: introCard("Start reading"),
+});
+
+/* THE KEY-LOSS ROUND'S BOARDS (2026-09-30). Each copies the anatomy of the
+   board it is a state of, so its markers reuse that board's `find` patterns;
+   the two shell exemplars number only the card that is their subject, the
+   rest of their shell being wired on the board that owns it (readme §13,
+   Canvas pages and flows — the pattern-exemplar rule). */
+Object.assign(FLOW_MARKERS, {
+  KeyCeremonyUnsupported: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'href="/downloads/app-debug.apk"', tag: "a" },
+  ],
+  ApplicantKeyElsewhere: [
+    { n: 1, find: ">Restore the key</button>", tag: "button" },
+    { n: 2, find: ">Make a new key</button>", tag: "button" },
+  ],
+  RestoreLength: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Recovery code"', tag: "div" },
+    { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
+    { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
+  YourKeyGate: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
+    { n: 3, find: ">Show my key</button>", tag: "button" },
+  ],
+  SettingsBackupNone: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Create my recovery code</button>", tag: "button" },
+  ],
+  SettingsBackupError: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
+    { n: 3, find: ">Create a new recovery code</button>", tag: "button" },
+  ],
+  // The settings page beneath is wired on `Settings`; the dialog's three
+  // answers and its scrim carry this board's numbers.
+  SignOutConfirm: [
+    { n: 1, find: ">Make a recovery code</button>", tag: "button" },
+    { n: 2, find: ">Sign out, keep it locked</button>", tag: "button" },
+    { n: 3, find: ">Erase it and sign out</button>", tag: "button" },
+    { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // scanExempt like every dialog board: the backup screen beneath is wired on
+  // `SettingsBackup`, so only the warning's pair and its scrim carry numbers.
+  NoScreenLock: [
+    { n: 1, find: ">Go on anyway</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
 });
 
 /* THE POST-MVP TREE'S BOARDS (the push round, 2026-09-22).

@@ -71,6 +71,13 @@ export interface StanceControlProps {
    * Nothing to walk back yet, so the pad omits the walk-away. Off by default.
    */
   firstConnection?: boolean;
+  /**
+   * A pick kept pending with the key elsewhere (`PadKeyAbsent`'s "Keep it
+   * pending, restore later"). The anchor shows the kept pick's face, and a
+   * `PendingMarker` under it says it is waiting for the key. The bundle is
+   * unchanged — nothing is signed until the key is restored. Off by default.
+   */
+  pendingPick?: StancePair;
   /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`. */
   node?: string;
 }

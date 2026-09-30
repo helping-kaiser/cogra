@@ -15,11 +15,14 @@
    Drawing the card empty would promise a container that fills; drawing it with
    a placeholder would put a second way of saying "no key" under the first.
 
-   WHAT STAYS IS THE PARAGRAPH, and it is the same paragraph, unchanged. It
-   says what the key is, that it lives only in this browser, and what holding a
-   copy means — every word of which is exactly why the screen is empty. A
-   reader who arrives here without a key learns the thing the screen exists to
-   teach, and the notice above says how to see it.
+   WHAT STAYS IS THE PARAGRAPH, with one clause changed (the key-loss round).
+   It says what the key is, where it lives, and what holding a copy means —
+   every word of which is exactly why the screen is empty. `YourKey`'s "lives
+   only in this browser" would sit one line under "There is no key on this
+   browser to show", two opposite facts a line apart, so here the key lives
+   "only on the device it was made on". A reader who arrives here without a
+   key learns the thing the screen exists to teach, and the notice above says
+   how to see it.
 
    NO ESCAPE HATCH: nothing is staged, so the back arrow is the whole way
    out. */
@@ -50,7 +53,7 @@ export function Screen() {
             color: "var(--text-secondary)",
           }}
         >
-          This key signs everything you publish, and it lives only in this browser. Store a copy
+          This key signs everything you publish, and it lives only on the device it was made on. Store a copy
           somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act
           as you.
         </p>

@@ -343,8 +343,11 @@ outlined button). Nothing carries a 2px border.
 ### Motion
 
 **M3 standard easing and durations. Motion clarifies where something
-came from; it never performs.** Reduced-motion preferences are honoured
-on both platforms. The two motions that exist in the product:
+came from; it never performs.** **Reduced motion is a house quality
+bar** (jakob, the key-loss round): WCAG places it at AAA, and the house
+holds every surface to it anyway — on both platforms, under the OS's
+own preference, every motion either stops travelling and fading or
+does not run. The two motions that exist in the product:
 
 - the collapsing top's 200ms `translateY(-110%)` exit — it hides only
   once half its own slot has scrolled past, and returns only after about
@@ -392,7 +395,10 @@ rule covers all three button variants:
   ground and on the loud surface alike, in both themes. Nothing removes it.
 - **Disabled** — **38%** opacity on the whole control (Material's value,
   and the one place the AA guarantee is waived by convention: a disabled
-  control is not an available target).
+  control is not an available target). **A submit that cannot go yet is
+  visible-but-disabled, with the reason on screen** (jakob, the key-loss
+  round): never hidden, and never left live only to refuse on press — the
+  reader sees the commitment exists and reads what it is waiting for.
 - **Selected** — colour only: the bottom bar's active slot moves from
   `onSurfaceVariant` to `onSurface` and to the filled icon cut; the
   chronicle filter swaps an outlined button for a filled one. No
@@ -401,6 +407,17 @@ rule covers all three button variants:
 Every pressable component carries `class="cg-state cg-focus"`, so
 anything a consumer builds gets the same behaviour by adding those two
 classes.
+
+### Loading
+
+**M3's ladder, and nothing else** (jakob, the key-loss round). A wait
+under **200ms** shows nothing — an indicator that flashes is noise. From
+200ms to **5s** the wait is indeterminate: `LoadingState` stands in the
+slot the content will take, so nothing moves when it arrives. Past 5s
+the wait is determinate — progress that says how far along it is. The
+**pull-to-refresh spinner** is the one named exception: it answers the
+gesture at once, because the pull itself asked for it.
+
 ### Imagery
 
 **An avatar is the actor's picture where they have one**, and a
@@ -807,7 +824,8 @@ Nothing vanishes silently, and none of these use `error` colouring.
 
 Part of the bar from day one. Every `on`-pair meets AA. Colour never
 carries meaning alone — stance is always accompanied by words. 48px
-minimum targets. Every icon-only control is labelled. **Every drag
+minimum targets — the platform bar (48dp, 44pt), which the house holds
+over WCAG AA's 24px floor. Every icon-only control is labelled. **Every drag
 gesture has a non-drag equivalent.** Both themes are designed.
 
 ---
@@ -845,6 +863,25 @@ hosted-font substitution is gone and this system matches the product's
 own no-external-request rule.
 
 ### Dialogs
+
+**Whether an act asks first is one rule, with three answers** (jakob,
+the key-loss round):
+
+- **Undo** for an act that is reversible and private — hiding someone,
+  unsaving a post. It happens on the press, and the snackbar carries the
+  way back.
+- **A think-twice dialog** for an act that is irreversible, or public
+  and consequential for someone else — removing a post, discarding a
+  draft, walking an opinion all the way back, closing an application,
+  declining a backup, changing the handle (a freed handle is claimable
+  and its links die), and signing out of a device set to forget the
+  account while it holds the only copy of the key.
+- **Nothing** for an act the reader undoes by doing it again — a switch
+  flipped back, a pick made over.
+
+An act is placed by what it costs, never by how often it happens: a
+dialog in front of a cheap, private act teaches the reader to press
+through dialogs, and that habit is what the costly ones then meet.
 
 **Emphasis goes to the outcome a distracted reader should land on.** M3's
 dialog vocabulary is text buttons only, and the source follows it, which
@@ -2123,8 +2160,9 @@ that no single page owned.
   guest's tap on `New post` or the stance face now starts the gate
   rather than the journey — so Main, FeedBare and WalletGuest leave
   those selectors. KeyElsewhere leaves the stance-face selector for
-  the same reason: its face diverges, the pad on press-and-hold and
-  the key gate on a tap. The applicant gaps stay in the census; their
+  the same reason: its face diverges — a tap and a press-and-hold both
+  open the pad carrying the key notice, so nothing signs without the
+  key. The applicant gaps stay in the census; their
   boards are still owed.
 
 ### The video conform round — 2026-09-03
@@ -6956,6 +6994,91 @@ to compete got their chooser.
   device as the account's own drafts**, never sent — the account
   persists, so a re-application finds them waiting, nothing silently
   deleted and nothing landing unsigned.
+
+### The key-loss round — 2026-09-30
+
+The V1.0 audit's K2 cluster (key loss and the key's lifecycle), ruled
+by jakob in one sitting: eleven entries adopted as recommended, and four
+rulings. The drawn boards assumed a recovery code always exists and
+never said when a key is made; together the findings showed several
+ways a reader could end up with no working code, or no copy of their
+key, with nothing on screen saying so.
+
+- **The key exists only once its ceremony ends.** The seed and the code
+  are made when the code is shown; the key is attached, kept, and its
+  backup uploaded at the typed-back confirmation — or attached alone at
+  `I accept the risk`. Every other exit, a closed tab or a killed app
+  included, leaves nothing. A re-key uploads the new backup only after
+  its code is typed back, so **the old code keeps working until the new
+  one is confirmed**, and an abandoned code screen costs nothing.
+- **The recovery code is read the way auth.md reads it** — case, dashes
+  and spaces never matter, and `I`, `L`, `O` fold to `1`, `1`, `0` — in
+  the master's `readRecoveryCode`, for the typed-back gate and its
+  divergence alike.
+- **A declined backup can be made late** (`SettingsBackupNone`): the row
+  reads `Not made yet`, and the screen takes KeyDecline's consequence
+  and the ceremony's own code screen. No field, because nothing is
+  replaced.
+- **A key that cannot come is not offered a restore.** With no backup,
+  every key-absent notice drops `Restore the key` and says how the key
+  can come instead (`KeyElsewhereNoBackup`); an applicant whose key was
+  made elsewhere may restore it or make a new one, which the unapproved
+  application allows (`ApplicantKeyElsewhere`).
+- **Forget-and-sign-out asks, when it would take the only key** — the
+  undo-vs-confirm rule's instance (§11, *Dialogs*). `SignOutConfirm`
+  leads with `Make a recovery code` and names everything the opt-in
+  would clear — the key, the draft, the picks kept pending; signing out
+  leaves them on the device, sealed; erasing them stays one press away, because the
+  don't-remember opt-in exists for shared devices and a shared device
+  needs a clean exit. The handle change is the rule's other named
+  instance; its dialog is drawn with the handle's own round.
+- **A session ended from elsewhere never destroys the only key** (jakob,
+  confirmed by the implementation side's security check). On an account
+  set to forget this device, `Sign out everywhere else`, a password
+  changed or reset elsewhere, or a reused token caught keeps an unbacked
+  key and any picks kept pending on the device, sealed — unusable until
+  this device signs in again, online, with the account's current
+  credentials. This bends only the don't-remember opt-in: for every
+  other account nothing was ever purged. An invalidation ends the
+  session; it is not a remote wipe.
+- **The recovery-code screen stays screenshot-able** (jakob, overruling
+  the audit). The key export keeps `FLAG_SECURE`; the code screen does
+  not, because readers new to keys keep their code as a screenshot, and
+  a black one would punish exactly them. The docblock states the
+  asymmetry so no later pass closes it.
+- **Every exit of the key's screens answers.** The ceremony's two
+  dialogs take the safe answer on scrim and Back, and declining says
+  what it made; Android's Back on the code screen names the way out;
+  a copy says `Code copied`; a code made from settings returns there
+  with a snackbar. The replace screen draws its refused code
+  (`SettingsBackupError`), tells a browser that lost its code where to
+  go, and Android's lockless phone is warned first (`NoScreenLock`).
+  The export gets its browser gate (`YourKeyGate`), its copies are
+  flagged sensitive, and restore names a wrong length
+  (`RestoreLength`), goes offline to `NetworkError`, and says where the
+  key is now.
+- **A browser that cannot hold a key is told so** before anything is
+  minted (`KeyCeremonyUnsupported`), in the key-absent notice's
+  tertiary, never error.
+- **A kept pick has exits and a life.** A hold on the key-elsewhere
+  feed opens `PadKeyAbsent` like a tap, so nothing signs without the
+  key; outside press and Back drop the pick, and only the text button
+  keeps it. A kept pick wears its face on the post's anchor with
+  `Waiting for your key` under it (the `PadPending` plate), lives on the
+  device, and signs with the others in one batch the reader reviews
+  once the key is restored — the review is this round's one gap.
+- **One key-absent "?"** serves the seal, the pad and both settings
+  twins, and `YourKeyAbsent` stops saying the key lives in the browser
+  it is absent from.
+- **The gate**: 208 → **218 screens**, 1510 → **1536 edges**, 0 → **1
+  gap** (the kept picks' review), **flows 62 → 63**, every one
+  resolved. The witness was re-blessed three times, each deliberately:
+  the new `make-a-recovery-code-later` flow, the `Restore the key`
+  control's census growing from five boards to six, and the triage
+  meeting its gap. Outside the round's new boards, five moved a line
+  or a badge — `SettingsBackup`, `YourKeyAbsent`, and the scrim badge on
+  `KeyConfirm`, `KeyDecline` and `PadKeyAbsent` — plus the four maps
+  that follow the edges.
 
 ## 15. Index
 

@@ -237,11 +237,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   under the title and under the row: **`Read aloud to people who
   can't see it.`** — the "?" is for the reader who wants the rest,
   not for the one who needs to know why the field is there.
-- **Your key** (key absent at the seal and at the stance pad): Signing needs your key, and
-  it isn't on this browser. Nothing is signed or sent without it — the
-  draft stays on this device. / Restore the key with your recovery
-  code to finish. Restoring here is the only way to complete this
-  write.
+- **Your key** (key absent — the seal, the stance pad, and the two
+  settings screens): Signing needs your key, and it isn't on this
+  browser — nothing is signed without it. / A recovery code brings the
+  key to any device. Until it's here, anything waiting on it stays on
+  this device. *(One text for all four key-absent surfaces, the key-loss
+  round: nothing in it assumes a write in progress.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -492,7 +493,12 @@ doesn't know which field is wrong.
   local format failure.
 - `That email and password don't match.` — SignIn's form-level fault
   line, in the failure voice the register already writes in.
-- `That code doesn't check out.` — Restore's recovery-code field.
+- `That code doesn't check out.` — Restore's recovery-code field, and
+  every other field that asks for the current code (`SettingsBackup`,
+  `YourKeyGate`).
+- `A recovery code is 26 characters.` — Restore's recovery-code field,
+  when the code is the wrong length once folded: the one shape problem a
+  reader can act on (auth.md). Drawn on `RestoreLength`.
 - `That doesn't match the code above.` — the key ceremony's confirm
   field, on RecoveryCodeMismatch.
 
@@ -724,8 +730,12 @@ you sign out.`
 always uses the newest one. Your current code was made on 12.08.2026.`,
 the field `Current recovery code`, the commitment `Create a new recovery
 code`, and last: `The new code is shown once and never stored. Have
-somewhere to write it down before you go on — the old code stops working
-as soon as the new one exists.`
+somewhere to write it down before you go on — the old code keeps working
+until the new one is confirmed.` A refused current code wears Restore's
+line, `That code doesn't check out.`, and under the field a browser that
+lost its code is told where to go instead of retrying forever: `Lost it?
+This browser can't make a new code without the current one. If the
+Android app holds your key, make the new code there.`
 
 **Your key** (`YourKey`) keeps web's body verbatim, and names the
 formats exactly, which is §7's stated exception: `Your actor key` ·
@@ -809,6 +819,86 @@ open. The commitment is `Confirm the code`, which is what pressing it
 does — *Confirm email change* is what a reader would have believed it
 did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
+
+## The key's lifecycle
+
+The key-loss round's lines (2026-09-30): the ceremony's exits, the
+backup made late or replaced, the key revealed, restored, or absent
+with no backup to restore from.
+
+**A browser that can't hold a key** (`KeyCeremonyUnsupported`) is told
+so in the key-absent notice's voice, never a fault's: `This browser
+can't hold a key` / `Open CoGra in a current Chrome, Firefox or Safari,
+or in the Android app.` — and the app is a door, the login landing's own
+link in its own words: `On Android? Download the app (APK)`.
+
+**Declining the backup** says what it made, because the task card the
+reader came from leaves the feed with it:
+`Key made — no backup yet. You can make a code in settings.`
+
+**The code screen** answers Android's Back with the way out rather than
+swallowing it: `Type the code back to finish`. A copy that worked says
+`Code copied` in the browser — the line the refused copy already
+speaks in; Android's own clip confirmation answers there. A code made
+or replaced from settings returns to settings with
+`Your key is backed up with the new code.`
+
+**The backup made late** (`SettingsBackupNone`): the Recovery code row
+reads `Not made yet`, and the Key backup footnote stops promising a way
+back — `Your key signs everything you publish and lives only in this
+browser. Until you make a recovery code, it can't be brought back.` The
+screen is `Make a recovery code`, with KeyDecline's consequence word for
+word, the ceremony's `Create my recovery code`, and last: `The code is
+shown once and never stored. Have somewhere to write it down before you
+go on.`
+
+**The key elsewhere, with no backup** (`KeyElsewhereNoBackup`): restore
+cannot work, so the card does not offer it, and says how the key can
+come instead — `This account has no backup, so the key can't be brought
+here yet. Make a recovery code on the device that holds it, then restore
+it here. Until then, anything you sign waits as pending.` Every
+key-absent notice takes that sentence in place of its restore line for
+this reader.
+
+**The applicant's key elsewhere** (`ApplicantKeyElsewhere`): `Your
+application's key was made on another device. Restore it here with your
+recovery code, or make a new key — until you're approved, a new one
+costs nothing.` — `Restore the key` · `Make a new key`.
+
+**A pick kept pending** wears `Waiting for your key` under the post's
+anchor, in `PendingMarker`'s quiet type — never `Still settling`, which
+means signed and not yet ordered.
+
+**A restore that worked** says where the key is now, in the platform
+noun: `Your key is on this browser now.` · `Your key is in this app now.`
+
+**Your key, with the key elsewhere** (`YourKeyAbsent`) keeps `YourKey`'s
+paragraph with one clause changed, so it does not contradict the notice
+above it: `This key signs everything you publish, and it lives only on
+the device it was made on.`
+
+**The key behind its gate** (`YourKeyGate`, a browser whose seed is
+sealed): `On this browser your key is sealed inside its backup. Enter
+your recovery code to open it and see the key.` — the field `Current
+recovery code`, the commitment `Show my key`, a refused code in
+Restore's line. Either copy on `YourKey` answers with the snackbar
+`Copied`.
+
+**Signing out without a backup** (`SignOutConfirm`, the don't-remember
+switch on and no recovery code): `Sign out without a backup?` / `This
+browser holds the only copy of your key. Signing out leaves your key,
+your draft and any opinions you kept pending here, locked until you sign
+in on this browser again. Erase them instead, and no one — including
+CoGra — can bring them back.` — `Make a recovery code` ·
+`Sign out, keep it locked` · `Erase it and sign out`. The body names
+all three things the opt-in would clear — the key, the draft, the picks
+kept pending (jakob's ruling). The app renders the platform noun as
+`This app` and `in this app`.
+
+**No screen lock** (Android, in front of every reveal or replace):
+`This phone has no screen lock` / `Anyone who picks it up could see your
+key or replace your recovery code. You can go on, or set a screen lock
+first.` — `Go on anyway` · `Cancel`.
 
 ## The profile save
 
