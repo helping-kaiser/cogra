@@ -442,6 +442,7 @@
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "status": "resolved",
       "startsOn": [
+        "ApplicantKeyElsewhere",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -449,11 +450,12 @@
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 5 boards → Restore",
+        "start · «Restore the key» on 6 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
         "Restore",
+        "ApplicantKeyElsewhere",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -1758,6 +1760,12 @@
         "make-your-key",
         "verify-the-email"
       ]
+    },
+    "ApplicantKeyElsewhere": {
+      "flows": [
+        "restore-your-key"
+      ],
+      "endpoint": []
     },
     "ApplicantRejected": {
       "flows": [

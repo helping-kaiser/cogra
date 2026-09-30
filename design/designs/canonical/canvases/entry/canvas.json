@@ -101,6 +101,24 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantKeyElsewhere.dc.html",
+      "title": "Applicant · the key made elsewhere",
+      "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeyElsewhereNoBackup.dc.html",
+      "title": "Key elsewhere · no backup to restore from",
+      "x": 1920,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "RestoreLength.dc.html",
       "title": "Restore · the code is the wrong length",
       "x": 1920,
@@ -408,9 +426,9 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -2160,
+      "x": -2450,
       "y": 0,
-      "w": 1740,
+      "w": 2030,
       "h": 4173,
       "page": "entry",
       "title": "Entry · flow map"

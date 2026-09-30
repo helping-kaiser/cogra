@@ -845,6 +845,19 @@ word, the ceremony's `Create my recovery code`, and last: `The code is
 shown once and never stored. Have somewhere to write it down before you
 go on.`
 
+**The key elsewhere, with no backup** (`KeyElsewhereNoBackup`): restore
+cannot work, so the card does not offer it, and says how the key can
+come instead — `This account has no backup, so the key can't be brought
+here yet. Make a recovery code on the device that holds it, then restore
+it here. Until then, anything you sign waits as pending.` Every
+key-absent notice takes that sentence in place of its restore line for
+this reader.
+
+**The applicant's key elsewhere** (`ApplicantKeyElsewhere`): `Your
+application's key was made on another device. Restore it here with your
+recovery code, or make a new key — until you're approved, a new one
+costs nothing.` — `Restore the key` · `Make a new key`.
+
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`
 
