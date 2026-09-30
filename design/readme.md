@@ -7070,7 +7070,7 @@ key, with nothing on screen saying so.
 - **One key-absent "?"** serves the seal, the pad and both settings
   twins, and `YourKeyAbsent` stops saying the key lives in the browser
   it is absent from.
-- **The gate**: 208 → **218 screens**, 1510 → **1535 edges**, 0 → **1
+- **The gate**: 208 → **218 screens**, 1510 → **1536 edges**, 0 → **1
   gap** (the kept picks' review), **flows 62 → 63**, every one
   resolved. The witness was re-blessed three times, each deliberately:
   the new `make-a-recovery-code-later` flow, the `Restore the key`
