@@ -49,21 +49,35 @@ import { formatStancePair, nearestAnchor, SR_ONLY } from "../stance/StanceReadou
    lookup `RefPair`'s readout uses. The anchor's WORD does not come with it:
    it names a feeling about a stance and this record is a citation, so the
    spoken reading stays the pair exactly. */
-function Body({ kind, name, sub, src, pair }) {
+function Body({ kind, name, sub, src, pair, node }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? nearestAnchor(pair) : null;
   return (
     <>
-      <NodeMark kind={kind} name={name} src={src} />
+      <NodeMark kind={kind} name={name} src={src} node={node && "mark"} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-        {sub && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{sub}</span>}
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "name"}>
+          {name}
+        </span>
+        {sub && (
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "kind"}>
+            {sub}
+          </span>
+        )}
       </span>
       {exact && (
         <>
-          <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }}>{anchor.emoji}</span>
-            <span className="cg-exact">{exact}</span>
+          <span
+            aria-hidden="true"
+            style={{ flex: "none", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+            data-node={node && "pair"}
+          >
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: 1 }} data-node={node && "face"}>
+              {anchor.emoji}
+            </span>
+            <span className="cg-exact" data-node={node && "exact"}>
+              {exact}
+            </span>
           </span>
           <span style={SR_ONLY}>{exact}</span>
         </>
@@ -72,10 +86,14 @@ function Body({ kind, name, sub, src, pair }) {
   );
 }
 
-export function StagedReference({ kind = "post", name, sub, src, pair, onRemove, onEdit }) {
-  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} />;
+export function StagedReference({ kind = "post", name, sub, src, pair, onRemove, onEdit, node, nodeKey }) {
+  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} node={node} />;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}>
+    <div
+      style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}
+      data-node={node}
+      data-node-key={nodeKey}
+    >
       {/* The button adds no box of its own — no border, no background, no
           padding, ink inherited — so the row is the row it always was, and the
           state layer, the focus ring and the 48px target arrive with
@@ -99,6 +117,7 @@ export function StagedReference({ kind = "post", name, sub, src, pair, onRemove,
         onClick={onRemove}
         className="cg-state cg-focus"
         style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
+        data-node={node && "remove"}
       >
         <Icon name="close" size={18} />
       </button>

@@ -13,11 +13,19 @@
 // a GIVEN after the arrow, an empty phrase or a line of prose is named with
 // its file and line rather than passed.
 //
-// Syntax is what this checks today. The node check — a plain word where a
-// data-node path exists — needs the node-ID registry, and activates per screen
-// as the ID sweep lands (backlog item 111). A prohibition written without
-// NEVER is prose the parser cannot recognize as one; that stays a review
-// discipline, named in the README.
+// The node check reads the registry render-screens writes (`designs/canonical/
+// nodes.json`, design ⇄ impl seam 002/004, backlog item 111), in two halves:
+//
+// - A token shaped like a node path (`feed.card.actionRow`, a trailing 's or
+//   comma allowed) must be a registered path — in every sidecar, so a line can
+//   never name an element the built boards do not carry.
+// - On a REGISTERED screen, plain words that name one of its nodes fail: the
+//   line must write the path. A node is recognized by its name's words
+//   (`mediaRow` is "media row", hyphens read as spaces) when that name is a
+//   compound — a one-word name like `card` or `title` is also an everyday
+//   word, so its plain-word use stays a review discipline, as a prohibition
+//   written without NEVER does. A screen with no registered IDs keeps its
+//   plain words until its round of the ID sweep lands.
 //
 // Run from this directory: node check-behavior.mjs   (exit 1 on any FAIL)
 
@@ -48,6 +56,52 @@ for (const source of ["motion.css", "transitions.css"]) {
   for (const [name, { resolved }] of Object.entries(tokens.files[source]?.tokens ?? {})) {
     if (DURATION.test(String(resolved).trim())) motionTokens.add(name);
   }
+}
+
+// The registry, and per registered screen the compound node names its plain
+// words would spell.
+const registryFile = join(canonical, "nodes.json");
+const registry = existsSync(registryFile) ? JSON.parse(readFileSync(registryFile, "utf8")) : { screens: {} };
+const registered = new Set();
+const phrases = new Map();
+for (const [board, { nodes }] of Object.entries(registry.screens ?? {})) {
+  const byPhrase = new Map();
+  for (const path of Object.keys(nodes)) {
+    registered.add(path);
+    const words = path.split(".").at(-1).split(/(?=[A-Z])/).map((w) => w.toLowerCase());
+    if (words.length < 2) continue;
+    const phrase = words.join(" ");
+    if (!byPhrase.has(phrase)) byPhrase.set(phrase, []);
+    byPhrase.get(phrase).push(path);
+  }
+  phrases.set(board, byPhrase);
+}
+const PATH_TOKEN = /^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*)+$/;
+const bareToken = (t) => t.replace(/'s$/, "").replace(/[,;:]+$/, "");
+
+// Node failures for one line: unregistered paths anywhere, and on a registered
+// screen the plain words of a compound node name.
+function nodeCheck(line, board) {
+  const found = [];
+  const toks = line.trim().split(/\s+/);
+  for (const t of toks) {
+    const bare = bareToken(t);
+    if (PATH_TOKEN.test(bare) && !registered.has(bare)) found.push(`${bare} is not a registered node path — nodes.json holds every path a line may name`);
+  }
+  const byPhrase = phrases.get(board);
+  if (byPhrase) {
+    const prose = toks
+      .filter((t) => !PATH_TOKEN.test(bareToken(t)))
+      .join(" ")
+      .toLowerCase()
+      .replace(/-/g, " ");
+    for (const [phrase, paths] of byPhrase) {
+      if (new RegExp(`(?:^|[^a-z0-9])${phrase}s?(?=$|[^a-z0-9])`).test(prose)) {
+        found.push(`"${phrase}" names a registered node on ${board} — write ${paths.join(" or ")}; plain words stay only for concepts with no node`);
+      }
+    }
+  }
+  return found;
 }
 
 class GrammarError extends Error {}
@@ -154,16 +208,20 @@ for (const file of sidecars) {
       fails.push(`${at}: ${err.message}`);
       return;
     }
+    for (const f of nodeCheck(line, screen)) fails.push(`${at}: ${f}`);
     const key = line.trim().split(/\s+/).join(" ");
     if (seen.has(key)) fails.push(`${at}: repeats line ${seen.get(key)} — one rule stands once`);
     else seen.set(key, n + 1);
   });
-  counts.push(`${file} ${tally.WHEN + tally.ALWAYS} lines (${tally.WHEN} WHEN · ${tally.ALWAYS} ALWAYS)`);
+  counts.push(
+    `${file} ${tally.WHEN + tally.ALWAYS} lines (${tally.WHEN} WHEN · ${tally.ALWAYS} ALWAYS) · ${phrases.has(screen) ? "node paths (registered)" : "plain words (not registered)"}`,
+  );
 }
 
 for (const c of counts) console.log(`  ${c}`);
 for (const f of fails) console.log(`FAIL ${f}`);
+const held = sidecars.filter((f) => phrases.has(f.replace(/\.md$/, ""))).length;
 console.log(
-  `check-behavior: ${sidecars.length} sidecars · syntax ${fails.length ? `${fails.length} failure${fails.length === 1 ? "" : "s"}` : "ok"} · node check inactive until the ID registry lands in ${Date.now() - t0} ms`,
+  `check-behavior: ${sidecars.length} sidecars · ${registered.size} registered node paths on ${phrases.size} screens · ${held} sidecar${held === 1 ? "" : "s"} held to node paths · ${fails.length ? `${fails.length} failure${fails.length === 1 ? "" : "s"}` : "ok"} in ${Date.now() - t0} ms`,
 );
 if (fails.length) process.exit(1);

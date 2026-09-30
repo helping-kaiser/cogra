@@ -18,6 +18,8 @@ export interface TopicRemovableProps {
    * "#<topic> — set how it relates"; without it the pill is inert.
    */
   onEdit?: () => void;
+  /** The data-node name its placer gives this chip — keyed by the tag's name (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `remove`. */
+  node?: string;
 }
 
 export declare function TopicRemovable(props: TopicRemovableProps): JSX.Element;

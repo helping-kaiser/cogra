@@ -37,6 +37,10 @@ export interface TopicChipProps {
   /** `md` is the chip proper (32px, label-large); `sm` is the 24px readout rung. */
   size?: "md" | "sm";
   style?: React.CSSProperties;
+  /** The data-node name its placer gives this chip (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
+  /** The chip's content key — the tag's name, without #. */
+  nodeKey?: string;
 }
 
 export declare function TopicChip(props: TopicChipProps): JSX.Element;

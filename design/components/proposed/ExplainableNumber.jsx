@@ -41,7 +41,7 @@ const SR_ONLY = {
    else. A Post score has no glyph that carries its magnitude, so hiding the
    digits would leave the `graph` mark saying only "there is a score", which is
    the black box §7 exists to refuse. */
-export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false }) {
+export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false, node }) {
   return (
     <button
       type="button"
@@ -65,6 +65,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
         textAlign: "left",
         ...(overMedia ? { filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" } : null),
       }}
+      data-node={node}
     >
       {/* A GLYPH, NOT AN EMOJI. The product's only emoji vocabulary is the stance
           readout, and a face on a post card already means "your opinion" — a second
@@ -83,7 +84,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
           is failure only — a score below zero is a fact about reach, not a fault,
           and colouring it red would editorialise it the way §2.4 forbids for a
           negative stance. */}
-      <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }}>
+      <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }} data-node={node && "value"}>
         {value}
         {unit ? <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>{unit}</span> : null}
       </span>

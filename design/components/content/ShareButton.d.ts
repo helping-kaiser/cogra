@@ -12,6 +12,8 @@ export interface ShareButtonProps {
   onShare?: () => void;
   /** Completes the accessible name — "Share this post". */
   targetLabel?: string;
+  /** The data-node name its placer gives this button (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function ShareButton(props: ShareButtonProps): JSX.Element;

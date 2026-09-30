@@ -19,7 +19,7 @@ import { Icon } from "../navigation/Icon.jsx";
    move into the ⋮ menu. `PostCard` draws it; `showShare={false}` is for a
    surface that has none to offer. */
 
-export function ShareButton({ onShare, targetLabel = "this post" }) {
+export function ShareButton({ onShare, targetLabel = "this post", node }) {
   return (
     <button
       type="button"
@@ -36,6 +36,7 @@ export function ShareButton({ onShare, targetLabel = "this post" }) {
         color: "var(--text-secondary)",
         cursor: "pointer",
       }}
+      data-node={node}
     >
       <Icon name="share" size={18} />
     </button>

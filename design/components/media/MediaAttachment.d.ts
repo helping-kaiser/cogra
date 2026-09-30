@@ -67,6 +67,10 @@ export interface MediaAttachmentProps {
    * surface has no fullscreen to open — the composer's cover preview.
    */
   fullscreen?: boolean;
+  /** The data-node name its placer gives this frame (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
+  /** The frame's content key — its position in the set, from 1. */
+  nodeKey?: string;
 }
 
 export declare function MediaAttachment(props: MediaAttachmentProps): JSX.Element;
@@ -99,6 +103,8 @@ export interface PagerDotsProps {
    * survive an unknown photograph.
    */
   tone?: "card" | "viewer";
+  /** The data-node name its placer gives the dot row (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 /**
@@ -123,6 +129,8 @@ export interface MediaGalleryProps {
   radius?: string;
   /** Passed through to each frame; falls back to the item's own `maxHeight`. */
   maxHeight?: string;
+  /** The data-node name of the placement holding this gallery (design ⇄ impl seam 002; renders as attributes only). The gallery draws no box of its own to carry it; given one, it names its parts: `frame` per picture, keyed by its position from 1, and `dots`. */
+  node?: string;
 }
 
 export declare function MediaGallery(props: MediaGalleryProps): JSX.Element | null;

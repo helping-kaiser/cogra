@@ -45,7 +45,7 @@ import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
      account` there. The row stands either way: hiding is about an actor, and a
      redacted actor still ranks into the reader's feed. */
 
-export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", presentation = "sheet", placement = "header" }) {
+export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", presentation = "sheet", placement = "header", node }) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
 
@@ -82,6 +82,7 @@ export function OverflowMenu({ items = [], ariaLabel = "More", align = "right", 
           color: "var(--text-secondary)",
           cursor: "pointer",
         }}
+        data-node={node}
       >
         <Icon name="more_vert" />
       </button>

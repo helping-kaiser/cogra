@@ -206,6 +206,8 @@ export function MediaAttachment({
   duration = "0:00",
   progress = 0,
   fullscreen = true,
+  node,
+  nodeKey,
 }) {
   const [muted, setMuted] = useGlobalMute();
   const videoRef = React.useRef(null);
@@ -249,6 +251,8 @@ export function MediaAttachment({
         borderRadius: radius,
         background: "var(--surface-container-high)",
       }}
+      data-node={node}
+      data-node-key={nodeKey}
     >
       {src && video && !resting ? (
         <video
@@ -372,7 +376,7 @@ const DOT_TONES = {
   viewer: { on: "#fff", off: "rgba(255,255,255,0.42)", filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))" },
 };
 
-export function PagerDots({ count, current, tone = "card" }) {
+export function PagerDots({ count, current, tone = "card", node }) {
   if (count < 2) return null;
   const palette = DOT_TONES[tone] ?? DOT_TONES.card;
   const window = Math.min(count, DOT_WINDOW);
@@ -391,6 +395,7 @@ export function PagerDots({ count, current, tone = "card" }) {
         gap: `${DOT_FULL}px`,
         filter: palette.filter,
       }}
+      data-node={node}
     >
       {slots.map((index, offset) => {
         const edge =
@@ -435,7 +440,7 @@ export function PagerDots({ count, current, tone = "card" }) {
    the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
    (square) and each display-crops to it — a pager whose height changed per
    swipe would bounce the card under the reader's thumb. */
-export function MediaGallery({ items = [], ratio, radius, maxHeight }) {
+export function MediaGallery({ items = [], ratio, radius, maxHeight, node }) {
   const [page, setPage] = React.useState(0);
   const stripRef = React.useRef(null);
   if (items.length === 0) return null;
@@ -446,6 +451,8 @@ export function MediaGallery({ items = [], ratio, radius, maxHeight }) {
         ratio={items[0].ratio ?? ratio ?? "wide"}
         radius={radius ?? items[0].radius}
         maxHeight={maxHeight ?? items[0].maxHeight}
+        node={node && "frame"}
+        nodeKey={node && "1"}
       />
     );
   }
@@ -470,13 +477,20 @@ export function MediaGallery({ items = [], ratio, radius, maxHeight }) {
       >
         {items.map((item, index) => (
           <div key={item.src ?? index} style={{ flex: "none", width: "100%", scrollSnapAlign: "start" }}>
-            <MediaAttachment {...item} ratio={frameRatio} radius={radius ?? item.radius} maxHeight={maxHeight ?? item.maxHeight} />
+            <MediaAttachment
+              {...item}
+              ratio={frameRatio}
+              radius={radius ?? item.radius}
+              maxHeight={maxHeight ?? item.maxHeight}
+              node={node && "frame"}
+              nodeKey={node && String(index + 1)}
+            />
           </div>
         ))}
       </div>
       {/* The dots are a readout, not ten targets — the gesture is the swipe. */}
       <div style={{ padding: "8px 0 0" }}>
-        <PagerDots count={items.length} current={page} />
+        <PagerDots count={items.length} current={page} node={node && "dots"} />
       </div>
     </div>
   );
