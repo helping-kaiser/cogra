@@ -6093,17 +6093,20 @@ painted a frame.
   finger, and so does CoGra. A hard fling needs no clause of its
   own: incumbents succeed each other faster than playback can
   start, so a clip that leaves before painting simply never leaves
-  its still face. **The feed's hard top re-elects** (jakob
-  2026-09-30, found in his hand test): when the scroll settles at the
-  hard top — where the surface cannot scroll further up, an
-  overscroll bounce settling back included — the first qualifying
-  clip in feed order takes the stage, even from an incumbent that
-  still qualifies. Two short clips can sit whole in the viewport at
-  once near the top, and without this the lower one, once it held the
-  stage, would keep it for good. Everywhere below the hard top the
-  no-ricochet rule holds as ruled: a settle one pixel below it
-  re-elects nothing. The lines stand in
-  `designs/canonical/behavior/Feed.md`. **A sheet over a surface
+  its still face. **The hard top re-elects** (jakob 2026-09-30,
+  found in his hand test): when the feed's scroll settles at its hard
+  top — where the surface cannot scroll further up, an overscroll
+  bounce settling back included — the first qualifying clip in feed
+  order takes the stage, even from an incumbent that still qualifies.
+  Two short clips can sit whole in the viewport at once near the top,
+  and without this the lower one, once it held the stage, would keep
+  it for good. The comments thread's stage re-elects the same way at
+  the thread's own hard top, in thread order (jakob 2026-09-30): the
+  topmost comment clip could otherwise never regain the stage once it
+  had left it. Everywhere below a hard top the no-ricochet rule holds
+  as ruled: a settle one pixel below it re-elects nothing. The lines
+  stand in `designs/canonical/behavior/Feed.md` and `ReplyEntry.md`.
+  **A sheet over a surface
   suspends that surface's stage** (jakob 2026-09-24, ruled with the
   implementation session): a clip behind a sheet is not on screen in the law's
   sense — the covered surface's incumbent stops rather than

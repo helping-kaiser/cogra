@@ -28,6 +28,9 @@ Where each sidecar's words come from:
   *incumbent* is the playing clip, the *stage* is the one clip a scroll
   surface plays, and the *hard top* is where the surface cannot scroll
   further up.
+- `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
+  stage law's hard top, at the thread's own hard top and in thread
+  order, in the same words.
 - `ComposeDetails.md` — the already-published marker (copy-voice, *The
   already-published marker*), on the Details step's media row.
 
