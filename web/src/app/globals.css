@@ -8,9 +8,9 @@
 
 /*
  * The palette of design.md §2.3, orange-led from the #EF6C1A seed. Values are
- * generated, never hand-picked — the repo-root design-tokens.json is the
- * contract both clients pin to (`make tokens`), and palette.test.ts fails if
- * these drift from it.
+ * generated, never hand-picked — design/tokens/scheme.json is the generated
+ * scheme (`make tokens`) the design token contract transcribes, and
+ * palette.test.ts fails if these drift from it.
  *
  * Roles are plain custom properties so a single definition carries both themes;
  * @theme inline then exposes each as a Tailwind colour, which is what lets a

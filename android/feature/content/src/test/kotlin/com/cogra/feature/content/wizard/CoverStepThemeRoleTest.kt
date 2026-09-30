@@ -19,7 +19,7 @@ import org.robolectric.RobolectricTestRunner
  * never completes under this repo's Robolectric/Compose-BOM combination —
  * see `MediaThumbBadgeThemeRoleTest`'s doc comment for what was tried. The
  * colour role itself is pinned by `ColorSchemeTest`/`PreviewThemeTokensTest`
- * against `design-tokens.json`; a diff review confirms both badges here
+ * against `design/tokens.json`; a diff review confirms both badges here
  * read `MaterialTheme.colorScheme.inverseSurface`/`.inverseOnSurface`.
  */
 @RunWith(RobolectricTestRunner::class)
