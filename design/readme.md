@@ -1327,6 +1327,10 @@ the detail view is just about the post.
   the rounded corners keep a strip of the surface behind visible.
   The entry row (avatar + "Add a comment") is pinned at its foot.
 - **Replies arrive collapsed** behind a "View n replies" line.
+- **The order** (jakob, 2026-09-30): top-level comments newest first,
+  and the replies in a branch oldest first — a branch reads as a
+  conversation, so a reply just signed ends its branch. Newest first
+  at the top level holds until ranking can order the thread.
 - **The thread is two levels deep on screen**: a comment and its
   replies, indented once. A reply to a reply flattens into the same
   level and opens with the @handle it answers — the mention is the

@@ -30,7 +30,8 @@ Where each sidecar's words come from:
   further up.
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
-  order, in the same words.
+  order, in the same words; and thread order itself (readme §13,
+  *Comments live in a sheet*).
 - `ComposeDetails.md` — the already-published marker (copy-voice, *The
   already-published marker*), on the Details step's media row.
 
