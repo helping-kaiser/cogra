@@ -1,10 +1,10 @@
 # ComposeDetails · `spec:design:behavior-compose-details`
 
-WHEN media attaches GIVEN it matches media in a published post of the author -> the media row shows the already-published marker
+WHEN media attaches GIVEN it matches media in a published post of the author -> composeDetails.mediaRow shows the already-published marker
 
-WHEN media attaches GIVEN it matches media only in the author's drafts -> NEVER the media row shows the already-published marker
+WHEN media attaches GIVEN it matches media only in the author's drafts -> NEVER composeDetails.mediaRow shows the already-published marker
 
-WHEN media attaches GIVEN it matches media only in other people's posts -> NEVER the media row shows the already-published marker
+WHEN media attaches GIVEN it matches media only in other people's posts -> NEVER composeDetails.mediaRow shows the already-published marker
 
 WHEN media attaches GIVEN it matches media in a published post of the author -> NEVER a dialog opens AND NEVER a confirm step appears
 
