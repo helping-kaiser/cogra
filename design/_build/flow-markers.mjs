@@ -1463,15 +1463,17 @@ Object.assign(FLOW_MARKERS, {
   ],
   // The ceremony's two dialogs. Both are scanExempt: the arrow and the words
   // beneath the scrim are inactive while the ask is open, so only the
-  // dialog's own pair carries a number — the hand boards stamped exactly
-  // these two and left the arrow bare.
+  // dialog's own pair and the scrim it sits on carry numbers — the scrim
+  // (and system Back with it) takes the safe answer (the key-loss round).
   KeyConfirm: [
     { n: 1, find: ">Cancel</button>", tag: "button" },
     { n: 2, find: ">Show my code</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   KeyDecline: [
     { n: 1, find: ">I accept the risk</button>", tag: "button" },
     { n: 2, find: ">Go back</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   Verified: [{ n: 1, find: ">Back to CoGra</button>", tag: "button" }],
   // Neither draws a back arrow: a mail link has no previous screen of ours.

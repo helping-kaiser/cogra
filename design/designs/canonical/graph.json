@@ -12,8 +12,8 @@
     "TagPadCompose": "the same sheet on the composer — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "RefPair": "the citation's pair sheet covers the details stage — the fields and the staged rows beneath the scrim are inactive in this state; only the sheet (and its scrim) is live",
     "GuestGate": "the join prompt covers the borrowed view — the band, the post card, and nav beneath the scrim are inactive in this state; only the ask (and its scrim) is live",
-    "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
-    "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog's own pair is live",
+    "KeyConfirm": "the record-your-code dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
+    "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
     "PadStanding": "the scrim wash covers the shell — the band, the post card's own controls and the nav are inactive in this state; only the parked pad is live",
     "TagPageHeldPad": "the scrim wash covers the tag page — the back arrow, the two posts' and the comment's own controls, and the topic row's own anchor beneath it are inactive in this state; only the parked pad is live, and every one of those controls is wired on `TagPageHeld`",
@@ -318,6 +318,7 @@
 
     { "from": "KeyConfirm", "via": 1, "kind": "cancel", "label": "Cancel", "to": [{ "board": "KeyCeremony" }] },
     { "from": "KeyConfirm", "via": 2, "kind": "advance", "label": "Show my code", "to": [{ "board": "RecoveryCode" }] },
+    { "from": "KeyConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "board": "KeyCeremony", "case": "the safe answer, Cancel's — nothing is made" }] },
 
     { "from": "RecoveryCode", "via": 1, "kind": "advance", "label": "Copy", "to": [{ "terminal": "self", "case": "the code lands on the clipboard" }] },
     { "from": "RecoveryCode", "via": 2, "kind": "advance", "label": "confirm field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -327,8 +328,9 @@
     { "from": "RecoveryCodeMismatch", "via": 2, "kind": "advance", "label": "confirm field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "RecoveryCodeMismatch", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
 
-    { "from": "KeyDecline", "via": 1, "kind": "cancel", "label": "I accept the risk", "to": [{ "terminal": "back", "case": "key without backup — returns where the ceremony began" }] },
+    { "from": "KeyDecline", "via": 1, "kind": "cancel", "label": "I accept the risk", "to": [{ "terminal": "back", "case": "key without backup — returns where the ceremony began, and the snackbar says so" }] },
     { "from": "KeyDecline", "via": 2, "kind": "back", "label": "Go back", "to": [{ "board": "KeyCeremony" }] },
+    { "from": "KeyDecline", "via": 3, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "board": "KeyCeremony", "case": "the safe answer, Go back's — nothing is made" }] },
 
     { "from": "SignIn", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "FeedBare", "case": "the arrow is a link, not history — from a root of the funnel, up is the public front door" }] },
     { "from": "SignIn", "via": 2, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },

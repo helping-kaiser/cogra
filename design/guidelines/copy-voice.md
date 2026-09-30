@@ -810,6 +810,16 @@ does — *Confirm email change* is what a reader would have believed it
 did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
 
+## The key's lifecycle
+
+The key-loss round's lines (2026-09-30): the ceremony's exits, the
+backup made late or replaced, the key revealed, restored, or absent
+with no backup to restore from.
+
+**Declining the backup** says what it made, because the task card the
+reader came from leaves the feed with it:
+`Key made — no backup yet. You can make a code in settings.`
+
 ## The profile save
 
 Blessed with the small-rulings batch. A profile edit is a signed act
