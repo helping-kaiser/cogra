@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
  *
  * Why duplicating the palette is safe: these values are not a second opinion
  * about the colour, they are a second *reader* of the one contract. The
- * repo-root `design-tokens.json` is that contract, `:app`'s `ColorSchemeTest`
+ * `design/tokens.json` token file is that contract, `:app`'s `ColorSchemeTest`
  * pins the app theme to it, and `PreviewThemeTokensTest` in this module pins
  * these to the same file. A drift fails a test rather than reaching a screen.
  *

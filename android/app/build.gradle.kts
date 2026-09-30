@@ -90,18 +90,22 @@ android {
     }
 }
 
-// `design-tokens.json` is read from the repo root at test time rather
-// than compiled in, so it belongs to no source set and Gradle cannot
-// see it. Undeclared, the up-to-date check and the build cache both
-// hand back a pass computed against the previous `make tokens` output —
-// a palette edit would report green without ColorSchemeTest running.
-// Declaring a runtime-read file as a task input is Gradle's own answer
-// (user manual, "Incremental build"); `workingDir` is stated because
-// the test names the file by a path relative to this module.
+// `design/tokens.json` (the token contract) and `design/tokens/scheme.json`
+// (the generated scheme, for the seed) are read at test time rather than
+// compiled in, so they belong to no source set and Gradle cannot see
+// them. Undeclared, the up-to-date check and the build cache both hand
+// back a pass computed against the previous palette — a palette edit
+// would report green without ColorSchemeTest running. Declaring a
+// runtime-read file as a task input is Gradle's own answer (user manual,
+// "Incremental build"); `workingDir` is stated because the test names
+// the files by a path relative to this module.
 tasks.withType<Test>().configureEach {
     workingDir = projectDir
-    inputs.file(file("../../design-tokens.json"))
+    inputs.file(file("../../design/tokens.json"))
         .withPropertyName("designTokens")
+        .withPathSensitivity(PathSensitivity.NONE)
+    inputs.file(file("../../design/tokens/scheme.json"))
+        .withPropertyName("designScheme")
         .withPathSensitivity(PathSensitivity.NONE)
 }
 

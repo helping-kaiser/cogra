@@ -4,7 +4,7 @@
  *
  * WHAT IS NOT HERE, AND WHY. Colour, type, and the shape scale already live in
  * globals.css and are pinned by palette.test.ts and type.test.ts to the
- * generated `design-tokens.json` and `@material/web`'s typescale. They are
+ * generated `design/tokens/scheme.json` and `@material/web`'s typescale. They are
  * contracts, not styling, so this file does not restate them — a second
  * declaration is how two sources of truth start to drift. design/readme.md's
  * own precedence rule ("where a value here differs from the product source,

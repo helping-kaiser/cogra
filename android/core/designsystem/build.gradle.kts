@@ -23,6 +23,21 @@ android {
     }
 }
 
+// `design/tokens.json` is read at test time rather than compiled in, so it
+// belongs to no source set and Gradle cannot see it. Undeclared, the
+// up-to-date check and the build cache both hand back a pass computed
+// against the previous palette — a palette edit would report green without
+// PreviewThemeTokensTest running. Declaring a runtime-read file as a task
+// input is Gradle's own answer (user manual, "Incremental build");
+// `workingDir` is stated because the test names the file by a path relative
+// to this module.
+tasks.withType<Test>().configureEach {
+    workingDir = projectDir
+    inputs.file(file("../../../design/tokens.json"))
+        .withPropertyName("designTokens")
+        .withPathSensitivity(PathSensitivity.NONE)
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -76,8 +91,8 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
-    // The preview palette pins itself to the repo-root design-tokens.json,
-    // the same contract :app's ColorSchemeTest reads.
+    // The preview palette pins itself to design/tokens.json, the same
+    // contract :app's ColorSchemeTest reads.
     testImplementation(libs.kotlinx.serialization.json)
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
