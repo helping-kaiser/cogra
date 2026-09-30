@@ -965,6 +965,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedKinds.dc.html",
+      "title": "Feed · all four kinds",
+      "x": 5760,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -1344,10 +1353,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -3900,
+      "x": -4190,
       "y": 0,
-      "w": 3480,
-      "h": 2655,
+      "w": 3770,
+      "h": 2900,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },

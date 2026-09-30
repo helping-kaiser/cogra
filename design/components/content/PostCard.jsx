@@ -125,6 +125,14 @@ export function PostCard({
      renders exactly as before. */
   lead,
   main,
+  /* TWO PASS-THROUGHS FOR THE V1.0 FEED KINDS (the three-feed-cards round,
+     2026-09-30). A profile and a tag ride the feed in this shell too, and each
+     names a target that is not a post: the ⋮ says whose menu it opens — `More
+     on this post` would be wrong on a person — and a tag's opinion is an
+     Affinity, whose pad speaks its own four ends (`StanceControl`'s `axes`).
+     Additive: given neither, the card renders exactly as before. */
+  menuLabel = "More on this post",
+  stanceAxes,
   node,
 }) {
   const detail = variant === "detail";
@@ -276,7 +284,7 @@ export function PostCard({
               the header and another in the card would be two menus for one post.
               The summary card keeps its own: in a feed there is no header to
               carry it. */}
-          {!detail && <OverflowMenu items={items} ariaLabel="More on this post" node={node && "menu"} />}
+          {!detail && <OverflowMenu items={items} ariaLabel={menuLabel} node={node && "menu"} />}
         </div>
       </div>
       {hasMedia && heading}
@@ -472,6 +480,7 @@ export function PostCard({
               defaultPick={stanceDefaultPick}
               onOpenHistory={stanceOnOpenHistory}
               pendingPick={stancePendingPick}
+              {...(stanceAxes ? { axes: stanceAxes } : null)}
               node={node && "stance"}
             />
           )}
