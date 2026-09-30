@@ -478,6 +478,15 @@
       "page": "media"
     },
     {
+      "file": "ReelSensitive.dc.html",
+      "title": "Reel · a sensitive clip, veiled",
+      "x": 2400,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "media"
+    },
+    {
       "file": "ReaderPostMenu.dc.html",
       "title": "Post · the reader's menu",
       "x": 1920,
@@ -572,7 +581,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 3598,
+      "h": 3629,
       "page": "media",
       "title": "Media · flow map"
     },
