@@ -2027,7 +2027,7 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
         <SettingsGroup
           label="Writing"
-          footnote="Everything you sign is paid for separately. A post's license is settled when it is first signed and never changes."
+          footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
         >
           <SettingsRow
             checked
