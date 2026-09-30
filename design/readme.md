@@ -51,7 +51,7 @@ from a screenshot.
 |---|---|
 | `cogra/` (attached local codebase, read-only mount) | the whole system |
 | `cogra/docs/implementation/design.md` (928 lines) | the written design system — §2 colour, §3 type, §4 shape/spacing/motion, §5 iconography, §6 components, §7 copy, §8 the stance control, §9 honesty surfaces, §10 accessibility, §11 the mark |
-| `cogra/design-tokens.json` | the generated palette — the generator's committed output, today `design/tokens/scheme.json` |
+| `cogra/design/tokens/scheme.json` | the generated palette — the generator's committed output |
 | `cogra/web/src/app/globals.css` | the web token layer — palette, the fifteen type roles, the five radius rungs |
 | `cogra/web/src/lib/ui/*.tsx` (23 components) | the component inventory and its exact class strings |
 | `cogra/web/src/lib/stance/*.ts` | the stance model, anchor table, pad geometry, parking |
@@ -1827,9 +1827,22 @@ entry first". What stands:
   (`--print-metrics` writes that table). The census prints either way
   — how many summaries exceed the trigger's own 198px text room and
   the band's tighter 154px against the total. Full pipeline: `node bundle.mjs &&
-  node render-screens.mjs && node gen-maps.mjs && node gen-canvases.mjs
-  && node check-flows.mjs && node check-readouts.mjs &&
-  node report-summaries.mjs`.
+  node export-tokens.mjs && node render-screens.mjs && node gen-maps.mjs
+  && node gen-canvases.mjs && node check-flows.mjs &&
+  node check-readouts.mjs && node check-behavior.mjs &&
+  node check-help-notes.mjs && node report-summaries.mjs`.
+- **`_build/check-behavior.mjs` holds the behavior sidecars to their
+  grammar**: every line of `designs/canonical/behavior/<Screen>.md`
+  parses as a WHEN or an ALWAYS line, or the gate fails with its file
+  and line. The sidecars are the contract the implementation side's
+  conformance harness compiles; their README carries the grammar and
+  what the check does not see.
+- **`_build/check-help-notes.mjs` holds the "? contents" notes to
+  copy-voice** (item 109): each note section names a dialog of
+  copy-voice's *The "?" dialogs* and must carry its blessed text, and
+  every dialog there lives in exactly one note — canonical's
+  `help-contents` or the post-MVP tree's `wallet-help-contents`. A
+  reworded dialog is rebuilt into its note with `--write`.
 - **Every page is wired** (rounds 1–6, 2026-08-31: Entry, then Money
   & Wallet, Feed & Search, Comments, Compose, Media + Patterns; the
   Profile page joined 2026-09-01 — 699 edges over all 93 boards, no
@@ -6086,9 +6099,22 @@ painted a frame.
   finger, and so does CoGra. A hard fling needs no clause of its
   own: incumbents succeed each other faster than playback can
   start, so a clip that leaves before painting simply never leaves
-  its still face. **A sheet over a surface suspends that surface's
-  stage** (jakob 2026-09-24, ruled with the implementation
-  session): a clip behind a sheet is not on screen in the law's
+  its still face. **The hard top re-elects** (jakob 2026-09-30,
+  found in his hand test): when the feed's scroll settles at its hard
+  top — where the surface cannot scroll further up, an overscroll
+  bounce settling back included — the first qualifying clip in feed
+  order takes the stage, even from an incumbent that still qualifies.
+  Two short clips can sit whole in the viewport at once near the top,
+  and without this the lower one, once it held the stage, would keep
+  it for good. The comments thread's stage re-elects the same way at
+  the thread's own hard top, in thread order (jakob 2026-09-30): the
+  topmost comment clip could otherwise never regain the stage once it
+  had left it. Everywhere below a hard top the no-ricochet rule holds
+  as ruled: a settle one pixel below it re-elects nothing. The lines
+  stand in `designs/canonical/behavior/Feed.md` and `ReplyEntry.md`.
+  **A sheet over a surface
+  suspends that surface's stage** (jakob 2026-09-24, ruled with the
+  implementation session): a clip behind a sheet is not on screen in the law's
   sense — the covered surface's incumbent stops rather than
   playing on under the scrim, and a clip drawn on the sheet
   competes for the stage by the same law, never by claim
@@ -6930,11 +6956,14 @@ to compete got their chooser.
   canvases are deliberately not on it.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
   `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
-  `check-readouts.mjs`, `report-summaries.mjs` — the board pipeline
-  (§13, *Canvas pages and flows*): render the screens, stamp
-  the flow numbers, generate the maps, seed the per-canvas manifests
-  (§14), gate the result. Run all seven after any
-  screen, component, or graph.json edit. A screen whose state is not a
+  `check-readouts.mjs`, `check-behavior.mjs`, `check-help-notes.mjs`,
+  `report-summaries.mjs` — the board pipeline (§13, *Canvas pages and
+  flows*): render the screens, stamp the flow numbers, generate the
+  maps, seed the per-canvas manifests (§14), gate the result —
+  `check-behavior` holds the behavior sidecars to their grammar,
+  `check-help-notes` the "? contents" notes to copy-voice. Run all of
+  them after any screen, component, graph.json, sidecar or "?" copy
+  edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
   instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
   the gate's user-flow half (§13, *The user-flow layer*): it resolves
@@ -6962,7 +6991,10 @@ and `iconography.md` for the deeper dives.
 `.dc.html` boards, `canvas.json` (the master layout: coordinates,
 pages, annotations), `graph.json` and the flow layer beside it (§13),
 `canvases.json` + `canvases/<id>/` (the canvas map and per-canvas seed
-manifests, §14), and `img/` (the photographs the boards carry).
+manifests, §14), `behavior/` (the per-screen behavior sidecars, the
+contract the implementation side's conformance harness compiles — its
+README carries the grammar), and `img/` (the photographs the boards
+carry).
 
 **`designs/postmvp/`** — the same shape, one tree over: rounds drawn
 before their slice is the work, reviewed on the fifth canvas, and moved

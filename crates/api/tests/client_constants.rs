@@ -3,7 +3,7 @@
 //! them for real.
 //!
 //! The repo already solves this class of problem twice, with
-//! `design-tokens.json` and `client-crypto-vectors.json`: an artifact the
+//! `design/tokens.json` and `client-crypto-vectors.json`: an artifact the
 //! authoritative side writes and every consumer pins by test. Media caps,
 //! attachment counts, the page size, the registration grammar and the
 //! write-handshake protocol constants had none of that — each was written

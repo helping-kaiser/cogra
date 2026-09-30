@@ -23,6 +23,16 @@
 //! the description and the poster belong to the placement, and each
 //! version's junction row carries what that version's manifest witnessed.
 //!
+//! **An author's bytes are one asset, however often they are uploaded.**
+//! `(author_id, digest)` names at most one live row, so an upload of bytes
+//! the author already holds is handed that row, and a re-encode whose
+//! rendition turns out to be such bytes settles `merged` into it
+//! ([`merge_ingest`]). A merged row serves nothing: every read by its id
+//! answers with the asset it names, which is how a client holding the id
+//! it was handed at upload attaches the one asset like any other. Reusing
+//! media in a second post is therefore two placements of one asset, never
+//! a second asset.
+//!
 //! `author_id` here is Postgres-native truth rather than a cached
 //! derivation — media is not a graph node, so there is no graph-side
 //! authorship to cache from.
@@ -37,6 +47,12 @@ use uuid::Uuid;
 /// Stored as text under a CHECK, the shape every state column in the
 /// schema uses, and decoded straight into this type so no caller ever
 /// compares strings.
+///
+/// The column has a fourth value, `merged`, that this type deliberately
+/// cannot hold: a merged row is a pointer to another asset, and every read
+/// that could reach one resolves it to the asset it names first. A query
+/// that decoded a merged row would be a read that forgot to resolve, and
+/// fails loudly rather than handing out an asset that serves nothing.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AssetState {
     /// The upload landed and its final bytes do not exist yet. Nothing may
@@ -328,7 +344,8 @@ async fn write_asset(pool: &PgPool, new: NewAsset<'_>) -> Result<MediaAttachment
 }
 
 /// The live asset this author's upload of these bytes produced, by either
-/// of its digests.
+/// of its digests — resolved through a merged row to the asset it names,
+/// so a retry of a file whose re-encode merged is handed that asset.
 async fn upload_of(
     pool: &PgPool,
     author_id: Uuid,
@@ -343,11 +360,15 @@ async fn upload_of(
                state AS "state: AssetState", failure_reason,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
-        WHERE author_id = $1
-          AND state <> 'failed'
-          AND (digest = $2 OR source_digest = $2)
-        ORDER BY created_at
-        LIMIT 1
+        WHERE id = (
+            SELECT COALESCE(merged_into, id)
+            FROM media_attachments
+            WHERE author_id = $1
+              AND state <> 'failed'
+              AND (digest = $2 OR source_digest = $2)
+            ORDER BY created_at
+            LIMIT 1
+        )
         "#,
         author_id,
         digest,
@@ -461,7 +482,8 @@ pub struct Rendition<'a> {
 /// caller deletes it.
 ///
 /// A unique violation here means this author already holds a live asset
-/// with the rendition's digest; the caller settles the row as failed.
+/// with the rendition's digest; the caller merges the row into it
+/// ([`merge_ingest`]).
 pub async fn finish_ingest(
     pool: &PgPool,
     id: Uuid,
@@ -489,6 +511,49 @@ pub async fn finish_ingest(
         rendition.storage_key,
         rendition.size_bytes,
         rendition.options,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Settles a `processing` asset whose rendition is bytes its author
+/// already holds as `merged` into that asset, returning its id.
+///
+/// This is the re-encode's side of the rule the upload path keeps by
+/// handing a re-upload the existing row: `(author_id, digest)` names one
+/// asset, because a manifest is resolved back to rows by digest. The
+/// upload path can simply answer with the other row; a re-encode cannot,
+/// because its own id went to the client before the rendition existed. So
+/// the row keeps its id and becomes a pointer: every read by that id
+/// answers with the asset it names, and the client attaches it as it
+/// would any other — to as many of its posts as it likes.
+///
+/// Only a `ready` asset is merged into. Ready rows never change again, so
+/// a merged row always resolves to final bytes. `None` when there is no
+/// such row to merge into, or the job's row is no longer `processing`;
+/// the caller hands the job back to be tried again.
+pub async fn merge_ingest(
+    pool: &PgPool,
+    id: Uuid,
+    author_id: Uuid,
+    digest: &[u8],
+) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"
+        UPDATE media_attachments j
+        SET state       = 'merged',
+            merged_into = held.id,
+            lease_until = NULL
+        FROM (
+            SELECT id FROM media_attachments
+            WHERE author_id = $2 AND digest = $3 AND state = 'ready'
+        ) held
+        WHERE j.id = $1 AND j.state = 'processing'
+        RETURNING held.id
+        "#,
+        id,
+        author_id,
+        digest,
     )
     .fetch_optional(pool)
     .await
@@ -819,8 +884,10 @@ pub async fn assets_by_digests(
     .await
 }
 
-/// Many assets by id, in one round trip — what a gallery input is
-/// resolved through before anything is staged.
+/// Many assets by id, in one round trip — the read behind the asset
+/// loader, whose keys come off placements and profile columns and so are
+/// always the ids of assets that serve bytes. An id a client names goes
+/// through [`resolve_assets`] instead.
 pub async fn assets_by_ids(
     pool: &PgPool,
     ids: &[Uuid],
@@ -842,7 +909,66 @@ pub async fn assets_by_ids(
     .await
 }
 
-/// One asset by id.
+/// One asset a client named, and the id it named it by.
+///
+/// The two differ exactly when the named row merged into an asset its
+/// author already held: `asset` is then that asset, under its own id.
+#[derive(Debug, Clone)]
+pub struct ResolvedAsset {
+    pub requested: Uuid,
+    pub asset: MediaAttachment,
+}
+
+/// The assets a client named by id, each resolved through a merged row to
+/// the asset it names — what a gallery input or a profile picture is read
+/// through before anything is staged. An id naming nothing is absent from
+/// the answer.
+pub async fn resolve_assets(
+    pool: &PgPool,
+    ids: &[Uuid],
+) -> Result<Vec<ResolvedAsset>, sqlx::Error> {
+    let rows = sqlx::query!(
+        r#"
+        SELECT named.id AS requested,
+               m.id, m.author_id, m.digest, m.digest_algo, m.storage_key,
+               m.mime_type, m.size_bytes,
+               m.options AS "options!: serde_json::Value",
+               m.state AS "state: AssetState", m.failure_reason,
+               m.redaction_reason, m.redacted_at, m.created_at
+        FROM media_attachments named
+        JOIN media_attachments m ON m.id = COALESCE(named.merged_into, named.id)
+        WHERE named.id = ANY($1)
+        "#,
+        ids,
+    )
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|r| ResolvedAsset {
+            requested: r.requested,
+            asset: MediaAttachment {
+                id: r.id,
+                author_id: r.author_id,
+                digest: r.digest,
+                digest_algo: r.digest_algo,
+                storage_key: r.storage_key,
+                mime_type: r.mime_type,
+                size_bytes: r.size_bytes,
+                options: r.options,
+                state: r.state,
+                failure_reason: r.failure_reason,
+                redaction_reason: r.redaction_reason,
+                redacted_at: r.redacted_at,
+                created_at: r.created_at,
+            },
+        })
+        .collect())
+}
+
+/// One asset by id, resolved through a merged row to the asset it names —
+/// so a client polling the id its upload was handed reads the asset that
+/// upload became, under that asset's own id.
 pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, sqlx::Error> {
     sqlx::query_as!(
         MediaAttachment,
@@ -853,7 +979,7 @@ pub async fn by_id(pool: &PgPool, id: Uuid) -> Result<Option<MediaAttachment>, s
                state AS "state: AssetState", failure_reason,
                redaction_reason, redacted_at, created_at
         FROM media_attachments
-        WHERE id = $1
+        WHERE id = (SELECT COALESCE(merged_into, id) FROM media_attachments WHERE id = $1)
         "#,
         id,
     )
@@ -1112,7 +1238,8 @@ pub async fn expired_upload_sessions(
 /// **The join is the seam.** "Orphaned" means no reference from any of
 /// the four content junctions, none from the profile and chat image
 /// columns, none from a post or comment placement that names this asset
-/// as its poster, and none from the upload session that produced it.
+/// as its poster, none from the upload session that produced it, and none
+/// from an upload that merged into it.
 /// Every one of those references is checked here, in one query,
 /// deliberately: a reference this list misses is an asset deleted out from
 /// under a live parent, so the list must be extended in the same change
@@ -1124,6 +1251,16 @@ pub async fn expired_upload_sessions(
 /// nobody attached would age out while its session still pointed at it,
 /// and the foreign key would refuse the delete — failing not that row but
 /// the whole sweep, so nothing would ever be collected again.
+///
+/// The merge probe keeps an asset for as long as an upload that resolves
+/// to it does. A merged row's id is out with a client that may still
+/// attach it; collecting the asset first would leave that id resolving to
+/// nothing, and the foreign key would refuse the delete — the same
+/// whole-sweep failure. The merged row itself references nothing a parent
+/// reads, so it ages out like any unattached upload, and its asset is
+/// judged on its own references on the next pass. Several placements of
+/// one asset need no probe of their own: any one standing placement is
+/// already a reference the junction probes see.
 ///
 /// The poster probes are two rather than one because a cover is named on
 /// the placement: a post placement and a comment placement can each name
@@ -1149,8 +1286,9 @@ pub async fn expired_upload_sessions(
 /// Each `NOT EXISTS` is an index probe of the referencing column — the
 /// four junctions' reverse index on `attachment_id`, the two version
 /// tables' partial index on the picture column, the post and comment
-/// junctions' partial index on `cover_media_id`, and the session table's
-/// `media_id`. Postgres creates
+/// junctions' partial index on `cover_media_id`, the session table's
+/// `media_id`, and the asset table's partial index on `merged_into`.
+/// Postgres creates
 /// no index behind a foreign key, so without them each probe is a
 /// sequential scan and so is the delete's own integrity re-check. A new
 /// way to reference an asset owes this list a probe *and* that column an
@@ -1195,6 +1333,8 @@ pub async fn sweep_orphans(
                     SELECT 1 FROM comment_attachments a WHERE a.cover_media_id = m.id)
               AND NOT EXISTS (
                     SELECT 1 FROM media_upload_sessions s WHERE s.media_id = m.id)
+              AND NOT EXISTS (
+                    SELECT 1 FROM media_attachments merged WHERE merged.merged_into = m.id)
             ORDER BY m.created_at
             LIMIT $2
         )

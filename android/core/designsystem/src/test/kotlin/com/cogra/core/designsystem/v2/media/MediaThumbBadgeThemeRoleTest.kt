@@ -22,7 +22,7 @@ import org.robolectric.RobolectricTestRunner
  * `createAndroidComposeRule<ComponentActivity>()`, and there is no other
  * `captureToImage()` use anywhere in this codebase to borrow a working
  * recipe from. The colour role itself is pinned by `ColorSchemeTest` /
- * `PreviewThemeTokensTest` against `design-tokens.json`; a diff review
+ * `PreviewThemeTokensTest` against `design/tokens.json`; a diff review
  * confirms these badges read `MaterialTheme.colorScheme.inverseSurface` /
  * `.inverseOnSurface`. Automated pixel-level regression coverage is a
  * queued bite pending a working `captureToImage()` recipe for this repo.
