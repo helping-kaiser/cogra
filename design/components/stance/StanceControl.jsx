@@ -328,6 +328,7 @@ export function StanceControl({
             color: "var(--primary)",
             ...(overMedia ? OVER_MEDIA_ANCHOR : null),
           }}
+          data-node={node && "anchor"}
         >
           {/* Never a bare word (§8.3): a viewer with no bundle gets a face
               outside the table, muted and translucent — the control visibly

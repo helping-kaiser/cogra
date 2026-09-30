@@ -81,8 +81,8 @@ export function BandIcon({ name, label, size = 24, dot = false, node }) {
 
 export function CograBand({ trailing, chats = true, bell = true, unread = false, children, node }) {
   return (
-    <div style={{ flex: "none" }} data-node={node}>
-      <div style={{ height: "48px", display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "0 var(--space-4)" }}>
+    <div style={{ flex: "none" }}>
+      <div style={{ height: "48px", display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "0 var(--space-4)" }} data-node={node}>
         <span style={{ display: "inline-flex", color: "var(--primary)" }} aria-hidden="true" data-node={node && "mark"}>
           <Icon name="mark" size={24} pickColor="var(--primary-container)" />
         </span>

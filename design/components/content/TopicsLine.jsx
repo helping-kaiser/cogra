@@ -164,10 +164,9 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
             onClick={onOpenReferences}
             className="cg-state cg-focus"
             style={{ flex: "none", border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)" }}
+            data-node={countsNode}
           >
-            <span style={COUNT_STYLE} data-node={countsNode}>
-              {counts}
-            </span>
+            <span style={COUNT_STYLE}>{counts}</span>
           </button>
         ) : (
           <span style={COUNT_STYLE} data-node={countsNode}>

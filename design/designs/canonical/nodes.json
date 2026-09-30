@@ -124,11 +124,15 @@
           "ada",
           "tobias"
         ],
-        "feed.card.actionRow.stance.exact": [
+        "feed.card.actionRow.stance.anchor": [
           "ada",
           "tobias"
         ],
-        "feed.card.actionRow.stance.face": [
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
           "ada",
           "tobias"
         ],
@@ -224,7 +228,10 @@
         "postDetail.card.actionRow.stance": [
           "mira"
         ],
-        "postDetail.card.actionRow.stance.face": [
+        "postDetail.card.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
           "mira"
         ],
         "postDetail.card.authorChip": [
