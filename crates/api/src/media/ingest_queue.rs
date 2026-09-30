@@ -430,8 +430,7 @@ async fn settle_ready(
                     Ok(Settled::Merged(held))
                 }
                 None => {
-                    store::release_ingest(pool, job.id, settings.retry_after.as_secs_f64())
-                        .await?;
+                    store::release_ingest(pool, job.id, settings.retry_after.as_secs_f64()).await?;
                     Ok(Settled::Retrying)
                 }
             }

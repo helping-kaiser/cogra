@@ -1286,7 +1286,11 @@ async fn an_asset_is_not_swept_while_a_merged_upload_names_it(pool: PgPool) {
         .iter()
         .map(|a| a.id)
         .collect();
-    assert_eq!(second, vec![held], "with nothing naming it, it is an orphan");
+    assert_eq!(
+        second,
+        vec![held],
+        "with nothing naming it, it is an orphan"
+    );
 }
 
 /// The same clip twice from a phone, as the worker meets it: two uploads
