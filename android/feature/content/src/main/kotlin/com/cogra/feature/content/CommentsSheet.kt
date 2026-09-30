@@ -318,8 +318,10 @@ private fun CommentsList(
     // qualifying clip takes it the moment it drops. The sheet is a scroll
     // surface of its own, so it does not share the stage of the list below —
     // it suspends it: the surface that raised the sheet stops its own clip
-    // while the sheet stands (jakob 2026-09-24).
-    ScrollStageHost(listState) {
+    // while the sheet stands (jakob 2026-09-24). Settling at the thread's own
+    // hard top hands its stage to the topmost qualifying clip (jakob
+    // 2026-09-30): else a top clip that once lost focus never plays again.
+    ScrollStageHost(listState, hardTopReelects = true) {
         LazyColumn(
             state = listState,
             modifier = modifier.testTag("comments_list"),

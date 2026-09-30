@@ -112,7 +112,7 @@ class StageElectionTest {
         assertThat(StageElection.elect(INCUMBENT, emptyMap())).isNull()
     }
 
-    // (e) The feed's hard top re-elects (jakob 2026-09-30).
+    // (e) The hard top re-elects — the feed's and the thread's (jakob 2026-09-30).
 
     /** The found bug's shape: both clips whole at the top, the lower one still on stage. */
     @Test

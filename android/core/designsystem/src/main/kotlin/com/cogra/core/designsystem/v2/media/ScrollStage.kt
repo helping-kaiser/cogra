@@ -44,11 +44,12 @@ import androidx.compose.ui.platform.InspectorInfo
  * - **(c) Topmost when empty.** An empty stage goes to the topmost
  *   qualifying clip in list order. No most-visible arithmetic.
  * - **(d) Nothing qualifies, nothing plays** until something does.
- * - **(e) The feed's hard top re-elects** (jakob 2026-09-30, worded by
- *   design for the Feed behavior sidecar): when the scroll settles at the
- *   hard top — where the surface cannot scroll further up, an overscroll
- *   settling back included, a settle 1px below not — the stage goes to the
- *   first qualifying clip in feed order, even over an incumbent that still
+ * - **(e) The hard top re-elects** (jakob 2026-09-30, worded by design for
+ *   the Feed behavior sidecar; the same day extended to the comment thread,
+ *   at the thread's own hard top): when the scroll settles at the surface's
+ *   hard top — where it cannot scroll further up, an overscroll settling
+ *   back included, a settle 1px below not — the stage goes to the first
+ *   qualifying clip in list order, even over an incumbent that still
  *   qualifies. It is the one boundary of (a): two clips that both fit on
  *   screen at the top would otherwise leave the lower one on stage forever,
  *   since it never leaves the gate, and the first could never play again.
@@ -102,7 +103,7 @@ internal object StageElection {
      * @param places every clip on the surface, by its key. A clip that left
      *   the list is simply absent.
      * @param landedAtHardTop whether the scroll has just settled at the
-     *   feed's hard top — clause (e) — so the stage is decided afresh.
+     *   surface's hard top — clause (e) — so the stage is decided afresh.
      */
     fun <K : Any> elect(incumbent: K?, places: Map<K, StagePlace>, landedAtHardTop: Boolean = false): K? {
         // (a) The incumbent keeps the stage while it qualifies. A clip
@@ -338,10 +339,10 @@ internal fun rememberScrollStage(
  * claim last. Dismissing the sheet lifts it, and the stage is decided again
  * as if the list had scrolled.
  *
- * **The feed passes [hardTopReelects]** (clause (e) of [StageElection], jakob
- * 2026-09-30, ruled for "the feed's hard top"): settling at the top of the
- * list hands the stage to the first qualifying clip, even over an incumbent
- * that still qualifies. Other surfaces keep plain incumbency.
+ * **The feed and the comment thread pass [hardTopReelects]** (clause (e) of
+ * [StageElection], jakob 2026-09-30): settling at the top of the list hands
+ * the stage to the first qualifying clip, even over an incumbent that still
+ * qualifies — each surface at its own hard top.
  */
 @Composable
 fun ScrollStageHost(

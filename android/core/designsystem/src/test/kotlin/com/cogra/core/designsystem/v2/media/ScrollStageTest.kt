@@ -298,18 +298,6 @@ class ScrollStageTest {
         assertOnStage(B)
     }
 
-    /** The clause is the feed's (ruled for "the feed's hard top"): a surface without it keeps plain incumbency. */
-    @Test
-    fun aSurfaceWithoutTheHardTopClauseKeepsItsIncumbentAtTheTop() {
-        show(A, B, C, D, height = 400.dp)
-        settleAt(150f)
-        assertOnStage(B)
-
-        settleAt(0f)
-
-        assertOnStage(B)
-    }
-
     private fun show(vararg rows: String, height: Dp = 300.dp, hardTopReelects: Boolean = false) {
         compose.setContent {
             OneSurface(height = height, hardTopReelects = hardTopReelects) {

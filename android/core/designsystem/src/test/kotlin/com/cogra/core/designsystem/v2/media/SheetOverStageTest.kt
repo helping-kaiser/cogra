@@ -1,5 +1,6 @@
 package com.cogra.core.designsystem.v2.media
 
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -20,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -64,6 +68,10 @@ class SheetOverStageTest {
     val compose = createComposeRule()
 
     private lateinit var feed: LazyListState
+
+    private lateinit var thread: LazyListState
+
+    private lateinit var scope: CoroutineScope
 
     private var sheetOpen by mutableStateOf(false)
 
@@ -173,6 +181,38 @@ class SheetOverStageTest {
     }
 
     /**
+     * THE THREAD'S OWN HARD TOP re-elects its stage (jakob 2026-09-30: "comment
+     * clips also need it"). Two thread clips fit whole at the thread's top;
+     * scrolled down, the second takes the stage, and scrolling back without
+     * reaching the top leaves it there — no ricochet, a settle one unit below
+     * included. Landing at the thread's top hands the stage back to the first,
+     * while the feed beneath rests below its own top, suspended.
+     */
+    @Test
+    fun landingAtTheThreadsOwnHardTopHandsItsStageBackToTheTopmostThreadClip() {
+        showFeedUnderSheet()
+        scrollFeedTo(HALF_OF_EACH)
+        openSheet(clips = listOf(SHEET_S, SHEET_T, SHEET_U))
+        assertHolds(SHEET_S)
+
+        // S at 50/200, T whole: T takes the thread's stage.
+        settleThreadAt(PAST_A)
+        assertHolds(SHEET_T)
+        // S at 150/200 and at 199/200, T whole: T keeps it.
+        settleThreadAt(HALF_OF_EACH)
+        assertHolds(SHEET_T)
+        settleThreadAt(1f)
+        assertHolds(SHEET_T)
+
+        settleThreadAt(0f)
+
+        assertThat(thread.canScrollBackward).isFalse()
+        assertThat(feed.canScrollBackward).isTrue()
+        assertHolds(SHEET_S)
+        assertThat(playingFrames()).containsExactly(trace(SHEET_S))
+    }
+
+    /**
      * The detail's pinned clip is not a stage at all — it composes its player
      * unconditionally — so no suspension reaches it, and a sheet's clip takes
      * the player from it by claiming last. When the sheet closes the pinned
@@ -210,7 +250,7 @@ class SheetOverStageTest {
             Surfaces {
                 feed = rememberLazyListState()
                 // The surface that raises the sheet is the one that knows it is up.
-                ScrollStageHost(feed, suspended = sheetOpen) {
+                ScrollStageHost(feed, suspended = sheetOpen, hardTopReelects = true) {
                     LazyColumn(state = feed, modifier = Modifier.size(WIDTH, HEIGHT)) {
                         items(listOf(FEED_A, FEED_B), key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
                     }
@@ -226,14 +266,16 @@ class SheetOverStageTest {
      */
     @Composable
     private fun Surfaces(base: @Composable () -> Unit) {
+        scope = rememberCoroutineScope()
         CompositionLocalProvider(LocalDensity provides Density(1f)) {
             Cogra2PreviewTheme {
-                Box(Modifier.size(WIDTH, HEIGHT)) {
+                Box(Modifier.size(WIDTH, THREAD_HEIGHT)) {
                     base()
                     if (sheetOpen) {
-                        val thread = rememberLazyListState()
-                        ScrollStageHost(thread) {
-                            LazyColumn(state = thread, modifier = Modifier.size(WIDTH, HEIGHT)) {
+                        thread = rememberLazyListState()
+                        // Wired as the real thread is: its own hard top re-elects.
+                        ScrollStageHost(thread, hardTopReelects = true) {
+                            LazyColumn(state = thread, modifier = Modifier.size(WIDTH, THREAD_HEIGHT)) {
                                 items(sheetClips, key = { it }) { row -> ScrollStageRow(row) { Clip(row) } }
                             }
                         }
@@ -270,6 +312,17 @@ class SheetOverStageTest {
         compose.waitForIdle()
     }
 
+    /** A thread scroll that runs, then settles at [offset] — in progress for its frames, at rest at the end. */
+    private fun settleThreadAt(offset: Float) {
+        compose.runOnIdle {
+            val current = thread.firstVisibleItemIndex * ROW + thread.firstVisibleItemScrollOffset
+            scope.launch { thread.animateScrollBy(offset - current) }
+        }
+        compose.waitForIdle()
+        assertThat(thread.isScrollInProgress).isFalse()
+        assertThat(thread.firstVisibleItemIndex * ROW + thread.firstVisibleItemScrollOffset).isEqualTo(offset.toInt())
+    }
+
     private fun assertHolds(name: String) {
         val holding = VideoStage.holding
         assertThat(holding?.url).isEqualTo(url(name))
@@ -298,10 +351,15 @@ class SheetOverStageTest {
         const val FEED_A = "feed-a"
         const val FEED_B = "feed-b"
         const val SHEET_S = "sheet-s"
+        const val SHEET_T = "sheet-t"
+        const val SHEET_U = "sheet-u"
         const val PINNED_P = "pinned-p"
 
         val WIDTH = 200.dp
         val HEIGHT = 300.dp
+
+        /** The thread: two whole clips at its top. */
+        val THREAD_HEIGHT = 400.dp
         val CLIP = 200.dp
 
         /** A clip row's height in scroll units. */

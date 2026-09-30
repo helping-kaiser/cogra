@@ -189,12 +189,12 @@ class VeiledStageTest {
     }
 
     /**
-     * The feed's hard top re-elects on LANDING there (jakob 2026-09-30), never
-     * while resting there: an unveil at the top is still an eligibility change,
-     * so A, topmost and whole, does not displace B.
+     * The hard top re-elects on LANDING there (jakob 2026-09-30), never while
+     * resting there: an unveil at the top is still an eligibility change, so
+     * A, topmost and whole, does not displace B.
      */
     @Test
-    fun anUnveilWhileRestingAtTheFeedsHardTopStillStealsNothing() {
+    fun anUnveilWhileRestingAtTheHardTopStillStealsNothing() {
         show(A, B, veil = setOf(A), height = TALL, hardTopReelects = true)
         assertHolds(B)
         assertThat(list.canScrollBackward).isFalse()
