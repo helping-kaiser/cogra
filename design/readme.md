@@ -1834,9 +1834,28 @@ entry first". What stands:
 - **`_build/check-behavior.mjs` holds the behavior sidecars to their
   grammar**: every line of `designs/canonical/behavior/<Screen>.md`
   parses as a WHEN or an ALWAYS line, or the gate fails with its file
-  and line. The sidecars are the contract the implementation side's
-  conformance harness compiles; their README carries the grammar and
-  what the check does not see.
+  and line — and names only registered node paths, writing a path
+  wherever a registered screen has a node for the element. The
+  sidecars are the contract the implementation side's conformance
+  harness compiles; their README carries the grammar and what the
+  check does not see.
+- **Registered screens carry data-node paths** (design ⇄ impl seam
+  002; the calibration screens `Feed`, `PostDetail`, `ComposeDetails`
+  first). A master names its own parts with local segments, and only
+  when its placer hands it a `node` name; a screen that exports `NODE`
+  supplies the prefix, and `render-screens` (`_build/node-paths.mjs`)
+  joins each segment with its annotated ancestors into the full path
+  on the built board — `feed.card.actionRow.score`. A repeated
+  instance carries `data-node-key`, a content key (the author's
+  handle, the tag's name; a position only where content has none),
+  and so does every node inside it: the implementation side diffs
+  (path, key), never DOM order. Every other board renders the
+  annotations stripped, so a name reaches a built board only once it
+  is registered in `designs/canonical/nodes.json`, which the render
+  writes. **Registered paths are append-only**: a collision fails the
+  render, and so does a registered path that stops rendering — a
+  rename is a breaking change for the implementation side, made only
+  by deleting the path from `nodes.json` by hand in a reviewed PR.
 - **`_build/check-help-notes.mjs` holds the "? contents" notes to
   copy-voice** (item 109): each note section names a dialog of
   copy-voice's *The "?" dialogs* and must carry its blessed text, and
@@ -6955,17 +6974,19 @@ to compete got their chooser.
   post-MVP separation*). The stages below read this list; the ideation
   canvases are deliberately not on it.
 - `_build/render-screens.mjs`, `shell.mjs`, `flow-markers.mjs`,
-  `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
+  `node-paths.mjs`, `gen-maps.mjs`, `gen-canvases.mjs`, `check-flows.mjs`,
   `check-readouts.mjs`, `check-behavior.mjs`, `check-help-notes.mjs`,
   `report-summaries.mjs` — the board pipeline (§13, *Canvas pages and
-  flows*): render the screens, stamp the flow numbers, generate the
+  flows*): render the screens, join the registered screens' data-node
+  paths into `nodes.json`, stamp the flow numbers, generate the
   maps, seed the per-canvas manifests (§14), gate the result —
-  `check-behavior` holds the behavior sidecars to their grammar,
-  `check-help-notes` the "? contents" notes to copy-voice. Run all of
-  them after any screen, component, graph.json, sidecar or "?" copy
-  edit. A screen whose state is not a
+  `check-behavior` holds the behavior sidecars to their grammar and the
+  registry, `check-help-notes` the "? contents" notes to copy-voice. Run
+  all of them after any screen, component, graph.json, sidecar or "?"
+  copy edit. A screen whose state is not a
   portrait phone exports `FRAME` and the shell builds that artboard
-  instead — so far only the rotated viewer. `_build/flow-engine.mjs` is
+  instead — so far only the rotated viewer; a calibration screen
+  exports `NODE`, its data-node prefix. `_build/flow-engine.mjs` is
   the gate's user-flow half (§13, *The user-flow layer*): it resolves
   `flows.json` and blesses `flows.resolved.json`.
 

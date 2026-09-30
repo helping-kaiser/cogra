@@ -3635,7 +3635,7 @@ accessible name, which copy-voice does not carry yet. Nothing here
 gates the implementation session: the lines and the copy are the
 contract meanwhile.
 
-### 111 · The behavior lint's node check · *tooling* · **filed 2026-09-30**
+### 111 · The behavior lint's node check · *tooling* · **done 2026-09-30**
 
 `check-behavior.mjs` checks the sidecars' syntax only. The
 grammar's element rule — a full data-node path wherever a node
@@ -3648,3 +3648,14 @@ screens first (`Feed`, `PostDetail`, `ComposeDetails` — the
 calibration-ID PR), then each round of the ID sweep. The grammar and
 the activation plan are the design ⇄ impl seam's entries 002 and 004
 (dev-state `cogra/tmp_dev/design-impl-seam.md`).
+
+*Landed with the calibration-ID PR*: `render-screens` writes the
+registry (`designs/canonical/nodes.json`) from the screens that export
+`NODE`, and `check-behavior` reads it — a node path a line names must
+be registered, and on a registered screen the plain words of a compound
+node name fail. Each sweep round brings its screens under the check by
+registering them; no further tooling is needed. `ComposeDetails.md`'s
+media row became `composeDetails.mediaRow` in the same change;
+`Feed.md` names no element the Feed board draws (its clips, sound disc
+and sheets are not on that board), so its lines keep their words until
+a registered board draws them.
