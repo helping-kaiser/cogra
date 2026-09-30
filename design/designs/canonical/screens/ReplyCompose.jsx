@@ -1,7 +1,9 @@
 /* THE REPLY WIZARD'S FIRST STAGE (legacy conversion, lane C): the words, and
    nothing else yet. It is `ReplyPictures` before anything was attached — same
    quoted row, same body mid-sentence, same foot — so the two are one composer
-   at two moments and read from one set of masters.
+   at two moments and read from one set of masters. It is drawn answering the
+   post (the thread's Add a comment); `ReplyComposeComment` is the same
+   composer answering a comment.
 
    THE X DISCARDS HERE. A reply keeps no draft, so leaving it loses the words:
    `WizardHeader`'s `leaveLabel` says so, and a non-empty composer asks first

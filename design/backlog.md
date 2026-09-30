@@ -3719,3 +3719,14 @@ new and close. A briefed round when ranking lands: the default, the
 setting's words and home, and what the thread shows for comments the
 ranker cannot score — the feed's and search's unranked tail are the
 precedents.
+
+### 116 · The settled reply's landing needs a redraw · *design* · **filed 2026-09-30**
+
+The thread-order rule (newest first at the top level, oldest first in
+a branch) puts a landed reply at the end of its branch — and at
+`ReplySettled`'s drawn offset the reader's own words then fall below
+the sheet's foot, which breaks "show the content you just wrote". The
+board keeps its old position and its docblock says so. A briefed
+choice for jakob: the landing scrolls the thread to the new card
+(K6.6's direction), or the board takes a larger offset that keeps the
+card in view. Drawn once ruled.
