@@ -1969,8 +1969,15 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `Settings` frames the whole scroll; a sheet board keeps the phone's 844 and
    lets the page run past it, which is what a scrolling page under a sheet does.
    The three boards therefore differ in what covers the page and in nothing
-   else. */
-function SettingsBody() {
+   else.
+
+   Two states of the account reach it (the key-loss round): `backup="none"`
+   is a reader who declined the backup — the Recovery code row reads
+   `Not made yet` and opens `SettingsBackupNone`, and the group's footnote
+   stops promising a way back that does not exist — and `forget` is the
+   don't-remember switch turned on. Both default to the page every other
+   board draws. */
+function SettingsBody({ backup = "made", forget = false } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
@@ -2069,9 +2076,13 @@ function SettingsBody() {
 
         <SettingsGroup
           label="Key backup"
-          footnote="Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
+          footnote={
+            backup === "none"
+              ? "Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back."
+              : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
+          }
         >
-          <SettingsRow label="Recovery code" status="Last created 12.08.2026" onOpen={() => {}} />
+          <SettingsRow label="Recovery code" status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"} onOpen={() => {}} />
           <SettingsRow label="Your key" onOpen={() => {}} />
         </SettingsGroup>
 
@@ -2127,7 +2138,7 @@ function SettingsBody() {
 
         <SettingsGroup ariaLabel="Sign out">
           <SettingsRow
-            checked={false}
+            checked={forget}
             label="Don't remember this account on this device"
             status="Your key and your draft are cleared from this browser when you sign out."
             onOpen={() => {}}
@@ -2143,7 +2154,8 @@ function SettingsBody() {
             does not need to be argued with.
 
             IT IS A NAVIGATING ROW, NOT AN ACTION ROW. Sign out happens on the
-            press; this opens a surface, and the chevron is the system's one
+            press — asking first only when it would take the only copy of an
+            unbacked key (`SignOutConfirm`); this opens a surface, and the chevron is the system's one
             promise that it does. That is also why the label is a verb phrase
             where `SettingsRow`'s own note asks for a noun: the row names a task
             rather than a setting, and `Account deletion` would be the page's
@@ -2160,6 +2172,147 @@ function SettingsBody() {
         >
           <SettingsRow label="Delete account" onOpen={() => {}} />
         </SettingsGroup>
+      </div>
+    </>
+  );
+}
+
+/* ── Restore's body (readme §13, entry; the key-loss round) ──────────────────
+   What `Restore` draws, and what its two refused states draw — one body, so
+   the three boards differ in the line the field wears and in nothing else.
+   The body copy is the screen's `{{restoreBody}}` hole, which each board's
+   own VALS fills from its wording chip. `value` seeds the field for a state
+   whose line answers something typed; `error` is the field's M3 error line. */
+function RestoreBody({ value = "", error }) {
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          Restore your key
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          {"{{restoreBody}}"}
+        </p>
+
+        <div style={{ marginTop: 32 }}>
+          <TextField id="recovery-code" label="Recovery code" mono placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX" value={value} error={error} />
+        </div>
+
+        <div style={{ marginTop: 16 }}>
+          <Checkbox label="Don't remember this account on this device" />
+        </div>
+
+        <div style={{ marginTop: 16 }}>
+          <Button style={{ width: "100%" }}>Restore the key</Button>
+        </div>
+
+        <p
+          style={{
+            margin: "24px 0 0",
+            fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          This is the only way to restore your key. If the code is gone too, the key can't be brought back — your sign-in still works.
+        </p>
+      </div>
+    </>
+  );
+}
+
+/* ── The backup's replace screen (readme §13, the settings round; the
+   key-loss round) ─────────────────────────────────────────────────────────
+   What `SettingsBackup` draws, and what its wrong-code state and the Android
+   no-screen-lock warning are drawn over — one body, so the three boards
+   differ in the state they draw and in nothing else.
+
+   `app` draws Android's layout: the phone's own unlock is the proof, so there
+   is no field, and no lost-code line either — the line exists because a
+   browser whose code is gone cannot re-key. `error` is the field's M3 error
+   line, `RestoreError`'s words for the same secret refused. */
+function SettingsBackupBody({ app = false, error }) {
+  return (
+    <>
+      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          A new recovery code
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          A new code re-encrypts your key and replaces the old backup — recovery always uses the
+          newest one. Your current code was made on 12.08.2026.
+        </p>
+
+        {!app && (
+          <>
+            <div style={{ marginTop: 32 }}>
+              <TextField
+                id="settings-rekey-code"
+                label="Current recovery code"
+                mono
+                placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
+                value=""
+                error={error}
+              />
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <QuietNote>
+                Lost it? This browser can&apos;t make a new code without the current one. If the Android app holds your
+                key, make the new code there.
+              </QuietNote>
+            </div>
+          </>
+        )}
+
+        <div style={{ marginTop: app ? 32 : 16 }}>
+          <Button style={{ width: "100%" }}>Create a new recovery code</Button>
+        </div>
+
+        <p
+          style={{
+            margin: "24px 0 0",
+            fontSize: "var(--text-body-small)",
+            lineHeight: "var(--text-body-small--line-height)",
+            letterSpacing: "var(--text-body-small--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          The new code is shown once and never stored. Have somewhere to write it down before you go
+          on — the old code keeps working until the new one is confirmed.
+        </p>
       </div>
     </>
   );

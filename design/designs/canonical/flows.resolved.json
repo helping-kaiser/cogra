@@ -360,6 +360,21 @@
       ]
     },
     {
+      "name": "make-a-recovery-code-later",
+      "description": "A reader who declined the backup opens the Recovery code row, makes the code on the ceremony's own board, types it back, and lands in settings with the key backed up.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackupNone — no code has been made yet — the row reads Not made yet, and the backup is made late",
+        "SettingsBackupNone · 2 «Create my recovery code» → RecoveryCode — the first code on the ceremony's own board — back stays swallowed until it is typed back",
+        "end · RecoveryCode · 3 «I've written it down» → Settings — a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackupNone",
+        "RecoveryCode"
+      ]
+    },
+    {
       "name": "vouch-back-for-your-inviter",
       "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
       "status": "resolved",
@@ -427,6 +442,7 @@
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "status": "resolved",
       "startsOn": [
+        "ApplicantKeyElsewhere",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -434,11 +450,12 @@
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 5 boards → Restore",
+        "start · «Restore the key» on 6 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
         "Restore",
+        "ApplicantKeyElsewhere",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -1744,6 +1761,12 @@
         "verify-the-email"
       ]
     },
+    "ApplicantKeyElsewhere": {
+      "flows": [
+        "restore-your-key"
+      ],
+      "endpoint": []
+    },
     "ApplicantRejected": {
       "flows": [
         "follow-a-citation",
@@ -2736,6 +2759,7 @@
     },
     "RecoveryCode": {
       "flows": [
+        "make-a-recovery-code-later",
         "make-your-key"
       ],
       "endpoint": [
@@ -2951,15 +2975,23 @@
     },
     "Settings": {
       "flows": [
+        "make-a-recovery-code-later",
         "request-account-deletion"
       ],
       "endpoint": [
+        "make-a-recovery-code-later",
         "request-account-deletion"
       ]
     },
     "SettingsBackupKeyAbsent": {
       "flows": [
         "restore-your-key"
+      ],
+      "endpoint": []
+    },
+    "SettingsBackupNone": {
+      "flows": [
+        "make-a-recovery-code-later"
       ],
       "endpoint": []
     },
@@ -3088,5 +3120,7 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": []
+  "gapsOnFlows": [
+    "Restore/4: the kept picks' review — picks kept pending on this device sign together, in one batch the reader reviews first"
+  ]
 }

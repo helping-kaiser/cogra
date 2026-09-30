@@ -32,7 +32,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 4456,
+      "h": 4733,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -256,6 +256,51 @@
       "file": "DeleteAccountMail.dc.html",
       "title": "Delete account · check your mail",
       "x": 1920,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackupNone.dc.html",
+      "title": "Settings · make a recovery code, none made yet",
+      "x": 2400,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsBackupError.dc.html",
+      "title": "Settings · a new recovery code, the current one refused",
+      "x": 2880,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "YourKeyGate.dc.html",
+      "title": "Settings · your key, behind the browser's gate",
+      "x": 3840,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SignOutConfirm.dc.html",
+      "title": "Settings · signing out without a backup",
+      "x": 4320,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "NoScreenLock.dc.html",
+      "title": "Settings · no screen lock (Android)",
+      "x": 3360,
       "y": 2988,
       "w": 390,
       "h": 844,

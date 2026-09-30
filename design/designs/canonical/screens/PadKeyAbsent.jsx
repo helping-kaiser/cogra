@@ -24,7 +24,34 @@
    a signature that cannot be given must not draw it. No prop takes that row
    away, and adding one would be deciding what the pad looks like when signing is
    impossible. So the notice stands where the landing line and the actions
-   would. */
+   would.
+
+   ONLY THE TEXT BUTTON KEEPS (the key-loss round). `StanceControl`'s rule
+   holds here unchanged: a press outside, or the system's Back, stages
+   nothing — the pick is dropped, as a Cancel would drop it. Keeping the pick
+   is a choice the reader makes by its own words, `Keep it pending, restore
+   later`, and never the side effect of leaving.
+
+   A KEPT PICK'S LIFE, IN ONE PLACE (the key-loss round; E12's ruling):
+   - It lives on this device only, and survives a restart. Nothing is staged
+     server-side and nothing is signed.
+   - The post's anchor wears it (`PadPending`): the kept pick's face, and
+     `Waiting for your key` under it. Tapping the face opens this pad again,
+     holding it; a new pick kept on the same post replaces it.
+   - Several can wait at once, one per post. When the key is restored they
+     sign together, in one batch the reader reviews first — never silently.
+   - A remembered sign-out keeps them, as it keeps everything on the device.
+     A sign-out that forgets the account clears them with the draft — and
+     where it would also take an unbacked key, `SignOutConfirm` names all
+     three and keeps them sealed unless the reader erases them.
+   - A session invalidated from elsewhere — `Sign out everywhere else` on
+     another device, a password changed or reset there, a reused token
+     caught — never destroys
+     them, even on an account set to forget this device: they stay on it,
+     sealed and unusable until this device signs in again, online, with the
+     account's current credentials (jakob, confirmed by the implementation
+     side's security check). An invalidation ends the session; it is not a
+     remote wipe. */
 export function Screen() {
   return (
     <>

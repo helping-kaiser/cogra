@@ -22,65 +22,22 @@
    biometric or screen-lock gate and uses it; a browser has none, so it asks
    for the current code. The board draws the browser's, the way every platform
    line on these boards is drawn browser-first — one flow, each platform's own
-   proof.
+   proof. ON ANDROID this is the same screen without the field or the lost-code
+   line: the commitment raises the phone's own unlock, a cancelled prompt leaves
+   the screen as it was, and a phone with no screen lock is warned first
+   (`NoScreenLock`, drawn over that layout).
 
    THE CONSEQUENCE IS SAID BEFORE THE ACT, never only in the snackbar after
-   it: the old backup stops working the moment the new code exists. */
+   it — and the consequence is that nothing is lost by walking away (the
+   key-loss round): the new backup uploads only once the new code is typed back
+   on the code screen, so the old code keeps working until then, and an
+   abandoned code screen leaves the old backup exactly as it was.
+
+   A BROWSER THAT LOST ITS CODE IS TOLD WHERE TO GO (the key-loss round). The
+   browser's key is sealed behind the backup it would replace, so without the
+   current code it cannot re-key (web.md) — and a reader retrying the field
+   forever is the dead end the quiet line under it closes. The wrong code is
+   `SettingsBackupError`; offline is `NetworkError`'s. */
 export function Screen() {
-  return (
-    <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "var(--text-headline-small)",
-            lineHeight: "var(--text-headline-small--line-height)",
-            fontWeight: "var(--text-headline-small--font-weight)",
-          }}
-        >
-          A new recovery code
-        </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
-          A new code re-encrypts your key and replaces the old backup — recovery always uses the
-          newest one. Your current code was made on 12.08.2026.
-        </p>
-
-        <div style={{ marginTop: 32 }}>
-          <TextField
-            id="settings-rekey-code"
-            label="Current recovery code"
-            mono
-            placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
-            value=""
-          />
-        </div>
-
-        <div style={{ marginTop: 16 }}>
-          <Button style={{ width: "100%" }}>Create a new recovery code</Button>
-        </div>
-
-        <p
-          style={{
-            margin: "24px 0 0",
-            fontSize: "var(--text-body-small)",
-            lineHeight: "var(--text-body-small--line-height)",
-            letterSpacing: "var(--text-body-small--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
-          The new code is shown once and never stored. Have somewhere to write it down before you go
-          on — the old code stops working as soon as the new one exists.
-        </p>
-      </div>
-    </>
-  );
+  return <SettingsBackupBody />;
 }

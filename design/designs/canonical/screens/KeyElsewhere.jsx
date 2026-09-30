@@ -1,5 +1,12 @@
 /* The key isn't here — restore-first, and the feed keeps reading (readme §13).
-   The wording chip flips the title between the browser and the installed app. */
+   The wording chip flips the title between the browser and the installed app.
+
+   THE STANCE FACE OPENS THE KEY-ABSENT PAD, WHICHEVER WAY IT IS PRESSED (the
+   key-loss round). Everywhere else a tap opens the pad and a press-and-hold
+   signs the modest opinion on the spot — and a hold here would sign with a
+   key that is not here. So the hold opens `PadKeyAbsent` exactly as the tap
+   does: nothing signs silently, and the reader meets the notice before the
+   pick, never after it. A pick kept there waits on this device (`PadPending`). */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
 

@@ -2,7 +2,21 @@
    on the device and never leaves it, so the only thing CoGra can offer is the
    recovery code, and this screen exists to say so before asking for anything.
    Both ways out are real: the code now, or Not now — which does not skip the
-   ceremony, it opens the board that spells out what declining costs. */
+   ceremony, it opens the board that spells out what declining costs.
+
+   THE KEY EXISTS ONLY ONCE THE CEREMONY ENDS (the key-loss round). The seed
+   and the code are made when the code is shown and held in memory; the key is
+   attached to the account, kept on this browser, and its sealed backup
+   uploaded right after the attach — all at the moment the typed-back code
+   confirms. `I accept the risk` attaches and keeps the key with no backup.
+   Every other exit — this back arrow, the dialog's Cancel, a closed tab, a
+   killed app — leaves no key at all, and the next open shows the task card
+   exactly as it was. Leaving the code screen is earned, so nothing it would
+   have made survives an unearned exit.
+
+   A BROWSER THAT CANNOT HOLD A KEY IS TOLD SO HERE (web.md, the browser
+   floor): the ceremony probes WebCrypto Ed25519 before minting, and a browser
+   without it opens `KeyCeremonyUnsupported` instead of this board. */
 export function Screen() {
   return (
     <>
