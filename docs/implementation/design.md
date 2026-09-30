@@ -95,13 +95,16 @@ if the palette ever needs more separation, but it changes
 every token, so it is a decision, not a tweak.
 
 The generator lives in `web/src/lib/ui/design-tokens.test.ts` and
-writes **`design-tokens.json`** at the repo root — the contract both
-clients pin their themes to, the same arrangement the client crypto
-has with `client-crypto-vectors.json`. `make tokens` regenerates it;
-every other run asserts it is not stale, and the AA check of §2.1
-runs there, so a palette that fails cannot be generated. Neither
-client transcribes a value: Android's `ColorSchemeTest` and web's
-`palette.test.ts` read the file.
+writes **`design/tokens/scheme.json`**, the scheme
+`design/tokens/colors.css` transcribes into **`design/tokens.json`**
+— the token contract the clients pin their themes to, the same
+arrangement the client crypto has with `client-crypto-vectors.json`.
+`make tokens` regenerates the scheme; every other run asserts it is
+not stale, and the AA check of §2.1 runs there, so a palette that
+fails cannot be generated. `design/_build/export-tokens.mjs` fails
+when `colors.css` drifts from the scheme. Neither client transcribes
+a value: Android's `ColorSchemeTest` reads the contract and web's
+`palette.test.ts` reads the scheme.
 
 ### 2.3 Tokens
 
