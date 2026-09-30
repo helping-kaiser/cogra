@@ -97,7 +97,13 @@ export function joinNodePaths(markup, prefix, board) {
       const full = path.join(".");
       const chain = keys.join("/");
       const identity = `${full}\u0000${chain}`;
-      if (seen.has(identity)) fail(`two nodes share path ${full}${chain ? ` and key ${chain}` : " with no key"} — a repeated instance needs a data-node-key`);
+      if (seen.has(identity)) {
+        fail(
+          chain
+            ? `two nodes share path ${full} and key ${chain} — the instances' key rule does not tell them apart`
+            : `two nodes share path ${full} with no key — a repeated instance needs a data-node-key`,
+        );
+      }
       seen.set(identity, true);
       nodes.push({ path: full, key: chain || null, rule: key === undefined ? null : KEY_RULES[seg] });
       const rest = attrs.replace(STRIP, "");
