@@ -54,7 +54,7 @@ const PAIR = {
   opacity: 0.75,
 };
 
-export function TopicRemovable({ topic, pair, onRemove, onEdit }) {
+export function TopicRemovable({ topic, pair, onRemove, onEdit, node }) {
   return (
     <span
       style={{
@@ -71,6 +71,8 @@ export function TopicRemovable({ topic, pair, onRemove, onEdit }) {
         fontWeight: "var(--text-label-large--font-weight)",
         letterSpacing: "var(--text-label-large--letter-spacing)",
       }}
+      data-node={node}
+      data-node-key={node && topic.replace(/^#/, "")}
     >
       {onEdit ? (
         <button
@@ -116,6 +118,7 @@ export function TopicRemovable({ topic, pair, onRemove, onEdit }) {
           color: "inherit",
           cursor: "pointer",
         }}
+        data-node={node && "remove"}
       >
         <Icon name="close" size={16} />
       </button>

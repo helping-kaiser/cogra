@@ -79,6 +79,8 @@ export function MediaThumb({
   label,
   onRemove,
   removeLabel = "Remove this picture",
+  node,
+  nodeKey,
 }) {
   const w = width ?? size;
   const h = height ?? size;
@@ -105,6 +107,8 @@ export function MediaThumb({
         alignItems: "center",
         justifyContent: "center",
       }}
+      data-node={node}
+      data-node-key={nodeKey}
     >
       {src && (
         <img

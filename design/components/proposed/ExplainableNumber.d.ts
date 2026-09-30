@@ -25,6 +25,8 @@ export interface ExplainableNumberProps {
    * do — they are shown whatever the reader's setting says.
    */
   exact?: boolean;
+  /** The data-node name its placer gives this number (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `value`. */
+  node?: string;
 }
 
 export declare function ExplainableNumber(props: ExplainableNumberProps): JSX.Element;

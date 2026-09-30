@@ -6,7 +6,7 @@ import React from "react";
    as a card; an outline on top of it would be Material's *outlined* card, a
    different component. */
 
-export function Card({ children, as = "section", ariaLabel, style }) {
+export function Card({ children, as = "section", ariaLabel, style, node, nodeKey }) {
   const Tag = as;
   return (
     <Tag
@@ -21,6 +21,8 @@ export function Card({ children, as = "section", ariaLabel, style }) {
         padding: "var(--card-padding)",
         ...style,
       }}
+      data-node={node}
+      data-node-key={nodeKey}
     >
       {children}
     </Tag>

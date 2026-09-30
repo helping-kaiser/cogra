@@ -21,7 +21,12 @@
    THIS STAGE NEVER STANDS ON AN EMPTY BODY (jakob's ruling, 2026-09-23).
    Removing the last picture in the manager gives the pick step back — the
    `ComposePicked` remove edge's last-one case — so no empty Details ever
-   reaches the seal. The stage's words stay staged in the draft. */
+   reaches the seal. The stage's words stay staged in the draft.
+
+   A CALIBRATION SCREEN (design ⇄ impl seam 002): `NODE` registers the board,
+   so the names `ComposeDetailsBody` gives its elements carry
+   `composeDetails.…` data-node paths into the built board and `nodes.json`. */
+export const NODE = "composeDetails";
 export function Screen() {
   return <ComposeDetailsBody />;
 }

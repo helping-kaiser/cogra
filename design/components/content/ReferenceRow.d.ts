@@ -27,6 +27,8 @@ export interface NodeMarkProps {
   name?: string;
   /** A person's avatar photo or a media post's cover. */
   src?: string;
+  /** The data-node name its placer gives this mark (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function NodeMark(props: NodeMarkProps): JSX.Element;

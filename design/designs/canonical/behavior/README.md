@@ -57,11 +57,15 @@ outcome := [NEVER] <observable> [WITHIN <duration | motion token>]
 - The keywords are uppercase and reserved; everything between them is
   plain words. A trigger, a state or an outcome is never empty.
 - **Elements are named by their full data-node path** wherever a node
-  exists (`feed.card.soundDisc`); plain words stay only for concepts
+  exists (`composeDetails.mediaRow`), written where the plain words
+  stood and without their article; plain words stay only for concepts
   with no node — playback, focus, the keyboard, the stage. The node IDs
-  land screen by screen, and until a screen's land its lines name its
+  land screen by screen in `designs/canonical/nodes.json`, the registry
+  the board build writes, and until a screen's land its lines name its
   elements in plain words; the paths swap in as a rename, never as a
-  change of meaning.
+  change of meaning. A path names what the screen's board draws: an
+  element the board does not draw has no node on it yet, and its line
+  keeps the plain words until a registered board draws it.
 
 Three lines, from the two sidecars:
 
@@ -98,7 +102,7 @@ prohibition carried only by omission is a review finding.
 ## What the lint checks
 
 `_build/check-behavior.mjs` is a stage of the design pipeline, and its
-exit is part of the design gate. Today it checks syntax:
+exit is part of the design gate. It checks syntax:
 
 - every non-heading, non-blank line parses as a WHEN or an ALWAYS line
   under the grammar above — prose fails, THEN fails, a GIVEN after the
@@ -108,7 +112,18 @@ exit is part of the design gate. Today it checks syntax:
   canonical screen;
 - no line stands twice in one sidecar.
 
-What activates later: the node check. Once a screen's data-node IDs are
-registered, a plain word in its lines where a node exists fails — screen
-by screen as the ID sweep lands, the calibration screens (`Feed`,
-`PostDetail`, `ComposeDetails`) first.
+And it checks nodes, against `nodes.json`:
+
+- a node path in any line is a registered one — a line never names an
+  element the built boards do not carry;
+- on a registered screen (`Feed`, `PostDetail` and `ComposeDetails`, the
+  calibration screens, so far), plain words that spell one of its nodes
+  fail: "the media row" on `ComposeDetails` is written
+  `composeDetails.mediaRow`. The check knows a node by the words of a
+  compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word
+  name (`card`, `title`) is also an everyday word, so writing it as a
+  plain word is caught in review, not by the lint, the way an unwritten
+  prohibition is.
+
+A screen whose IDs are not registered yet keeps its plain words, and the
+check holds it to node paths from the change that registers it.

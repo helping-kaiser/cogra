@@ -163,6 +163,7 @@ export function StanceControl({
      marker's quiet line under it says what it waits on. Additive — absent,
      the control renders exactly as before. */
   pendingPick,
+  node,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
   React.useEffect(() => {
@@ -293,6 +294,7 @@ export function StanceControl({
       style={{ position: "relative", display: "flex", flexDirection: "column", gap: "var(--space-1)", width: wide ? "100%" : undefined }}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
+      data-node={node}
     >
       {/* OVER MEDIA THE ROW SPENDS NO GAP: the skip-link beside the anchor is a
           hairline the eye never sees, but its gap pushes the anchor off the
@@ -336,6 +338,7 @@ export function StanceControl({
             color: "var(--primary)",
             ...(overMedia ? OVER_MEDIA_ANCHOR : null),
           }}
+          data-node={node && "anchor"}
         >
           {/* Never a bare word (§8.3): a viewer with no bundle gets a face
               outside the table, muted and translucent — the control visibly
@@ -357,6 +360,7 @@ export function StanceControl({
                 opacity: restingFace === null ? "var(--opacity-resting-face)" : 1,
                 filter: restingFace === null ? "grayscale(1)" : "none",
               }}
+              data-node={node && "face"}
             >
               {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
             </span>
@@ -380,6 +384,7 @@ export function StanceControl({
               className="cg-exact"
               aria-hidden="true"
               style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+              data-node={node && "exact"}
             >
               {formatStancePair(restingPair)}
             </span>

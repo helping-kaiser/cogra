@@ -78,6 +78,8 @@ export interface StanceControlProps {
    * unchanged — nothing is signed until the key is restored. Off by default.
    */
   pendingPick?: StancePair;
+  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`. */
+  node?: string;
 }
 
 export declare function StanceControl(props: StanceControlProps): JSX.Element;

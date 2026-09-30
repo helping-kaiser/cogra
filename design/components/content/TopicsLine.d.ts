@@ -17,6 +17,8 @@ export interface TopicsLineProps {
   onOpen?: () => void;
   /** Without `onOpen`: chips navigate, and only the counts open the sheet. */
   onOpenReferences?: () => void;
+  /** The data-node name its placer gives this line (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `tag` per chip, keyed by the tag's name; `counts`. */
+  node?: string;
 }
 
 export declare function TopicsLine(props: TopicsLineProps): JSX.Element | null;

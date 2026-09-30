@@ -67,7 +67,7 @@ export const REDACTED_ACTOR_NAME = "Deleted account";
 export const HIDE_ACTOR_LABEL = (handle, redacted = false) =>
   redacted || !handle ? "Hide this account" : `Hide ${handle}`;
 
-export function MonogramAvatar({ name, size = "sm", src, redacted = false }) {
+export function MonogramAvatar({ name, size = "sm", src, redacted = false, node }) {
   const [failed, setFailed] = React.useState(false);
   const initial = redacted ? null : (name ?? "").trim().charAt(0).toUpperCase() || "?";
   const box =
@@ -93,6 +93,7 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false }) {
         color: "var(--on-secondary-container)",
         fontWeight: 500,
       }}
+      data-node={node}
     >
       {src && !failed && !redacted ? (
         <img src={src} alt="" onError={() => setFailed(true)} style={{ height: "100%", width: "100%", objectFit: "cover", display: "block" }} />
@@ -112,7 +113,7 @@ export function MonogramAvatar({ name, size = "sm", src, redacted = false }) {
    the squeeze ahead of the handle's 1, so the handle gives way only after
    the name is spent. Every list row and card reads this one law from here —
    no board and no client re-decides it. */
-export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redacted = false }) {
+export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redacted = false, node }) {
   const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
   const clip = { whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 };
   return (
@@ -130,8 +131,9 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
         textDecoration: "none",
         borderRadius: "var(--radius-full)",
       }}
+      data-node={node}
     >
-      <MonogramAvatar name={name} src={avatarSrc} redacted={redacted} />
+      <MonogramAvatar name={name} src={avatarSrc} redacted={redacted} node={node && "avatar"} />
       <span
         style={{
           ...clip,
@@ -140,10 +142,11 @@ export function ActorChip({ handle, displayName, href, onClick, avatarSrc, redac
           fontWeight: "var(--text-label-large--font-weight)",
           color: redacted ? "var(--text-secondary)" : undefined,
         }}
+        data-node={node && "name"}
       >
         {name}
       </span>
-      {!redacted && <span style={{ ...clip, flexShrink: 1, fontSize: "var(--text-label-medium)", color: "var(--text-secondary)" }}>@{handle}</span>}
+      {!redacted && <span style={{ ...clip, flexShrink: 1, fontSize: "var(--text-label-medium)", color: "var(--text-secondary)" }} data-node={node && "handle"}>@{handle}</span>}
     </a>
   );
 }
