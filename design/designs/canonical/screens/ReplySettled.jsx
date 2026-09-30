@@ -20,10 +20,17 @@
 
    THE NEW REPLY IS IN `children`, WHICH IS THE COMPOSER'S OWN SLOT. The master
    reserves it for "an open reply or edit composer, rendered between the card
-   and its replies" — so the signed words appear exactly where the reader was
-   typing them, above the older replies rather than at the end of a list they
-   would have to find. It wears `pending`: it is signed, not yet settled, and
-   the marker says so in the product's own words.
+   and its replies", and the words stand above the older replies. It wears
+   `pending`: it is signed, not yet settled, and the marker says so in the
+   product's own words.
+
+   THAT PLACE IS OWED A REDRAW (the reply pack, 2026-09-30). A branch reads
+   oldest first (readme §13, *Comments live in a sheet*), so by the rule the
+   reply just signed ends its branch, under @mira's 28m. Moved there at this
+   board's offset, its words fall below the sheet's foot, and whether the
+   landing scrolls to the new card or the offset grows is a drawing choice
+   still to be ruled — so the board keeps its drawn place until then rather
+   than trading "show the content you just wrote" for the order.
 
    THE EDIT'S RETURN IS THIS SAME ANATOMY. The ruling covers a comment edit in
    one breath ("editing sth and then not seeing the corrected version gives the

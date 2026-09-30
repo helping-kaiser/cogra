@@ -1707,7 +1707,14 @@ const TOBIAS_REPLIES = [
    reply-return ruling): the parent's collapsed count has become its replies,
    and the reply just signed sits in `CommentCard`'s reserved `children` slot —
    the slot the composer stood in, which is why the words land where the reader
-   left them. */
+   left them.
+
+   THE THREAD'S ORDER IS THE RULE'S (readme §13, *Comments live in a sheet*):
+   top-level comments newest first — @tobias 1h, @mira 2h, @sol 3h — and the
+   replies in a branch oldest first. The landed reply is the one place this
+   sheet does not follow it yet: by the rule it ends its branch, and moving it
+   there puts its words below the frame at the kept offset — which way the
+   landing brings it into view is still to be ruled, so the drawing waits. */
 function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
@@ -1750,7 +1757,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
       <CommentCard
         author={MIRA}
         content="The gulls had been at it before the tide came back. Two frames, both grim."
-        timestamp="10m"
+        timestamp="2h"
         media={[
           { src: "comment-shingle.jpg", ratio: "4 / 3", fit: "cover", alt: "A stretch of shingle at low tide." },
           { src: "comment-gulls.jpg", ratio: "1 / 1", fit: "cover", alt: "Gulls on the tideline." },
@@ -1763,7 +1770,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
       <CommentCard
         author={SOL}
         content="Which headland is the third one, counting from the ferry landing?"
-        timestamp="45m"
+        timestamp="3h"
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={CARD_MENU}
