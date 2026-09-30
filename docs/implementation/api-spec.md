@@ -2096,8 +2096,10 @@ type Query {
   stagedWrite(id: UUID!): StagedWrite
 
   "One of the viewer's own uploads, polled like stagedWrite until a
-   PROCESSING asset reads READY or FAILED. Null for an unknown id,
-   another account's asset, and without a session."
+   PROCESSING asset reads READY or FAILED. An upload whose re-encode
+   came out as bytes the viewer already holds answers as that asset,
+   READY under its own id; attaching either id attaches it. Null for
+   an unknown id, another account's asset, and without a session."
   mediaAttachment(id: UUID!): MediaAttachment
 
   "The host key the device verifies seals against before approving
@@ -3375,6 +3377,18 @@ says so.
   with a `failureReason`, and uploading the file again is a fresh
   attempt. An asset is never re-encoded once it is `READY` — its
   digest may already be witnessed.
+- **An author's bytes are one asset, and reusing them never
+  refuses.** An upload of bytes its author already holds is
+  answered with that asset. A clip that arrives as different bytes
+  but re-encodes to a rendition the author already holds — the
+  same clip picked twice on a phone that re-encodes every pick —
+  resolves to that asset once the re-encode finishes:
+  `mediaAttachment` on the upload's id then reads the held asset,
+  `READY` under its own id, and prepare accepts either id as that
+  asset. An asset is reusable across its author's own parents, so
+  attaching one that already sits in an earlier post is a second
+  placement of it, never a refusal; only the same asset twice in
+  one gallery is refused, at `["attachments", "<i>", "mediaId"]`.
 - **Animation is a still.** An animated WebP is accepted as the
   picture it is, and **a still GIF converts on the device** — one
   image format reaches the server, and no picture encoder has to

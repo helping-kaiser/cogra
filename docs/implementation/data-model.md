@@ -501,11 +501,20 @@ CREATE TABLE media_attachments (
     mime_type        TEXT         NOT NULL,
     size_bytes       BIGINT,
     options          JSONB        NOT NULL DEFAULT '{}'::jsonb,
-    -- The ingest state, stated by every insert (no default).
+    -- The ingest state, stated by every insert (no default). `merged`
+    -- is a re-encoded upload whose rendition is an asset its author
+    -- already holds: it serves nothing, and every read by its id
+    -- answers with the asset merged_into names.
     state            TEXT         NOT NULL
-        CHECK (state IN ('processing', 'ready', 'failed')),
+        CHECK (state IN ('processing', 'ready', 'failed', 'merged')),
     -- What the author reads when the asset failed; present exactly then.
     failure_reason   TEXT,
+    -- The ready asset a merged upload resolves to; present exactly
+    -- when merged. A client was handed the upload's id before its
+    -- rendition existed, so the row stays and points rather than
+    -- becoming a second row for bytes (author_id, digest) already
+    -- names.
+    merged_into      UUID         REFERENCES media_attachments(id),
     -- The digest of the bytes as they arrived, kept on a re-encoded
     -- asset so a retried upload of the same file finds it after
     -- `digest` has moved to the rendition. Null on an asset stored as
@@ -521,7 +530,9 @@ CREATE TABLE media_attachments (
     redaction_reason TEXT,
     redacted_at      TIMESTAMPTZ,
     created_at       TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-    CHECK ((state = 'failed') = (failure_reason IS NOT NULL))
+    CHECK ((state = 'failed') = (failure_reason IS NOT NULL)),
+    CHECK ((state = 'merged') = (merged_into IS NOT NULL)),
+    CHECK (merged_into <> id)
 );
 
 -- One live asset per author per digest: a retried upload of the same
@@ -529,7 +540,10 @@ CREATE TABLE media_attachments (
 -- object, and the upload returns that row rather than erroring. A
 -- failed asset holds its digest no longer, so the same file can be
 -- uploaded again once the cause is gone. The same rule covers the
--- digest a re-encoded asset arrived with.
+-- digest a re-encoded asset arrived with. A re-encode whose rendition
+-- collides here merges into the asset it collides with; the merged
+-- row keeps the digest it arrived with, so a retry of that file
+-- finds it and is handed the asset it resolves to.
 CREATE UNIQUE INDEX media_attachments_author_digest_key
     ON media_attachments (author_id, digest) WHERE state <> 'failed';
 CREATE UNIQUE INDEX media_attachments_author_source_digest_key
@@ -540,6 +554,11 @@ CREATE UNIQUE INDEX media_attachments_author_source_digest_key
 -- is empty.
 CREATE INDEX media_attachments_processing_idx
     ON media_attachments (created_at) WHERE state = 'processing';
+
+-- A merged row references its asset: the orphan sweep probes it and
+-- every delete checks it as a foreign key.
+CREATE INDEX media_attachments_merged_into_idx
+    ON media_attachments (merged_into) WHERE merged_into IS NOT NULL;
 ```
 
 The author-digest index leads with `author_id`, so it serves every
