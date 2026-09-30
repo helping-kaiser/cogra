@@ -1010,12 +1010,15 @@ you sign* puts the act where it really is.
 A picker that said *Search tags* would promise that a name it cannot
 show you is a name you cannot have.
 
-**Canonicalization is previewed, never silent.** `Signs as #saltmaps`
-under the field while `#SaltMaps` is typed, and under that the shape a
-name may take: `Letters, digits, dot, dash and underscore. Capitals
-become lowercase.` A reader is choosing a permanent public endpoint;
-one that quietly becomes a different string is the surprise §9 exists
-to stop.
+**Canonicalization is previewed, never silent.** While `#SaltMaps` is
+typed, the list's first row is always the typed name canonicalized —
+`saltmaps`, with `Signs as #saltmaps` as its second line — and the
+keyboard's action key stages it. Under the field sits the shape a name
+may take: `Letters, digits, dot, dash and underscore. Capitals become
+lowercase.` A reader is choosing a permanent public endpoint; one that
+quietly becomes a different string is the surprise §9 exists to stop.
+The preview is the row that picks, so the promise and the gesture are
+one thing, and it is a row, never a `Create` button.
 
 **The pair editor names its axes in the reader's words.** `How much it
 is about this` with `Barely` / `Entirely`, and `How sure you are` with
