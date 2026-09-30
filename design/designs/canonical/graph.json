@@ -322,11 +322,11 @@
 
     { "from": "RecoveryCode", "via": 1, "kind": "advance", "label": "Copy", "to": [{ "terminal": "self", "case": "the code lands on the clipboard" }] },
     { "from": "RecoveryCode", "via": 2, "kind": "advance", "label": "confirm field", "to": [{ "terminal": "self", "case": "typing" }] },
-    { "from": "RecoveryCode", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "board": "RecoveryCodeMismatch", "case": "the typed prefix diverges from the code — the button never enables" }] },
+    { "from": "RecoveryCode", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "board": "Settings", "case": "a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so" }, { "board": "RecoveryCodeMismatch", "case": "the typed prefix diverges from the code — the button never enables" }] },
 
     { "from": "RecoveryCodeMismatch", "via": 1, "kind": "advance", "label": "Copy", "to": [{ "terminal": "self", "case": "the code lands on the clipboard" }] },
     { "from": "RecoveryCodeMismatch", "via": 2, "kind": "advance", "label": "confirm field", "to": [{ "terminal": "self", "case": "typing" }] },
-    { "from": "RecoveryCodeMismatch", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
+    { "from": "RecoveryCodeMismatch", "via": 3, "kind": "advance", "label": "I've written it down", "to": [{ "terminal": "back", "case": "code confirmed — returns where the ceremony began" }, { "board": "Settings", "case": "a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so" }, { "terminal": "self", "case": "still failing — the line updates in place" }] },
 
     { "from": "KeyDecline", "via": 1, "kind": "cancel", "label": "I accept the risk", "to": [{ "terminal": "back", "case": "key without backup — returns where the ceremony began, and the snackbar says so" }] },
     { "from": "KeyDecline", "via": 2, "kind": "back", "label": "Go back", "to": [{ "board": "KeyCeremony" }] },

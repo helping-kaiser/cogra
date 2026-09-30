@@ -820,6 +820,13 @@ with no backup to restore from.
 reader came from leaves the feed with it:
 `Key made — no backup yet. You can make a code in settings.`
 
+**The code screen** answers Android's Back with the way out rather than
+swallowing it: `Type the code back to finish`. A copy that worked says
+`Code copied` in the browser — the line the refused copy already
+speaks in; Android's own clip confirmation answers there. A code made
+or replaced from settings returns to settings with
+`Your key is backed up with the new code.`
+
 ## The profile save
 
 Blessed with the small-rulings batch. A profile edit is a signed act
