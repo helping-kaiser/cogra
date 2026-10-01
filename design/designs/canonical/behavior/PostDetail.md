@@ -8,7 +8,11 @@ ALWAYS postDetail.card.actionRow.share carries no number
 
 ALWAYS postDetail.card keeps the one order of its contents a post card has on every surface, with nothing clamped to lift postDetail.card.actionRow above the fold
 
-ALWAYS postDetail.card.opinions counts the opinions held on the post
+ALWAYS postDetail.card.opinions counts the opinions held on the post and carries no face
+
+ALWAYS postDetail.card.opinions is absent GIVEN no opinion is held on the post
+
+ALWAYS postDetail.card.citedBy is absent GIVEN nothing cites the post
 
 ALWAYS postDetail.card.citedBy counts what cites the post, apart from postDetail.card.tagsLine's count
 
