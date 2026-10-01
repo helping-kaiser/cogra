@@ -7300,6 +7300,38 @@ in-flight state, and the only fault the seal knew was "offline".
   byte-identical. The maps follow the edges. `Feed.md` gains the hold's
   lines, and `ComposeSeal.md` opens with the commit in flight.
 
+### The morning fixes — 2026-10-01
+
+Small rulings jakob made in one sitting.
+
+- **Both pickers end in `Done`** (jakob: "'Done' is my word of choice
+  there as you are 'done' adding hashtags"). `TagPicker`, its two
+  states and `ReferencePicker` carry the full-width foot every wizard
+  stage wears. `Done` and the header back are one leave: both return to
+  the composer with every staged pick kept, and `Done` is the
+  affirmative twin, because a back arrow reads as an abort. On the
+  refused name it still leaves, adding nothing.
+- **The reply composer's words are a field.** `ReplyDraft` and the
+  reply's five media states draw `WordsBody`, the growing body box, at
+  a three-line minimum (`CommentEdit`'s own) under the growth law, with
+  a comment's 2,000-character cap.
+- **The post detail lives on Feed, the avatar pair on Profile.** The
+  detail view, the reader's menu at both widths, the license and
+  opinions sheets and `CitedBy` move to the Feed & Search page, and the
+  profile picture's crop and seal to Profile. Media keeps the video and
+  picture boards.
+- **`Still settling` joins "Also show", on by default** (the scope
+  cut's chip, drawn). Off, the feed keeps to what has landed and the
+  trigger reads `settled only`. Every drawn feed is unchanged.
+- **A clip's poster reaches the canvas.** The canvas editor resolves a
+  board's pictures only through `src` and `url()`, so a clip's
+  `poster` drew an empty plate there. The shell now lays the poster
+  under each clip as a picture (`posterLayer`), and the clip still
+  paints over it wherever it renders.
+- **The gate**: 229 screens, 1618 → **1622 edges** (the four `Done`s),
+  1 gap, **flows 63**, every one resolved, the witness not re-blessed.
+  The maps and the canvas manifests follow the moved boards.
+
 ## 15. Index
 
 **Root**
