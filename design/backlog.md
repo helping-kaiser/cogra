@@ -3740,9 +3740,11 @@ ruling:
 
 - **Boards for copy-only vehicles.** The session-expired sign-in
   screen, `This post doesn't exist.` and `This comment doesn't exist.`,
-  the write rule's notice on a pad (`PadKeyAbsent`'s shape) and its
-  quiet line on a hold's row, a comfort's revert on the target's row,
-  and the words for a dead ask link.
+  a comfort's revert on the target's row, and the words for a dead ask
+  link.
+- ~~**The write rule on a pad and on a hold's row**~~ — closed
+  2026-10-01 by `PadWriteRule` and `RowWriteRule` (readme §13, *The
+  failure fixes and the support stack*).
 - **What else locks while a seal signs** (lane C's C26, unruled). Only
   the commit goes inert. Whether Back, the header's X and the fact
   rows' actions lock too, and what the reader sees if they leave
@@ -3759,3 +3761,22 @@ ruling:
 - **The key-absent boards onto `NoticePanel`.** Five boards still draw
   the tertiary panel by hand. They also disagree on the corner and drop
   the title's letter-spacing.
+- **The write rule's words where no draft is kept** (found 2026-10-01).
+  The reply seals reach `WriteRuleFailed`, whose words and way out say
+  the draft is kept — but a reply keeps no draft (*The reply pack*). A
+  ruling: the reply-scale words and way out, or a kept reply draft.
+
+### 118 · What the support stack left open · *design* · **filed 2026-10-01**
+
+The support stack (readme §13, *The failure fixes and the support
+stack*) drew the three rows and two boards. Still unruled:
+
+- **The report's edges.** Whether `Send by email` goes inert while the
+  field is empty, and whether words written survive leaving the screen
+  — the board draws a filled field and says neither.
+- **A running version behind the newest.** `WhatsNew` marks the
+  running version as current; an install that is behind the newest
+  release has no drawn reading yet.
+- **The addresses' swap.** `reports@cogra.local` and
+  `hello@cogra.local` (`_shared.jsx`, the support stack's fixtures)
+  swap for real addresses once CoGra is on a server.
