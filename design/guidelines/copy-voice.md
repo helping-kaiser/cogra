@@ -259,6 +259,14 @@ title, at most two short paragraphs, Close. The texts, verbatim
   key to any device. Until it's here, anything waiting on it stays on
   this device. *(One text for all four key-absent surfaces, the key-loss
   round: nothing in it assumes a write in progress.)*
+- **Why signing waits** (the write rule's notice — the seal
+  and the stance pad): Each signing is paid for, and there's only so
+  much to go around at a time. When it runs short, signing waits —
+  nothing you asked for was signed, and nothing was spent. / Nothing
+  needs fixing on your side. Your draft is kept, and an opinion can
+  simply be given again. It frees up as time passes, so try again a
+  little later. *(New 2026-10-01, the stopper exception's first dialog,
+  flagged for blessing. Payer-neutral by the V1.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -761,7 +769,8 @@ blessing. Unmarked lines are already blessed or already drawn.
 - `WRITE_RULE_FAILED` — a notice. On a seal it is `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent — your draft is
-  kept.`, with `Keep the draft, sign later` under it. **Drawn** on
+  kept.`, with `Keep the draft, sign later` under it, and the panel's
+  own "?" opening `Why signing waits` (*The "?" dialogs*). **Drawn** on
   `WriteRuleFailed`. *New.* The words name no payer (the V1.0 scope
   cut). On a pad the same panel takes Set's place in `PadKeyAbsent`'s
   shape. On a hold's row the quiet line reads `You can't sign right

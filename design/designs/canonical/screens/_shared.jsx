@@ -1203,6 +1203,11 @@ const SEAL_REFUSED_CITATION = "This can't be cited anymore.";
 const WRITE_RULE_TITLE = "You can't sign right now";
 const WRITE_RULE_FACT =
   "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your draft is kept.";
+/* The write rule's own "?" — the stopper exception (jakob 2026-10-01). The
+   header's "?" explains signing; this one explains how the stop resolves, so
+   it rides the notice panel and is named by its dialog (copy-voice, *The "?"
+   dialogs*). The pad's notice carries the same one. */
+const WRITE_RULE_HELP = "Why signing waits";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
   return (
@@ -1272,7 +1277,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
           </div>
         ) : state === "writeRule" ? (
           <>
-            <NoticePanel title={WRITE_RULE_TITLE}>
+            <NoticePanel title={WRITE_RULE_TITLE} helpLabel={WRITE_RULE_HELP} onHelp={() => {}}>
               <NoticeLine>{WRITE_RULE_FACT}</NoticeLine>
             </NoticePanel>
             <Button variant="text" style={{ width: "100%" }}>Keep the draft, sign later</Button>

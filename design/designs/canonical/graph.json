@@ -1560,6 +1560,7 @@
     { "from": "WriteRuleFailed", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "WriteRuleFailed", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
     { "from": "WriteRuleFailed", "via": 7, "kind": "cancel", "label": "Keep the draft, sign later", "to": [{ "terminal": "back", "case": "leaves — the draft stays on this device and is offered back the next time you compose" }] },
+    { "from": "WriteRuleFailed", "via": 8, "kind": "detour", "label": "? — Why signing waits (the notice's own)", "to": [{ "board": "HelpDialog", "case": "the write rule's text — how the stop resolves, by the stopper exception" }] },
     { "from": "PadFailed", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "PadFailed", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap moves the pick — Retry then signs the pick the pad shows" }] },
     { "from": "PadFailed", "via": 3, "kind": "advance", "label": "Walk it back", "to": [{ "board": "SeveranceConfirm", "case": "the explicit route — the walk-away is its own act, untouched by the failed one" }] },

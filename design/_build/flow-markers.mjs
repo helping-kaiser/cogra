@@ -1721,6 +1721,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Keep the draft, sign later</button>", tag: "button" },
+    // The panel's own "?" (the stopper exception, 2026-10-01), appended so no
+    // via renumbers.
+    { n: 8, find: 'aria-label="Why signing waits"', tag: "button" },
   ],
   PadFailed: [
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
