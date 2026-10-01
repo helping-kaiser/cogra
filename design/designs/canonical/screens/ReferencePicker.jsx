@@ -8,12 +8,21 @@
    contract's `ReferenceTarget` union, read as the ruling — so no row offers a
    kind that cannot be cited, and its filter holds those three kinds.
 
+   A PICK STAGES AND THE PICKER STAYS OPEN (jakob, 2026-10-01, the shared
+   anatomy's law — `TagPicker`). A tap on a row stages that citation in the
+   composer at once and the reader goes on picking, the row's add mark turned
+   to the added mark (`ReferenceRow`'s `staged`): here the post is in and the
+   person is still to add. A tap on a row already added changes nothing; a
+   staged citation leaves from the composer, where its row carries the ×. The
+   composer's cap still bounds the batch — ten references (`ComposeSealCited`)
+   — and how the list reads once the tenth is in is not drawn yet.
+
    `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01, carried here by
    the shared anatomy `TagPicker` names). Both return to the composer the
-   picker was opened from, every staged reference kept; `Done` is the
-   affirmative twin, because a back arrow reads as an abort to a reader who has
-   finished citing. It is the full-width foot every wizard stage wears
-   (`ReplyDraft`'s `Next`). */
+   picker was opened from, every staged reference kept — back is navigation,
+   never an undo; `Done` is the affirmative twin, because a back arrow reads as
+   an abort to a reader who has finished citing. It is the full-width foot
+   every wizard stage wears (`ReplyDraft`'s `Next`). */
 export function Screen() {
   return (
     <>
@@ -25,7 +34,7 @@ export function Screen() {
         </div>
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" staged onOpen={() => {}} />
         <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
       </div>
       <div style={{ flex: "none", padding: "8px 24px 24px" }}>

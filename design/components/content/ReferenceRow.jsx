@@ -95,7 +95,16 @@ export function NodeMark({ kind, name, src, node }) {
    indirect hit is indistinguishable from a mishit. The row's right edge is one
    of three: `pair` (the signed pair, as numbers), `rank` (the viewer-relative
    rank), or `value` (a plain string — the age past the seam). */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, onOpen }) {
+/* `staged` IS A PICKER ROW ALREADY ADDED (jakob 2026-10-01, the pickers'
+   multi-add): a pick stages at once and the picker stays open, so the list has
+   to show what is in. The add mark turns to the added mark: the glyph becomes
+   `check`, so the state never rests on colour alone, and its ink moves from
+   `--text-secondary` to `--on-surface`, the house *Selected* move (readme §4,
+   *Interaction states*). The row's spoken name ends `Added`, because the mark
+   itself is hidden from the accessibility tree. It wins over `trailing`. The row stays a row: a tap
+   on it changes nothing, since un-staging is the composer's chip ×, never the
+   picker's. */
+export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, staged = false, pending = false, onOpen }) {
   const tagFamily = pairFamily === undefined ? kind === "topic" : pairFamily === "tag";
   const exact = pair ? (tagFamily ? formatTagPair(pair) : formatStancePair(pair)) : null;
   /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
@@ -169,7 +178,14 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
           `trailing` node wins over both: the PICKER's edge is the action (the
           add mark), because there the whole row's tap picks — ranking still
           orders the list, the number just yields the edge to the act. */}
-      {trailing ? (
+      {staged ? (
+        <>
+          <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--on-surface)" }}>
+            <Icon name="check" size={20} />
+          </span>
+          <span style={SR_ONLY}>Added</span>
+        </>
+      ) : trailing ? (
         <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}>{trailing}</span>
       ) : rank ? (
         <>
