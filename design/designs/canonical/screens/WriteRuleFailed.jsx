@@ -19,6 +19,12 @@
    and they hold for a member past the per-member caps and for a pool that has
    run dry alike, the two ways V1.0 meets this refusal.
 
+   THE WORDS ARE THE SOLVENCY READING (jakob 2026-10-01, backlog item 117).
+   One code carries both of the rule's gates — solvency, and the stamp wall a
+   member below it meets — and the drawn words fit only the first. Until the
+   contract can tell the surface which gate refused (the design ⇄ impl seam),
+   they stand as drawn for every refusal of this code.
+
    NO RETRY. Asking again at once meets the same answer, and a control that
    fails the same way twice is not a way out (`RefusedFile`'s rule). The way
    out is `ComposeKeyAbsent`'s, turned to this fact: keep the draft, sign

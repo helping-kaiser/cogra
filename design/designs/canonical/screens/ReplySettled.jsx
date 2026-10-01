@@ -26,13 +26,15 @@
    `Reply` (`CommentCard`'s `own`, jakob 2026-10-01), as @sol's 3h comment
    further down does.
 
-   THAT PLACE IS OWED A REDRAW (the reply pack, 2026-09-30). A branch reads
-   oldest first (readme §13, *Comments live in a sheet*), so by the rule the
-   reply just signed ends its branch, under @mira's 28m. Moved there at this
-   board's offset, its words fall below the sheet's foot, and whether the
-   landing scrolls to the new card or the offset grows is a drawing choice
-   still to be ruled — so the board keeps its drawn place until then rather
-   than trading "show the content you just wrote" for the order.
+   THE LANDING SCROLLS TO THE NEW CARD (jakob 2026-10-01, the audit's K6.6
+   direction; backlog item 116). A branch reads oldest first (readme §13,
+   *Comments live in a sheet*), so the reply just signed ends its branch,
+   under @mira's 28m, where this board's offset would leave its words below
+   the sheet's foot. The return is anchored to the new card, and the thread
+   scrolls until that card stands in view: the scroll keeps "show the content
+   you just wrote", never a larger offset. The board keeps its drawn offset
+   and draws the anatomy of the moment — the parent expanded, the card
+   pending and the reader's own.
 
    THE EDIT'S RETURN IS THIS SAME ANATOMY. The ruling covers a comment edit in
    one breath ("editing sth and then not seeing the corrected version gives the

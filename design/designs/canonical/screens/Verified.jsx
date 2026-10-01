@@ -2,7 +2,13 @@
    It is a landing, not a step: the application already moved, and the one
    thing left to say is that the app knows. So the mark is the whole picture,
    the line is centered under it, and the way on is a text button — nothing
-   here is a commitment to make. */
+   here is a commitment to make.
+
+   SIGNED OUT, THE WAY ON IS SIGN-IN (jakob 2026-10-01, audit K3.20). The
+   mail may be opened on a device or a browser with no CoGra session; the
+   verification has landed all the same, because the link is the proof, and
+   `Back to CoGra` then opens `SignIn`, which lands wherever app-open lands
+   for that account. */
 export function Screen() {
   return (
     <div

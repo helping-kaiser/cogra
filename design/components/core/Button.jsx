@@ -181,6 +181,7 @@ export function Button({
   type = "button",
   onClick,
   ariaLabel,
+  describedBy,
   className,
   style,
   node,
@@ -191,6 +192,7 @@ export function Button({
       disabled={disabled}
       onClick={busy ? undefined : onClick}
       aria-label={ariaLabel}
+      aria-describedby={describedBy}
       aria-busy={busy || undefined}
       aria-disabled={busy || undefined}
       className={className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS}

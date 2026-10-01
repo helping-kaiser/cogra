@@ -23,7 +23,14 @@
    says so rather than inviting a second ask that cannot start.
 
    THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
-   applicants included (readme §13, the feed's filter on screen). */
+   applicants included (readme §13, the feed's filter on screen).
+
+   A PUT-AWAY CARD COMES BACK WHEN THE STATE CHANGES (jakob 2026-10-01, audit
+   K3.4). The dismissal belongs to the wait, not to the application: once the
+   application is approved, closed or runs out, the shell shows that state's
+   card whether or not this one was put away — `ApplicantRejected`,
+   `ApplicantExpired` — because a reader who dismissed a wait has not
+   dismissed what ended it. */
 export function Screen() {
   return (
     <>

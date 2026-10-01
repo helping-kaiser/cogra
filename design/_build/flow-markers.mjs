@@ -594,12 +594,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'data-field="Title"', tag: "div" },
-    { n: 4, find: 'data-field="Description"', tag: "div" },
-    { n: 5, find: "+ Add a tag", tag: "button" },
-    { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
-    { n: 7, find: "+ Cite something", tag: "button" },
-    { n: 8, find: ">Next</button>", tag: "button" },
-    { n: 9, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
+    { n: 5, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 6, find: "+ Cite something", tag: "button" },
+    { n: 7, find: ">Next</button>", tag: "button" },
+    { n: 8, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
@@ -792,6 +791,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Your key"', tag: "button" },
     { n: 5, find: ">Restore the key</button>", tag: "button" },
     { n: 6, find: ">Keep the draft, restore later</button>", tag: "button" },
+    // The header's "?" beside the notice's (the stopper exception, A3 of the
+    // 2026-10-01 night round), appended so no via renumbers.
+    { n: 7, find: 'aria-label="How signing works"', tag: "button" },
   ],
   ComposeLicense: [
     { n: 1, find: 'aria-label="License"', tag: "button" },
@@ -1175,6 +1177,8 @@ Object.assign(FLOW_MARKERS, {
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
   ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
   ProfileNotFound: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  PostNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
+  CommentNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   ProfileUnreachable: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Retry</button>", tag: "button" },
@@ -1333,10 +1337,19 @@ Object.assign(FLOW_MARKERS, {
     { n: 23, find: ">What&#x27;s new</span>", tag: "button" },
     { n: 24, find: ">Report a problem</span>", tag: "button" },
     { n: 25, find: ">Contact</span>", tag: "button" },
+    // The kept picks' row (backlog item 113), inside the Key backup group and
+    // numbered by the same identity rule — the next free number.
+    { n: 26, find: " kept picks waiting</span>", tag: "button" },
   ],
   // The release chronicle: the way out, and one door per release — the same
   // control drawn three times, so one number.
   WhatsNew: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+  ],
+  // The behind state: the newer release's door is a release door like the
+  // rest, so one number covers every door.
+  WhatsNewBehind: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
   ],
@@ -1502,6 +1515,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
     { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
   ],
+  // Signed out mid-session: `SignIn` with its welcome line swapped, so its
+  // numbers are SignIn's.
+  SignInExpired: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
   Restore: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="Recovery code"', tag: "div" },
@@ -1629,6 +1656,77 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE ENTRY FUNNEL'S ROUND (jakob 2026-10-01, the audit's K3 blockers). The
+   new task pages number like the credential screens they borrow from — the
+   way back, the fields, the commitment. The two shell boards are exemplars,
+   so only their cards' controls carry numbers. Controls added to a wired
+   board take its next free number (the identity rule: a badge is not a
+   position). */
+FLOW_MARKERS.ApplicantFeed.push({ n: 21, find: ">Wrong address?</button>", tag: "button" });
+Object.assign(FLOW_MARKERS, {
+  ApplicantEmail: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="New email"', tag: "div" },
+    { n: 3, find: 'data-field="Current password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: ">Change email</button>", tag: "button" },
+  ],
+  ApplicantExpired: [
+    { n: 1, find: 'aria-label="Copy your ask link"', tag: "button" },
+    { n: 2, find: ">Use a fresh invite</button>", tag: "button" },
+  ],
+  ApplicantRearm: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
+    { n: 3, find: ">Use this link for your application</button>", tag: "button" },
+  ],
+  // SignInError's anatomy to the element, so SignInError's numbers.
+  SignInLimited: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
+  FeedSecurityNotice: [
+    { n: 1, find: ">Change password</button>", tag: "button" },
+    { n: 2, find: ">Got it</button>", tag: "button" },
+  ],
+  VouchAskUnusable: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Go to the feed</button>", tag: "button" },
+  ],
+  // The email change's link and its in-flight row. The landing's one way on
+  // reads by the side chip, so it is found by its hole.
+  ChangeEmailLinked: [{ n: 1, find: ">{{linkedWay}}</button>", tag: "button" }],
+  ChangeEmailLinkedSignedOut: [{ n: 1, find: ">Sign in</button>", tag: "button" }],
+  SettingsEmailPending: [{ n: 1, find: ">Email</span>", tag: "button" }],
+  // The deletion's confirmation landing, its grace on settings, and the
+  // screen the row then opens.
+  DeleteAccountConfirmed: [
+    { n: 1, find: ">Also remove what I posted</span>", tag: "label" },
+    { n: 2, find: ">Add it to the deletion</button>", tag: "button" },
+    { n: 3, find: ">Go to the feed</button>", tag: "button" },
+  ],
+  SettingsDeleting: [
+    { n: 1, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Delete account</span>", tag: "button" },
+  ],
+  DeleteAccountPending: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+  ],
+});
+FLOW_MARKERS.ChangeEmailConfirm.push(
+  { n: 4, find: ">Resend</button>", tag: "button" },
+  { n: 5, find: ">Cancel the change</button>", tag: "button" },
+);
+
 /* The reply and edit wizards, the two overlays and the pattern boards
    (legacy-conversion lane C, 2026-09-04): the last nine boards that had only
    hand markup. Their via numbers are the hand boards' own — every one
@@ -1703,6 +1801,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Restore the key</button>", tag: "button" },
     { n: 3, find: ">Discard the reply</button>", tag: "button" },
   ],
+  // The reply's gated seal and its fault, pattern exemplars likewise: only the
+  // gate's own controls carry numbers; the rest is `ReplySeal`'s.
+  ReplySealUploading: [{ n: 1, find: ">Sign comment</button>", tag: "button" }],
+  ReplySealUploadFailed: [
+    { n: 1, find: ">Retry</button>", tag: "button" },
+    { n: 2, find: ">Sign comment</button>", tag: "button" },
+  ],
   EditCompose: [
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
@@ -1717,11 +1822,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: "+ Add a tag", tag: "button" },
     { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "signing 3 things", tag: "button" },
+    { n: 11, find: "signing 5 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+    { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so
@@ -2050,7 +2157,8 @@ Object.assign(FLOW_MARKERS, {
     secondComments(9),
     ...nav(10),
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
-    { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 19, find: ">Use a fresh invite</button>", tag: "button" },
+    { n: 20, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchAsk: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2224,20 +2332,33 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Un-tag</button>", tag: "button" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Set exact values for #saltmaps</button>", tag: "button" },
   ],
   // The composer's twin of the pad. It has no `Withdraw` — nothing is signed on
-  // that path yet — so its three live things are the pad, `Done` and the scrim.
+  // that path yet — so its live things are the pad, `Done`, the scrim and the
+  // non-drag route hidden until focused.
   TagPadCompose: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Set exact values for #coastroad</button>", tag: "button" },
   ],
   // The citation's twin of TagPad — the same pad over two signed axes, because
-  // both of a citation's parameters are signed. Same three controls.
+  // both of a citation's parameters are signed. Same controls.
   RefPair: [
     { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
+  ],
+  // The standing citation's sheet on an edit — RefPair's controls, and the
+  // removal in the walk-away's slot.
+  RefPairEdit: [
+    { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
+    { n: 2, find: ">Remove citation</button>", tag: "button" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
   ],
 });
 
@@ -2391,6 +2512,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Recovery code"', tag: "div" },
     { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
+  // The kept picks' review (backlog item 113): every row's × is one control
+  // drawn three times, so the rows share a number — the pickers' rule.
+  KeptPicksReview: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="Remove ', tag: "button", all: true },
+    { n: 3, find: ">Sign them</button>", tag: "button" },
+  ],
+  // Its seal: `ProfileEditSeal`'s five controls, in the same order.
+  KeptPicksSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your picks are kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Sign the opinions</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
   ],
   YourKeyGate: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },

@@ -7,6 +7,7 @@
       "status": "resolved",
       "startsOn": [
         "ChatsComingSoon",
+        "CommentNotFound",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -34,6 +35,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -56,7 +58,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -69,6 +71,7 @@
         "ComposeSeal",
         "ComposeLanded",
         "ChatsComingSoon",
+        "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -95,6 +98,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -289,15 +293,14 @@
     },
     {
       "name": "guest-turns-applicant",
-      "description": "Sign in or join, offered on every guest screen, runs out to the invite and through Create account into the applicant days.",
+      "description": "Sign in or join, offered on every guest screen, runs a visitor who holds no link out to the invite and through Create account into the applicant days.",
       "status": "resolved",
       "startsOn": [
         "FeedBare",
-        "GuestGate",
-        "Main"
+        "GuestGate"
       ],
       "steps": [
-        "start · «Sign in or join» on 3 boards → SignIn",
+        "start · «Sign in or join» — to SignIn on 2 boards → SignIn",
         "SignIn · 8 «New here? Enter your invite» → InviteEntry",
         "InviteEntry · 3 «Continue» → Join — the link checks out",
         "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
@@ -308,6 +311,24 @@
         "Join",
         "ApplicantFeed",
         "FeedBare",
+        "GuestGate"
+      ]
+    },
+    {
+      "name": "join-with-the-link-in-hand",
+      "description": "A visitor who arrived through a live invite link presses Sign in or join and meets the join form with the link already held — never the door, never a second paste.",
+      "status": "resolved",
+      "startsOn": [
+        "GuestGate",
+        "Main"
+      ],
+      "steps": [
+        "start · «Sign in or join» — to Join on 2 boards → Join",
+        "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "Join",
+        "ApplicantFeed",
         "GuestGate",
         "Main"
       ]
@@ -658,15 +679,15 @@
     },
     {
       "name": "reply-while-the-pictures-upload",
-      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
+      "description": "Next pressed while the pictures are still going up reaches the reply's own gated seal; signing waits for them, then the comment settles into the thread.",
       "status": "resolved",
       "steps": [
-        "start · ReplyPictures · 3 «Next» → ComposeSealUploading — uploads still running — the gated seal (master on the media page)",
-        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
+        "start · ReplyPictures · 3 «Next» → ReplySealUploading — uploads still running — the reply's gated seal",
+        "end · ReplySealUploading · 1 «Sign comment (disabled)» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyPictures",
-        "ComposeSealUploading",
+        "ReplySealUploading",
         "ReplySettled"
       ]
     },
@@ -690,6 +711,7 @@
       "status": "resolved",
       "startsOn": [
         "ChatsComingSoon",
+        "CommentNotFound",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -717,6 +739,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -739,7 +762,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -752,6 +775,7 @@
         "ComposeSeal",
         "ComposeLanded",
         "ChatsComingSoon",
+        "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -778,6 +802,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -806,6 +831,7 @@
       "status": "resolved",
       "startsOn": [
         "ChatsComingSoon",
+        "CommentNotFound",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -833,6 +859,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -855,7 +882,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -868,6 +895,7 @@
         "ComposeSeal",
         "ComposeLanded",
         "ChatsComingSoon",
+        "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -894,6 +922,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -922,6 +951,7 @@
       "status": "resolved",
       "startsOn": [
         "ChatsComingSoon",
+        "CommentNotFound",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Explore",
@@ -949,6 +979,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -971,7 +1002,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 48 boards → ComposePick",
+        "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -982,6 +1013,7 @@
         "ComposeSeal",
         "ComposeLanded",
         "ChatsComingSoon",
+        "CommentNotFound",
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
@@ -1008,6 +1040,7 @@
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
+        "PostNotFound",
         "Profile",
         "ProfileComments",
         "ProfileDeleted",
@@ -1792,6 +1825,7 @@
         "follow-a-citation",
         "guest-turns-applicant",
         "join-with-an-invite",
+        "join-with-the-link-in-hand",
         "make-your-key",
         "open-a-posts-pictures",
         "trace-a-score-to-its-records",
@@ -1802,6 +1836,7 @@
       "endpoint": [
         "guest-turns-applicant",
         "join-with-an-invite",
+        "join-with-the-link-in-hand",
         "make-your-key",
         "verify-the-email"
       ]
@@ -1899,6 +1934,15 @@
       "flows": [
         "cite-a-post",
         "remove-your-comment"
+      ],
+      "endpoint": []
+    },
+    "CommentNotFound": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
       ],
       "endpoint": []
     },
@@ -2099,8 +2143,7 @@
     },
     "ComposeSealUploading": {
       "flows": [
-        "publish-while-the-uploads-run",
-        "reply-while-the-pictures-upload"
+        "publish-while-the-uploads-run"
       ],
       "endpoint": []
     },
@@ -2455,7 +2498,8 @@
     },
     "GuestGate": {
       "flows": [
-        "guest-turns-applicant"
+        "guest-turns-applicant",
+        "join-with-the-link-in-hand"
       ],
       "endpoint": []
     },
@@ -2514,9 +2558,12 @@
     "Join": {
       "flows": [
         "guest-turns-applicant",
-        "join-with-an-invite"
+        "join-with-an-invite",
+        "join-with-the-link-in-hand"
       ],
-      "endpoint": []
+      "endpoint": [
+        "join-with-the-link-in-hand"
+      ]
     },
     "KeyCeremony": {
       "flows": [
@@ -2552,7 +2599,7 @@
     "Main": {
       "flows": [
         "follow-a-citation",
-        "guest-turns-applicant",
+        "join-with-the-link-in-hand",
         "open-a-posts-pictures",
         "trace-a-score-to-its-records",
         "visit-an-author",
@@ -2634,6 +2681,15 @@
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author"
+      ],
+      "endpoint": []
+    },
+    "PostNotFound": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
       ],
       "endpoint": []
     },
@@ -3030,6 +3086,12 @@
       ],
       "endpoint": []
     },
+    "ReplySealUploading": {
+      "flows": [
+        "reply-while-the-pictures-upload"
+      ],
+      "endpoint": []
+    },
     "ReplySettled": {
       "flows": [
         "edit-your-comment",
@@ -3238,7 +3300,5 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": [
-    "Restore/4: the kept picks' review — picks kept pending on this device sign together, in one batch the reader reviews first"
-  ]
+  "gapsOnFlows": []
 }

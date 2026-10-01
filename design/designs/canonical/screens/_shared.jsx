@@ -75,6 +75,8 @@ const {
   OwnStanceReadout,
   StanceValue,
   StanceSlider,
+  StanceStanding,
+  StanceLandingLine,
   TAG_RANGES,
   TaggedRow,
   TransportError,
@@ -1249,6 +1251,23 @@ const SEAL_CITATIONS = [
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.2, pInterest: 0.1 }, onRemove: () => {}, onEdit: () => {} },
 ];
 
+/* THE KEPT PICKS, written once (backlog item 113, the kept picks' review):
+   the review that lists them and the seal that signs them are two boards of
+   one batch, and a seal reading back a set the review disagreed with would
+   be the drift this constant exists to stop. Three, because the settings row
+   that reopens the review counts three. The first is `PadPending`'s own pick
+   on @ada's post; a person among them on purpose, since every pad that meets
+   the key's absence can keep its pick (`PadKeyAbsent` is the master for all
+   of them). Each pair is read the readout's way on both boards — the face,
+   the digits in geek mode, and the anchor's word with both axes spoken
+   (`StagedReference`'s `stance` on the review, `StanceReadout` on the
+   seal). */
+const KEPT_PICKS = [
+  { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
+  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 } },
+  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 } },
+];
+
 /* The one citation the reply's seal was drawn holding. It is a constant rather
    than a board's literal because two states of that seal name it — the one
    that reads it back and the × that drops it. */
@@ -1271,7 +1290,9 @@ const REPLY_CITATION = "Tide tables and the third headland";
    `state` IS WHAT BECAME OF THE COMMIT (the failure pack, jakob 2026-09-30).
    One body, so the seal a fault is drawn on is the seal the reader was on:
    - `signing` — past 200ms without an answer: the commit reads its present
-     participle and goes inert (`SealSigning`).
+     participle and goes inert, and the ways out with it (`SealSigning`).
+   - `slow` — the same signing past 5s: the acts card's subline swaps to the
+     slow line in olive, and nothing else changes (`SealSigningSlow`).
    - `offline` — no answer at all: the fault takes the commit's place,
      `TransportError`'s line over an outlined Retry and the same way back
      (`NetworkError`).
@@ -1295,6 +1316,9 @@ const WRITE_RULE_FACT =
    it rides the notice panel and is named by its dialog (copy-voice, *The "?"
    dialogs*). The pad's notice carries the same one. */
 const WRITE_RULE_HELP = "Why signing waits";
+/* The slow line (jakob 2026-10-01: past 5s, an honest line and no fake
+   progress) — a draft flagged for blessing (copy-voice, *Faults by code*). */
+const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
   return (
@@ -1339,7 +1363,8 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                 },
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
-          note="They land together, or none does."
+          note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
+          noteTone={state === "slow" ? "slow" : "quiet"}
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1384,7 +1409,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
             </div>
           </>
         ) : (
-          <SealFooter signLabel="Sign and publish" busy={state === "signing"} busyLabel="Signing and publishing…" />
+          <SealFooter signLabel="Sign and publish" busy={state === "signing" || state === "slow"} busyLabel="Signing and publishing…" />
         )}
       </div>
     </>
@@ -1496,8 +1521,14 @@ const replyCitedRow = () => ({
    line and the act row's value name it. `keyAbsent` is the seal with the key
    elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
    the footer stood, and the header's "?" kept beside the notice's own, by the
-   stopper exception (readme §13, *The failure fixes and the support stack*). */
-function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
+   stopper exception (readme §13, *The failure fixes and the support stack*).
+
+   `uploading` is the seal gated on the reply's media (jakob's ruling, the night
+   batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
+   true }` once one has not. Every row is unchanged; `UploadStatusLine` stands
+   over the foot, and `Sign comment` is disabled while it shows
+   (`ReplySealUploading`, `ReplySealUploadFailed`). */
+function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
     <>
@@ -1546,7 +1577,15 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
             <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
           </>
         ) : (
-          <SealFooter signLabel="Sign comment" />
+          <>
+            {uploading &&
+              (uploading.failed ? (
+                <UploadStatusLine failed onRetry={() => {}} />
+              ) : (
+                <UploadStatusLine done={uploading.done} total={uploading.total} />
+              ))}
+            <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
+          </>
         )}
       </div>
     </>
@@ -1554,8 +1593,8 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
 }
 
 /* THE KEY NOTICE AT REPLY SCALE — `ComposeKeyAbsent`'s panel, which is
-   `WalletKeyAbsent`'s and `PadKeyAbsent`'s: a `tertiary-container` block (a
-   waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
+   `PadKeyAbsent`'s: `NoticePanel` at the `medium` corner, a
+   `tertiary-container` block (a waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
    key, one line, and the restore button in `Button`'s `inverse`. Written once
    here because the reply's door and the reply's seal both draw it.
 
@@ -1564,16 +1603,10 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
    sentence, and the restore button is not drawn. */
 function KeyAbsentNotice({ line }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-medium)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-          Your key isn't on this browser
-        </h2>
-        <HelpDot ariaLabel="Your key" variant="inverse" />
-      </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{line}</p>
+    <NoticePanel title="Your key isn't on this browser" helpLabel="Your key">
+      <NoticeLine>{line}</NoticeLine>
       <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-    </div>
+    </NoticePanel>
   );
 }
 
@@ -1765,6 +1798,34 @@ function ComposeDetailsBody({
    change was whitespace the record does not carry. The batch already knows: it
    is what the acts sheet lists and what the footer counts, so the guard reads
    the number that was always there. */
+/* A STAGED WITHDRAWAL, READ BACK WHERE THE THING STOOD, WITH ITS WAY BACK
+   (jakob's ruling, the night batch 2026-10-01 — audit K5.3). A tag taken off a
+   post, or a citation removed from it, is a record in the edit's batch, not an
+   erasure: the chip or the row leaves its block, and this line stands under the
+   block naming what goes. `Undo` unstages that one withdrawal — the chip or the
+   row returns as it stood, and the acts card counts its records off again. One
+   line per item, so each carries its own `Undo`.
+
+   RE-PICKING A WITHDRAWN NAME IS THE SAME UNDO. Choosing `#coastroad` again in
+   the tag picker, or the same post in the reference picker, unstages its
+   withdrawal rather than staging a second, cancelling record: one staged act
+   per name (behavior/TagPicker.md, behavior/ReferencePicker.md). */
+function WithdrawnLine({ name }) {
+  return (
+    <QuietNote>
+      Withdrawn: {name}{" "}
+      <InlineAction size="sm" ariaLabel={`Undo withdrawing ${name}`}>
+        Undo
+      </InlineAction>
+    </QuietNote>
+  );
+}
+
+/* What the post edit's References block holds withdrawn — another author's
+   post the edit stops citing. Its removal stages `withdrawalCost` counter-records,
+   and this one was revised upward past 1, so it stages two. */
+const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
+
 function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
@@ -1797,7 +1858,7 @@ function EditComposeBody({ unchanged = false } = {}) {
             <TopicRemovable topic="saltmaps" onEdit={() => {}} />
           </div>
           <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-          <QuietNote>Withdrawn: #coastroad</QuietNote>
+          {!unchanged && <WithdrawnLine name="#coastroad" />}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -1805,7 +1866,8 @@ function EditComposeBody({ unchanged = false } = {}) {
           {/* The composer's whole staged form, as `ComposeDetails` draws it:
               the kind under the name, and the pair the citation signs. An edit
               stages the same citation a first draft does, so it shows back the
-              same facts. */}
+              same facts. The row opens `RefPairEdit` — the citation already
+              stands, so its pick adds a record — and its × withdraws it. */}
           <StagedReference
             kind="post"
             name="The long way home — @ada"
@@ -1815,6 +1877,7 @@ function EditComposeBody({ unchanged = false } = {}) {
             onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+          {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1832,7 +1895,9 @@ function EditComposeBody({ unchanged = false } = {}) {
 
         <div style={{ flex: 1 }} />
 
-        <ActsFooter count={unchanged ? 0 : 3} />
+        {/* Five things: the edit, #saltmaps added, #coastroad withdrawn, and the
+            citation's withdrawal at its two counter-records (`EditActs`). */}
+        <ActsFooter count={unchanged ? 0 : 5} />
         <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>
       </div>
     </>
@@ -2241,7 +2306,15 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `Not made yet` and opens `SettingsBackupNone`, and the group's footnote
    stops promising a way back that does not exist — and `forget` is the
    don't-remember switch turned on. Both default to the page every other
-   board draws. */
+   board draws.
+
+   `keptPicks` is the count of picks still waiting after their review was
+   left unsigned (backlog item 113, jakob's ruling B3): a quiet row in the
+   Key backup group, after `Your key`, reading `3 kept picks waiting`, that
+   reopens `KeptPicksReview`. It exists only while that is true — kept picks
+   with the key here and their batch unsigned — so it defaults to none, and
+   `Settings`, which draws the page whole, draws it present to show its
+   place in the order. */
 /* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the
    settings row, the release chronicle and the report's diagnostic line all
    read the running version, and three boards disagreeing about it would be
@@ -2254,6 +2327,108 @@ const RUNNING_VERSION = "0.1.2";
 const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
 const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+
+/* THE RELEASE CHRONICLE, whole (`WhatsNew`'s anatomy, shared the moment its
+   behind state drew it a second time). The notes are fixture, not copy. */
+const RELEASES = [
+  {
+    version: RUNNING_VERSION,
+    date: "30.09.2026",
+    current: true,
+    notes: [
+      "A reply says what it answers — a post by its title, a comment by its first words.",
+      "While something signs, the button says what it's doing, and a signing that doesn't go through says so right where you were.",
+    ],
+  },
+  {
+    version: "0.1.1",
+    date: "28.09.2026",
+    notes: [
+      "Comments, profiles and tags can join your feed — turn them on in the filter.",
+      "A tag you type is always the first row, ready to add.",
+    ],
+  },
+  {
+    version: "0.1.0",
+    date: "25.09.2026",
+    notes: ["The first release: posts and comments, opinions, tags and citations, invites, and a key that is yours alone."],
+  },
+];
+
+/* A newer release than the one running here (jakob 2026-10-01, the A10
+   ruling) — the behind state's fixture, one patch on. */
+const NEWER_VERSION = "0.1.3";
+
+/* The behind state's two lines — drafts flagged for blessing (copy-voice,
+   *The settings page*, About): the quiet line atop the chronicle, and the
+   once-per-release snackbar on a cold open's feed. */
+const NEWER_VERSION_LINE = "A newer version exists.";
+const NEWER_VERSION_SNACKBAR = "A newer version of CoGra is out.";
+
+function Release({ version, date, current = false, notes }) {
+  return (
+    <>
+      <SectionLabel>{current ? `Version ${version} · current · ${date}` : `Version ${version} · ${date}`}</SectionLabel>
+      <div style={{ padding: "0 16px" }}>
+        <Card>
+          {notes.map((line) => (
+            <p
+              key={line}
+              style={{
+                margin: 0,
+                fontSize: "var(--text-body-medium)",
+                lineHeight: "var(--text-body-medium--line-height)",
+                letterSpacing: "var(--text-body-medium--letter-spacing)",
+              }}
+            >
+              {line}
+            </p>
+          ))}
+          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
+            See it on GitHub
+          </InlineAction>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* `newer` is the version a running app is behind, or nothing. Given, one quiet
+   line stands atop the chronicle — the fact in `--text-secondary`, the door
+   onto that release's public page ending it, `ProfileMoreFailed`'s line shape
+   — and nothing else changes: no badge, no banner, no nagging. */
+function WhatsNewBody({ newer }) {
+  return (
+    <>
+      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" />
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 0 16px" }}>
+        {newer && (
+          <p
+            style={{
+              margin: 0,
+              padding: "8px 24px 0",
+              fontSize: "var(--text-body-medium)",
+              lineHeight: "var(--text-body-medium--line-height)",
+              letterSpacing: "var(--text-body-medium--letter-spacing)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
+            <InlineAction size="sm" ariaLabel={`See version ${newer} on GitHub`} onClick={() => {}}>
+              See it on GitHub
+            </InlineAction>
+          </p>
+        )}
+        {RELEASES.map((release) => (
+          <Release key={release.version} {...release} />
+        ))}
+        <div style={{ padding: "16px 24px 0" }}>
+          <QuietNote>Newest first. Every release's full notes and its code are public on GitHub.</QuietNote>
+        </div>
+      </div>
+    </>
+  );
+}
 
 /* THE REPORT PAGE, whole (`ReportProblem`'s anatomy, shared the moment its
    empty state drew it a second time). `words` is what the field holds. Empty,
@@ -2332,10 +2507,16 @@ function ReportProblemBody({ words }) {
   );
 }
 
-function SettingsBody({ backup = "made", forget = false } = {}) {
+/* `emailPending` and `deleting` are the two in-flight account acts the page
+   reads back (jakob 2026-10-01, audit K3.21 and K3.22): an email change with
+   a side still owed, and a confirmed deletion in its grace. Each changes one
+   row's status, and the deletion also brings its band, which rides every
+   logged-in surface and sits under an inner page's header. */
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
+      {deleting && <DeletionBand days={6} />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
@@ -2439,6 +2620,9 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
         >
           <SettingsRow label="Recovery code" status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"} onOpen={() => {}} />
           <SettingsRow label="Your key" onOpen={() => {}} />
+          {keptPicks > 0 && (
+            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} />
+          )}
         </SettingsGroup>
 
         <SettingsGroup
@@ -2467,7 +2651,12 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
         >
           <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
           <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
-          <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
+          <SettingsRow
+            label="Email"
+            value="sol@solferreira.art"
+            status={emailPending ? "Change pending" : undefined}
+            onOpen={() => {}}
+          />
         </SettingsGroup>
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
@@ -2537,9 +2726,13 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
             quiet line. */}
         <SettingsGroup
           ariaLabel="Delete account"
-          footnote="Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+          footnote={
+            deleting
+              ? undefined
+              : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+          }
         >
-          <SettingsRow label="Delete account" onOpen={() => {}} />
+          <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} />
         </SettingsGroup>
       </div>
     </>

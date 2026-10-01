@@ -4,7 +4,9 @@
    avatar is the frequent standalone change; the rare name/bio/website edits
    live here). Save sits at the bottom (the wizard ruling) and leads to the
    change's seal: every profile change is a signed act. The handle is
-   deliberately absent — it is L2 account state and changes in Settings. */
+   deliberately absent — it is L2 account state and changes in Settings.
+   It reads as a wizard stage, not a task page (jakob 2026-10-01): it leads
+   to a seal, so `Save` keeps its pinned foot under the two-placement law. */
 export function Screen() {
   return (
     <>

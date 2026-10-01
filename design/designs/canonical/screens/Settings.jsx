@@ -86,10 +86,17 @@
      Delete account             open, as account management; what it removes
                                 before any record has landed is not yet ruled
                                 (backlog)
-     About · the support stack  as for a member */
+     About · the support stack  as for a member
 
-export const FRAME = { width: 390, height: 2613 };
+   THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
+   113, jakob's ruling B3): `3 kept picks waiting`, last in the Key backup
+   group, opening `KeptPicksReview` again. It is there only while picks kept
+   with the key elsewhere wait, the key is back, and their review was left
+   unsigned — the page's one row that comes and goes. Quiet: a navigating row
+   and nothing more, no badge, no colour, no reminder anywhere else. */
+
+export const FRAME = { width: 390, height: 2670 };
 
 export function Screen() {
-  return <SettingsBody />;
+  return <SettingsBody keptPicks={3} />;
 }
