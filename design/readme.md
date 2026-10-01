@@ -1163,8 +1163,9 @@ may serve any actor's view of the shared record to any reader. So:
   ranking honest (§9); it exposes nothing the public record does not
   already carry.
 - **The borrowed view persists through the applicant days** and hands
-  over to the member's own view the moment their first stance exists —
-  the vouch-back.
+  over to the member's own view when the vouch-back is signed — that
+  signature alone. A landed member's opinion on anything else leaves
+  the view borrowed.
 - **The vantage resolves to the most specific actor available**, and
   the band names whichever one it lands on. Anyone who arrived through
   an invite link borrows that link's ISSUER, and an applicant is still

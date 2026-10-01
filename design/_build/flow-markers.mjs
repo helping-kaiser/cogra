@@ -100,7 +100,8 @@ export const FLOW_MARKERS = {
   VouchBack: [
     filter,
     { n: 2, find: ">Not now</button>", tag: "button" },
-    { n: 3, find: ">Vouch back</button>", tag: "button" },
+    // The band's `Vouch back` and the card's open the same pad: one number.
+    { n: 3, find: ">Vouch back</button>", tag: "button", all: true },
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
     ...nav(13),
   ],
