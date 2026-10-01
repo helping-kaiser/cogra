@@ -28,7 +28,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to the post" />
+      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" />
       <ScoreColumn>
         <ScoreOrigin />
         <QuietNote>Every path here starts with an opinion you gave.</QuietNote>

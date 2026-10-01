@@ -11,9 +11,10 @@
 
    IT IS THE ENTRY FLOW'S MAIL-SENT IDIOM. `Reset` says the same thing in a
    status line under its own field because the reader is still standing on the
-   form; here the form is spent, so it is a board — `VerifyExpired`'s column and
-   its foot, the outlined act that might be needed over nothing else. The
-   heading is the errand, the paragraph is the address and what the link does.
+   form; here the form is spent, so it is a board — `VerifyExpired`'s column,
+   and the outlined act that might be needed following the words, in content
+   flow (readme §4, the two placements). The heading is the errand, the
+   paragraph is the address and what the link does.
 
    THE ADDRESS IS NAMED, NOT DESCRIBED — the settings round's own rule, from
    `ChangeEmail`: a reader who mistyped their address last year finds out here,
@@ -61,11 +62,11 @@ export function Screen() {
           </QuietNote>
         </div>
 
-        <div style={{ flex: 1 }} />
-
-        <Button variant="outline" style={{ width: "100%" }}>
-          Resend the link
-        </Button>
+        <div style={{ marginTop: 24 }}>
+          <Button variant="outline" style={{ width: "100%" }}>
+            Resend the link
+          </Button>
+        </div>
       </div>
     </>
   );

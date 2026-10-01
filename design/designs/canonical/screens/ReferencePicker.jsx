@@ -10,12 +10,13 @@
 
    A PICK STAGES AND THE PICKER STAYS OPEN (jakob, 2026-10-01, the shared
    anatomy's law — `TagPicker`). A tap on a row stages that citation in the
-   composer at once and the reader goes on picking, the row's add mark turned
-   to the added mark (`ReferenceRow`'s `staged`): here the post is in and the
-   person is still to add. A tap on a row already added changes nothing; a
-   staged citation leaves from the composer, where its row carries the ×. The
-   composer's cap still bounds the batch — ten references (`ComposeSealCited`)
-   — and how the list reads once the tenth is in is not drawn yet.
+   composer at once and the reader goes on picking, and the row moves out of
+   the results into the staged section above them, a `StagedReference` with
+   its × — the post-MVP chat pickers' idiom (jakob, 2026-10-01): here the post
+   is in and the person is still to add. The × un-stages the citation on the
+   spot; the composer's own × still removes it too. The composer's cap still
+   bounds the batch — ten references (`ComposeSealCited`) — and how the list
+   reads once the tenth is in is not drawn yet.
 
    `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01, carried here by
    the shared anatomy `TagPicker` names). Both return to the composer the
@@ -32,9 +33,11 @@ export function Screen() {
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
           <FilterTrigger reading="Everything" ariaLabel="What the search shows" />
         </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
+          <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} />
+        </div>
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" staged onOpen={() => {}} />
         <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
       </div>
       <div style={{ flex: "none", padding: "8px 24px 24px" }}>

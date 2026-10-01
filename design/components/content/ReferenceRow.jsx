@@ -66,20 +66,30 @@ import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ON
    tone, so a tile drawn on one vanished into it — the `#` on the tag card was
    invisible. `onCard` gives it `surface-container-high`, the tone
    `ContentRow`'s disc already wears on the same card. Everywhere off a card
-   the tile is unchanged. */
-export function NodeMark({ kind, name, src, onCard = false, node }) {
-  if (kind === "person") return <MonogramAvatar name={name} src={src} size="md" node={node} />;
+   the tile is unchanged.
+
+   `redacted` IS A MARK WHOSE PAYLOAD WENT (the closing batch, 2026-10-01):
+   a removed post's cover and words left with the rest of it, so its tile
+   keeps its space and fills with nothing — `MonogramAvatar`'s own rule for
+   a deleted account's disc, which this passes on for a person.
+
+   `size` is the mark's edge in px, 32 by default. The score's path trace
+   ends on the thing it reached at its own avatar size (`PathTrace`), and
+   below 32 the corner steps down a rung, as the trace's tiles always have. */
+export function NodeMark({ kind, name, src, onCard = false, redacted = false, size = 32, node }) {
+  if (kind === "person") return <MonogramAvatar name={name} src={src} size={size === 32 ? "md" : size} redacted={redacted} node={node} />;
   const tile = {
-    height: "32px",
-    width: "32px",
+    height: `${size}px`,
+    width: `${size}px`,
     flex: "none",
     display: "grid",
     placeItems: "center",
-    borderRadius: "var(--radius-small)",
+    borderRadius: size < 32 ? "var(--radius-extra-small)" : "var(--radius-small)",
     background: onCard ? "var(--surface-container-high)" : "var(--surface-container-highest)",
     color: "var(--text-secondary)",
     overflow: "hidden",
   };
+  if (redacted) return <span style={tile} aria-hidden="true" data-node={node} />;
   if (kind === "post" && src) {
     return (
       <span style={tile} aria-hidden="true" data-node={node}>
@@ -88,9 +98,19 @@ export function NodeMark({ kind, name, src, onCard = false, node }) {
     );
   }
   const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
+  const small = size < 32;
   return (
-    <span style={{ ...tile, fontFamily: "var(--font-sans)", fontSize: "var(--text-title-medium)", fontWeight: "var(--text-title-medium--font-weight)" }} aria-hidden="true" data-node={node}>
-      {letter ?? <Icon name={NODE_GLYPHS[kind]} size={18} />}
+    <span
+      style={{
+        ...tile,
+        fontFamily: "var(--font-sans)",
+        fontSize: small ? "var(--text-label-large)" : "var(--text-title-medium)",
+        fontWeight: small ? "var(--text-label-large--font-weight)" : "var(--text-title-medium--font-weight)",
+      }}
+      aria-hidden="true"
+      data-node={node}
+    >
+      {letter ?? <Icon name={NODE_GLYPHS[kind]} size={small ? 14 : 18} />}
     </span>
   );
 }
@@ -100,17 +120,13 @@ export function NodeMark({ kind, name, src, onCard = false, node }) {
    row reads "on <post title>", the offer row "on <item name>". Without it an
    indirect hit is indistinguishable from a mishit. The row's right edge is one
    of three: `pair` (the signed pair, as numbers), `rank` (the viewer-relative
-   rank), or `value` (a plain string — the age past the seam). */
-/* `staged` IS A PICKER ROW ALREADY ADDED (jakob 2026-10-01, the pickers'
-   multi-add): a pick stages at once and the picker stays open, so the list has
-   to show what is in. The add mark turns to the added mark: the glyph becomes
-   `check`, so the state never rests on colour alone, and its ink moves from
-   `--text-secondary` to `--on-surface`, the house *Selected* move (readme §4,
-   *Interaction states*). The row's spoken name ends `Added`, because the mark
-   itself is hidden from the accessibility tree. It wins over `trailing`. The row stays a row: a tap
-   on it changes nothing, since un-staging is the composer's chip ×, never the
-   picker's. */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, staged = false, pending = false, onOpen }) {
+   rank), or `value` (a plain string — the age past the seam).
+
+   A PICKED ROW LEAVES THE LIST (jakob 2026-10-01, the pickers' staged
+   section): the moment a picker row is picked it stands above the results as
+   a `StagedReference` with its ×, so a picker's list only ever holds rows
+   still to add, each with the add mark on its edge. */
+export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, onOpen }) {
   const tagFamily = pairFamily === undefined ? kind === "topic" : pairFamily === "tag";
   const exact = pair ? (tagFamily ? formatTagPair(pair) : formatStancePair(pair)) : null;
   /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
@@ -184,14 +200,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
           `trailing` node wins over both: the PICKER's edge is the action (the
           add mark), because there the whole row's tap picks — ranking still
           orders the list, the number just yields the edge to the act. */}
-      {staged ? (
-        <>
-          <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--on-surface)" }}>
-            <Icon name="check" size={20} />
-          </span>
-          <span style={SR_ONLY}>Added</span>
-        </>
-      ) : trailing ? (
+      {trailing ? (
         <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}>{trailing}</span>
       ) : rank ? (
         <>

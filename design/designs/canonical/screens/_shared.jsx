@@ -17,6 +17,7 @@ const {
   MonogramAvatar,
   ActorChip,
   HIDE_ACTOR_LABEL,
+  REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
   LoadingState,
@@ -1472,8 +1473,8 @@ const replyCitedRow = () => ({
    `target` is what the reply answers (`REPLY_TARGETS`): only the read-back
    line and the act row's value name it. `keyAbsent` is the seal with the key
    elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
-   the footer stood, and the header's "?" given up to the notice's, because a
-   screen spends one dot. */
+   the footer stood, and the header's "?" kept beside the notice's own, by the
+   stopper exception (readme §13, *The failure fixes and the support stack*). */
 function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
   const named = REPLY_TARGETS[target];
   return (
@@ -1482,7 +1483,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help={keyAbsent ? undefined : "How signing works"}
+        help="How signing works"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>{named.note} — 89 characters.</QuietNote>
@@ -2748,35 +2749,54 @@ const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
    quote's own box is the tile's default (`NodeMark`'s `onCard`). Drawn side
    by side on `FeedEntryKinds`.
 
-   THE SCORE UNDER IT IS PLAIN TEXT, NEVER `ExplainableNumber`. That master is
-   the affordance and never the explanation; here the reader is standing inside
-   the explanation, so a control that opened it again would open nothing. It
-   keeps the master's own register — the label quiet, the value on-surface at
-   500 — because it is the same figure, read rather than pressed. */
+   THE SCORE AND THE THING ARE ONE ENTITY (jakob 2026-10-01: "make it one
+   entity"). The figure hangs on the held thing's top-left as a flag, attached
+   the way the tag page hangs its claim on each row (`TaggedRow`): the flag's
+   tone over the row's, zero gap, and the row squaring its top-left corner
+   under it (`QuotedRow`'s `attach`), so flag and thing read as one folder-tab
+   silhouette — the number belongs to this thing, not floating near it.
+
+   IT IS THE GLYPH AND THE SIGNED NUMBER, no label word: `graph` and `+15.20`,
+   the drill-down's own register, where every path below it is signed and the
+   flag is their sum. Its spoken name stays `Feed score`, in a screen-reader
+   span. THE SIGN APPEARS ONLY HERE (jakob: the cards keep plain numbers, "we
+   dont need noise"); a negative wears its − everywhere, and a zero none.
+
+   IT IS PLAIN TEXT, NEVER `ExplainableNumber`. That master is the affordance
+   and never the explanation; here the reader is standing inside the
+   explanation, so a control that opened it again would open nothing. It keeps
+   the master's own register — the glyph quiet, the value on-surface at 500 —
+   because it is the same figure, read rather than pressed. */
 const SCORE_ORIGINS = {
   post: { title: "The long way home — @ada", snippet: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.", name: ADA.displayName, src: "comment-camera.jpg" },
   comment: { title: "@tobias", snippet: TOBIAS_COMMENT, name: TOBIAS.displayName },
   person: { title: MIRA.displayName, snippet: "@" + MIRA.handle, name: MIRA.displayName, src: "inviter.jpg" },
   topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard /> },
 };
+const signedScore = (score) => (/^[−-]/.test(score) || /^0(\.0+)?$/.test(score) ? score : "+" + score);
 
 function ScoreOrigin({ kind = "post", score = "15.20" }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <QuotedRow {...SCORE_ORIGINS[kind]} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       <span
         style={{
           display: "inline-flex",
-          alignItems: "baseline",
+          alignItems: "center",
+          alignSelf: "flex-start",
           gap: 6,
+          padding: "2px 10px",
+          background: "var(--surface-container-high)",
+          borderRadius: "var(--radius-small) var(--radius-small) 0 0",
           fontSize: "var(--text-body-small)",
           lineHeight: "var(--text-body-small--line-height)",
           color: "var(--text-secondary)",
         }}
       >
-        Feed score
-        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{score}</span>
+        <Icon name="graph" size={16} />
+        <span style={SR_ONLY}>Feed score</span>
+        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{signedScore(score)}</span>
       </span>
+      <QuotedRow attach {...SCORE_ORIGINS[kind]} />
     </div>
   );
 }
@@ -2788,13 +2808,25 @@ function ScoreOrigin({ kind = "post", score = "15.20" }) {
    into a statistic about the post instead of a fact about the reader's own
    network.
 
-   IT ENDS ON THE POST, as a tile rather than a circle: people are circles
-   everywhere in this system (`NodeMark`), and a post is a thing with a face.
+   IT ENDS ON THE THING IT REACHED, in that thing's own mark (`NodeMark`,
+   the closing batch, jakob 2026-10-01): a post's cover tile, a comment's
+   glyph tile, a person's circle, a tag's `#` — the mark `ScoreOrigin` holds
+   above it, at the trace's size. People are circles everywhere in this
+   system, and every other kind is a tile.
 
    THE AVATARS ARE `aria-hidden` BY THE MASTER, so the trace carries its own
-   screen-reader line — the same discipline every stance readout takes. */
-function PathTrace({ people, size = 24 }) {
-  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then the post`;
+   screen-reader line — the same discipline every stance readout takes — and
+   the line is kind-neutral, ending `then what reached you`, the page title's
+   own words, because the mark beside it already says the kind. */
+const TRACE_ENDS = {
+  post: { kind: "post", src: "post-photo.jpg" },
+  comment: { kind: "comment" },
+  person: { kind: "person", name: MIRA.displayName, src: "inviter.jpg" },
+  topic: { kind: "topic" },
+};
+
+function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
+  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then what reached you`;
   return (
     <span style={{ display: "inline-flex", alignItems: "center" }}>
       {people.map((person, index) => (
@@ -2806,11 +2838,7 @@ function PathTrace({ people, size = 24 }) {
         </React.Fragment>
       ))}
       <span aria-hidden="true" style={{ width: 14, height: 1, background: "var(--border-hairline)", flex: "none" }} />
-      <img
-        src="post-photo.jpg"
-        alt=""
-        style={{ width: size, height: size, flex: "none", borderRadius: "var(--radius-extra-small)", objectFit: "cover", display: "block" }}
-      />
+      <NodeMark {...TRACE_ENDS[kind]} size={size} onCard={onCard} />
       <span style={SR_ONLY}>{spoken}</span>
     </span>
   );
@@ -2821,7 +2849,7 @@ function PathTrace({ people, size = 24 }) {
    40px disc, and a path is a chain. Everything else about the row is the
    master's — the card ground, the medium corner, the 12px padding, the chevron
    that says this opens another surface. */
-function PathRow({ people, through, value, onOpen }) {
+function PathRow({ people, through, value, onOpen, kind = "post" }) {
   return (
     <button
       type="button"
@@ -2844,7 +2872,7 @@ function PathRow({ people, through, value, onOpen }) {
       }}
     >
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        <PathTrace people={people} />
+        <PathTrace people={people} kind={kind} onCard />
         <span
           style={{
             fontSize: "var(--text-label-small)",
@@ -3182,13 +3210,51 @@ const FEED_LEAD_TITLE = {
 
    REPLIES NEVER APPEAR IN THE FEED (jakob 2026-10-01). A comment's replies
    live in its thread, and the card carries no `View n replies` line: the feed
-   ranks the comment, not its branch, and the door to the branch is the card. */
+   ranks the comment, not its branch, and the door to the branch is the card.
+
+   ITS ⋮ IS THE COMMENT'S MENU (jakob 2026-10-01), the sheet every comment's ⋮
+   opens (`CommentMenu`), never the post card's: the card stands for a
+   comment, so its menu holds what a comment's does — Save and Cite, then
+   `Cited by` and `Opinions on this`, the license closing it. Your own
+   comment's adds `Remove` among the acts (`CommentMenuOwn`), as everywhere.
+   The card appends the license row itself, so the rows handed it stop short
+   of it. */
+const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+/* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
+   · AN UNTITLED POST — a text post's title is optional — is named by its
+     first words in the title's place, the way `History` lists one and the
+     quote names a comment: the words are the post.
+   · A REMOVED POST keeps its row, as it keeps its place in every thread:
+     the title's place reads `Removed by its author`, the removal mark's own
+     line, over the author, who stays; its mark keeps its space empty.
+
+   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu;
+   nothing else about it changes — the feed card carries no Edit.
+
+   A LONG COMMENT folds at two lines under `More`, the caption's precedent
+   (`FEED_COMMENT_CLAMP_LINES`); the card is still the door to its thread.
+
+   A GUEST meets the card as every card: the face opens `GuestGate` (the
+   guest feed's rule, `Main`), and the reply glyph is not drawn, since
+   `CommentCard` offers a reply only to a reader signed in. Nothing here is
+   drawn for a guest: no guest board shows a comment card. */
+const FEED_COMMENT_CLAMP_LINES = 2;
+const REMOVED_BY_AUTHOR = "Removed by its author";
 const commentTarget = (parent, kind) =>
   kind === "comment"
     ? { kind: "comment", label: `@${parent.author.handle}'s comment`, title: "@" + parent.author.handle, sub: parent.content }
-    : { kind: "post", label: `“${parent.title}” — @${parent.author.handle}`, title: parent.title, sub: "@" + parent.author.handle, cover: parent.media?.[0]?.src };
+    : parent.removed
+      ? { kind: "post", label: `@${parent.author.handle}'s removed post`, title: REMOVED_BY_AUTHOR, sub: "@" + parent.author.handle, removed: true }
+      : {
+          kind: "post",
+          label: `“${parent.title ?? parent.content}” — @${parent.author.handle}`,
+          title: parent.title ?? parent.content,
+          sub: "@" + parent.author.handle,
+          cover: parent.media?.[0]?.src,
+        };
 
-function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle }) {
+function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
@@ -3200,7 +3266,8 @@ function CommentFeedCard({ author, content, timestamp, parent, parentKind = "pos
       target={target.label}
       targetKind={target.kind}
       targetShape="thread"
-      targetDetail={{ title: target.title, sub: target.sub, cover: target.cover }}
+      targetDetail={{ title: target.title, sub: target.sub, cover: target.cover, removed: target.removed }}
+      clampLines={FEED_COMMENT_CLAMP_LINES}
       onOpenTarget={() => {}}
       onOpen={() => {}}
       bundle={bundle}
@@ -3212,7 +3279,7 @@ function CommentFeedCard({ author, content, timestamp, parent, parentKind = "pos
       replyGlyph
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={CARD_MENU}
+      menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}
     />
   );
 }
@@ -3243,25 +3310,46 @@ const FEED_BIO = {
   overflow: "hidden",
 };
 
-function ProfileFeedCard({ person, src, bio, score, bundle }) {
+/* A DELETED ACCOUNT STILL RANKS (the closing batch, jakob 2026-10-01). The
+   husk keeps its records and its standing (erasure.md §3), so it reaches a
+   feed like anyone; only its identity payloads went. The card draws it the
+   way every surface draws a redacted actor (`ActorChip`'s `redacted`): the
+   disc keeps its space and fills with nothing, the name's place reads
+   `Deleted account` in the system's voice, `text-secondary`, and no handle
+   stands under it — the stored form is a uniqueness device, not a name. No
+   bio: it went with the rest. Its ⋮ is `PROFILE_DELETED_MENU` less the share
+   the row carries, and every control names it `this account`.
+
+   A GUEST meets the card as every card: the face opens `GuestGate` (the
+   guest feed's rule, `Main`). No guest board draws one. */
+const FEED_DELETED_PROFILE_MENU = PROFILE_DELETED_MENU.filter((row) => row.label !== "Share this profile");
+
+function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false }) {
+  const handle = redacted ? null : "@" + person.handle;
   return (
     <PostCard
       lead={
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", minWidth: 0 }}>
-          <MonogramAvatar name={person.displayName} src={src} size={56} />
+          <MonogramAvatar name={person.displayName} src={src} size={56} redacted={redacted} />
           <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-            <span style={FEED_LEAD_TITLE}>{person.displayName}</span>
-            <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+            {redacted ? (
+              <span style={{ ...FEED_LEAD_TITLE, color: "var(--text-secondary)" }}>{REDACTED_ACTOR_NAME}</span>
+            ) : (
+              <>
+                <span style={FEED_LEAD_TITLE}>{person.displayName}</span>
+                <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+              </>
+            )}
           </span>
         </span>
       }
-      main={bio ? <p style={FEED_BIO}>{bio}</p> : undefined}
-      targetLabel={"@" + person.handle}
+      main={bio && !redacted ? <p style={FEED_BIO}>{bio}</p> : undefined}
+      targetLabel={handle ?? "this account"}
       bundle={bundle}
       score={score}
       onOpenScore={() => {}}
-      menuItems={FEED_PROFILE_MENU(person.handle)}
-      menuLabel={"More about @" + person.handle}
+      menuItems={redacted ? FEED_DELETED_PROFILE_MENU : FEED_PROFILE_MENU(person.handle)}
+      menuLabel={redacted ? "More about this account" : "More about " + handle}
       onOpen={() => {}}
     />
   );
@@ -3287,9 +3375,34 @@ function ProfileFeedCard({ person, src, bio, score, bundle }) {
    page's own row ends with. A Type has no license, is never cited and is not
    saved, so the card carries no ⋮. The card opens the tag's page.
 
-   THE TAGGED THINGS ARE `TagPage`'s, newest first, the page's order. */
+   THE TAGGED THINGS ARE `TagPage`'s, newest first, the page's order.
+
+   THE WHY-LINE NAMES TWO PEOPLE AT MOST (the closing batch, jakob 2026-10-01).
+   One or two are named — `Reaches you through @ada and @tobias`; past two,
+   the first and a count — `Reaches you through @ada and 3 others`. Where the
+   full line would not fit its one line, it compresses to the drill-down's own
+   `Through @ada`, the strongest path's person; a handle so long that even
+   that does not fit ellipsizes, the `ActorChip` truncation law ("…"). A
+   static render cannot measure, so the compression is chosen on an estimate
+   from the line's own tokens: about half an em to the glyph at `body-small`
+   across the lead's width beside the `#` tile and the age, 46 characters.
+
+   AN EMPTY TAG still ranks — it reaches the reader through people's opinions
+   of it, not through what carries it — so its card keeps the why-line and its
+   glimpse gives way to one quiet line, `Nothing carries this tag right now.`,
+   `TagPageEmpty`'s own first sentence, with no age, since nothing is newest.
+
+   A GUEST meets the card as every card: the face opens `GuestGate`, and so
+   does the compose glyph, as the guest feed's `New post` does (`Main`). No
+   guest board draws one. */
 const TAG_ACT = "Tag a new post with it";
-const reachesThrough = (handles) => `Reaches you through ${handles.map((h) => "@" + h).join(" and ")}`;
+const WHY_LINE_CHARS = 46;
+const TAG_NOTHING_RECENT = "Nothing carries this tag right now.";
+const reachesThrough = (handles) => {
+  const named = handles.map((h) => "@" + h);
+  const full = `Reaches you through ${named.length > 2 ? `${named[0]} and ${named.length - 1} others` : named.join(" and ")}`;
+  return full.length > WHY_LINE_CHARS ? `Through ${named[0]}` : full;
+};
 const SALTMAPS_TAGGED = [
   { kind: "post", title: "Low tide at six tomorrow — anyone walking the flats?", by: TOBIAS, age: "1h" },
   { kind: "post", title: SOL_POST.title, by: SOL, age: "3d", cover: SOL_POST.media[0].src },
@@ -3298,6 +3411,21 @@ const SALTMAPS_TAGGED = [
 
 function TagFeedCard({ name, through, tagged, score, bundle }) {
   const [newest, ...rest] = tagged;
+  const glimpse = newest ? (
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
+      <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
+        {tagged.map((thing) => (
+          <NodeMark key={thing.title} kind={thing.kind} src={thing.cover} onCard />
+        ))}
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
+        <span style={FEED_LEAD_SMALL}>@{newest.by.handle}{rest.length > 0 && ` · and ${rest.length} more`}</span>
+      </span>
+    </span>
+  ) : (
+    <span style={FEED_LEAD_SMALL}>{TAG_NOTHING_RECENT}</span>
+  );
   return (
     <PostCard
       lead={
@@ -3309,20 +3437,8 @@ function TagFeedCard({ name, through, tagged, score, bundle }) {
           </span>
         </span>
       }
-      main={
-        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
-          <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
-            {tagged.map((thing) => (
-              <NodeMark key={thing.title} kind={thing.kind} src={thing.cover} onCard />
-            ))}
-          </span>
-          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
-            <span style={FEED_LEAD_SMALL}>@{newest.by.handle}{rest.length > 0 && ` · and ${rest.length} more`}</span>
-          </span>
-        </span>
-      }
-      timestamp={newest.age}
+      main={glimpse}
+      timestamp={newest?.age}
       targetLabel={name}
       bundle={bundle}
       score={score}

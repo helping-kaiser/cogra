@@ -30,8 +30,9 @@
    `Done` STILL LEAVES (jakob, 2026-10-01; `TagPicker`). It is the header back's
    affirmative twin, the same leave to the composer with every staged tag kept —
    the tags picked before the refusal included, since a pick stages at once and
-   the picker stays open; the refused name stages nothing, so nothing is added
-   on the way out. */
+   the picker stays open, and they would stand in the staged section above the
+   list (`TagPicker`); this board draws none. The refused name stages nothing,
+   so nothing is added on the way out. */
 export function Screen() {
   return (
     <>

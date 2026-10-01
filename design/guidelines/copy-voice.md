@@ -523,11 +523,9 @@ that staged them, because no rule turns "References" into "citation".
 A count already made of words (`1 more`, on the rows that offer an
 act) keeps them and says itself.
 
-**`Added`** — the end of a picker row's spoken name once the row is
-staged (`ReferenceRow`'s `staged`; the pickers' multi-add, jakob
-2026-10-01). The added mark that shows it is a glyph, hidden from the
-accessibility tree, so a listener hears the state in this word: "saltmarsh,
-Added". *New 2026-10-01, flagged for blessing.*
+**A picker's staged row** speaks through its ×: `Remove saltmarsh`,
+`StagedReference`'s own name for the control, once a pick has moved the row
+above the list (the pickers' staged section, jakob 2026-10-01).
 
 ## The staged-act snackbar
 
@@ -735,8 +733,8 @@ stands, and the rest of the surface stays readable.
   offered (`WriteRuleFailed`). A refusal that is our bug takes the same
   panel in its own words, with `Try again` (`SealFaultBug`).
 
-Every line here is blessed (the failure pack's and the failure fixes'
-lines, jakob 2026-10-01), save one a line marks as still flagged.
+Every line here is blessed (the failure pack's, the failure fixes' and
+the review fixes' lines, jakob 2026-10-01).
 *Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
@@ -805,10 +803,9 @@ lines, jakob 2026-10-01), save one a line marks as still flagged.
   own "?" opening `Why signing waits` (*The "?" dialogs*). **Drawn** on
   `WriteRuleFailed`. Reached from a reply's seal, which keeps no draft
   (readme §13, *The reply pack*), the fact's last clause swaps to what is true
-  there: `Nothing was signed or spent — your reply is still here.`
-  *(The reply-scale clause is the one line here still flagged — new
-  2026-10-01; the reply-scale way out is owed, backlog item 117.)* The
-  words name no
+  there: `Nothing was signed or spent — your reply is still here.`,
+  and the way out under the panel reads `Not now`, back to the reply's
+  seal with the words still there (jakob 2026-10-01). The words name no
   payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
@@ -934,7 +931,7 @@ stands, with `Changing your password signs out every other device.`
 under them — the fact `ResetNew` already says, moved in front of the act.
 
 **About** — the support stack (jakob, 2026-10-01; every line here
-blessed the same day, save the empty report's, still flagged). Three
+blessed the same day). Three
 rows join the group after `About CoGra`
 and before `Privacy` and `Terms`, each one string for app and web:
 
@@ -957,8 +954,8 @@ and before `Privacy` and `Terms`, each one string for app and web:
   because the press opens the reader's mail and sends nothing itself.
   With the field empty it stays visible and disabled, `Nothing to send
   yet` right above it — the edit foot's zero, `Nothing to sign yet`,
-  with the report's verb (`ReportProblemEmpty`; *new 2026-10-01,
-  flagged for blessing*). Leaving with Back keeps the words.
+  with the report's verb (`ReportProblemEmpty`). Leaving with Back keeps
+  the words.
 - `Contact`, its value the address it writes to — a plain mail door,
   kept apart from the report so reports stay structured.
 
@@ -1672,6 +1669,16 @@ what the screen holds and nothing more, because the cover carried down
 from level one already says what it is all about. Sentence case, no
 colon, no subtitle.
 
+**The score on the held thing** carries no word (jakob 2026-10-01): the
+`graph` glyph and the signed figure, `+15.20`, hung on the thing's top-left;
+`Feed score` is its spoken name. The sign appears only there — every card
+keeps its plain figure, a negative keeping its `−` everywhere, a zero none.
+
+**A path's spoken shape** ends kind-neutral: `You, then @ada, then what
+reached you` — the title's own words, since the trace's last mark already
+says what kind of thing it reached. *New 2026-10-01, flagged for blessing.*
+The back arrow on level one reads `Back to feed`, for every kind.
+
 **The rule under the cover**, on level one: `Every path here starts with
 an opinion you gave.` This is the inbound-inert invariant
 (`feed-ranking.md` §1) in the reader's vocabulary — nothing anyone points
@@ -1746,7 +1753,19 @@ read at the top of the trace.
 **The tag's why-line**: `Reaches you through @ada and @tobias` — blessed.
 Under the tag's name, the people the strongest paths run through, in the
 drill-down's own `Through @ada` words; one person reads `Reaches you through
-@ada`.
+@ada`. Past two people the line names the first and counts the rest:
+`Reaches you through @ada and 3 others` — blessed (jakob 2026-10-01). Where
+the full line would not fit its one line, it compresses to `Through @ada`,
+the strongest path's person — blessed; a handle so long that even that does
+not fit ellipsizes, `ActorChip`'s truncation law ("…").
+
+**The empty tag's line**: `Nothing carries this tag right now.` — where the
+glimpse would stand when nothing carries the tag, `TagPageEmpty`'s own first
+sentence. *New 2026-10-01, flagged for blessing.*
+
+**A comment's head row, over a removed post**: `Removed by its author` in
+the title's place, the removal mark's own line in the system's voice, over
+the author's handle. An untitled post is named there by its first words.
 
 **The tag's glimpse line**: `@tobias · and 2 more` — blessed. Under the
 newest thing's name, its author, then how many more stand behind it; with

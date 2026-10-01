@@ -12,18 +12,35 @@
    words, the person by their name over their handle, the tag by its name
    beside its `#` tile.
 
+   THE SCORE HANGS ON THE THING (the closing batch, jakob 2026-10-01): each
+   block's top-left wears the figure as an attached flag, glyph and signed
+   number, `ScoreOrigin`'s one entity. Under each, its strongest path, whose
+   trace ends on the thing it reached in that thing's own mark — the cover,
+   the comment's glyph, the person's circle, the `#` — and speaks `then what
+   reached you`, the same words for every kind. The back arrow reads `Back to
+   feed`, where every kind's card stands.
+
    A REFERENCE BOARD, like `FeedShapes`: wired nowhere, because each block is
    the top of `FeedEntry`, which carries the wiring. */
+
+const KIND_PATHS = [
+  { kind: "post", score: "15.20", path: SCORE_PATHS[0] },
+  { kind: "comment", score: "12.40", path: { through: "@mira", people: [SCORE_VIEWER, MIRA_FACED], value: "+5.10" } },
+  { kind: "person", score: "11.70", path: { through: "@tobias", people: [SCORE_VIEWER, TOBIAS], value: "+4.80" } },
+  { kind: "topic", score: "10.30", path: { through: "@ada", people: [SCORE_VIEWER, ADA_FACED], value: "+4.40" } },
+];
 
 export function Screen() {
   return (
     <>
       <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" />
       <ScoreColumn>
-        <ScoreOrigin kind="post" score="15.20" />
-        <ScoreOrigin kind="comment" score="12.40" />
-        <ScoreOrigin kind="person" score="11.70" />
-        <ScoreOrigin kind="topic" score="10.30" />
+        {KIND_PATHS.map(({ kind, score, path }) => (
+          <div key={kind} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <ScoreOrigin kind={kind} score={score} />
+            <PathRow kind={kind} people={path.people} through={path.through} value={path.value} onOpen={() => {}} />
+          </div>
+        ))}
         <QuietNote>Every path here starts with an opinion you gave.</QuietNote>
       </ScoreColumn>
     </>

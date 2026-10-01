@@ -12,12 +12,30 @@
    · VEILED. The compact veil takes the words, as it does in a thread; the
      head row stays readable, because what the comment answers is what lets a
      reader choose to reveal it.
+   · ANSWERING AN UNTITLED POST (the closing batch, jakob 2026-10-01). A text
+     post's title is optional, so the head row names it by its first words in
+     the title's place — the quote's precedent — over its author; the mark is
+     the text post's `T`.
+   · ANSWERING A REMOVED POST. The head row stays and wears the removal
+     mark's line, `Removed by its author`, in the system's voice over the
+     author, its mark an empty tile; the comment stays readable, because a
+     removed post keeps its thread and what answers it.
+   · YOUR OWN. The same card; its ⋮ opens your own menu (`CommentMenuOwn`),
+     and nothing else changes.
+   · A LONG COMMENT folds at two lines under `More`, the caption's precedent,
+     opening in place; the card is still the door to its thread.
+
+   GUESTS meet these cards as every card — the face opens `GuestGate` — and
+   no guest board draws one (`CommentFeedCard`).
 
    A REFERENCE BOARD, like `FeedShapes`: wired nowhere, each card one a reader
    would meet on `FeedKinds`, which carries the wiring. So the board exports a
    tall `FRAME` — a comparison cut off at 844px is one nobody can make. */
 
-export const FRAME = { width: 390, height: 1180 };
+export const FRAME = { width: 390, height: 2280 };
+
+const LONG_COMMENT =
+  "Drove it twice this summer, once in each direction, and the second time I stopped at every lay-by between the tunnel mouth and the third headland. The light does something different on the way back — lower, warmer, and it catches the salt crust on the flats so the whole shore looks drawn in chalk. Worth the four hours, and worth doing backwards.";
 
 export function Screen() {
   return (
@@ -50,6 +68,31 @@ export function Screen() {
           topics={["saltmaps"]}
           score="7.10"
         />
+        <CommentFeedCard
+          author={MIRA}
+          content="Six works — I'll bring the tide table and the good boots."
+          timestamp="50m"
+          parent={TOBIAS_POST}
+          score="6.40"
+        />
+        <CommentFeedCard
+          author={TOBIAS}
+          content="Kept the rubbing from that morning anyway — the salt held the line."
+          timestamp="6h"
+          parent={{ author: ADA, removed: true }}
+          topics={["saltmaps"]}
+          score="5.90"
+        />
+        <CommentFeedCard
+          author={SOL}
+          content="The honey stand is half the reason I take the coast road at all."
+          timestamp="3h"
+          parent={MIRA_GALLERY_POST}
+          topics={["tidemarket"]}
+          score="5.20"
+          own
+        />
+        <CommentFeedCard author={KEL} content={LONG_COMMENT} timestamp="1d" parent={ADA_POST} topics={["coastroad"]} score="4.60" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>

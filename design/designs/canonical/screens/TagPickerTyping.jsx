@@ -16,9 +16,10 @@
    `Signs as #saltmaps` as its second line — so the promise about the record
    and the gesture that makes it are one thing. A tap on it stages it, and so
    does the name field's keyboard action key — and either way the picker stays
-   open (jakob, 2026-10-01; `TagPicker`): the row turns to the added mark and
-   the name stays in the field, so the stage is seen where it was made, and
-   the reader clears the field to name the next tag. Here the typed name is also a
+   open (jakob, 2026-10-01; `TagPicker`): the row moves up into the staged
+   section with its × and the name stays in the field, so the stage is seen
+   right under where it was made, and the reader clears the field to name the
+   next tag. Nothing is staged on this board yet. Here the typed name is also a
    name in use, and it is that one row: a name is never listed twice. Rows the
    index matches sit under it (`TagPicker`).
 

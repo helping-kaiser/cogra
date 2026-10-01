@@ -474,9 +474,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">salt<", tag: "div" },
     { n: 4, find: 'aria-label="What the search shows"', tag: "button" },
-    { n: 5, find: ">Salt maps of the coast road<", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
     { n: 6, find: ">Done</button>", tag: "button" },
+    // The staged section's × (the closing batch, 2026-10-01), appended so no
+    // via renumbers.
+    { n: 7, find: 'aria-label="Remove Salt maps of the coast road"', tag: "button" },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
@@ -1895,13 +1897,13 @@ Object.assign(FLOW_MARKERS, {
      row IS its content — a label naming it "a path" would say less than the
      trace already does. */
   FeedEntry: [
-    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    { n: 1, find: `aria-label="Back to feed"`, tag: "a" },
     { n: 2, find: ">Through ", tag: "button", all: true },
     { n: 3, find: `aria-label="Show 2 more paths"`, tag: "button" },
     ...nav(4),
   ],
   FeedEntryMoved: [
-    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    { n: 1, find: `aria-label="Back to feed"`, tag: "a" },
     ...nav(2),
   ],
   RankPath: [
@@ -2183,10 +2185,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">salt<", tag: "div" },
     { n: 4, find: ">Signs as #salt<", tag: "button" },
     { n: 4, find: ">saltmaps<", tag: "button" },
-    { n: 4, find: ">saltmarsh<", tag: "button" },
     { n: 4, find: ">saltcrust<", tag: "button" },
-    { n: 4, find: ">saltflats<", tag: "button" },
     { n: 5, find: ">Done</button>", tag: "button" },
+    // The staged section's × (the closing batch, 2026-10-01), appended so no
+    // via renumbers.
+    { n: 6, find: 'aria-label="Remove saltmarsh"', tag: "button" },
+    { n: 6, find: 'aria-label="Remove saltflats"', tag: "button" },
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },

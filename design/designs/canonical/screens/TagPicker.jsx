@@ -61,13 +61,18 @@
    row — or the action key on the typed name — stages that tag in the composer
    at once, and the reader goes on picking: tags come several at a time, and a
    picker that closed on every pick would send the reader back through
-   "+ Add a tag" once per tag. The staged row says so where it stands, its add
-   mark turned to the added mark (`ReferenceRow`'s `staged`); here two of the
-   index's rows are in. The query stays as typed, so the list being picked from
-   does not move under the reader. A tap on a row already added changes
-   nothing: the picker only adds, and a staged tag leaves from the composer,
-   where its chip carries the ×. A row whose name the composer already holds
-   wears the added mark the moment the picker opens.
+   "+ Add a tag" once per tag.
+
+   THE PICKED ROW MOVES ABOVE THE RESULTS (jakob, 2026-10-01, overruling the
+   in-list check). The moment a row is picked it leaves the list and stands in
+   the staged section between the name field and the results, a
+   `StagedReference` with its × — the post-MVP chat pickers' idiom exactly
+   (`ChatPickerGroup`): no heading, the rows themselves say what they are.
+   Here two of the index's rows are in. The × un-stages the tag on the spot,
+   and the row goes back to the list if the query still matches it; the
+   composer's chip × still removes it too. The query stays as typed, so the
+   list being picked from does not move under the reader. A tag the composer
+   already holds stands in the staged section the moment the picker opens.
 
    `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01). Both return to
    the composer the picker was opened from, every staged tag kept — back is
@@ -81,13 +86,15 @@ export function Screen() {
       <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot />} />
       <div style={{ flex: "none" }}>
         <SearchBar query="salt" placeholder="Name a tag" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
+          <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} />
+          <StagedReference kind="topic" name="saltflats" onRemove={() => {}} />
+        </div>
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltmarsh" staged onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltflats" staged onOpen={() => {}} />
         <div style={{ flex: 1 }} />
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.

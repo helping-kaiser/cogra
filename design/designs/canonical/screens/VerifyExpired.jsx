@@ -17,10 +17,11 @@
    the opposite of its own heading. No back arrow either, for the reason
    `VerifiedApp` has none: a mail link has no previous screen of ours.
 
-   THE PAIR IS `NetworkError`'s FOOT — the outlined act that might fix it
-   over the plain way on. `Resend the link` is the applicant feed's own
-   control, taken verbatim, because it is the same act asked from a
-   different place. */
+   THE PAIR IS `NetworkError`'s — the outlined act that might fix it over
+   the plain way on — following the words in content flow, because a landing
+   is a task page and not a seal (readme §4, the two placements). `Resend the
+   link` is the applicant feed's own control, taken verbatim, because it is
+   the same act asked from a different place. */
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>
@@ -47,9 +48,7 @@ export function Screen() {
         link picks it back up.
       </p>
 
-      <div style={{ flex: 1 }} />
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
         <Button variant="outline" style={{ width: "100%" }}>
           Resend the link
         </Button>

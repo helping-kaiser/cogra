@@ -32,6 +32,14 @@ export interface NodeMarkProps {
    * card's own tone is the tile's default. Defaults to false.
    */
   onCard?: boolean;
+  /**
+   * The thing's payload went (a removed post): the tile keeps its space and
+   * fills with nothing; a person's disc takes `MonogramAvatar`'s `redacted`.
+   * Defaults to false.
+   */
+  redacted?: boolean;
+  /** The mark's edge in px — 32 by default; the score's path trace ends on one at its own avatar size. */
+  size?: number;
   /** The data-node name its placer gives this mark (design ⇄ impl seam 002; renders as attributes only). */
   node?: string;
 }
@@ -80,13 +88,6 @@ export interface ReferenceRowProps {
    * `rank` and `value`. Decorative — the row's own tap is the action.
    */
   trailing?: JSX.Element;
-  /**
-   * A picker row already staged in the composer the picker serves: the add
-   * mark becomes the added mark (`check`, `--on-surface`) and the row's spoken
-   * name ends "Added". Wins over `trailing`. A tap on a staged row changes
-   * nothing — un-staging is the composer's chip ×.
-   */
-  staged?: boolean;
   /**
    * The act is signed but not yet ordered on L1: the row wears the pending
    * marker under its pair. This sheet is the only surface that says so — a

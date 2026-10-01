@@ -20,6 +20,10 @@ export interface QuotedRowProps {
   /** Stands where the picture stands, for a thing whose face is not a
    *  person's — a tag's `#` tile (`NodeMark`). */
   mark?: React.ReactNode;
+  /** Squares the top-left corner so a flag above it fuses with the row —
+   *  the score's trace hangs its figure there (`TaggedRow`'s attachment).
+   *  Defaults to false. */
+  attach?: boolean;
 }
 
 export declare function QuotedRow(props: QuotedRowProps): JSX.Element;
