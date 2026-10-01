@@ -7775,6 +7775,108 @@ jakob's rulings closing the day's rounds, executed in one lane.
   staged citations' boards re-render for the card-tone mark, and the maps
   follow the edges.
 
+### The navigation-and-sheets round — 2026-10-01
+
+jakob's night rulings on the K11 cluster: two laws in his own words, and
+the rest as recommended. Both laws stand in §4.
+
+- **THE LAYER LAW** (§4, *Navigation*). A direct link — a shared post, a
+  reel, any deep link — opens as a layer over the app's current state,
+  and back returns to exactly that state (jakob: "a back gesture from
+  that shared content does send you back to your before state of the
+  app"). With no prior state, back lands on the owning tab's root: a
+  post, a comment or a profile on Feed, a tag on Explore. The entry
+  funnel keeps its links: `VouchAsk`'s arrow and `Not now` land on Feed.
+  `PageHeader` scopes "a link, never history" to the funnel.
+- **THE SHEET LAW** (§4, *Sheets*). Every sheet carries a commit; the
+  commit applies; the scrim, a swipe down and Back discard — no
+  live-apply sheets (jakob: "all of them having a done/save/finish button
+  is better than all of them submitting on colapse.. as then there is no
+  aboard"). The reason is his ranker's: every refetch will one day run
+  the whole personalized ranking, so five taps must never mean five
+  rankings — one re-query per visit. Revisited only if readers turn out
+  to expect collapse-to-submit.
+- **The post detail's way back names its origin**, by a table built
+  from its arriving edges, as the tag page's is (the detail, the clip
+  detail, its veiled twin and `Removed`):
+
+  | Where the reader came from | The label |
+  |---|---|
+  | the feed, in any of its states | `Back to feed` |
+  | Explore, mid-query | `Back to the search` |
+  | Saved | `Back to Saved` |
+  | History | `Back to History` |
+  | Notifications | `Back to Notifications` |
+  | your own profile | `Back to your profile` |
+  | another's profile | `Back to the profile` |
+  | a tag's page | `Back to #<thattag>` |
+  | another post, through its references or Cited by sheet | `Back to the post` |
+  | the stream, by its score's door | `Back to the stream` |
+  | nowhere — a link | `Back to feed` |
+
+- **So does a profile's** (the profile, its held, posts and comments
+  views, the deleted husk, not-found and unreachable), which drew a bare
+  `Back` and now draws the cold label:
+
+  | Where the reader came from | The label |
+  |---|---|
+  | the feed, in any of its states | `Back to feed` |
+  | a post — its author chip, opinions or references | `Back to the post` |
+  | the comments sheet | `Back to the comments` |
+  | the stream | `Back to the stream` |
+  | Notifications | `Back to Notifications` |
+  | Saved | `Back to Saved` |
+  | a profile's opinions list | `Back to the opinions` |
+  | a tag's page | `Back to #<thattag>` |
+  | nowhere — a link | `Back to feed` |
+
+- **What comes back.** A sheet that launched a forward navigation comes
+  back at its offset with its branches expanded; the cite's wizard X
+  returns the thread as it was; a process the OS ended restores by the
+  platform's convention; a restart is a cold launch only. The re-tap
+  ladder's *transient* and *session* bullets say so.
+- **Sheets and the pad are modal** for assistive tech — focus in,
+  contained, returned (`BottomSheet`, the pad's `aria-modal`) — under
+  §10's four focus rules. The comments sheet is modal at one detent; the
+  sliver above the filter is visual only.
+- **The law's consequences.** The feed's, search's and settings'
+  filters stage their chips and commit on `Done` (`FilterFoot`, the
+  staged reading); the `?` text says `Nothing changes until you press
+  Done`. `ComposeLicense` commits on Done and the seal's row reads the
+  pair by one joining rule (`licenseSummary`), `your default` gone.
+  `ComposeSensitive` opens switched on, its reason disabling (and
+  dropped at signing) with the switch off; at edit, a post the platform
+  veiled reads `Also veiled by the platform's verdict` under the row.
+  The pad sheets drag only from the handle and title zone, and every
+  dismissal discards as the scrim does.
+- **The grammars, stated once** (§4, *Sheets*): M3's modal-sheet drag
+  (handle or a list at scroll-top, ~25 % or a fling, snap-back, no
+  detents) and the platform photo viewer's (double-tap to ~4×, pan wins
+  zoomed, reset on paging, ~20 % or a fling to close, plain close under
+  reduced motion).
+- **One dialog anatomy** (§11, *Dialogs*): `DialogSurface` takes
+  `title`, `body` and `actions` by M3's spec — the body on
+  `onSurfaceVariant`, the default button size, end-aligned — and every
+  question dialog on both trees moved onto it; the key dialogs lose
+  their small, split buttons. Scrim, Escape and Back take the safe
+  answer, now wired on `GuestGate`, `DiscardConfirm`,
+  `ComposeDraftDiscard` and `SealDiscardConfirm`, and named on every
+  dialog's scrim edge.
+- **Landing on a comment** is one statement for every deep link (§4):
+  scrolled to the sheet's top, its branch expanded, a brief tonal
+  highlight that fades (jakob: "yes that sound great"); a stale
+  approval row lands on Invites with no notice. The `ReplyEntry` sidecar
+  carries it, with the sheet's return.
+- **Flagged for blessing** (copy-voice): `Back to Saved`, `Back to
+  History`, `Back to Notifications`, `Back to the stream`, `Back to the
+  opinions`; `Nothing changes until you press Done`; the license joining
+  rule and its eight non-zero readings; `Also veiled by the platform's
+  verdict`. The lane's calls are backlog item 121.
+- **The gate**: **243 screens**, 1673 → **1680 edges** (three filter
+  `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
+  The witness was re-blessed twice, deliberately: the filter flows end on
+  `Done`, and the search's comment row lands on the comment.
+
 ## 15. Index
 
 **Root**

@@ -490,8 +490,27 @@ DO, the way the sound toggle already does:
   it is a named surface, like Explore and settings, rather than a common
   noun like the post or the wallet — and it is the destination a reader
   meets most often, so one spelling serves `DetailHeader`, `Removed`,
-  the tag page's origin table and the stream alike.
+  the profiles, `VouchAsk`, the tag page's origin table and the stream
+  alike — and it is the cold entry's label on a post, a comment or a
+  profile, whose root is Feed (readme §4, *Navigation*).
 - `Close` — the viewer's X, which IS shutting a layer.
+
+**The way back names where it goes** (readme §4, *Navigation*): on a
+read drill-in the arrow's name is its origin's noun, from the screen's
+table (readme §13, *The tag-page smalls* and *The navigation-and-sheets
+round*). A named surface keeps its name, the feed's many states are one
+noun, and a sheet is named by what it is a sheet of. Already blessed:
+`Back to feed`, `Back to Explore`, `Back to the search`, `Back to Your
+topics`, `Back to the post`, `Back to the comments`, `Back to the
+profile`, `Back to #<thattag>`, `Back to your profile`. Added by the
+post detail's and the profile's tables, each flagged for blessing:
+
+- `Back to Saved` · `Back to History` · `Back to Notifications` — the
+  three named surfaces, by their titles.
+- `Back to the stream` — from the reel (its score's door, an author
+  chip), the stream's own common noun.
+- `Back to the opinions` — from a profile's opinions list
+  (`@ada · Opinions`), the list named by what it holds.
 - `Share this post` — the share control everywhere it appears. The
   completed name, never a bare "Share": a glyph with one word beside it
   in the accessibility tree tells a listener the verb but not the
