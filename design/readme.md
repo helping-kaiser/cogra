@@ -299,6 +299,17 @@ there too, so the two platforms answer a scroll the same way.
 `CollapsingTop` and `PageHeader` point at this table rather than at any
 blanket rule about surfaces that scroll.
 
+**The primary action has two placements, and only two** (jakob,
+2026-10-01). A **task page's** primary action follows its last field,
+in content flow, aligned with the fields — a settings subpage, a form,
+a landing that asks for one act; where a page has no field, the action
+follows its words. A **wizard stage or a sheet** pins its footer, so a
+growing field never walks the commitment out of reach (the growth law's
+`Done`, *The sheets-and-video round*) — every compose, reply and edit
+stage, the seals, the picture's crop, the profile edit, and the two
+pickers' `Done`. Nothing else: no spacer pushing a task page's action
+toward the bottom edge.
+
 **One design, both platforms, dark mode included** (jakob, 2026-09-17).
 Wherever Android and web can do the same thing, they look the same
 thing: no divergence in colour, spacing, treatment or dark-mode
@@ -4264,7 +4275,7 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   thing this board owes is that nothing is scheduled yet. `Reset` says
   the same thing in a status line because its form is still on screen;
   here the form is spent, so it is a board — `VerifyExpired`'s column and
-  its foot. No expiry is claimed: `auth.md` gives the reset link fifteen
+  its outlined act. No expiry is claimed: `auth.md` gives the reset link fifteen
   minutes and `erasure.md` gives this one no window, so drawing one would
   be inventing a mechanic.
 - **The grace state is a band on every logged-in surface (jakob), and

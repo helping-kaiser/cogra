@@ -56,9 +56,7 @@ export function Screen() {
           keep it somewhere safe.
         </p>
 
-        <div style={{ flex: 1 }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
           <Button style={{ width: "100%" }}>Create my recovery code</Button>
           <Button variant="outline" style={{ width: "100%" }}>
             Not now

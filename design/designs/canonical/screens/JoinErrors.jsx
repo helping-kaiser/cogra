@@ -44,9 +44,7 @@ export function Screen() {
           />
         </div>
 
-        <div style={{ flex: 1 }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
           <Button style={{ width: "100%" }}>Create account</Button>
           <Button variant="text" style={{ width: "100%" }}>
             Already have an account? Sign in
