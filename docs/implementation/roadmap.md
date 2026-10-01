@@ -607,7 +607,10 @@ from the media path and carrying their own doc write-back:
   ranked feed. Deferred elements that land with this rework rather
   than piecemeal before it: the landed-only ("show only settled
   content") control (the `includePending` mechanism is already
-  wired on both clients), the license qualifiers on the feed card
+  wired on both clients; designed as the filter sheet's
+  `Still settling` chip, on by default — `FeedSheet`,
+  [design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions)),
+  the license qualifiers on the feed card
   (already fetched), the author's did-not-land notice
   ([design.md §9](design.md); rides `stagedWrite`/`EXPIRED`), and
   the composer's unchanged-snapshot guard (disable save when the

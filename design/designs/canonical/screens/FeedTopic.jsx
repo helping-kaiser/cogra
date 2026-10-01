@@ -27,7 +27,7 @@
    Affinity that is not (0, 0), and the topic feed admits positive association
    only. A topic held against stays a public record and stays on Your topics; it
    simply never reaches this pill. */
-const NARROWED = { kinds: ["posts"], topic: "#saltmaps", forms: ["text", "photos", "video"], order: "ranked", seen: false, also: [] };
+const NARROWED = { kinds: ["posts"], topic: "#saltmaps", forms: ["text", "photos", "video"], order: "ranked", seen: false, also: ["settling"] };
 
 export function Screen() {
   return (

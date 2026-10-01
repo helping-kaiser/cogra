@@ -1,6 +1,24 @@
 {
   "artboards": [
     {
+      "file": "AvatarCrop.dc.html",
+      "title": "Profile picture · crop",
+      "x": 3360,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "AvatarSeal.dc.html",
+      "title": "Profile picture · what you sign",
+      "x": 3840,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "Profile.dc.html",
       "title": "Profile · your own",
       "x": 0,
@@ -32,7 +50,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5019,
+      "h": 5045,
       "page": "profile",
       "title": "Profile · flow map"
     },

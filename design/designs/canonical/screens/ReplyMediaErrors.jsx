@@ -32,10 +32,7 @@ export function Screen() {
           src="comment-camera.jpg"
         />
 
-        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
-          I have the whole walk on film somewhere — these four are the ones that survived.
-          <Caret />
-        </p>
+        <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["I have the whole walk on film somewhere — these four are the ones that survived."]} />
 
         <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
           <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={58} height={72} fit="contain" onRemove={() => {}} />

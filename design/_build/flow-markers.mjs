@@ -466,6 +466,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="What the search shows"', tag: "button" },
     { n: 5, find: ">Salt maps of the coast road<", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
+    { n: 6, find: ">Done</button>", tag: "button" },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
@@ -2118,17 +2119,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">saltmarsh<", tag: "button" },
     { n: 4, find: ">saltcrust<", tag: "button" },
     { n: 4, find: ">saltflats<", tag: "button" },
+    { n: 5, find: ">Done</button>", tag: "button" },
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">#SaltMaps<", tag: "div" },
     { n: 4, find: ">saltmaps<", tag: "button" },
+    { n: 5, find: ">Done</button>", tag: "button" },
   ],
   TagPickerRefused: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">#salt maps<", tag: "div" },
+    { n: 4, find: ">Done</button>", tag: "button" },
   ],
   TagPad: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
