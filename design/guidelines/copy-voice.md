@@ -864,9 +864,94 @@ Blessed with the audit-states round:
 - `This link doesn't work anymore` — the dead verify link's heading
   (`VerifyExpired`), in `JoinInvalid`'s idiom.
 - `It may have expired or already been used. Send yourself a fresh one
-  — your application is untouched, and the new link picks it back up.`
-  — the two possibilities, the way forward, and the reassurance a
-  reader who reads "expired" without it would miss.
+  — if your account is still waiting on its email, the new link picks it
+  back up.` — the two possibilities, the way forward, and the
+  reassurance a reader who reads "expired" needs, kept to what is true:
+  an account left unverified for a day has been reaped (jakob
+  2026-10-01, audit K3.3). *New 2026-10-01, flagged for blessing.*
+- Signed out (audit K3.20), the dead link's way on reads `Sign in`, and
+  `Resend the link` opens an `Email` field in place above the pair — the
+  two existing words, so nothing new to bless; `Verified`'s `Back to
+  CoGra` keeps its words and opens `SignIn`.
+
+## The entry funnel's round
+
+The audit's K3 blockers, ruled by jakob 2026-10-01 and drawn in one lane.
+Every line below is *new 2026-10-01, flagged for blessing*, unless it
+says it reuses a blessed one.
+
+**The verify card prints the address and says the reap once**
+(`ApplicantFeed`). Its blessed body stays; under it `Sent to
+noor@fieldmail.org` with the door `Wrong address?`, then the
+consequence, once and as a consequence rather than a clock: `An account
+left unverified for a day is removed — joining again then starts over.`
+
+**Wrong address?** (`ApplicantEmail`) keeps `ChangeEmail`'s heading,
+fields and commitment (`Change your email`, `New email`, `Current
+password`, `Change email`) and says the carve-out in its own paragraph:
+`Your email isn't verified yet, so the new address is all a change
+needs. A fresh link goes there, and the one sent to noor@fieldmail.org
+stops working.` Its snackbar: `Sent — the link is on its way to
+noor@fieldnotes.org.`
+
+**The run-out application** (`ApplicantExpired`) says what happened and
+what it does not mean, in the rejected card's order, with no verdict:
+`Your application ran out of time` · `Nobody answered before its time
+was up, and that is all it means. Your account stays exactly as it is,
+you can keep reading, and any member you know can vouch you in.` *Ran
+out* and never *closed*, which is the rejection's verb. The ask link
+keeps the rejected card's three lines verbatim (`Ask someone you know to
+vouch for you`, its caption, `Copy your ask link`) — one link, one set
+of words wherever it is offered.
+
+**The fresh-invite door** on both closed cards: `Use a fresh invite`.
+Its page (`ApplicantRearm`) is titled by the door, with `Paste the new
+invite link, and your application starts again through it. Your account
+stays exactly as it is.` — or, arriving through a link, `This link from
+@sol can start your application again. Your account stays exactly as it
+is.` — the field `Invite link` (blessed), and `Use this link for your
+application`. A dead link answers in the field in `JoinInvalid`'s
+heading, `This invite can't be used anymore` (blessed).
+
+**An invite link opened signed in, with nothing to re-arm**, lands where
+app-open lands, with one snackbar per reader:
+
+- `You're already in — this invite is for someone new.` — a member.
+- `This is your own invite — send it to the person it's for.` — its
+  issuer.
+- `Your application is already waiting — this link isn't needed now.` —
+  an applicant whose application is live.
+
+**Sign in, too many tries** (`SignInLimited`): `Too many tries in a row.
+Wait a moment, then try again.` No figure — the backoff grows and the
+client is not told by how much — and no field accused.
+
+**The security notice** (`FeedSecurityNotice`), a task card on the
+landing: `We signed out every device` · `A sign-in this account had
+already replaced was used again, which can mean someone else had a copy.
+If your password might be known to anyone, change it.` · `Change
+password` (blessed, the credential screen's commitment) · `Got it`
+(blessed, the waiting card's). *We*, because the service did it; *a
+sign-in*, never the token underneath it.
+
+**An ask that can't be taken up** (`VouchAskUnusable`), in `JoinInvalid`'s
+idiom, one pair per case, then `Go to the feed` (blessed):
+
+- `@noor is already in` · `Someone has vouched them in already, so this
+  ask has nothing left to do.`
+- `@noor is waiting on someone else` · `Another member is deciding on
+  their application right now. If it ends without them getting in, this
+  same link works again.`
+
+**The ask link's readers who cannot vouch through it** land where
+app-open lands, with a snackbar:
+
+- `Vouching unlocks once your application is approved.` — an applicant;
+  the register table's `Inviting unlocks…` line, turned to the act.
+- `That's your own ask link — send it to someone who's already in.` —
+  the asker.
+- `@noor is already waiting in your invites.` — a member who already has
+  them queued.
 
 ## The settings page
 
@@ -1071,6 +1156,42 @@ open. The commitment is `Confirm the code`, which is what pressing it
 does — *Confirm email change* is what a reader would have believed it
 did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
+
+**The change in flight, and its ends** (jakob 2026-10-01, audit K3.21;
+*new 2026-10-01, flagged for blessing*, save the reused lines):
+
+- A landed side's row reads `sol@solferreira.art — confirmed`, the
+  counterpart of `— still waiting`.
+- `Resend`, on the pair it re-sends; its snackbar `Sent again — check
+  both inboxes.` And last on the page, `Cancel the change`, with
+  `Change canceled — your email stays sol@solferreira.art.` over
+  settings.
+- A wrong code takes `Restore`'s field line, `That code doesn't check
+  out.` (blessed).
+- The change past its window, as the fault line above the commitment:
+  `This change ran out before both sides landed. Your email stays as it
+  is — start again from settings.`
+- The new address taken meanwhile (`EMAIL_IN_USE`, which keeps
+  answering until the window closes): `That address now belongs to
+  another account. Your email stays as it is — if the address frees up
+  before the change runs out, confirming again applies it.`
+- The settings row while a side is owed: its value the address the
+  account still has, its status `Change pending`
+  (`SettingsEmailPending`).
+
+**The new address's link, opened** (`ChangeEmailLinked`, `Verified`'s
+idiom), first side: `New address confirmed` · `One side left: the code
+we sent to sol@solferreira.art. Your email moves once it's typed in.` ·
+`Enter the code`; last side: `Email changed` · `You sign in with
+sol@ferreira.studio from now on, and resets go there too.` · `Back to
+settings`. Past the window it takes `VerifyExpired`'s heading, `This
+link doesn't work anymore` (blessed), with `The change it belonged to
+ran out before both sides landed. Your email is still
+sol@solferreira.art.` and `Back to settings`; with the address taken,
+`That address is taken now` over the `EMAIL_IN_USE` line above. Signed
+out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
+`This link confirms sol@ferreira.studio as your new address. It counts
+once you're signed in.` · `Sign in`.
 
 ## The key's lifecycle
 
@@ -1556,7 +1677,8 @@ describes an emergency.
 ## Deleting the account
 
 Drawn on `Settings`, `DeleteAccount`, `DeleteAccountMail`,
-`FeedDeleting`, `DeleteAccountCanceled` and `ProfileDeleted`. This
+`DeleteAccountConfirmed`, `FeedDeleting`, `SettingsDeleting`,
+`DeleteAccountPending`, `DeleteAccountCanceled` and `ProfileDeleted`. This
 flow's words carry the product's erasure ethic, so the register is held
 tighter here than anywhere: honest, quiet, no drama, and nothing that
 argues with a decision the reader has made.
@@ -1616,6 +1738,28 @@ days.` with `Cancel`, and `Your account and everything you posted are
 deleted in 6 days.` where the sweep was opted into. The band names what
 is going, because a reader who chose the sweep is waiting on something
 larger than one who did not.
+
+**The link's landing states the deadline** (`DeleteAccountConfirmed`;
+jakob 2026-10-01, audit K3.22; *new 2026-10-01, flagged for blessing*,
+save the reused lines). The heading is the band's sentence on its first
+day, `Your account is deleted in 7 days` — or `Your account and
+everything you posted are deleted in 7 days` when the sweep is in — then
+`That's 08.10.2026. Until then nothing changes, and you can cancel from
+any device.` When the request left the sweep off, the page offers it
+again in `DeleteAccount`'s own words (`Also remove what I posted` and
+its line, blessed), committed with `Add it to the deletion`, whose
+snackbar is `Added — what you posted goes too.` Signed out, one quiet
+line says the link was enough — `You're not signed in here, and you
+don't need to be — the link was the proof.` — and the way on reads `Sign
+in` instead of `Go to the feed`.
+
+**During the grace the settings row reads the deadline** —
+`Deletion in 6 days`, the forward ladder — and the group's footnote
+goes, since it describes a request not yet made (`SettingsDeleting`).
+The row opens `DeleteAccountPending`: `Delete account` · `Your account
+is deleted in 6 days, on 08.10.2026. Until then nothing has changed, and
+canceling keeps everything as it is.` · `Cancel`, the band's word, which
+ends in the canceled snackbar below.
 
 **The cancel says what happened, and offers no way back.** `Canceled —
 your account stays, and nothing was deleted.` Every other snackbar in the
