@@ -35,13 +35,18 @@
    a vouch lands, which is the same rule the invites queue keeps and the same
    reason.
 
+   THE WAY BACK NAMES FEED. The landing is an entry-funnel screen — reached
+   from outside the app, often as the first screen it opens — so its arrow and
+   `Not now` are links to the member's root rather than history (readme §4,
+   *Navigation*): with nothing beneath the screen, history has nowhere to go.
+
    `Not now` LEAVES IT STANDING. An ask link does not expire and does not get
    used up, so declining to answer costs the asker nothing — the reader can
    open the same link again, and so can everyone else it was sent to. */
 export function Screen() {
   return (
     <>
-      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back" />
+      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 16px 0", overflow: "hidden" }}>
         <Card style={{ flex: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

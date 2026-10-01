@@ -1161,9 +1161,9 @@ Object.assign(FLOW_MARKERS, {
   // The failed next page is this board's whole subject; the profile beneath it
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
   ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
-  ProfileNotFound: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  ProfileNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   ProfileUnreachable: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: ">Retry</button>", tag: "button" },
     ...nav(3),
   ],
@@ -1173,7 +1173,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
   ],
   ProfileOther: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
@@ -1188,7 +1188,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(8),
   ],
   ProfileOtherHeld: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Your opinion on @ada', tag: "button" },
@@ -1213,7 +1213,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(6),
   ],
   ProfilePosts: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
@@ -1237,7 +1237,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(16),
   ],
   ProfileComments: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
@@ -1997,7 +1997,7 @@ Object.assign(FLOW_MARKERS, {
   // a person there is none of. The ⋮ is appended last (jakob 2026-09-12), so no
   // via on this board renumbers behind it.
   ProfileDeleted: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="Opinions on and by this account"', tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
     { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
@@ -2039,7 +2039,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
   VouchAsk: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: ">Not now</button>", tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on @noor"', tag: "button" },
     { n: 3, find: ">Choose your opinion on @noor</button>", tag: "button" },

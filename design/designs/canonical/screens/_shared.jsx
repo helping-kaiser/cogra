@@ -400,7 +400,13 @@ function KeyPledge() {
 
 /* The detail surface's header: back plus the ONE overflow. On a detail view the
    menu lives up here and the card's own dot yields (PostCard hides it in
-   detail) — two dots would be two menus for one post. */
+   detail) — two dots would be two menus for one post.
+
+   THE ARROW IS HISTORY AND ITS LABEL NAMES THE ORIGIN (the layer law, readme
+   §4, *Navigation*): `Back to Saved`, `Back to the search`, `Back to #saltmaps`
+   — the post detail's noun table, readme §13, the navigation-and-sheets round.
+   `Back to feed` is what the boards draw, because it is the cold entry's label
+   as well as the feed's: the state that stands with no route behind it. */
 function DetailHeader({ items, node }) {
   return (
     <PageHeader
@@ -892,11 +898,15 @@ function ProfileOwnBody({ tail = null }) {
    THE HEADER BAR CARRIES ONLY THE WAY BACK (the band law, jakob 2026-09-11).
    The ⋮ came down into the actions row, where Message gave up the half of the
    row it did not need; a detail surface's top bar is where a reader looks for
-   the way out, and this page's rare acts belong beside its common ones. */
+   the way out, and this page's rare acts belong beside its common ones.
+
+   THE WAY BACK NAMES WHERE IT GOES — the profile's origin-noun table (readme
+   §13, the navigation-and-sheets round). The board draws `Back to feed`, the
+   cold entry's label and the feed's alike. */
 function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back" />
+      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -937,7 +947,7 @@ function ProfileOtherBody({ bundle } = {}) {
 function ProfileDeletedBody() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
