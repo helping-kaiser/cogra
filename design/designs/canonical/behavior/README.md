@@ -44,6 +44,10 @@ Where each sidecar's words come from:
   *Comments live in a sheet*); and the removed comment's mark in its own
   place, its replies kept under it (comment.md §5; readme §13, *The
   comment-removal round*).
+- `FeedKinds.md` — the feed cards (readme §13, *The feed cards,
+  ruled*): the unified row's order, the law that a comment's replies live
+  in its thread and never in the feed, where the comment card's door and
+  its comment glyph land in the thread, and the tag's staged new post.
 - `ComposeDetails.md` — the already-published marker (copy-voice, *The
   already-published marker*), on the Details step's media row.
 - `TagPicker.md` — the typed-name row (readme §13, *The typed-name

@@ -1,4 +1,4 @@
-/* ONE PATH — level two of the Post score's drill-down (backlog item 13). A path
+/* ONE PATH — level two of the Feed score's drill-down (backlog item 13). A path
    row on `FeedEntry` opens it, and it says what that one route does and what it
    is made of.
 

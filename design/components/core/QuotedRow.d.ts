@@ -17,6 +17,9 @@ export interface QuotedRowProps {
   name?: string;
   /** The author's picture. */
   src?: string;
+  /** Stands where the picture stands, for a thing whose face is not a
+   *  person's — a tag's `#` tile (`NodeMark`). */
+  mark?: React.ReactNode;
 }
 
 export declare function QuotedRow(props: QuotedRowProps): JSX.Element;

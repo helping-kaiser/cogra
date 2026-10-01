@@ -134,6 +134,13 @@ export function PostCard({
      Additive: given neither, the card renders exactly as before. */
   menuLabel = "More on this post",
   stanceAxes,
+  /* THE KIND'S OWN ACT (the feed cards, ruled 2026-10-01). Every feed card's
+     row reads opinion · score · the kind's own act · share — a post's act is
+     its comments, and a kind riding this shell hands its own here (a tag's
+     `Tag a new post with it`, `GlyphAction`). It stands where the comments
+     stand, before the share. Additive: given none, the card renders exactly
+     as before. */
+  act,
   node,
 }) {
   const detail = variant === "detail";
@@ -436,8 +443,10 @@ export function PostCard({
       {edited && <EditedMarker onInspect={onInspectEdit} />}
       {pending && <PendingMarker />}
       {/* THE AFFORDANCE ROW. The stance control leads — it is the gesture the
-          product lives on — then the Post score, then comments, then anything
-          else a post grows. ONE LINE, NEVER WRAPPING: a second row of
+          product lives on — then the Feed score, then comments, then anything
+          else a post grows. It is the unified row every feed card wears
+          (ruled 2026-10-01): opinion · score · the kind's own act · share,
+          where a post's own act is its comments. ONE LINE, NEVER WRAPPING: a second row of
           affordances reads as a second kind of thing, and it costs height a
           post cannot spare. That is the constraint
           that keeps every affordance here glyph-plus-number — words would not
@@ -454,7 +463,7 @@ export function PostCard({
           EVERY CONTROL IN IT ANSWERS TO 48px. The ink stays whatever size it is
           drawn — `cg-hit` grows the TARGET around it, so a spread row cannot
           turn wider spacing into smaller aim. */}
-      {(showStance || score !== undefined || comments !== undefined || actions) && (
+      {(showStance || score !== undefined || comments !== undefined || act || actions) && (
         <div style={{ display: "flex", flexWrap: "nowrap", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)", width: "100%", minWidth: 0 }} data-node={node && "actionRow"}>
           {/* `taught` and `onCommit` belong to the SHELL, not the card: "the first
               tap ever" is a fact about the reader, and a card in a feed of twenty
@@ -487,7 +496,7 @@ export function PostCard({
             />
           )}
           {score !== undefined && (
-            <ExplainableNumber glyph="graph" label="Post score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
+            <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
           {/* COMMENTS get their own affordance rather than living behind a tap on
               the card, because "read the replies" is a different intent from
@@ -523,6 +532,7 @@ export function PostCard({
               {comments > 0 && <span aria-hidden="true" data-node={node && "count"}>{comments}</span>}
             </button>
           )}
+          {act}
           {/* SHARE CLOSES THE ROW. The order here is the order of importance —
               opinion, score, comment, share — and it is also the queue: on a
               phone too narrow to hold all four, share is the first to move into

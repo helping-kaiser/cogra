@@ -1549,7 +1549,7 @@
       "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the pinned clip expands it back into the stream, the reader's place held.",
       "status": "resolved",
       "steps": [
-        "start · Reel · 7 «Post Score» → PostDetailVideo — the detail door — the clip squishes to the top, the post rises beneath",
+        "start · Reel · 7 «Feed score» → PostDetailVideo — the detail door — the clip squishes to the top, the post rises beneath",
         "end · arrival at PostDetailVideo"
       ],
       "boards": [
@@ -1708,7 +1708,7 @@
     },
     {
       "name": "trace-a-score-to-its-records",
-      "description": "The Post score, wherever a post is drawn, opens why the post reached this reader: the paths from their own opinions to it, strongest first. A path opens its steps, a step opens what carries it, and behind that step stand the signed records themselves — the floor of the whole claim, and a reading journey that concludes on reaching them. The stream's score is excepted: on the rail it is the detail door and not this one.",
+      "description": "The Feed score, on every ranked card of every kind, opens why the thing reached this reader: the paths from their own opinions to it, strongest first. A path opens its steps, a step opens what carries it, and behind that step stand the signed records themselves — the floor of the whole claim, and a reading journey that concludes on reaching them. The stream's score is excepted: on the rail it is the detail door and not this one.",
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
@@ -1741,7 +1741,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Post Score» on 28 boards → FeedEntry",
+        "start · «Feed score» on 28 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",

@@ -1001,6 +1001,33 @@
       "page": "feed"
     },
     {
+      "file": "FeedCommentShapes.dc.html",
+      "title": "Feed · the comment card's shapes",
+      "x": 6240,
+      "y": 1060,
+      "w": 390,
+      "h": 1180,
+      "page": "feed"
+    },
+    {
+      "file": "FeedProfileShapes.dc.html",
+      "title": "Feed · the profile card's shapes",
+      "x": 6720,
+      "y": 1060,
+      "w": 390,
+      "h": 1100,
+      "page": "feed"
+    },
+    {
+      "file": "FeedTagShapes.dc.html",
+      "title": "Feed · the tag card's shapes",
+      "x": 7200,
+      "y": 1060,
+      "w": 390,
+      "h": 1080,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -1380,10 +1407,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -4190,
+      "x": -5060,
       "y": 0,
-      "w": 3770,
-      "h": 3915,
+      "w": 4640,
+      "h": 4296,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -2100,7 +2127,7 @@
     },
     {
       "file": "FeedEntry.dc.html",
-      "title": "Post score · why it reached you",
+      "title": "Feed score · why it reached you",
       "x": 0,
       "y": 3616,
       "w": 390,
@@ -2109,7 +2136,7 @@
     },
     {
       "file": "FeedEntryMoved.dc.html",
-      "title": "Post score · the paths have moved on",
+      "title": "Feed score · the paths have moved on",
       "x": 480,
       "y": 3616,
       "w": 390,
@@ -2118,7 +2145,7 @@
     },
     {
       "file": "RankPath.dc.html",
-      "title": "Post score · one path",
+      "title": "Feed score · one path",
       "x": 960,
       "y": 3616,
       "w": 390,
@@ -2127,7 +2154,7 @@
     },
     {
       "file": "RankHop.dc.html",
-      "title": "Post score · one step",
+      "title": "Feed score · one step",
       "x": 1440,
       "y": 3616,
       "w": 390,
@@ -2136,8 +2163,17 @@
     },
     {
       "file": "RankRecords.dc.html",
-      "title": "Post score · what landed",
+      "title": "Feed score · what landed",
       "x": 1920,
+      "y": 3616,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "FeedEntryKinds.dc.html",
+      "title": "Feed score · the top block, per kind",
+      "x": 2400,
       "y": 3616,
       "w": 390,
       "h": 844,
