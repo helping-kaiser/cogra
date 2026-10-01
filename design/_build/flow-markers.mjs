@@ -1332,6 +1332,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
   ],
+  // The behind state: the newer release's door is a release door like the
+  // rest, so one number covers every door.
+  WhatsNewBehind: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+  ],
   ReportProblem: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="What happened"', tag: "div" },

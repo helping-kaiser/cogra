@@ -966,6 +966,16 @@ and before `Privacy` and `Terms`, each one string for app and web:
   and the page's footnote reads `Newest first. Every release's full
   notes and its code are public on GitHub.` A release's notes are
   written when it ships, never here.
+- **A running version behind the newest** (jakob 2026-10-01). Atop the
+  chronicle, one quiet line: `A newer version exists.` ending in `See it
+  on GitHub`, named `See version 0.1.3 on GitHub` for a listener
+  (`WhatsNewBehind`). And once per release, on a cold app open, one
+  snackbar on the feed's arrival: `A newer version of CoGra is out.` with
+  `What's new` as its action, opening the chronicle; a device-local seen
+  flag per release means each release says it exactly once, and letting
+  it pass costs nothing (`FeedNewerVersion`). *Both lines new 2026-10-01,
+  flagged for blessing; the action word `What's new`, the row's own, is
+  the lane's call.*
 - `Report a problem` opens the report: the heading `Report a problem`;
   `Say what happened, in your own words. Sending opens your email with
   everything below filled in — nothing goes until you send it there.`;

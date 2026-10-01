@@ -128,6 +128,15 @@
       "page": "entry"
     },
     {
+      "file": "SignInExpired.dc.html",
+      "title": "Sign in · signed out mid-session",
+      "x": 2400,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "KeyCeremonyUnsupported.dc.html",
       "title": "Your key · this browser can't hold one",
       "x": 1920,
@@ -429,7 +438,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4238,
+      "h": 4277,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -444,9 +453,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 1818,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -465,6 +474,15 @@
       "title": "Seal · signing",
       "x": 480,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealSigningSlow.dc.html",
+      "title": "Seal · signing, past 5s",
+      "x": 480,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "patterns"
@@ -498,11 +516,11 @@
     },
     {
       "file": "RowSigning.dc.html",
-      "title": "Signing · on the target's row",
+      "title": "Signing · on the target's row, and a comfort's revert",
       "x": 2880,
       "y": 964,
       "w": 390,
-      "h": 844,
+      "h": 1500,
       "page": "patterns"
     },
     {
@@ -517,8 +535,8 @@
     {
       "file": "RowWriteRule.dc.html",
       "title": "Signing · the write rule on the target's row",
-      "x": 2880,
-      "y": 1928,
+      "x": 3360,
+      "y": 964,
       "w": 390,
       "h": 844,
       "page": "patterns"

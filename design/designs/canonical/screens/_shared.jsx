@@ -2255,6 +2255,108 @@ const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
 const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
 
+/* THE RELEASE CHRONICLE, whole (`WhatsNew`'s anatomy, shared the moment its
+   behind state drew it a second time). The notes are fixture, not copy. */
+const RELEASES = [
+  {
+    version: RUNNING_VERSION,
+    date: "30.09.2026",
+    current: true,
+    notes: [
+      "A reply says what it answers — a post by its title, a comment by its first words.",
+      "While something signs, the button says what it's doing, and a signing that doesn't go through says so right where you were.",
+    ],
+  },
+  {
+    version: "0.1.1",
+    date: "28.09.2026",
+    notes: [
+      "Comments, profiles and tags can join your feed — turn them on in the filter.",
+      "A tag you type is always the first row, ready to add.",
+    ],
+  },
+  {
+    version: "0.1.0",
+    date: "25.09.2026",
+    notes: ["The first release: posts and comments, opinions, tags and citations, invites, and a key that is yours alone."],
+  },
+];
+
+/* A newer release than the one running here (jakob 2026-10-01, the A10
+   ruling) — the behind state's fixture, one patch on. */
+const NEWER_VERSION = "0.1.3";
+
+/* The behind state's two lines — drafts flagged for blessing (copy-voice,
+   *The settings page*, About): the quiet line atop the chronicle, and the
+   once-per-release snackbar on a cold open's feed. */
+const NEWER_VERSION_LINE = "A newer version exists.";
+const NEWER_VERSION_SNACKBAR = "A newer version of CoGra is out.";
+
+function Release({ version, date, current = false, notes }) {
+  return (
+    <>
+      <SectionLabel>{current ? `Version ${version} · current · ${date}` : `Version ${version} · ${date}`}</SectionLabel>
+      <div style={{ padding: "0 16px" }}>
+        <Card>
+          {notes.map((line) => (
+            <p
+              key={line}
+              style={{
+                margin: 0,
+                fontSize: "var(--text-body-medium)",
+                lineHeight: "var(--text-body-medium--line-height)",
+                letterSpacing: "var(--text-body-medium--letter-spacing)",
+              }}
+            >
+              {line}
+            </p>
+          ))}
+          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
+            See it on GitHub
+          </InlineAction>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* `newer` is the version a running app is behind, or nothing. Given, one quiet
+   line stands atop the chronicle — the fact in `--text-secondary`, the door
+   onto that release's public page ending it, `ProfileMoreFailed`'s line shape
+   — and nothing else changes: no badge, no banner, no nagging. */
+function WhatsNewBody({ newer }) {
+  return (
+    <>
+      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" />
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 0 16px" }}>
+        {newer && (
+          <p
+            style={{
+              margin: 0,
+              padding: "8px 24px 0",
+              fontSize: "var(--text-body-medium)",
+              lineHeight: "var(--text-body-medium--line-height)",
+              letterSpacing: "var(--text-body-medium--letter-spacing)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
+            <InlineAction size="sm" ariaLabel={`See version ${newer} on GitHub`} onClick={() => {}}>
+              See it on GitHub
+            </InlineAction>
+          </p>
+        )}
+        {RELEASES.map((release) => (
+          <Release key={release.version} {...release} />
+        ))}
+        <div style={{ padding: "16px 24px 0" }}>
+          <QuietNote>Newest first. Every release's full notes and its code are public on GitHub.</QuietNote>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* THE REPORT PAGE, whole (`ReportProblem`'s anatomy, shared the moment its
    empty state drew it a second time). `words` is what the field holds. Empty,
    `Send by email` stays where it is, visible and disabled, with the reason in

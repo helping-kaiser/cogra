@@ -550,6 +550,24 @@
       "page": "feed"
     },
     {
+      "file": "PostNotFound.dc.html",
+      "title": "Post · no such post",
+      "x": 2880,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "CommentNotFound.dc.html",
+      "title": "Comment · no such comment",
+      "x": 3360,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "CommentCitedByEmpty.dc.html",
       "title": "Comment · what cites it, nothing yet",
       "x": 3360,

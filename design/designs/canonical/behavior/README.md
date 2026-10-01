@@ -32,7 +32,9 @@ Where each sidecar's words come from:
   decides when the row says `Signing…`, and a hold that fails says so
   on the target's row, never on the snackbar — and one the write rule
   refuses says so quietly there, with no Retry (copy-voice, *Faults by
-  code*).
+  code*). A failed comfort's revert says so on the same row, and the
+  newer-version snackbar speaks once per release on a cold open (readme
+  §13, *The curate rulings*).
 - `ComposeSeal.md` — the failure pack's commit in flight: the label
   swap after 200ms, the inert commit, and the fault in the commit's
   place, in the words of readme §13 and copy-voice (*In-flight labels*);

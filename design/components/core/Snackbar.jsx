@@ -26,7 +26,12 @@ import React from "react";
 
    NOT EVERY SNACKBAR GETS ONE, and the absence is a decision each time. The
    canceled-deletion board records the case where a way back is worse than
-   none. */
+   none.
+
+   ONE STATED EXCEPTION TO "CONFIRMATIONS ONLY" (jakob 2026-10-01): once per
+   release, on a cold app open, a snackbar on the feed's arrival says a newer
+   version is out, its action opening What's new (`FeedNewerVersion`). It
+   confirms nothing; it is the one quiet message a release gets. */
 export function Snackbar({ message, action, onAction, onDismiss, durationMs = 4000, inline = false, offset = 80 }) {
   React.useEffect(() => {
     if (message === null || message === undefined) return undefined;

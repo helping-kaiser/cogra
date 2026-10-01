@@ -1037,6 +1037,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedNewerVersion.dc.html",
+      "title": "Feed · a newer version, said once",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -1392,7 +1401,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4238,
+      "h": 4277,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1443,9 +1452,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 1818,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -1670,6 +1679,15 @@
       "file": "WhatsNew.dc.html",
       "title": "Settings · what's new",
       "x": 4320,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "WhatsNewBehind.dc.html",
+      "title": "Settings · what's new, a newer version out",
+      "x": 5760,
       "y": 1928,
       "w": 390,
       "h": 844,
