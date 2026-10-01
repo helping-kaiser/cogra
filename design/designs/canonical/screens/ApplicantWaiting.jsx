@@ -14,6 +14,14 @@
    left-aligned, the way `Resend the link` sits. The dismissal is remembered on
    the device: putting it away twice would say the first tap did nothing.
 
+   THE ASK LINK RIDES THIS CARD TOO (jakob 2026-10-01). auth.md says the
+   applicant can copy it at any time, so the canvas no longer keeps it for a
+   rejection. It is `ApplicantRejected`'s block — the same copy control and
+   mono line, `bare` inside the card that explains it — with a label and
+   caption true for a live application: while @mira's answer is open the link
+   stages nobody new (auth.md, one live application at a time), so the card
+   says so rather than inviting a second ask that cannot start.
+
    THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
    applicants included (readme §13, the feed's filter on screen). */
 export function Screen() {
@@ -24,6 +32,14 @@ export function Screen() {
       </CograBand>
       <FeedList>
         <TaskCard title="All set — waiting on @mira" body="Their approval brings you in. Nothing else is needed from you.">
+          <PayoutAddress
+            bare
+            label="Your ask link"
+            address={ASK_LINK}
+            onCopy={() => {}}
+            copyLabel="Copy your ask link"
+            caption="It does not expire. While @mira's answer is open, it can't start a second application."
+          />
           <Button variant="outline" selfStart>
             Got it
           </Button>

@@ -99,6 +99,7 @@ export const FLOW_MARKERS = {
     // The band's filter came after the sweeps had numbered the shell, so it
     // takes the next free number rather than ApplicantFeed's 1.
     { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 20, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
   VouchBack: [
     filter,

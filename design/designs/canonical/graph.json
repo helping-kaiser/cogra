@@ -235,6 +235,7 @@
     { "from": "ApplicantWaiting", "via": 17, "kind": "back", "label": "Got it", "to": [{ "terminal": "self", "case": "the waiting card steps aside, and stays away on this device" }] },
     { "from": "ApplicantWaiting", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
     { "from": "ApplicantWaiting", "via": 19, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
+    { "from": "ApplicantWaiting", "via": 20, "kind": "advance", "label": "copy your ask link", "to": [{ "terminal": "self", "case": "the ask link lands on the clipboard — Link copied. It does not expire; while this application is live it stages nobody new, and a member who opens it is told so before committing to anything" }] },
 
     { "from": "VouchBack", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "VouchBack", "via": 2, "kind": "back", "label": "Not now", "to": [{ "terminal": "self", "case": "the vouch card steps aside on this device — the band keeps Vouch back while the pair is incomplete, and another device still shows the card" }] },
