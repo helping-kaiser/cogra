@@ -234,6 +234,7 @@
     { "from": "ApplicantWaiting", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ApplicantWaiting", "via": 17, "kind": "back", "label": "Got it", "to": [{ "terminal": "self", "case": "the waiting card steps aside, and stays away on this device" }] },
     { "from": "ApplicantWaiting", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+    { "from": "ApplicantWaiting", "via": 19, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
 
     { "from": "VouchBack", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "VouchBack", "via": 2, "kind": "back", "label": "Not now", "to": [{ "terminal": "self", "case": "the vouch card steps aside on this device — the band keeps Vouch back while the pair is incomplete, and another device still shows the card" }] },
@@ -2013,6 +2014,7 @@
     { "from": "ApplicantRejected", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ApplicantRejected", "via": 17, "kind": "advance", "label": "copy your ask link", "to": [{ "terminal": "self", "case": "the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows" }] },
     { "from": "ApplicantRejected", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+    { "from": "ApplicantRejected", "via": 19, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
 
     { "from": "VouchAsk", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "out of the ask unanswered — an ask link is not used up, so the same one opens it again" }] },
     { "from": "VouchAsk", "via": 2, "kind": "cancel", "label": "Not now", "to": [{ "terminal": "back", "case": "nothing signed — the ask still stands, and the same link opens it again" }] },

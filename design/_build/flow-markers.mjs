@@ -96,6 +96,9 @@ export const FLOW_MARKERS = {
     secondComments(9),
     ...nav(10),
     { n: 17, find: ">Got it</button>", tag: "button" },
+    // The band's filter came after the sweeps had numbered the shell, so it
+    // takes the next free number rather than ApplicantFeed's 1.
+    { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchBack: [
     filter,
@@ -2038,6 +2041,7 @@ Object.assign(FLOW_MARKERS, {
     secondComments(9),
     ...nav(10),
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
+    { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchAsk: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },

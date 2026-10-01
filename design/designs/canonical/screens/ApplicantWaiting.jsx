@@ -12,11 +12,14 @@
    nothing has no reason to hold the top of the feed for days. `Got it` is the
    card's only control, so it takes `TaskCard`'s secondary dress — outlined and
    left-aligned, the way `Resend the link` sits. The dismissal is remembered on
-   the device: putting it away twice would say the first tap did nothing. */
+   the device: putting it away twice would say the first tap did nothing.
+
+   THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
+   applicants included (readme §13, the feed's filter on screen). */
 export function Screen() {
   return (
     <>
-      <CograBand>
+      <CograBand trailing={<FeedFilter />}>
         <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
       </CograBand>
       <FeedList>
