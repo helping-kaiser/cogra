@@ -3,7 +3,7 @@
    item 20's review rule: every row that opens something opens a drawn board.
 
    THE NOTICE IS `WalletKeyAbsent`'s, and the whole anatomy is
-   `SettingsBackupKeyAbsent`'s — a `tertiary-container` panel leading the page,
+   `SettingsBackupKeyAbsent`'s — `NoticePanel` leading the page at `large`,
    the restore button in `Button`'s `inverse`, the one "?" in `HelpDot`'s
    `inverse` naming the key. Two rows of one group reaching the same state draw
    it the same way, or the state reads as two.
@@ -31,18 +31,10 @@ export function Screen() {
     <>
       <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 32px", overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-large)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-              Your key isn't on this browser
-            </h2>
-            <HelpDot ariaLabel="Your key" variant="inverse" />
-          </div>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            There is no key on this browser to show.
-          </p>
+        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key" corner="large">
+          <NoticeLine>There is no key on this browser to show.</NoticeLine>
           <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-        </div>
+        </NoticePanel>
 
         <p
           style={{

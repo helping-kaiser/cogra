@@ -5,9 +5,9 @@
    changes: only custody is refused, and the refusal says where custody works.
 
    IT WEARS THE KEY-ABSENT NOTICE, NEVER `error` (readme §13, the pattern
-   boards): a `tertiary-container` panel, because nothing failed — this is a
-   fact about the browser, and the way on is somewhere else. It has no "?":
-   the notice already says everything a dialog would.
+   boards): `NoticePanel` at a page's `large` corner, because nothing failed
+   — this is a fact about the browser, and the way on is somewhere else. It
+   has no "?": the notice already says everything a dialog would.
 
    NO COMMITMENT, so nothing is drawn that cannot be done. The ceremony's two
    paragraphs and its two buttons all describe a key made on this browser;
@@ -36,13 +36,9 @@ export function Screen() {
         >
           Your key
         </h1>
-        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-large)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-            This browser can&apos;t hold a key
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Open CoGra in a current Chrome, Firefox or Safari, or in the Android app.
-          </p>
+        <div style={{ height: 16 }} />
+        <NoticePanel title="This browser can't hold a key" corner="large">
+          <NoticeLine>Open CoGra in a current Chrome, Firefox or Safari, or in the Android app.</NoticeLine>
           <a
             href="/downloads/app-debug.apk"
             download
@@ -51,7 +47,7 @@ export function Screen() {
           >
             On Android? Download the app (APK)
           </a>
-        </div>
+        </NoticePanel>
       </div>
     </>
   );

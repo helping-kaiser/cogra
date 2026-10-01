@@ -1554,8 +1554,8 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
 }
 
 /* THE KEY NOTICE AT REPLY SCALE — `ComposeKeyAbsent`'s panel, which is
-   `WalletKeyAbsent`'s and `PadKeyAbsent`'s: a `tertiary-container` block (a
-   waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
+   `PadKeyAbsent`'s: `NoticePanel` at the `medium` corner, a
+   `tertiary-container` block (a waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
    key, one line, and the restore button in `Button`'s `inverse`. Written once
    here because the reply's door and the reply's seal both draw it.
 
@@ -1564,16 +1564,10 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
    sentence, and the restore button is not drawn. */
 function KeyAbsentNotice({ line }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-medium)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-          Your key isn't on this browser
-        </h2>
-        <HelpDot ariaLabel="Your key" variant="inverse" />
-      </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{line}</p>
+    <NoticePanel title="Your key isn't on this browser" helpLabel="Your key">
+      <NoticeLine>{line}</NoticeLine>
       <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-    </div>
+    </NoticePanel>
   );
 }
 
