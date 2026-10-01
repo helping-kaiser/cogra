@@ -14,6 +14,16 @@
    the thing being signed, and it stays here: the settings route sets what a new
    post starts from and says so in its own words, on its own board.
 
+   THE RADIOS STAGE, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*).
+   A pick changes the sheet and nothing else; `Done` carries the pair to the
+   seal's row; the scrim, a swipe down and Back discard it, and the post's
+   terms are what they were.
+
+   THE FOOT AND THE ROW READ ONE SENTENCE. `licenseSummary` joins the pair's
+   name and both tier hints — drawn here at `Credit always` / `Not logged` —
+   and the seal's License row reads the same sentence for whatever pair the
+   post carries, so the sheet shows what Done will put on the row.
+
    THE SEAL BENEATH IS THE SEAL — `ComposeSealBody`, the same body
    `ComposeSeal` draws. What a sheet covers is inert, not shortened. */
 
@@ -35,7 +45,7 @@ export function Screen() {
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
             <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
-              Credit always — every use credits you.
+              <LicenseSummary license={{ attribution: 1, provenance: 0 }} />
             </span>
             <Button>Done</Button>
           </div>

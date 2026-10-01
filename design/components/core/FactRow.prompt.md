@@ -1,7 +1,7 @@
 Use `FactRow` for every hairline line that reads *label · value* — the seal's list of what a signature carries, the wallet's facts about a campaign.
 
 ```jsx
-<FactRow label="License" value="Public domain — your default" action="Change" onAction={openLicense} />
+<FactRow label="License" value={<LicenseSummary license={license} />} action="Change" onAction={openLicense} />
 <FactRow label="Your opinion" value={<StanceReadout pair={pair} />} action="Adjust" onAction={openPad} />
 <FactRow label="Sensitive" value="Not marked" action="Mark" onAction={openSensitive} last />
 ```

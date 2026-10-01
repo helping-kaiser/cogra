@@ -1006,10 +1006,10 @@
     { "from": "ComposeCitations", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ComposeLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
-    { "from": "ComposeLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three" }] },
-    { "from": "ComposeLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three" }] },
-    { "from": "ComposeLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the choice" }] },
-    { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }] },
+    { "from": "ComposeLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three, staged until Done" }] },
+    { "from": "ComposeLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three, staged until Done" }] },
+    { "from": "ComposeLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the pair's name and both tier hints (licenseSummary)" }] },
+    { "from": "ComposeLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the post's terms are what they were; swipe down, Back and Escape the same (the sheet law)" }] },
 
     { "from": "ComposePad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "ComposePad", "via": 2, "kind": "advance", "label": "the one-axis pad", "to": [{ "terminal": "self", "case": "For/Against only — your own post always reaches you in full" }] },
@@ -1018,10 +1018,10 @@
     { "from": "ComposePad", "via": 5, "kind": "cancel", "label": "scrim — press outside", "to": [{ "board": "ComposeSeal", "case": "stages nothing" }] },
 
     { "from": "ComposeSensitive", "via": 1, "kind": "detour", "label": "? — Sensitive", "to": [{ "board": "HelpDialog", "case": "the Sensitive text" }] },
-    { "from": "ComposeSensitive", "via": 2, "kind": "advance", "label": "the switch", "to": [{ "terminal": "self", "case": "veils body and description; title and tags stay readable" }] },
-    { "from": "ComposeSensitive", "via": 3, "kind": "advance", "label": "Why?", "to": [{ "terminal": "self", "case": "typing — shown on the veil" }] },
+    { "from": "ComposeSensitive", "via": 2, "kind": "advance", "label": "the switch", "to": [{ "terminal": "self", "case": "staged — on veils body and description, title and tags stay readable; off disables the reason, which keeps its text and is dropped at signing" }] },
+    { "from": "ComposeSensitive", "via": 3, "kind": "advance", "label": "Why?", "to": [{ "terminal": "self", "case": "typing, staged — shown on the veil" }] },
     { "from": "ComposeSensitive", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the row reads the mark" }] },
-    { "from": "ComposeSensitive", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes" }] },
+    { "from": "ComposeSensitive", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ComposeSeal", "case": "the sheet closes — the mark is what it was; swipe down, Back and Escape the same (the sheet law)" }] },
 
     { "from": "ComposeKeyAbsent", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }] },
     { "from": "ComposeKeyAbsent", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
@@ -1149,15 +1149,15 @@
     { "from": "TagPad", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — the drag stops at the floor, and nothing signs until the seal" }] },
     { "from": "TagPad", "via": 2, "kind": "advance", "label": "Withdraw", "to": [{ "terminal": "back", "case": "the sheet closes — the chip leaves the row for the body's withdrawn line, and the acts card counts one more" }] },
     { "from": "TagPad", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
-    { "from": "TagPad", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+    { "from": "TagPad", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was; swipe down, Back and Escape the same (the sheet law)" }] },
 
     { "from": "TagPadCompose", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — the drag stops at the floor, and nothing signs until the seal" }] },
     { "from": "TagPadCompose", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
-    { "from": "TagPadCompose", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+    { "from": "TagPadCompose", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was; swipe down, Back and Escape the same (the sheet law)" }] },
 
     { "from": "RefPair", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }] },
     { "from": "RefPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the staged row carries the pair it was given" }] },
-    { "from": "RefPair", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+    { "from": "RefPair", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was; swipe down, Back and Escape the same (the sheet law)" }] },
 
     { "from": "TagPage", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names that origin by the noun table (readme, the tag-page smalls) — `Back to Explore`, `Back to the search`, `Back to Your topics`, `Back to feed`, `Back to the post`, `Back to the comments`, `Back to the profile`, `Back to #<thattag>`; a cold entry with no history falls back to `Back to Explore`, the state the family's boards draw" }] },
     { "from": "TagPage", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on whichever stance it belongs to" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
@@ -1855,10 +1855,10 @@
     { "from": "YourKeyAbsent", "via": 3, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
 
     { "from": "SettingsLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
-    { "from": "SettingsLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three — it seeds the next post, never the last" }] },
-    { "from": "SettingsLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three — it seeds the next post, never the last" }] },
+    { "from": "SettingsLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three, staged until Done — it seeds the next post, never the last" }] },
+    { "from": "SettingsLicense", "via": 3, "kind": "advance", "label": "Public-record options", "to": [{ "terminal": "self", "case": "one of three, staged until Done — it seeds the next post, never the last" }] },
     { "from": "SettingsLicense", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "Settings", "case": "the sheet closes — the Default license row reads the new default" }, { "terminal": "self", "case": "didn't go through — it reverts, and the target's row says so with Retry (the row line, RowSigning's vehicle)" }] },
-    { "from": "SettingsLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Settings", "case": "the sheet closes — the default is what it was, the way the seal's sheet leaves a post's terms" }] },
+    { "from": "SettingsLicense", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Settings", "case": "the sheet closes — the default is what it was, the way the seal's sheet leaves a post's terms; swipe down, Back and Escape the same (the sheet law)" }] },
 
     { "from": "SettingsReading", "via": 1, "kind": "detour", "label": "? — How the filter works", "to": [{ "board": "HelpDialog", "case": "the filter text" }] },
     { "from": "SettingsReading", "via": 2, "kind": "advance", "label": "filter chips (kinds · forms · also show)", "to": [{ "terminal": "self", "case": "stages what a feed starts out admitting" }] },

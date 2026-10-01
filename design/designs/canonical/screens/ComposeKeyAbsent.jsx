@@ -45,7 +45,7 @@ export function Screen() {
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" action="Change" last />
+          <FactRow label="License" value={<LicenseSummary />} action="Change" last />
         </div>
 
         <div style={{ flex: 1 }} />

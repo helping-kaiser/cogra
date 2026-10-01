@@ -50,6 +50,28 @@ export function licenseReadings(license) {
   ];
 }
 
+/* THE AUTHOR'S READING OF A PAIR, ONE JOINING RULE (the sheet law's round,
+   readme §13, the navigation-and-sheets round): the pair's name, a dash, then
+   the two tier hints joined — `Public domain — nobody owes you a name, and uses
+   go unlogged.` The zero pair's name is `Public domain`; every other pair is
+   named by its two tier names, `Credit always · Not logged`. One rule, so the
+   nine pairs are composed rather than written, and the seal's row, the license
+   sheets' foot and the settings default cannot say different things. */
+export function licenseSummary(license = PUBLIC_DOMAIN) {
+  const credit = tierOf(ATTRIBUTION_TIERS, license.attribution);
+  const record = tierOf(PROVENANCE_TIERS, license.provenance);
+  if (!credit || !record) return "";
+  const name = license.attribution === 0 && license.provenance === 0 ? "Public domain" : `${credit.label} · ${record.label}`;
+  const clause = (hint) => hint.charAt(0).toLowerCase() + hint.slice(1).replace(/\.$/, "");
+  return `${name} — ${clause(credit.hint)}, and ${clause(record.hint)}.`;
+}
+
+/* The same reading as an element, for a slot that takes one (a `FactRow`
+   value, a sheet's foot). */
+export function LicenseSummary({ license = PUBLIC_DOMAIN }) {
+  return licenseSummary(license);
+}
+
 function AxisChoice({ legend, tiers, name, value, onChange }) {
   return (
     <div role="radiogroup" aria-label={legend} style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)" }}>

@@ -459,6 +459,13 @@ It states the body's rule, never a lock on this post: an edit carries
 the post's complete new content state, so it may flip the kind outright
 — every picture replaced by words, or the words by a gallery.
 
+The edit's Sensitive row binds only the author's own mark, never the
+moderator's verdict, so a post the platform veiled and its author did
+not reads `Not marked` with one quiet line under the row:
+
+- `Also veiled by the platform's verdict` — flagged for blessing (jakob
+  2026-10-01 ruled the line; the exact wording is the recommendation's).
+
 ## Accessible names
 
 The words a reader hears where the screen carries none — glyph controls
@@ -661,6 +668,20 @@ said the opposite of the truth.
 - `Credit` · `Public record of use` — the axis labels, the chooser's
   own legends, so a reader who published a post meets the same two
   words on both sides.
+
+**The author's reading of a pair is one joining rule** (`licenseSummary`;
+jakob 2026-10-01, the sheet law's round) — what the seal's License row,
+the license sheets' foot and the settings default all read: the pair's
+name, ` — `, the credit tier's hint and the record tier's hint joined by
+`, and`, each hint lowercased at its head with its full stop dropped,
+the whole closed by one full stop. The zero pair's name is `Public
+domain`; every other pair is named by its two tier names joined by
+` · `. So `Public domain — nobody owes you a name, and uses go
+unlogged.` and `Credit always · Not logged — every use credits you, and
+uses go unlogged.` The seal's row carries no `your default`: the
+reading says what the post's terms are, wherever they came from. The
+rule and the eight non-zero readings it composes are flagged for
+blessing.
 
 ## Staged references
 
