@@ -62,6 +62,15 @@ Where each sidecar's words come from:
   moves above the list, and its × un-stages it.
 - `ReferencePicker.md` — the same multi-add and staged section, at the
   citation picker: the shared anatomy's law, in the same words.
+- `KeptPicksReview.md` — the kept picks' review (readme §13, *The kept
+  picks' review*): one batch, signed only from its seal; the × that drops
+  a pick with no confirm and no undo, and the last drop's exit; leaving
+  unsigned keeps every pick.
+- The rest of the compose and media pages' sidecars (readme §13, *The
+  compose and media behavior pass*) — each board's own docblock, its
+  graph edges' cases, and the readme §13 rounds and copy-voice sections
+  those cite. `ComposeDetails.md` and `ComposeSeal.md` carry those lines
+  beside their own.
 - Every other board on the feed and comments pages (readme §13, *The
   feed and comments behavior pass*) — its own docblock, the readme §13
   records it names, its flow edges' outcomes and its copy-voice

@@ -254,6 +254,24 @@
       "page": "entry"
     },
     {
+      "file": "KeptPicksReview.dc.html",
+      "title": "Restore · the kept picks' review",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeptPicksSeal.dc.html",
+      "title": "Restore · the kept picks' seal",
+      "x": 2880,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "RecoveryCodeMismatch.dc.html",
       "title": "Recovery code · the mismatch",
       "x": 1440,
@@ -1473,7 +1491,7 @@
       "x": -3900,
       "y": 0,
       "w": 3480,
-      "h": 5369,
+      "h": 5438,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1591,7 +1609,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2613,
+      "h": 2670,
       "page": "profile"
     },
     {

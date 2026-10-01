@@ -14,7 +14,7 @@
    THE LIFECYCLE OF A KEPT PICK (`PadKeyAbsent` carries it in full): it lives
    on this device only, survives a restart, and waits beside any other kept
    picks until the key is restored — then they sign together, in one batch
-   the reader reviews first. */
+   the reader reviews first (`KeptPicksReview`, then `KeptPicksSeal`). */
 export function Screen() {
   return (
     <>

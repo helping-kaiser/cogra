@@ -2,11 +2,17 @@
 
 ALWAYS feed.card.media.frame wears its clip's stored still until playback first starts
 
+ALWAYS a clip with no chosen cover shows its own frame 0 as its still
+
 WHEN feed.card.media.frame's clip first starts playing -> the stored still gives way to playback AND NEVER the stored still returns
 
 WHEN feed.card.media.frame's clip stops being the playing clip -> it freezes on the frame it reached AND NEVER the stored still returns
 
+WHEN a clip on a card plays to its end -> it loops
+
 ALWAYS feed.card.media.frame carries feed.card.media.frame.soundDisc and no other control GIVEN the device allows autoplay
+
+ALWAYS a clip on a card wears no play and pause, no duration and no timeline
 
 ALWAYS feed.card.media.frame carries feed.card.media.frame.playDisc in the place of feed.card.media.frame.soundDisc GIVEN the device suppresses autoplay
 
@@ -21,3 +27,7 @@ WHEN tap feed.card.media.frame.soundDisc GIVEN sound is off -> sound turns on fo
 WHEN tap feed.card.media.frame.soundDisc GIVEN sound is on -> sound turns off for every clip on every surface
 
 ALWAYS a clip starts muted GIVEN the reader has not turned sound on
+
+ALWAYS a clip 16:9 or square displays at its own shape, and a clip taller than 4:5 centre-crops to 4:5
+
+ALWAYS no clip is letterboxed
