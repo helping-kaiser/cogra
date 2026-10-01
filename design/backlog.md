@@ -3755,10 +3755,10 @@ in copy-voice, *Faults by code*. These are still owed a board or a
 ruling:
 
 - ~~**Boards for copy-only vehicles.**~~ — closed 2026-10-01 (jakob, as
-  recommended): `SignInExpired`, `PostNotFound`, `CommentNotFound`,
-  `RowSigning`'s third card for a comfort's revert, and
-  `VouchAskUnusable` with the dead ask link's words, flagged for
-  blessing (readme §13, *The curate rulings*).
+  recommended): `SignInExpired`, `PostNotFound`, `CommentNotFound` and
+  `RowSigning`'s third card for a comfort's revert (readme §13, *The
+  curate rulings*). The dead ask link's surface and words are the
+  entry-funnel round's `VouchAskUnusable` (the audit's K3.8).
 - ~~**The write rule on a pad and on a hold's row**~~ — closed
   2026-10-01 by `PadWriteRule` and `RowWriteRule` (readme §13, *The
   failure fixes and the support stack*).

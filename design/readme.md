@@ -7695,8 +7695,8 @@ newer-version message, which he widened.
   `PostNotFound` and `CommentNotFound` are `ProfileNotFound`'s
   construction, back by the layer law and drawn cold. `RowSigning`'s
   third card draws a failed comfort's revert on the row
-  (`StanceControl`'s `comfortFailed`). `VouchAskUnusable` says the dead
-  ask link in `JoinInvalid`'s construction.
+  (`StanceControl`'s `comfortFailed`). The dead ask link is the entry
+  funnel's `VouchAskUnusable`.
 - **Every key-absent panel is `NoticePanel`**: the five boards, the
   reply's `KeyAbsentNotice` and post-MVP's `WalletKeyAbsent` — one corner
   rule, the title's letter-spacing restored.
@@ -7713,16 +7713,15 @@ newer-version message, which he widened.
   description with the last picture (`EditPicked`, `EditWords`).
 - **Blessed** (jakob): `Added — in the staged list.`, `Removed from the
   staged list.` and `You, then several steps, then what reached you`.
-- **Flagged for blessing**: the slow line, the dead ask link's heading
-  and paragraph, the newer-version line and snackbar, and the
-  snackbar's action word `What's new`.
+- **Flagged for blessing**: the slow line, the newer-version line and
+  snackbar, and the snackbar's action word `What's new`.
 - **The lane's calls, flagged for review:** the slow line standing in
   the subline's place on a single-act seal too; its polite `status`
   role; the signed-out sentence in the welcome line's secondary ink;
-  the not-found boards without a header title; the dead ask link with
-  no field and no way but back; the comfort's revert drawn as an unsave
-  on Sol's post; the newer release's notes left behind its door.
-- **The gate**: 243 → **250 screens**, 1673 → **1698 edges**, 1 gap,
+  the not-found boards without a header title; the comfort's revert
+  drawn as an unsave on Sol's post; the newer release's notes left
+  behind its door.
+- **The gate**: 243 → **249 screens**, 1673 → **1697 edges**, 1 gap,
   **flows 64**, every one resolved. The two not-found boards' bottom
   bars grow the census of the four publish flows' first step, 49 → 51
   boards, so the witness wants a deliberate re-bless. `RowSigning` grew

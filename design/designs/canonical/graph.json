@@ -99,7 +99,6 @@
     "ApplicantWaiting": "ApplicantFeed once every task card is done — time, not a tap",
     "ApplicantRejected": "the same applicant shell once the inviter has closed the application — the card flips where the reader is standing; somebody else's decision, not a tap",
     "VouchAsk": "opened from a rejected applicant's ask link, handed over outside the product — a link, not a tap",
-    "VouchAskUnusable": "an ask link opened when no one can answer it — the id unknown, the asker already landed, or their application already waiting on someone else (ASK_LINK_UNUSABLE); a link, not a tap",
     "VouchBack": "the approval landing — arrives with the next open, not a tap",
     "ReplyMedia": "a thread whose comments carry pictures — the same sheet, a state not a tap",
     "ReplyPicturesWeb": "the reply's pictures state in a browser — platform, not a tap",
@@ -2047,7 +2046,6 @@
 
     { "from": "VouchAsk", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "out of the ask unanswered — an ask link is not used up, so the same one opens it again" }] },
     { "from": "VouchAsk", "via": 2, "kind": "cancel", "label": "Not now", "to": [{ "terminal": "back", "case": "nothing signed — the ask still stands, and the same link opens it again" }] },
-    { "from": "VouchAskUnusable", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "out — nothing to answer, nothing signed" }] },
     { "from": "VouchAsk", "via": 3, "kind": "advance", "label": "the stance affordance", "to": [{ "board": "VouchAskPad", "case": "the pad blooms over the ask — it opens at the standing low default, never at a value the link carried" }] },
 
     { "from": "VouchAskPad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },

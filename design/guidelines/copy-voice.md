@@ -798,12 +798,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   in a data breach — pick another one.` *The breach half is copy-only.*
 - `INVITE_UNUSABLE` — the surface: `This invite can't be used anymore`
   (`JoinInvalid`).
-- `ASK_LINK_UNUSABLE` — the surface, in `JoinInvalid`'s construction:
-  `This ask can't be answered anymore` over `The person who asked may
-  already be in, or someone else may already be answering them. Nothing
-  here needs your signature.` — no field and no Retry, the back arrow the
-  way out. **Drawn** on `VouchAskUnusable`. *New 2026-10-01, flagged for
-  blessing.*
+- `ASK_LINK_UNUSABLE` — the surface, in `JoinInvalid`'s construction.
+  Its words are owed.
 - `VERIFICATION_TOKEN_INVALID` — the surface: `This link doesn't work
   anymore` (`VerifyExpired`).
 - `RESET_TOKEN_INVALID` — the surface, in `VerifyExpired`'s words. That
