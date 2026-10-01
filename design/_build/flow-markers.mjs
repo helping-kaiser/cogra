@@ -2019,7 +2019,8 @@ for (const [board, n] of Object.entries(CARD_SHARE)) {
    OWN skip-link (the topic round, 2026-09-14) joins via 2 under that same
    convention \u2014 it is the page's accessible path, and the page has one; its
    FACE takes the next free number, 15, because every other face on the page
-   has its own.
+   has its own. THE TOPIC ROW'S SHARE (2026-10-01) joins the posts' share at
+   11: one glyph, one outcome — the platform's own sheet — whatever it shares.
 
    BOTH STATES OF THE PAGE READ THE SAME LIST. The body is one helper
    (`TagPageBody`), so the markers are one list too: `topicStance` is the only
@@ -2040,6 +2041,7 @@ const tagPageBody = ({ topicStance }) => [
   { n: 10, find: 'aria-label="2 comments"', tag: "button" },
   { n: 10, find: 'aria-label="1 comment"', tag: "button" },
   { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
+  { n: 11, find: 'aria-label="Share #saltmaps"', tag: "button" },
   { n: 12, find: ">On \u201c", tag: "button", all: true },
   { n: 13, find: 'aria-label="More on this comment"', tag: "button" },
   { n: 14, find: 'aria-label="Your opinion on this comment', tag: "button" },
@@ -2069,11 +2071,13 @@ Object.assign(FLOW_MARKERS, {
   /* The emptied page carries the topic's own row and nothing else, so the two
      numbers the row needs are the two it gets: the page's accessible path at 2,
      by the family's convention, and the face at the next free number — which
-     here is 3, because no post or comment face stands between them. */
+     here is 3, because no post or comment face stands between them. The
+     row's share, which closes it, takes 4. */
   TagPageEmpty: [
     { n: 1, find: 'aria-label="Back to Explore"', tag: "a" },
     { n: 2, find: ">Choose your opinion on #slipwaylight</button>", tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on #slipwaylight"', tag: "button" },
+    { n: 4, find: 'aria-label="Share #slipwaylight"', tag: "button" },
   ],
   TagPicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },

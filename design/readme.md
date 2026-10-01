@@ -7108,10 +7108,18 @@ they turn a kind on, on one new board, `FeedKinds`.
   picture, name and handle over their bio, their menu the profile's own less
   the share the row carries; a tag's lead is the `#` tile and its name over
   the newest thing tagged with it, as a preview row, its opinion the
-  topic's Affinity, and no ⋮ and no share, because a Type has no license,
-  is never cited or saved, and its page shares nothing. Every tap lands on a
-  board that exists: the comment's thread, the person's profile, the tag's
-  page.
+  topic's Affinity, its share the one the tag page's own row ends with, and
+  no ⋮, because a Type has no license and is never cited or saved. Every
+  tap lands on a board that exists: the comment's thread, the person's
+  profile, the tag's page.
+- **The tag page shares** (jakob 2026-10-01). Its one wide control is the
+  stance on the topic — the profile's situation — so its row takes the
+  profile actions row's geometry, the anchor taking what is left and the
+  page's other act closing it. That act is share alone: a ⋮ would open a
+  sheet of one row, since a Type has nothing else a menu could hold, so it
+  stands as the `ShareButton` glyph every card's row ends with — one tap,
+  the platform's own sheet. It rides all four tag-page boards through
+  `TopicStanceRow`.
 - **Every ranked card wears the score** (jakob 2026-10-01: "every card
   should have the graph glyph and the score number next to it"). The rank
   is about the paths leading to a thing and never its kind, so the comment,

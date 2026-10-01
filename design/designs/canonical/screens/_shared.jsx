@@ -2821,19 +2821,32 @@ const AFFINITY_AXES = {
    states of the page carry it now — the populated one and the emptied one — and
    a row drawn twice is a row that can disagree with itself about its padding,
    its width or its axis words. So it is lifted here and the two boards differ
-   only in the name they hand it and whether anything is held. */
+   only in the name they hand it and whether anything is held.
+
+   SHARE CLOSES THE ROW (jakob 2026-10-01: "yes add share to tag page"). The
+   page's one wide control is the stance on the topic, the profile's situation
+   exactly, and the row takes the profile actions row's geometry: the anchor
+   takes what is left, and what the page does besides closes the row. On a
+   profile that is the ⋮, because a person has rows to hang off it — mention,
+   save, hide. A Type has none of those: no license, never cited, never saved,
+   never hidden. A ⋮ here would open a sheet holding one row, so share stands
+   as itself, the `ShareButton` glyph every card's row ends with — one tap, the
+   platform's own sheet. */
 function TopicStanceRow({ name, bundle, stanceOpen, stanceDefaultPick }) {
   return (
-    <div style={{ padding: "4px 16px 8px" }}>
-      <StanceControl
-        wide
-        targetLabel={name}
-        axes={AFFINITY_AXES}
-        bundle={bundle}
-        defaultOpen={stanceOpen}
-        defaultPick={stanceDefaultPick}
-        onCommit={() => {}}
-      />
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "4px 16px 8px" }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <StanceControl
+          wide
+          targetLabel={name}
+          axes={AFFINITY_AXES}
+          bundle={bundle}
+          defaultOpen={stanceOpen}
+          defaultPick={stanceDefaultPick}
+          onCommit={() => {}}
+        />
+      </div>
+      <ShareButton targetLabel={name} onShare={() => {}} />
     </div>
   );
 }
@@ -2971,9 +2984,10 @@ function ProfileFeedCard({ person, src, bio, score, bundle }) {
    newest thing tagged with it, as a preview row — the chat card's
    last-message row, and the first thing the tag's page opens on — with its
    age where a card's timestamp stands. The opinion is the topic's Affinity,
-   with the tag page's own four ends, and the score follows it. A Type has no license, is never cited
-   and is not saved, and the tag page offers no share, so the card carries no
-   ⋮ and no share — only what a tag has. The card opens the tag's page. */
+   with the tag page's own four ends; the score follows it and the share
+   closes the row, the same share the tag page's own row ends with. A Type has
+   no license, is never cited and is not saved, so the card carries no ⋮ —
+   only what a tag has. The card opens the tag's page. */
 function TagFeedCard({ name, newest, age, score, bundle }) {
   return (
     <PostCard
@@ -2991,7 +3005,6 @@ function TagFeedCard({ name, newest, age, score, bundle }) {
       onOpenScore={() => {}}
       scoreLabel={FEED_SCORE_LABEL}
       stanceAxes={AFFINITY_AXES}
-      showShare={false}
       onOpen={() => {}}
     />
   );
