@@ -99,7 +99,7 @@
     "ApplicantWaiting": "ApplicantFeed once every task card is done — time, not a tap",
     "ApplicantRejected": "the same applicant shell once the inviter has closed the application — the card flips where the reader is standing; somebody else's decision, not a tap",
     "VouchAsk": "opened from a rejected applicant's ask link, handed over outside the product — a link, not a tap",
-    "VouchBack": "the approval landing — arrives with the next open, not a tap",
+    "VouchBack": "the approval landing — arrives with the next open, not a tap; and again when a signed vouch-back expires instead of landing, the pair still incomplete",
     "ReplyMedia": "a thread whose comments carry pictures — the same sheet, a state not a tap",
     "ReplyPicturesWeb": "the reply's pictures state in a browser — platform, not a tap",
     "ComposeExpired": "the notice card arrives when an act expires unlanded — time, not a tap",
