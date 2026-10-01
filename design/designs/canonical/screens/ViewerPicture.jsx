@@ -26,7 +26,13 @@
 
    THREE WAYS OUT: the X, a swipe DOWN, and back. A tap is not one of them. An
    X, not a back arrow — this is a layer being dismissed, not a step being
-   walked. */
+   walked.
+
+   THE GESTURES ARE THE PLATFORM PHOTO VIEWER'S (readme §4, *Sheets*): double
+   tap toggles zoom up to about 4×, a pan wins while zoomed, paging resets the
+   zoom, and the swipe down follows the finger with the black fading — it
+   closes past about 20 % of the height or on a fling, and snaps back short of
+   it; a plain close under reduced motion. */
 export function Screen() {
   return <MediaViewer items={MIRA_GALLERY_POST.media} index={1} onClose={() => {}} />;
 }

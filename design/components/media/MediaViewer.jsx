@@ -28,6 +28,12 @@ import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
      rather than a back arrow, because the reader is dismissing a layer, not
      walking a step of a journey — and the swipe is the gesture every
      full-screen media layer is dismissed with.
+   · THE GESTURES ARE THE PLATFORM PHOTO VIEWER'S (readme §4, *Sheets*; jakob
+     2026-10-01). A double tap toggles zoom, capped at about 4×; while zoomed,
+     a pan wins over paging and dismissal; zoom resets on paging. The swipe
+     down drags the frame with the black fading, closes past about 20 % of the
+     screen's height or on a fling, and otherwise snaps back; under reduced
+     motion the close is plain.
    · A PICTURE PINCH-ZOOMS, and the gallery's swipe carries over: the set is
      paged here exactly as it is in the card, DOTS AND ALL — dots only, no
      arrows (item 21's pager ruling). Arrows would be a second vocabulary for a
