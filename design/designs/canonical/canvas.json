@@ -254,6 +254,24 @@
       "page": "entry"
     },
     {
+      "file": "KeptPicksReview.dc.html",
+      "title": "Restore · the kept picks' review",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeptPicksSeal.dc.html",
+      "title": "Restore · the kept picks' seal",
+      "x": 2880,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "RecoveryCodeMismatch.dc.html",
       "title": "Recovery code · the mismatch",
       "x": 1440,

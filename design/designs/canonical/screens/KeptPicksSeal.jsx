@@ -1,0 +1,53 @@
+/* THE KEPT PICKS' SEAL (backlog item 113; jakob's ruling B1, 2026-10-01) —
+   the standard seal, reached from `KeptPicksReview`'s `Sign them`, with the
+   kept picks as its what-you-sign list.
+
+   THE STANDARD SEAL, UNTOUCHED. `WizardHeader` with `What you sign` and
+   `Last step`, the header's "?" opening the Signed-actions text, the acts
+   card, and `SealFooter`'s pair — the anatomy `ProfileEditSeal` and
+   `AvatarSeal` draw. Nothing on it is removable: dropping a pick is the
+   review's, one stage back, and the seal only reads back what will be
+   signed.
+
+   ONE BATCH, ALL OR NOTHING (jakob, 2026-09-30: the kept picks sign
+   together, in one batch the reader reviews first). Each pick is one
+   opinion and one act, so the acts card reads each back on its own row —
+   what it is on, and its pair as `StanceReadout` reads it — counts them in
+   things, `3 things, signed together`, and carries the multi-act subline
+   every seal of more than one act carries: `They land together, or none
+   does.`
+
+   THE COMMIT NAMES WHAT IT SIGNS (`SealFooter`'s rule): `Sign the
+   opinions`. Signed, the batch leaves the seal for where the review was
+   opened from, with the usual settled snackbar in its batch form, `Signed 3
+   things, still settling.`, and each target's anchor wears `Still settling`
+   until its record is ordered. The X leaves with every pick still kept, as
+   leaving the review does. */
+export function Screen() {
+  return (
+    <>
+      <WizardHeader title="What you sign" leaveLabel="Leave — your picks are kept" stageLabel="Last step" help="How signing works" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
+        <ActsCard
+          rows={KEPT_PICKS.map((pick) => ({
+            label: "Opinion",
+            countNoun: "opinion",
+            value: (
+              <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
+                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pick.name}</span>
+                <StanceReadout pair={pick.pair} />
+              </span>
+            ),
+            count: "1",
+          }))}
+          total={`${KEPT_PICKS.length} things, signed together`}
+          note="They land together, or none does."
+        />
+
+        <div style={{ flex: 1 }} />
+
+        <SealFooter signLabel="Sign the opinions" />
+      </div>
+    </>
+  );
+}
