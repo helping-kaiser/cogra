@@ -1690,6 +1690,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Restore the key</button>", tag: "button" },
     { n: 3, find: ">Discard the reply</button>", tag: "button" },
   ],
+  // The reply's gated seal and its fault, pattern exemplars likewise: only the
+  // gate's own controls carry numbers; the rest is `ReplySeal`'s.
+  ReplySealUploading: [{ n: 1, find: ">Sign comment</button>", tag: "button" }],
+  ReplySealUploadFailed: [
+    { n: 1, find: ">Retry</button>", tag: "button" },
+    { n: 2, find: ">Sign comment</button>", tag: "button" },
+  ],
   EditCompose: [
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },

@@ -64,6 +64,8 @@
     "ComposePad": "the wash covers the seal, whole — its header, its three facts and its foot are inactive in this state; only the parked pad is live",
     "ReplyKeyAbsent": "the key notice covers the comments sheet — the thread beneath the scrim is inactive in this state, and wired on `ReplyEntry`; only the notice, the way out under it (and its scrim) are live",
     "ReplySealKeyAbsent": "a pattern exemplar drawn on the reply's seal (the pattern-exemplar rule): only the key notice and the discard under it are its own; the header, the acts card and the rows are `ReplySeal`'s controls, wired on that board",
+    "ReplySealUploading": "a pattern exemplar drawn on the reply's seal (the pattern-exemplar rule): only the gated commit is its own; the header, the acts card and the rows are `ReplySeal`'s controls, wired on that board",
+    "ReplySealUploadFailed": "a pattern exemplar drawn on the reply's seal (the pattern-exemplar rule): only the gate's Retry and the gated commit are its own; the header, the acts card and the rows are `ReplySeal`'s controls, wired on that board",
     "ReplyPad": "the wash covers the reply's seal, whole — its header, its add-rows, its three facts and its foot are inactive in this state; only the parked pad is live",
     "EditActs": "the acts sheet covers the edit — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "EditPicked": "the Show-all sheet covers the edit — everything beneath the scrim is inactive in this state, the picked row and the add control among them; only the sheet (and its scrim) is live",
@@ -106,6 +108,7 @@
     "ComposeExpired": "the notice card arrives when an act expires unlanded — time, not a tap",
     "ComposePickWeb": "the wizard's pick step in a browser — platform, not a tap",
     "ReplyVideoFailed": "the reply's video state when the upload doesn't land — a fault, not a tap",
+    "ReplySealUploadFailed": "the reply's gated seal when an upload doesn't land while it waits — a fault, not a tap",
     "CommentEditVideo": "the comment edit when the comment's body is a clip — content, not a tap",
     "EditComposeVideo": "the post edit when the post's body is a clip — content, not a tap",
     "EditWords": "the post edit when the post's body is words — content, not a tap; it is also where a media post lands once its last picture is removed, the field arriving empty",
@@ -755,7 +758,7 @@
 
     { "from": "ReplyPictures", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyPictures", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
-    { "from": "ReplyPictures", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "uploads still running — the gated seal (master on the media page)" }] },
+    { "from": "ReplyPictures", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ReplySealUploading", "case": "uploads still running — the reply's gated seal" }] },
     { "from": "ReplyPictures", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyPictures", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
     { "from": "ReplyPictures", "via": 6, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
@@ -763,7 +766,7 @@
 
     { "from": "ReplyVideo", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyVideo", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
-    { "from": "ReplyVideo", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "the video is still going up — the gated seal (master on the media page)" }] },
+    { "from": "ReplyVideo", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ReplySealUploading", "case": "the video is still going up — the reply's gated seal" }] },
     { "from": "ReplyVideo", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyVideo", "via": 5, "kind": "advance", "label": "remove video ×", "to": [{ "board": "ReplyCompose", "case": "the video leaves — the composer is words again" }] },
     { "from": "ReplyVideo", "via": 6, "kind": "advance", "label": "Describe the video", "to": [{ "board": "ComposeDescribeVideo", "case": "the describe sheet's video shape (master on the media page) — one description for the clip" }] },
@@ -772,7 +775,7 @@
 
     { "from": "ReplyVideoFailed", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyVideoFailed", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
-    { "from": "ReplyVideoFailed", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeSealUploading", "case": "the clip is not up — the gated seal waits on the retry (master on the media page)" }] },
+    { "from": "ReplyVideoFailed", "via": 3, "kind": "advance", "label": "Next (disabled)", "to": [{ "terminal": "self", "case": "disabled while the clip is failed — Retry or Remove it first" }] },
     { "from": "ReplyVideoFailed", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyVideoFailed", "via": 5, "kind": "advance", "label": "Retry", "to": [{ "terminal": "self", "case": "the upload starts again — a fault, not an answer" }] },
     { "from": "ReplyVideoFailed", "via": 6, "kind": "advance", "label": "Remove it", "to": [{ "board": "ReplyCompose", "case": "the clip leaves — the composer is words again" }] },
@@ -781,7 +784,7 @@
 
     { "from": "ReplyMediaErrors", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyMediaErrors", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
-    { "from": "ReplyMediaErrors", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal", "case": "what was accepted goes with the words" }, { "board": "ComposeSealUploading", "case": "uploads still running — the gated seal (master on the media page)" }] },
+    { "from": "ReplyMediaErrors", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal", "case": "what was accepted goes with the words" }, { "board": "ReplySealUploading", "case": "uploads still running — the reply's gated seal" }] },
     { "from": "ReplyMediaErrors", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyMediaErrors", "via": 5, "kind": "advance", "label": "Remove it (a refused file)", "to": [{ "terminal": "self", "case": "the refusal leaves the composer — the file never joined it" }] },
     { "from": "ReplyMediaErrors", "via": 6, "kind": "advance", "label": "+ Add pictures · 4 of 4", "to": [{ "terminal": "os", "case": "the platform's own picker" }, { "terminal": "self", "case": "the tray is full — every pick refuses, another line joins the list" }] },
@@ -790,7 +793,7 @@
 
     { "from": "ReplyPicturesWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
     { "from": "ReplyPicturesWeb", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyEntry", "case": "empty — leaves at once" }] },
-    { "from": "ReplyPicturesWeb", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ComposeSealUploading", "case": "uploads still running — the gated seal (master on the media page)" }] },
+    { "from": "ReplyPicturesWeb", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ReplySeal" }, { "board": "ReplySealUploading", "case": "uploads still running — the reply's gated seal" }] },
     { "from": "ReplyPicturesWeb", "via": 4, "kind": "advance", "label": "the words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "ReplyPicturesWeb", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
     { "from": "ReplyPicturesWeb", "via": 6, "kind": "advance", "label": "Describe the pictures", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the media page)" }] },
@@ -866,6 +869,11 @@
     { "from": "ReplySealKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
     { "from": "ReplySealKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "restored — back to this seal, the reply intact" }] },
     { "from": "ReplySealKeyAbsent", "via": 3, "kind": "cancel", "label": "Discard the reply", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }] },
+
+    { "from": "ReplySealUploading", "via": 1, "kind": "advance", "label": "Sign comment (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
+
+    { "from": "ReplySealUploadFailed", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ReplySealUploading", "case": "the upload starts again — the gate reads its running line" }] },
+    { "from": "ReplySealUploadFailed", "via": 2, "kind": "advance", "label": "Sign comment (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the failed upload" }] },
 
     { "from": "DiscardConfirm", "via": 1, "kind": "back", "label": "Keep writing", "to": [{ "terminal": "back", "case": "the dialog closes — back to the stage it covered" }] },
     { "from": "DiscardConfirm", "via": 2, "kind": "cancel", "label": "Discard", "to": [{ "board": "ReplyEntry", "case": "from a reply — the thread" }, { "board": "ReplyMedia", "case": "from the edit — the thread" }] },
@@ -1567,7 +1575,7 @@
     { "from": "ComposeSealUploading", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealUploading", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealUploading", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
+    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }] },
     { "from": "ComposeSealUploading", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeUploading", "case": "one stage back" }] },
 
     { "from": "ComposePickWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },

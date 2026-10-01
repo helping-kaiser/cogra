@@ -39,7 +39,26 @@ function Ring({ progress = 0.55, size = 18 }) {
   );
 }
 
-export function UploadStatusLine({ done, total, progress }) {
+/* THE GATE HAS A FAULT READING (jakob's ruling, the night batch 2026-10-01 —
+   audit K6.2). An upload that fails while the seal waits on it leaves the gate
+   closed for a reason the running line cannot say: `failed` swaps the ring and
+   the count for the failure's fact in error ink, the gate's consequence in the
+   quiet voice, and `Retry` — a fault, so the way out is to ask again, the way
+   every transport fault in the product does. No `Remove it` here: the seal reads
+   back, and what the reply carries is changed one stage back. The sign button
+   stays disabled while either reading shows. */
+export function UploadStatusLine({ done, total, progress, failed = false, message = "One picture didn't upload.", onRetry }) {
+  if (failed) {
+    return (
+      <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
+        <span style={{ color: "var(--error)" }}>{message}</span>{" "}
+        <span style={{ color: "var(--text-secondary)" }}>Signing waits for it.</span>{" "}
+        <InlineAction size="lg" onClick={onRetry} style={{ display: "inline" }}>
+          Retry
+        </InlineAction>
+      </p>
+    );
+  }
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "var(--space-2)" }}>
       <Ring progress={progress ?? (total ? done / total : 0.5)} />

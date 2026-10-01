@@ -1498,8 +1498,14 @@ const replyCitedRow = () => ({
    line and the act row's value name it. `keyAbsent` is the seal with the key
    elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
    the footer stood, and the header's "?" kept beside the notice's own, by the
-   stopper exception (readme §13, *The failure fixes and the support stack*). */
-function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
+   stopper exception (readme §13, *The failure fixes and the support stack*).
+
+   `uploading` is the seal gated on the reply's media (jakob's ruling, the night
+   batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
+   true }` once one has not. Every row is unchanged; `UploadStatusLine` stands
+   over the foot, and `Sign comment` is disabled while it shows
+   (`ReplySealUploading`, `ReplySealUploadFailed`). */
+function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
     <>
@@ -1548,7 +1554,15 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
             <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
           </>
         ) : (
-          <SealFooter signLabel="Sign comment" />
+          <>
+            {uploading &&
+              (uploading.failed ? (
+                <UploadStatusLine failed onRetry={() => {}} />
+              ) : (
+                <UploadStatusLine done={uploading.done} total={uploading.total} />
+              ))}
+            <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
+          </>
         )}
       </div>
     </>

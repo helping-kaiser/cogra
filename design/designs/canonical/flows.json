@@ -229,9 +229,9 @@
     },
     {
       "name": "reply-while-the-pictures-upload",
-      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
-      "start": { "board": "ReplyPictures", "via": 3, "case": "uploads still running — the gated seal (master on the media page)" },
-      "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }
+      "description": "Next pressed while the pictures are still going up reaches the reply's own gated seal; signing waits for them, then the comment settles into the thread.",
+      "start": { "board": "ReplyPictures", "via": 3, "case": "uploads still running — the reply's gated seal" },
+      "end": { "board": "ReplySealUploading", "via": 1, "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }
     },
     {
       "name": "edit-your-comment",
