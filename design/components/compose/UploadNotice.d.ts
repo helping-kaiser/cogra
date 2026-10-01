@@ -11,6 +11,15 @@ export interface UploadStatusLineProps {
   total: number;
   /** 0..1 override for the ring; defaults to done/total. */
   progress?: number;
+  /**
+   * The gate's fault reading: an upload failed while the seal waits. The
+   * failure's fact (`message`), "Signing waits for it." and Retry; the sign
+   * button stays disabled. `done`/`total` are unused while it shows.
+   */
+  failed?: boolean;
+  /** The failure's fact — "One picture didn't upload." by default. */
+  message?: string;
+  onRetry?: () => void;
 }
 
 export declare function UploadStatusLine(props: UploadStatusLineProps): JSX.Element;

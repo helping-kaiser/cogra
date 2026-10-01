@@ -190,6 +190,125 @@
         ]
       }
     },
+    "FeedCover": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.description": [
+          "tobias"
+        ],
+        "feed.card.media": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.media.frame": [
+          "mira/1",
+          "tobias/1"
+        ],
+        "feed.card.media.frame.playDisc": [
+          "mira/1"
+        ],
+        "feed.card.media.frame.soundDisc": [
+          "tobias/1"
+        ],
+        "feed.card.menu": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "tobias"
+        ],
+        "feed.card.tagsLine": [
+          "tobias"
+        ],
+        "feed.card.tagsLine.tag": [
+          "tobias/stillwater"
+        ],
+        "feed.card.timestamp": [
+          "mira",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "tobias"
+        ]
+      }
+    },
     "PostDetail": {
       "prefix": "postDetail",
       "keys": {

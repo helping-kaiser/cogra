@@ -39,7 +39,12 @@
      `Waiting for your key` under it. Tapping the face opens this pad again,
      holding it; a new pick kept on the same post replaces it.
    - Several can wait at once, one per post. When the key is restored they
-     sign together, in one batch the reader reviews first — never silently.
+     sign together, in one batch the reader reviews first — never silently
+     (jakob, 2026-09-30). `Restore the key` opens `KeptPicksReview`, one row
+     per kept pick, each with a × that drops it at once; `Sign them` leads to
+     the standard seal (`KeptPicksSeal`), which signs the batch all or
+     nothing. A review left unsigned keeps them, and the settings page's Key
+     backup group carries `3 kept picks waiting` to reopen it.
    - A remembered sign-out keeps them, as it keeps everything on the device.
      A sign-out that forgets the account clears them with the draft — and
      where it would also take an unbacked key, `SignOutConfirm` names all

@@ -1,7 +1,17 @@
 /* Sign in — the returning-member path off Main's borrowed view, Join, and
    every guest gate's "Sign in or join" (readme §13, entry). The link stack
    below the primary action stays flush with the screen's own gutter — plain
-   text rows, not a second row of pill buttons. */
+   text rows, not a second row of pill buttons.
+
+   SIGN-IN LANDS WHEREVER APP-OPEN LANDS FOR THAT ACCOUNT (jakob 2026-10-01,
+   audit K3.7). One rule, not a list to keep true: an account can be in
+   any of the states the shells draw — a member with or without the key
+   here, landed and not yet vouched back, in its deletion grace; an applicant
+   with tasks left, waiting, turned down, run out, or with the key made
+   elsewhere — and signing in is just the app opening for it, so each state
+   opens where an app-open in that state does. A pending security notice
+   (`LogInPayload.reuseDetectedAt`) rides along to that landing as a card.
+   A tripped login backoff answers here, as `SignInLimited`. */
 export function Screen() {
   return (
     <>

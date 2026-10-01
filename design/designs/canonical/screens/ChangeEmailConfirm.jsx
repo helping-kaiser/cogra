@@ -42,7 +42,24 @@
 
    NO BACK TRAP. Nothing is lost by leaving — the change is live on the server
    for its window and this screen is reachable again from the row — so the
-   arrow stays and goes where the others go. */
+   arrow stays and goes where the others go.
+
+   THE PENDING CHANGE CAN BE SENT AGAIN, AND CALLED OFF (jakob 2026-10-01,
+   audit K3.21). `Resend` sits on the pair it re-sends — both messages go
+   out again, for the reader whose mail never came — and `Cancel the change`
+   stands last, after the line that says what the account keeps, because
+   calling a change off is the quiet end of this page and not its point.
+   Neither asks first: a resend costs nothing, and a cancelled change is
+   started again from the row.
+
+   EVERY HALF-DONE AND FAILED STATE IS A LINE ON THIS PAGE. A side that has
+   landed reads `— confirmed` where `— still waiting` stood; the link side
+   lands from `ChangeEmailLinked`. A wrong code takes the field's error line
+   in `Restore`'s words. A change past its window, or an address registered
+   by someone else before both sides landed (`EMAIL_IN_USE`, which keeps
+   answering until the window closes, so a freed address still applies),
+   takes a form-level fault line above the commitment, `SignInError`'s
+   placement — the words are copy-voice's. */
 export function Screen() {
   return (
     <>
@@ -82,17 +99,22 @@ export function Screen() {
             padding: "var(--space-3)",
           }}
         >
-          <span
-            style={{
-              fontSize: "var(--text-label-small)",
-              lineHeight: "var(--text-label-small--line-height)",
-              fontWeight: "var(--text-label-small--font-weight)",
-              letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
-              color: "var(--text-secondary)",
-            }}
-          >
-            Both have to land
-          </span>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <span
+              style={{
+                fontSize: "var(--text-label-small)",
+                lineHeight: "var(--text-label-small--line-height)",
+                fontWeight: "var(--text-label-small--font-weight)",
+                letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Both have to land
+            </span>
+            <InlineAction size="sm" onClick={() => {}}>
+              Resend
+            </InlineAction>
+          </div>
           <div style={{ display: "grid", gridTemplateColumns: "64px 1fr", columnGap: "var(--space-2)", rowGap: "var(--space-1)" }}>
             <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
               Code
@@ -128,6 +150,12 @@ export function Screen() {
             Until both sides land your account keeps the address it has, and a reset still goes
             there.
           </QuietNote>
+        </div>
+
+        <div style={{ marginTop: 16 }}>
+          <InlineAction size="sm" onClick={() => {}}>
+            Cancel the change
+          </InlineAction>
         </div>
       </div>
     </>

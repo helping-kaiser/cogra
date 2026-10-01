@@ -75,6 +75,8 @@ const {
   OwnStanceReadout,
   StanceValue,
   StanceSlider,
+  StanceStanding,
+  StanceLandingLine,
   TAG_RANGES,
   TaggedRow,
   TransportError,
@@ -1249,6 +1251,23 @@ const SEAL_CITATIONS = [
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.2, pInterest: 0.1 }, onRemove: () => {}, onEdit: () => {} },
 ];
 
+/* THE KEPT PICKS, written once (backlog item 113, the kept picks' review):
+   the review that lists them and the seal that signs them are two boards of
+   one batch, and a seal reading back a set the review disagreed with would
+   be the drift this constant exists to stop. Three, because the settings row
+   that reopens the review counts three. The first is `PadPending`'s own pick
+   on @ada's post; a person among them on purpose, since every pad that meets
+   the key's absence can keep its pick (`PadKeyAbsent` is the master for all
+   of them). Each pair is read the readout's way on both boards — the face,
+   the digits in geek mode, and the anchor's word with both axes spoken
+   (`StagedReference`'s `stance` on the review, `StanceReadout` on the
+   seal). */
+const KEPT_PICKS = [
+  { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
+  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 } },
+  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 } },
+];
+
 /* The one citation the reply's seal was drawn holding. It is a constant rather
    than a board's literal because two states of that seal name it — the one
    that reads it back and the × that drops it. */
@@ -1502,8 +1521,14 @@ const replyCitedRow = () => ({
    line and the act row's value name it. `keyAbsent` is the seal with the key
    elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
    the footer stood, and the header's "?" kept beside the notice's own, by the
-   stopper exception (readme §13, *The failure fixes and the support stack*). */
-function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
+   stopper exception (readme §13, *The failure fixes and the support stack*).
+
+   `uploading` is the seal gated on the reply's media (jakob's ruling, the night
+   batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
+   true }` once one has not. Every row is unchanged; `UploadStatusLine` stands
+   over the foot, and `Sign comment` is disabled while it shows
+   (`ReplySealUploading`, `ReplySealUploadFailed`). */
+function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
     <>
@@ -1552,7 +1577,15 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
             <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
           </>
         ) : (
-          <SealFooter signLabel="Sign comment" />
+          <>
+            {uploading &&
+              (uploading.failed ? (
+                <UploadStatusLine failed onRetry={() => {}} />
+              ) : (
+                <UploadStatusLine done={uploading.done} total={uploading.total} />
+              ))}
+            <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
+          </>
         )}
       </div>
     </>
@@ -1765,6 +1798,34 @@ function ComposeDetailsBody({
    change was whitespace the record does not carry. The batch already knows: it
    is what the acts sheet lists and what the footer counts, so the guard reads
    the number that was always there. */
+/* A STAGED WITHDRAWAL, READ BACK WHERE THE THING STOOD, WITH ITS WAY BACK
+   (jakob's ruling, the night batch 2026-10-01 — audit K5.3). A tag taken off a
+   post, or a citation removed from it, is a record in the edit's batch, not an
+   erasure: the chip or the row leaves its block, and this line stands under the
+   block naming what goes. `Undo` unstages that one withdrawal — the chip or the
+   row returns as it stood, and the acts card counts its records off again. One
+   line per item, so each carries its own `Undo`.
+
+   RE-PICKING A WITHDRAWN NAME IS THE SAME UNDO. Choosing `#coastroad` again in
+   the tag picker, or the same post in the reference picker, unstages its
+   withdrawal rather than staging a second, cancelling record: one staged act
+   per name (behavior/TagPicker.md, behavior/ReferencePicker.md). */
+function WithdrawnLine({ name }) {
+  return (
+    <QuietNote>
+      Withdrawn: {name}{" "}
+      <InlineAction size="sm" ariaLabel={`Undo withdrawing ${name}`}>
+        Undo
+      </InlineAction>
+    </QuietNote>
+  );
+}
+
+/* What the post edit's References block holds withdrawn — another author's
+   post the edit stops citing. Its removal stages `withdrawalCost` counter-records,
+   and this one was revised upward past 1, so it stages two. */
+const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
+
 function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
@@ -1797,7 +1858,7 @@ function EditComposeBody({ unchanged = false } = {}) {
             <TopicRemovable topic="saltmaps" onEdit={() => {}} />
           </div>
           <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-          <QuietNote>Withdrawn: #coastroad</QuietNote>
+          {!unchanged && <WithdrawnLine name="#coastroad" />}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -1805,7 +1866,8 @@ function EditComposeBody({ unchanged = false } = {}) {
           {/* The composer's whole staged form, as `ComposeDetails` draws it:
               the kind under the name, and the pair the citation signs. An edit
               stages the same citation a first draft does, so it shows back the
-              same facts. */}
+              same facts. The row opens `RefPairEdit` — the citation already
+              stands, so its pick adds a record — and its × withdraws it. */}
           <StagedReference
             kind="post"
             name="The long way home — @ada"
@@ -1815,6 +1877,7 @@ function EditComposeBody({ unchanged = false } = {}) {
             onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+          {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1832,7 +1895,9 @@ function EditComposeBody({ unchanged = false } = {}) {
 
         <div style={{ flex: 1 }} />
 
-        <ActsFooter count={unchanged ? 0 : 3} />
+        {/* Five things: the edit, #saltmaps added, #coastroad withdrawn, and the
+            citation's withdrawal at its two counter-records (`EditActs`). */}
+        <ActsFooter count={unchanged ? 0 : 5} />
         <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>
       </div>
     </>
@@ -2241,7 +2306,15 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `Not made yet` and opens `SettingsBackupNone`, and the group's footnote
    stops promising a way back that does not exist — and `forget` is the
    don't-remember switch turned on. Both default to the page every other
-   board draws. */
+   board draws.
+
+   `keptPicks` is the count of picks still waiting after their review was
+   left unsigned (backlog item 113, jakob's ruling B3): a quiet row in the
+   Key backup group, after `Your key`, reading `3 kept picks waiting`, that
+   reopens `KeptPicksReview`. It exists only while that is true — kept picks
+   with the key here and their batch unsigned — so it defaults to none, and
+   `Settings`, which draws the page whole, draws it present to show its
+   place in the order. */
 /* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the
    settings row, the release chronicle and the report's diagnostic line all
    read the running version, and three boards disagreeing about it would be
@@ -2434,10 +2507,16 @@ function ReportProblemBody({ words }) {
   );
 }
 
-function SettingsBody({ backup = "made", forget = false } = {}) {
+/* `emailPending` and `deleting` are the two in-flight account acts the page
+   reads back (jakob 2026-10-01, audit K3.21 and K3.22): an email change with
+   a side still owed, and a confirmed deletion in its grace. Each changes one
+   row's status, and the deletion also brings its band, which rides every
+   logged-in surface and sits under an inner page's header. */
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
+      {deleting && <DeletionBand days={6} />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
@@ -2541,6 +2620,9 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
         >
           <SettingsRow label="Recovery code" status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"} onOpen={() => {}} />
           <SettingsRow label="Your key" onOpen={() => {}} />
+          {keptPicks > 0 && (
+            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} />
+          )}
         </SettingsGroup>
 
         <SettingsGroup
@@ -2569,7 +2651,12 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
         >
           <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
           <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
-          <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
+          <SettingsRow
+            label="Email"
+            value="sol@solferreira.art"
+            status={emailPending ? "Change pending" : undefined}
+            onOpen={() => {}}
+          />
         </SettingsGroup>
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
@@ -2639,9 +2726,13 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
             quiet line. */}
         <SettingsGroup
           ariaLabel="Delete account"
-          footnote="Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+          footnote={
+            deleting
+              ? undefined
+              : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+          }
         >
-          <SettingsRow label="Delete account" onOpen={() => {}} />
+          <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} />
         </SettingsGroup>
       </div>
     </>

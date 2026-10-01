@@ -2,7 +2,9 @@
    borrowed view hands off here once the invite link checks out. Handle,
    email, and password collected in one pass; Create account starts the
    applicant days (ApplicantFeed). No back history from a deep link, so the
-   arrow returns to the invite-entry step instead.
+   arrow is a link: to the invite-entry step for a link pasted there, and to
+   the borrowed view for a link the arrival already held — the band and the
+   guest gate open this form with it in hand (jakob 2026-10-01, audit K3.6).
 
    THE DOOR'S ONE EXPLANATION IS A "?", NOT A FIFTH LINE (jakob's ruling, the
    batch-rulings round: "that sounds great maybe behind a '?'. i already dislike

@@ -20,14 +20,25 @@
    field where a thumb cannot cover it, the title taken from the tag that was
    tapped. Two boards exist because two contexts reach this sheet with
    different controls, not because the sheet drifts between them — read
-   `TagPad` for the reasoning behind every part they share.
+   `TagPad` for the reasoning behind every part they share — the non-drag
+   route included: `Set exact values for #coastroad`, hidden until focused and
+   the first control focus reaches on open, swaps the field for the two tracks
+   in place (audit K10.1), and the readout is `aria-live`.
 
    THE SURFACE BENEATH IS DRAWN WHOLE (`ComposeDetailsBody`), the overlay rule
    from 2026-09-08: a sheet covers the surface the reader came from, and that
    surface is the real one, not a shortened stand-in of it. */
 
-/* The four poles, named for the record family that fills the slots. */
-const TAG_AXES = { left: "Barely", right: "Entirely", bottom: "Guessing", top: "Certain" };
+/* The four poles, named for the record family that fills the slots — and the
+   two questions, which only the non-drag route's tracks say aloud. */
+const TAG_AXES = {
+  directed: "How much it is about this",
+  interest: "How sure you are",
+  left: "Barely",
+  right: "Entirely",
+  bottom: "Guessing",
+  top: "Certain",
+};
 
 export function Screen() {
   return (
@@ -37,7 +48,11 @@ export function Screen() {
       <BottomSheet open ariaLabel="#coastroad">
         <SheetTitle>#coastroad</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
+            Set exact values for #coastroad
+          </button>
+
+          <div aria-live="polite" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <span
               aria-hidden="true"
               style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}

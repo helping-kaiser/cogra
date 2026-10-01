@@ -62,10 +62,17 @@
    are neighbours, and ending is last. It is drawn quiet — a navigating row with
    a chevron, no `error` colour and no `action` emphasis — because the weight of
    that act belongs to the flow it opens, not to a page a reader came to for the
-   theme. */
+   theme.
 
-export const FRAME = { width: 390, height: 2613 };
+   THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
+   113, jakob's ruling B3): `3 kept picks waiting`, last in the Key backup
+   group, opening `KeptPicksReview` again. It is there only while picks kept
+   with the key elsewhere wait, the key is back, and their review was left
+   unsigned — the page's one row that comes and goes. Quiet: a navigating row
+   and nothing more, no badge, no colour, no reminder anywhere else. */
+
+export const FRAME = { width: 390, height: 2670 };
 
 export function Screen() {
-  return <SettingsBody />;
+  return <SettingsBody keptPicks={3} />;
 }
