@@ -3570,7 +3570,8 @@ The application queue, in order:
    push + histories, minted new). The domain — screens, graph,
    flows — stays whole; a later re-split (chats alone, when it
    crowds) is the same canvases.json gesture again.
-8. **The applicant mechanism round** (once-each staging kept):
+8. **The applicant mechanism round** *(done 2026-10-01, item 108)*
+   (once-each staging kept):
    About/auth.md/contract corrections plus the three owed rulings
    (visibility of a staged act, its signing moment, its fate on an
    unapproved close).
@@ -3578,14 +3579,14 @@ The application queue, in order:
 The audit's master findings (325 entries, 15 clusters) queue behind
 this item's work as their own review rounds with jakob.
 
-### 108 · The applicant mechanism's corrections · *design + docs* · **corrected 2026-09-30, About's lines await blessing**
+### 108 · The applicant mechanism's corrections · *design + docs* · **closed 2026-10-01**
 
 The scope cut kept once-each staging (item 107; readme §13 carries
 the three mechanism rulings — author-only visibility, sign-at-approval
 in the vouch-in batch, drafts-on-close). auth.md's applicant
 paragraph describes once-each staging and the three rulings; About's
 *Getting in, and being let in* says what an applicant can write and
-what becomes of it — new copy, candidates to jakob for blessing. The
+what becomes of it, in lines jakob blessed on 2026-10-01. The
 contract's staging surface is relayed to the implementation session
 as a contract need, with the audit's K3 findings. The DeleteAccount
 wallet bullet left V1.0 the same day (the page names what exists);
