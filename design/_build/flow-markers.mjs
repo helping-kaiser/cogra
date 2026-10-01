@@ -1661,7 +1661,31 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Go to the feed</button>", tag: "button" },
   ],
+  // The email change's link and its in-flight row. The landing's one way on
+  // reads by the side chip, so it is found by its hole.
+  ChangeEmailLinked: [{ n: 1, find: ">{{linkedWay}}</button>", tag: "button" }],
+  ChangeEmailLinkedSignedOut: [{ n: 1, find: ">Sign in</button>", tag: "button" }],
+  SettingsEmailPending: [{ n: 1, find: ">Email</span>", tag: "button" }],
+  // The deletion's confirmation landing, its grace on settings, and the
+  // screen the row then opens.
+  DeleteAccountConfirmed: [
+    { n: 1, find: ">Also remove what I posted</span>", tag: "label" },
+    { n: 2, find: ">Add it to the deletion</button>", tag: "button" },
+    { n: 3, find: ">Go to the feed</button>", tag: "button" },
+  ],
+  SettingsDeleting: [
+    { n: 1, find: ">Cancel</button>", tag: "button" },
+    { n: 2, find: ">Delete account</span>", tag: "button" },
+  ],
+  DeleteAccountPending: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+  ],
 });
+FLOW_MARKERS.ChangeEmailConfirm.push(
+  { n: 4, find: ">Resend</button>", tag: "button" },
+  { n: 5, find: ">Cancel the change</button>", tag: "button" },
+);
 
 /* The reply and edit wizards, the two overlays and the pattern boards
    (legacy-conversion lane C, 2026-09-04): the last nine boards that had only
