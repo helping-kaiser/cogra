@@ -101,6 +101,14 @@ export const FLOW_MARKERS = {
     { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
     { n: 20, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
+  // ApplicantWaiting's shell with the card flipped, numbered to the number;
+  // the landing card has no control, so 17 stays unused here.
+  ApplicantLanding: [
+    ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
+    secondComments(9),
+    ...nav(10),
+    { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
+  ],
   VouchBack: [
     filter,
     { n: 2, find: ">Not now</button>", tag: "button" },
@@ -2065,7 +2073,7 @@ Object.assign(FLOW_MARKERS, {
    surface's gap (guest boards: the guest gate's). */
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
-  ApplicantRejected: 15,
+  ApplicantRejected: 15, ApplicantLanding: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
@@ -2084,7 +2092,7 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    name and carries its marker in its own list above. */
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
-  ApplicantRejected: 18,
+  ApplicantRejected: 18, ApplicantLanding: 18,
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
@@ -2102,7 +2110,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
-  ApplicantRejected: 16,
+  ApplicantRejected: 16, ApplicantLanding: 16,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
   FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,

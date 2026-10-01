@@ -6,7 +6,6 @@
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
       "status": "resolved",
       "startsOn": [
-        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -57,7 +56,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 48 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -69,7 +68,6 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
-        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -185,6 +183,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -216,7 +215,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 30 boards → ReplyEntry",
+        "start · «comment count» on 31 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -227,6 +226,7 @@
         "ReplySeal",
         "ReplySettled",
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -480,7 +480,6 @@
       "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
       "status": "resolved",
       "startsOn": [
-        "ApplicantRejected",
         "ComposeExpired",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -506,12 +505,11 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 24 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 23 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
         "VouchBackPad",
-        "ApplicantRejected",
         "ComposeExpired",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -703,7 +701,6 @@
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
       "status": "resolved",
       "startsOn": [
-        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -754,7 +751,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 48 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -766,7 +763,6 @@
         "ComposeDetails",
         "ComposeSeal",
         "ComposeLanded",
-        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -821,7 +817,6 @@
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
       "status": "resolved",
       "startsOn": [
-        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -872,7 +867,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 48 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -884,7 +879,6 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
-        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -939,7 +933,6 @@
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
       "status": "resolved",
       "startsOn": [
-        "ApplicantRejected",
         "ChatsComingSoon",
         "ComposeLanded",
         "DeleteAccountCanceled",
@@ -990,7 +983,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 49 boards → ComposePick",
+        "start · «nav · New post» on 48 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1000,7 +993,6 @@
         "ComposeDetailsVideo",
         "ComposeSeal",
         "ComposeLanded",
-        "ApplicantRejected",
         "ChatsComingSoon",
         "DeleteAccountCanceled",
         "Explore",
@@ -1374,6 +1366,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1404,12 +1397,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 29 boards → ProfileOther",
+        "start · «author chip» on 30 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
         "ProfileOther",
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1446,6 +1440,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1466,12 +1461,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 19 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 20 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
         "PostDetail",
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1498,6 +1494,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1518,12 +1515,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 19 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 20 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
         "Reel",
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1576,6 +1574,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1593,13 +1592,14 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 16 boards → RefsSheet",
+        "start · «reference count» on 17 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
         "RefsSheet",
         "PostDetail",
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1712,6 +1712,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1741,7 +1742,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 28 boards → FeedEntry",
+        "start · «Feed score» on 29 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1753,6 +1754,7 @@
         "RankHop",
         "RankRecords",
         "ApplicantFeed",
+        "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
         "ComposeExpired",
@@ -1823,16 +1825,22 @@
       ],
       "endpoint": []
     },
+    "ApplicantLanding": {
+      "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "reply-to-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": []
+    },
     "ApplicantRejected": {
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
-        "publish-a-post",
-        "publish-a-vertical-video",
-        "publish-a-video",
-        "publish-words",
         "reply-to-a-post",
-        "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"

@@ -110,6 +110,15 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantLanding.dc.html",
+      "title": "Applicant · approved, landing",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "KeyElsewhereNoBackup.dc.html",
       "title": "Key elsewhere · no backup to restore from",
       "x": 1920,
@@ -1380,9 +1389,9 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 4264,
       "page": "entry",
       "title": "Entry · flow map"
