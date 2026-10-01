@@ -1241,9 +1241,11 @@ then the pair, on a flag attached to every card's top edge — the word
 names the act, the glyph and the numbers say what it claimed, and the
 tag itself is not repeated because the page is titled by it.
 
-**An unused tag is not a miss.** `Nothing carries this tag yet. The name
-is still a place — anyone can be the first to use it.` No "not found",
-because the tag was found; what is empty is the list. *Still a place*
+**An unused tag is not a miss.** `Nothing carries this tag right now.
+The name is still a place — anyone can use it.` No "not found",
+because the tag was found; what is empty is the list. No "first"
+either: the line states the present and promises no past (jakob
+2026-09-15, `TagPageEmpty`). *Still a place*
 is the fact the contract guarantees, said without saying Type, node or
 vacuous anchoring.
 
