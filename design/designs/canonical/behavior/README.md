@@ -43,7 +43,9 @@ Where each sidecar's words come from:
   order, in the same words; thread order itself (readme §13,
   *Comments live in a sheet*); and the removed comment's mark in its own
   place, its replies kept under it (comment.md §5; readme §13, *The
-  comment-removal round*).
+  comment-removal round*); and the landing on a deep-linked comment and
+  the sheet's return from a forward navigation, the X of a cite
+  included (readme §4, *Navigation*).
 - `FeedKinds.md` — the feed cards (readme §13, *The feed cards,
   ruled*): the unified row's order, the law that a comment's replies live
   in its thread and never in the feed, where the comment card's door and

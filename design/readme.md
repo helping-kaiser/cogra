@@ -471,7 +471,7 @@ that lands on Feed's root, fresh.
 row or a shared link that opens a thread on a comment opens the comments
 sheet with that comment scrolled to the sheet's top, its branch
 expanded, and a brief tonal highlight on it — one rung up the surface
-ladder, never a hue — that holds about a second and fades. Under reduced
+ladder, never a hue — that fades within about a second. Under reduced
 motion it clears without fading. A notification whose target has moved
 on lands on the target as it now stands, with no special notice: a
 `ready for your approval` row opens Invites, the application in its

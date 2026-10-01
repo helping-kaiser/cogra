@@ -597,7 +597,7 @@
       "status": "resolved",
       "steps": [
         "start · Explore · 1 «search field» → ExploreSearch — typing — results as you type",
-        "end · ExploreSearch · 5 «comment result row» → ReplyEntry — the comment in its thread"
+        "end · ExploreSearch · 5 «comment result row» → ReplyEntry — the comment in its thread, landed on — scrolled to the sheet's top, its branch expanded, a brief tonal highlight (readme §4, Navigation)"
       ],
       "boards": [
         "Explore",
