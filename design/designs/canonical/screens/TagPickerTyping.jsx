@@ -36,7 +36,10 @@
    A STRING OUTSIDE THE GATE IS REFUSED AT THE FIELD, and `TagPickerRefused` is
    that state: the bar takes the error ring and this line carries the refusal
    instead of the rule. The two boards are one picker at two moments, the way
-   this one and `TagPicker` are. */
+   this one and `TagPicker` are.
+
+   `Done` IS THE HEADER BACK'S AFFIRMATIVE TWIN (jakob, 2026-10-01; `TagPicker`):
+   the same leave to the composer, every staged tag kept. */
 export function Screen() {
   return (
     <>
@@ -55,6 +58,9 @@ export function Screen() {
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
+      </div>
+      <div style={{ flex: "none", padding: "0 24px 24px" }}>
+        <Button style={{ width: "100%" }}>Done</Button>
       </div>
     </>
   );
