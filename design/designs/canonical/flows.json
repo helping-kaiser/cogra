@@ -44,7 +44,7 @@
     {
       "name": "reply-to-a-post",
       "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
-      "start": { "control": "comment count" },
+      "start": { "control": "comment count", "except": ["Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
       "waypoints": [
         { "board": "ReplyEntry", "via": 7, "to": "ReplyCompose" },
         { "board": "ReplyCompose", "via": 3 }
@@ -381,7 +381,7 @@
       "name": "message-someone",
       "description": "Message on someone's profile lands on the chats screen, which says the surface is not here yet — the conversation itself is still owed.",
       "start": { "board": "ProfileOther" },
-      "end": { "board": "ProfileOther", "via": 5 }
+      "end": { "board": "ProfileOther", "via": 5, "to": "ChatsComingSoon" }
     },
     {
       "name": "publish-from-the-browser",
@@ -449,7 +449,7 @@
     {
       "name": "cite-a-post",
       "description": "The reader's overflow — on a post or on a comment, the same two rows — opens the post wizard fresh, the thing cited riding along unseen. The journey ends at the details stage, where the reference is finally on screen.",
-      "start": { "control": "Cite in a new post" },
+      "start": { "control": "Cite in a new post", "to": "ComposePick" },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },
@@ -459,7 +459,7 @@
     {
       "name": "mention-someone",
       "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person, and the wizard it opens is the same one.",
-      "start": { "control": "Mention in a new post" },
+      "start": { "control": "Mention in a new post", "to": "ComposePick" },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },

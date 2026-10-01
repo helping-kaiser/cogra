@@ -13,3 +13,9 @@ ALWAYS the replies in a branch stand oldest first
 WHEN the author's confirmed Remove on their own comment lands -> the comment's words and pictures give way to the mark Removed by its author in the comment's own place AND NEVER the comment leaves the thread
 
 ALWAYS a removed comment's replies stay under it and readable
+
+WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is signed out -> the join prompt opens over the comments sheet AND NEVER the composer opens
+
+WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is an applicant -> the snackbar reads Comments open when you're in. AND NEVER the composer opens AND NEVER a comment stages
+
+ALWAYS the comments sheet's foot stands for every reader, signed out and applicant included

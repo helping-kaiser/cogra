@@ -182,15 +182,10 @@
       "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
       "status": "resolved",
       "startsOn": [
-        "ApplicantFeed",
-        "ApplicantLanding",
-        "ApplicantRejected",
-        "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Feed",
-        "FeedBare",
         "FeedCover",
         "FeedDeleting",
         "FeedFar",
@@ -202,7 +197,6 @@
         "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
-        "Main",
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
@@ -215,7 +209,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 31 boards → ReplyEntry",
+        "start · «comment count» on 25 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -225,15 +219,10 @@
         "ReplyCompose",
         "ReplySeal",
         "ReplySettled",
-        "ApplicantFeed",
-        "ApplicantLanding",
-        "ApplicantRejected",
-        "ApplicantWaiting",
         "ComposeExpired",
         "ComposeLanded",
         "DeleteAccountCanceled",
         "Feed",
-        "FeedBare",
         "FeedCover",
         "FeedDeleting",
         "FeedFar",
@@ -245,7 +234,6 @@
         "FeedTopic",
         "FeedUnread",
         "KeyElsewhere",
-        "Main",
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
@@ -1656,7 +1644,7 @@
         "RemoveMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» on 5 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 5 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1680,7 +1668,7 @@
         "ProfileMenu"
       ],
       "steps": [
-        "start · «Mention in a new post» on 1 board → ComposePick",
+        "start · «Mention in a new post» — to ComposePick on 1 board → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1806,7 +1794,6 @@
         "join-with-an-invite",
         "make-your-key",
         "open-a-posts-pictures",
-        "reply-to-a-post",
         "trace-a-score-to-its-records",
         "verify-the-email",
         "visit-an-author",
@@ -1829,7 +1816,6 @@
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
-        "reply-to-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
@@ -1840,7 +1826,6 @@
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
-        "reply-to-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
@@ -1851,7 +1836,6 @@
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
-        "reply-to-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
@@ -2263,7 +2247,6 @@
         "follow-a-citation",
         "guest-turns-applicant",
         "open-a-posts-pictures",
-        "reply-to-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
@@ -2571,7 +2554,6 @@
         "follow-a-citation",
         "guest-turns-applicant",
         "open-a-posts-pictures",
-        "reply-to-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"

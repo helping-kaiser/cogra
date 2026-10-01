@@ -1,6 +1,10 @@
 /* Guest gate · the ask — the pattern behind every account-needing slot
    (readme §13, patterns). A guest who reaches for a stance, a post, a
-   profile, or the chats gets THIS, never a bounce: the read stays exactly
+   profile, or the chats gets THIS, never a bounce — and so does every other
+   slot that needs an account (jakob 2026-10-01): a menu's Save, Cite,
+   Mention and Hide rows (a menu closes first), `Message`, and the comment
+   sheet's foot and its `Reply`. Share and the license terms stay open,
+   because reading needs no account. The read stays exactly
    where it was, under the wash, and the reader picks. Keep browsing closes
    the ask and gives the screen back; Sign in or join is the one committing
    action here and wears the filled button.

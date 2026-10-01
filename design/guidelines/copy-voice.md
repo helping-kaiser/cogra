@@ -557,6 +557,13 @@ publish` stages the post rather than landing it, so the wizard closes onto
 the applicant's own feed with this line, never with `Signed — it's in the
 thread now, still settling.` (jakob 2026-10-01).
 
+**Comments are not a kind that stages** (jakob 2026-10-01: applicants do
+not comment in V1.0). A staged comment would wear `Still settling` for a
+reply that cannot wait as pending, so the comment sheet's foot and a
+comment's `Reply` answer an applicant in place, as the dead Invites
+control does: `Comments open when you're in.` — **flagged for blessing**.
+A guest gets the join prompt there instead.
+
 ## In-flight labels
 
 The failure pack (jakob, 2026-09-30). A commit whose answer has not
