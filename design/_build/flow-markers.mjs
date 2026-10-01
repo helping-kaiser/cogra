@@ -1704,11 +1704,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: "+ Add a tag", tag: "button" },
     { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "signing 3 things", tag: "button" },
+    { n: 11, find: "signing 5 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+    { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so
@@ -2228,6 +2230,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 4, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
+  ],
+  // The standing citation's sheet on an edit — RefPair's controls, and the
+  // removal in the walk-away's slot.
+  RefPairEdit: [
+    { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
+    { n: 2, find: ">Remove citation</button>", tag: "button" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
   ],
 });
 

@@ -76,7 +76,8 @@
    IT STAGES, AND THE SEAL SIGNS. The sheet closes, the chip leaves the row, and
    what stands in its place is the `Withdrawn:` line the edit body already
    carries — one more action for the acts card, which the edit seals together
-   with everything else (item 37). Nothing asks twice. The seal is the willing
+   with everything else (item 37) — and that line's `Undo`, or picking the name
+   again, takes the withdrawal back (audit K5.3). Nothing asks twice. The seal is the willing
    act, and a confirmation over a change that is staged and reversible would be
    a second layer guarding nothing.
 
