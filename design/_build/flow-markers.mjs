@@ -2063,6 +2063,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="Give your opinion on @noor"', tag: "button" },
     { n: 3, find: ">Choose your opinion on @noor</button>", tag: "button" },
   ],
+  VouchAskUnusable: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
   VouchAskPad: [
     { n: 1, find: 'aria-label="How vouching works"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion', tag: "div" },

@@ -2135,6 +2135,15 @@
       "page": "profile"
     },
     {
+      "file": "VouchAskUnusable.dc.html",
+      "title": "Invites · an ask no longer answerable",
+      "x": 4800,
+      "y": 6795,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "RejectAllConfirm.dc.html",
       "title": "Invites · closing a link's applications",
       "x": 4320,
