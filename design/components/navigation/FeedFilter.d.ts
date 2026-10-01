@@ -25,8 +25,9 @@ export interface FeedFilterValue {
 /**
  * The feed's filter: one chip-shaped trigger that reads back the current view,
  * and a sheet holding the whole thing. The trigger sits on the right edge of
- * the `CograBand` and scrolls with it. Applies live — nothing behind a sheet is
- * inert, and a filter with an Apply button makes the reader commit to a guess.
+ * the `CograBand` and scrolls with it. The sheet stages: `Done` commits and the
+ * feed re-queries once; the scrim, a swipe down and Back discard (the sheet law,
+ * readme §4, *Sheets*). `onChange` fires on Done only, with the staged filter.
  *
  * Turning every kind off is allowed: the feed then shows its empty state, which
  * says what is switched off. The control never prevents a choice.
@@ -66,10 +67,9 @@ export interface FeedFilterSheetProps {
    *  row, and the reading the surface owes. Omitted, the sheet is the feed's:
    *  no heading, the "?" in the corner. */
   lead?: JSX.Element;
-  /** The Done row a sheet takes when nothing reacts behind it to be watched.
-   *  Given one, the sheet owns its height, the sections scroll inside it and
-   *  this stays pinned under them. Omitted, the sheet is the feed's: the
-   *  filter applies live and there is nothing to commit. */
+  /** The Done row — `FilterFoot`, the staged reading and the commit. Every
+   *  filter sheet takes one (the sheet law). Given one, the sheet owns its
+   *  height, the sections scroll inside it and this stays pinned under them. */
   foot?: JSX.Element;
   /** The topics the viewer may narrow to — see `FeedFilterProps.topics`. */
   topics?: readonly string[];
@@ -106,6 +106,16 @@ export interface FilterTriggerProps {
 }
 
 export declare function FilterTrigger(props: FilterTriggerProps): JSX.Element;
+
+/** The Done row every filter sheet ends on (the sheet law): a hairline, the
+ *  staged filter's reading in the pill's words, and the commit. */
+export interface FilterFootProps {
+  reading: string;
+  /** Commits the staged filter — the one re-query. */
+  onDone?: () => void;
+}
+
+export declare function FilterFoot(props: FilterFootProps): JSX.Element;
 
 /** Every kind the network ranks and V1.0 serves — Posts, Comments, Profiles,
  *  Tags (readme §13, the V1.0 scope cut). One list, shared by the feed and

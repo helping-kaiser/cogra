@@ -754,7 +754,7 @@ paper over:
   kind or counts them, and once the exceptions stop fitting the band's
   154px they collapse to a count ("3 kinds · 4 changes"), because a pill
   that overflows has told the reader nothing
-  and "far from the default" is the fact that matters there. It applies live — no Apply button asking the reader to guess — and
+  and "far from the default" is the fact that matters there. It stages, and `Done` commits — one re-query per visit (§4, *Sheets*) — and
   switching every kind off is allowed: the feed says what is off rather
   than the chip refusing the tap. No glyph on the trigger: there is no
   filter icon in the inlined set, and an icon could not say "newest".
@@ -1575,7 +1575,7 @@ The rulings that put it on screen:
   uses. The filter sheet opens taller than the sheet default (88%)
   so the whole control is present.
 - **The sheet carries its own "?"** (the pads' precedent): "The
-  filter" dialog explains combining, live-apply, the seen toggle,
+  filter" dialog explains combining, the `Done` that commits, the seen toggle,
   and that the default lives in settings — the settings entry is
   its own design (backlog item 20). `SegmentedFilter` drops to the
   chips' 32px drawn rung: it lives among 32px chips in these
@@ -2096,10 +2096,9 @@ The rulings the layer rests on:
 
 - **A sheet's `Done` advances; its scrim does not.** The explicit Done
   is how a sheet's journey concludes, not a way back. A scrim exit is
-  always `back` — the filter sheets, which apply live and carry no Done
-  of their own, are concluded by a flow declaring that scrim edge as
-  its given end rather than by walking it. A sheet's journey ends
-  there: the signing that may follow is the publishing flow's
+  always `back`, and it discards (§4, *Sheets*); a flow about leaving a
+  sheet unchanged declares that scrim edge as its given end rather than
+  walking it. A sheet's journey ends at its Done: the signing that may follow is the publishing flow's
   conclusion, never the sheet's.
 - **An `advance` must reach something.** A control whose every outcome
   merely informs — the applicant's locked rows answering with a
@@ -3440,8 +3439,7 @@ is a thing the drawing said that the surface would not hold.
   owns its height, the sections scroll inside it, and the Done row —
   the license sheets' third anatomy — is pinned beneath them, clear of
   the safe area the sheet already pads for. Given none it is sized by
-  its content, so the feed's own sheet is unchanged; the feed's filter
-  is the one that applies live, and the one with no `Done`.
+  its content; every filter sheet takes one (§4, *Sheets*).
 - **A confirmation that draws one half reads as the whole.**
   `ChangeEmailConfirm` showed the field for the code and nothing for
   the link waiting at the new address, and `Confirm email change` said

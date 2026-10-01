@@ -19,12 +19,14 @@
    still on screen. The "?" moves with the title onto its own row, which is
    `SheetTitle`'s rule for a sheet that has one.
 
-   IT COMMITS, WHERE THE FEED'S WATCHES. The feed's filter applies live because
-   the list behind it rearranges as the reader presses; over settings nothing
-   reacts, so the sheet takes the Done row — the license sheets' third anatomy:
-   a hairline, the reading, the button, inside the sheet's own inset. The
-   reading is the pill's word, `Posts`, so the row that opened this sheet, the
-   sheet's own foot and the trigger in every feed cannot say different things.
+   IT COMMITS ON DONE, LIKE EVERY SHEET (the sheet law, readme §4, *Sheets*).
+   Chips stage; `Done` saves the default and the row reads it back; the scrim,
+   a swipe down and Back discard, and the default is what it was — the way
+   `SettingsLicense` leaves it. The foot is `FilterFoot`, the license sheets'
+   third anatomy: a hairline, the reading, the button, inside the sheet's own
+   inset. The reading is the pill's word, `Posts`, so the row that opened this
+   sheet, the sheet's own foot and the trigger in every feed cannot say
+   different things.
 
    THE FOOT IS PINNED AND THE SECTIONS SCROLL. Four sections already outrun the
    sheet's 88%, so a commitment placed after them would be the one control a
@@ -55,16 +57,7 @@ export function Screen() {
             </div>
           </>
         }
-        foot={
-          <div style={{ padding: "0 var(--space-6)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-              <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
-                Posts
-              </span>
-              <Button>Done</Button>
-            </div>
-          </div>
-        }
+        foot={<FilterFoot reading="Posts" />}
       />
     </>
   );

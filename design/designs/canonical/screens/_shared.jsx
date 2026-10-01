@@ -50,6 +50,7 @@ const {
   FeedFilter,
   FeedFilterSheet,
   FilterTrigger,
+  FilterFoot,
   FilterSection,
   OrderSection,
   FEED_KINDS,

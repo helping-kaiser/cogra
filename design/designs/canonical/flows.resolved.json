@@ -154,11 +154,11 @@
     },
     {
       "name": "narrow-the-feed",
-      "description": "The band's filter trigger opens the filter sheet; the sheet applies live, and tapping out leaves the reader on the narrowed feed.",
+      "description": "The band's filter trigger opens the filter sheet; the chips stage, and Done commits — the feed re-queries once and the reader lands on the narrowed feed.",
       "status": "resolved",
       "steps": [
         "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
-        "end · FeedSheet · 6 «scrim — tap outside» → FeedNarrowed — narrowed"
+        "end · FeedSheet · 8 «Done» → FeedNarrowed — narrowed — the feed re-queries once"
       ],
       "boards": [
         "Feed",
@@ -539,11 +539,11 @@
     },
     {
       "name": "close-the-filter-unchanged",
-      "description": "The filter sheet opened and shut with nothing touched leaves the feed exactly as it was.",
+      "description": "The filter sheet dismissed leaves the feed exactly as it was — whatever was staged is dropped, and nothing re-queries.",
       "status": "resolved",
       "steps": [
         "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
-        "end · FeedSheet · 6 «scrim — tap outside» → Feed — unchanged"
+        "end · FeedSheet · 6 «scrim — tap outside» → back — the sheet closes and the staged filter is dropped — the feed is what it was, not re-queried; swipe down, Back and Escape the same — the sheet law: nothing staged applies"
       ],
       "boards": [
         "Feed",
@@ -556,7 +556,7 @@
       "status": "resolved",
       "steps": [
         "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
-        "end · FeedSheet · 6 «scrim — tap outside» → FeedNothing — everything off"
+        "end · FeedSheet · 8 «Done» → FeedNothing — everything off — the feed re-queries once"
       ],
       "boards": [
         "Feed",
@@ -570,7 +570,7 @@
       "status": "resolved",
       "steps": [
         "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
-        "end · FeedSheet · 6 «scrim — tap outside» → FeedFar — far from the default"
+        "end · FeedSheet · 8 «Done» → FeedFar — far from the default — the feed re-queries once"
       ],
       "boards": [
         "Feed",
@@ -607,11 +607,11 @@
     },
     {
       "name": "narrow-a-search",
-      "description": "The results' Everything trigger opens the search filter; the sheet applies live, and tapping out leaves the reader on the narrowed results.",
+      "description": "The results' Everything trigger opens the search filter; the chips stage, and Done commits — the search re-queries once and the reader lands on the narrowed results.",
       "status": "resolved",
       "steps": [
         "start · ExploreSearch · 2 «Everything (filter trigger)» → ExploreFilter",
-        "end · ExploreFilter · 5 «scrim — tap outside» → ExploreSearch — the sheet closes"
+        "end · ExploreFilter · 6 «Done» → ExploreSearch — the sheet closes — the search re-queries once, narrowed"
       ],
       "boards": [
         "ExploreSearch",
@@ -2431,7 +2431,9 @@
         "filter-the-feed-to-nothing",
         "narrow-the-feed"
       ],
-      "endpoint": []
+      "endpoint": [
+        "close-the-filter-unchanged"
+      ]
     },
     "FeedTopic": {
       "flows": [

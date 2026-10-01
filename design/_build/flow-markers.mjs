@@ -207,6 +207,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "aria-pressed=", tag: "button", all: true },
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 6, find: ">Done</button>", tag: "button" },
   ],
   ExploreNone: [...searchShell("brackish cartography", 4)],
   Feed: [
@@ -219,10 +220,10 @@ Object.assign(FLOW_MARKERS, {
     ...nav(11),
   ],
   /* The sheet's chips all share via 2, the topic chips included (the topic
-     round): every chip in here applies live and in place, which is one act
-     whatever it narrows, and WHICH feed the reader lands on is what via 6 —
-     the way out — enumerates. The door to the full list is the one new
-     control, so it is the one new number. */
+     round): every chip in here stages in place, which is one act whatever it
+     narrows, and WHICH feed the reader lands on is what via 8 — `Done`, the
+     commit (the sheet law) — enumerates. The door to the full list and the
+     commit each take the next free number. */
   FeedSheet: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button", all: true },
@@ -231,6 +232,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">All your topics</button>", tag: "button" },
+    { n: 8, find: ">Done</button>", tag: "button" },
   ],
   /* The feed narrowed to one topic. Neither card carries a reference, so the
      numbering closes over the slot `FeedNarrowed` keeps for one. */
@@ -1431,6 +1433,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">Done</button>", tag: "button" },
   ],
   // Two password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated

@@ -343,8 +343,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
 - **The filter** (the feed's and search's filter sheets): What you
   let in, and in what order — the kinds combine freely, ranked or
   newest is one choice, and what you've already seen stays out
-  unless you ask for it back. Every change applies as you tap;
-  nothing here is signed or shared. / It lasts until you change it,
+  unless you ask for it back. Nothing changes until you press Done,
+  and nothing here is signed or shared. / It lasts until you change it,
   on this device only. Your default lives in settings.
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
