@@ -227,7 +227,10 @@ both platforms share one string (jakob).** Push's settings talk about
 *when*, not *where* (`Announce new notifications the moment they
 arrive.`), and where the noun is unavoidable the one shared sentence
 names both concretely (`…the notification settings of the browser or
-phone itself`) rather than rendering twice.
+phone itself`) rather than rendering twice. About's key topic is one of
+these: `Everything you publish is signed by a key only you hold.` — no
+noun, one string for both (jakob 2026-10-01, the bare "device" retired;
+the wording **flagged for blessing**).
 
 ## The "?" dialogs
 
