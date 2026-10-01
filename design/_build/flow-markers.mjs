@@ -505,6 +505,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
   ],
+  // Your own comment's menu (the comment-removal round): CommentMenu's rows
+  // keep their numbers — the badge is an identity, not a position — and
+  // Remove takes the next free one.
+  CommentMenuOwn: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">License terms</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Remove</button>", tag: "button" },
+  ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
     { n: 2, find: ">Mention in a new post</button>", tag: "button" },

@@ -420,12 +420,17 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
    points at it exactly the way it would point at anyone else's. It takes the
    reader menu's own position, second, so the thumb finds one row in one place
    on every menu that has it. */
+/* THE AUTHOR'S REMOVAL, one row on every own menu that has it — the post's and
+   the comment's (the comment-removal round). It stands as the LAST of the acts,
+   where the post's menu has always put it: the rarest act, and the one that
+   takes the content away. */
+const REMOVE_ROW = { label: "Remove", onSelect: () => {} };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
-  { label: "Remove", onSelect: () => {} },
+  REMOVE_ROW,
   LICENSE_ROW,
 ];
 const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} }, LICENSE_ROW];
@@ -462,6 +467,17 @@ const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
 const CITED_BY_ROW = { label: "Cited by", onSelect: () => {} };
 
 const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+/* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01): the reader's
+   menu with `Remove` joined as the last of the acts — after Save and Cite,
+   before the two readings, the license closing it. That is `OWN_POST_MENU`'s
+   place for the row, and the one `ChatMessageMenuOwn` already took at message
+   scale.
+
+   NO EDIT ROW AND NO SENSITIVE ROW, though the post's own menu has both. A
+   comment's Edit is a button on its own card (`CommentCard`'s `own`), so a
+   menu row would be a second door to one act; and a comment's sensitive mark
+   rides its edit, which is where the post's row sends the reader too. */
+const OWN_COMMENT_MENU = [...CARD_MENU, REMOVE_ROW, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
