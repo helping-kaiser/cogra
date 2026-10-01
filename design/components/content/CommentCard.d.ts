@@ -80,9 +80,19 @@ export interface CommentCardProps {
   targetShape?: "line" | "thread";
   /**
    * What the `"thread"` head row draws: a post's title over its author's
-   * handle, or a comment's author over its first words; the post's cover.
+   * handle — an untitled post's first words in the title's place — or a
+   * comment's author over its first words; the post's cover. `removed` is a
+   * target whose payload went: the title's place reads the removal mark's
+   * line in the system's voice, and the mark keeps its space empty.
    */
-  targetDetail?: { title: string; sub?: string; cover?: string };
+  targetDetail?: { title: string; sub?: string; cover?: string; removed?: boolean };
+  /**
+   * Folds the words at this many lines, with `More` under them opening them
+   * in place — the caption's precedent. Offered on an estimate from the
+   * column's width, as `PostCard`'s text body is. Off by default; the feed
+   * card passes it.
+   */
+  clampLines?: number;
   /**
    * The card's own door: the words (and the pictures) open it. In the feed,
    * the comment's thread scrolled to it. Things with their own meaning keep it.

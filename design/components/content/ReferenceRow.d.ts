@@ -32,6 +32,14 @@ export interface NodeMarkProps {
    * card's own tone is the tile's default. Defaults to false.
    */
   onCard?: boolean;
+  /**
+   * The thing's payload went (a removed post): the tile keeps its space and
+   * fills with nothing; a person's disc takes `MonogramAvatar`'s `redacted`.
+   * Defaults to false.
+   */
+  redacted?: boolean;
+  /** The mark's edge in px — 32 by default; the score's path trace ends on one at its own avatar size. */
+  size?: number;
   /** The data-node name its placer gives this mark (design ⇄ impl seam 002; renders as attributes only). */
   node?: string;
 }

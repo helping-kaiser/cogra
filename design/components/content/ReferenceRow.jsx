@@ -66,20 +66,30 @@ import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ON
    tone, so a tile drawn on one vanished into it — the `#` on the tag card was
    invisible. `onCard` gives it `surface-container-high`, the tone
    `ContentRow`'s disc already wears on the same card. Everywhere off a card
-   the tile is unchanged. */
-export function NodeMark({ kind, name, src, onCard = false, node }) {
-  if (kind === "person") return <MonogramAvatar name={name} src={src} size="md" node={node} />;
+   the tile is unchanged.
+
+   `redacted` IS A MARK WHOSE PAYLOAD WENT (the closing batch, 2026-10-01):
+   a removed post's cover and words left with the rest of it, so its tile
+   keeps its space and fills with nothing — `MonogramAvatar`'s own rule for
+   a deleted account's disc, which this passes on for a person.
+
+   `size` is the mark's edge in px, 32 by default. The score's path trace
+   ends on the thing it reached at its own avatar size (`PathTrace`), and
+   below 32 the corner steps down a rung, as the trace's tiles always have. */
+export function NodeMark({ kind, name, src, onCard = false, redacted = false, size = 32, node }) {
+  if (kind === "person") return <MonogramAvatar name={name} src={src} size={size === 32 ? "md" : size} redacted={redacted} node={node} />;
   const tile = {
-    height: "32px",
-    width: "32px",
+    height: `${size}px`,
+    width: `${size}px`,
     flex: "none",
     display: "grid",
     placeItems: "center",
-    borderRadius: "var(--radius-small)",
+    borderRadius: size < 32 ? "var(--radius-extra-small)" : "var(--radius-small)",
     background: onCard ? "var(--surface-container-high)" : "var(--surface-container-highest)",
     color: "var(--text-secondary)",
     overflow: "hidden",
   };
+  if (redacted) return <span style={tile} aria-hidden="true" data-node={node} />;
   if (kind === "post" && src) {
     return (
       <span style={tile} aria-hidden="true" data-node={node}>
@@ -88,9 +98,19 @@ export function NodeMark({ kind, name, src, onCard = false, node }) {
     );
   }
   const letter = kind === "topic" ? "#" : kind === "post" ? "T" : null;
+  const small = size < 32;
   return (
-    <span style={{ ...tile, fontFamily: "var(--font-sans)", fontSize: "var(--text-title-medium)", fontWeight: "var(--text-title-medium--font-weight)" }} aria-hidden="true" data-node={node}>
-      {letter ?? <Icon name={NODE_GLYPHS[kind]} size={18} />}
+    <span
+      style={{
+        ...tile,
+        fontFamily: "var(--font-sans)",
+        fontSize: small ? "var(--text-label-large)" : "var(--text-title-medium)",
+        fontWeight: small ? "var(--text-label-large--font-weight)" : "var(--text-title-medium--font-weight)",
+      }}
+      aria-hidden="true"
+      data-node={node}
+    >
+      {letter ?? <Icon name={NODE_GLYPHS[kind]} size={small ? 14 : 18} />}
     </span>
   );
 }

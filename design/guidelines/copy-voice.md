@@ -1745,7 +1745,19 @@ read at the top of the trace.
 **The tag's why-line**: `Reaches you through @ada and @tobias` — blessed.
 Under the tag's name, the people the strongest paths run through, in the
 drill-down's own `Through @ada` words; one person reads `Reaches you through
-@ada`.
+@ada`. Past two people the line names the first and counts the rest:
+`Reaches you through @ada and 3 others` — blessed (jakob 2026-10-01). Where
+the full line would not fit its one line, it compresses to `Through @ada`,
+the strongest path's person — blessed; a handle so long that even that does
+not fit ellipsizes, `ActorChip`'s truncation law ("…").
+
+**The empty tag's line**: `Nothing carries this tag right now.` — where the
+glimpse would stand when nothing carries the tag, `TagPageEmpty`'s own first
+sentence. *New 2026-10-01, flagged for blessing.*
+
+**A comment's head row, over a removed post**: `Removed by its author` in
+the title's place, the removal mark's own line in the system's voice, over
+the author's handle. An untitled post is named there by its first words.
 
 **The tag's glimpse line**: `@tobias · and 2 more` — blessed. Under the
 newest thing's name, its author, then how many more stand behind it; with

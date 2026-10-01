@@ -104,6 +104,16 @@ export function CommentCard({
      first words, `QuotedRow`'s rule — and `onOpenTarget` is its door. */
   targetShape = "line",
   targetDetail,
+  /* A LONG COMMENT FOLDS WHERE IT IS RANKED (the closing batch, jakob
+     2026-10-01: the caption's precedent). In the feed the words fold at
+     `clampLines` with `More` under them, a text control that opens them in
+     place and never navigates — the card itself is the door to the thread.
+     A static render cannot measure, so the opener is offered on an estimate
+     from the same tokens as `PostCard`'s: about half an em to the glyph at
+     `body-medium`, so 51 characters to the card's line and 45 to the
+     thread shape's, which hangs 44px in. Off by default: a thread, a
+     profile's list and a tag's page draw the words whole, as before. */
+  clampLines,
   /* THE CARD'S OWN DOOR (`PostCard`'s `onOpen`, the comment's twin). Where it
      is given, the comment's words are a door: in the feed, to its thread,
      scrolled to it. Everything with its own meaning keeps it — the head row
@@ -150,7 +160,45 @@ export function CommentCard({
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
      and the opinion the reader can still give. */
-  const words = <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>;
+  /* The thread shape needs its detail and its door; without either the card
+     falls back to the line, so a half-specified head row never draws. */
+  const shape = target && onOpenTarget && targetDetail ? targetShape : "line";
+  const [unfolded, setUnfolded] = React.useState(false);
+  const folds = Boolean(clampLines) && String(content ?? "").length > clampLines * (shape === "thread" ? 45 : 51);
+  const words = (
+    <p
+      style={{
+        margin: 0,
+        fontSize: "var(--text-body-medium)",
+        lineHeight: "var(--text-body-medium--line-height)",
+        ...(folds && !unfolded ? { display: "-webkit-box", WebkitLineClamp: clampLines, WebkitBoxOrient: "vertical", overflow: "hidden" } : null),
+      }}
+    >
+      {withMentions(content)}
+    </p>
+  );
+  const opener = folds ? (
+    <button
+      type="button"
+      aria-expanded={unfolded}
+      onClick={() => setUnfolded((shown) => !shown)}
+      className="cg-state cg-focus"
+      style={{
+        alignSelf: "flex-start",
+        border: 0,
+        background: "none",
+        padding: "4px 0",
+        margin: 0,
+        cursor: "pointer",
+        fontFamily: "var(--font-sans)",
+        fontSize: "var(--text-label-medium)",
+        fontWeight: "var(--text-label-medium--font-weight)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {unfolded ? "Less" : "More"}
+    </button>
+  ) : null;
   /* With a door (`onOpen`) the words are a link and the pictures take the
      same tap, `PostCard`'s rule for its media in the feed — one door, no
      control nested in another. */
@@ -167,6 +215,7 @@ export function CommentCard({
       ) : (
         words
       )}
+      {opener}
       {/* A comment is words first and its pictures join them (readme §13) —
           below the words, INSET at the card's medium rung rather than
           full-bleed, and capped at a comment-scale height: the media joins the
@@ -182,9 +231,6 @@ export function CommentCard({
       ))}
     </>
   );
-  /* The thread shape needs its detail and its door; without either the card
-     falls back to the line, so a half-specified head row never draws. */
-  const shape = target && onOpenTarget && targetDetail ? targetShape : "line";
   const shown = redacted ? (
     <RedactedContent {...(redacted === true ? {} : redacted)} />
   ) : sensitive ? (
@@ -269,11 +315,29 @@ export function CommentCard({
           <div style={{ display: "flex", flexDirection: "column" }}>
             {/* THE HEAD ROW — its own door, to what it names (in the feed, the
                 post's detail). Its mark sits on the card, so it takes the
-                card's tile tone (`NodeMark`'s `onCard`). */}
+                card's tile tone (`NodeMark`'s `onCard`). A REMOVED TARGET
+                (`targetDetail.removed`) keeps its row: the payload went, so
+                the mark keeps its space empty and the title's place reads the
+                removal mark's line in the system's voice — `text-secondary`
+                at the body's weight, the register `Deleted account` takes —
+                over the author, who stays. The comment stays readable under
+                it; a node is never deleted, and neither is what answers it. */}
             <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
-              <NodeMark kind={targetKind} src={targetDetail.cover} onCard />
+              <NodeMark kind={targetKind} src={targetDetail.cover} redacted={targetDetail.removed} onCard />
               <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-                <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{targetDetail.title}</span>
+                <span
+                  style={{
+                    fontSize: "var(--text-label-large)",
+                    lineHeight: "var(--text-label-large--line-height)",
+                    fontWeight: targetDetail.removed ? 400 : "var(--text-label-large--font-weight)",
+                    ...(targetDetail.removed ? { color: "var(--text-secondary)" } : null),
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {targetDetail.title}
+                </span>
                 <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{targetDetail.sub}</span>
               </span>
             </button>

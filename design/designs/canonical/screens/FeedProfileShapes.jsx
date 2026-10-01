@@ -11,14 +11,22 @@
      56px.
    · AN OPINION ALREADY HELD. The row's face is the reader's own, as on every
      card.
+   · A DELETED ACCOUNT (the closing batch, jakob 2026-10-01). The husk keeps
+     its records and its standing, so it still ranks: the disc keeps its
+     space and fills with nothing, the name's place reads `Deleted account` in
+     the system's voice, and no handle and no bio stand under it — the
+     redacted actor everywhere (`ActorChip`'s `redacted`, `ProfileDeleted`).
    · A NEGATIVE SCORE. A minus sign and no colour (`ExplainableNumber`): a low
      score is a fact about reach, not a fault.
+
+   GUESTS meet these cards as every card — the face opens `GuestGate` — and
+   no guest board draws one (`ProfileFeedCard`).
 
    A REFERENCE BOARD, like `FeedShapes`: wired nowhere, each card one a reader
    would meet on `FeedKinds`, which carries the wiring, drawn whole in a tall
    `FRAME`. */
 
-export const FRAME = { width: 390, height: 1100 };
+export const FRAME = { width: 390, height: 1300 };
 
 export function Screen() {
   return (
@@ -34,6 +42,7 @@ export function Screen() {
         <ProfileFeedCard person={MIRA} src="inviter.jpg" score="9.40" />
         <ProfileFeedCard person={TOBIAS} bio="Walks the flats before work." score="8.20" />
         <ProfileFeedCard person={SOL} bio="Rubbings, tide tables and the long way round." bundle={mkBundle(0.4, 0.5)} score="6.00" />
+        <ProfileFeedCard person={{ handle: "marlow", displayName: "Marlow" }} redacted score="3.40" />
         <ProfileFeedCard person={{ handle: "kel", displayName: "Kel Moreau" }} bio="Night shifts at the harbour office." score="−1.20" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

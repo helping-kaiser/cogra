@@ -17,6 +17,7 @@ const {
   MonogramAvatar,
   ActorChip,
   HIDE_ACTOR_LABEL,
+  REDACTED_ACTOR_NAME,
   ProfileHeader,
   EmptyState,
   LoadingState,
@@ -3193,10 +3194,38 @@ const FEED_LEAD_TITLE = {
    of it. */
 const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+/* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
+   · AN UNTITLED POST — a text post's title is optional — is named by its
+     first words in the title's place, the way `History` lists one and the
+     quote names a comment: the words are the post.
+   · A REMOVED POST keeps its row, as it keeps its place in every thread:
+     the title's place reads `Removed by its author`, the removal mark's own
+     line, over the author, who stays; its mark keeps its space empty.
+
+   YOUR OWN COMMENT (`own`) is the same card, its ⋮ opening your own menu;
+   nothing else about it changes — the feed card carries no Edit.
+
+   A LONG COMMENT folds at two lines under `More`, the caption's precedent
+   (`FEED_COMMENT_CLAMP_LINES`); the card is still the door to its thread.
+
+   A GUEST meets the card as every card: the face opens `GuestGate` (the
+   guest feed's rule, `Main`), and the reply glyph is not drawn, since
+   `CommentCard` offers a reply only to a reader signed in. Nothing here is
+   drawn for a guest: no guest board shows a comment card. */
+const FEED_COMMENT_CLAMP_LINES = 2;
+const REMOVED_BY_AUTHOR = "Removed by its author";
 const commentTarget = (parent, kind) =>
   kind === "comment"
     ? { kind: "comment", label: `@${parent.author.handle}'s comment`, title: "@" + parent.author.handle, sub: parent.content }
-    : { kind: "post", label: `“${parent.title}” — @${parent.author.handle}`, title: parent.title, sub: "@" + parent.author.handle, cover: parent.media?.[0]?.src };
+    : parent.removed
+      ? { kind: "post", label: `@${parent.author.handle}'s removed post`, title: REMOVED_BY_AUTHOR, sub: "@" + parent.author.handle, removed: true }
+      : {
+          kind: "post",
+          label: `“${parent.title ?? parent.content}” — @${parent.author.handle}`,
+          title: parent.title ?? parent.content,
+          sub: "@" + parent.author.handle,
+          cover: parent.media?.[0]?.src,
+        };
 
 function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false }) {
   const target = commentTarget(parent, parentKind);
@@ -3210,7 +3239,8 @@ function CommentFeedCard({ author, content, timestamp, parent, parentKind = "pos
       target={target.label}
       targetKind={target.kind}
       targetShape="thread"
-      targetDetail={{ title: target.title, sub: target.sub, cover: target.cover }}
+      targetDetail={{ title: target.title, sub: target.sub, cover: target.cover, removed: target.removed }}
+      clampLines={FEED_COMMENT_CLAMP_LINES}
       onOpenTarget={() => {}}
       onOpen={() => {}}
       bundle={bundle}
@@ -3253,25 +3283,46 @@ const FEED_BIO = {
   overflow: "hidden",
 };
 
-function ProfileFeedCard({ person, src, bio, score, bundle }) {
+/* A DELETED ACCOUNT STILL RANKS (the closing batch, jakob 2026-10-01). The
+   husk keeps its records and its standing (erasure.md §3), so it reaches a
+   feed like anyone; only its identity payloads went. The card draws it the
+   way every surface draws a redacted actor (`ActorChip`'s `redacted`): the
+   disc keeps its space and fills with nothing, the name's place reads
+   `Deleted account` in the system's voice, `text-secondary`, and no handle
+   stands under it — the stored form is a uniqueness device, not a name. No
+   bio: it went with the rest. Its ⋮ is `PROFILE_DELETED_MENU` less the share
+   the row carries, and every control names it `this account`.
+
+   A GUEST meets the card as every card: the face opens `GuestGate` (the
+   guest feed's rule, `Main`). No guest board draws one. */
+const FEED_DELETED_PROFILE_MENU = PROFILE_DELETED_MENU.filter((row) => row.label !== "Share this profile");
+
+function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false }) {
+  const handle = redacted ? null : "@" + person.handle;
   return (
     <PostCard
       lead={
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", minWidth: 0 }}>
-          <MonogramAvatar name={person.displayName} src={src} size={56} />
+          <MonogramAvatar name={person.displayName} src={src} size={56} redacted={redacted} />
           <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-            <span style={FEED_LEAD_TITLE}>{person.displayName}</span>
-            <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+            {redacted ? (
+              <span style={{ ...FEED_LEAD_TITLE, color: "var(--text-secondary)" }}>{REDACTED_ACTOR_NAME}</span>
+            ) : (
+              <>
+                <span style={FEED_LEAD_TITLE}>{person.displayName}</span>
+                <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+              </>
+            )}
           </span>
         </span>
       }
-      main={bio ? <p style={FEED_BIO}>{bio}</p> : undefined}
-      targetLabel={"@" + person.handle}
+      main={bio && !redacted ? <p style={FEED_BIO}>{bio}</p> : undefined}
+      targetLabel={handle ?? "this account"}
       bundle={bundle}
       score={score}
       onOpenScore={() => {}}
-      menuItems={FEED_PROFILE_MENU(person.handle)}
-      menuLabel={"More about @" + person.handle}
+      menuItems={redacted ? FEED_DELETED_PROFILE_MENU : FEED_PROFILE_MENU(person.handle)}
+      menuLabel={redacted ? "More about this account" : "More about " + handle}
       onOpen={() => {}}
     />
   );
@@ -3297,9 +3348,34 @@ function ProfileFeedCard({ person, src, bio, score, bundle }) {
    page's own row ends with. A Type has no license, is never cited and is not
    saved, so the card carries no ⋮. The card opens the tag's page.
 
-   THE TAGGED THINGS ARE `TagPage`'s, newest first, the page's order. */
+   THE TAGGED THINGS ARE `TagPage`'s, newest first, the page's order.
+
+   THE WHY-LINE NAMES TWO PEOPLE AT MOST (the closing batch, jakob 2026-10-01).
+   One or two are named — `Reaches you through @ada and @tobias`; past two,
+   the first and a count — `Reaches you through @ada and 3 others`. Where the
+   full line would not fit its one line, it compresses to the drill-down's own
+   `Through @ada`, the strongest path's person; a handle so long that even
+   that does not fit ellipsizes, the `ActorChip` truncation law ("…"). A
+   static render cannot measure, so the compression is chosen on an estimate
+   from the line's own tokens: about half an em to the glyph at `body-small`
+   across the lead's width beside the `#` tile and the age, 46 characters.
+
+   AN EMPTY TAG still ranks — it reaches the reader through people's opinions
+   of it, not through what carries it — so its card keeps the why-line and its
+   glimpse gives way to one quiet line, `Nothing carries this tag right now.`,
+   `TagPageEmpty`'s own first sentence, with no age, since nothing is newest.
+
+   A GUEST meets the card as every card: the face opens `GuestGate`, and so
+   does the compose glyph, as the guest feed's `New post` does (`Main`). No
+   guest board draws one. */
 const TAG_ACT = "Tag a new post with it";
-const reachesThrough = (handles) => `Reaches you through ${handles.map((h) => "@" + h).join(" and ")}`;
+const WHY_LINE_CHARS = 46;
+const TAG_NOTHING_RECENT = "Nothing carries this tag right now.";
+const reachesThrough = (handles) => {
+  const named = handles.map((h) => "@" + h);
+  const full = `Reaches you through ${named.length > 2 ? `${named[0]} and ${named.length - 1} others` : named.join(" and ")}`;
+  return full.length > WHY_LINE_CHARS ? `Through ${named[0]}` : full;
+};
 const SALTMAPS_TAGGED = [
   { kind: "post", title: "Low tide at six tomorrow — anyone walking the flats?", by: TOBIAS, age: "1h" },
   { kind: "post", title: SOL_POST.title, by: SOL, age: "3d", cover: SOL_POST.media[0].src },
@@ -3308,6 +3384,21 @@ const SALTMAPS_TAGGED = [
 
 function TagFeedCard({ name, through, tagged, score, bundle }) {
   const [newest, ...rest] = tagged;
+  const glimpse = newest ? (
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
+      <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
+        {tagged.map((thing) => (
+          <NodeMark key={thing.title} kind={thing.kind} src={thing.cover} onCard />
+        ))}
+      </span>
+      <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
+        <span style={FEED_LEAD_SMALL}>@{newest.by.handle}{rest.length > 0 && ` · and ${rest.length} more`}</span>
+      </span>
+    </span>
+  ) : (
+    <span style={FEED_LEAD_SMALL}>{TAG_NOTHING_RECENT}</span>
+  );
   return (
     <PostCard
       lead={
@@ -3319,20 +3410,8 @@ function TagFeedCard({ name, through, tagged, score, bundle }) {
           </span>
         </span>
       }
-      main={
-        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
-          <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
-            {tagged.map((thing) => (
-              <NodeMark key={thing.title} kind={thing.kind} src={thing.cover} onCard />
-            ))}
-          </span>
-          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
-            <span style={FEED_LEAD_SMALL}>@{newest.by.handle}{rest.length > 0 && ` · and ${rest.length} more`}</span>
-          </span>
-        </span>
-      }
-      timestamp={newest.age}
+      main={glimpse}
+      timestamp={newest?.age}
       targetLabel={name}
       bundle={bundle}
       score={score}
