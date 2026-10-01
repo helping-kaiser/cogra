@@ -32,25 +32,15 @@ export function Screen() {
       <PersonTimeline />
 
       <div style={{ position: "relative", zIndex: 50 }}>
-        <DialogSurface ariaLabel="How opinions build">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-              How opinions build
-            </h2>
-            <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-              An opinion is not one number — it is every pick ever signed from one side toward the other, added up. Each row here is one
-              signed pick, exactly as it was made.
-            </p>
-            <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-              The dial only reaches so far, but the sum underneath keeps counting — so walking something back takes as many picks as
-              building it did. And walking back is not deleting: a pick in the other direction is one more signed record, and the whole
-              history stays readable, right here.
-            </p>
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button>Close</Button>
-            </div>
-          </div>
-        </DialogSurface>
+        <DialogSurface
+          onScrimPress={() => {}}
+          title="How opinions build"
+          body={[
+            "An opinion is not one number — it is every pick ever signed from one side toward the other, added up. Each row here is one signed pick, exactly as it was made.",
+            "The dial only reaches so far, but the sum underneath keeps counting — so walking something back takes as many picks as building it did. And walking back is not deleting: a pick in the other direction is one more signed record, and the whole history stays readable, right here.",
+          ]}
+          actions={<Button>Close</Button>}
+        />
       </div>
     </>
   );

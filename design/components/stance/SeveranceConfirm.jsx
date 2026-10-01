@@ -75,78 +75,69 @@ export function SeveranceConfirm({
   const pickAnchor = pick === null ? null : bundleReadout(pick, sever.zero);
   const read = severanceParts(bundle, targetLabel);
   return (
-    <DialogSurface ariaLabel={title} inline={inline} onScrimPress={onCancel}>
-      <h2
-        style={{
-          margin: 0,
-          fontSize: "var(--text-headline-small)",
-          lineHeight: "var(--text-headline-small--line-height)",
-          fontWeight: "var(--text-headline-small--font-weight)",
-        }}
-      >
-        {title}
-      </h2>
-      {pickAnchor !== null && (
-        <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)" }}>
-          <span aria-hidden="true">
-            Your pick: {pickAnchor.emoji} {formatStancePair(pick)}
-          </span>
-          <span style={SR_ONLY}>{`Your pick: ${pickAnchor.label}, ${formatStanceWords(pick, names)}`}</span>
-        </p>
-      )}
-      <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>
-        {sever.effect(targetLabel)}
-      </p>
-      {/* The RAW total leads and the cap is derived from it. The other order — the
-          fold first, the sum second — reads as arithmetic that does not work: "my
-          opinion is +1.00, so why does walking it back take +1.40?" */}
-      {read.sentence !== undefined ? (
-        <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{read.sentence}</p>
-      ) : (
-        <>
-          <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-            {sever.sum(targetLabel, read.raw)}
+    /* THE SHELL LAYS IT OUT (readme §11, *Dialogs*): the order below is the
+       body's, and the size, alignment and body colour are `DialogSurface`'s.
+       The scrim, Escape and Back take `Keep it`, the safe answer. */
+    <DialogSurface
+      inline={inline}
+      onScrimPress={onCancel}
+      title={title}
+      body={[
+        pickAnchor !== null && (
+          <p style={{ margin: 0 }}>
+            <span aria-hidden="true">
+              Your pick: {pickAnchor.emoji} {formatStancePair(pick)}
+            </span>
+            <span style={SR_ONLY}>{`Your pick: ${pickAnchor.label}, ${formatStanceWords(pick, names)}`}</span>
           </p>
-          {read.capped && (
-            <p style={{ margin: "4px 0 0", fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
-              Your feed reads it capped at {read.folded}.
-            </p>
-          )}
+        ),
+        sever.effect(targetLabel),
+        /* The RAW total leads and the cap is derived from it. The other order —
+           the fold first, the sum second — reads as arithmetic that does not
+           work: "my opinion is +1.00, so why does walking it back take +1.40?"
+           The two lines are one statement, so they keep a tight 4px apart. */
+        read.sentence !== undefined ? (
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }}>{read.sentence}</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }}>
+            <p style={{ margin: 0 }}>{sever.sum(targetLabel, read.raw)}</p>
+            {read.capped && <p style={{ margin: 0 }}>Your feed reads it capped at {read.folded}.</p>}
+          </div>
+        ),
+        alreadySevered ? "You are already at nothing here." : cost,
+        /* A FAILED SIGNING RE-RAISES ITS OWN SURFACE WITH RETRY (jakob, the
+           failure pack). The dialog never closed — the act waits for its
+           answer — so the fault line stands above the pair and the
+           commitment's own slot reads `Retry`: the same act, asked again, from
+           where it was asked. The safe action keeps its place. */
+        failed && (
+          <p role="alert" style={{ margin: 0, color: "var(--text-failure)" }}>
+            That didn&apos;t send. Try again.
+          </p>
+        ),
+      ].filter(Boolean)}
+      actions={
+        <>
+          {/* IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING (jakob, the failure
+              pack): the family's own present participle — "Walking it back…",
+              "Disconnecting…" — and the control inert, never dimmed. Dimming is
+              kept for the one true refusal, a bundle already at nothing. */}
+          <button
+            type="button"
+            disabled={alreadySevered}
+            onClick={busy ? undefined : onConfirm}
+            aria-busy={busy || undefined}
+            aria-disabled={busy || undefined}
+            className={BUTTON_CLASS}
+            style={buttonStyle({ variant: "text", disabled: alreadySevered, busy })}
+          >
+            {busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control}
+          </button>
+          <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary" })}>
+            Keep it
+          </button>
         </>
-      )}
-      <p style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)" }}>
-        {alreadySevered ? "You are already at nothing here." : cost}
-      </p>
-      {/* A FAILED SIGNING RE-RAISES ITS OWN SURFACE WITH RETRY (jakob, the
-          failure pack). The dialog never closed — the act waits for its
-          answer — so the fault line stands above the pair and the
-          commitment's own slot reads `Retry`: the same act, asked again, from
-          where it was asked. The safe action keeps its place. */}
-      {failed && (
-        <p role="alert" style={{ margin: "8px 0 0", fontSize: "var(--text-body-medium)", color: "var(--text-failure)" }}>
-          That didn&apos;t send. Try again.
-        </p>
-      )}
-      <div style={{ marginTop: "var(--space-6)", display: "flex", justifyContent: "flex-end", gap: "var(--space-2)" }}>
-        {/* IN FLIGHT THE LABEL SAYS WHAT IS HAPPENING (jakob, the failure
-            pack): the family's own present participle — "Walking it back…",
-            "Disconnecting…" — and the control inert, never dimmed. Dimming is
-            kept for the one true refusal, a bundle already at nothing. */}
-        <button
-          type="button"
-          disabled={alreadySevered}
-          onClick={busy ? undefined : onConfirm}
-          aria-busy={busy || undefined}
-          aria-disabled={busy || undefined}
-          className={BUTTON_CLASS}
-          style={buttonStyle({ variant: "text", size: "sm", disabled: alreadySevered, busy })}
-        >
-          {busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control}
-        </button>
-        <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary", size: "sm" })}>
-          Keep it
-        </button>
-      </div>
-    </DialogSurface>
+      }
+    />
   );
 }

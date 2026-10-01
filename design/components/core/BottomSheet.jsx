@@ -66,6 +66,42 @@ import React from "react";
    own scrolling. */
 const SHEET_CEILING = "calc(100% - 72px - env(safe-area-inset-top, 0px))";
 
+/* FOCUS IN, CONTAINED, RETURNED (readme §10) — every modal surface's, the sheet's
+   and the dialog's alike. While `active`, focus moves to the surface, Tab cycles
+   inside it, and Escape asks `onEscape` for the way out (a sheet's discard, a
+   dialog's safe answer); when it ends, focus goes back to whatever held it
+   before — the control that opened the surface. */
+const FOCUS_STOPS = 'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+export function useModalFocus(surfaceRef, active, onEscape) {
+  const escape = React.useRef(onEscape);
+  escape.current = onEscape;
+  React.useEffect(() => {
+    if (!active) return undefined;
+    const opener = document.activeElement;
+    if (surfaceRef.current) surfaceRef.current.focus();
+    const onKey = (event) => {
+      if (event.key === "Escape" && escape.current) escape.current();
+      if (event.key !== "Tab" || !surfaceRef.current) return;
+      const stops = surfaceRef.current.querySelectorAll(FOCUS_STOPS);
+      if (stops.length === 0) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener && typeof opener.focus === "function") opener.focus();
+    };
+  }, [active, surfaceRef]);
+}
+
 /* `stacked` is the sheet that opens over another sheet — the comment's menu and
    the comment's license, both over the comments thread. A SHEET OVER A SHEET IS
    DRAWN AS LAYERS. Left flat, the upper sheet's wash resolves beneath the lower
@@ -95,35 +131,8 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
     return () => clearTimeout(timer);
   }, [open, shown]);
 
-  /* FOCUS IN, CONTAINED, RETURNED (readme §10). Opening moves focus to the
-     sheet; Tab cycles inside it; closing hands focus back to whatever held it
-     before — the control that opened the sheet. */
   const surfaceRef = React.useRef(null);
-  React.useEffect(() => {
-    if (!open || inline) return undefined;
-    const opener = document.activeElement;
-    if (surfaceRef.current) surfaceRef.current.focus();
-    const onKey = (event) => {
-      if (event.key === "Escape" && onClose) onClose();
-      if (event.key !== "Tab" || !surfaceRef.current) return;
-      const stops = surfaceRef.current.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-      if (stops.length === 0) return;
-      const first = stops[0];
-      const last = stops[stops.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      if (opener && typeof opener.focus === "function") opener.focus();
-    };
-  }, [open, inline, onClose]);
+  useModalFocus(surfaceRef, open && !inline, onClose);
 
   /* The wash's layer; the surface rides one above it, so a stacked sheet's wash
      clears the sheet below instead of sliding under it. */

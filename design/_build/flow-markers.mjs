@@ -713,6 +713,7 @@ Object.assign(FLOW_MARKERS, {
   ComposeDraftDiscard: [
     { n: 1, find: ">Discard it</button>", tag: "button" },
     { n: 2, find: ">Keep the draft</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   ComposeSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1616,6 +1617,7 @@ Object.assign(FLOW_MARKERS, {
   GuestGate: [
     { n: 1, find: ">Keep browsing</button>", tag: "button" },
     { n: 2, find: ">Sign in or join</button>", tag: "button", all: true },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
 });
 
@@ -1818,6 +1820,7 @@ Object.assign(FLOW_MARKERS, {
   SealDiscardConfirm: [
     { n: 1, find: ">Discard it</button>", tag: "button" },
     { n: 2, find: ">Keep the draft</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   PadFailed: [
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
@@ -1866,6 +1869,7 @@ Object.assign(FLOW_MARKERS, {
   DiscardConfirm: [
     { n: 1, find: ">Keep writing</button>", tag: "button" },
     { n: 2, find: ">Discard</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
 });
 

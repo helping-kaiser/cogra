@@ -800,7 +800,7 @@
 
     { "from": "ReplyPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "ReplyPadHelp", "case": "the reply pad's own topic — the post pad's text says the opposite of what is true here" }] },
     { "from": "ReplyPadHelp", "via": 1, "kind": "back", "label": "Close", "to": [{ "board": "ReplyPad" }] },
-    { "from": "ReplyPadHelp", "via": 2, "kind": "back", "label": "scrim — press outside", "to": [{ "board": "ReplyPad" }] },
+    { "from": "ReplyPadHelp", "via": 2, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "board": "ReplyPad" }] },
     { "from": "ReplyPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
     { "from": "ReplyPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "ReplySeal", "case": "nothing staged" }, { "board": "ReplySealComment", "case": "nothing staged — the seal that answers a comment" }] },
     { "from": "ReplyPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "ReplySeal", "case": "the adjusted stance on the seal" }, { "board": "ReplySealComment", "case": "the adjusted stance on the seal — the seal that answers a comment" }] },
@@ -862,7 +862,7 @@
     { "from": "ReplyKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
     { "from": "ReplyKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
     { "from": "ReplyKeyAbsent", "via": 3, "kind": "back", "label": "Not now", "to": [{ "terminal": "back", "case": "the notice closes — the thread as it was, nothing written, nothing kept" }] },
-    { "from": "ReplyKeyAbsent", "via": 4, "kind": "back", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the notice closes — the thread as it was, nothing written, nothing kept" }] },
+    { "from": "ReplyKeyAbsent", "via": 4, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the notice closes — the thread as it was, nothing written, nothing kept" }] },
 
     { "from": "ReplySealKeyAbsent", "via": 1, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
     { "from": "ReplySealKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "restored — back to this seal, the reply intact" }] },
@@ -870,6 +870,7 @@
 
     { "from": "DiscardConfirm", "via": 1, "kind": "back", "label": "Keep writing", "to": [{ "terminal": "back", "case": "the dialog closes — back to the stage it covered" }] },
     { "from": "DiscardConfirm", "via": 2, "kind": "cancel", "label": "Discard", "to": [{ "board": "ReplyEntry", "case": "from a reply — the thread" }, { "board": "ReplyMedia", "case": "from the edit — the thread" }] },
+    { "from": "DiscardConfirm", "via": 3, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the safe answer, Keep writing's — the dialog closes, nothing discarded" }] },
 
     { "from": "ComposePick", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
     { "from": "ComposePick", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, no confirmation" }] },
@@ -1050,6 +1051,7 @@
 
     { "from": "ComposeDraftDiscard", "via": 1, "kind": "cancel", "label": "Discard it", "to": [{ "board": "ComposePick", "case": "the draft discarded — the roll comes live and a fresh pick begins, the card's own Discard said from the dialog" }] },
     { "from": "ComposeDraftDiscard", "via": 2, "kind": "back", "label": "Keep the draft", "to": [{ "terminal": "back", "case": "the dialog closes — the draft stands, and the card behind it still offers Continue" }] },
+    { "from": "ComposeDraftDiscard", "via": 3, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the safe answer, Keep the draft's — the dialog closes and the draft stands" }] },
 
     { "from": "EditCompose", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the edit began" }] },
     { "from": "EditCompose", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — draft kept" }] },
@@ -1319,14 +1321,14 @@
 
     { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "RemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
-    { "from": "RemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
+    { "from": "RemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
     { "from": "CommentRemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "CommentRemoved", "case": "the visible mark — the comment keeps its place in the thread, never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "CommentRemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the thread as it was" }] },
-    { "from": "CommentRemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
+    { "from": "CommentRemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
 
     { "from": "SeveranceConfirm", "via": 1, "kind": "advance", "label": "Walk it back", "to": [{ "terminal": "back", "case": "signed — the bundle goes to nothing, and the signed line names where it left the reader" }, { "terminal": "self", "case": "not signed — the dialog stays up, the fault line above its pair, and the commitment's slot reads Retry" }] },
     { "from": "SeveranceConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the pick is still parked on the pad beneath it" }] },
-    { "from": "SeveranceConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing signed" }] },
+    { "from": "SeveranceConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing signed" }] },
 
     { "from": "Removed", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from — the layer law: the state they left, exactly — and the label names that origin by the post detail's noun table (readme §13, the navigation-and-sheets round) — `Back to feed`, `Back to the search`, `Back to Saved`, `Back to History`, `Back to Notifications`, `Back to your profile`, `Back to the profile`, `Back to #<thattag>`, `Back to the post`, `Back to the stream`; a cold entry with no history lands on Feed under `Back to feed`, the state the boards draw" }] },
     { "from": "Removed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -1583,6 +1585,7 @@
 
     { "from": "GuestGate", "via": 1, "kind": "back", "label": "Keep browsing", "to": [{ "terminal": "back", "case": "the ask closes — the read stays where it was" }] },
     { "from": "GuestGate", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
+    { "from": "GuestGate", "via": 3, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the safe answer, Keep browsing's — the ask closes and the read stays where it was" }] },
 
     { "from": "NetworkError", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ComposeLanded", "case": "reaches this time — the exemplar's signed landing" }, { "terminal": "self", "case": "still offline — the fault stays in place", "info": true }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "a cited post that never landed — its row says so, with Remove it (master)" }, { "board": "SealFaultBug", "case": "any other refusal of one staged act — a bug the picker should have blocked: the notice owns it, with Try again, Report a problem and Discard the post (master)" }] },
     { "from": "SealFaultRow", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
@@ -1613,6 +1616,7 @@
     { "from": "SealFaultBug", "via": 9, "kind": "cancel", "label": "Discard the post", "to": [{ "board": "SealDiscardConfirm", "case": "losing the draft asks first" }] },
     { "from": "SealDiscardConfirm", "via": 1, "kind": "cancel", "label": "Discard it", "to": [{ "terminal": "back", "case": "the draft is gone — leaves the flow, back where composing began; nothing was signed" }] },
     { "from": "SealDiscardConfirm", "via": 2, "kind": "back", "label": "Keep the draft", "to": [{ "board": "SealFaultBug", "case": "the dialog closes — the seal stands as it was, its three ways out still offered" }] },
+    { "from": "SealDiscardConfirm", "via": 3, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "board": "SealFaultBug", "case": "the safe answer, Keep the draft's — the dialog closes and the seal stands as it was" }] },
     { "from": "PadFailed", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "PadFailed", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap moves the pick — Retry then signs the pick the pad shows" }] },
     { "from": "PadFailed", "via": 3, "kind": "advance", "label": "Walk it back", "to": [{ "board": "SeveranceConfirm", "case": "the explicit route — the walk-away is its own act, untouched by the failed one" }] },
@@ -1629,7 +1633,7 @@
     { "from": "PadKeyAbsent", "via": 4, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "nothing is kept — the pick is dropped, as StanceControl's outside press drops one" }] },
 
     { "from": "HelpDialog", "via": 1, "kind": "back", "label": "Close", "to": [{ "terminal": "back", "case": "the dialog closes — back to the screen that asked" }] },
-    { "from": "HelpDialog", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
+    { "from": "HelpDialog", "via": 2, "kind": "back", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
     { "from": "Profile", "via": 1, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "Profile", "via": 2, "kind": "detour", "label": "profile overflow ⋮", "to": [{ "board": "ProfileOwnMenu", "case": "your own profile's sheet — the two private lists and the share row" }] },
     { "from": "Profile", "via": 3, "kind": "advance", "label": "settings gear", "to": [{ "board": "Settings" }] },
@@ -1992,11 +1996,11 @@
 
     { "from": "RejectConfirm", "via": 1, "kind": "advance", "label": "Close it", "to": [{ "board": "Invites", "case": "the row leaves this inviter's list and the applicant is told — their account stays a signed-in reader, and any other member can still vouch them in" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "RejectConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the application is still waiting" }] },
-    { "from": "RejectConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] },
+    { "from": "RejectConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] },
 
     { "from": "RejectAllConfirm", "via": 1, "kind": "advance", "label": "Close them", "to": [{ "board": "Invites", "case": "every application still waiting on that link leaves this list at once and each person is told — the sweep passes over the ones already closed, and any member can still vouch any of them in" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "RejectAllConfirm", "via": 2, "kind": "cancel", "label": "Keep them", "to": [{ "terminal": "back", "case": "the dialog closes — the group is still waiting, all of it" }] },
-    { "from": "RejectAllConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] },
+    { "from": "RejectAllConfirm", "via": 3, "kind": "cancel", "label": "scrim — press outside, or system Back", "to": [{ "terminal": "back", "case": "the dialog closes, nothing closed" }] },
 
     { "from": "ApplicantRejected", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "ApplicantRejected", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },

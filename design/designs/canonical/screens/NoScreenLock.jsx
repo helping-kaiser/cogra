@@ -18,36 +18,17 @@ export function Screen() {
   return (
     <>
       <SettingsBackupBody app />
-      <DialogSurface ariaLabel="This phone has no screen lock">
-        <h2
-          style={{
-            margin: 0,
-            fontSize: "var(--text-headline-small)",
-            lineHeight: "var(--text-headline-small--line-height)",
-            fontWeight: "var(--text-headline-small--font-weight)",
-          }}
-        >
-          This phone has no screen lock
-        </h2>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
-          Anyone who picks it up could see your key or replace your recovery code. You can go on, or set a screen lock
-          first.
-        </p>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 24 }}>
-          <Button variant="text" size="sm">
-            Go on anyway
-          </Button>
-          <Button size="sm">Cancel</Button>
-        </div>
-      </DialogSurface>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="This phone has no screen lock"
+        body="Anyone who picks it up could see your key or replace your recovery code. You can go on, or set a screen lock first."
+        actions={
+          <>
+            <Button variant="text">Go on anyway</Button>
+            <Button>Cancel</Button>
+          </>
+        }
+      />
     </>
   );
 }

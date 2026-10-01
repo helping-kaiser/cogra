@@ -18,23 +18,15 @@ export function Screen() {
     <>
       <ComposeSealBody />
 
-      <DialogSurface ariaLabel="How signing works">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            How signing works
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They
-            sign together: all of them land, or none does.
-          </p>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Each signing is paid for — the cost is real, so each one still counts.
-          </p>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button>Close</Button>
-          </div>
-        </div>
-      </DialogSurface>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="How signing works"
+        body={[
+          "Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does.",
+          "Each signing is paid for — the cost is real, so each one still counts.",
+        ]}
+        actions={<Button>Close</Button>}
+      />
     </>
   );
 }

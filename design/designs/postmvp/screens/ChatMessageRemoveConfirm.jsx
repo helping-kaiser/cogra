@@ -19,21 +19,20 @@ export function Screen() {
   return (
     <>
       <ChatThreadBody />
-      <DialogSurface ariaLabel="Remove this message?">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Remove this message?
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Its words and anything it carries leave every reader's view. A visible mark stays in their place — “Removed by its author” — and replies to it keep pointing there.
-          </p>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>This is immediate and permanent.</p>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Remove this message?"
+        body={[
+          "Its words and anything it carries leave every reader's view. A visible mark stays in their place — “Removed by its author” — and replies to it keep pointing there.",
+          "This is immediate and permanent.",
+        ]}
+        actions={
+          <>
             <Button variant="text">Remove</Button>
             <Button>Keep it</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </>
+        }
+      />
     </>
   );
 }

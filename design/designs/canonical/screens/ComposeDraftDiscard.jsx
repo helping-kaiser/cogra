@@ -38,21 +38,17 @@ export function Screen() {
   return (
     <>
       <ComposeDraftBody />
-      <DialogSurface ariaLabel="Discard your draft?">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Discard your draft?
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing
-            that loses it.
-          </p>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Discard your draft?"
+        body="Picking pictures starts a new post, and this draft is what stands in the way. Discarding is the only thing that loses it."
+        actions={
+          <>
             <Button variant="text">Discard it</Button>
             <Button>Keep the draft</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </>
+        }
+      />
     </>
   );
 }

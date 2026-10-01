@@ -19,20 +19,17 @@ export function Screen() {
   return (
     <>
       <ChatPickerBody />
-      <DialogSurface ariaLabel="You already have a chat with Ada Okonkwo">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            You already have a chat with Ada Okonkwo
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Carry on where you left off, or start a separate chat — you can have more than one with the same person.
-          </p>
-          <div style={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 8 }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="You already have a chat with Ada Okonkwo"
+        body="Carry on where you left off, or start a separate chat — you can have more than one with the same person."
+        actions={
+          <>
             <Button variant="text">Start a new chat</Button>
             <Button>Open that chat</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </>
+        }
+      />
     </>
   );
 }

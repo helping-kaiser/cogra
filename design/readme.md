@@ -1032,8 +1032,8 @@ spec: the title in `headline-small`, the body in `body-medium` on
 24px from body to actions, and the actions at the default button size,
 aligned to the end. A board passes words and buttons, never a layout,
 so no two dialogs can drift apart. **The scrim and system Back take the safe
-answer** — cancel, keep, stay — never the destructive act, and never an
-answer the dialog does not offer.
+answer** — cancel, keep, stay: the dialog closes and nothing is done —
+never the destructive act.
 
 ### The stance control
 

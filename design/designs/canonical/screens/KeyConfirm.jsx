@@ -12,36 +12,17 @@ export function Screen() {
   return (
     <>
       <KeyPledge />
-      <DialogSurface ariaLabel="Ready to record your code?">
-        <h2
-          style={{
-            margin: 0,
-            fontSize: "var(--text-headline-small)",
-            lineHeight: "var(--text-headline-small--line-height)",
-            fontWeight: "var(--text-headline-small--font-weight)",
-          }}
-        >
-          Ready to record your code?
-        </h2>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
-          The next screen shows your recovery code — 26 characters, shown once, meant only for your eyes. Have somewhere
-          safe ready to keep it, and you stay on that screen until the code is confirmed.
-        </p>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 24 }}>
-          <Button variant="text" size="sm">
-            Cancel
-          </Button>
-          <Button size="sm">Show my code</Button>
-        </div>
-      </DialogSurface>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Ready to record your code?"
+        body="The next screen shows your recovery code — 26 characters, shown once, meant only for your eyes. Have somewhere safe ready to keep it, and you stay on that screen until the code is confirmed."
+        actions={
+          <>
+            <Button variant="text">Cancel</Button>
+            <Button>Show my code</Button>
+          </>
+        }
+      />
     </>
   );
 }

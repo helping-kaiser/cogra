@@ -15,18 +15,17 @@ export function Screen() {
   return (
     <>
       <ReplyDraft />
-      <DialogSurface ariaLabel="Discard this reply?">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Discard this reply?
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>Nothing is kept.</p>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Discard this reply?"
+        body="Nothing is kept."
+        actions={
+          <>
             <Button variant="text">Discard</Button>
             <Button>Keep writing</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </>
+        }
+      />
     </>
   );
 }

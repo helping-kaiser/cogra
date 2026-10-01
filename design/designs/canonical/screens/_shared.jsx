@@ -535,15 +535,17 @@ const REMOVE_CONFIRM_COPY = {
 function RemoveDialog({ kind, overSheet = false }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
-    <DialogSurface ariaLabel={title}>
-      <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>{title}</h2>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{body}</p>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>This is immediate and permanent.</p>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-        <Button variant="text">Remove</Button>
-        <Button>Keep it</Button>
-      </div>
-    </DialogSurface>
+    <DialogSurface
+      onScrimPress={() => {}}
+      title={title}
+      body={[body, "This is immediate and permanent."]}
+      actions={
+        <>
+          <Button variant="text">Remove</Button>
+          <Button>Keep it</Button>
+        </>
+      }
+    />
   );
   return overSheet ? <div style={{ position: "fixed", inset: 0, zIndex: 43 }}>{dialog}</div> : dialog;
 }
