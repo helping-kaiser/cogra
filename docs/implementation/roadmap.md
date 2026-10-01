@@ -173,8 +173,9 @@ event-driven and is not an MVP dependency.
 - **Slice 3.1 — notifications, the minimal cut**: implementing the
   drawn notifications list; no push channel.
 - **Slice 8's erasure half** — self-deletion of content and account
-  ([erasure.md](../instances/erasure.md)). Play's account-deletion
-  policy mandates it; the moderation half waits.
+  ([erasure.md](../instances/erasure.md)), a comment as well as a post
+  (the comment-scale boards are drawn). Play's account-deletion policy
+  mandates it; the moderation half waits.
 - **The conformance workstreams W3–W8** of the 2026-09-08 UI audit,
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
@@ -606,7 +607,10 @@ from the media path and carrying their own doc write-back:
   ranked feed. Deferred elements that land with this rework rather
   than piecemeal before it: the landed-only ("show only settled
   content") control (the `includePending` mechanism is already
-  wired on both clients), the license qualifiers on the feed card
+  wired on both clients; designed as the filter sheet's
+  `Still settling` chip, on by default — `FeedSheet`,
+  [design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions)),
+  the license qualifiers on the feed card
   (already fetched), the author's did-not-land notice
   ([design.md §9](design.md); rides `stagedWrite`/`EXPIRED`), and
   the composer's unchanged-snapshot guard (disable save when the
@@ -726,8 +730,9 @@ from the media path and carrying their own doc write-back:
   7-day grace ([erasure.md](../instances/erasure.md)).
 - Moderation: verdict Tags, payload removal, read-side flags
   ([moderation.md](../instances/moderation.md)).
-- **Hand test:** remove your own post; watch the tombstone appear and
-  the archive row land.
+- **Hand test:** remove your own post and your own comment; watch each
+  tombstone appear in its place, the comment's replies still under it,
+  and the archive rows land.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 9 — Production deployment

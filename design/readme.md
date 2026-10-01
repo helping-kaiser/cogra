@@ -6987,7 +6987,8 @@ to compete got their chooser.
 - **Removing your own comment is V1.0** (jakob 2026-09-25): the comment
   menu carries Remove, the confirm speaks at comment scale, and a
   thread draws the removed comment's mark — the erasure half of the
-  roadmap's slice 8, mandated at launch.
+  roadmap's slice 8, mandated at launch. Drawn in *The comment-removal
+  round*.
 - **`Still settling` joins the filter's "Also show", default on** — the
   landed-only control the slice-3 rework promises.
 - **Topic follow ships whole** — the tag page's row, `YourTopics` and
@@ -7305,6 +7306,81 @@ in-flight state, and the only fault the seal knew was "offline".
   end. `NetworkError` stands on `ComposeSealBody` and renders
   byte-identical. The maps follow the edges. `Feed.md` gains the hold's
   lines, and `ComposeSeal.md` opens with the commit in flight.
+
+### The comment-removal round — 2026-10-01
+
+Removing your own comment is V1.0 (jakob 2026-10-01, the audit's R-1,
+option (a); *The V1.0 scope cut*). It is the erasure half at comment
+scale, drawn in the post's idiom, three boards in a row on the comments
+page.
+
+- **Your own comment's menu carries `Remove`** (`CommentMenuOwn`,
+  `OWN_COMMENT_MENU`). The row stands as the last of the acts: after
+  Save and Cite, before the two readings, with the license closing the
+  menu. That is the own-post menu's place for it, and the place
+  `ChatMessageMenuOwn` takes at message scale. The menu has no Edit
+  row, because the card carries Edit. It has no sensitive row, because
+  a comment's mark rides its edit. Every comment ⋮ edge gains the
+  own-comment case.
+- **The confirm is the post's dialog with the nouns swapped**
+  (`CommentRemoveConfirm`). `RemoveConfirm`'s body moved to `_shared` as
+  `RemoveDialog`, one anatomy keyed by kind, and the post's board renders
+  byte-identical. The comment's dialog uses copy-voice's whole-comment
+  body: the mark keeps *the comment's spot in its thread*. Over the
+  thread it is lifted by `ReplyKeyAbsent`'s layer glue.
+- **The removed comment keeps its place** (`CommentRemoved`, the
+  sheet's `removed`). Comment nodes are never deleted (comment.md §5).
+  The card keeps its author, its time and its place in the order, and
+  `Removed by its author` stands where its words were. The mark's
+  second line names the comment. The two replies under it stay in place
+  and readable. The reader's position holds across the three boards at
+  one offset (`REMOVED_COMMENT_SCROLL`, `ReplySettled`'s `scrolledBy`),
+  so their own comment and its branch are in view.
+- **A removed comment keeps what a removed post keeps.** Its ⋮ goes
+  with the payload, the `Removed` rule. Its author chip, its opinion and
+  its Reply stay, the comment-scale twin of the removed post's open
+  thread.
+- **The comment register points at the drawn confirm.** In post-MVP,
+  `CommentHistoryOwn`'s `Remove the whole comment` hands off to
+  canonical's `CommentRemoveConfirm`, as the post's register always
+  handed off to `RemoveConfirm`.
+- **The gate**: 229 → **232 screens**, 1618 → **1636 edges**, 1 gap,
+  **flows 64**, every one resolved. The witness was re-blessed once,
+  deliberately: `remove-your-comment` joins `remove-your-post`, and
+  `cite-a-post`'s census grew by the own-comment menu. `ReplyEntry.md`
+  gains the mark's line and the kept-replies invariant.
+
+### The morning fixes — 2026-10-01
+
+Small rulings jakob made in one sitting.
+
+- **Both pickers end in `Done`** (jakob: "'Done' is my word of choice
+  there as you are 'done' adding hashtags"). `TagPicker`, its two
+  states and `ReferencePicker` carry the full-width foot every wizard
+  stage wears. `Done` and the header back are one leave: both return to
+  the composer with every staged pick kept, and `Done` is the
+  affirmative twin, because a back arrow reads as an abort. On the
+  refused name it still leaves, adding nothing.
+- **The reply composer's words are a field.** `ReplyDraft` and the
+  reply's five media states draw `WordsBody`, the growing body box, at
+  a three-line minimum (`CommentEdit`'s own) under the growth law, with
+  a comment's 2,000-character cap.
+- **The post detail lives on Feed, the avatar pair on Profile.** The
+  detail view, the reader's menu at both widths, the license and
+  opinions sheets and `CitedBy` move to the Feed & Search page, and the
+  profile picture's crop and seal to Profile. Media keeps the video and
+  picture boards.
+- **`Still settling` joins "Also show", on by default** (the scope
+  cut's chip, drawn). Off, the feed keeps to what has landed and the
+  trigger reads `settled only`. Every drawn feed is unchanged.
+- **A clip's poster reaches the canvas.** The canvas editor resolves a
+  board's pictures only through `src` and `url()`, so a clip's
+  `poster` drew an empty plate there. The shell now lays the poster
+  under each clip as a picture (`posterLayer`), and the clip still
+  paints over it wherever it renders.
+- **The gate**: 229 screens, 1618 → **1622 edges** (the four `Done`s),
+  1 gap, **flows 63**, every one resolved, the witness not re-blessed.
+  The maps and the canvas manifests follow the moved boards.
 
 ### The failure fixes and the support stack — 2026-10-01
 

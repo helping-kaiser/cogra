@@ -307,7 +307,7 @@
       "via": 2,
       "kind": "advance",
       "label": "Remove the whole comment",
-      "to": [{ "board": "VersionRemoveConfirm", "case": "the think-twice dialog at whole-comment scale (master — the post boards' dialog; no comment confirm is drawn) — every version goes at once and the comment keeps its place in the thread, wearing the mark" }]
+      "to": [{ "terminal": "canonical", "case": "the comment's own think-twice dialog, canonical's CommentRemoveConfirm — every version goes at once and the comment keeps its place in the thread, wearing the mark" }]
     },
     {
       "from": "CommentHistoryOwn",

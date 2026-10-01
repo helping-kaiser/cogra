@@ -6,7 +6,14 @@
    IT OFFERS POSTS, COMMENTS AND PROFILES (readme §13, the V1.0 scope cut,
    2026-09-25): a V1.0 reference points at a person, a post or a comment — the
    contract's `ReferenceTarget` union, read as the ruling — so no row offers a
-   kind that cannot be cited, and its filter holds those three kinds. */
+   kind that cannot be cited, and its filter holds those three kinds.
+
+   `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01, carried here by
+   the shared anatomy `TagPicker` names). Both return to the composer the
+   picker was opened from, every staged reference kept; `Done` is the
+   affirmative twin, because a back arrow reads as an abort to a reader who has
+   finished citing. It is the full-width foot every wizard stage wears
+   (`ReplyDraft`'s `Next`). */
 export function Screen() {
   return (
     <>
@@ -20,6 +27,9 @@ export function Screen() {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+      </div>
+      <div style={{ flex: "none", padding: "8px 24px 24px" }}>
+        <Button style={{ width: "100%" }}>Done</Button>
       </div>
     </>
   );

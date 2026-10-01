@@ -25,7 +25,11 @@
 
    A SPACE IS THE REFUSAL DRAWN because it is the one a reader reaches by
    habit — names are written with spaces everywhere else in the product. The
-   other half of the gate is length (128), which refuses in the same line. */
+   other half of the gate is length (128), which refuses in the same line.
+
+   `Done` STILL LEAVES (jakob, 2026-10-01; `TagPicker`). It is the header back's
+   affirmative twin, the same leave to the composer with every staged tag kept;
+   the refused name stages nothing, so nothing is added on the way out. */
 export function Screen() {
   return (
     <>
@@ -53,6 +57,9 @@ export function Screen() {
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
+      </div>
+      <div style={{ flex: "none", padding: "0 24px 24px" }}>
+        <Button style={{ width: "100%" }}>Done</Button>
       </div>
     </>
   );

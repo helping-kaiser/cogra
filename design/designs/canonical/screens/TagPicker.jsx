@@ -55,7 +55,13 @@
    one they do not.
 
    NO SKY ENTRY AND NO BOTTOM NAV — picking is a task, not the tab, which is
-   `ReferencePicker`'s own reason. */
+   `ReferencePicker`'s own reason.
+
+   `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01). Both return to
+   the composer the picker was opened from, every staged tag kept; `Done` is the
+   affirmative twin, because a back arrow reads as an abort to a reader who has
+   finished adding tags. It is the full-width foot every wizard stage wears
+   (`ReplyDraft`'s `Next`), and every state of both pickers carries it. */
 export function Screen() {
   return (
     <>
@@ -73,6 +79,9 @@ export function Screen() {
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
         </p>
+      </div>
+      <div style={{ flex: "none", padding: "0 24px 24px" }}>
+        <Button style={{ width: "100%" }}>Done</Button>
       </div>
     </>
   );

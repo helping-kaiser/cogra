@@ -1330,8 +1330,10 @@ change-histories round*; `copy-voice.md` carries the words).
    opinion` line.
 
 The chat container's own chronicle is drawn: the chat details round's
-`ChatHistory` (post-MVP). What is still owed: the comment master carries
-no redaction state, so a removed comment version has no mark to draw yet.
+`ChatHistory` (post-MVP). `CommentCard` carries the redaction state
+(`redacted`): a removed comment version wears the mark in
+`CommentHistoryOwn` (post-MVP), and a removed comment in its thread in
+`CommentRemoved` (readme §13, *The comment-removal round*).
 
 ### 35 · Video playback — decisions the transition fix surfaced · *design* · **ruled**
 
@@ -3558,8 +3560,11 @@ The application queue, in order:
    payer-neutral signing copy — new strings to copy-voice for
    blessing.
 5. **New drawings**: comment removal at comment scale (menu row,
-   confirm, the removed comment's mark in a thread); the `Still
-   settling` chip under "Also show".
+   confirm, the removed comment's mark in a thread) *(drawn
+   2026-10-01 on jakob's R-1 ruling — readme §13, the comment-removal
+   round: `CommentMenuOwn`, `CommentRemoveConfirm`,
+   `CommentRemoved`)*; the `Still settling` chip under "Also show"
+   *(drawn 2026-10-01, on by default, `FeedSheet`)*.
 6. **The three feed cards** (comment, profile, tag in the feed)
    *(drawn 2026-09-30, jakob's fifteen-first ruling; `FeedKinds`,
    readme §13 *The three feed cards*, calls flagged for his review)*.
@@ -3570,7 +3575,8 @@ The application queue, in order:
    push + histories, minted new). The domain — screens, graph,
    flows — stays whole; a later re-split (chats alone, when it
    crowds) is the same canvases.json gesture again.
-8. **The applicant mechanism round** (once-each staging kept):
+8. **The applicant mechanism round** *(done 2026-10-01, item 108)*
+   (once-each staging kept):
    About/auth.md/contract corrections plus the three owed rulings
    (visibility of a staged act, its signing moment, its fate on an
    unapproved close).
@@ -3578,14 +3584,14 @@ The application queue, in order:
 The audit's master findings (325 entries, 15 clusters) queue behind
 this item's work as their own review rounds with jakob.
 
-### 108 · The applicant mechanism's corrections · *design + docs* · **corrected 2026-09-30, About's lines await blessing**
+### 108 · The applicant mechanism's corrections · *design + docs* · **closed 2026-10-01**
 
 The scope cut kept once-each staging (item 107; readme §13 carries
 the three mechanism rulings — author-only visibility, sign-at-approval
 in the vouch-in batch, drafts-on-close). auth.md's applicant
 paragraph describes once-each staging and the three rulings; About's
 *Getting in, and being let in* says what an applicant can write and
-what becomes of it — new copy, candidates to jakob for blessing. The
+what becomes of it, in lines jakob blessed on 2026-10-01. The
 contract's staging surface is relayed to the implementation session
 as a contract need, with the audit's K3 findings. The DeleteAccount
 wallet bullet left V1.0 the same day (the page names what exists);
@@ -3664,7 +3670,12 @@ media row became `composeDetails.mediaRow` in the same change;
 and sheets are not on that board), so its lines keep their words until
 a registered board draws them.
 
-### 112 · Copy-voice residues of the behavior home · *copy* · **filed 2026-09-30**
+### 112 · Copy-voice residues of the behavior home · *copy* · **closed 2026-10-01**
+
+**Closed** (jakob 2026-10-01, as recommended): *Ages* names the
+chronicle's datelines and the already-published marker as the
+dateline form's owners, and the video sentence is blessed as it
+stands, its annotation gone.
 
 Two threads the behavior-home round (#24) surfaced and jakob's
 merge did not close. First: *Ages* still reads as if every

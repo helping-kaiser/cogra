@@ -66,12 +66,24 @@ export const FEED_FORMS = [
 
 export const FEED_ORDER = FILTER_ORDER;
 
+/* WHAT THE FEED ALSO ADMITS. `Sensitive` and `Removed` are off until asked
+   for. `Still settling` is ON by default (jakob, 2026-10-01; readme §13, the
+   V1.0 scope cut): content authored and not yet landed reaches the feed
+   wearing its pending marker, which is the feed every reader has always had.
+   Switched off, the feed keeps to what has landed — the landed-only view. Its
+   label is the pending marker's own words, so the chip names exactly what it
+   lets in. */
 export const FEED_ALSO = [
   { value: "sensitive", label: "Sensitive" },
   { value: "removed", label: "Removed" },
+  { value: "settling", label: "Still settling" },
 ];
 
-export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: [], topic: null };
+export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: ["settling"], topic: null };
+
+/* The trigger's word for the one default-on chip switched off — a deviation,
+   so the trigger speaks it, in the landed-only view's own terms. */
+const SETTLED_ONLY = "settled only";
 
 const labelOf = (set, value) => (set.find((entry) => entry.value === value) || {}).label;
 
@@ -147,7 +159,7 @@ export function measureTriggerText(text) {
 export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_PX) {
   const kinds = value.kinds || [];
   const forms = value.forms || [];
-  const also = value.also || [];
+  const also = value.also ?? FEED_FILTER_DEFAULT.also;
   const head = kinds.length === 0 ? "Nothing" : kinds.length === 1 ? labelOf(FEED_KINDS, kinds[0]) : kinds.length + " kinds";
   const extras = [];
   /* THE TOPIC LEADS THE EXTRAS, AND IT IS AN EXTRA (the topic round,
@@ -166,7 +178,12 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_C
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map((form) => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
   if (value.seen === true) extras.push("showing seen");
-  if (also.length > 0) extras.push("+ " + also.map((entry) => labelOf(FEED_ALSO, entry).toLowerCase()).join(", "));
+  /* The also-group speaks deviations like every other axis: a chip switched ON
+     past the default joins the `+` list, and the default-on chip switched OFF
+     says so in its own words. */
+  const added = also.filter((entry) => !FEED_FILTER_DEFAULT.also.includes(entry));
+  if (added.length > 0) extras.push("+ " + added.map((entry) => labelOf(FEED_ALSO, entry).toLowerCase()).join(", "));
+  if (!also.includes("settling")) extras.push(SETTLED_ONLY);
   if (extras.length === 0) return head;
   const spelled = [head, ...extras].join(" · ");
   if (measureTriggerText(spelled) <= budgetPx) return spelled;
@@ -294,6 +311,9 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
         </FilterSection>
       )}
       <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
+      {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
+          the default is the feed as it has always been, and off is the
+          landed-only view. */}
       <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
         {FEED_ALSO.map((entry) => (
           <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />

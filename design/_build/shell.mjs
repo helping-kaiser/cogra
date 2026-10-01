@@ -129,9 +129,31 @@ class Component extends DCLogic {
 }
 </${"script"}>`;
 
+// THE POSTER, WHERE THE CANVAS CAN SEE IT. A board's clip is a `<video>` whose
+// `poster` is the still the board means to show: the clip files never travel
+// with a canvas, so the poster is the whole picture there. The canvas editor
+// carries a board's pictures inline and resolves them by rewriting `src="…"`
+// and `url(…)` to data URLs — and nothing else, so a `poster="…"` reaches no
+// file and the frame draws its empty plate. So the shell lays the same still
+// under the clip as an `<img>`, the one reference the editor resolves, and
+// makes the clip positioned so it still paints over it wherever it renders.
+// Board-only: the components keep the platform's own `poster`, and a browser
+// that loads the poster draws the same picture twice, one over the other.
+const POSTER_FILE = /^[A-Za-z0-9._-]+\.(?:jpe?g|png|webp|gif|avif)$/i;
+export const posterLayer = (markup) =>
+  markup.replace(/<video\b([^>]*)>/g, (tag, attrs) => {
+    const poster = /\sposter="([^"]+)"/.exec(attrs)?.[1];
+    if (!poster || !POSTER_FILE.test(poster)) return tag;
+    const fit = /object-fit:\s*(contain|cover)/.exec(attrs)?.[1] ?? "cover";
+    const under = `<img src="${poster}" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:${fit}">`;
+    const placed = /style="[^"]*\bposition:/.test(attrs) ? tag : tag.replace(/\sstyle="/, ' style="position:relative;');
+    return under + placed;
+  });
+
 // frame: { width, height, style } — the phone screen by default; the map
 // boards pass their own computed size and a scrolling-free flex column.
-export const shell = (markup, extraProps, extraVals, frame = {}) => {
+export const shell = (rawMarkup, extraProps, extraVals, frame = {}) => {
+  const markup = posterLayer(rawMarkup);
   const width = frame.width ?? 390;
   const height = frame.height ?? 844;
   const style = frame.style ?? "display: flex; flex-direction: column; overflow: hidden;";

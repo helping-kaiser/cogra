@@ -40,8 +40,10 @@ Where each sidecar's words come from:
   landed and the bug (copy-voice, *Faults by code*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
-  order, in the same words; and thread order itself (readme §13,
-  *Comments live in a sheet*).
+  order, in the same words; thread order itself (readme §13,
+  *Comments live in a sheet*); and the removed comment's mark in its own
+  place, its replies kept under it (comment.md §5; readme §13, *The
+  comment-removal round*).
 - `ComposeDetails.md` — the already-published marker (copy-voice, *The
   already-published marker*), on the Details step's media row.
 - `TagPicker.md` — the typed-name row (readme §13, *The typed-name
