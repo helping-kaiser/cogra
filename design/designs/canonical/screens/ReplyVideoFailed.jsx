@@ -40,10 +40,7 @@ export function Screen() {
           src="comment-camera.jpg"
         />
 
-        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
-          Eighteen seconds of the same headland, if the light comes through at all.
-          <Caret />
-        </p>
+        <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["Eighteen seconds of the same headland, if the light comes through at all."]} />
 
         <MediaThumb
           src="comment-camera.jpg"

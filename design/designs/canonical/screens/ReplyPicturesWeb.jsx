@@ -18,10 +18,7 @@ export function Screen() {
           src="comment-camera.jpg"
         />
 
-        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
-          The glovebox camera earns its keep — this is the print from 2019 that almost catches it.
-          <Caret />
-        </p>
+        <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["The glovebox camera earns its keep — this is the print from 2019 that almost catches it."]} />
 
         <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
           <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" width={70} height={88} fit="contain" onRemove={() => {}} />

@@ -925,6 +925,13 @@ const REPLY_TARGETS = {
   },
 };
 
+/* THE REPLY'S WORDS ARE A FIELD (jakob, 2026-10-01): `WordsBody`'s box at a
+   minimum of three lines — `CommentEdit`'s own minimum for the same words —
+   capped at a comment's 2,000 characters. Every reply composer board draws it
+   from these two numbers, so the composer cannot disagree with itself. */
+const REPLY_WORDS_ROWS = 3;
+const REPLY_WORDS_CAP = 2000;
+
 function ReplyDraft({ target = "post" } = {}) {
   return (
     <>
@@ -932,10 +939,7 @@ function ReplyDraft({ target = "post" } = {}) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuotedRow {...REPLY_TARGETS[target].quoted} />
 
-        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
-          The third headland light is real — I have a print from 2019 that almost catches it. Almost.
-          <Caret />
-        </p>
+        <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["The third headland light is real — I have a print from 2019 that almost catches it. Almost."]} />
 
         <InlineAction size="sm" selfStart>+ Add pictures or a video</InlineAction>
 
@@ -1490,15 +1494,24 @@ function KeyAbsentNotice({ line }) {
    longer than the box shows, and the paragraphs drawn are the visible tail of
    it, so a count taken from them would be a lie about what is written. Over the
    cap the box takes the `--error` outline and the surface's own refusal renders
-   under it, which is `TextField`'s arrangement exactly. */
-function WordsBody({ paragraphs, cap, used, error }) {
+   under it, which is `TextField`'s arrangement exactly.
+
+   `rows` IS THE GROWTH LAW'S MINIMUM (readme §13, the sheets-and-video round).
+   Without it the box takes the whole column, which is the post's body: the
+   post IS its words. Given, the box opens at that many lines and grows with
+   the writing — `TextField`'s own `rows` rule — which is the reply composer's
+   words, written above what they answer and the pictures that join them. The
+   board draws the minimum, as every field does. */
+function WordsBody({ paragraphs, cap, used, error, rows }) {
   const spent = used ?? [...paragraphs.join("\n\n")].length;
   const over = cap != null && spent > cap;
+  const sized = rows != null;
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
+    <div style={sized ? { flex: "none", display: "flex", flexDirection: "column", gap: "var(--space-1)" } : { flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
       <div
         style={{
-          flex: 1,
+          flex: sized ? "none" : 1,
+          minHeight: sized ? `calc(${rows} * var(--text-body-large--line-height) + 26px)` : undefined,
           display: "flex",
           flexDirection: "column",
           gap: 16,
