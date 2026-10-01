@@ -56,6 +56,8 @@ const {
   TabBar,
   RedactedContent,
   HelpDot,
+  NoticePanel,
+  NoticeLine,
   TextField,
   MediaAttachment,
   ActsCard,

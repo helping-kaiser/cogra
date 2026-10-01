@@ -253,6 +253,15 @@
       "page": "profile"
     },
     {
+      "file": "WhatsNewBehind.dc.html",
+      "title": "Settings · what's new, a newer version out",
+      "x": 5760,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ReportProblem.dc.html",
       "title": "Settings · report a problem",
       "x": 4800,

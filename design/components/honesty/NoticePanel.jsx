@@ -7,11 +7,10 @@ import { HelpDot } from "../core/HelpDot.jsx";
    was spent: the state is a notice, not a fault, so it never takes `error`.
 
    IT IS THE KEY-ABSENT BOARDS' PANEL, PROMOTED. `ComposeKeyAbsent`,
-   `PadKeyAbsent`, `SettingsBackupKeyAbsent`, `YourKeyAbsent` and
-   `KeyCeremonyUnsupported` each draw this block by hand; the write rule's
-   restoration surface was the sixth, and the componentization law says a
-   sixth copy is a master owed. Those five still draw their own and move onto
-   this one in a round of their own.
+   `PadKeyAbsent`, `SettingsBackupKeyAbsent`, `YourKeyAbsent`,
+   `KeyCeremonyUnsupported` and the reply's `KeyAbsentNotice` wear it, beside
+   the write rule's restoration surface and the seal's bug register — one
+   corner rule and one title, letter-spacing included.
 
    ITS ANATOMY IS THEIRS: the title in `title-medium`, the panel's one "?" in
    `HelpDot`'s `inverse` beside it when the panel has something to explain,

@@ -4,8 +4,8 @@
    is absent owes that state a board too. Otherwise implementation guesses the
    surface behind the row, which is the gap the rule closed everywhere else.
 
-   THE NOTICE IS `WalletKeyAbsent`'s, which is `ComposeKeyAbsent`'s: a
-   `tertiary-container` panel, the restore button in `Button`'s `inverse` — the
+   THE NOTICE IS `ComposeKeyAbsent`'s: `NoticePanel` at a page's `large`
+   corner, a `tertiary-container` panel, the restore button in `Button`'s `inverse` — the
    filled button taking the panel's own pair turned over rather than a
    `primary` fill arguing with it — and the "?" in `HelpDot`'s `inverse`, ringed
    in the panel's own `currentColor`. It is a waiting state, never an `error`
@@ -34,18 +34,10 @@ export function Screen() {
     <>
       <PageHeader backHref="/settings" backLabel="Back to settings" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-large)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-              Your key isn't on this browser
-            </h2>
-            <HelpDot ariaLabel="Your key" variant="inverse" />
-          </div>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Making a new code needs the key itself. Your current recovery code keeps working.
-          </p>
+        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key" corner="large">
+          <NoticeLine>Making a new code needs the key itself. Your current recovery code keeps working.</NoticeLine>
           <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-        </div>
+        </NoticePanel>
 
         <h1
           style={{

@@ -581,12 +581,11 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'data-field="Title"', tag: "div" },
-    { n: 4, find: 'data-field="Description"', tag: "div" },
-    { n: 5, find: "+ Add a tag", tag: "button" },
-    { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
-    { n: 7, find: "+ Cite something", tag: "button" },
-    { n: 8, find: ">Next</button>", tag: "button" },
-    { n: 9, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 4, find: "+ Add a tag", tag: "button" },
+    { n: 5, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 6, find: "+ Cite something", tag: "button" },
+    { n: 7, find: ">Next</button>", tag: "button" },
+    { n: 8, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
   ],
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
@@ -779,6 +778,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Your key"', tag: "button" },
     { n: 5, find: ">Restore the key</button>", tag: "button" },
     { n: 6, find: ">Keep the draft, restore later</button>", tag: "button" },
+    // The header's "?" beside the notice's (the stopper exception, A3 of the
+    // 2026-10-01 night round), appended so no via renumbers.
+    { n: 7, find: 'aria-label="How signing works"', tag: "button" },
   ],
   ComposeLicense: [
     { n: 1, find: 'aria-label="License"', tag: "button" },
@@ -1162,6 +1164,8 @@ Object.assign(FLOW_MARKERS, {
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
   ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
   ProfileNotFound: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  PostNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
+  CommentNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   ProfileUnreachable: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Retry</button>", tag: "button" },
@@ -1330,6 +1334,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
   ],
+  // The behind state: the newer release's door is a release door like the
+  // rest, so one number covers every door.
+  WhatsNewBehind: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+  ],
   ReportProblem: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="What happened"', tag: "div" },
@@ -1481,6 +1491,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
   ],
   SignIn: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
+  // Signed out mid-session: `SignIn` with its welcome line swapped, so its
+  // numbers are SignIn's.
+  SignInExpired: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="Email"', tag: "div" },
     { n: 3, find: 'data-field="Password"', tag: "div" },

@@ -26,8 +26,11 @@ import { Button } from "../core/Button.jsx";
    `busy` IS THE SIGNING IN FLIGHT (jakob, the failure pack). The commit is
    the one control a slow answer leaves pressable twice, so it goes inert and
    its label reads `busyLabel` — the verb's present participle, "Signing and
-   publishing…" — through `Button`'s own `busy`. Everything above the foot
-   stays as it was: the fault, if one comes, takes the commit's place
+   publishing…" — through `Button`'s own `busy`. The ways out lock with it
+   for the swap's duration (jakob 2026-10-01): this foot's Back and the
+   header's back arrow and X refuse a press, because leaving mid-sign would
+   orphan the outcome. Everything above the foot stays as it was and
+   readable: the fault, if one comes, takes the commit's place
    (`NetworkError`), and a success leaves the seal. */
 
 export function SealFooter({ signLabel, busyLabel, backLabel = "Back", disabled = false, busy = false, onSign, onBack }) {

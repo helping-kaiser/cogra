@@ -1290,7 +1290,9 @@ const REPLY_CITATION = "Tide tables and the third headland";
    `state` IS WHAT BECAME OF THE COMMIT (the failure pack, jakob 2026-09-30).
    One body, so the seal a fault is drawn on is the seal the reader was on:
    - `signing` — past 200ms without an answer: the commit reads its present
-     participle and goes inert (`SealSigning`).
+     participle and goes inert, and the ways out with it (`SealSigning`).
+   - `slow` — the same signing past 5s: the acts card's subline swaps to the
+     slow line in olive, and nothing else changes (`SealSigningSlow`).
    - `offline` — no answer at all: the fault takes the commit's place,
      `TransportError`'s line over an outlined Retry and the same way back
      (`NetworkError`).
@@ -1314,6 +1316,9 @@ const WRITE_RULE_FACT =
    it rides the notice panel and is named by its dialog (copy-voice, *The "?"
    dialogs*). The pad's notice carries the same one. */
 const WRITE_RULE_HELP = "Why signing waits";
+/* The slow line (jakob 2026-10-01: past 5s, an honest line and no fake
+   progress) — a draft flagged for blessing (copy-voice, *Faults by code*). */
+const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
   return (
@@ -1358,7 +1363,8 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                 },
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
-          note="They land together, or none does."
+          note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
+          noteTone={state === "slow" ? "slow" : "quiet"}
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1403,7 +1409,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
             </div>
           </>
         ) : (
-          <SealFooter signLabel="Sign and publish" busy={state === "signing"} busyLabel="Signing and publishing…" />
+          <SealFooter signLabel="Sign and publish" busy={state === "signing" || state === "slow"} busyLabel="Signing and publishing…" />
         )}
       </div>
     </>
@@ -1587,8 +1593,8 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
 }
 
 /* THE KEY NOTICE AT REPLY SCALE — `ComposeKeyAbsent`'s panel, which is
-   `WalletKeyAbsent`'s and `PadKeyAbsent`'s: a `tertiary-container` block (a
-   waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
+   `PadKeyAbsent`'s: `NoticePanel` at the `medium` corner, a
+   `tertiary-container` block (a waiting state, never `error`), the "?" in `HelpDot`'s `inverse` naming the
    key, one line, and the restore button in `Button`'s `inverse`. Written once
    here because the reply's door and the reply's seal both draw it.
 
@@ -1597,16 +1603,10 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
    sentence, and the restore button is not drawn. */
 function KeyAbsentNotice({ line }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-medium)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-          Your key isn't on this browser
-        </h2>
-        <HelpDot ariaLabel="Your key" variant="inverse" />
-      </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{line}</p>
+    <NoticePanel title="Your key isn't on this browser" helpLabel="Your key">
+      <NoticeLine>{line}</NoticeLine>
       <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-    </div>
+    </NoticePanel>
   );
 }
 
@@ -2327,6 +2327,108 @@ const RUNNING_VERSION = "0.1.2";
 const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
 const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+
+/* THE RELEASE CHRONICLE, whole (`WhatsNew`'s anatomy, shared the moment its
+   behind state drew it a second time). The notes are fixture, not copy. */
+const RELEASES = [
+  {
+    version: RUNNING_VERSION,
+    date: "30.09.2026",
+    current: true,
+    notes: [
+      "A reply says what it answers — a post by its title, a comment by its first words.",
+      "While something signs, the button says what it's doing, and a signing that doesn't go through says so right where you were.",
+    ],
+  },
+  {
+    version: "0.1.1",
+    date: "28.09.2026",
+    notes: [
+      "Comments, profiles and tags can join your feed — turn them on in the filter.",
+      "A tag you type is always the first row, ready to add.",
+    ],
+  },
+  {
+    version: "0.1.0",
+    date: "25.09.2026",
+    notes: ["The first release: posts and comments, opinions, tags and citations, invites, and a key that is yours alone."],
+  },
+];
+
+/* A newer release than the one running here (jakob 2026-10-01, the A10
+   ruling) — the behind state's fixture, one patch on. */
+const NEWER_VERSION = "0.1.3";
+
+/* The behind state's two lines — drafts flagged for blessing (copy-voice,
+   *The settings page*, About): the quiet line atop the chronicle, and the
+   once-per-release snackbar on a cold open's feed. */
+const NEWER_VERSION_LINE = "A newer version exists.";
+const NEWER_VERSION_SNACKBAR = "A newer version of CoGra is out.";
+
+function Release({ version, date, current = false, notes }) {
+  return (
+    <>
+      <SectionLabel>{current ? `Version ${version} · current · ${date}` : `Version ${version} · ${date}`}</SectionLabel>
+      <div style={{ padding: "0 16px" }}>
+        <Card>
+          {notes.map((line) => (
+            <p
+              key={line}
+              style={{
+                margin: 0,
+                fontSize: "var(--text-body-medium)",
+                lineHeight: "var(--text-body-medium--line-height)",
+                letterSpacing: "var(--text-body-medium--letter-spacing)",
+              }}
+            >
+              {line}
+            </p>
+          ))}
+          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
+            See it on GitHub
+          </InlineAction>
+        </Card>
+      </div>
+    </>
+  );
+}
+
+/* `newer` is the version a running app is behind, or nothing. Given, one quiet
+   line stands atop the chronicle — the fact in `--text-secondary`, the door
+   onto that release's public page ending it, `ProfileMoreFailed`'s line shape
+   — and nothing else changes: no badge, no banner, no nagging. */
+function WhatsNewBody({ newer }) {
+  return (
+    <>
+      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" />
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 0 16px" }}>
+        {newer && (
+          <p
+            style={{
+              margin: 0,
+              padding: "8px 24px 0",
+              fontSize: "var(--text-body-medium)",
+              lineHeight: "var(--text-body-medium--line-height)",
+              letterSpacing: "var(--text-body-medium--letter-spacing)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
+            <InlineAction size="sm" ariaLabel={`See version ${newer} on GitHub`} onClick={() => {}}>
+              See it on GitHub
+            </InlineAction>
+          </p>
+        )}
+        {RELEASES.map((release) => (
+          <Release key={release.version} {...release} />
+        ))}
+        <div style={{ padding: "16px 24px 0" }}>
+          <QuietNote>Newest first. Every release's full notes and its code are public on GitHub.</QuietNote>
+        </div>
+      </div>
+    </>
+  );
+}
 
 /* THE REPORT PAGE, whole (`ReportProblem`'s anatomy, shared the moment its
    empty state drew it a second time). `words` is what the field holds. Empty,

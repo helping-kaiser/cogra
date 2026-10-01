@@ -13,3 +13,5 @@ ALWAYS the replies in a branch stand oldest first
 WHEN the author's confirmed Remove on their own comment lands -> the comment's words and pictures give way to the mark Removed by its author in the comment's own place AND NEVER the comment leaves the thread
 
 ALWAYS a removed comment's replies stay under it and readable
+
+WHEN the sheet reopens after the reader's reply is signed -> the thread scrolls to the new reply's card AND NEVER the new reply's card stands below the sheet's foot

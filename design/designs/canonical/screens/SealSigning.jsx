@@ -14,6 +14,15 @@
    law that a wait is shown in words. It refuses a second press from the first
    one — that part shows nothing, and needs nothing shown.
 
+   THE WAYS OUT LOCK WITH IT (jakob 2026-10-01, backlog item 117). For the
+   swap's duration the header's back arrow, the foot's Back and the header's X
+   are inert too: signing is seconds, and leaving mid-sign would orphan the
+   outcome. The fact rows stay readable. An app killed mid-sign says the
+   outcome on the next open with the ordinary settled or failure notice.
+
+   PAST 5s THE SUBLINE SAYS SO (`SealSigningSlow`): an honest olive line under
+   the total, never a progress bar the signing cannot measure.
+
    EVERYTHING ELSE IS THE SEAL AS IT WAS. The outcome lands in the commit's
    place or leaves the seal: signed, it exits to the post; offline, the fault
    stands where the button is (`NetworkError`); refused, the row or the notice

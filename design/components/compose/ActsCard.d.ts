@@ -59,6 +59,12 @@ export interface ActsCardProps {
    * a single-act seal.
    */
   note?: string;
+  /**
+   * `slow` — a signing past 5s: the subline swaps to the honest slow line in
+   * `--tertiary` ink, the olive of the notice family, never a progress bar.
+   * Pass the slow line as `note` with it.
+   */
+  noteTone?: "quiet" | "slow";
 }
 
 export declare function ActsCard(props: ActsCardProps): JSX.Element;

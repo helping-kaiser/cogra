@@ -88,6 +88,8 @@ const WRITE_RULE_TITLE = "You can't sign right now";
 const WRITE_RULE_PAD_FACT = "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.";
 const WRITE_RULE_HELP = "Why signing waits";
 const WRITE_RULE_ROW = "You can't sign right now.";
+/* A comfort's revert, said on the row (copy-voice, *Faults by code*). */
+const COMFORT_FAILED_ROW = "That didn't go through.";
 
 /* THE ANCHOR ON A MEDIA SURFACE (jakob, review rounds 1 and 2). On the stream
    the control sits on whatever the clip happens to be showing, where the card's
@@ -195,8 +197,10 @@ export function StanceControl({
      117) is the write rule's refusal, which is a notice and not a fault: on
      the row a quiet line with no Retry, and in the pad the notice panel
      standing where the landing line and the commit row would, in
-     `PadKeyAbsent`'s shape. Additive — absent, the control renders exactly
-     as before. */
+     `PadKeyAbsent`'s shape. `"comfortFailed"` is a read-side comfort's
+     revert (the failure pack), row only: the hold's vehicle, `That didn't go
+     through.` with Retry. Additive — absent, the control renders exactly as
+     before. */
   signing,
   node,
 }) {
@@ -478,6 +482,10 @@ export function StanceControl({
           no Retry — the face never moved, and asking again at once meets the
           same answer. */}
       {rowSigning === "writeRule" && <SigningPending row quiet message={WRITE_RULE_ROW} />}
+      {/* A read-side comfort that failed (save, unsave, hide, undo, unhide):
+          it reverted, and the target's row says so in the hold's vehicle,
+          with the way to ask again — the comfort, never a signature. */}
+      {rowSigning === "comfortFailed" && <SigningPending row message={COMFORT_FAILED_ROW} onRetry={() => {}} />}
 
       {open && (
         <>

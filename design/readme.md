@@ -308,7 +308,9 @@ growing field never walks the commitment out of reach (the growth law's
 `Done`, *The sheets-and-video round*) — every compose, reply and edit
 stage, the seals, the picture's crop, the profile edit, and the two
 pickers' `Done`. Nothing else: no spacer pushing a task page's action
-toward the bottom edge.
+toward the bottom edge. The one stated exception is `ReportProblem`:
+the read-back of what travels stands between its field and `Send by
+email`, because the honesty comes before the press (jakob 2026-10-01).
 
 **One design, both platforms, dark mode included** (jakob, 2026-09-17).
 Wherever Android and web can do the same thing, they look the same
@@ -427,7 +429,10 @@ under **200ms** shows nothing — an indicator that flashes is noise. From
 slot the content will take, so nothing moves when it arrives. Past 5s
 the wait is determinate — progress that says how far along it is. The
 **pull-to-refresh spinner** is the one named exception: it answers the
-gesture at once, because the pull itself asked for it.
+gesture at once, because the pull itself asked for it. A **signing**
+past 5s is the other: it cannot measure its own steps, so the seal's
+subline says so in an honest olive line and nothing feigns progress
+(`SealSigningSlow`, jakob 2026-10-01).
 
 ### Imagery
 
@@ -7649,8 +7654,7 @@ jakob's rulings closing the day's rounds, executed in one lane.
   already-published marker now reads with item 112's ruling.
 - **The lane's calls, flagged for review** (backlog item 120): the
   comment's two-line fold; the removed post's empty tile and its
-  secondary ink; `Nothing carries this tag right now.`; `then what
-  reached you`; no sign on a zero; the 46-character estimate behind the
+  secondary ink; no sign on a zero; the 46-character estimate behind the
   why-line's compression; `ProfileEdit` kept as a wizard stage; the
   report left as drawn; the staged rows' card-tone mark.
 - **The gate**: **243 screens**, 1671 → **1673 edges** (the two pickers'
@@ -7856,6 +7860,68 @@ C19–C21, every one "as recommended"), executed in one lane.
   65**, every one resolved. The witness was re-blessed once,
   deliberately: `guest-turns-applicant` now starts only where no link is
   held, and `join-with-the-link-in-hand` is the held link's journey.
+### The curate rulings — 2026-10-01
+
+jakob's night round on backlog items 116, 117, 118 and 120, the three
+spoken strings and the audit's K8.1, every one as recommended except the
+newer-version message, which he widened.
+
+- **The report keeps its read-back before the press**, the
+  two-placement law's one stated exception (§4). `ProfileEdit` and
+  post-MVP's `ChatEdit` read as wizard stages and keep their pinned
+  `Save`.
+- **The post seal's key notice keeps the header's "?"** beside its own,
+  by the stopper exception, as its reply-scale twin does.
+- **A signed reply lands by scrolling the thread to its card** (K6.6's
+  direction): the return anchors to the new card at its branch's end.
+  `ReplySettled` keeps its drawn offset.
+- **While a seal signs, it holds the reader.** For the label swap's
+  duration the back arrow, Back and the X are inert with the commit; the
+  fact rows stay readable; an app killed mid-sign says the outcome on
+  the next open with the ordinary settled or failure notice. Past 5s
+  the acts card's subline swaps to `Still signing — the network is slow
+  right now.` in olive `--tertiary` and nothing feigns progress
+  (`SealSigningSlow`, `ActsCard`'s `noteTone`) — §4's *Loading* names it
+  the law's second exception.
+- **The write rule's words are the solvency reading** until the
+  contract can tell its two gates apart; the split waits on the design ⇄
+  impl seam.
+- **The copy-only vehicles have boards.** `SignInExpired` is `SignIn`
+  with the signed-out sentence where the welcome line stood.
+  `PostNotFound` and `CommentNotFound` are `ProfileNotFound`'s
+  construction, back by the layer law and drawn cold. `RowSigning`'s
+  third card draws a failed comfort's revert on the row
+  (`StanceControl`'s `comfortFailed`). The dead ask link is the entry
+  funnel's `VouchAskUnusable`.
+- **Every key-absent panel is `NoticePanel`**: the five boards, the
+  reply's `KeyAbsentNotice` and post-MVP's `WalletKeyAbsent` — one corner
+  rule, the title's letter-spacing restored.
+- **A stale install hears about the newer version twice, quietly**
+  (jakob: "one message might be helpfull"). `WhatsNewBehind` carries `A
+  newer version exists.` atop the chronicle with its release door; once
+  per release, on a cold app open, one snackbar on the feed's arrival
+  says `A newer version of CoGra is out.`, its action opening What's new,
+  a device-local seen flag per release (`FeedNewerVersion`) — the
+  Snackbar charter's one stated exception. A more obvious vehicle is
+  backlog item 123.
+- **The words path composes no description** (K8.1): `ComposeCited`
+  drops the field, and the media-to-words flip drops a standing
+  description with the last picture (`EditPicked`, `EditWords`).
+- **Blessed** (jakob): `Added — in the staged list.`, `Removed from the
+  staged list.` and `You, then several steps, then what reached you`.
+- **Flagged for blessing**: the slow line, the newer-version line and
+  snackbar, and the snackbar's action word `What's new`.
+- **The lane's calls, flagged for review:** the slow line standing in
+  the subline's place on a single-act seal too; its polite `status`
+  role; the signed-out sentence in the welcome line's secondary ink;
+  the not-found boards without a header title; the comfort's revert
+  drawn as an unsave on Sol's post; the newer release's notes left
+  behind its door.
+- **The gate**: 243 → **249 screens**, 1673 → **1697 edges**, 1 gap,
+  **flows 64**, every one resolved. The two not-found boards' bottom
+  bars grow the census of the four publish flows' first step, 49 → 51
+  boards, so the witness wants a deliberate re-bless. `RowSigning` grew
+  to 1600 and `RowWriteRule` moved beside it on the patterns page.
 
 ## 15. Index
 

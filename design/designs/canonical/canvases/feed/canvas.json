@@ -334,6 +334,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedNewerVersion.dc.html",
+      "title": "Feed · a newer version, said once",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -443,9 +452,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5060,
+      "x": -5350,
       "y": 0,
-      "w": 4640,
+      "w": 4930,
       "h": 4309,
       "page": "feed",
       "title": "Feed & Search · flow map"
@@ -562,6 +571,24 @@
       "file": "CitedBy.dc.html",
       "title": "Post · what cites it",
       "x": 2400,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostNotFound.dc.html",
+      "title": "Post · no such post",
+      "x": 2880,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "CommentNotFound.dc.html",
+      "title": "Comment · no such comment",
+      "x": 3360,
       "y": 4676,
       "w": 390,
       "h": 844,

@@ -14,7 +14,9 @@
    the media-to-words flip the ruling allows: with nothing left to manage the
    sheet has nothing to say, and what it closes onto is `EditWords` — the same
    edit, its body now a field. That is why the removal edge leaves this board
-   and not `EditCompose`: the × that does it is drawn here.
+   and not `EditCompose`: the × that does it is drawn here. The flip drops
+   the post's description with its last picture (jakob 2026-10-01): a words
+   post has none, so the signed edit carries none.
 
    THE PICTURES ARE THE EDIT'S OWN — the two `EditComposeBody` carries, in its
    order, the first one the cover. A manager showing a different set than the

@@ -534,8 +534,7 @@ the eye gets:
 - `Added — in the staged list.` — on a pick.
 - `Removed from the staged list.` — on a staged row's ×.
 
-Both blessed per jakob's direction (2026-10-01: "fix as recommended"), the
-exact wording flagged.
+Both blessed (jakob 2026-10-01).
 
 ## The staged-act snackbar
 
@@ -744,7 +743,7 @@ stands, and the rest of the surface stays readable.
   panel in its own words, with `Try again` (`SealFaultBug`).
 
 Every line here is blessed (the failure pack's, the failure fixes' and
-the review fixes' lines, jakob 2026-10-01).
+the review fixes' lines, jakob 2026-10-01), except where marked flagged.
 *Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
@@ -757,12 +756,20 @@ the review fixes' lines, jakob 2026-10-01).
   connection and try again.` A read with content on screen is written
   per surface (*Missing and unreachable*).
 
+**A slow answer** (not a code, and not yet a fault): a signing past 5s
+keeps `Signing and publishing…` on its commit, and the subline under the
+seal's total reads `Still signing — the network is slow right now.` in the
+olive `--tertiary` ink. No progress is feigned, because a signing cannot
+measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
+2026-10-01, flagged for blessing.*
+
 **Transport faults:**
 
 - `UNAUTHENTICATED`, `REFRESH_TOKEN_INVALID` mid-session — the
   surface: the sign-in screen, with the draft and any picks kept on
   the device. `You've been signed out. Sign in again to carry on.`
-  *Copy-only — its board is owed.*
+  **Drawn** on `SignInExpired`, where the welcome line stood, in its
+  secondary ink.
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
   for a fault the server answered.
@@ -774,7 +781,7 @@ the review fixes' lines, jakob 2026-10-01).
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
-  doesn't exist.` *Copy-only — the boards are owed.*
+  doesn't exist.` **Drawn** on `PostNotFound` and `CommentNotFound`.
 - `BAD_INPUT` — on the field, in the field's own words. Where no field
   is named, in place: `That didn't go through. Try again.`
 
@@ -846,7 +853,8 @@ the review fixes' lines, jakob 2026-10-01).
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
-through.` with `Retry`, in the hold's vehicle. *Copy-only.*
+through.` with `Retry`, in the hold's vehicle. **Drawn** on `RowSigning`'s
+third card.
 
 ## The reset and verify landings
 
@@ -1040,6 +1048,16 @@ and before `Privacy` and `Terms`, each one string for app and web:
   and the page's footnote reads `Newest first. Every release's full
   notes and its code are public on GitHub.` A release's notes are
   written when it ships, never here.
+- **A running version behind the newest** (jakob 2026-10-01). Atop the
+  chronicle, one quiet line: `A newer version exists.` ending in `See it
+  on GitHub`, named `See version 0.1.3 on GitHub` for a listener
+  (`WhatsNewBehind`). And once per release, on a cold app open, one
+  snackbar on the feed's arrival: `A newer version of CoGra is out.` with
+  `What's new` as its action, opening the chronicle; a device-local seen
+  flag per release means each release says it exactly once, and letting
+  it pass costs nothing (`FeedNewerVersion`). *Both lines new 2026-10-01,
+  flagged for blessing; the action word `What's new`, the row's own, is
+  the lane's call.*
 - `Report a problem` opens the report: the heading `Report a problem`;
   `Say what happened, in your own words. Sending opens your email with
   everything below filled in — nothing goes until you send it there.`;
@@ -1902,9 +1920,8 @@ keeps its plain figure, a negative keeping its `−` everywhere, a zero none.
 reached you` — blessed (jakob 2026-10-01). The title's own words, since the
 trace's last mark already says what kind of thing it reached. One person
 on the path is named; a path through two or more takes the generic form,
-`You, then several steps, then what reached you` — blessed per jakob's
-direction (2026-10-01: "for longer paths we need generic wording"), the
-exact wording flagged. A chain of handles read aloud would bury the reached
+`You, then several steps, then what reached you` — blessed (jakob
+2026-10-01: "for longer paths we need generic wording"). A chain of handles read aloud would bury the reached
 thing at its end, and the row's `Through @kel and @wren` already says who.
 The back arrow on level one reads `Back to feed`, for every kind.
 

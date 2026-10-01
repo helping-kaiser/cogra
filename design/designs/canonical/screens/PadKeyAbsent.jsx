@@ -9,7 +9,7 @@
    never stopped before doing the thinking, only before the part that needs a
    key.
 
-   THE NOTICE IS `ComposeKeyAbsent`'s, which is `WalletKeyAbsent`'s: a
+   THE NOTICE IS `ComposeKeyAbsent`'s: `NoticePanel` at the `medium` corner, a
    `tertiary-container` panel, the "?" in `HelpDot`'s `inverse` — the ring the
    panel's own `currentColor` draws — and the restore button in `Button`'s
    `inverse`, the filled button that takes the panel's pair turned over.
@@ -117,21 +117,11 @@ export function Screen() {
 
         <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-medium)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-              Your key isn't on this browser
-            </h2>
-            <HelpDot ariaLabel="Your key" variant="inverse" />
-          </div>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Signing needs your key, which isn't in this browser — the write waits as pending.
-          </p>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Restore the key with your recovery code to finish.
-          </p>
+        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key">
+          <NoticeLine>Signing needs your key, which isn't in this browser — the write waits as pending.</NoticeLine>
+          <NoticeLine>Restore the key with your recovery code to finish.</NoticeLine>
           <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-        </div>
+        </NoticePanel>
 
         <Button variant="text" style={{ width: "100%" }}>Keep it pending, restore later</Button>
       </div>

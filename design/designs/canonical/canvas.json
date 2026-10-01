@@ -128,6 +128,15 @@
       "page": "entry"
     },
     {
+      "file": "SignInExpired.dc.html",
+      "title": "Sign in · signed out mid-session",
+      "x": 2400,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "KeyCeremonyUnsupported.dc.html",
       "title": "Your key · this browser can't hold one",
       "x": 1920,
@@ -1118,6 +1127,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedNewerVersion.dc.html",
+      "title": "Feed · a newer version, said once",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -1497,9 +1515,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5060,
+      "x": -5350,
       "y": 0,
-      "w": 4640,
+      "w": 4930,
       "h": 4309,
       "page": "feed",
       "title": "Feed & Search · flow map"
@@ -1524,9 +1542,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 1818,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -1757,6 +1775,15 @@
       "page": "profile"
     },
     {
+      "file": "WhatsNewBehind.dc.html",
+      "title": "Settings · what's new, a newer version out",
+      "x": 5760,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ReportProblem.dc.html",
       "title": "Settings · report a problem",
       "x": 4800,
@@ -1910,6 +1937,15 @@
       "page": "patterns"
     },
     {
+      "file": "SealSigningSlow.dc.html",
+      "title": "Seal · signing, past 5s",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "SealFaultRow.dc.html",
       "title": "Seal · a cited post that didn't land",
       "x": 960,
@@ -1938,11 +1974,11 @@
     },
     {
       "file": "RowSigning.dc.html",
-      "title": "Signing · on the target's row",
+      "title": "Signing · on the target's row, and a comfort's revert",
       "x": 2880,
       "y": 964,
       "w": 390,
-      "h": 844,
+      "h": 1600,
       "page": "patterns"
     },
     {
@@ -1957,8 +1993,8 @@
     {
       "file": "RowWriteRule.dc.html",
       "title": "Signing · the write rule on the target's row",
-      "x": 2880,
-      "y": 1928,
+      "x": 3360,
+      "y": 964,
       "w": 390,
       "h": 844,
       "page": "patterns"
@@ -2363,6 +2399,24 @@
       "file": "CitedBy.dc.html",
       "title": "Post · what cites it",
       "x": 2400,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostNotFound.dc.html",
+      "title": "Post · no such post",
+      "x": 2880,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "CommentNotFound.dc.html",
+      "title": "Comment · no such comment",
+      "x": 3360,
       "y": 4676,
       "w": 390,
       "h": 844,
