@@ -3791,3 +3791,23 @@ stack*) drew the three rows and two boards. Still unruled:
 - **The addresses' swap.** `reports@cogra.local` and
   `hello@cogra.local` (`_shared.jsx`, the support stack's fixtures)
   swap for real addresses once CoGra is on a server.
+
+### 119 · The dateline sweep, when the histories migrate · *design* · **filed 2026-10-01** · **future**
+
+The chronicle's version datelines — `Current version · signed 12
+September`, `Earlier version · signed 8 September` on the post-MVP
+change-history boards (`designs/postmvp/screens/_shared.jsx`,
+`ChatHistory`) — print a day and a month name, and that form breaks
+the Ages law's date, `dd.mm.yyyy` (copy-voice, *Ages*). jakob
+2026-10-01: "an item for later once we add the feature". So the sweep
+rides the histories' move from the post-MVP tree into canonical (readme
+§13, *The post-MVP separation*), never before: every dateline on the
+moved boards becomes the Ages date, and copy-voice's dateline
+paragraph (*Ages*, *Change histories*) is rewritten to the one form.
+
+One contradiction to settle beside it: copy-voice gives the same
+`12 September` form to the already-published marker (`Already in your
+post from 12 September.`, *The already-published marker*), a V1.0 line
+in `behavior/ComposeDetails.md` whose board is owed (item 110). It is
+not post-MVP, so the migration does not carry it — the marker's date
+wants its own ruling before item 110 draws it.
