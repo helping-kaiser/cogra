@@ -7114,33 +7114,6 @@ they turn a kind on, on one new board, `FeedKinds`.
   no ⋮, because a Type has no license and is never cited or saved. Every
   tap lands on a board that exists: the comment's thread, the person's
   profile, the tag's page.
-- **The tag page shares** (jakob 2026-10-01). Its one wide control is the
-  stance on the topic — the profile's situation — so its row takes the
-  profile actions row's geometry, the anchor taking what is left and the
-  page's other act closing it. That act is share alone: a ⋮ would open a
-  sheet of one row, since a Type has nothing else a menu could hold, so it
-  stands as the `ShareButton` glyph every card's row ends with — one tap,
-  the platform's own sheet. It rides all four tag-page boards through
-  `TopicStanceRow`.
-- **The cards' anatomies wait on three working boards** (jakob
-  2026-10-01: the cards "need to be more unique"). `FeedCommentOptions`,
-  `FeedProfileOptions` and `FeedTagOptions` each hold today's card and two
-  anatomies side by side, captioned, for jakob's pick — `reference` boards
-  wired nowhere, as `FeedShapes` is. The options ride option-candidate props
-  (`CommentCard`'s `targetShape`, `PostCard`'s `stanceWide`) that no screen
-  wears; the picked anatomy replaces its card on `FeedKinds`, and the props
-  of the anatomies not picked leave the masters.
-- **The gate for the score, the share and the boards**: 1618 → **1619
-  edges** (the empty tag page's share), three reference boards, **1 gap**,
-  flows **63**, every one resolved. The witness was not re-blessed.
-- **Every ranked card wears the score** (jakob 2026-10-01: "every card
-  should have the graph glyph and the score number next to it"). The rank
-  is about the paths leading to a thing and never its kind, so the comment,
-  the person and the tag wear the post card's figure — `graph_3` and the
-  number, second in the row after the opinion — and it opens the same trace,
-  `FeedEntry`. A post's figure is spoken `Feed score`; the other three say
-  `Feed score`. `CommentCard` gained `score`, and `PostCard` `scoreLabel`,
-  both additive.
 - **`PostCard` gained `menuLabel` and `stanceAxes`**, both additive, so the
   ⋮ can say whose menu it is and a tag's pad can speak its own four ends;
   every other board renders unchanged.
@@ -7474,6 +7447,82 @@ backlog item 117, and his confirmation of the support stack's shape.
   re-render because the page under them grew; every pad and feed board
   renders byte-identical. `ComposeSeal.md` gains the two refusals and
   `Feed.md` the write rule's hold.
+
+### The feed cards, ruled — 2026-10-01
+
+jakob's review of the three feed cards — they "need to be more unique.. the
+profile card just looks like a text post that only has a body", and the tag
+card "needs to tell a better story" — then his picks from three option
+boards, each with its own rulings. `FeedKinds` is redrawn in the picked
+anatomies.
+
+- **`Feed score` everywhere** (jakob: "we will have up to 10 rankable
+  objects and it should be the same for all of them"). The figure is one
+  figure on every ranked card and has one name — spoken, read at the top of
+  the trace, in every docblock and in prose, and in the graph's labels.
+  Every ranked card wears it, `graph_3` and the number, second in the row,
+  and it opens the one trace, `FeedEntry`: the score is about the paths
+  leading to a thing, never the kind of thing it is.
+- **The unified row.** Every feed card's actions read **opinion · score ·
+  the kind's own act · share**. A post's own act is its comments — the
+  post card already drew this order. A comment's is its reply, a tag's
+  `Tag a new post with it`; a person's slot waits for chats, when the chat
+  glyph takes it. A kind's act is `GlyphAction` — the share button's
+  anatomy, the act in its accessible name — carried on `PostCard` by `act`.
+- **The comment is a slice of its thread.** The post it answers stands as a
+  head row — its mark, its title, its author; a comment's author over its
+  first words when it answers a comment — and the comment hangs under it
+  on a connector rule (`CommentCard`'s `targetShape="thread"`). **The
+  double door**: the head row opens the post's detail, and the rest of the
+  card opens the post's comment section scrolled to this comment. The
+  reply is the comment glyph, opening that same place with the composer
+  already aimed at the comment, and share closes the row.
+- **Replies never appear in the feed** (jakob). A comment's replies live
+  in its thread; the card carries no `View n replies` line, because the
+  feed ranks the comment and the card itself is the door to its branch.
+  `behavior/FeedKinds.md` holds it, with where the card's door and its
+  reply land.
+- **The person is the top of their profile**: a 56px picture, the name in
+  a title's weight, the handle under it, the bio in the quiet colour,
+  folded at two lines. The opinion is the row's standard face, the control
+  every card wears; the row is opinion · score · share.
+- **The tag tells why, and what is behind it.** Under its name, the people
+  it reaches the reader through (`Reaches you through @ada and @tobias`,
+  blessed); the body is a glimpse — the marks of the newest things tagged
+  side by side, the newest named, `@tobias · and 2 more` under it
+  (blessed). Its act is the compose glyph, opening the composer at its
+  first stage with the tag staged.
+- **A tile on a card takes the darker tone** (jakob, the tag's `#`).
+  `NodeMark`'s `onCard` gives the tile `surface-container-high`, the tone
+  `ContentRow`'s disc already wears there, because the card's own tone is
+  the tile's default and the `#` vanished into it. Every mark standing on a
+  card or a quote takes it: the tag's `#` and glimpse, the comment's head
+  row, the trace's tag block.
+- **The tag page shares.** Its one wide control is the stance on the topic
+  — the profile's situation — so its row takes the profile actions row's
+  geometry, and the page's other act closes it. That act is share alone: a
+  ⋮ would open a sheet of one row, since a Type has nothing else a menu
+  could hold, so it stands as the `ShareButton` glyph, one tap to the
+  platform's own sheet. It rides all four tag-page boards.
+- **The trace's top block names every kind** (`ScoreOrigin`, drawn side by
+  side on `FeedEntryKinds`): a post by its title and author, a comment by
+  its author's handle over its first words, a person by their name over
+  their handle, a tag by its name beside its `#` (`QuotedRow` gained
+  `mark`). The four levels below it do not change with the kind.
+- **Each card's shapes**, the `FeedShapes` pattern — reference boards,
+  wired nowhere: `FeedCommentShapes` (its own pictures, answering a
+  comment, veiled), `FeedProfileShapes` (a long bio, no bio, no picture,
+  an opinion held, a negative score), `FeedTagShapes` (one thing behind
+  it, one person it reaches through, the newest a picture, the topic held,
+  a negative score).
+- **The gate**: 1665 → **1666 edges** (the tag's compose act; the
+  comment's `View replies` number now carries its card door), four
+  reference boards, 1 gap, **flows 64**, every one resolved. The witness
+  was re-blessed once, deliberately: `reel-to-detail` and
+  `trace-a-score-to-its-records` start on the renamed `Feed score` label,
+  their routes and their 28-board census unchanged. `FeedKinds`' stance
+  edges gained the hold's two failure outcomes every other feed board's
+  carry.
 
 ## 15. Index
 
