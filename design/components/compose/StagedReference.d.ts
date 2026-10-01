@@ -18,6 +18,12 @@ export interface StagedReferenceProps {
    * the digits paint only in geek mode and the spoken reading does not.
    */
   pair?: StancePair;
+  /**
+   * The pair is a stance in its own right — a kept pick waiting to be signed,
+   * not a citation. The drawing is unchanged; the spoken twin becomes
+   * `StanceReadout`'s, the anchor's word and both axes named.
+   */
+  stance?: boolean;
   /** The × is its own button, named "Remove <name>". */
   onRemove?: () => void;
   /**

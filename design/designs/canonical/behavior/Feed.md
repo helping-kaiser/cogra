@@ -2,6 +2,10 @@
 
 ALWAYS at most one clip plays on the feed
 
+ALWAYS feed.card.media.frame competes for the feed's one stage GIVEN it holds a clip
+
+ALWAYS a comment card's clip competes for the same stage as feed.card.media.frame
+
 ALWAYS the playing clip keeps the stage GIVEN it still qualifies and the scroll has not settled at the feed's hard top
 
 WHEN a second clip scrolls into view GIVEN the incumbent still qualifies -> NEVER the stage changes hands
@@ -25,6 +29,8 @@ ALWAYS no clip on the feed plays GIVEN a sheet covers the feed
 WHEN the sheet over the feed dismisses GIVEN a clip qualifies -> the topmost qualifying clip takes the stage
 
 ALWAYS a veiled clip has no playback and no sound-disc presence
+
+ALWAYS feed.card.media.frame.soundDisc is absent GIVEN feed.card.media.frame's clip is veiled
 
 WHEN a veiled clip unveils GIVEN the incumbent still qualifies -> NEVER the stage changes hands
 

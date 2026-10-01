@@ -1320,6 +1320,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 23, find: ">What&#x27;s new</span>", tag: "button" },
     { n: 24, find: ">Report a problem</span>", tag: "button" },
     { n: 25, find: ">Contact</span>", tag: "button" },
+    // The kept picks' row (backlog item 113), inside the Key backup group and
+    // numbered by the same identity rule — the next free number.
+    { n: 26, find: " kept picks waiting</span>", tag: "button" },
   ],
   // The release chronicle: the way out, and one door per release — the same
   // control drawn three times, so one number.
@@ -2399,6 +2402,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Recovery code"', tag: "div" },
     { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
+  // The kept picks' review (backlog item 113): every row's × is one control
+  // drawn three times, so the rows share a number — the pickers' rule.
+  KeptPicksReview: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="Remove ', tag: "button", all: true },
+    { n: 3, find: ">Sign them</button>", tag: "button" },
+  ],
+  // Its seal: `ProfileEditSeal`'s five controls, in the same order.
+  KeptPicksSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your picks are kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Sign the opinions</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
   ],
   YourKeyGate: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },

@@ -129,13 +129,14 @@ export function clipFrame(ratio) {
    side while scrolling (jakob, 2026-09-15). Every disc a media surface draws
    is this one — sound, play, and the stream's way back — so they sit at one
    size and one weight wherever the reader meets them. */
-export function MediaDisc({ label, glyph, onClick, pressed, corner = "bottom-right" }) {
+export function MediaDisc({ label, glyph, onClick, pressed, corner = "bottom-right", node }) {
   const [vertical, horizontal] = corner.split("-");
   return (
     <button
       type="button"
       aria-label={label}
       aria-pressed={pressed}
+      data-node={node}
       onClick={(event) => {
         event.stopPropagation();
         if (onClick) onClick(event);
@@ -299,6 +300,7 @@ export function MediaAttachment({
           pressed={!muted}
           glyph={muted ? "volume_off" : "volume_up"}
           onClick={() => setMuted(!muted)}
+          node={node && "soundDisc"}
         />
       )}
       {/* THE ONE PLACE PLAY IS DRAWN IN A CARD. The device asked for no motion —
@@ -307,7 +309,7 @@ export function MediaAttachment({
           clip. It takes the sound disc's place rather than joining it: one
           control, the one that matters here. */}
       {video && controls === "play" && (
-        <MediaDisc label="Play this video" glyph="play_arrow" onClick={() => {}} />
+        <MediaDisc label="Play this video" glyph="play_arrow" onClick={() => {}} node={node && "playDisc"} />
       )}
       {/* THE SECOND RUNG. On a reading surface built around the clip, the reader
           is watching deliberately, so the transport is real — and the sound

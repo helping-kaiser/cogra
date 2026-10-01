@@ -7660,6 +7660,76 @@ jakob's rulings closing the day's rounds, executed in one lane.
   staged citations' boards re-render for the card-tone mark, and the maps
   follow the edges.
 
+### The kept picks' review — 2026-10-01
+
+jakob's rulings B1-B3 (the night round), closing backlog item 113 and the
+canonical tree's one gap, `Restore/4`. Kept picks sign together, in one
+batch the reader reviews first (jakob, 2026-09-30).
+
+- **Review, then the standard seal.** `Restore the key` with picks kept
+  opens `KeptPicksReview` — from `Restore`, `RestoreError` and
+  `RestoreLength` alike. One row per kept pick, the staged section's
+  `StagedReference` with its ×: the target's face, its kind, the pair in
+  readout form, spoken as the readout speaks it (`stance`). `Sign them`
+  leads to `KeptPicksSeal`, the standard seal with the picks as its acts,
+  one `Opinion` row each, all or nothing; signed, the batch returns where
+  the review was opened from with `Signed 3 things, still settling.` The
+  seal idiom is untouched and nothing on it is removable.
+- **The × drops at once** — no confirm, no undo; nothing was signed, and
+  the pick is made again from its pad. The last drop closes the review
+  with `Nothing left to sign.`
+- **Leaving unsigned keeps them.** The arrow, the system's Back and the
+  seal's X keep every pick, and the Key backup group carries a quiet row,
+  `3 kept picks waiting`, that reopens the review — there only while that
+  is true.
+- **The lane's calls, flagged for review:** every new string (copy-voice,
+  *The key's lifecycle*); the restore's snackbar riding in over the review;
+  the review's pinned foot (ruling A2's wizard reading); one acts-card row
+  per pick rather than one per kind; the row's place, last in the group;
+  `WriteRuleFailed` as the seal's write-rule master. Backlog item 113 holds
+  the questions the drawing left.
+- **The gate**: 243 → **245 screens**, 1673 → **1682 edges**, 1 → **0
+  gaps**, **flows 64**, every one resolved. The witness was re-blessed
+  once, deliberately: the gap leaves the triage, and no flow moved.
+  `Settings` grew a row taller; the maps follow the edges.
+### The compose and media behavior pass — 2026-10-01
+
+Pass C of the behavior home (jakob's F1: transcription only, unruled
+behavior filed, never invented), the compose and media pages.
+
+- **Every non-reference board on both pages has its sidecar.** Each line
+  transcribes a board's docblock, its graph edges' cases, and the rounds
+  above and copy-voice sections they cite: the wizard's two ways out and
+  its kept draft, the caps' late counter and refusals, the seal's
+  read-back and its faults, the growth law, the cover and frame-0 rules,
+  the veil and the control ladder. `ComposeDetails.md` and
+  `ComposeSeal.md` gain the lines their merged rulings bind. Reference
+  boards (the ladders, the shapes, the maps) owe none.
+- **What no ruling answers stays out of the sidecars** and waits for
+  jakob as filed questions: the cover step's Next before a face is
+  picked, the counting sheets at the fold's edge, the body fork's switch,
+  the words stage's empty Next, an edit's × on a pick made in the same
+  edit, and the viewer's third way out, where this record's reel round
+  says the backdrop and `ViewerPicture`'s docblock says a tap is not one.
+### The feed and comments behavior pass — 2026-10-01
+
+Pass C's first two pages (jakob, the night ruling round's F1): every
+board on the feed and comments pages carries a sidecar in
+`designs/canonical/behavior/`, transcribed from its docblock, the
+records here, its flow edges and copy-voice. Nothing was ruled in the
+pass; behavior no ruling covers was filed for jakob's review rather
+than written.
+
+- **`FeedCover` is registered under `feed`** (backlog 114), named as
+  `Feed` names its parts; a card's discs carry `soundDisc` and
+  `playDisc`. The stage law spans a post's clip and a comment card's,
+  and only the post's is drawn, so `Feed.md` anchors the post's clip as
+  `feed.card.media.frame` and keeps *clip* for both.
+- **Three behaviors wait for the night's other rounds**: the feed
+  filter's commit (the sheet law), the settled reply's landing scroll,
+  and the reply's uploading seal. Their sidecars hold everything else.
+- **The gate**: screens and edges unchanged; `nodes.json` gains
+  `FeedCover` and two paths; 72 sidecars, every one green.
 ### The pads and the edit's withdrawals — 2026-10-01
 
 jakob's night rulings D1–D3 (audit K10.1, K5.3, K6.2), executed in one

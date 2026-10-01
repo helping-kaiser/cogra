@@ -3691,7 +3691,7 @@ annotation goes, or he rewords it and the note follows through
 `check-help-notes --write`. Both are one-line rulings; fold them
 into the next copy round's brief.
 
-### 113 · The kept picks' review board · *design* · **filed 2026-09-30**
+### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01**
 
 The key-loss round ruled a kept pick's life (readme §13, *The
 key-loss round*; `PadKeyAbsent`'s docblock): picks kept pending with
@@ -3705,7 +3705,32 @@ face and pair, dropping one before signing), what it signs as and
 what the snackbar says, and where the reader lands after. Drawing it
 closes the gap.
 
-### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30**
+**Drawn 2026-10-01** (jakob's rulings B1-B3; readme §13, *The kept
+picks' review*): `KeptPicksReview`, `KeptPicksSeal` and the settings
+row; the gap is closed. Left for rulings, none drawn:
+
+- **The anchor after the key is back.** A review left unsigned leaves the
+  posts' anchors wearing `Waiting for your key`, no longer true, and the
+  face's tap still opens `PadKeyAbsent`. What the anchor reads, and what
+  its tap opens, while the batch waits on the reader rather than the key.
+- **A kept pick whose target went.** A post removed or an account deleted
+  before the batch signs: the row's face, and whether the seal refuses
+  that act on its row (`SealFaultRow`'s shape) or the review drops it.
+- **A kept pick that would sever its bundle.** On a held post or topic, a
+  pick that nets the bundle to nothing goes through `SeveranceConfirm`
+  when signed alone; the batch has no such step.
+- **Kept vouches.** A kept vouch-back (`VouchBackPad` opens `VouchedIn`
+  when signed alone) or approval (`ApprovePad`, whose application may
+  expire meanwhile), signed in the batch.
+- **The write rule at kept-picks scale.** `WriteRuleFailed` draws the
+  post's seal and says the draft is kept; its clause and its way out for
+  the picks are owed, as the reply's were.
+- **Spoken drops.** Whether a dropped row is announced, as the pickers'
+  `PickAnnouncement` does, and where focus lands when a row leaves.
+- **The row's conditions.** Whether `3 kept picks waiting` shows while the
+  key has gone again, or over a sealed sign-out's picks.
+
+### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30** · **done 2026-10-01**
 
 Register a feed board that draws a clip — `FeedShapes` or
 `FeedCover` — under the `feed` node prefix, as the first round of the
@@ -3715,6 +3740,12 @@ their plain words, which item 111's node check then holds. Approved
 by jakob on 2026-09-30; the grammar and the plan are the design ⇄
 impl seam's entry 002 (dev-state `cogra/tmp_dev/design-impl-seam.md`)
 and the calibration-ID PR, #30.
+
+Done 2026-10-01: `FeedCover` registers under `feed`, named as `Feed`
+names its parts, and the card's discs carry `soundDisc` and `playDisc`.
+The stage law spans a post's clip and a comment card's, and only the
+post's is drawn, so `Feed.md` anchors the post's clip as
+`feed.card.media.frame` in its own lines and keeps *clip* for both.
 
 ### 115 · Ranked comment order, once ranking exists · *design* · **filed 2026-09-30** · **future**
 

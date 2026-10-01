@@ -1251,6 +1251,23 @@ const SEAL_CITATIONS = [
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.2, pInterest: 0.1 }, onRemove: () => {}, onEdit: () => {} },
 ];
 
+/* THE KEPT PICKS, written once (backlog item 113, the kept picks' review):
+   the review that lists them and the seal that signs them are two boards of
+   one batch, and a seal reading back a set the review disagreed with would
+   be the drift this constant exists to stop. Three, because the settings row
+   that reopens the review counts three. The first is `PadPending`'s own pick
+   on @ada's post; a person among them on purpose, since every pad that meets
+   the key's absence can keep its pick (`PadKeyAbsent` is the master for all
+   of them). Each pair is read the readout's way on both boards — the face,
+   the digits in geek mode, and the anchor's word with both axes spoken
+   (`StagedReference`'s `stance` on the review, `StanceReadout` on the
+   seal). */
+const KEPT_PICKS = [
+  { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
+  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 } },
+  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 } },
+];
+
 /* The one citation the reply's seal was drawn holding. It is a constant rather
    than a board's literal because two states of that seal name it — the one
    that reads it back and the × that drops it. */
@@ -2289,7 +2306,15 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `Not made yet` and opens `SettingsBackupNone`, and the group's footnote
    stops promising a way back that does not exist — and `forget` is the
    don't-remember switch turned on. Both default to the page every other
-   board draws. */
+   board draws.
+
+   `keptPicks` is the count of picks still waiting after their review was
+   left unsigned (backlog item 113, jakob's ruling B3): a quiet row in the
+   Key backup group, after `Your key`, reading `3 kept picks waiting`, that
+   reopens `KeptPicksReview`. It exists only while that is true — kept picks
+   with the key here and their batch unsigned — so it defaults to none, and
+   `Settings`, which draws the page whole, draws it present to show its
+   place in the order. */
 /* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the
    settings row, the release chronicle and the report's diagnostic line all
    read the running version, and three boards disagreeing about it would be
@@ -2380,7 +2405,7 @@ function ReportProblemBody({ words }) {
   );
 }
 
-function SettingsBody({ backup = "made", forget = false } = {}) {
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0 } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
@@ -2487,6 +2512,9 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
         >
           <SettingsRow label="Recovery code" status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"} onOpen={() => {}} />
           <SettingsRow label="Your key" onOpen={() => {}} />
+          {keptPicks > 0 && (
+            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} />
+          )}
         </SettingsGroup>
 
         <SettingsGroup
