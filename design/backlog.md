@@ -3665,7 +3665,12 @@ media row became `composeDetails.mediaRow` in the same change;
 and sheets are not on that board), so its lines keep their words until
 a registered board draws them.
 
-### 112 · Copy-voice residues of the behavior home · *copy* · **filed 2026-09-30**
+### 112 · Copy-voice residues of the behavior home · *copy* · **closed 2026-10-01**
+
+**Closed** (jakob 2026-10-01, as recommended): *Ages* names the
+chronicle's datelines and the already-published marker as the
+dateline form's owners, and the video sentence is blessed as it
+stands, its annotation gone.
 
 Two threads the behavior-home round (#24) surfaced and jakob's
 merge did not close. First: *Ages* still reads as if every

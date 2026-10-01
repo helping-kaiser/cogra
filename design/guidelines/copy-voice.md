@@ -65,6 +65,11 @@ a thread is where people agree on when. The chats list keeps the ladder. The rem
 other timestamp — it is the redaction's own moment, not the content's
 age.
 
+The dateline form — `12 September`, the year added only when it is not
+the current one — belongs to the chronicle's version datelines (*Change
+histories*) and the already-published marker (*The already-published
+marker*), where a date names a record rather than its age.
+
 Forward-looking moments read the same ladder forward (ruled
 2026-09-14): the relative form — `in 6 days`, `in 1 day`, then `in 5
 hours` on the last day — is the future vocabulary. A far date, where
@@ -245,12 +250,10 @@ title, at most two short paragraphs, Close. The texts, verbatim
   for the whole clip; its cover takes none of its own. / Nothing is
   described for you: a picture without a description is skipped by
   screen readers, never guessed at.
-  *(The video sentence is an extension of blessed copy — 2026-09-02,
-  flagged for review; the rest of the dialog is unchanged.)*
-  The sheet and the describe row both carry the reason permanently,
+  *(The sheet and the describe row both carry the reason permanently,
   under the title and under the row: **`Read aloud to people who
   can't see it.`** — the "?" is for the reader who wants the rest,
-  not for the one who needs to know why the field is there.
+  not for the one who needs to know why the field is there.)*
 - **Your key** (key absent — the seal, the stance pad, and the two
   settings screens): Signing needs your key, and it isn't on this
   browser — nothing is signed without it. / A recovery code brings the
