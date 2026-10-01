@@ -523,11 +523,9 @@ that staged them, because no rule turns "References" into "citation".
 A count already made of words (`1 more`, on the rows that offer an
 act) keeps them and says itself.
 
-**`Added`** — the end of a picker row's spoken name once the row is
-staged (`ReferenceRow`'s `staged`; the pickers' multi-add, jakob
-2026-10-01). The added mark that shows it is a glyph, hidden from the
-accessibility tree, so a listener hears the state in this word: "saltmarsh,
-Added". *New 2026-10-01, flagged for blessing.*
+**A picker's staged row** speaks through its ×: `Remove saltmarsh`,
+`StagedReference`'s own name for the control, once a pick has moved the row
+above the list (the pickers' staged section, jakob 2026-10-01).
 
 ## The staged-act snackbar
 

@@ -1087,7 +1087,7 @@
       ],
       "steps": [
         "start · «+ Cite something» on 12 boards → ReferencePicker",
-        "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row's add mark turns to the added mark, and the picker stays open for the next"
+        "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row leaves the results for the staged section above them, wearing its ×, and the picker stays open for the next"
       ],
       "boards": [
         "ReferencePicker",

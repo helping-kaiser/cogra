@@ -54,9 +54,11 @@ Where each sidecar's words come from:
   row*): the canonicalized typed name as the list's first row, and what
   the keyboard's action key stages; and the pickers' multi-add (readme
   §13, *The review fixes*): a pick stages and the picker stays open,
-  and `Done` and the header back both leave with every pick kept.
-- `ReferencePicker.md` — the same multi-add, at the citation picker:
-  the shared anatomy's law, in the same words.
+  and `Done` and the header back both leave with every pick kept; and
+  the staged section (readme §13, *The closing batch*): a picked row
+  moves above the list, and its × un-stages it.
+- `ReferencePicker.md` — the same multi-add and staged section, at the
+  citation picker: the shared anatomy's law, in the same words.
 
 ## The grammar
 

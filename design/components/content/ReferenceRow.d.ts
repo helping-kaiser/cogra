@@ -89,13 +89,6 @@ export interface ReferenceRowProps {
    */
   trailing?: JSX.Element;
   /**
-   * A picker row already staged in the composer the picker serves: the add
-   * mark becomes the added mark (`check`, `--on-surface`) and the row's spoken
-   * name ends "Added". Wins over `trailing`. A tap on a staged row changes
-   * nothing — un-staging is the composer's chip ×.
-   */
-  staged?: boolean;
-  /**
    * The act is signed but not yet ordered on L1: the row wears the pending
    * marker under its pair. This sheet is the only surface that says so — a
    * chip on a card shows nothing pending.

@@ -54,7 +54,11 @@ function Body({ kind, name, sub, src, pair, node }) {
   const anchor = pair ? nearestAnchor(pair) : null;
   return (
     <>
-      <NodeMark kind={kind} name={name} src={src} node={node && "mark"} />
+      {/* The row stands on `surface-container-highest`, the tile's own tone,
+          so its mark takes the card tone (`NodeMark`'s `onCard`, jakob's
+          ruling on the tag card's `#`) — a staged tag's `#` would vanish
+          into the row otherwise. */}
+      <NodeMark kind={kind} name={name} src={src} onCard node={node && "mark"} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "name"}>
           {name}
