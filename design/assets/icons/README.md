@@ -39,7 +39,7 @@ fill="none"/>` rect is stripped, per the product's own convention.
 | content-copy.svg | content_copy | copying the payout address |
 | notifications.svg | notifications | the band's bell, on every root |
 | bookmark.svg | bookmark (filled) | the unsave control on a Saved row |
-| graph-3.svg | graph_3 | the Post score |
+| graph-3.svg | graph_3 | the Feed score |
 
 `graph-3.svg` is the one exception: Material **Symbols** only (hence the
 `0 -960 960 960` viewBox), and **derived** — Material ships no FILL-1 cut,

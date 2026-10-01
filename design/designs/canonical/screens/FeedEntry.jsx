@@ -1,4 +1,4 @@
-/* WHY THIS REACHED YOU — level one of the Post score's drill-down (backlog item
+/* WHY THIS REACHED YOU — level one of the Feed score's drill-down (backlog item
    13, ruled by jakob 2026-09-11). The score on a card or a detail surface opens
    it, and it answers the one question a ranked feed owes its reader: why is this
    post in MY feed, and not somebody else's.

@@ -22,8 +22,8 @@ const SR_ONLY = {
 
    So this is one thing: a quiet figure that opens its explanation. It does not
    render the explanation. There is no expand-in-place variant, because the
-   product's one figure is the score every ranked card wears — the Post score,
-   and the same figure on the feed's comment, person and tag cards — and its
+   product's one figure is the score every ranked card wears — the Feed score,
+   one figure and one name on every kind of card — and its
    explanation is four screens deep, not three rows.
    Nothing here is designed against a number that does not exist yet — earnings
    included.
@@ -39,7 +39,7 @@ const SR_ONLY = {
 /* THE FIGURE IS DRAWN WHATEVER THE READING MODE SAYS (jakob's ruling, the geek
    round's review). Geek mode governs the number PAIRS — the two-parameter
    readings the faces and the tag objects already stand in for — and nothing
-   else. A Post score has no glyph that carries its magnitude, so hiding the
+   else. A Feed score has no glyph that carries its magnitude, so hiding the
    digits would leave the `graph` mark saying only "there is a score", which is
    the black box §7 exists to refuse. */
 export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, overMedia = false, node }) {

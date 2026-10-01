@@ -1,7 +1,7 @@
 Use `ExplainableNumber` for any figure the product shows. It is the affordance, never the explanation.
 
 ```jsx
-<ExplainableNumber glyph="graph" label="Post score" value="15.20" onOpenDetail={openScore} />
+<ExplainableNumber glyph="graph" label="Feed score" value="15.20" onOpenDetail={openScore} />
 ```
 
 - **Every number is explainable** (§7). A figure with no route to what produced it is the black box again, just smaller — so `onOpenDetail` is not optional in spirit.
@@ -10,4 +10,4 @@ Use `ExplainableNumber` for any figure the product shows. It is the affordance, 
 - **Negative is ordinary:** a minus sign, no colour. `error` is failure, and a low score is not one.
 - Never a badge, a trend arrow, or a sparkline.
 - **There is no expand-in-place variant**, and do not add one for a number that does not exist yet. The score's explanation is four screens (`FeedEntry` and below), whatever kind of card wears it; when a second figure arrives, design its explanation then.
-- **One figure, two spoken names.** A post card's score is `Post score`; the feed's comment, person and tag cards say `Feed score`, because the rank is about the paths leading to a thing, not its kind.
+- **One figure, one name.** Every ranked card's score is `Feed score` — a post, a comment, a person, a tag and every kind to come — because the rank is about the paths leading to a thing, not its kind.

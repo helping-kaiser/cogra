@@ -3,8 +3,8 @@
  * explanation (§7). It does not render the explanation.
  *
  * There is no expand-in-place variant. The product's one figure is the score
- * every ranked card wears — the Post score, and the same figure on the feed's
- * comment, person and tag cards — and its explanation is four screens deep
+ * every ranked card wears — the Feed score, one figure and one name on a post,
+ * a comment, a person and a tag alike — and its explanation is four screens deep
  * (`FeedEntry` → `RankPath` → `RankHop` → `RankRecords`). Nothing here is
  * designed against a number that does not exist yet.
  */

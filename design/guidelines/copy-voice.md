@@ -1619,7 +1619,7 @@ person, and the way back costs nothing.
 
 ## The score drill-down and the opinions sheets
 
-Every new line on the Post score's four drill-down boards and on the two
+Every new line on the Feed score's four drill-down boards and on the two
 opinions sheets. The register the round was ruled into is paths, people
 and connections — never statistics — so the words are sparse by design:
 each board says what the reader is looking at, and the honesty lands in
