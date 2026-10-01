@@ -14,7 +14,10 @@
    the results into the staged section above them, a `StagedReference` with
    its × — the post-MVP chat pickers' idiom (jakob, 2026-10-01): here the post
    is in and the person is still to add. The × un-stages the citation on the
-   spot; the composer's own × still removes it too. The composer's cap still
+   spot; the composer's own × still removes it too. Both moves are spoken as
+   well as seen — `PickAnnouncement`, `Added — in the staged list.` and
+   `Removed from the staged list.`, the shared anatomy's polite status
+   message (`TagPicker`). The composer's cap still
    bounds the batch — ten references (`ComposeSealCited`) — and how the list
    reads once the tenth is in is not drawn yet.
 
@@ -36,6 +39,7 @@ export function Screen() {
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
           <StagedReference kind="post" name="Salt maps of the coast road" sub="@sol · 3d" src="post-photo.jpg" onRemove={() => {}} />
         </div>
+        <PickAnnouncement said="Added — in the staged list." />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="person" name="Sal Torres" sub="@saltorres" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />

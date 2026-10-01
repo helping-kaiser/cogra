@@ -148,6 +148,28 @@ function ExactTail({ exact, spoken }) {
   );
 }
 
+/* THE PICKERS' QUIET ANNOUNCEMENT (jakob 2026-10-01). A pick moves its row out
+   of the list into the staged section above it, and a staged row's × moves it
+   back — a change an eye sees and an ear does not. So `TagPicker` and
+   `ReferencePicker` carry one status message, the WCAG 4.1.3 pattern in
+   `Snackbar`'s own wiring: `role="status"`, `aria-live="polite"`, mounted
+   whether or not it has anything to say, because assistive technology only
+   announces changes to a region it was already watching. It is the
+   confirmation's register, never the field error's `role="alert"`: polite, so
+   it waits behind what is already being read rather than cutting it off.
+
+   SPOKEN ONLY, IT DRAWS NOTHING. Not a `Snackbar`: the row's move is already
+   the visible confirmation, and a toast over a picker the reader is still
+   working would cover the list they are picking from. A pick says `Added — in
+   the staged list.`; the × says `Removed from the staged list.` */
+function PickAnnouncement({ said = "" }) {
+  return (
+    <div role="status" aria-live="polite" style={SR_ONLY}>
+      {said}
+    </div>
+  );
+}
+
 /* An opinion of one gentle record — the vouch-back default made a bundle. */
 function mkBundle(pDirected, pInterest) {
   const pair = { pDirected, pInterest };
@@ -2817,7 +2839,14 @@ function ScoreOrigin({ kind = "post", score = "15.20" }) {
    THE AVATARS ARE `aria-hidden` BY THE MASTER, so the trace carries its own
    screen-reader line — the same discipline every stance readout takes — and
    the line is kind-neutral, ending `then what reached you`, the page title's
-   own words, because the mark beside it already says the kind. */
+   own words, because the mark beside it already says the kind.
+
+   ONE HOP NAMES THE PERSON; MORE HOPS TAKE THE GENERIC FORM (jakob
+   2026-10-01). A path through one person is spoken `You, then @ada, then what
+   reached you`; a path through two or more is spoken `You, then several
+   steps, then what reached you`, because a chain of handles read aloud
+   buries the reached thing at its end. The row's `Through @kel and @wren`
+   still says who. */
 const TRACE_ENDS = {
   post: { kind: "post", src: "post-photo.jpg" },
   comment: { kind: "comment" },
@@ -2826,7 +2855,8 @@ const TRACE_ENDS = {
 };
 
 function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
-  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then what reached you`;
+  const between = people.length === 2 ? `@${people[1].handle}` : "several steps";
+  const spoken = `You, then ${between}, then what reached you`;
   return (
     <span style={{ display: "inline-flex", alignItems: "center" }}>
       {people.map((person, index) => (
