@@ -1,4 +1,4 @@
-/* ONE STEP — level three of the Post score's drill-down (backlog item 13). A
+/* ONE STEP — level three of the Feed score's drill-down (backlog item 13). A
    step row on `RankPath` opens it, and it answers the question a folded step
    raises the moment a reader sees it: one face stands there, and the row under
    it said two opinions. Which two, and why do they read as one?

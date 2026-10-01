@@ -70,6 +70,31 @@ export interface CommentCardProps {
   targetKind?: string;
   /** Opens the target. Shown only when both `target` and this are set. */
   onOpenTarget?: () => void;
+  /**
+   * How the card names what it answers: `"line"` (default — the one-line
+   * pointer, where a comment is listed away from its thread) or `"thread"`
+   * (the feed card's — the target as a head row, its own door, and the
+   * comment hung under it on a connector rule). Needs `targetDetail`; falls
+   * back to `"line"` without it.
+   */
+  targetShape?: "line" | "thread";
+  /**
+   * What the `"thread"` head row draws: a post's title over its author's
+   * handle, or a comment's author over its first words; the post's cover.
+   */
+  targetDetail?: { title: string; sub?: string; cover?: string };
+  /**
+   * The card's own door: the words (and the pictures) open it. In the feed,
+   * the comment's thread scrolled to it. Things with their own meaning keep it.
+   */
+  onOpen?: () => void;
+  /**
+   * Draws `onReply` as the comment glyph (`GlyphAction`, "Reply to @handle")
+   * in the feed card's third slot instead of the thread's text button.
+   */
+  replyGlyph?: boolean;
+  /** Shows `ShareButton`, closing the row — the feed card's. A thread passes none. */
+  onShare?: () => void;
   /** Extra affordances in the same row as the stance control, Reply and Edit. */
   actions?: React.ReactNode;
   /** Extra overflow-menu items, appended after the license entry. */
@@ -82,6 +107,14 @@ export interface CommentCardProps {
    * timestamp and the thread position survive around it.
    */
   redacted?: boolean | import("../honesty/SensitiveVeil").RedactedContentProps;
+  /**
+   * The feed score, already formatted, where the comment is RANKED — a feed
+   * card. Second in the affordance row, `graph_3` plus the number, exactly as
+   * `PostCard` wears it, opening the same trace. A thread passes none.
+   */
+  score?: string;
+  /** Opens the score's trace (`FeedEntry`). */
+  onOpenScore?: () => void;
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
   /**

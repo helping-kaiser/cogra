@@ -18,7 +18,10 @@ import { MonogramAvatar } from "../people/ActorChip.jsx";
    one line of it is the point. That is why the column carries no gap: title and
    snippet are one two-line address, not two facts. */
 
-export function QuotedRow({ title, snippet, name, src }) {
+/* `mark` STANDS WHERE THE PICTURE STANDS, for a quoted thing whose face is
+   not a person's (the feed cards, ruled 2026-10-01): a tag held above the
+   score's trace is its `#` tile, `NodeMark`'s, never a monogram. */
+export function QuotedRow({ title, snippet, name, src, mark }) {
   return (
     <div
       style={{
@@ -31,7 +34,7 @@ export function QuotedRow({ title, snippet, name, src }) {
         background: "var(--surface-container-highest)",
       }}
     >
-      <MonogramAvatar name={name} size={32} src={src} />
+      {mark ?? <MonogramAvatar name={name} size={32} src={src} />}
       <span style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <span
           style={{

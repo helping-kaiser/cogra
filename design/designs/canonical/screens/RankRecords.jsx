@@ -1,4 +1,4 @@
-/* WHAT LANDED — level four, the floor of the Post score's drill-down (backlog
+/* WHAT LANDED — level four, the floor of the Feed score's drill-down (backlog
    item 13). The two signed records behind one step, and below them there is
    nothing but the network's own published sequence.
 

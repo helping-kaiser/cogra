@@ -5,11 +5,15 @@ import { ActorChip } from "../people/ActorChip.jsx";
 import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
 import { LICENSE_MENU_LABEL } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
+import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 import { MediaGallery } from "../media/MediaAttachment.jsx";
 import { RedactedContent, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
+import { ShareButton } from "./ShareButton.jsx";
+import { GlyphAction } from "./GlyphAction.jsx";
+import { NodeMark } from "./ReferenceRow.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -23,6 +27,21 @@ import { RedactedContent, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
    "View n replies" line (`replyCount`); `replies` renders them expanded. */
 
 const MAX_INDENT_DEPTH = 1;
+
+/* The thread shape's head-row door: a bare button
+   around what it names, the state layer on the whole block. */
+const TARGET_DOOR = {
+  display: "block",
+  width: "100%",
+  border: 0,
+  background: "none",
+  padding: 0,
+  cursor: "pointer",
+  fontFamily: "var(--font-sans)",
+  color: "var(--on-surface)",
+  textAlign: "left",
+  borderRadius: "var(--radius-small)",
+};
 
 /* @handle tokens read as the person they name. Colour is ALL this is: a handle
    typed into a body is text, never a record — the mention that binds is the
@@ -72,6 +91,31 @@ export function CommentCard({
   target,
   targetKind = "post",
   onOpenTarget,
+  /* HOW THE COMMENT NAMES WHAT IT ANSWERS (the feed cards, ruled 2026-10-01).
+     · "line" (the default) — the one-line `On …` pointer, where a comment is
+       listed away from its thread: a profile's comments, a tag's page.
+     · "thread" — the FEED's shape: the post as a head row (its own mark, its
+       title, its author) and the comment hung under it on a connector rule,
+       the way a reply hangs under what it answers. A comment is the one feed
+       card whose meaning depends on something else, and this is the shape
+       that says so before a word of it is read.
+     `targetDetail` carries what the head row draws — { title, sub, cover }: a
+     post's title over its author's handle, or a comment's author over its
+     first words, `QuotedRow`'s rule — and `onOpenTarget` is its door. */
+  targetShape = "line",
+  targetDetail,
+  /* THE CARD'S OWN DOOR (`PostCard`'s `onOpen`, the comment's twin). Where it
+     is given, the comment's words are a door: in the feed, to its thread,
+     scrolled to it. Everything with its own meaning keeps it — the head row
+     opens the post, the author chip the person, the chips their tags. */
+  onOpen,
+  /* THE REPLY AS THE COMMENT GLYPH, in the feed card's third slot (opinion ·
+     score · the kind's own act · share). The act is `onReply`'s; only its
+     drawing changes from the thread's text button to `GlyphAction`. */
+  replyGlyph = false,
+  /* SHARE CLOSES THE ROW where it is given — the feed card's — exactly as
+     `PostCard`'s does. A thread passes none. */
+  onShare,
   actions,
   menuItems = [],
   topics = [],
@@ -87,6 +131,14 @@ export function CommentCard({
      its thread (`CommentRemoved`), both wearing the mark a removed post
      wears. */
   redacted,
+  /* THE SCORE, WHERE THE COMMENT IS RANKED (the feed-cards rework, 2026-10-01).
+     A comment met in the feed reached the reader by the same paths a post does,
+     so it wears the same figure the post card wears — `graph_3` and the number,
+     second in the row after the opinion — and opens the same trace. A thread
+     passes none: inside the sheet a comment stands by the thread's order, not
+     by a rank. Additive: given none, the card renders exactly as before. */
+  score,
+  onOpenScore,
   children,
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
@@ -98,18 +150,65 @@ export function CommentCard({
      has no title to leave outside it, so what carries the informed choice is
      the frame the card already wears — the author, the timestamp, the topics,
      and the opinion the reader can still give. */
+  const words = <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>;
+  /* With a door (`onOpen`) the words are a link and the pictures take the
+     same tap, `PostCard`'s rule for its media in the feed — one door, no
+     control nested in another. */
+  const open = (event) => {
+    event.preventDefault();
+    onOpen();
+  };
   const body = (
     <>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{withMentions(content)}</p>
+      {onOpen ? (
+        <a href="#" onClick={open} className="cg-focus" style={{ display: "block", color: "inherit", textDecoration: "none" }}>
+          {words}
+        </a>
+      ) : (
+        words
+      )}
       {/* A comment is words first and its pictures join them (readme §13) —
           below the words, INSET at the card's medium rung rather than
           full-bleed, and capped at a comment-scale height: the media joins the
           words, it must not turn the comment into a post. Comment pictures
           never crop (jakob 2026-08-31), so multiples share a fixed square frame
           and each whole frame fits inside it; at most four ride one comment. */}
-      {Array.isArray(media) && media.length > 0 && (
+      {Array.isArray(media) && media.length > 0 && (onOpen ? (
+        <div onClick={open}>
+          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
+        </div>
+      ) : (
         <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
-      )}
+      ))}
+    </>
+  );
+  /* The thread shape needs its detail and its door; without either the card
+     falls back to the line, so a half-specified head row never draws. */
+  const shape = target && onOpenTarget && targetDetail ? targetShape : "line";
+  const shown = redacted ? (
+    <RedactedContent {...(redacted === true ? {} : redacted)} />
+  ) : sensitive ? (
+    <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
+      {body}
+    </SensitiveVeil>
+  ) : (
+    body
+  );
+  /* The comment's own part — who, what, its topics — drawn once, standing
+     straight in the card or hung on the thread shape's connector. */
+  const ownPart = (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
+        {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
+          {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
+          <OverflowMenu items={items} ariaLabel="More on this comment" />
+        </div>
+      </div>
+      {shown}
+      {/* The same topics-and-citations line a post wears, one line —
+          a comment is content like any other and signs the same acts. */}
+      {!redacted && <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />}
     </>
   );
   return (
@@ -132,7 +231,7 @@ export function CommentCard({
             thread surfaces simply pass no target. The glyph names the
             TARGET's kind (the semantic-atoms rule) — a post unless the
             comment answers something else. */}
-        {target && onOpenTarget && (
+        {target && onOpenTarget && shape === "line" && (
           <button
             type="button"
             onClick={onOpenTarget}
@@ -166,36 +265,46 @@ export function CommentCard({
             </span>
           </button>
         )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
-          {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
-            {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
-            <OverflowMenu items={items} ariaLabel="More on this comment" />
+        {shape === "thread" ? (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {/* THE HEAD ROW — its own door, to what it names (in the feed, the
+                post's detail). Its mark sits on the card, so it takes the
+                card's tile tone (`NodeMark`'s `onCard`). */}
+            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+              <NodeMark kind={targetKind} src={targetDetail.cover} onCard />
+              <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{targetDetail.title}</span>
+                <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{targetDetail.sub}</span>
+              </span>
+            </button>
+            {/* THE CONNECTOR. A rule down from the head's mark — centred on its
+                32px tile — to the comment, which hangs inset beside it the way
+                a reply hangs under what it answers. Hairline-quiet: it draws a
+                relation, not a frame. */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--card-gap)", marginLeft: "15px", paddingLeft: "27px", paddingTop: "var(--space-3)", borderLeft: "2px solid var(--border-hairline)" }}>
+              {ownPart}
+            </div>
           </div>
-        </div>
-        {redacted ? (
-          <RedactedContent {...(redacted === true ? {} : redacted)} />
-        ) : sensitive ? (
-          <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
-            {body}
-          </SensitiveVeil>
         ) : (
-          body
+          ownPart
         )}
-        {/* The same topics-and-citations line a post wears, one line —
-            a comment is content like any other and signs the same acts. */}
-        {!redacted && <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />}
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}
         {/* One affordance row, as on PostCard: the opinion leads, everything else
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
-        {(showStance || (signedIn && (onReply || (own && onEdit))) || actions) && (
+        {(showStance || score !== undefined || (signedIn && (onReply || (own && onEdit))) || onShare || actions) && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }}>
           {/* Owned by the shell — see PostCard. */}
           {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />}
-          {signedIn && onReply && (
+          {score !== undefined && (
+            <ExplainableNumber glyph="graph" label="Feed score" value={score} onOpenDetail={onOpenScore ?? (() => {})} />
+          )}
+          {signedIn && onReply && replyGlyph && (
+            <GlyphAction glyph="chat_bubble" label={author ? `Reply to @${author.handle}` : "Reply"} onPress={onReply} />
+          )}
+          {signedIn && onReply && !replyGlyph && (
             <Button variant="text" size="sm" onClick={onReply}>
               Reply
             </Button>
@@ -205,6 +314,7 @@ export function CommentCard({
               Edit
             </Button>
           )}
+          {onShare && <ShareButton targetLabel={targetLabel} onShare={onShare} />}
           {actions}
         </div>
         )}

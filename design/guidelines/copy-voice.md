@@ -1619,7 +1619,7 @@ person, and the way back costs nothing.
 
 ## The score drill-down and the opinions sheets
 
-Every new line on the Post score's four drill-down boards and on the two
+Every new line on the Feed score's four drill-down boards and on the two
 opinions sheets. The register the round was ruled into is paths, people
 and connections — never statistics — so the words are sparse by design:
 each board says what the reader is looking at, and the honesty lands in
@@ -1692,6 +1692,31 @@ having already said what was counted.
 `Nothing here yet — write the first post.` shape: calm, and naming the
 one thing that would fill it. It never scolds and it carries no `error`
 colour; a comment nobody has answered is not a fault.
+
+## The feed cards
+
+The comment, person and tag cards a reader meets beside the posts (readme
+§13, *The feed cards, ruled*), blessed by jakob 2026-10-01.
+
+**`Feed score`** — the figure's one name, on every ranked card of every
+kind: "we will have up to 10 rankable objects and it should be the same for
+all of them." It is spoken (the accessible name of the `graph_3` figure) and
+read at the top of the trace.
+
+**The tag's why-line**: `Reaches you through @ada and @tobias` — blessed.
+Under the tag's name, the people the strongest paths run through, in the
+drill-down's own `Through @ada` words; one person reads `Reaches you through
+@ada`.
+
+**The tag's glimpse line**: `@tobias · and 2 more` — blessed. Under the
+newest thing's name, its author, then how many more stand behind it; with
+nothing more, the author alone.
+
+**The tag's own act**: `Tag a new post with it` — blessed, the compose
+glyph's accessible name; the person menu's `Mention in a new post` sibling.
+
+**The comment's reply glyph** is spoken `Reply to @tobias`, the seal's own
+read-back of a reply to a comment.
 
 ## The coming-soon surfaces
 
