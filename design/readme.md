@@ -1168,8 +1168,9 @@ may serve any actor's view of the shared record to any reader. So:
   ranking honest (§9); it exposes nothing the public record does not
   already carry.
 - **The borrowed view persists through the applicant days** and hands
-  over to the member's own view the moment their first stance exists —
-  the vouch-back.
+  over to the member's own view when the vouch-back is signed — that
+  signature alone. A landed member's opinion on anything else leaves
+  the view borrowed.
 - **The vantage resolves to the most specific actor available**, and
   the band names whichever one it lands on. Anyone who arrived through
   an invite link borrows that link's ISSUER, and an applicant is still
@@ -2445,8 +2446,9 @@ the ruling that an applicant stages each kind of act once (2026-09-01).
   nothing about reaching the real surfaces changed.
 - **An exhausted kind answers in place.** Once an applicant has staged
   a post or a stance, the same control's next tap no longer opens
-  anything — it answers where it was pressed, "Your post is staged —
-  it lands with you." or the stance's equivalent. These are **self
+  anything — it answers where it was pressed, "Your post waits with
+  your application — it arrives with you." or the stance's equivalent
+  (copy-voice, *The staged-act snackbar*). These are **self
   outcomes marked info-true**, per the user-flow layer's rule that an
   all-informing `advance` fails the gate: here it does not, because
   the *first*-tap outcomes still advance to a real board, and only the
@@ -7922,6 +7924,61 @@ newer-version message, which he widened.
   bars grow the census of the four publish flows' first step, 49 → 51
   boards, so the witness wants a deliberate re-bless. `RowSigning` grew
   to 1600 and `RowWriteRule` moved beside it on the patterns page.
+### The applicant's life round — 2026-10-01
+
+jakob's night rulings on the applicant's days, from staging to the
+vouch-back (the audit's K3.9–K3.19, as recommended unless named).
+
+- **An applicant's seal stages, and says so.** The seal is the member's;
+  `Sign and publish` closes the wizard onto the applicant's own feed
+  with the staged-act line, never `Signed — it's in the thread now`.
+  From the turned-down shell New post still opens the wizard: the post
+  waits on the device as the account's own draft, and a fresh
+  application finds it (the mechanism's drafts-on-close ruling).
+- **A topic has its own staged-act line**: `Your topic waits with your
+  application — it arrives with you.`, on the tag page's topic face.
+- **Applicants do not comment in V1.0** (jakob's ruling). A comment
+  cannot wait as pending, so it is not a kind that stages: the sheet's
+  foot and `Reply` stay drawn and answer an applicant in place with
+  `Comments open when you're in.`
+- **Every account-needing slot asks on tap.** A guest meets `GuestGate`
+  from the reader's post menu (Save, Cite, Hide), the profile menus
+  (every row but Share), `Message`, the comment menu's Save and Cite,
+  and the comment foot. License terms and Share stay open. An
+  applicant's Cite and Mention take the once-each case; Save and Hide
+  are open to them.
+- **About**: the key topic names no platform; back to Join keeps every
+  field as it was left. Its once-each text already stood (item 108).
+- **Approved, landing** (`ApplicantLanding`): the waiting shell with the
+  card flipped to `Approved — your registration is landing`, no
+  control, flipping live to `VouchBack` when the record lands; the
+  `keyAt` chip draws the key-absent variant, which says the landing
+  comes from the device holding the key.
+- **The vouch-back stays reachable and alone ends the borrowed view.**
+  While the pair is incomplete the band carries `Vouch back`, so `Not
+  now` loses nothing; a first opinion on the member who vouched you in
+  is the vouch-back wherever it is signed and opens `VouchedIn`. An
+  opinion on anything else leaves the view borrowed. On `VouchedIn`
+  Android's Back is `Go to your feed`; a vouch-back that never lands is
+  an ordinary expired act, and the card and band return.
+- **The ask link rides the waiting card** (jakob's pick, (b)), its
+  caption true for a live application: it stages nobody new until the
+  answer comes.
+- **The waiting and turned-down feeds wear the filter**, as every feed
+  view does.
+- **Settings is one page for applicants too**; its docblock names each
+  row's applicant state, and before any key both key rows read `Not
+  made yet` and open the ceremony.
+- **Flagged for blessing**: the topic line; `Comments open when you're
+  in.`; About's `…signed by a key only you hold.`; the landing card's
+  title and both bodies; the waiting card's `Your ask link` and its
+  caption.
+- **The gate**: 243 → **244 screens**, 1673 → **1694 edges**, 1 gap,
+  **flows 64**, every one resolved. The witness was re-blessed twice,
+  deliberately: every applicant shell (the turned-down and landing ones
+  included) is excepted from the staging flows, the guest and applicant
+  shells from `reply-to-a-post`, and `cite-a-post`, `mention-someone`
+  and `message-someone` name their non-gate outcome.
 
 ## 15. Index
 

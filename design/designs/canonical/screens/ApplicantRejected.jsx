@@ -38,11 +38,14 @@
    through @kel's link and the feed they are reading is the one that link
    carried. Re-ranking somebody's whole feed as a side effect of being turned
    down would be a punishment the ruling is at pains not to impose. The band's
-   LINE changes, because the old one promised an approval that is not coming. */
+   LINE changes, because the old one promised an approval that is not coming.
+
+   THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
+   applicants included (readme §13, the feed's filter on screen). */
 export function Screen() {
   return (
     <>
-      <CograBand>
+      <CograBand trailing={<FeedFilter />}>
         <BorrowedViewBand
           handle="kel"
           displayName="Kel Moreau"

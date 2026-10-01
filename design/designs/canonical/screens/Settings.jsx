@@ -64,6 +64,30 @@
    that act belongs to the flow it opens, not to a page a reader came to for the
    theme.
 
+   AN APPLICANT READS THIS SAME PAGE (jakob 2026-10-01, K3.18). Account
+   management is never gated (auth.md), so applicant days draw no second
+   settings; the board is the member's, and this table names what each row is
+   for an applicant. Back goes to `ProfileApplicant`.
+
+     Theme · Giving an opinion  as for a member — device choices; the opinion
+                                input is how their one staged opinion is taken
+     Writing                    as for a member; the staged post starts from
+                                the default license
+     Reading                    as for a member; the borrowed feed wears the
+                                same filter
+     Hidden accounts            as for a member — hiding is a reading comfort,
+                                open to applicants
+     Recovery code · Your key   before the key ceremony both read
+                                `Not made yet` and open the ceremony
+                                (`KeyCeremony`); after it, as for a member
+     Sessions · Credentials     as for a member
+     Sign out (and its switch)  as for a member — an applicant signs out
+                                exactly as a member does (auth.md)
+     Delete account             open, as account management; what it removes
+                                before any record has landed is not yet ruled
+                                (backlog)
+     About · the support stack  as for a member
+
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
    113, jakob's ruling B3): `3 kept picks waiting`, last in the Key backup
    group, opening `KeptPicksReview` again. It is there only while picks kept

@@ -59,7 +59,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 5438,
+      "h": 5529,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -292,7 +292,7 @@
       "file": "ChangeEmailLinked.dc.html",
       "title": "Settings · the new address's link, opened",
       "x": 5760,
-      "y": 1928,
+      "y": 2932,
       "w": 390,
       "h": 844,
       "page": "profile"

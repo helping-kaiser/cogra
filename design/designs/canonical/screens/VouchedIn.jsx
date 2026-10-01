@@ -59,6 +59,17 @@
    it came from no longer exists, so a back arrow would be a lie. A bottom bar
    would make a ceremony into a tab. One way out, forward.
 
+   ANDROID'S BACK IS `Go to your feed` (jakob 2026-10-01). The board draws no
+   back, but the platform's gesture still exists, and it does exactly what the
+   one control does: the feed, never the pad or the card behind it.
+
+   A VOUCH-BACK THAT NEVER LANDS IS AN ORDINARY EXPIRED ACT. This board shows
+   while the opinion is signed and still settling. If it expires instead of
+   landing, the reader gets the same did-not-land notice any expired act
+   raises — nothing special to the ceremony — and since the pair is still
+   incomplete, the vouch card and the band's `Vouch back` return
+   (`VouchBack`).
+
    ── THE MOTION ──────────────────────────────────────────────────────────────
    THIS IS A DECLARED DEVIATION, not an oversight. readme §4 Motion says
    "nothing inside an arriving screen animates — no list entrance, no stagger"

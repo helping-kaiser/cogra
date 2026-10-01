@@ -227,7 +227,10 @@ both platforms share one string (jakob).** Push's settings talk about
 *when*, not *where* (`Announce new notifications the moment they
 arrive.`), and where the noun is unavoidable the one shared sentence
 names both concretely (`…the notification settings of the browser or
-phone itself`) rather than rendering twice.
+phone itself`) rather than rendering twice. About's key topic is one of
+these: `Everything you publish is signed by a key only you hold.` — no
+noun, one string for both (jakob 2026-10-01, the bare "device" retired;
+the wording **flagged for blessing**).
 
 ## The "?" dialogs
 
@@ -543,6 +546,22 @@ of opening the real surface again; one line per kind, same shape:
 
 - `Your post waits with your application — it arrives with you.`
 - `Your opinion waits with your application — it arrives with you.`
+- `Your topic waits with your application — it arrives with you.` — the
+  Affinity on a tag page, its own once-each kind. Drafted from the
+  audit's recommendation (jakob 2026-10-01, "as recommended"); **flagged
+  for blessing**.
+
+The post's line is also the seal's answer for an applicant: `Sign and
+publish` stages the post rather than landing it, so the wizard closes onto
+the applicant's own feed with this line, never with `Signed — it's in the
+thread now, still settling.` (jakob 2026-10-01).
+
+**Comments are not a kind that stages** (jakob 2026-10-01: applicants do
+not comment in V1.0). A staged comment would wear `Still settling` for a
+reply that cannot wait as pending, so the comment sheet's foot and a
+comment's `Reply` answer an applicant in place, as the dead Invites
+control does: `Comments open when you're in.` — **flagged for blessing**.
+A guest gets the join prompt there instead.
 
 ## In-flight labels
 
