@@ -301,15 +301,14 @@
     },
     {
       "name": "guest-turns-applicant",
-      "description": "Sign in or join, offered on every guest screen, runs out to the invite and through Create account into the applicant days.",
+      "description": "Sign in or join, offered on every guest screen, runs a visitor who holds no link out to the invite and through Create account into the applicant days.",
       "status": "resolved",
       "startsOn": [
         "FeedBare",
-        "GuestGate",
-        "Main"
+        "GuestGate"
       ],
       "steps": [
-        "start · «Sign in or join» on 3 boards → SignIn",
+        "start · «Sign in or join» — to SignIn on 2 boards → SignIn",
         "SignIn · 8 «New here? Enter your invite» → InviteEntry",
         "InviteEntry · 3 «Continue» → Join — the link checks out",
         "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
@@ -320,6 +319,24 @@
         "Join",
         "ApplicantFeed",
         "FeedBare",
+        "GuestGate"
+      ]
+    },
+    {
+      "name": "join-with-the-link-in-hand",
+      "description": "A visitor who arrived through a live invite link presses Sign in or join and meets the join form with the link already held — never the door, never a second paste.",
+      "status": "resolved",
+      "startsOn": [
+        "GuestGate",
+        "Main"
+      ],
+      "steps": [
+        "start · «Sign in or join» — to Join on 2 boards → Join",
+        "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "Join",
+        "ApplicantFeed",
         "GuestGate",
         "Main"
       ]
@@ -1802,6 +1819,7 @@
         "follow-a-citation",
         "guest-turns-applicant",
         "join-with-an-invite",
+        "join-with-the-link-in-hand",
         "make-your-key",
         "open-a-posts-pictures",
         "reply-to-a-post",
@@ -1813,6 +1831,7 @@
       "endpoint": [
         "guest-turns-applicant",
         "join-with-an-invite",
+        "join-with-the-link-in-hand",
         "make-your-key",
         "verify-the-email"
       ]
@@ -2464,7 +2483,8 @@
     },
     "GuestGate": {
       "flows": [
-        "guest-turns-applicant"
+        "guest-turns-applicant",
+        "join-with-the-link-in-hand"
       ],
       "endpoint": []
     },
@@ -2523,9 +2543,12 @@
     "Join": {
       "flows": [
         "guest-turns-applicant",
-        "join-with-an-invite"
+        "join-with-an-invite",
+        "join-with-the-link-in-hand"
       ],
-      "endpoint": []
+      "endpoint": [
+        "join-with-the-link-in-hand"
+      ]
     },
     "KeyCeremony": {
       "flows": [
@@ -2561,7 +2584,7 @@
     "Main": {
       "flows": [
         "follow-a-citation",
-        "guest-turns-applicant",
+        "join-with-the-link-in-hand",
         "open-a-posts-pictures",
         "reply-to-a-post",
         "trace-a-score-to-its-records",
