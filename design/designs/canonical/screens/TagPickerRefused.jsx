@@ -17,6 +17,8 @@
    would be the product inventing a name the reader did not type. The rule line
    turns into the refusal and the first row simply is not there — so the name
    field's keyboard action key, which stages the first row, stages nothing.
+   The pickers' status message (`PickAnnouncement`) stays silent with it; the
+   refusal's own `role="alert"` is what speaks.
 
    AND THE LIST IS EMPTY WITHOUT SAYING SO. The rows answer a name; an illegal
    string has none, and an empty-list message here would be a second voice
@@ -54,6 +56,7 @@ export function Screen() {
             A tag name is letters, digits, dot, dash and underscore.
           </p>
         </div>
+        <PickAnnouncement />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ flex: 1 }} />

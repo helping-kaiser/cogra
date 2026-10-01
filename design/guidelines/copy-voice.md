@@ -527,6 +527,16 @@ act) keeps them and says itself.
 `StagedReference`'s own name for the control, once a pick has moved the row
 above the list (the pickers' staged section, jakob 2026-10-01).
 
+**A pick, and its undoing, said aloud** — the pickers' status message
+(`PickAnnouncement`), polite and spoken only, since the row's move is all
+the eye gets:
+
+- `Added — in the staged list.` — on a pick.
+- `Removed from the staged list.` — on a staged row's ×.
+
+Both blessed per jakob's direction (2026-10-01: "fix as recommended"), the
+exact wording flagged.
+
 ## The staged-act snackbar
 
 An applicant's second tap of a kind already staged answers here instead

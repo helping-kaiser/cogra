@@ -74,6 +74,12 @@
    list being picked from does not move under the reader. A tag the composer
    already holds stands in the staged section the moment the picker opens.
 
+   THE MOVE IS SPOKEN TOO (jakob, 2026-10-01). The row's move is all an eye
+   needs; an ear gets `PickAnnouncement`, a polite status message that says
+   `Added — in the staged list.` on a pick and `Removed from the staged list.`
+   on the ×, and draws nothing. This board is the moment after `saltflats`
+   went in.
+
    `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01). Both return to
    the composer the picker was opened from, every staged tag kept — back is
    navigation, never an undo; `Done` is the affirmative twin, because a back
@@ -90,6 +96,7 @@ export function Screen() {
           <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} />
           <StagedReference kind="topic" name="saltflats" onRemove={() => {}} />
         </div>
+        <PickAnnouncement said="Added — in the staged list." />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
