@@ -61,7 +61,13 @@ import { formatStancePair, formatTagPair, nearestAnchor, nearestTagAnchor, SR_ON
 
 /** A node kind's mark, on any surface: avatar, cover, T, #, or the kind's
  *  glyph from the ONE semantic assignment (`NODE_GLYPHS`, the glyph atoms). */
-export function NodeMark({ kind, name, src, node }) {
+/* ON A CARD THE TILE TAKES THE DARKER TONE (jakob, the feed cards,
+   2026-10-01). A card stands on `surface-container-highest`, the tile's own
+   tone, so a tile drawn on one vanished into it — the `#` on the tag card was
+   invisible. `onCard` gives it `surface-container-high`, the tone
+   `ContentRow`'s disc already wears on the same card. Everywhere off a card
+   the tile is unchanged. */
+export function NodeMark({ kind, name, src, onCard = false, node }) {
   if (kind === "person") return <MonogramAvatar name={name} src={src} size="md" node={node} />;
   const tile = {
     height: "32px",
@@ -70,7 +76,7 @@ export function NodeMark({ kind, name, src, node }) {
     display: "grid",
     placeItems: "center",
     borderRadius: "var(--radius-small)",
-    background: "var(--surface-container-highest)",
+    background: onCard ? "var(--surface-container-high)" : "var(--surface-container-highest)",
     color: "var(--text-secondary)",
     overflow: "hidden",
   };

@@ -466,7 +466,7 @@ fills is the most common way an icon set starts to look accidental.
 | `more_vert` | every overflow menu — a post's, a comment's, and either profile's actions row |
 | `chat_bubble` | the comments affordance on a card |
 | `volume_up` / `volume_off` | a video's sound toggle |
-| `graph_3` | the Post score |
+| `graph_3` | the Feed score |
 | `bookmark` | the unsave control on a Saved row — the system's own addition (the review-fix round), not yet in the product's set |
 | `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
 | `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
@@ -585,7 +585,7 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the product's one figure is the score every ranked card wears (the Post score on a post, the same figure on a comment, a person and a tag in the feed) and its explanation is four screens deep | — |
+| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the product's one figure is the score every ranked card wears (the Feed score, on a post, a comment, a person and a tag alike) and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
@@ -975,7 +975,7 @@ sum actually exceeded it.
 "Intentional additions" above. All four are §6 requirements the product
 has not met yet, not new ideas.
 
-**One affordance row.** The stance control leads, the Post score follows,
+**One affordance row.** The stance control leads, the Feed score follows,
 then anything else the post grows — so each surface stops arranging them
 itself. Nothing in that row may take `primaryContainer`; the stance knob
 already spends the screen's one loud surface.
@@ -986,7 +986,7 @@ It is now a `License terms` item in the new `OverflowMenu`, which every
 post and comment carries — the row carries what a reader reaches for, the
 menu carries the rest.
 
-**The Post score is a card prop, shown as `graph_3` plus the number.**
+**The Feed score is a card prop, shown as `graph_3` plus the number.**
 Not the word "Score", and never an emoji: the product's only emoji
 vocabulary is the stance readout, and a second face on the same card
 would make both unreadable. Uncapped, negative allowed, never coloured —
@@ -1081,7 +1081,7 @@ its post.
 
 ### Design-ready, not yet built
 
-**The score is "Post score" to readers**, and its drill-down is
+**The score is "Feed score" to readers**, and its drill-down is
 **four full screens, not nested containers**: FeedEntry → RankPath →
 RankHop → the raw records. The reason for screens is that a container
 would get confusing at four levels; the risk is the reader feeling shot
@@ -1405,7 +1405,7 @@ as Q46 in docs/open-questions.md):
   maps of the coast road*").
 - **Ranks on every kind**, quiet viewer-relative numbers on the
   row's right edge; explained by the "?", drill-down waits for the
-  Post score screens (item 13).
+  Feed score screens (item 13).
 - **The Explore tab at rest**: recent searches (device-local) plus
   a PROMINENT entry into THE SKY — the 3D graph view (item 16) — never a
   small side thing. Typing drops the Sky entry off the bottom
@@ -1921,7 +1921,7 @@ entry first". What stands:
   wallet's traceability promise owes,
   the settings and invites screens, the chat surface (its band entry
   now on every tab root), the item / offer surfaces, the Sky
-  (item 16), and item 13's Post score drill-down. Cross-flow reuse
+  (item 16), and item 13's Feed score drill-down. Cross-flow reuse
   is wired as edges into the master boards (the describe sheet, the
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad, and the three pattern boards — the guest gate, the
@@ -3430,7 +3430,7 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   drawn, then jakob's review removed the follow anchors and the
   comment's reply affordances), 79 →
   **56 gaps**, and flows 58/53/5 → **58/55/3**. The twenty-four close
-  and one opens — `TagPage`'s own Post score row, which every board
+  and one opens — `TagPage`'s own Feed score row, which every board
   drawing a post card carries. `open-a-topic` and `add-a-topic` resolve
   for the first time, which is the round's headline: both had been
   blocked since the flow set was authored. No hand-drawn board moved a
@@ -3935,7 +3935,7 @@ row's geometry is identical in both modes.
 
 - **The pairs, and only the pairs.** Stance pairs, tag pairs and
   citation pairs — the two-parameter readings a face or a tag object
-  already stands in for. The Post score and the viewer-relative rank
+  already stands in for. The Feed score and the viewer-relative rank
   keep their digits in both modes: neither has a glyph that could carry
   its magnitude, and a `graph` mark alone would say only that a score
   exists, which is the black box §7 refuses. Money, ages, comment and
@@ -4221,7 +4221,7 @@ drew against it. Ruled by jakob the same day.
   **59** and flows hold at **60/57/3**. The edge jump is honest and
   expected: 19 roots × the bell, `FeedUnread`'s clone of `Feed`'s
   eighteen, and the two new boards' own. The two new gaps are
-  `FeedUnread` inheriting `Feed`'s Post Score and chats gaps. The
+  `FeedUnread` inheriting `Feed`'s Feed score and chats gaps. The
   witness moved only in origin lists — the three new boards join every
   flow that starts on a bottom-nav tap, and `FeedUnread` joins the ones
   that start on a post card; no step rerouted.
@@ -4320,7 +4320,7 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   feed boards clone `Feed`'s eighteen each, `ProfileDeleted` takes
   `ProfileNotFound`'s six, and the request flow's own six close the
   settings row's gap without opening one. The four new gaps are the two
-  clones inheriting `Feed`'s Post Score and chats — `FeedUnread`'s own
+  clones inheriting `Feed`'s Feed score and chats — `FeedUnread`'s own
   inheritance, twice. The new flow is `request-account-deletion`, which
   ends where the flow leaves the app; the witness moved only in origin
   lists and the six start counts they feed, and no step rerouted.
@@ -4492,7 +4492,7 @@ such.
   someone's operational rows live is a question about whose disk they sit
   on. The rows are rebuildable either way, so adopting a bound later is
   maintenance and never a loss.
-- **The score reads `Post score` in prose too** — `PostCard`'s docblock
+- **The score reads `Feed score` in prose too** — `PostCard`'s docblock
   and its `.d.ts`, the icons README, the numbers card, the iconography
   guideline. Graph gap names keep the old spelling by ruling.
 - **The gate**: 170 → **171 boards**, 1263 → **1287 edges**, gaps 63 →
@@ -4500,7 +4500,7 @@ such.
   eighteen (the feed's own anatomy, plus Undo), `ProfileDeleted`'s four
   (its counts, its anchor, its tabs, its rows — the page it got back),
   the Saved row's unsave, and Save on the own-post menu. The two new gaps
-  are `FeedHidden` inheriting the feed's Post Score and chats. The
+  are `FeedHidden` inheriting the feed's Feed score and chats. The
   witness moved in origin lists and their start counts only —
   `FeedHidden` joining nine feed-rooted flows, `ProfileDeleted` joining
   the two profile ones its new controls open — plus `RemoveMenu`'s two
@@ -4513,7 +4513,7 @@ such.
 ### The score-and-opinions round — 2026-09-11
 
 Round 4 of the MVP design queue, and the last of the slice-3 remainders:
-the Post score's drill-down (backlog item 13, all four screens) and the
+the Feed score's drill-down (backlog item 13, all four screens) and the
 opinions-on-content list (item 55). jakob ruled every input before the
 round opened — level one shows the strongest handful with a quiet row
 that expands, the all-paths-moved case is a quiet line in the graph
@@ -4565,7 +4565,7 @@ are reading about.
   believed.
 - **The numbers here are not pairs, so they paint in both readings.** A
   score and a path's contribution have no glyph that could carry their
-  magnitude, exactly as the Post score itself has none (§13, *Geek
+  magnitude, exactly as the Feed score itself has none (§13, *Geek
   mode*). The pairs on these boards — a step's opinion, a record's own —
   are `StanceValue`s and follow the mode like every other pair.
 - **The five parts are glue, not masters.** `ScoreOrigin`, `PathTrace`,
@@ -4630,9 +4630,6 @@ and `who-holds-an-opinion-on-this`. **No flow changed status**: none of
 the three blocked ones was blocked on item 13. The witness otherwise
 moved only in origin lists — the four publish flows' `nav · New post`
 start growing 39 → 44 boards as the five drill-down boards join the bar.
-One label was aligned in passing: `FeedHidden`'s score edge read `Post
-score` where the other 21 read `Post Score`, which would have dropped it
-silently from the control start.
 
 ### The vouch-back ceremony — 2026-09-11
 
@@ -4764,13 +4761,13 @@ pass: one board, one law, and two sweeps.
   there. **No board draws it**: the law and the master's fallback are
   the entire mechanism, and a second `ReaderPostMenu` differing in one
   word would be four-fifths of a board already on the canvas.
-- **The score reads `Post score` in prose, wherever prose says it** —
+- **The score reads `Feed score` in prose, wherever prose says it** —
   `readme` in six places, `ExplainableNumber` across its three files,
   `PostCard`'s prompt, `ReelRail`, the score glyph's note in `Icon`,
   the media card, the core-loop prototype's notes, and `shell.mjs`.
-  The graph's 23 edge labels keep `Post Score`, and the maps generated
-  from them with it: `flows.json` starts `trace-a-score-to-its-records`
-  by matching that label, so the string is a key there and not a word.
+  The graph's edge labels read `Feed score` too, and `flows.json` starts
+  `trace-a-score-to-its-records` by matching that label, so a rename of
+  the word moves the flow's key with it.
   Gap names were the same exception and no longer carry it — item 13's
   gaps closed with the drill-down.
 - **The text clamp is founded on the square tile.** Eighteen lines at
@@ -5268,7 +5265,7 @@ none of them needing a board. Ruled by jakob the same day.
   reaches the page — a connection to it or none — and sees what is
   tagged. The only thing a guest lacks is an opinion of the topic, so
   the stance face wears the no-opinion 🫥 and the borrowed vantage
-  (genesis, for a bare arrival) ranks what they read, post scores
+  (genesis, for a bare arrival) ranks what they read, feed scores
   included. `TagPage`'s three stance faces take the `GuestGate` outcome
   `Reel` already spells for a shared board; `TagPageHeld` takes none,
   because no guest can hold a topic. No guest board of its own, by the
@@ -7141,7 +7138,7 @@ they turn a kind on, on one new board, `FeedKinds`.
   is about the paths leading to a thing and never its kind, so the comment,
   the person and the tag wear the post card's figure — `graph_3` and the
   number, second in the row after the opinion — and it opens the same trace,
-  `FeedEntry`. A post's figure is spoken `Post score`; the other three say
+  `FeedEntry`. A post's figure is spoken `Feed score`; the other three say
   `Feed score`. `CommentCard` gained `score`, and `PostCard` `scoreLabel`,
   both additive.
 - **`PostCard` gained `menuLabel` and `stanceAxes`**, both additive, so the

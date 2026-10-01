@@ -86,6 +86,7 @@ const {
   VideoTransport,
   SeekLine,
   ShareButton,
+  GlyphAction,
   ExplainableNumber,
   MediaViewer,
   ReelRail,
@@ -2597,7 +2598,7 @@ function SettingsBackupBody({ app = false, error }) {
    THE NUMBERS HERE ARE NOT PAIRS, SO THEY PAINT IN BOTH READING MODES. Geek
    mode governs the two-parameter readings a face stands in for; a score and a
    path's contribution have no glyph that could carry their magnitude, exactly
-   as the Post score itself has none (readme §13, geek mode). The pairs on these
+   as the Feed score itself has none (readme §13, geek mode). The pairs on these
    boards — a step's opinion, a record's own — are `StanceValue`s and follow the
    mode like every other pair in the product.
 
@@ -2671,7 +2672,7 @@ function ScoreOrigin({ score = "15.20" }) {
           color: "var(--text-secondary)",
         }}
       >
-        Post score
+        Feed score
         <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{score}</span>
       </span>
     </div>
@@ -3027,224 +3028,30 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
   );
 }
 
-/* ── THE V1.0 FEED KINDS (the three-feed-cards round, 2026-09-30) ──────────
+/* ── THE V1.0 FEED KINDS (the three-feed-cards round 2026-09-30; the
+   anatomies ruled by jakob 2026-10-01) ─────────────────────────────────────
    jakob's ruling (the fifteen-first round): the four served kinds — Posts,
-   Comments, Profiles, Tags — everywhere, feed and search alike. The filter
-   already offered all four; these are the three cards a reader meets once
-   they turn a kind on. Each is a real master, mounted — nothing hand-built
-   (the componentization law) — and each follows the idiom its kind already
-   wears somewhere else, so none of them is new anatomy.
+   Comments, Profiles, Tags — everywhere, feed and search alike. These are the
+   three cards a reader meets beside the posts once they turn a kind on. Each
+   is a real master, mounted — nothing hand-built (the componentization law).
 
-   THE COMMENT KEEPS ITS OWN MASTER. A comment met away from its thread is
-   already drawn — `CommentCard` in the out-of-thread shape `ProfileComments`
-   and `TagPage` draw, leading with the target pointer that says what it
-   answers and opens it. `TagPage`'s mixed list set the rule this follows:
-   each kind keeps its own master, and a comment is never re-dressed as a
-   post. It keeps `Reply` and its replies line, `ProfileComments`' shape
-   rather than `TagPage`'s doorway, because the feed is where a reader acts,
-   not a place that only lists.
+   THE UNIFIED ROW (jakob 2026-10-01). Every feed card's actions read
+   opinion · score · the kind's own act · share. A post's own act is its
+   comments; a comment's is its reply, a tag's `Tag a new post with it`; a
+   person's slot stands empty until chats land, when the chat glyph takes it.
+   The score is the same figure on every kind, spoken `Feed score` — "we will
+   have up to 10 rankable objects and it should be the same for all of them" —
+   and it opens the same trace (`FeedEntry`), whose top block names the thing
+   the card stands for (`ScoreOrigin`).
 
    THE PROFILE AND THE TAG RIDE `PostCard`, as the post-MVP chat and message
-   cards do (the chats integration round): the card's header and ⋮, its
-   action row, and the card itself as the door. The lead has the chat card's
-   geometry — the kind's own mark, its name, one quiet line — so neither card
-   reads as a text post. The marks are `NodeMark`'s: a person is their
-   picture, a tag the `#` tile its chip wears.
-
-   EVERY RANKED CARD WEARS THE SCORE (jakob 2026-10-01: "every card should
-   have the graph glyph and the score number next to it"). All four kinds
-   reach the feed by one rank, and the rank is about the paths leading to the
-   thing, never about what kind of thing it is — so the three cards wear the
-   post card's own figure, second in the row after the opinion, and it opens
-   the same trace (`FeedEntry`). Its spoken name is the kind-neutral
-   `FEED_SCORE_LABEL`; the post card keeps `Post score`. */
-const FEED_SCORE_LABEL = "Feed score";
-
+   cards do: its header and ⋮, its row, and the card itself as the door. The
+   comment keeps its own master, `CommentCard`, in its thread shape. */
 function FeedLeadName({ children }) {
   return <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{children}</span>;
 }
 const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
-
-function CommentFeedCard({ author, content, timestamp, target, topics = [], references = 0, replyCount = 0, score, bundle }) {
-  return (
-    <CommentCard
-      author={author}
-      content={content}
-      timestamp={timestamp}
-      target={target}
-      onOpenTarget={() => {}}
-      score={score}
-      onOpenScore={() => {}}
-      scoreLabel={FEED_SCORE_LABEL}
-      bundle={bundle}
-      topics={topics}
-      references={references}
-      replyCount={replyCount}
-      onOpenReplies={() => {}}
-      onReply={() => {}}
-      license={{ attribution: 0, provenance: 0 }}
-      menuItems={CARD_MENU}
-    />
-  );
-}
-
-/* THE PROFILE CARD. The lead is the person — picture, name, handle — and the
-   body their bio, the two things `ProfileHeader` opens on; the card opens
-   their profile. The row keeps the feed card's order and drops what a person
-   does not have: the opinion on them leads, the score follows, the share
-   closes it, and there are no comments. Its ⋮ is the profile's own menu, less
-   the share row the action row already carries. */
-const FEED_PROFILE_MENU = (handle) => [
-  SAVE_ROW,
-  { label: "Mention in a new post", onSelect: () => {} },
-  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {} },
-];
-
-function ProfileFeedCard({ person, src, bio, score, bundle }) {
-  return (
-    <PostCard
-      lead={
-        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <MonogramAvatar name={person.displayName} src={src} size={32} />
-          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <FeedLeadName>{person.displayName}</FeedLeadName>
-            <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
-          </span>
-        </span>
-      }
-      main={<p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>}
-      targetLabel={"@" + person.handle}
-      bundle={bundle}
-      score={score}
-      onOpenScore={() => {}}
-      scoreLabel={FEED_SCORE_LABEL}
-      menuItems={FEED_PROFILE_MENU(person.handle)}
-      menuLabel={"More about @" + person.handle}
-      onOpen={() => {}}
-    />
-  );
-}
-
-/* THE TAG CARD. The lead is the `#` tile and the tag's name; the body is the
-   newest thing tagged with it, as a preview row — the chat card's
-   last-message row, and the first thing the tag's page opens on — with its
-   age where a card's timestamp stands. The opinion is the topic's Affinity,
-   with the tag page's own four ends; the score follows it and the share
-   closes the row, the same share the tag page's own row ends with. A Type has
-   no license, is never cited and is not saved, so the card carries no ⋮ —
-   only what a tag has. The card opens the tag's page. */
-function TagFeedCard({ name, newest, age, score, bundle }) {
-  return (
-    <PostCard
-      lead={
-        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <NodeMark kind="topic" />
-          <FeedLeadName>{name}</FeedLeadName>
-        </span>
-      }
-      main={<ContentRow variant="chronicle" chevron={false} inert title={newest.author.displayName} name={newest.author.displayName} second={newest.words} />}
-      timestamp={age}
-      targetLabel={name}
-      bundle={bundle}
-      score={score}
-      onOpenScore={() => {}}
-      scoreLabel={FEED_SCORE_LABEL}
-      stanceAxes={AFFINITY_AXES}
-      onOpen={() => {}}
-    />
-  );
-}
-
-/* ── THE FEED CARDS' OPTION BOARDS (the feed-cards rework, 2026-10-01) ─────
-   jakob, on the round above: the cards "need to be more unique.. the profile
-   card just looks like a text post that only has a body. the comment card is
-   better as it has the link to the original post but could be even more
-   distinct. the tag card also needs some work.. it needs to tell a better
-   story". So each card gets ONE working board holding its anatomies side by
-   side — today's card first, every option after it — for him to pick from.
-
-   THESE ARE WORKING BOARDS, NOT SCREENS. A comparison needs a frame no phone
-   has, so each is a `reference` board exactly as `FeedShapes` is: a wide
-   `FRAME`, wired nowhere, no flow numbers and no edges, because nothing on it
-   is a place a reader stands — each column is a card a reader WOULD meet on
-   `FeedKinds`. Whichever anatomy jakob picks replaces its card on that board;
-   the option props the masters grew for the others (`CommentCard`'s
-   `targetShape`, `PostCard`'s `stanceWide`) leave with them.
-
-   EVERY OPTION IS MASTERS. The cards are `CommentCard` and `PostCard`, the
-   marks `NodeMark`, the identity `MonogramAvatar`, the peeks `ContentRow` —
-   arranged, never redrawn. Each column names its option with `SectionLabel`
-   and says what it is for with `QuietNote`, the note register. */
-const OPTION_GAP = 48;
-const optionFrame = (columns, height) => ({
-  width: columns * 390 + (columns - 1) * OPTION_GAP,
-  height,
-  style: `display: flex; flex-direction: row; gap: ${OPTION_GAP}px; overflow: hidden;`,
-});
-
-function OptionColumn({ label, note, children }) {
-  return (
-    <div style={{ width: 390, flex: "none", display: "flex", flexDirection: "column" }}>
-      <SectionLabel>{label}</SectionLabel>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0" }}>{children}</div>
-      <div style={{ padding: "12px 24px 0" }}>
-        <QuietNote>{note}</QuietNote>
-      </div>
-    </div>
-  );
-}
-
-/* THE COMMENT'S FIXTURE, shared by its three columns so they differ by
-   anatomy alone: `FeedKinds`' comment, answering `ADA_POST`. */
-const OPTION_COMMENT = {
-  author: TOBIAS,
-  content: "That stretch after the second bend is the reason I keep a camera in the glovebox.",
-  timestamp: "1h",
-  target: "“The long way home” — @ada",
-  topics: ["glovebox", "coastroad"],
-  references: 1,
-  replyCount: 2,
-  score: "12.40",
-};
-
-/* The comment with its target louder — `CommentFeedCard` plus the option
-   candidate. The detail is `ADA_POST`'s own: its title, its author, the start
-   of its words, Ada's picture for the quote and the post's cover for the head
-   row's mark. */
-function CommentFeedCardOption({ shape, ...comment }) {
-  return (
-    <CommentCard
-      {...comment}
-      onOpenTarget={() => {}}
-      targetShape={shape}
-      targetDetail={{
-        title: ADA_POST.title,
-        author: ADA,
-        snippet: ADA_POST.description,
-        authorSrc: "comment-camera.jpg",
-        cover: ADA_POST.media[0].src,
-      }}
-      onOpenScore={() => {}}
-      scoreLabel={FEED_SCORE_LABEL}
-      onOpenReplies={() => {}}
-      onReply={() => {}}
-      license={{ attribution: 0, provenance: 0 }}
-      menuItems={CARD_MENU}
-    />
-  );
-}
-
-/* THE PERSON, TWO WAYS (option candidates). Both lead with the person at a
-   size a text post's author never takes, put the bio in the quiet colour
-   under them, and wear the opinion as the profile page does — the wide
-   anchor (`stanceWide`). They differ in the register of the identity:
-
-   · `contact` — the profile header's own compact shape at card scale: the
-     picture left, the name and handle beside it. A person met in the feed
-     reads as the top of their profile.
-   · `portrait` — the picture centred over the name, the shape a "someone you
-     might know" tile has everywhere. The card's ⋮ keeps its corner. */
-const OPTION_NAME = {
+const FEED_LEAD_TITLE = {
   fontSize: "var(--text-title-medium)",
   lineHeight: "var(--text-title-medium--line-height)",
   fontWeight: "var(--text-title-medium--font-weight)",
@@ -3252,7 +3059,78 @@ const OPTION_NAME = {
   overflow: "hidden",
   textOverflow: "ellipsis",
 };
-const OPTION_BIO = {
+
+/* THE COMMENT CARD — a slice of its thread (jakob's pick, 2026-10-01). A
+   comment is the one feed card whose meaning depends on something else, so it
+   says what it answers before a word of it is read: the post as a head row —
+   its own mark, its title, its author — and the comment hung under it on a
+   connector rule, the way a reply hangs under what it answers. What it
+   answers is a post or a comment (the reply pack): a post's head row is its
+   title over its author's handle, a comment's — which has no title — its
+   author's handle over its first words, `QuotedRow`'s own rule.
+
+   THE DOUBLE DOOR. The head row opens what it names: the post's detail. The
+   rest of the card opens the comment's own place — the post's comment
+   section, scrolled to this comment. Things with their own meaning keep it:
+   the author chip, the chips, the row.
+
+   THE ROW IS THE UNIFIED ONE: the opinion, the score, the comment glyph —
+   the reply, which opens that same comment section at this comment with the
+   composer already aimed at it — and the share.
+
+   REPLIES NEVER APPEAR IN THE FEED (jakob 2026-10-01). A comment's replies
+   live in its thread, and the card carries no `View n replies` line: the feed
+   ranks the comment, not its branch, and the door to the branch is the card. */
+const commentTarget = (parent) =>
+  parent.title
+    ? { kind: "post", label: `“${parent.title}” — @${parent.author.handle}`, title: parent.title, sub: "@" + parent.author.handle, cover: parent.media?.[0]?.src }
+    : { kind: "comment", label: `@${parent.author.handle}'s comment`, title: "@" + parent.author.handle, sub: parent.content };
+
+function CommentFeedCard({ author, content, timestamp, parent, media, sensitive, topics = [], references = 0, score, bundle }) {
+  const target = commentTarget(parent);
+  return (
+    <CommentCard
+      author={author}
+      content={content}
+      timestamp={timestamp}
+      media={media}
+      sensitive={sensitive}
+      target={target.label}
+      targetKind={target.kind}
+      targetShape="thread"
+      targetDetail={{ title: target.title, sub: target.sub, cover: target.cover }}
+      onOpenTarget={() => {}}
+      onOpen={() => {}}
+      bundle={bundle}
+      topics={topics}
+      references={references}
+      score={score}
+      onOpenScore={() => {}}
+      onReply={() => {}}
+      replyGlyph
+      onShare={() => {}}
+      license={{ attribution: 0, provenance: 0 }}
+      menuItems={CARD_MENU}
+    />
+  );
+}
+
+/* THE PROFILE CARD — the top of their profile (jakob's pick, 2026-10-01).
+   The person leads at a size no author chip takes: the profile header's own
+   compact shape at card scale, the picture beside the name in a title's
+   weight and the handle under it, the bio in the quiet colour below — so a
+   person met in the feed reads as their page arriving, never as a text post
+   with only a body. The opinion is the row's standard face, the control every
+   other card wears. The row reads opinion · score · share: the kind's own act
+   is the chat glyph, and its slot waits for chats. Its ⋮ is the profile's own
+   menu, less the share row the row already carries; the card opens the
+   profile. */
+const FEED_PROFILE_MENU = (handle) => [
+  SAVE_ROW,
+  { label: "Mention in a new post", onSelect: () => {} },
+  { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {} },
+];
+const FEED_BIO = {
   margin: 0,
   fontSize: "var(--text-body-medium)",
   lineHeight: "var(--text-body-medium--line-height)",
@@ -3263,46 +3141,23 @@ const OPTION_BIO = {
   overflow: "hidden",
 };
 
-function ProfileFeedCardOption({ shape, person, src, bio, score, bundle }) {
-  const contact = shape === "contact";
+function ProfileFeedCard({ person, src, bio, score, bundle }) {
   return (
     <PostCard
       lead={
-        contact ? (
-          <span style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", minWidth: 0 }}>
-            <MonogramAvatar name={person.displayName} src={src} size={56} />
-            <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-              <span style={OPTION_NAME}>{person.displayName}</span>
-              <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
-            </span>
-          </span>
-        ) : (
-          /* The portrait leads below the header row, so the row holds nothing
-             but the ⋮ — an empty lead keeps it in its corner. */
-          <span aria-hidden="true" />
-        )
-      }
-      main={
-        contact ? (
-          <p style={OPTION_BIO}>{bio}</p>
-        ) : (
-          /* The portrait rises into the header row, which holds only the ⋮ in
-             its corner — the row's height plus the card's gap, so the picture
-             starts at the card's top padding rather than under an empty band. */
-          <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-1)", textAlign: "center", marginTop: -36 }}>
-            <MonogramAvatar name={person.displayName} src={src} size={72} />
-            <span style={{ ...OPTION_NAME, marginTop: "var(--space-2)" }}>{person.displayName}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", minWidth: 0 }}>
+          <MonogramAvatar name={person.displayName} src={src} size={56} />
+          <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+            <span style={FEED_LEAD_TITLE}>{person.displayName}</span>
             <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
-            <p style={{ ...OPTION_BIO, marginTop: "var(--space-2)" }}>{bio}</p>
           </span>
-        )
+        </span>
       }
+      main={bio ? <p style={FEED_BIO}>{bio}</p> : undefined}
       targetLabel={"@" + person.handle}
       bundle={bundle}
       score={score}
       onOpenScore={() => {}}
-      scoreLabel={FEED_SCORE_LABEL}
-      stanceWide
       menuItems={FEED_PROFILE_MENU(person.handle)}
       menuLabel={"More about @" + person.handle}
       onOpen={() => {}}
@@ -3310,80 +3165,68 @@ function ProfileFeedCardOption({ shape, person, src, bio, score, bundle }) {
   );
 }
 
-/* THE TAG, TWO WAYS (option candidates). jakob's story for the card: "this
-   is a hashtag that ranks high for you (based on your graph) and there might
-   be some interesting stuff to check out behind it". Today's card answers it
-   with ONE preview row, which reads as a post riding inside a tag. Both
-   options show MORE THAN ONE thing behind the tag, so the card reads as a
-   door to a place rather than a post with a header:
+/* THE TAG CARD — why it reaches you, and a glimpse (jakob's pick,
+   2026-10-01). jakob's story for it: "this is a hashtag that ranks high for
+   you (based on your graph) and there might be some interesting stuff to
+   check out behind it". The score tells the first half on every card; this
+   card also says it in words, under the name — whom it reaches the reader
+   through, the strongest paths' people, in the drill-down's own vocabulary.
+   The body is the second half: a glimpse of the newest things tagged, their
+   marks side by side and the newest one named, so the card reads as a door
+   to a place rather than a post inside a header.
 
-   · `glimpse` — the story said in words first: under the name, a quiet line
-     naming whom it reaches the reader through (the drill-down's own `Through
-     @ada` vocabulary), and the body a glimpse — the newest things tagged,
-     as their marks side by side, the newest one's name beside them.
-   · `peek` — no new words at all: the `#` and the score do the talking, and
-     the body is the tag page's own list in miniature, its two newest things
-     as rows.
+   ITS MARKS SIT ON THE CARD, so they take the card's tile tone (`NodeMark`'s
+   `onCard`, jakob: the `#` takes the darker tone).
 
-   THE TAGGED THINGS ARE `TagPage`'s: Tobias's text post (1h), Sol's salt maps
-   (3d), Ada's comment on them (4d) — newest first, the page's order. */
-const OPTION_TAGGED = [
+   THE ROW IS THE UNIFIED ONE: the topic's Affinity with the tag page's own
+   four ends, the score, the kind's own act — `Tag a new post with it`, the
+   compose glyph, opening the composer with the tag already staged, the
+   person menu's `Mention in a new post` sibling — and the share the tag
+   page's own row ends with. A Type has no license, is never cited and is not
+   saved, so the card carries no ⋮. The card opens the tag's page.
+
+   THE TAGGED THINGS ARE `TagPage`'s, newest first, the page's order. */
+const TAG_ACT = "Tag a new post with it";
+const reachesThrough = (handles) => `Reaches you through ${handles.map((h) => "@" + h).join(" and ")}`;
+const SALTMAPS_TAGGED = [
   { kind: "post", title: "Low tide at six tomorrow — anyone walking the flats?", by: TOBIAS, age: "1h" },
   { kind: "post", title: SOL_POST.title, by: SOL, age: "3d", cover: SOL_POST.media[0].src },
   { kind: "comment", title: "Low tide is kinder to the rubbings than noon ever was.", by: ADA, age: "4d" },
 ];
-const OPTION_WHY = "Reaches you through @ada and @tobias";
 
-function TagFeedCardOption({ shape, name, score, bundle }) {
-  const glimpse = shape === "glimpse";
-  const [newest, ...rest] = OPTION_TAGGED;
+function TagFeedCard({ name, through, tagged, score, bundle }) {
+  const [newest, ...rest] = tagged;
   return (
     <PostCard
       lead={
         <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <NodeMark kind="topic" />
-          {glimpse ? (
-            <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-              <FeedLeadName>{name}</FeedLeadName>
-              <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{OPTION_WHY}</span>
-            </span>
-          ) : (
+          <NodeMark kind="topic" onCard />
+          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
             <FeedLeadName>{name}</FeedLeadName>
-          )}
+            <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{reachesThrough(through)}</span>
+          </span>
         </span>
       }
       main={
-        glimpse ? (
-          <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
-            <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
-              {/* Each mark takes a hairline, for `QuotedRow`'s reason on the
-                  comment's quote: the tile's tone is the card's own. */}
-              {OPTION_TAGGED.map((thing) => (
-                <span key={thing.title} style={{ display: "flex", borderRadius: "var(--radius-small)", border: "1px solid var(--border-hairline)" }}>
-                  <NodeMark kind={thing.kind} src={thing.cover} />
-                </span>
-              ))}
-            </span>
-            <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-              <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
-              <span style={FEED_LEAD_SMALL}>@{newest.by.handle} · and {rest.length} more</span>
-            </span>
-          </span>
-        ) : (
-          <span style={{ display: "flex", flexDirection: "column" }}>
-            {OPTION_TAGGED.slice(0, 2).map((thing) => (
-              <ContentRow key={thing.title} variant="chronicle" chevron={false} inert glyph={thing.kind === "comment" ? "chat_bubble" : "dynamic_feed"} title={thing.title} second={"@" + thing.by.handle} trailing={thing.age} />
+        <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
+          <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
+            {tagged.map((thing) => (
+              <NodeMark key={thing.title} kind={thing.kind} src={thing.cover} onCard />
             ))}
           </span>
-        )
+          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
+            <span style={FEED_LEAD_SMALL}>@{newest.by.handle}{rest.length > 0 && ` · and ${rest.length} more`}</span>
+          </span>
+        </span>
       }
-      timestamp={glimpse ? newest.age : undefined}
+      timestamp={newest.age}
       targetLabel={name}
       bundle={bundle}
       score={score}
       onOpenScore={() => {}}
-      scoreLabel={FEED_SCORE_LABEL}
       stanceAxes={AFFINITY_AXES}
+      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} />}
       onOpen={() => {}}
     />
   );

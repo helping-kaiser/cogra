@@ -18,12 +18,16 @@
    wears its figure, and each one outranks the card below it — so the board
    never draws a feed out of its own rank.
 
-   EACH KIND IS ITS OWN MASTER (`_shared.jsx`, the V1.0 feed kinds):
-   `CommentFeedCard` is `CommentCard` in its out-of-thread shape, the target
-   pointer leading; `ProfileFeedCard` and `TagFeedCard` are `PostCard`,
-   mounted, with a lead and a body of their own. Every tap lands on a board
-   that already exists — the comment's thread, the person's profile, the
-   tag's page.
+   EACH KIND IS ITS OWN MASTER (`_shared.jsx`, the V1.0 feed kinds), in the
+   anatomy jakob picked (2026-10-01): the comment as a slice of its thread,
+   the person as the top of their profile, the tag with why it reaches the
+   reader and a glimpse of what is behind it. Every card's row is the unified
+   one — opinion · score · the kind's own act · share — and every tap lands on
+   a board that already exists: the comment's head row on the post, the rest
+   of it and its reply glyph on its thread at the comment, the person's card
+   on their profile, the tag's card on its page and its compose glyph on the
+   composer with the tag staged. The variants each card meets live on
+   `FeedCommentShapes`, `FeedProfileShapes` and `FeedTagShapes`.
 
    NO SECOND ALGORITHM. All four kinds rank by the ordinary rank, side by side
    — the default feed's order, the kinds only widening what it may admit. */
@@ -38,14 +42,13 @@ export function Screen() {
           author={TOBIAS}
           content="That stretch after the second bend is the reason I keep a camera in the glovebox."
           timestamp="1h"
-          target="“The long way home” — @ada"
+          parent={ADA_POST}
           topics={["glovebox", "coastroad"]}
           references={1}
-          replyCount={2}
           score="12.40"
         />
         <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" />
-        <TagFeedCard name="#saltmaps" newest={{ author: TOBIAS, words: "Low tide at six tomorrow — anyone walking the flats?" }} age="1h" score="10.30" />
+        <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" />
         <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

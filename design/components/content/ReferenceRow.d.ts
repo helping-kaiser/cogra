@@ -27,6 +27,11 @@ export interface NodeMarkProps {
   name?: string;
   /** A person's avatar photo or a media post's cover. */
   src?: string;
+  /**
+   * The tile stands on a card: it takes `surface-container-high`, since the
+   * card's own tone is the tile's default. Defaults to false.
+   */
+  onCard?: boolean;
   /** The data-node name its placer gives this mark (design ⇄ impl seam 002; renders as attributes only). */
   node?: string;
 }

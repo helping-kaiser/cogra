@@ -289,33 +289,6 @@
       "page": "feed"
     },
     {
-      "file": "FeedCommentOptions.dc.html",
-      "title": "Feed · the comment card, three anatomies",
-      "x": 6240,
-      "y": 1060,
-      "w": 1266,
-      "h": 500,
-      "page": "feed"
-    },
-    {
-      "file": "FeedProfileOptions.dc.html",
-      "title": "Feed · the profile card, three anatomies",
-      "x": 7600,
-      "y": 1060,
-      "w": 1266,
-      "h": 420,
-      "page": "feed"
-    },
-    {
-      "file": "FeedTagOptions.dc.html",
-      "title": "Feed · the tag card, three anatomies",
-      "x": 8960,
-      "y": 1060,
-      "w": 1266,
-      "h": 420,
-      "page": "feed"
-    },
-    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -425,10 +398,10 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -6220,
+      "x": -4190,
       "y": 0,
-      "w": 5800,
-      "h": 3941,
+      "w": 3770,
+      "h": 4283,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -461,7 +434,7 @@
     },
     {
       "file": "FeedEntry.dc.html",
-      "title": "Post score · why it reached you",
+      "title": "Feed score · why it reached you",
       "x": 0,
       "y": 3616,
       "w": 390,
@@ -470,7 +443,7 @@
     },
     {
       "file": "FeedEntryMoved.dc.html",
-      "title": "Post score · the paths have moved on",
+      "title": "Feed score · the paths have moved on",
       "x": 480,
       "y": 3616,
       "w": 390,
@@ -479,7 +452,7 @@
     },
     {
       "file": "RankPath.dc.html",
-      "title": "Post score · one path",
+      "title": "Feed score · one path",
       "x": 960,
       "y": 3616,
       "w": 390,
@@ -488,7 +461,7 @@
     },
     {
       "file": "RankHop.dc.html",
-      "title": "Post score · one step",
+      "title": "Feed score · one step",
       "x": 1440,
       "y": 3616,
       "w": 390,
@@ -497,7 +470,7 @@
     },
     {
       "file": "RankRecords.dc.html",
-      "title": "Post score · what landed",
+      "title": "Feed score · what landed",
       "x": 1920,
       "y": 3616,
       "w": 390,

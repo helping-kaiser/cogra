@@ -28,7 +28,7 @@ const post = (at) => [
   { n: at.topic, find: '<a href="/t/', tag: "a", all: true },
   { n: at.refs, find: ">· 1 reference<", tag: "span" },
   { n: at.stance, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
-  { n: at.score, find: ">Post score</span>", tag: "button", all: true },
+  { n: at.score, find: ">Feed score</span>", tag: "button", all: true },
   { n: at.comments, find: 'aria-label="3 comments"', tag: "button" },
 ];
 
@@ -157,7 +157,7 @@ const signedPost = (at) => [
   { n: at.topic, find: '<a href="/t/', tag: "a", all: true },
   { n: at.stance, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
   { n: at.stance, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-  { n: at.score, find: ">Post score</span>", tag: "button", all: true },
+  { n: at.score, find: ">Feed score</span>", tag: "button", all: true },
 ];
 const searchShell = (fieldText, nRow) => [
   { n: 1, find: fieldText, tag: "div" },
@@ -297,16 +297,17 @@ Object.assign(FLOW_MARKERS, {
      reading order down the column: each card's own door takes its own number
      because each lands somewhere different, and what the cards repeat — the
      author chip, the tag chips, the share, the score — takes one number each
-     (`all`); the score's under both its spoken names, since it is one figure
-     opening one trace on every card.
-     The faces share one via with their skip-links, the feed's convention,
-     except the topic's: its pad is an Affinity's, so it keeps its own number
-     the way `TagPage`'s does. The band's chats and bell close the list rather
-     than joining the sweeps below, since this board has no older numbering
-     for a sweep to extend. */
+     (`all`). The comment's double door is two numbers — its head row (2, the
+     post) and its words (8, its thread at the comment) — and its reply glyph
+     keeps the reply's 7. The faces share one via with their skip-links, the
+     feed's convention, except the topic's: its pad is an Affinity's, so it
+     keeps its own number the way `TagPage`'s does. The band's chats and bell
+     close the list rather than joining the sweeps below, since this board has
+     no older numbering for a sweep to extend; the tag's compose glyph, the
+     last to arrive, takes the next free number, 26. */
   FeedKinds: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
-    { n: 2, find: ">On “", tag: "button" },
+    { n: 2, find: 'aria-label="On “', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a", all: true },
     { n: 4, find: 'aria-label="More on this comment"', tag: "button" },
     { n: 5, find: '<a href="/t/', tag: "a", all: true },
@@ -316,8 +317,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: ">Choose your opinion on @mira</button>", tag: "button" },
     { n: 6, find: 'aria-label="Your opinion on this post', tag: "button" },
     { n: 6, find: ">Choose your opinion on this post</button>", tag: "button" },
-    { n: 7, find: ">Reply</button>", tag: "button" },
-    { n: 8, find: "View 2 replies", tag: "button" },
+    { n: 7, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 8, find: ">That stretch after the second bend", tag: "a" },
     { n: 9, find: 'aria-label="More about @mira"', tag: "button" },
     { n: 10, find: ">Runs the stand by the sea wall", tag: "a" },
     { n: 11, find: 'aria-label="Share ', tag: "button", all: true },
@@ -327,12 +328,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 14, find: 'aria-label="More on this post"', tag: "button" },
     { n: 15, find: ">More</button>", tag: "button" },
     { n: 16, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 17, find: ">Post score</span>", tag: "button" },
     { n: 17, find: ">Feed score</span>", tag: "button", all: true },
     { n: 18, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(19),
     { n: 24, find: 'aria-label="Chats"', tag: "button" },
     { n: 25, find: 'aria-label="Notifications"', tag: "button" },
+    { n: 26, find: 'aria-label="Tag a new post with it"', tag: "button" },
   ],
 });
 
@@ -599,7 +600,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: '<a href="/u/', tag: "a", all: true },
     { n: 3, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
     { n: 3, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-    { n: 4, find: ">Post score</span>", tag: "button", all: true },
+    { n: 4, find: ">Feed score</span>", tag: "button", all: true },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(6),
   ],
@@ -611,7 +612,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 6, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-    { n: 7, find: ">Post score</span>", tag: "button", all: true },
+    { n: 7, find: ">Feed score</span>", tag: "button", all: true },
     { n: 8, find: 'aria-label="0 comments"', tag: "button" },
     ...nav(9),
   ],
@@ -627,7 +628,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: ">· 1 reference<", tag: "span" },
     { n: 10, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 10, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-    { n: 11, find: ">Post score</span>", tag: "button", all: true },
+    { n: 11, find: ">Feed score</span>", tag: "button", all: true },
     { n: 12, find: 'aria-label="3 comments"', tag: "button" },
     ...nav(13),
   ],
@@ -805,7 +806,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 7, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-    { n: 8, find: ">Post score</span>", tag: "button", all: true },
+    { n: 8, find: ">Feed score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(10),
@@ -1017,7 +1018,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: '<a href="/t/', tag: "a", all: true },
     { n: 7, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 7, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
-    { n: 8, find: ">Post score</span>", tag: "button", all: true },
+    { n: 8, find: ">Feed score</span>", tag: "button", all: true },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
     { n: 10, find: 'aria-label="Turn sound on"', tag: "button" },
@@ -1032,7 +1033,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: 'aria-label="2 comments"', tag: "button" },
     { n: 6, find: 'aria-label="Share this post"', tag: "button" },
-    { n: 7, find: ">Post score</span>", tag: "button" },
+    { n: 7, find: ">Feed score</span>", tag: "button" },
     { n: 8, find: ">More</button>", tag: "button" },
     { n: 9, find: 'alt="A man standing at the edge', tag: "img" },
     { n: 10, find: 'aria-label="Seek"', tag: "div" },
@@ -1045,7 +1046,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 4, find: 'aria-label="2 comments"', tag: "button" },
     { n: 5, find: 'aria-label="Share this post"', tag: "button" },
-    { n: 6, find: ">Post score</span>", tag: "button" },
+    { n: 6, find: ">Feed score</span>", tag: "button" },
     { n: 7, find: ">More</button>", tag: "button" },
     { n: 8, find: ">Show</button>", tag: "button" },
     { n: 9, find: 'aria-label="Sensitive — tap to view.', tag: "button" },
@@ -1059,7 +1060,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 6, find: 'aria-label="Give your opinion on this post"', tag: "button" },
     { n: 6, find: ">Choose your opinion on this post</button>", tag: "button" },
-    { n: 7, find: ">Post score</span>", tag: "button" },
+    { n: 7, find: ">Feed score</span>", tag: "button" },
     { n: 8, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(10),
@@ -1077,7 +1078,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="Tags and references"', tag: "button" },
     { n: 9, find: 'aria-label="Give your opinion on this post"', tag: "button" },
     { n: 9, find: ">Choose your opinion on this post</button>", tag: "button" },
-    { n: 10, find: ">Post score</span>", tag: "button" },
+    { n: 10, find: ">Feed score</span>", tag: "button" },
     { n: 11, find: 'aria-label="2 comments"', tag: "button" },
     { n: 12, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(13),
@@ -1096,7 +1097,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: 'aria-label="Opinions on this post"', tag: "button" },
     { n: 8, find: 'aria-label="Give your opinion on this post"', tag: "button" },
     { n: 8, find: ">Choose your opinion on this post</button>", tag: "button" },
-    { n: 9, find: ">Post score</span>", tag: "button" },
+    { n: 9, find: ">Feed score</span>", tag: "button" },
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
     { n: 11, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(12),
@@ -1221,7 +1222,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 11, find: '<a href="/t/', tag: "a", all: true },
     { n: 12, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 12, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
-    { n: 13, find: ">Post score</span>", tag: "button", all: true },
+    { n: 13, find: ">Feed score</span>", tag: "button", all: true },
     { n: 14, find: ">· 1 reference<", tag: "span" },
     { n: 15, find: 'aria-label="3 comments"', tag: "button" },
     { n: 15, find: 'aria-label="1 comment"', tag: "button" },
@@ -1873,7 +1874,7 @@ Object.assign(FLOW_MARKERS, {
     // free number for the same reason.
     { n: 15, find: ">@kel closed your application<", tag: "button" },
   ],
-  /* ── The Post score’s drill-down (backlog item 13) ─────────────────────
+  /* ── The Feed score’s drill-down (backlog item 13) ─────────────────────
      The path rows and the step rows carry one number each: they are one control
      the reader meets four times and twice, exactly as a repeated per-post control
      is, so one edge covers them (readme §13, canvas pages and flows). Each is
@@ -2121,7 +2122,7 @@ const tagPageBody = ({ topicStance }) => [
   { n: 6, find: "scroll-snap-type:x mandatory", tag: "div" },
   { n: 7, find: '<a href="/t/', tag: "a", all: true },
   { n: 8, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
-  { n: 9, find: ">Post score</span>", tag: "button", all: true },
+  { n: 9, find: ">Feed score</span>", tag: "button", all: true },
   { n: 10, find: 'aria-label="2 comments"', tag: "button" },
   { n: 10, find: 'aria-label="1 comment"', tag: "button" },
   { n: 11, find: 'aria-label="Share this post"', tag: "button", all: true },
@@ -2986,7 +2987,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: '<a href="/u/', tag: "a", all: true },
     { n: 5, find: 'aria-label="Give your opinion on', tag: "button", all: true },
     { n: 5, find: ">Choose your opinion on", tag: "button", all: true },
-    { n: 6, find: ">Post score</span>", tag: "button", all: true },
+    { n: 6, find: ">Feed score</span>", tag: "button", all: true },
     { n: 7, find: 'aria-label="4 comments"', tag: "button" },
     { n: 7, find: 'aria-label="1 comment"', tag: "button" },
     { n: 7, find: 'aria-label="2 comments"', tag: "button" },

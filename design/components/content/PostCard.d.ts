@@ -100,9 +100,9 @@ export interface PostCardProps {
    */
   stanceSigning?: "busy" | "failed" | "writeRule";
   /**
-   * The Post score, already formatted. Uncapped and possibly negative: render a
+   * The Feed score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
-   * explanation is the Post score drill-down (`FeedEntry` and below).
+   * explanation is the Feed score drill-down (`FeedEntry` and below).
    */
   score?: string;
   /** Opens the score's detail surface (readme §7.1). */
@@ -206,17 +206,11 @@ export interface PostCardProps {
    */
   stanceAxes?: import("../stance/StancePad").PadAxes;
   /**
-   * The score's accessible name, for a feed kind that is not a post — the
-   * glyph and the number are the same figure on every ranked card. Defaults
-   * to "Post score". Additive.
+   * The kind's own act, for a feed kind riding this shell — the third slot of
+   * the unified row (opinion · score · act · share), where a post's comments
+   * stand. A tag's is `Tag a new post with it`. Additive.
    */
-  scoreLabel?: string;
-  /**
-   * OPTION CANDIDATE (the feed-cards rework, 2026-10-01) — drawn only on the
-   * `FeedProfileOptions` board, pending jakob's pick; no screen wears it. The
-   * opinion as the WIDE anchor, taking what the row leaves. Defaults to false.
-   */
-  stanceWide?: boolean;
+  act?: React.ReactNode;
   /**
    * Squares the top-left corner so a row flag (TaggedRow) fuses with the
    * card. Defaults to false.
