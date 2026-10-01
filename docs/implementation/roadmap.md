@@ -173,8 +173,9 @@ event-driven and is not an MVP dependency.
 - **Slice 3.1 — notifications, the minimal cut**: implementing the
   drawn notifications list; no push channel.
 - **Slice 8's erasure half** — self-deletion of content and account
-  ([erasure.md](../instances/erasure.md)). Play's account-deletion
-  policy mandates it; the moderation half waits.
+  ([erasure.md](../instances/erasure.md)), a comment as well as a post
+  (the comment-scale boards are drawn). Play's account-deletion policy
+  mandates it; the moderation half waits.
 - **The conformance workstreams W3–W8** of the 2026-09-08 UI audit,
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
@@ -726,8 +727,9 @@ from the media path and carrying their own doc write-back:
   7-day grace ([erasure.md](../instances/erasure.md)).
 - Moderation: verdict Tags, payload removal, read-side flags
   ([moderation.md](../instances/moderation.md)).
-- **Hand test:** remove your own post; watch the tombstone appear and
-  the archive row land.
+- **Hand test:** remove your own post and your own comment; watch each
+  tombstone appear in its place, the comment's replies still under it,
+  and the archive rows land.
 - **Surfaces:** backend, API, Android, web.
 
 ### Slice 9 — Production deployment
