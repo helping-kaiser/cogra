@@ -1766,6 +1766,15 @@
       "page": "patterns"
     },
     {
+      "file": "SealSigningSlow.dc.html",
+      "title": "Seal · signing, past 5s",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "SealFaultRow.dc.html",
       "title": "Seal · a cited post that didn't land",
       "x": 960,

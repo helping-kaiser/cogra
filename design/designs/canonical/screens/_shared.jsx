@@ -1271,7 +1271,9 @@ const REPLY_CITATION = "Tide tables and the third headland";
    `state` IS WHAT BECAME OF THE COMMIT (the failure pack, jakob 2026-09-30).
    One body, so the seal a fault is drawn on is the seal the reader was on:
    - `signing` — past 200ms without an answer: the commit reads its present
-     participle and goes inert (`SealSigning`).
+     participle and goes inert, and the ways out with it (`SealSigning`).
+   - `slow` — the same signing past 5s: the acts card's subline swaps to the
+     slow line in olive, and nothing else changes (`SealSigningSlow`).
    - `offline` — no answer at all: the fault takes the commit's place,
      `TransportError`'s line over an outlined Retry and the same way back
      (`NetworkError`).
@@ -1295,6 +1297,9 @@ const WRITE_RULE_FACT =
    it rides the notice panel and is named by its dialog (copy-voice, *The "?"
    dialogs*). The pad's notice carries the same one. */
 const WRITE_RULE_HELP = "Why signing waits";
+/* The slow line (jakob 2026-10-01: past 5s, an honest line and no fake
+   progress) — a draft flagged for blessing (copy-voice, *Faults by code*). */
+const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
   return (
@@ -1339,7 +1344,8 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                 },
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
-          note="They land together, or none does."
+          note={state === "slow" ? SEAL_SLOW_LINE : "They land together, or none does."}
+          noteTone={state === "slow" ? "slow" : "quiet"}
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1384,7 +1390,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
             </div>
           </>
         ) : (
-          <SealFooter signLabel="Sign and publish" busy={state === "signing"} busyLabel="Signing and publishing…" />
+          <SealFooter signLabel="Sign and publish" busy={state === "signing" || state === "slow"} busyLabel="Signing and publishing…" />
         )}
       </div>
     </>

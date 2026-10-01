@@ -744,7 +744,7 @@ stands, and the rest of the surface stays readable.
   panel in its own words, with `Try again` (`SealFaultBug`).
 
 Every line here is blessed (the failure pack's, the failure fixes' and
-the review fixes' lines, jakob 2026-10-01).
+the review fixes' lines, jakob 2026-10-01), except where marked flagged.
 *Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
@@ -756,6 +756,13 @@ the review fixes' lines, jakob 2026-10-01).
 - A read with nothing loaded: `Can't reach the server. Check your
   connection and try again.` A read with content on screen is written
   per surface (*Missing and unreachable*).
+
+**A slow answer** (not a code, and not yet a fault): a signing past 5s
+keeps `Signing and publishing…` on its commit, and the subline under the
+seal's total reads `Still signing — the network is slow right now.` in the
+olive `--tertiary` ink. No progress is feigned, because a signing cannot
+measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
+2026-10-01, flagged for blessing.*
 
 **Transport faults:**
 

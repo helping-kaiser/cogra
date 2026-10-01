@@ -429,7 +429,10 @@ under **200ms** shows nothing — an indicator that flashes is noise. From
 slot the content will take, so nothing moves when it arrives. Past 5s
 the wait is determinate — progress that says how far along it is. The
 **pull-to-refresh spinner** is the one named exception: it answers the
-gesture at once, because the pull itself asked for it.
+gesture at once, because the pull itself asked for it. A **signing**
+past 5s is the other: it cannot measure its own steps, so the seal's
+subline says so in an honest olive line and nothing feigns progress
+(`SealSigningSlow`, jakob 2026-10-01).
 
 ### Imagery
 

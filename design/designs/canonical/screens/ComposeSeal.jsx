@@ -15,7 +15,12 @@
 
    THE BODY IS `_shared.jsx`'s `ComposeSealBody`, because four overlays stand on
    it — the stance pad, the license and sensitive sheets, and the "?" dialog —
-   and each of them draws the seal it covers, whole. */
+   and each of them draws the seal it covers, whole.
+
+   WHILE IT SIGNS, THE SEAL HOLDS THE READER (jakob 2026-10-01). The commit's
+   label swap locks the back arrow, Back and the X with it, and past 5s the
+   acts card's subline says the network is slow — `SealSigning` and
+   `SealSigningSlow` draw the two moments. */
 export function Screen() {
   return <ComposeSealBody />;
 }

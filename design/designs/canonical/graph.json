@@ -137,6 +137,7 @@
     "LadderTopics": "reference",
     "PadPending": "reference",
     "SealSigning": "reference",
+    "SealSigningSlow": "reference",
     "RowSigning": "reference",
     "RowWriteRule": "reference",
     "FeedShapes": "reference",

@@ -36,8 +36,10 @@ Where each sidecar's words come from:
 - `ComposeSeal.md` — the failure pack's commit in flight: the label
   swap after 200ms, the inert commit, and the fault in the commit's
   place, in the words of readme §13 and copy-voice (*In-flight labels*);
-  and the two refusals of one staged act, the citation that never
-  landed and the bug (copy-voice, *Faults by code*).
+  the two refusals of one staged act, the citation that never
+  landed and the bug (copy-voice, *Faults by code*); and the ways out
+  locked while it signs, the slow line past 5s and the outcome after a
+  kill (readme §13, *The curate rulings*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,
