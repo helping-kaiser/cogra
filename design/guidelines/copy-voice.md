@@ -218,7 +218,9 @@ phone itself`) rather than rendering twice.
 ## The "?" dialogs
 
 Compose keeps captions to one short line; the full explanation lives
-behind a small "?" (at most one per screen) opening a plain dialog:
+behind a small "?" (at most one per screen, save the stopper exception:
+a notice that stops the surface's one act carries its own beside the
+header's — readme §13, *The compose flow*) opening a plain dialog:
 title, at most two short paragraphs, Close. The texts, verbatim
 (browser wording shown; the app variant swaps the platform noun):
 

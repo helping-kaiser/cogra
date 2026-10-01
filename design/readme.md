@@ -1298,7 +1298,11 @@ new post". Its result rows are the seed of the search design (item
 lives behind a small "?" — at most one per screen, top-right of the
 header or of the sheet/card it explains (the pads carry their own) —
 opening a plain dialog: title, at most two short paragraphs, Close.
-The eight dialog texts live in
+**The stopper exception** (jakob, 2026-10-01): a notice that stops the
+one act its surface exists for carries its own "?" on the panel,
+beside the header's. The header's "?" explains the surface; the
+stopper's explains how the stop resolves, and one dialog cannot do
+both. `WriteRuleFailed` is the first. The dialog texts live in
 [guidelines/copy-voice.md](guidelines/copy-voice.md). **Button
 rule:** filled and outlined pills render a TRUE 40px tall (border
 box) with 24px side padding and a 64px minimum width; header pills
