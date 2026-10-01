@@ -88,9 +88,12 @@ export interface StanceControlProps {
    * refusal, a notice and not a fault: on the row, the quiet line `You can't
    * sign right now.` with no Retry; in the pad, `NoticePanel` (with its own
    * "?") where the landing line and the commit row stood, and `Not now`.
+   * `"comfortFailed"` is not a signing: a read-side comfort (save, unsave,
+   * hide, undo, unhide) that failed has reverted, and the row says `That
+   * didn't go through.` with `Retry`, the hold's vehicle. Row only.
    * Off by default.
    */
-  signing?: "busy" | "failed" | "writeRule";
+  signing?: "busy" | "failed" | "writeRule" | "comfortFailed";
   /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`. */
   node?: string;
 }

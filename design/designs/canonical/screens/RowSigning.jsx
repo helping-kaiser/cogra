@@ -24,7 +24,18 @@
    The row line is `SigningPending`'s `row` form: `That didn't sign.` in the
    failure voice, one of the three things `--error` may mean, and `Retry` as
    the bare word ending it, which asks the same hold again. It is short
-   because the row is one line of controls by rule. */
+   because the row is one line of controls by rule.
+
+   THE THIRD CARD IS A COMFORT THAT FAILED (the failure pack: "a comfort
+   that fails reverts and says so in the same place"; jakob 2026-10-01,
+   backlog item 117). Save, unsave, hide, undo and unhide answer at the tap;
+   when the answer is no, the change reverts — here Sol's post, saved from
+   its menu, is unsaved again — and the row under the face says `That didn't
+   go through.` in the failure voice with `Retry`, which asks the comfort
+   again, never a signature. The face never moved, because a comfort is not
+   an opinion. The plate grows to hold the third card. */
+export const FRAME = { width: 390, height: 1500 };
+
 export function Screen() {
   return (
     <>
@@ -32,6 +43,7 @@ export function Screen() {
       <FeedList>
         <PostCard {...TOBIAS_POST} stanceSigning="busy" />
         <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} stanceSigning="failed" />
+        <PostCard {...SOL_POST} stanceSigning="comfortFailed" />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>

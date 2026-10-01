@@ -1803,11 +1803,11 @@
     },
     {
       "file": "RowSigning.dc.html",
-      "title": "Signing · on the target's row",
+      "title": "Signing · on the target's row, and a comfort's revert",
       "x": 2880,
       "y": 964,
       "w": 390,
-      "h": 844,
+      "h": 1500,
       "page": "patterns"
     },
     {
@@ -1822,8 +1822,8 @@
     {
       "file": "RowWriteRule.dc.html",
       "title": "Signing · the write rule on the target's row",
-      "x": 2880,
-      "y": 1928,
+      "x": 3360,
+      "y": 964,
       "w": 390,
       "h": 844,
       "page": "patterns"

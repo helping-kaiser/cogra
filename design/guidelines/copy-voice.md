@@ -853,7 +853,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
-through.` with `Retry`, in the hold's vehicle. *Copy-only.*
+through.` with `Retry`, in the hold's vehicle. **Drawn** on `RowSigning`'s
+third card.
 
 ## The reset and verify landings
 
