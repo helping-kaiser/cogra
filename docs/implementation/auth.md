@@ -736,6 +736,18 @@ hijacker holding only a live session from redirecting recovery, and
 the new-address verification blocks a typo from silently stranding the
 account on an address no one can reach.
 
+**The unverified carve-out.** An account whose email is not yet
+verified — an applicant who mistyped their address at registration —
+changes it without the original-address code. That address has proved
+nothing, so the code protects nothing, and a mistyped address would
+never receive it; and the registration has already taken a
+single-use link's one slot, so without the carve-out the only way
+out is the 24-hour reap and a fresh invite ("Expiry" above). The password is still
+re-entered. The new address's verification link is the whole proof:
+opening it applies the change and verifies the email in the one step
+(step 4 of "Application"), and links sent to the replaced address stop
+working.
+
 ---
 
 ## Tokens

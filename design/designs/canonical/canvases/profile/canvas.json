@@ -1,6 +1,15 @@
 {
   "artboards": [
     {
+      "file": "VouchAskUnusable.dc.html",
+      "title": "Invites · an ask that can't be taken up",
+      "x": 4800,
+      "y": 6795,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 3360,
@@ -47,9 +56,9 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3900,
+      "x": -5060,
       "y": 0,
-      "w": 3480,
+      "w": 4640,
       "h": 5438,
       "page": "profile",
       "title": "Profile · flow map"
@@ -271,6 +280,42 @@
       "page": "profile"
     },
     {
+      "file": "ChangeEmailLinked.dc.html",
+      "title": "Settings · the new address's link, opened",
+      "x": 5760,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmailLinkedSignedOut.dc.html",
+      "title": "Settings · the new address's link, signed out",
+      "x": 6240,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsEmailPending.dc.html",
+      "title": "Settings · an email change pending",
+      "x": 6720,
+      "y": 1928,
+      "w": 390,
+      "h": 2613,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsDeleting.dc.html",
+      "title": "Settings · a deletion in its grace",
+      "x": 7200,
+      "y": 1928,
+      "w": 390,
+      "h": 2660,
+      "page": "profile"
+    },
+    {
       "file": "SettingsBackupKeyAbsent.dc.html",
       "title": "Settings · a new recovery code, key absent",
       "x": 480,
@@ -301,6 +346,24 @@
       "file": "DeleteAccountMail.dc.html",
       "title": "Delete account · check your mail",
       "x": 1920,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountConfirmed.dc.html",
+      "title": "Delete account · confirmed by the link",
+      "x": 4800,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountPending.dc.html",
+      "title": "Delete account · during the grace",
+      "x": 5280,
       "y": 2988,
       "w": 390,
       "h": 844,

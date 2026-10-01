@@ -28,6 +28,11 @@
    that explains it and a card inside a card is two containers saying one
    thing.
 
+   THE FRESH-INVITE DOOR FOLLOWS IT (jakob 2026-10-01, audit K3.5). A closed
+   application re-arms from either end of the funnel (auth.md, *Rejection*):
+   the ask link is one, a fresh invite link the other. `Use a fresh invite`
+   opens `ApplicantRearm`, the same door `ApplicantExpired`'s card carries.
+
    THE BAND NAMES @kel STILL. The vantage rule resolves to the most specific
    actor an arrival carries, and the arrival is unchanged: this reader came
    through @kel's link and the feed they are reading is the one that link
@@ -57,6 +62,9 @@ export function Screen() {
             copyLabel="Copy your ask link"
             caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
           />
+          <Button variant="outline" selfStart>
+            Use a fresh invite
+          </Button>
         </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} />
         <PostCard {...TOBIAS_POST} signedIn={false} />

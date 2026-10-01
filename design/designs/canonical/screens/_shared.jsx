@@ -2405,10 +2405,16 @@ function ReportProblemBody({ words }) {
   );
 }
 
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0 } = {}) {
+/* `emailPending` and `deleting` are the two in-flight account acts the page
+   reads back (jakob 2026-10-01, audit K3.21 and K3.22): an email change with
+   a side still owed, and a confirmed deletion in its grace. Each changes one
+   row's status, and the deletion also brings its band, which rides every
+   logged-in surface and sits under an inner page's header. */
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
+      {deleting && <DeletionBand days={6} />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
@@ -2543,7 +2549,12 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0 } = {}) {
         >
           <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
           <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
-          <SettingsRow label="Email" value="sol@solferreira.art" onOpen={() => {}} />
+          <SettingsRow
+            label="Email"
+            value="sol@solferreira.art"
+            status={emailPending ? "Change pending" : undefined}
+            onOpen={() => {}}
+          />
         </SettingsGroup>
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
@@ -2613,9 +2624,13 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0 } = {}) {
             quiet line. */}
         <SettingsGroup
           ariaLabel="Delete account"
-          footnote="Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+          footnote={
+            deleting
+              ? undefined
+              : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
+          }
         >
-          <SettingsRow label="Delete account" onOpen={() => {}} />
+          <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} />
         </SettingsGroup>
       </div>
     </>

@@ -74,12 +74,18 @@
     },
     {
       "name": "guest-turns-applicant",
-      "description": "Sign in or join, offered on every guest screen, runs out to the invite and through Create account into the applicant days.",
-      "start": { "control": "Sign in or join" },
+      "description": "Sign in or join, offered on every guest screen, runs a visitor who holds no link out to the invite and through Create account into the applicant days.",
+      "start": { "control": "Sign in or join", "to": "SignIn" },
       "waypoints": [
-        { "board": "SignIn", "via": 8 },
+        { "board": "SignIn", "via": 8, "to": "InviteEntry" },
         { "board": "InviteEntry", "via": 3, "case": "the link checks out" }
       ],
+      "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "join-with-the-link-in-hand",
+      "description": "A visitor who arrived through a live invite link presses Sign in or join and meets the join form with the link already held — never the door, never a second paste.",
+      "start": { "control": "Sign in or join", "to": "Join" },
       "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
     },
     {
@@ -146,7 +152,7 @@
       "description": "An ask link lands on the person who sent it; opening the stance affordance raises the pad, and Set signs the vouch that brings them in — the route a turned-down applicant still has.",
       "start": { "board": "VouchAsk" },
       "waypoints": [
-        { "board": "VouchAsk", "via": 3 }
+        { "board": "VouchAsk", "via": 3, "to": "VouchAskPad" }
       ],
       "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
     },

@@ -7795,6 +7795,67 @@ lane. D1 and D3 as recommended; D2 as recommended with his sharpening.
   **flows 64**, every one resolved. The witness was re-blessed once,
   deliberately: `reply-while-the-pictures-upload` now runs through
   `ReplySealUploading`.
+### The entry funnel round — 2026-10-01
+
+jakob's night rulings on the audit's K3 blockers (Block C items C1–C7,
+C19–C21, every one "as recommended"), executed in one lane.
+
+- **A mistyped address has a way out.** The verify card prints the
+  address it sent to, with `Wrong address?`, and an unverified applicant
+  changes it with the new address alone (`ApplicantEmail`; auth.md,
+  *Email change*, the unverified carve-out): the old address has proved
+  nothing, and a mistyped one never receives a code.
+- **The reap is said once, as a consequence.** The verify card carries
+  one line saying an account left unverified for a day is removed; no
+  figure ticks, no other surface repeats it, and `VerifyExpired`
+  promises the fresh link only to an account still waiting on it.
+- **A run-out application has its card.** `ApplicantExpired`,
+  `ApplicantRejected`'s shape with no verdict: what happened, what it
+  does not mean, the ask link in the rejected card's words. A waiting
+  card the reader put away comes back as whatever state ends the wait.
+- **A closed application re-arms from the shell.** Both closed cards
+  carry `Use a fresh invite`, opening `ApplicantRearm`; an invite link
+  opened by a signed-in applicant with a closed application opens the
+  same page holding the link. Signed-in readers with nothing to re-arm
+  land where app-open lands, with a snackbar.
+- **A held link is never pasted twice.** The landing stays feed-first;
+  for a visitor holding a live invite link the band's `Sign in or join`,
+  every guest gate's affirmative and SignIn's `New here?` open `Join`
+  with the link, and a dead link opens `JoinInvalid` from the same
+  places.
+- **Sign-in lands wherever app-open lands for the account** — one rule
+  for every state the shells draw. The login backoff answers in place
+  (`SignInLimited`), and a reused sign-in's notice rides the landing as a
+  task card (`FeedSecurityNotice`), delivered once.
+- **Every reader of an ask link is answered.** `VouchAskUnusable` in
+  `JoinInvalid`'s idiom for an applicant already in or waiting on
+  someone else; a guest meets the ask and its affordance raises the
+  guest gate, sign-in coming back to it; an applicant, the asker and a
+  member who already has them queued land on their own landing with a
+  snackbar.
+- **The verify landings work signed out.** `VerifyExpired` serves the
+  app and the browser; signed out its way on reads `Sign in` and
+  `Resend the link` asks for the address in place; `Verified`'s way on
+  opens `SignIn`.
+- **The email change is visible end to end.** The new address's link
+  lands on `ChangeEmailLinked` (`Verified`'s idiom, first side or last)
+  or, signed out, `ChangeEmailLinkedSignedOut`; `ChangeEmailConfirm`
+  gains `Resend` and `Cancel the change`; the settings row reads `Change
+  pending` (`SettingsEmailPending`).
+- **The deletion's link has a landing, and the grace a screen.**
+  `DeleteAccountConfirmed` states the deadline and offers the content
+  sweep again when the request left it off; during the grace the row
+  reads `Deletion in 6 days` (`SettingsDeleting`) and opens
+  `DeleteAccountPending`, whose `Cancel` ends it.
+- **The lane's calls, flagged for review** (backlog item 122): the dead
+  link's feed-first arrival, the password kept on the carve-out, the
+  deletion landing's column and its unticked commit, the grace screen
+  without its band, and every new string (copy-voice, *The entry
+  funnel's round*).
+- **The gate**: 243 → **255 screens**, 1673 → **1711 edges**, **flows
+  65**, every one resolved. The witness was re-blessed once,
+  deliberately: `guest-turns-applicant` now starts only where no link is
+  held, and `join-with-the-link-in-hand` is the held link's journey.
 
 ## 15. Index
 

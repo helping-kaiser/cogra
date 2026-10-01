@@ -191,6 +191,60 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantExpired.dc.html",
+      "title": "Applicant · ran out of time",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantRearm.dc.html",
+      "title": "Applicant · a fresh invite",
+      "x": 3840,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantEmail.dc.html",
+      "title": "Applicant · wrong address",
+      "x": 4320,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "VouchAskUnusable.dc.html",
+      "title": "Invites · an ask that can't be taken up",
+      "x": 4800,
+      "y": 6795,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "FeedSecurityNotice.dc.html",
+      "title": "Signed in · the security notice",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInLimited.dc.html",
+      "title": "Sign in · too many tries",
+      "x": 2400,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -1416,10 +1470,10 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -2450,
+      "x": -3320,
       "y": 0,
-      "w": 2030,
-      "h": 4238,
+      "w": 2900,
+      "h": 4489,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1506,9 +1560,9 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3900,
+      "x": -5060,
       "y": 0,
-      "w": 3480,
+      "w": 4640,
       "h": 5438,
       "page": "profile",
       "title": "Profile · flow map"
@@ -1730,6 +1784,42 @@
       "page": "profile"
     },
     {
+      "file": "ChangeEmailLinked.dc.html",
+      "title": "Settings · the new address's link, opened",
+      "x": 5760,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmailLinkedSignedOut.dc.html",
+      "title": "Settings · the new address's link, signed out",
+      "x": 6240,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsEmailPending.dc.html",
+      "title": "Settings · an email change pending",
+      "x": 6720,
+      "y": 1928,
+      "w": 390,
+      "h": 2613,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsDeleting.dc.html",
+      "title": "Settings · a deletion in its grace",
+      "x": 7200,
+      "y": 1928,
+      "w": 390,
+      "h": 2660,
+      "page": "profile"
+    },
+    {
       "file": "SettingsBackupKeyAbsent.dc.html",
       "title": "Settings · a new recovery code, key absent",
       "x": 480,
@@ -1760,6 +1850,24 @@
       "file": "DeleteAccountMail.dc.html",
       "title": "Delete account · check your mail",
       "x": 1920,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountConfirmed.dc.html",
+      "title": "Delete account · confirmed by the link",
+      "x": 4800,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountPending.dc.html",
+      "title": "Delete account · during the grace",
+      "x": 5280,
       "y": 2988,
       "w": 390,
       "h": 844,
