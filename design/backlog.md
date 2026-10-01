@@ -3811,11 +3811,36 @@ the Ages law's date, `dd.mm.yyyy` (copy-voice, *Ages*). jakob
 rides the histories' move from the post-MVP tree into canonical (readme
 §13, *The post-MVP separation*), never before: every dateline on the
 moved boards becomes the Ages date, and copy-voice's dateline
-paragraph (*Ages*, *Change histories*) is rewritten to the one form.
+paragraph (*Ages*, *Change histories*) drops the chronicle from the
+dateline form's owners.
 
-One contradiction to settle beside it: copy-voice gives the same
-`12 September` form to the already-published marker (`Already in your
-post from 12 September.`, *The already-published marker*), a V1.0 line
-in `behavior/ComposeDetails.md` whose board is owed (item 110). It is
-not post-MVP, so the migration does not carry it — the marker's date
-wants its own ruling before item 110 draws it.
+The already-published marker keeps the `12 September` form (`Already
+in your post from 12 September.`, *The already-published marker*): item
+112's resolution names it a dateline owner in copy-voice's *Ages*. It is
+a V1.0 line, not post-MVP, so the sweep leaves it standing, and item 110
+draws it in that form; the rewritten dateline paragraph keeps it as the
+form's owner.
+
+### 120 · What the closing batch left for rulings · *design* · **filed 2026-10-01**
+
+The closing batch (readme §13, *The closing batch*) executed jakob's
+rulings and left these calls for his eye:
+
+- **The report's placement.** `ReportProblem` and its empty state
+  already drew `Send by email` in content flow; what stands between the
+  field and the commit is the read-back of what travels, which the
+  board's honesty paragraph puts before the press. Whether the commit
+  moves up to follow the field, under the two-placement law, is
+  unruled.
+- **The profile and chat edits.** `ProfileEdit` (and post-MVP's
+  `ChatEdit`, its anatomy) lead to a seal and were drawn by the wizard
+  ruling, so their `Save` keeps its pinned foot; if jakob reads them as
+  task pages, both move into content flow.
+- **The post seal's key notice.** `ReplySealKeyAbsent` now keeps the
+  header's "?" beside the notice's by the stopper exception;
+  `ComposeKeyAbsent`, its post-scale twin, still gives the header's up.
+- **A pick's announcement.** A picked row moves into the staged section,
+  and nothing spoken says so at the moment of the pick.
+- **Two strings flagged for blessing** (copy-voice): the empty tag's
+  `Nothing carries this tag right now.` and the trace's kind-neutral
+  `then what reached you`.

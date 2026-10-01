@@ -931,7 +931,7 @@ stands, with `Changing your password signs out every other device.`
 under them — the fact `ResetNew` already says, moved in front of the act.
 
 **About** — the support stack (jakob, 2026-10-01; every line here
-blessed the same day, save the empty report's, still flagged). Three
+blessed the same day). Three
 rows join the group after `About CoGra`
 and before `Privacy` and `Terms`, each one string for app and web:
 
@@ -954,8 +954,8 @@ and before `Privacy` and `Terms`, each one string for app and web:
   because the press opens the reader's mail and sends nothing itself.
   With the field empty it stays visible and disabled, `Nothing to send
   yet` right above it — the edit foot's zero, `Nothing to sign yet`,
-  with the report's verb (`ReportProblemEmpty`; *new 2026-10-01,
-  flagged for blessing*). Leaving with Back keeps the words.
+  with the report's verb (`ReportProblemEmpty`). Leaving with Back keeps
+  the words.
 - `Contact`, its value the address it writes to — a plain mail door,
   kept apart from the report so reports stay structured.
 

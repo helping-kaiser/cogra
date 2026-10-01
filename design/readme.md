@@ -7590,6 +7590,76 @@ jakob's rulings from his review of the day's rounds.
   picker open. Backlog item 119 files the post-MVP dateline sweep for
   the histories' migration.
 
+### The closing batch — 2026-10-01
+
+jakob's rulings closing the day's rounds, executed in one lane.
+
+- **The shapes boards gain the ruled variants.** On `FeedCommentShapes`:
+  a comment answering an untitled post, its head row naming the post by
+  its first words in the title's place; a comment whose post was
+  removed, the head row wearing `Removed by its author` in the system's
+  voice over the author, its mark an empty tile (`NodeMark`'s
+  `redacted`), the comment readable; your own comment, whose ⋮ opens your
+  own menu; and a long comment, folded at two lines under `More`, the
+  caption's precedent (`CommentCard`'s `clampLines`). On
+  `FeedProfileShapes`: a deleted account, which still ranks — the empty
+  disc and `Deleted account`, no handle, no bio. On `FeedTagShapes`: the
+  why-line past two people, `Reaches you through @ada and 3 others`; a
+  handle too long for the line; and an empty tag, its glimpse given way
+  to `Nothing carries this tag right now.` A guest meets every one of
+  these cards as every card, the face opening `GuestGate`; no guest
+  board draws one, so the masters' docblocks say it.
+- **The why-line compresses, then ellipsizes.** Where the full line
+  would not fit, it reads `Through @ada`, the strongest path's person;
+  a handle that still does not fit ellipsizes, `ActorChip`'s law.
+- **The comment card's ⋮ is the comment's menu** (`CommentMenu`, or
+  `CommentMenuOwn` on your own), never the post card's.
+- **The score hangs on the thing it scores.** At the top of the trace
+  the figure is a flag on the held thing's top-left, attached the way the
+  tag page attaches its claim to a row (`QuotedRow`'s `attach`), drawn as
+  the `graph` glyph and the signed figure, `+15.20`, with no label word;
+  `Feed score` stays its spoken name. The sign appears only there — the
+  cards keep their plain figures (jakob: "we dont need noise"). No other
+  surface drew the labeled form.
+- **The trace names no kind but the thing's own mark.** `PathTrace` ends
+  on the reached thing's `NodeMark` — cover, comment glyph, circle, `#` —
+  and speaks `then what reached you`; level one's back reads `Back to
+  feed`. `FeedEntryKinds` draws each kind's block with its strongest path.
+- **A picked row moves above the results** (jakob, overruling the
+  in-list check). Both pickers stage into a section between the field
+  and the list, a `StagedReference` with its × — the post-MVP chat
+  pickers' idiom, without a heading — and the × un-stages on the spot;
+  the composer keeps its own removal. `ReferenceRow`'s `staged` and the
+  spoken `Added` retire, and a staged row's mark takes the card tone,
+  since its row stands on the tile's own.
+- **The write rule at reply scale says `Not now`** — the pad's and the
+  reply door's word — and returns to the reply's seal with the words
+  still in its composer; backlog item 117's last way-out bullet closes.
+- **The reply seal's key notice keeps the header's "?"** beside its own,
+  by the stopper exception, as `WriteRuleFailed` does.
+- **The primary action has two placements** (§4, *Spacing and layout*).
+  Five boards dropped a spacer that pushed a task page's action toward
+  the bottom edge: `Join`, `JoinErrors`, `KeyCeremony`,
+  `DeleteAccountMail` and `VerifyExpired`. Every other task page already
+  followed its fields; the wizard stages and sheets keep their pinned
+  feet.
+- **Blessed** (jakob): the review fixes' strings — the pad's and the
+  reply seal's "?" clauses, `your reply is still here`, and `Nothing to
+  send yet` — and the variants' lines. Item 119's note on the
+  already-published marker now reads with item 112's ruling.
+- **The lane's calls, flagged for review** (backlog item 120): the
+  comment's two-line fold; the removed post's empty tile and its
+  secondary ink; `Nothing carries this tag right now.`; `then what
+  reached you`; no sign on a zero; the 46-character estimate behind the
+  why-line's compression; `ProfileEdit` kept as a wizard stage; the
+  report left as drawn; the staged rows' card-tone mark.
+- **The gate**: **243 screens**, 1671 → **1673 edges** (the two pickers'
+  ×), 1 gap, **flows 64**, every one resolved. The witness was re-blessed
+  once, deliberately: `cite-something` ends on the pick moving into the
+  staged section. The three shapes boards grew taller on the canvas, the
+  staged citations' boards re-render for the card-tone mark, and the maps
+  follow the edges.
+
 ## 15. Index
 
 **Root**
