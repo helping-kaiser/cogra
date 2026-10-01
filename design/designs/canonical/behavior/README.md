@@ -62,6 +62,11 @@ Where each sidecar's words come from:
   moves above the list, and its × un-stages it.
 - `ReferencePicker.md` — the same multi-add and staged section, at the
   citation picker: the shared anatomy's law, in the same words.
+- Every other board on the feed and comments pages (readme §13, *The
+  feed and comments behavior pass*) — its own docblock, the readme §13
+  records it names, its flow edges' outcomes and its copy-voice
+  strings, in their words. `FeedCover.md` and `PostDetail.md` name
+  their elements by node path.
 
 ## The grammar
 

@@ -7660,6 +7660,26 @@ jakob's rulings closing the day's rounds, executed in one lane.
   staged citations' boards re-render for the card-tone mark, and the maps
   follow the edges.
 
+### The feed and comments behavior pass — 2026-10-01
+
+Pass C's first two pages (jakob, the night ruling round's F1): every
+board on the feed and comments pages carries a sidecar in
+`designs/canonical/behavior/`, transcribed from its docblock, the
+records here, its flow edges and copy-voice. Nothing was ruled in the
+pass; behavior no ruling covers was filed for jakob's review rather
+than written.
+
+- **`FeedCover` is registered under `feed`** (backlog 114), named as
+  `Feed` names its parts; a card's discs carry `soundDisc` and
+  `playDisc`. The stage law spans a post's clip and a comment card's,
+  and only the post's is drawn, so `Feed.md` anchors the post's clip as
+  `feed.card.media.frame` and keeps *clip* for both.
+- **Three behaviors wait for the night's other rounds**: the feed
+  filter's commit (the sheet law), the settled reply's landing scroll,
+  and the reply's uploading seal. Their sidecars hold everything else.
+- **The gate**: screens and edges unchanged; `nodes.json` gains
+  `FeedCover` and two paths; 72 sidecars, every one green.
+
 ## 15. Index
 
 **Root**
