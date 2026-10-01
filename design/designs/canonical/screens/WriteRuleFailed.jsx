@@ -28,11 +28,20 @@
    TWO "?"s, BY THE STOPPER EXCEPTION (jakob 2026-10-01: "the '?' at the top
    right is the general one for the seal and not for this specific problem").
    The header's explains signing; the panel's, in `HelpDot`'s `inverse`,
-   opens `Why signing waits` — what the write rule is in payer-neutral words,
-   that nothing was signed, spent or lost, and that a little later it signs as
-   usual. A notice that stops the one act its surface exists for may carry its
-   own "?" (readme §13, the copy rule), so no later pass folds it into the
-   header's. */
+   opens `Why signing waits` — in the words jakob blessed on 2026-10-01: a
+   limit on how many signed actions go through in a short time, there to keep
+   the network safe from flooding, reached for now; nothing signed or spent,
+   the draft kept, and a try again in a little while. A notice that stops the
+   one act its surface exists for may carry its own "?" (readme §13, the copy
+   rule), so no later pass folds it into the header's.
+
+   AT REPLY SCALE THE DRAFT CLAUSE SAYS WHAT IS TRUE THERE (jakob 2026-10-01:
+   conditional). A reply keeps no draft (readme §13, *The reply pack*), so
+   reached from a reply's seal the fact ends `your reply is still here` — the
+   seal still reads it back, and its back arrow returns to the composer with
+   the words — and the "?" says the same. The reply-scale way out is not
+   drawn: `Keep the draft, sign later` is the post's, and what replaces it is
+   owed (backlog item 117). */
 export function Screen() {
   return <ComposeSealBody state="writeRule" />;
 }

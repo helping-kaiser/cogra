@@ -267,13 +267,16 @@ title, at most two short paragraphs, Close. The texts, verbatim
   this device. *(One text for all four key-absent surfaces, the key-loss
   round: nothing in it assumes a write in progress.)*
 - **Why signing waits** (the write rule's notice — the seal
-  and the stance pad): Each signing is paid for, and there's only so
-  much to go around at a time. When it runs short, signing waits —
-  nothing you asked for was signed, and nothing was spent. / Nothing
-  needs fixing on your side. Your draft is kept, and an opinion can
-  simply be given again. It frees up as time passes, so try again a
-  little later. *(New 2026-10-01, the stopper exception's first dialog,
-  flagged for blessing. Payer-neutral by the V1.0 scope cut.)*
+  and the stance pad): There's a limit to how many signed actions can
+  go through in a short time — it keeps the network safe from flooding.
+  You've hit it for now. / Nothing was signed or spent, and your draft
+  is kept. Try again in a little while. *(Blessed, jakob 2026-10-01 —
+  the stopper exception's first dialog. One dialog, its draft clause
+  true per surface: on the pad, which keeps no draft, the second
+  paragraph reads `Nothing was signed or spent. Try again in a little
+  while.`; from a reply's seal, which keeps none either, `Nothing was
+  signed or spent, and your reply is still here. Try again in a little
+  while.` Payer-neutral by the V1.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -785,16 +788,20 @@ blessing. Unmarked lines are already blessed or already drawn.
   to go around at a time. Nothing was signed or spent — your draft is
   kept.`, with `Keep the draft, sign later` under it, and the panel's
   own "?" opening `Why signing waits` (*The "?" dialogs*). **Drawn** on
-  `WriteRuleFailed`. *New.* The words name no payer (the V1.0 scope
-  cut). On a pad the same panel stands where the landing line and Set
-  were, in `PadKeyAbsent`'s shape: `You can't sign right now` over `Each
-  signing is paid for, and there's only so much to go around at a time.
-  Nothing was signed or spent.` — a pad has no draft — with the same
-  "?" and `Not now` under it; the pick is not kept. **Drawn** on
-  `PadWriteRule`. On a hold's row the quiet line reads `You can't sign
-  right now.` in the pending marker's register, never the failure
-  voice, with no Retry. **Drawn** on `RowWriteRule`. *New 2026-10-01,
-  flagged for blessing.*
+  `WriteRuleFailed`. Reached from a reply's seal, which keeps no draft
+  (*The reply pack*), the fact's last clause swaps to what is true
+  there: `Nothing was signed or spent — your reply is still here.`
+  *(The reply-scale clause is new 2026-10-01, flagged for blessing; the
+  reply-scale way out is owed — backlog item 117.)* The words name no
+  payer (the V1.0 scope cut). On a pad the same panel stands where the
+  landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
+  right now` over `Each signing is paid for, and there's only so much
+  to go around at a time. Nothing was signed or spent.` — a pad has no
+  draft — with the same "?" and `Not now` under it; the pick is not
+  kept. **Drawn** on `PadWriteRule`. On a hold's row the quiet line
+  reads `You can't sign right now.` in the pending marker's register,
+  never the failure voice, with no Retry. **Drawn** on `RowWriteRule`.
+  *Blessed, jakob 2026-10-01.*
 - **One staged act refused** (the field-level refusal on
   `references.<index>.target`; jakob 2026-10-01). A target that landed
   never stops answering, so two cases exist, and they read nothing
