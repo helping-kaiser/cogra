@@ -12,7 +12,11 @@
    `keyAbsent`, so the seal and its fallback cannot disagree about a row.
 
    THE NOTICE IS `KeyAbsentNotice`, the door's own, with the line this moment
-   needs. The header gives up its "?" to the notice's: one dot per screen.
+   needs. TWO "?"s, BY THE STOPPER EXCEPTION (readme §13, *The failure fixes
+   and the support stack*; jakob 2026-10-01): the missing key stops the one
+   act the seal exists for, so the notice carries its own "?", naming the key,
+   beside the header's, which explains signing — the shape `WriteRuleFailed`
+   draws.
 
    `Discard the reply` IS THE OTHER WAY, and it asks first: a non-empty
    composer is asked through `DiscardConfirm`, from here as from the X.

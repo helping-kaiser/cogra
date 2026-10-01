@@ -1472,8 +1472,8 @@ const replyCitedRow = () => ({
    `target` is what the reply answers (`REPLY_TARGETS`): only the read-back
    line and the act row's value name it. `keyAbsent` is the seal with the key
    elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
-   the footer stood, and the header's "?" given up to the notice's, because a
-   screen spends one dot. */
+   the footer stood, and the header's "?" kept beside the notice's own, by the
+   stopper exception (readme §13, *The failure fixes and the support stack*). */
 function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
   const named = REPLY_TARGETS[target];
   return (
@@ -1482,7 +1482,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
         title="What you sign"
         leaveLabel="Leave — the reply is discarded"
         stageLabel="Last step"
-        help={keyAbsent ? undefined : "How signing works"}
+        help="How signing works"
       />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuietNote>{named.note} — 89 characters.</QuietNote>
