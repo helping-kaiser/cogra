@@ -544,6 +544,11 @@ of opening the real surface again; one line per kind, same shape:
 
 - `Your post waits with your application — it arrives with you.`
 - `Your opinion waits with your application — it arrives with you.`
+- `Your topic waits with your application — it arrives with you.` — the
+  Affinity on a tag page, its own once-each kind. Drafted from the
+  audit's recommendation (jakob 2026-10-01, "as recommended"); **flagged
+  for blessing**.
+
 The post's line is also the seal's answer for an applicant: `Sign and
 publish` stages the post rather than landing it, so the wizard closes onto
 the applicant's own feed with this line, never with `Signed — it's in the
