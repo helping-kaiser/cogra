@@ -47,6 +47,7 @@
     "ReaderPostMenuNarrow": "the same sheet on a narrow phone — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
     "CommentMenu": "the comment's sheet covers the thread, which covers the post detail — two sheets deep, the thread dimmed under the menu's own wash, and only the top sheet (and that wash) is live",
     "CommentMenuOwn": "your own comment's sheet covers the thread, which covers the post detail — two sheets deep, the thread dimmed under the menu's own wash, and only the top sheet (and that wash) is live",
+    "CommentRemoveConfirm": "the think-twice dialog covers the comments sheet — the thread beneath the scrim is inactive in this state, and wired on `ReplyEntry`; only the dialog (and its scrim) is live",
     "PostLicense": "the license sheet covers the post detail — everything beneath the scrim is inactive in this state, and the terms themselves are a block to read, not controls; only the wash is live",
     "CommentLicense": "the license sheet covers the thread, which covers the post detail — two sheets deep, the thread dimmed under the sheet's own wash, and only that wash is live",
     "ProfileMenu": "the profile's sheet covers the page — everything beneath the scrim is inactive in this state; only the sheet (and its scrim) is live",
@@ -1290,6 +1291,9 @@
     { "from": "RemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "Removed", "case": "the visible mark — never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "RemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes" }] },
     { "from": "RemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
+    { "from": "CommentRemoveConfirm", "via": 1, "kind": "advance", "label": "Remove", "to": [{ "board": "CommentRemoved", "case": "the visible mark — the comment keeps its place in the thread, never silent" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "CommentRemoveConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the thread as it was" }] },
+    { "from": "CommentRemoveConfirm", "via": 3, "kind": "cancel", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the dialog closes, nothing removed" }] },
 
     { "from": "SeveranceConfirm", "via": 1, "kind": "advance", "label": "Walk it back", "to": [{ "terminal": "back", "case": "signed — the bundle goes to nothing, and the signed line names where it left the reader" }, { "terminal": "self", "case": "not signed — the dialog stays up, the fault line above its pair, and the commitment's slot reads Retry" }] },
     { "from": "SeveranceConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the pick is still parked on the pad beneath it" }] },

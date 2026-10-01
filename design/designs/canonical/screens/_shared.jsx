@@ -478,6 +478,43 @@ const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
    menu row would be a second door to one act; and a comment's sensitive mark
    rides its edit, which is where the post's row sends the reader too. */
 const OWN_COMMENT_MENU = [...CARD_MENU, REMOVE_ROW, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+
+/* THE THINK-TWICE DIALOG BEHIND AN AUTHOR'S `Remove`, ONE ANATOMY PER KIND
+   (`RemoveConfirm`'s, shared the moment the comment's confirm drew it a second
+   time). The nouns swap per kind and nothing else moves (jakob 2026-09-23,
+   copy-voice): what goes, the mark that stays in its place, that it is
+   immediate and permanent — and the safe answer is the filled one, `Remove`
+   carrying no colour, because a removal is not an error (jakob 2026-09-15). */
+const REMOVE_CONFIRM_COPY = {
+  post: {
+    title: "Remove this post?",
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the post's spot in threads stays with it.`,
+  },
+  comment: {
+    title: "Remove this comment?",
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the comment's spot in its thread stays with it.`,
+  },
+};
+
+/* `overSheet` lifts the dialog above a sheet it is raised over — the comments
+   thread — by `ReplyKeyAbsent`'s one layer of board glue: `DialogSurface` sits
+   on the base wash layer and the sheet one above it, so the dialog is the
+   thing raised last. Over the post detail there is no sheet to clear. */
+function RemoveDialog({ kind, overSheet = false }) {
+  const { title, body } = REMOVE_CONFIRM_COPY[kind];
+  const dialog = (
+    <DialogSurface ariaLabel={title}>
+      <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>{title}</h2>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{body}</p>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>This is immediate and permanent.</p>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+        <Button variant="text">Remove</Button>
+        <Button>Keep it</Button>
+      </div>
+    </DialogSurface>
+  );
+  return overSheet ? <div style={{ position: "fixed", inset: 0, zIndex: 43 }}>{dialog}</div> : dialog;
+}
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded

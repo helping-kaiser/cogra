@@ -565,6 +565,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  // The same dialog at comment scale, over the thread (the comment-removal
+  // round): the post's numbers, because it is the post's dialog. The thread
+  // beneath is wired on `ReplyEntry`.
+  CommentRemoveConfirm: [
+    { n: 1, find: ">Remove</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   Removed: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: '<a href="/u/', tag: "a", all: true },
