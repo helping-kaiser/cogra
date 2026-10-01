@@ -3844,3 +3844,46 @@ rulings and left these calls for his eye:
 - **Two strings flagged for blessing** (copy-voice): the empty tag's
   `Nothing carries this tag right now.` and the trace's kind-neutral
   `then what reached you`.
+
+### 121 · What the entry funnel round left for rulings · *design* · **filed 2026-10-01**
+
+The entry funnel round (readme §13, *The entry funnel round*) executed
+jakob's K3 rulings (Block C items C1–C7, C19–C21) and left these calls
+for his eye:
+
+- **The dead link's arrival.** The ruling kept the feed-first landing and
+  asked for the unusable-link arrival to be stated. The lane read it as
+  the same landing: a dead link still names its issuer, so it lands on
+  `Main` and the band and the gate open `JoinInvalid`; a link that
+  resolves to nothing lands on `FeedBare`. Nothing on arrival says the
+  link is dead.
+- **The wrong-address change keeps the password.** The carve-out drops the
+  old address's code and nothing else; whether a change of address
+  restarts the 24-hour reap is unruled, and auth.md keeps the clock at
+  registration.
+- **The deletion's landing.** `DeleteAccountConfirmed` takes
+  `VerifyExpired`'s left column rather than `Verified`'s centred one,
+  because it carries a checkbox; what `Add it to the deletion` does with
+  the box unticked is unruled. Its signed-out line and its
+  sweep-already-chosen heading are copy, not boards.
+- **The grace screen.** `DeleteAccountPending` drops the band (it would
+  say its paragraph twice) and keeps the ruled `Cancel` as its button,
+  bare; `Cancel the deletion` would name its object. During the grace
+  the settings group's footnote goes, since it describes a request not
+  yet made.
+- **The email change's failure landings** — the expired link and the
+  taken address — are copy on `ChangeEmailLinked`, not boards.
+- **An expiry notification.** The shell's card returns when an
+  application runs out, but no tenth notification kind says so; the
+  contract has none either.
+- **Where the snackbars land.** The ask link's three non-vouching readers
+  and the invite link's three signed-in readers with nothing to re-arm
+  all land where app-open lands for them; whether the already-queued
+  member should land on `Invites` instead is open.
+- **Two neighbours of the rulings, untouched.** `JoinInvalid` still says
+  an existing account "is untouched", which the 24-hour reap makes false
+  for an unverified one (the honesty fix `VerifyExpired` got); and
+  `VerifiedApp` opened signed out has no stated way on.
+- **Strings flagged for blessing** (copy-voice, *The entry funnel's
+  round*, *Confirm the change* and *Deleting the account*): every new
+  line the round drew.
