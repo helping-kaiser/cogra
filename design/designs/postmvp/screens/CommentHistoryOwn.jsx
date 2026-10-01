@@ -18,9 +18,10 @@
    rendering removed in its thread. The tombstone's slot says `Already removed`.
 
    THE CONFIRM IS NOT DRAWN AGAIN. Both removals open the post boards' dialog at
-   comment scale — `VersionRemoveConfirm` is the master for the per-version act
-   and for the whole-comment act alike: the same surface, the same emphasis, the
-   safe action filled. One think-twice shape for one kind of decision.
+   comment scale: `VersionRemoveConfirm` is the master for the per-version act,
+   and the whole-comment act opens canonical's `CommentRemoveConfirm`, the
+   comment's own Remove — the same surface, the same emphasis, the safe action
+   filled. One think-twice shape for one kind of decision.
 
    THE FRAME IS TALLER THAN A PHONE so the register shows whole, the lead card
    and the law at the foot included: the column measures 745px, and with the
