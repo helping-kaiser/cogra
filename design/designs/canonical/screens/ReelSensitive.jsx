@@ -25,8 +25,8 @@
    plays: the screen becomes `Reel`. The score's detail door opens
    `PostDetailVideoSensitive`, the same post still veiled.
 
-   The stream has no behavior sidecar, so nothing here is written as one: every
-   outcome above follows from the recorded veil and stage laws. */
+   Every outcome above follows from the recorded veil and stage laws, and
+   `behavior/ReelSensitive.md` holds them as lines. */
 
 const SENSITIVE_MIRA_CLIP = { reason: "One rubbing includes a dead seabird." };
 

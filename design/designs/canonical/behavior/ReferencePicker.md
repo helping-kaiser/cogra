@@ -9,3 +9,5 @@ WHEN tap the remove control of a staged row -> the row's target is unstaged from
 WHEN tap Done -> the picker closes to the composer it was opened from AND NEVER a staged reference is unstaged
 
 WHEN press the header back -> the picker closes to the composer it was opened from AND NEVER a staged reference is unstaged
+
+WHEN tap a result row GIVEN the row's target is withdrawn in the edit the picker was opened from -> the target's withdrawal is unstaged AND NEVER a second record is staged for the target

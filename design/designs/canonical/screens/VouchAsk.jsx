@@ -42,7 +42,16 @@
 
    `Not now` LEAVES IT STANDING. An ask link does not expire and does not get
    used up, so declining to answer costs the asker nothing — the reader can
-   open the same link again, and so can everyone else it was sent to. */
+   open the same link again, and so can everyone else it was sent to.
+
+   EVERY READER THE LINK REACHES IS ANSWERED (jakob 2026-10-01, audit K3.8).
+   This page is a member's with a usable link. A guest meets it too — the
+   reading is public — and the stance affordance raises the guest gate over
+   it; signing in brings them back to this ask. A link that cannot stage
+   anyone right now opens `VouchAskUnusable`. The three readers who cannot
+   vouch through it — an applicant, the asker themselves, a member who
+   already has the applicant in their queue — land where app-open lands for
+   them, and a snackbar says why. */
 export function Screen() {
   return (
     <>

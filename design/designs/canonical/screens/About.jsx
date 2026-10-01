@@ -17,7 +17,14 @@
 
    IT IS A TASK PAGE, so it wears the back arrow and no bottom bar — the entry
    flow's own grammar (readme §13), and the reason the join door can open it
-   without the door losing its place. The header pins: a reader scrolling a
+   without the door losing its place. THE JOIN FORM KEEPS ITS VALUES across
+   the detour: opened from Join's "?", back returns to the form with every
+   field as the reader left it, half-filled or not (jakob 2026-10-01).
+
+   THE KEY TOPIC NAMES NO PLATFORM. Read on the web or in the app, the page is
+   one string, so the key is one "only you hold" rather than one on a bare
+   "device" (copy-voice, the platform noun: where a sentence can be phrased
+   without it, it is). The header pins: a reader scrolling a
    reference page must never lose the way back (readme §13, browse collapses,
    task pins).
 
@@ -182,7 +189,7 @@ export function Screen() {
 
         <Topic title="Your key is yours">
           {[
-            "Everything you publish is signed by a key that lives on your device and nowhere else. We cannot sign for you, and we cannot recover it for you — your recovery code is the only way back.",
+            "Everything you publish is signed by a key only you hold. We cannot sign for you, and we cannot recover it for you — your recovery code is the only way back.",
           ]}
         </Topic>
 

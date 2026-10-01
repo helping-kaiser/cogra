@@ -27,7 +27,13 @@
    card always is; the suppressed card leads because its chrome is the state
    nothing else in the canvas draws. The three shapes side by side are
    `FeedShapes`, which is a reference board for exactly the reason this one is
-   not: comparing them needs a frame no phone has. */
+   not: comparing them needs a frame no phone has.
+
+   THE FIRST ROUND OF THE ID SWEEP (backlog 114): `NODE` registers the board
+   under the feed's own prefix, named as `Feed` names it, so the stage law's
+   lines in `behavior/Feed.md` name its clip by `feed.card.media.frame` and its
+   discs by `soundDisc` and `playDisc`. */
+export const NODE = "feed";
 const SUPPRESSED = {
   ...MIRA_CLIP_POST,
   title: undefined,
@@ -39,12 +45,12 @@ const SUPPRESSED = {
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard {...SUPPRESSED} bundle={mkBundle(0.3, 0.15)} />
-        <PostCard {...TOBIAS_CANOE_POST} bundle={mkBundle(0.1, 0.1)} />
+        <PostCard {...SUPPRESSED} bundle={mkBundle(0.3, 0.15)} node="card" />
+        <PostCard {...TOBIAS_CANOE_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

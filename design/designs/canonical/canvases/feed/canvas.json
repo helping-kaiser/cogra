@@ -163,6 +163,24 @@
       "page": "comments"
     },
     {
+      "file": "ReplySealUploading.dc.html",
+      "title": "Reply · what you sign, waiting on uploads",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplySealUploadFailed.dc.html",
+      "title": "Reply · what you sign, an upload failed",
+      "x": 8160,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
       "x": 3840,
@@ -316,6 +334,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedNewerVersion.dc.html",
+      "title": "Feed · a newer version, said once",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -416,19 +443,19 @@
     },
     {
       "file": "MapComments.dc.html",
-      "x": -5060,
+      "x": -5640,
       "y": 0,
-      "w": 4640,
-      "h": 2481,
+      "w": 5220,
+      "h": 2643,
       "page": "comments",
       "title": "Comments · flow map"
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5060,
+      "x": -5350,
       "y": 0,
-      "w": 4640,
-      "h": 4491,
+      "w": 4930,
+      "h": 4556,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -544,6 +571,24 @@
       "file": "CitedBy.dc.html",
       "title": "Post · what cites it",
       "x": 2400,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostNotFound.dc.html",
+      "title": "Post · no such post",
+      "x": 2880,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "CommentNotFound.dc.html",
+      "title": "Comment · no such comment",
+      "x": 3360,
       "y": 4676,
       "w": 390,
       "h": 844,

@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="840x470" name="Stance alternates" subtitle="The non-drag path. One control at a time — sliders lead, typing is a tap away." -->
+<!-- @dsCard group="Components" viewport="1240x470" name="Stance alternates" subtitle="The non-drag path. One control at a time — sliders lead, typing is a tap away. A tag or citation sheet hosts it in the field's place." -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -9,26 +9,32 @@
 </head><body><div id="root"></div>
 <script type="text/babel">
 const NS = window.CoGraDesignSystem_9084ba;
-const { StanceAlternates, StanceStanding, StanceLandingLine } = NS;
+const { StanceAlternates, StanceStanding, StanceLandingLine, TAG_RANGES } = NS;
+const TAG_AXES={directed:"How much it is about this",interest:"How sure you are",left:"Barely",right:"Entirely",bottom:"Guessing",top:"Certain"};
 const clip=(v)=>(v===0?0:Math.min(1,Math.max(-1,v)));
 const landingOf=(rawSum,pick)=>{const landing={pDirected:clip(rawSum.pDirected+pick.pDirected),pInterest:clip(rawSum.pInterest+pick.pInterest)};return{landing,inert:landing.pDirected===0||landing.pInterest===0,severed:landing.pDirected===0&&landing.pInterest===0}};
 const standing={current:{pDirected:0.55,pInterest:0.2},rawSum:{pDirected:0.55,pInterest:0.2},records:2,severed:false,severance:{records:2}};
 function Demo(){
   const [a,setA]=React.useState({pDirected:0.4,pInterest:0.2});
   const [b,setB]=React.useState({pDirected:-0.35,pInterest:0.75});
+  const [c,setC]=React.useState({pDirected:0.1,pInterest:1});
   return (
   <div className="row">
     <div className="col">
       <span className="lbl">Sliders — what opens by default</span>
-      <StanceAlternates inline pick={a} onPick={setA} landing={<StanceLandingLine landing={landingOf(standing.rawSum,a)}/>}>
+      <StanceAlternates inline onSever={()=>{}} pick={a} onPick={setA} landing={<StanceLandingLine landing={landingOf(standing.rawSum,a)}/>}>
         <StanceStanding pick={a} bundle={standing} targetLabel="this post"/>
       </StanceAlternates>
     </div>
     <div className="col">
       <span className="lbl">Typed — for a reader who has chosen exact values</span>
-      <StanceAlternates inline mode="entry" pick={b} onPick={setB} landing={<StanceLandingLine landing={landingOf(standing.rawSum,b)}/>}>
+      <StanceAlternates inline onSever={()=>{}} mode="entry" pick={b} onPick={setB} landing={<StanceLandingLine landing={landingOf(standing.rawSum,b)}/>}>
         <StanceStanding pick={b} bundle={standing} targetLabel="this post"/>
       </StanceAlternates>
+    </div>
+    <div className="col" style={{width:300,padding:16,borderRadius:"var(--radius-extra-large) var(--radius-extra-large) 0 0",background:"var(--surface-container-high)"}}>
+      <span className="lbl">In a tag's sheet — the field's place, Done unchanged</span>
+      <StanceAlternates host="sheet" pick={c} onPick={setC} axes={TAG_AXES} ranges={TAG_RANGES}/>
     </div>
   </div>)}
 ReactDOM.createRoot(document.getElementById("root")).render(<Demo/>);

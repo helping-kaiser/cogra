@@ -27,22 +27,38 @@ Where each sidecar's words come from:
   clip *qualifies* at 70% visibility or more and unveiled, the
   *incumbent* is the playing clip, the *stage* is the one clip a scroll
   surface plays, and the *hard top* is where the surface cannot scroll
-  further up. Its hold lines are the failure pack's (readme §13, *The
+  further up. A post's clip is `feed.card.media.frame`, registered on
+  `FeedCover`; a comment card's clip stays plain words until a
+  registered board draws one, so the law's lines keep *clip* for both.
+  Its hold lines are the failure pack's (readme §13, *The
   failure pack*): a signed act waits for its signature, the 200ms law
   decides when the row says `Signing…`, and a hold that fails says so
   on the target's row, never on the snackbar — and one the write rule
   refuses says so quietly there, with no Retry (copy-voice, *Faults by
-  code*).
+  code*). A failed comfort's revert says so on the same row, and the
+  newer-version snackbar speaks once per release on a cold open (readme
+  §13, *The curate rulings*).
 - `ComposeSeal.md` — the failure pack's commit in flight: the label
   swap after 200ms, the inert commit, and the fault in the commit's
   place, in the words of readme §13 and copy-voice (*In-flight labels*);
+  the two refusals of one staged act, the citation that never
+  landed and the bug (copy-voice, *Faults by code*); and the ways out
+  locked while it signs, the slow line past 5s and the outcome after a
+  kill (readme §13, *The curate rulings*).
   and the two refusals of one staged act, the citation that never
-  landed and the bug (copy-voice, *Faults by code*).
+  landed and the bug (copy-voice, *Faults by code*); and an applicant's
+  exit, onto their own feed with the staged-act line (readme §13, *The
+  applicant's life round*; copy-voice, *The staged-act snackbar*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,
-  *Comments live in a sheet*); and the removed comment's mark in its own
+  *Comments live in a sheet*); the removed comment's mark in its own
   place, its replies kept under it (comment.md §5; readme §13, *The
+  comment-removal round*); and the signed reply's landing, scrolled to
+  its new card (readme §13, *The curate rulings*).
+  comment-removal round*); and the foot's gates — the join prompt for a
+  guest, and for an applicant the snackbar, since applicants do not
+  comment in V1.0 (readme §13, *The applicant's life round*).
   comment-removal round*); and the landing on a deep-linked comment and
   the sheet's return from a forward navigation, the X of a cite
   included (readme §4, *Navigation*).
@@ -58,9 +74,28 @@ Where each sidecar's words come from:
   §13, *The review fixes*): a pick stages and the picker stays open,
   and `Done` and the header back both leave with every pick kept; and
   the staged section (readme §13, *The closing batch*): a picked row
-  moves above the list, and its × un-stages it.
+  moves above the list, and its × un-stages it; and the edit's re-pick
+  (readme §13, *The pads and the edit's withdrawals*): picking a name
+  the edit has withdrawn unstages the withdrawal, one staged act per
+  name.
 - `ReferencePicker.md` — the same multi-add and staged section, at the
   citation picker: the shared anatomy's law, in the same words.
+- `KeptPicksReview.md` — the kept picks' review (readme §13, *The kept
+  picks' review*): one batch, signed only from its seal; the × that drops
+  a pick with no confirm and no undo, and the last drop's exit; leaving
+  unsigned keeps every pick.
+- The rest of the compose and media pages' sidecars (readme §13, *The
+  compose and media behavior pass*) — each board's own docblock, its
+  graph edges' cases, and the readme §13 rounds and copy-voice sections
+  those cite. `ComposeDetails.md` and `ComposeSeal.md` carry those lines
+  beside their own.
+- Every other board on the feed and comments pages (readme §13, *The
+  feed and comments behavior pass*) — its own docblock, the readme §13
+  records it names, its flow edges' outcomes and its copy-voice
+  strings, in their words. `FeedCover.md` and `PostDetail.md` name
+  their elements by node path.
+  citation picker: the shared anatomy's law, in the same words; and the
+  same re-pick, for a citation the edit has withdrawn.
 
 ## The grammar
 
@@ -145,7 +180,7 @@ And it checks nodes, against `nodes.json`:
 - a node path in any line is a registered one — a line never names an
   element the built boards do not carry;
 - on a registered screen (`Feed`, `PostDetail` and `ComposeDetails`, the
-  calibration screens, so far), plain words that spell one of its nodes
+  calibration screens, and `FeedCover`, the feed's clip, so far), plain words that spell one of its nodes
   fail: "the media row" on `ComposeDetails` is written
   `composeDetails.mediaRow`. The check knows a node by the words of a
   compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word

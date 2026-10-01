@@ -49,6 +49,20 @@ export interface PadAxes {
   directed?: string;
   /** The question `pInterest` answers — "How much reaches you" for a stance. */
   interest?: string;
+  /**
+   * The standing readout's label — "Current opinion" when omitted. A family
+   * whose record is not an opinion names its own (a citation on an edit:
+   * "Current").
+   */
+  current?: string;
+  /** The landing readout's label — "Resulting opinion" when omitted. */
+  resulting?: string;
+  /**
+   * `false` keeps the nearest anchor's WORD out of the spoken readouts — for a
+   * family that borrows the stance faces as a lossy readout but whose record
+   * is not a stance (a citation). The face still paints; the pair is spoken.
+   */
+  anchorWord?: boolean;
 }
 
 /** The stance's own six — the pad's default. */

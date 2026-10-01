@@ -21,7 +21,9 @@
    succession — a new lineage head whose founding payload carries the whole
    new state (chats.md §8) — and the old one stays published. So `Save` leads
    to the seal (`ChatEditSeal`), the profile's own path: every change to what
-   a chat is called is a signed act.
+   a chat is called is a signed act. It reads as a wizard stage, as
+   `ProfileEdit` does (jakob 2026-10-01), so `Save` keeps its pinned foot
+   under the two-placement law (readme §4).
 
    WHO MAY OPEN THIS follows the governance map (`ChatDetails`), and the
    picture's door is the platform's picker, then canonical's avatar crop at

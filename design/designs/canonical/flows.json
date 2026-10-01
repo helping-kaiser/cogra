@@ -4,7 +4,7 @@
     {
       "name": "publish-a-post",
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "pictures — the crop" },
         { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
@@ -44,7 +44,7 @@
     {
       "name": "reply-to-a-post",
       "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
-      "start": { "control": "comment count" },
+      "start": { "control": "comment count", "except": ["Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
       "waypoints": [
         { "board": "ReplyEntry", "via": 7, "to": "ReplyCompose" },
         { "board": "ReplyCompose", "via": 3 }
@@ -74,12 +74,18 @@
     },
     {
       "name": "guest-turns-applicant",
-      "description": "Sign in or join, offered on every guest screen, runs out to the invite and through Create account into the applicant days.",
-      "start": { "control": "Sign in or join" },
+      "description": "Sign in or join, offered on every guest screen, runs a visitor who holds no link out to the invite and through Create account into the applicant days.",
+      "start": { "control": "Sign in or join", "to": "SignIn" },
       "waypoints": [
-        { "board": "SignIn", "via": 8 },
+        { "board": "SignIn", "via": 8, "to": "InviteEntry" },
         { "board": "InviteEntry", "via": 3, "case": "the link checks out" }
       ],
+      "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "join-with-the-link-in-hand",
+      "description": "A visitor who arrived through a live invite link presses Sign in or join and meets the join form with the link already held — never the door, never a second paste.",
+      "start": { "control": "Sign in or join", "to": "Join" },
       "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
     },
     {
@@ -146,7 +152,7 @@
       "description": "An ask link lands on the person who sent it; opening the stance affordance raises the pad, and Set signs the vouch that brings them in — the route a turned-down applicant still has.",
       "start": { "board": "VouchAsk" },
       "waypoints": [
-        { "board": "VouchAsk", "via": 3 }
+        { "board": "VouchAsk", "via": 3, "to": "VouchAskPad" }
       ],
       "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
     },
@@ -159,7 +165,7 @@
     {
       "name": "take-a-stance-on-a-post",
       "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
-      "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting"] },
+      "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
     {
@@ -229,9 +235,9 @@
     },
     {
       "name": "reply-while-the-pictures-upload",
-      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
-      "start": { "board": "ReplyPictures", "via": 3, "case": "uploads still running — the gated seal (master on the media page)" },
-      "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }
+      "description": "Next pressed while the pictures are still going up reaches the reply's own gated seal; signing waits for them, then the comment settles into the thread.",
+      "start": { "board": "ReplyPictures", "via": 3, "case": "uploads still running — the reply's gated seal" },
+      "end": { "board": "ReplySealUploading", "via": 1, "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }
     },
     {
       "name": "edit-your-comment",
@@ -242,7 +248,7 @@
     {
       "name": "publish-words",
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeWords", "via": 3, "to": "ComposeDetails" },
@@ -253,7 +259,7 @@
     {
       "name": "publish-a-video",
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a horizontal or square video — its face" },
         { "board": "ComposeCover", "via": 6 },
@@ -264,7 +270,7 @@
     {
       "name": "publish-a-vertical-video",
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a vertical video — no cover step, the door waits on details" },
         { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
@@ -381,7 +387,7 @@
       "name": "message-someone",
       "description": "Message on someone's profile lands on the chats screen, which says the surface is not here yet — the conversation itself is still owed.",
       "start": { "board": "ProfileOther" },
-      "end": { "board": "ProfileOther", "via": 5 }
+      "end": { "board": "ProfileOther", "via": 5, "to": "ChatsComingSoon" }
     },
     {
       "name": "publish-from-the-browser",
@@ -449,7 +455,7 @@
     {
       "name": "cite-a-post",
       "description": "The reader's overflow — on a post or on a comment, the same two rows — opens the post wizard fresh, the thing cited riding along unseen. The journey ends at the details stage, where the reference is finally on screen.",
-      "start": { "control": "Cite in a new post" },
+      "start": { "control": "Cite in a new post", "to": "ComposePick" },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },
@@ -459,7 +465,7 @@
     {
       "name": "mention-someone",
       "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person, and the wizard it opens is the same one.",
-      "start": { "control": "Mention in a new post" },
+      "start": { "control": "Mention in a new post", "to": "ComposePick" },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
         { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },

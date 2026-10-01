@@ -23,74 +23,12 @@
    THE NOTES ARE FIXTURE, NOT COPY. What each release says is written when it
    ships; the board draws the shape a release's notes take.
 
+   A RUNNING VERSION BEHIND THE NEWEST (jakob 2026-10-01) gains one quiet
+   line atop the list and its door (`WhatsNewBehind`); this board is the
+   running version current.
+
    A TASK PAGE: the back arrow and no bottom bar, like every page Settings
-   opens. */
-
-const RELEASES = [
-  {
-    version: RUNNING_VERSION,
-    date: "30.09.2026",
-    current: true,
-    notes: [
-      "A reply says what it answers — a post by its title, a comment by its first words.",
-      "While something signs, the button says what it's doing, and a signing that doesn't go through says so right where you were.",
-    ],
-  },
-  {
-    version: "0.1.1",
-    date: "28.09.2026",
-    notes: [
-      "Comments, profiles and tags can join your feed — turn them on in the filter.",
-      "A tag you type is always the first row, ready to add.",
-    ],
-  },
-  {
-    version: "0.1.0",
-    date: "25.09.2026",
-    notes: ["The first release: posts and comments, opinions, tags and citations, invites, and a key that is yours alone."],
-  },
-];
-
-function Release({ version, date, current = false, notes }) {
-  return (
-    <>
-      <SectionLabel>{current ? `Version ${version} · current · ${date}` : `Version ${version} · ${date}`}</SectionLabel>
-      <div style={{ padding: "0 16px" }}>
-        <Card>
-          {notes.map((line) => (
-            <p
-              key={line}
-              style={{
-                margin: 0,
-                fontSize: "var(--text-body-medium)",
-                lineHeight: "var(--text-body-medium--line-height)",
-                letterSpacing: "var(--text-body-medium--letter-spacing)",
-              }}
-            >
-              {line}
-            </p>
-          ))}
-          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
-            See it on GitHub
-          </InlineAction>
-        </Card>
-      </div>
-    </>
-  );
-}
-
+   opens. The page is `WhatsNewBody`, shared with its behind state. */
 export function Screen() {
-  return (
-    <>
-      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" />
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 0 16px" }}>
-        {RELEASES.map((release) => (
-          <Release key={release.version} {...release} />
-        ))}
-        <div style={{ padding: "16px 24px 0" }}>
-          <QuietNote>Newest first. Every release's full notes and its code are public on GitHub.</QuietNote>
-        </div>
-      </div>
-    </>
-  );
+  return <WhatsNewBody />;
 }

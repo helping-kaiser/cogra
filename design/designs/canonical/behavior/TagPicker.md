@@ -15,3 +15,7 @@ WHEN tap the remove control of a staged row -> the row's name is unstaged from t
 WHEN tap Done -> the picker closes to the composer it was opened from AND NEVER a staged tag is unstaged
 
 WHEN press the header back -> the picker closes to the composer it was opened from AND NEVER a staged tag is unstaged
+
+WHEN tap a row in the list GIVEN the row's name is withdrawn in the edit the picker was opened from -> the name's withdrawal is unstaged AND NEVER a second record is staged for the name
+
+WHEN press the keyboard's action key GIVEN the typed name is withdrawn in the edit the picker was opened from -> the name's withdrawal is unstaged AND NEVER a second record is staged for the name

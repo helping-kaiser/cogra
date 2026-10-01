@@ -19,7 +19,12 @@
    THE BODY IS `_shared.jsx`'s `ReplySealBody`, because the reply's stance pad
    stands on this seal and draws it whole. It is drawn answering the post;
    `ReplySealComment` is it answering a comment, and `ReplySealKeyAbsent` it
-   with the key gone mid-write. */
+   with the key gone mid-write.
+
+   WHILE IT SIGNS, IT HOLDS THE READER AS THE POST'S SEAL DOES (jakob
+   2026-10-01): `Signing comment…` locks the back arrow, Back and the X, and
+   past 5s the subline under the total says the network is slow
+   (`SealSigning`, `SealSigningSlow`). */
 export function Screen() {
   return <ReplySealBody />;
 }

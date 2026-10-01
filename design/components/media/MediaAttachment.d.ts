@@ -88,6 +88,8 @@ export interface MediaDiscProps {
   onClick?: () => void;
   pressed?: boolean;
   corner?: "bottom-left" | "bottom-right" | "top-left" | "top-right";
+  /** The data-node name its placer gives this disc (design ⇄ impl seam 002; renders as attributes only). A card's frame names its disc `soundDisc` or `playDisc`. */
+  node?: string;
 }
 
 export declare function MediaDisc(props: MediaDiscProps): JSX.Element;

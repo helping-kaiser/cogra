@@ -27,6 +27,11 @@
    send it there; a bare `Send` would promise a delivery this screen does not
    make. The words are platform-independent, one string for app and web.
 
+   THE TWO-PLACEMENT LAW'S STATED EXCEPTION (readme §4, *Spacing and
+   layout*; jakob 2026-10-01). The commit does not follow the field: the
+   read-back of what travels stands between them, so the reader sees
+   everything that goes before the press.
+
    THE FIELD'S TWO EDGES (jakob 2026-10-01, closing backlog item 118's first
    question). Empty, `Send by email` is visible and disabled with the reason
    right above it (`ReportProblemEmpty`) — the disabled-submit law. And

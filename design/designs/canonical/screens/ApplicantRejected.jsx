@@ -28,16 +28,24 @@
    that explains it and a card inside a card is two containers saying one
    thing.
 
+   THE FRESH-INVITE DOOR FOLLOWS IT (jakob 2026-10-01, audit K3.5). A closed
+   application re-arms from either end of the funnel (auth.md, *Rejection*):
+   the ask link is one, a fresh invite link the other. `Use a fresh invite`
+   opens `ApplicantRearm`, the same door `ApplicantExpired`'s card carries.
+
    THE BAND NAMES @kel STILL. The vantage rule resolves to the most specific
    actor an arrival carries, and the arrival is unchanged: this reader came
    through @kel's link and the feed they are reading is the one that link
    carried. Re-ranking somebody's whole feed as a side effect of being turned
    down would be a punishment the ruling is at pains not to impose. The band's
-   LINE changes, because the old one promised an approval that is not coming. */
+   LINE changes, because the old one promised an approval that is not coming.
+
+   THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
+   applicants included (readme §13, the feed's filter on screen). */
 export function Screen() {
   return (
     <>
-      <CograBand>
+      <CograBand trailing={<FeedFilter />}>
         <BorrowedViewBand
           handle="kel"
           displayName="Kel Moreau"
@@ -57,6 +65,9 @@ export function Screen() {
             copyLabel="Copy your ask link"
             caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
           />
+          <Button variant="outline" selfStart>
+            Use a fresh invite
+          </Button>
         </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} />
         <PostCard {...TOBIAS_POST} signedIn={false} />

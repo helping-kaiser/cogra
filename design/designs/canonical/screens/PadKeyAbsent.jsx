@@ -9,7 +9,7 @@
    never stopped before doing the thinking, only before the part that needs a
    key.
 
-   THE NOTICE IS `ComposeKeyAbsent`'s, which is `WalletKeyAbsent`'s: a
+   THE NOTICE IS `ComposeKeyAbsent`'s: `NoticePanel` at the `medium` corner, a
    `tertiary-container` panel, the "?" in `HelpDot`'s `inverse` — the ring the
    panel's own `currentColor` draws — and the restore button in `Button`'s
    `inverse`, the filled button that takes the panel's pair turned over.
@@ -39,7 +39,12 @@
      `Waiting for your key` under it. Tapping the face opens this pad again,
      holding it; a new pick kept on the same post replaces it.
    - Several can wait at once, one per post. When the key is restored they
-     sign together, in one batch the reader reviews first — never silently.
+     sign together, in one batch the reader reviews first — never silently
+     (jakob, 2026-09-30). `Restore the key` opens `KeptPicksReview`, one row
+     per kept pick, each with a × that drops it at once; `Sign them` leads to
+     the standard seal (`KeptPicksSeal`), which signs the batch all or
+     nothing. A review left unsigned keeps them, and the settings page's Key
+     backup group carries `3 kept picks waiting` to reopen it.
    - A remembered sign-out keeps them, as it keeps everything on the device.
      A sign-out that forgets the account clears them with the draft — and
      where it would also take an unbacked key, `SignOutConfirm` names all
@@ -112,21 +117,11 @@ export function Screen() {
 
         <StancePad value={{ pDirected: 0.1, pInterest: 0.1 }} />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12, borderRadius: "var(--radius-medium)", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", padding: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <h2 style={{ margin: 0, flex: 1, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
-              Your key isn't on this browser
-            </h2>
-            <HelpDot ariaLabel="Your key" variant="inverse" />
-          </div>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Signing needs your key, which isn't in this browser — the write waits as pending.
-          </p>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Restore the key with your recovery code to finish.
-          </p>
+        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key">
+          <NoticeLine>Signing needs your key, which isn't in this browser — the write waits as pending.</NoticeLine>
+          <NoticeLine>Restore the key with your recovery code to finish.</NoticeLine>
           <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
-        </div>
+        </NoticePanel>
 
         <Button variant="text" style={{ width: "100%" }}>Keep it pending, restore later</Button>
       </div>

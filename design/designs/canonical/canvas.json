@@ -110,6 +110,15 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantLanding.dc.html",
+      "title": "Applicant · approved, landing",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "KeyElsewhereNoBackup.dc.html",
       "title": "Key elsewhere · no backup to restore from",
       "x": 1920,
@@ -122,6 +131,15 @@
       "file": "RestoreLength.dc.html",
       "title": "Restore · the code is the wrong length",
       "x": 1920,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInExpired.dc.html",
+      "title": "Sign in · signed out mid-session",
+      "x": 2400,
       "y": 5204,
       "w": 390,
       "h": 844,
@@ -191,6 +209,60 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantExpired.dc.html",
+      "title": "Applicant · ran out of time",
+      "x": 3360,
+      "y": 4184,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantRearm.dc.html",
+      "title": "Applicant · a fresh invite",
+      "x": 3840,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantEmail.dc.html",
+      "title": "Applicant · wrong address",
+      "x": 4320,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "VouchAskUnusable.dc.html",
+      "title": "Invites · an ask that can't be taken up",
+      "x": 4800,
+      "y": 6795,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "FeedSecurityNotice.dc.html",
+      "title": "Signed in · the security notice",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInLimited.dc.html",
+      "title": "Sign in · too many tries",
+      "x": 2400,
+      "y": 8244,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -249,6 +321,24 @@
       "title": "Restore · the code doesn't check out",
       "x": 960,
       "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeptPicksReview.dc.html",
+      "title": "Restore · the kept picks' review",
+      "x": 2400,
+      "y": 9248,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeptPicksSeal.dc.html",
+      "title": "Restore · the kept picks' seal",
+      "x": 2880,
+      "y": 4240,
       "w": 390,
       "h": 844,
       "page": "entry"
@@ -767,6 +857,24 @@
       "page": "comments"
     },
     {
+      "file": "ReplySealUploading.dc.html",
+      "title": "Reply · what you sign, waiting on uploads",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplySealUploadFailed.dc.html",
+      "title": "Reply · what you sign, an upload failed",
+      "x": 8160,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
       "x": 3840,
@@ -1025,6 +1133,15 @@
       "y": 1060,
       "w": 390,
       "h": 1600,
+      "page": "feed"
+    },
+    {
+      "file": "FeedNewerVersion.dc.html",
+      "title": "Feed · a newer version, said once",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
       "page": "feed"
     },
     {
@@ -1380,37 +1497,37 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -2450,
+      "x": -3320,
       "y": 0,
-      "w": 2030,
-      "h": 4238,
+      "w": 2900,
+      "h": 5308,
       "page": "entry",
       "title": "Entry · flow map"
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 3295,
+      "w": 3190,
+      "h": 3669,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -5060,
+      "x": -5640,
       "y": 0,
-      "w": 4640,
-      "h": 2481,
+      "w": 5220,
+      "h": 2643,
       "page": "comments",
       "title": "Comments · flow map"
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5060,
+      "x": -5350,
       "y": 0,
-      "w": 4640,
-      "h": 4491,
+      "w": 4930,
+      "h": 4556,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1434,9 +1551,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 1818,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -1470,10 +1587,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3900,
+      "x": -5060,
       "y": 0,
-      "w": 3480,
-      "h": 5720,
+      "w": 4640,
+      "h": 5880,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1591,7 +1708,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2613,
+      "h": 2670,
       "page": "profile"
     },
     {
@@ -1667,6 +1784,15 @@
       "page": "profile"
     },
     {
+      "file": "WhatsNewBehind.dc.html",
+      "title": "Settings · what's new, a newer version out",
+      "x": 5760,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ReportProblem.dc.html",
       "title": "Settings · report a problem",
       "x": 4800,
@@ -1691,6 +1817,42 @@
       "y": 1928,
       "w": 390,
       "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmailLinked.dc.html",
+      "title": "Settings · the new address's link, opened",
+      "x": 5760,
+      "y": 2932,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeEmailLinkedSignedOut.dc.html",
+      "title": "Settings · the new address's link, signed out",
+      "x": 6240,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsEmailPending.dc.html",
+      "title": "Settings · an email change pending",
+      "x": 6720,
+      "y": 1928,
+      "w": 390,
+      "h": 2613,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsDeleting.dc.html",
+      "title": "Settings · a deletion in its grace",
+      "x": 7200,
+      "y": 1928,
+      "w": 390,
+      "h": 2660,
       "page": "profile"
     },
     {
@@ -1724,6 +1886,24 @@
       "file": "DeleteAccountMail.dc.html",
       "title": "Delete account · check your mail",
       "x": 1920,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountConfirmed.dc.html",
+      "title": "Delete account · confirmed by the link",
+      "x": 4800,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteAccountPending.dc.html",
+      "title": "Delete account · during the grace",
+      "x": 5280,
       "y": 2988,
       "w": 390,
       "h": 844,
@@ -1766,6 +1946,15 @@
       "page": "patterns"
     },
     {
+      "file": "SealSigningSlow.dc.html",
+      "title": "Seal · signing, past 5s",
+      "x": 480,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
       "file": "SealFaultRow.dc.html",
       "title": "Seal · a cited post that didn't land",
       "x": 960,
@@ -1794,11 +1983,11 @@
     },
     {
       "file": "RowSigning.dc.html",
-      "title": "Signing · on the target's row",
+      "title": "Signing · on the target's row, and a comfort's revert",
       "x": 2880,
       "y": 964,
       "w": 390,
-      "h": 844,
+      "h": 1600,
       "page": "patterns"
     },
     {
@@ -1813,8 +2002,8 @@
     {
       "file": "RowWriteRule.dc.html",
       "title": "Signing · the write rule on the target's row",
-      "x": 2880,
-      "y": 1928,
+      "x": 3360,
+      "y": 964,
       "w": 390,
       "h": 844,
       "page": "patterns"
@@ -1931,6 +2120,15 @@
       "file": "RefPair.dc.html",
       "title": "A staged citation's pair",
       "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "RefPairEdit.dc.html",
+      "title": "A standing citation's pair · editing",
+      "x": 4800,
       "y": 3180,
       "w": 390,
       "h": 844,
@@ -2210,6 +2408,24 @@
       "file": "CitedBy.dc.html",
       "title": "Post · what cites it",
       "x": 2400,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostNotFound.dc.html",
+      "title": "Post · no such post",
+      "x": 2880,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "CommentNotFound.dc.html",
+      "title": "Comment · no such comment",
+      "x": 3360,
       "y": 4676,
       "w": 390,
       "h": 844,

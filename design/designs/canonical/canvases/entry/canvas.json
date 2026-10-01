@@ -110,6 +110,15 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantLanding.dc.html",
+      "title": "Applicant · approved, landing",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "KeyElsewhereNoBackup.dc.html",
       "title": "Key elsewhere · no backup to restore from",
       "x": 1920,
@@ -122,6 +131,15 @@
       "file": "RestoreLength.dc.html",
       "title": "Restore · the code is the wrong length",
       "x": 1920,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInExpired.dc.html",
+      "title": "Sign in · signed out mid-session",
+      "x": 2400,
       "y": 5204,
       "w": 390,
       "h": 844,
@@ -191,6 +209,51 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantExpired.dc.html",
+      "title": "Applicant · ran out of time",
+      "x": 3360,
+      "y": 4184,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantRearm.dc.html",
+      "title": "Applicant · a fresh invite",
+      "x": 3840,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantEmail.dc.html",
+      "title": "Applicant · wrong address",
+      "x": 4320,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "FeedSecurityNotice.dc.html",
+      "title": "Signed in · the security notice",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInLimited.dc.html",
+      "title": "Sign in · too many tries",
+      "x": 2400,
+      "y": 8244,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -249,6 +312,24 @@
       "title": "Restore · the code doesn't check out",
       "x": 960,
       "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeptPicksReview.dc.html",
+      "title": "Restore · the kept picks' review",
+      "x": 2400,
+      "y": 9248,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeptPicksSeal.dc.html",
+      "title": "Restore · the kept picks' seal",
+      "x": 2880,
+      "y": 4240,
       "w": 390,
       "h": 844,
       "page": "entry"
@@ -426,10 +507,10 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -2450,
+      "x": -3320,
       "y": 0,
-      "w": 2030,
-      "h": 4238,
+      "w": 2900,
+      "h": 5308,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -444,9 +525,9 @@
     },
     {
       "file": "MapPatterns.dc.html",
-      "x": -2450,
+      "x": -2740,
       "y": 0,
-      "w": 2030,
+      "w": 2320,
       "h": 1818,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
@@ -465,6 +546,15 @@
       "title": "Seal · signing",
       "x": 480,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealSigningSlow.dc.html",
+      "title": "Seal · signing, past 5s",
+      "x": 480,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "patterns"
@@ -498,11 +588,11 @@
     },
     {
       "file": "RowSigning.dc.html",
-      "title": "Signing · on the target's row",
+      "title": "Signing · on the target's row, and a comfort's revert",
       "x": 2880,
       "y": 964,
       "w": 390,
-      "h": 844,
+      "h": 1600,
       "page": "patterns"
     },
     {
@@ -517,8 +607,8 @@
     {
       "file": "RowWriteRule.dc.html",
       "title": "Signing · the write rule on the target's row",
-      "x": 2880,
-      "y": 1928,
+      "x": 3360,
+      "y": 964,
       "w": 390,
       "h": 844,
       "page": "patterns"
