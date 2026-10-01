@@ -585,7 +585,7 @@ which is what makes a guess expensive.
 
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
-| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the only figure the product has is the Post score and its explanation is four screens deep | — |
+| `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the product's one figure is the score every ranked card wears (the Post score on a post, the same figure on a comment, a person and a tag in the feed) and its explanation is four screens deep | — |
 | `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
@@ -7112,6 +7112,14 @@ they turn a kind on, on one new board, `FeedKinds`.
   is never cited or saved, and its page shares nothing. Every tap lands on a
   board that exists: the comment's thread, the person's profile, the tag's
   page.
+- **Every ranked card wears the score** (jakob 2026-10-01: "every card
+  should have the graph glyph and the score number next to it"). The rank
+  is about the paths leading to a thing and never its kind, so the comment,
+  the person and the tag wear the post card's figure — `graph_3` and the
+  number, second in the row after the opinion — and it opens the same trace,
+  `FeedEntry`. A post's figure is spoken `Post score`; the other three say
+  `Feed score`. `CommentCard` gained `score`, and `PostCard` `scoreLabel`,
+  both additive.
 - **`PostCard` gained `menuLabel` and `stanceAxes`**, both additive, so the
   ⋮ can say whose menu it is and a tag's pad can speak its own four ends;
   every other board renders unchanged.
@@ -7121,7 +7129,7 @@ they turn a kind on, on one new board, `FeedKinds`.
   tag, so neither reads as a text post; the tag card's body as its newest
   claim, with that claim's age as the card's timestamp; the face at the
   feed row's anchor size on both, rather than a profile's wide one; no
-  figures, no `Message` and no score on the profile card; `FeedFar`, which
+  figures and no `Message` on the profile card; `FeedFar`, which
   turns comments and profiles on, still draws only posts, because whether
   its `photos` form admits a text comment or a person is unruled;
   `FeedKinds` is not a registered screen, so `nodes.json` does not change.

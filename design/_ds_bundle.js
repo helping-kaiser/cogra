@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"3c6e9d426e62","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"dedfaa55b260","components/compose/StagedReference.jsx":"5b3fc77b1704","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"d5f7cca6dd3c","components/content/OverflowMenu.jsx":"c8bc58ab9716","components/content/PostCard.jsx":"7875654aa24a","components/content/ReferenceRow.jsx":"2cbbc7ce53a4","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"38703661022c","components/core/Button.jsx":"e0c9031720e8","components/core/Card.jsx":"2809bdee6885","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"7aa476569aba","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"a6450f9f869a","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/NoticePanel.jsx":"061075d67146","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"2b32453555c5","components/honesty/TransportError.jsx":"7bd4768896ec","components/media/MediaAttachment.jsx":"1c969987f2bb","components/media/MediaViewer.jsx":"b66a3e63536f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"9800c146a9fb","components/media/ReelRail.jsx":"2b8d1b95fbb9","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"2341df4ec848","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"1ef7af623c30","components/navigation/Icon.jsx":"2e976eb71d18","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"63d50d3782ad","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"9569b330a08e","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"d1407b1120e9","components/stance/SeveranceConfirm.jsx":"b660196cb7d9","components/stance/StanceAlternates.jsx":"ef4123c4f82d","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"6a2d21b61f6b","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"45ceb657cd0f","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"3c6e9d426e62","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"dedfaa55b260","components/compose/StagedReference.jsx":"5b3fc77b1704","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"38ea14b24662","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"a1b949ea4690","components/content/OverflowMenu.jsx":"c8bc58ab9716","components/content/PostCard.jsx":"c5b1a00d1f3e","components/content/ReferenceRow.jsx":"2cbbc7ce53a4","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"38703661022c","components/core/Button.jsx":"e0c9031720e8","components/core/Card.jsx":"2809bdee6885","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"7aa476569aba","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"a6450f9f869a","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"70203f48654a","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"c83cd00f9341","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/NoticePanel.jsx":"061075d67146","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"2b32453555c5","components/honesty/TransportError.jsx":"7bd4768896ec","components/media/MediaAttachment.jsx":"1c969987f2bb","components/media/MediaViewer.jsx":"b66a3e63536f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"9800c146a9fb","components/media/ReelRail.jsx":"2b8d1b95fbb9","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"2341df4ec848","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"1ef7af623c30","components/navigation/Icon.jsx":"2e976eb71d18","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"63d50d3782ad","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"9569b330a08e","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"22a934fdbcfd","components/stance/SeveranceConfirm.jsx":"b660196cb7d9","components/stance/StanceAlternates.jsx":"ef4123c4f82d","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"6a2d21b61f6b","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"45ceb657cd0f","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"}]} */
 
 (() => {
 
@@ -7042,6 +7042,105 @@ __ds_scope.LONG_PRESS_MS = LONG_PRESS_MS;
 __ds_scope.StanceControl = StanceControl;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceControl.jsx", error: String((e && e.message) || e) }); }
 
+// components/proposed/ExplainableNumber.jsx
+try { (() => {
+const { Icon } = __ds_scope;
+const SR_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0
+};
+
+/* PROPOSED — the shape every number in this product takes, not any one number.
+
+   design.md §7 binds figures with two rules: every number shown is EXPLAINABLE —
+   traceable, on demand, to what produced it, because a figure with no path behind
+   it is the black box again, just smaller — and detail is LAYERED: a calm surface
+   by default, the arithmetic a tap away.
+
+   So this is one thing: a quiet figure that opens its explanation. It does not
+   render the explanation. There is no expand-in-place variant, because the
+   product's one figure is the score every ranked card wears — the Post score,
+   and the same figure on the feed's comment, person and tag cards — and its
+   explanation is four screens deep, not three rows.
+   Nothing here is designed against a number that does not exist yet — earnings
+   included.
+
+   Register: `body-small` on `onSurfaceVariant`. Never a badge, never a colour,
+   never a trend arrow. Growth-dashboard framing is the failure mode §1 names by
+   anti-goal. */
+
+/* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
+   clip, where onSurfaceVariant on photography is not quiet but unreadable. It
+   goes white with a shadow — the register is unchanged, the contrast is not. */
+
+/* THE FIGURE IS DRAWN WHATEVER THE READING MODE SAYS (jakob's ruling, the geek
+   round's review). Geek mode governs the number PAIRS — the two-parameter
+   readings the faces and the tag objects already stand in for — and nothing
+   else. A Post score has no glyph that carries its magnitude, so hiding the
+   digits would leave the `graph` mark saying only "there is a score", which is
+   the black box §7 exists to refuse. */
+function ExplainableNumber({
+  label,
+  value,
+  unit,
+  glyph,
+  onOpenDetail,
+  overMedia = false,
+  node
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onOpenDetail,
+    className: "cg-state cg-focus cg-hit",
+    style: {
+      flex: "none",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "6px",
+      minHeight: "var(--touch-target-min)",
+      border: 0,
+      background: "none",
+      borderRadius: "var(--radius-full)",
+      padding: "0 8px",
+      margin: "0 -8px",
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      fontSize: "var(--text-body-small)",
+      color: overMedia ? "#fff" : "var(--text-secondary)",
+      textAlign: "left",
+      ...(overMedia ? {
+        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
+      } : null)
+    },
+    "data-node": node
+  }, glyph ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    name: glyph,
+    size: 18
+  }), /*#__PURE__*/React.createElement("span", {
+    style: SR_ONLY
+  }, label)) : /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: overMedia ? "#fff" : "var(--on-surface)",
+      fontWeight: 500
+    },
+    "data-node": node && "value"
+  }, value, unit ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--text-secondary)",
+      fontWeight: 400
+    }
+  }, unit) : null));
+}
+__ds_scope.ExplainableNumber = ExplainableNumber;
+})(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/ExplainableNumber.jsx", error: String((e && e.message) || e) }); }
+
 // components/content/OverflowMenu.jsx
 try { (() => {
 const { Icon, BottomSheet, SheetItem } = __ds_scope;
@@ -8729,7 +8828,7 @@ __ds_scope.RedactedContent = RedactedContent;
 
 // components/content/CommentCard.jsx
 try { (() => {
-const { Card, Button, ActorChip, PendingMarker, EditedMarker, LICENSE_MENU_LABEL, StanceControl, OverflowMenu, Icon, NODE_GLYPHS, TopicsLine, MediaGallery, RedactedContent, SensitiveVeil } = __ds_scope;
+const { Card, Button, ActorChip, PendingMarker, EditedMarker, LICENSE_MENU_LABEL, StanceControl, ExplainableNumber, OverflowMenu, Icon, NODE_GLYPHS, TopicsLine, MediaGallery, RedactedContent, SensitiveVeil } = __ds_scope;
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -8803,6 +8902,17 @@ function CommentCard({
      removed VERSION in a comment's edit history, which wears the mark a
      removed post wears. */
   redacted,
+  /* THE SCORE, WHERE THE COMMENT IS RANKED (the feed-cards rework, 2026-10-01).
+     A comment met in the feed reached the reader by the same paths a post does,
+     so it wears the same figure the post card wears — `graph_3` and the number,
+     second in the row after the opinion — and opens the same trace. A thread
+     passes none: inside the sheet a comment stands by the thread's order, not
+     by a rank. Its spoken name is kind-neutral, because the figure is about the
+     paths leading to the thing and not about the kind of thing it is (jakob).
+     Additive: given none, the card renders exactly as before. */
+  score,
+  onOpenScore,
+  scoreLabel = "Feed score",
   children
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
@@ -8905,7 +9015,7 @@ function CommentCard({
     topics: topics,
     references: references,
     onOpenReferences: onOpenReferences
-  }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || signedIn && (onReply || own && onEdit) || actions) && /*#__PURE__*/React.createElement("div", {
+  }), edited && /*#__PURE__*/React.createElement(EditedMarker, null), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || signedIn && (onReply || own && onEdit) || actions) && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexWrap: "wrap",
@@ -8921,6 +9031,11 @@ function CommentCard({
     signedIn: signedIn,
     taught: taught,
     onCommit: onCommit
+  }), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
+    glyph: "graph",
+    label: scoreLabel,
+    value: score,
+    onOpenDetail: onOpenScore ?? (() => {})
   }), signedIn && onReply && /*#__PURE__*/React.createElement(Button, {
     variant: "text",
     size: "sm",
@@ -8972,104 +9087,6 @@ function CommentCard({
 }
 __ds_scope.CommentCard = CommentCard;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/content/CommentCard.jsx", error: String((e && e.message) || e) }); }
-
-// components/proposed/ExplainableNumber.jsx
-try { (() => {
-const { Icon } = __ds_scope;
-const SR_ONLY = {
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0 0 0 0)",
-  whiteSpace: "nowrap",
-  border: 0
-};
-
-/* PROPOSED — the shape every number in this product takes, not any one number.
-
-   design.md §7 binds figures with two rules: every number shown is EXPLAINABLE —
-   traceable, on demand, to what produced it, because a figure with no path behind
-   it is the black box again, just smaller — and detail is LAYERED: a calm surface
-   by default, the arithmetic a tap away.
-
-   So this is one thing: a quiet figure that opens its explanation. It does not
-   render the explanation. It used to also expand a few rows of arithmetic in
-   place; that variant is gone, because the only figure the product has is the Post
-   Score, and its explanation is four screens deep, not three rows.
-   Nothing here is designed against a number that does not exist yet — earnings
-   included.
-
-   Register: `body-small` on `onSurfaceVariant`. Never a badge, never a colour,
-   never a trend arrow. Growth-dashboard framing is the failure mode §1 names by
-   anti-goal. */
-
-/* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
-   clip, where onSurfaceVariant on photography is not quiet but unreadable. It
-   goes white with a shadow — the register is unchanged, the contrast is not. */
-
-/* THE FIGURE IS DRAWN WHATEVER THE READING MODE SAYS (jakob's ruling, the geek
-   round's review). Geek mode governs the number PAIRS — the two-parameter
-   readings the faces and the tag objects already stand in for — and nothing
-   else. A Post score has no glyph that carries its magnitude, so hiding the
-   digits would leave the `graph` mark saying only "there is a score", which is
-   the black box §7 exists to refuse. */
-function ExplainableNumber({
-  label,
-  value,
-  unit,
-  glyph,
-  onOpenDetail,
-  overMedia = false,
-  node
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: onOpenDetail,
-    className: "cg-state cg-focus cg-hit",
-    style: {
-      flex: "none",
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "6px",
-      minHeight: "var(--touch-target-min)",
-      border: 0,
-      background: "none",
-      borderRadius: "var(--radius-full)",
-      padding: "0 8px",
-      margin: "0 -8px",
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--text-body-small)",
-      color: overMedia ? "#fff" : "var(--text-secondary)",
-      textAlign: "left",
-      ...(overMedia ? {
-        filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.6))"
-      } : null)
-    },
-    "data-node": node
-  }, glyph ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-    name: glyph,
-    size: 18
-  }), /*#__PURE__*/React.createElement("span", {
-    style: SR_ONLY
-  }, label)) : /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: overMedia ? "#fff" : "var(--on-surface)",
-      fontWeight: 500
-    },
-    "data-node": node && "value"
-  }, value, unit ? /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--text-secondary)",
-      fontWeight: 400
-    }
-  }, unit) : null));
-}
-__ds_scope.ExplainableNumber = ExplainableNumber;
-})(); } catch (e) { __ds_ns.__errors.push({ path: "components/proposed/ExplainableNumber.jsx", error: String((e && e.message) || e) }); }
 
 // components/media/MediaViewer.jsx
 try { (() => {
@@ -9432,6 +9449,12 @@ function PostCard({
      Additive: given neither, the card renders exactly as before. */
   menuLabel = "More on this post",
   stanceAxes,
+  /* THE SCORE'S SPOKEN NAME (the feed-cards rework, 2026-10-01). The figure is
+     one figure on every ranked card — the paths leading to the thing, whatever
+     kind it is (jakob) — so the glyph and the number never change. Only the
+     name a screen reader speaks does, because `Post score` would misname a
+     person or a tag riding this shell. Additive: a post card is unchanged. */
+  scoreLabel = "Post score",
   node
 }) {
   const detail = variant === "detail";
@@ -9713,7 +9736,7 @@ function PostCard({
     node: node && "stance"
   })), score !== undefined && /*#__PURE__*/React.createElement(ExplainableNumber, {
     glyph: "graph",
-    label: "Post score",
+    label: scoreLabel,
     value: score,
     onOpenDetail: onOpenScore ?? (() => {}),
     node: node && "score"

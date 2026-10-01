@@ -5,6 +5,7 @@ import { ActorChip } from "../people/ActorChip.jsx";
 import { PendingMarker, EditedMarker } from "../honesty/PendingMarker.jsx";
 import { LICENSE_MENU_LABEL } from "../forms/LicenseChooser.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
+import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
 import { OverflowMenu } from "./OverflowMenu.jsx";
 import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
@@ -86,6 +87,17 @@ export function CommentCard({
      removed VERSION in a comment's edit history, which wears the mark a
      removed post wears. */
   redacted,
+  /* THE SCORE, WHERE THE COMMENT IS RANKED (the feed-cards rework, 2026-10-01).
+     A comment met in the feed reached the reader by the same paths a post does,
+     so it wears the same figure the post card wears — `graph_3` and the number,
+     second in the row after the opinion — and opens the same trace. A thread
+     passes none: inside the sheet a comment stands by the thread's order, not
+     by a rank. Its spoken name is kind-neutral, because the figure is about the
+     paths leading to the thing and not about the kind of thing it is (jakob).
+     Additive: given none, the card renders exactly as before. */
+  score,
+  onOpenScore,
+  scoreLabel = "Feed score",
   children,
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
@@ -190,10 +202,13 @@ export function CommentCard({
             the comment grows lands beside it — and it spreads across the card
             the same way, every control on a 48px target (jakob's ruling, the
             geek round). */}
-        {(showStance || (signedIn && (onReply || (own && onEdit))) || actions) && (
+        {(showStance || score !== undefined || (signedIn && (onReply || (own && onEdit))) || actions) && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", columnGap: "var(--space-2)", rowGap: "var(--space-1)", width: "100%" }}>
           {/* Owned by the shell — see PostCard. */}
           {showStance && <StanceControl targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />}
+          {score !== undefined && (
+            <ExplainableNumber glyph="graph" label={scoreLabel} value={score} onOpenDetail={onOpenScore ?? (() => {})} />
+          )}
           {signedIn && onReply && (
             <Button variant="text" size="sm" onClick={onReply}>
               Reply

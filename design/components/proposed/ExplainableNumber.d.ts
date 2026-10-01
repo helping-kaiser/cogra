@@ -2,10 +2,11 @@
  * PROPOSED. The shape every number takes: a quiet figure that opens its own
  * explanation (§7). It does not render the explanation.
  *
- * There is no expand-in-place variant. The only figure the product has is the
- * Post score, and its explanation is four screens deep — see
- * `components/proposed/score/`. Nothing here is designed against a number that
- * does not exist yet.
+ * There is no expand-in-place variant. The product's one figure is the score
+ * every ranked card wears — the Post score, and the same figure on the feed's
+ * comment, person and tag cards — and its explanation is four screens deep
+ * (`FeedEntry` → `RankPath` → `RankHop` → `RankRecords`). Nothing here is
+ * designed against a number that does not exist yet.
  */
 export interface ExplainableNumberProps {
   /** Spoken name. With `glyph` set it lives only in the accessibility tree. */
@@ -18,13 +19,6 @@ export interface ExplainableNumberProps {
   onOpenDetail?: () => void;
   /** Restyled to sit on photography — white with a drop shadow, same register. */
   overMedia?: boolean;
-  /**
-   * This figure is a SIGNAL NUMBER: the digits (and the `—` that stands in for
-   * them) ride a `cg-exact` span and paint only in geek mode, leaving the glyph
-   * to carry the reading. The Post score sets it. Money, ages and counts never
-   * do — they are shown whatever the reader's setting says.
-   */
-  exact?: boolean;
   /** The data-node name its placer gives this number (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `value`. */
   node?: string;
 }

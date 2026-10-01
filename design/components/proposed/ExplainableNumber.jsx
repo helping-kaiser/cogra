@@ -21,9 +21,10 @@ const SR_ONLY = {
    by default, the arithmetic a tap away.
 
    So this is one thing: a quiet figure that opens its explanation. It does not
-   render the explanation. It used to also expand a few rows of arithmetic in
-   place; that variant is gone, because the only figure the product has is the Post
-   Score, and its explanation is four screens deep, not three rows.
+   render the explanation. There is no expand-in-place variant, because the
+   product's one figure is the score every ranked card wears — the Post score,
+   and the same figure on the feed's comment, person and tag cards — and its
+   explanation is four screens deep, not three rows.
    Nothing here is designed against a number that does not exist yet — earnings
    included.
 

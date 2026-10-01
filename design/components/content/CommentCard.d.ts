@@ -82,6 +82,16 @@ export interface CommentCardProps {
    * timestamp and the thread position survive around it.
    */
   redacted?: boolean | import("../honesty/SensitiveVeil").RedactedContentProps;
+  /**
+   * The feed score, already formatted, where the comment is RANKED — a feed
+   * card. Second in the affordance row, `graph_3` plus the number, exactly as
+   * `PostCard` wears it, opening the same trace. A thread passes none.
+   */
+  score?: string;
+  /** Opens the score's trace (`FeedEntry`). */
+  onOpenScore?: () => void;
+  /** The score's accessible name. Defaults to "Feed score" — kind-neutral. */
+  scoreLabel?: string;
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
   /**

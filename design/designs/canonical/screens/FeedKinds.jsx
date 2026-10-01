@@ -14,7 +14,9 @@
    THE THREE NEW CARDS LEAD, the post below them, for the same board's
    reason: they are what this board records, and a card cut off at the fold
    is a card nobody can check. The post is the ordinary `PostCard`, standing
-   for the feed's own cards.
+   for the feed's own cards. The scores agree with that order — every card
+   wears its figure, and each one outranks the card below it — so the board
+   never draws a feed out of its own rank.
 
    EACH KIND IS ITS OWN MASTER (`_shared.jsx`, the V1.0 feed kinds):
    `CommentFeedCard` is `CommentCard` in its out-of-thread shape, the target
@@ -40,9 +42,10 @@ export function Screen() {
           topics={["glovebox", "coastroad"]}
           references={1}
           replyCount={2}
+          score="12.40"
         />
-        <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." />
-        <TagFeedCard name="#saltmaps" newest={{ author: TOBIAS, words: "Low tide at six tomorrow — anyone walking the flats?" }} age="1h" />
+        <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" />
+        <TagFeedCard name="#saltmaps" newest={{ author: TOBIAS, words: "Low tide at six tomorrow — anyone walking the flats?" }} age="1h" score="10.30" />
         <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />

@@ -2891,13 +2891,23 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
    action row, and the card itself as the door. The lead has the chat card's
    geometry — the kind's own mark, its name, one quiet line — so neither card
    reads as a text post. The marks are `NodeMark`'s: a person is their
-   picture, a tag the `#` tile its chip wears. */
+   picture, a tag the `#` tile its chip wears.
+
+   EVERY RANKED CARD WEARS THE SCORE (jakob 2026-10-01: "every card should
+   have the graph glyph and the score number next to it"). All four kinds
+   reach the feed by one rank, and the rank is about the paths leading to the
+   thing, never about what kind of thing it is — so the three cards wear the
+   post card's own figure, second in the row after the opinion, and it opens
+   the same trace (`FeedEntry`). Its spoken name is the kind-neutral
+   `FEED_SCORE_LABEL`; the post card keeps `Post score`. */
+const FEED_SCORE_LABEL = "Feed score";
+
 function FeedLeadName({ children }) {
   return <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{children}</span>;
 }
 const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
 
-function CommentFeedCard({ author, content, timestamp, target, topics = [], references = 0, replyCount = 0, bundle }) {
+function CommentFeedCard({ author, content, timestamp, target, topics = [], references = 0, replyCount = 0, score, bundle }) {
   return (
     <CommentCard
       author={author}
@@ -2905,6 +2915,9 @@ function CommentFeedCard({ author, content, timestamp, target, topics = [], refe
       timestamp={timestamp}
       target={target}
       onOpenTarget={() => {}}
+      score={score}
+      onOpenScore={() => {}}
+      scoreLabel={FEED_SCORE_LABEL}
       bundle={bundle}
       topics={topics}
       references={references}
@@ -2920,16 +2933,16 @@ function CommentFeedCard({ author, content, timestamp, target, topics = [], refe
 /* THE PROFILE CARD. The lead is the person — picture, name, handle — and the
    body their bio, the two things `ProfileHeader` opens on; the card opens
    their profile. The row keeps the feed card's order and drops what a person
-   does not have: the opinion on them leads, the share closes it, and there is
-   no score and no comments. Its ⋮ is the profile's own menu, less the share
-   row the action row already carries. */
+   does not have: the opinion on them leads, the score follows, the share
+   closes it, and there are no comments. Its ⋮ is the profile's own menu, less
+   the share row the action row already carries. */
 const FEED_PROFILE_MENU = (handle) => [
   SAVE_ROW,
   { label: "Mention in a new post", onSelect: () => {} },
   { label: HIDE_ACTOR_LABEL("@" + handle), onSelect: () => {} },
 ];
 
-function ProfileFeedCard({ person, src, bio, bundle }) {
+function ProfileFeedCard({ person, src, bio, score, bundle }) {
   return (
     <PostCard
       lead={
@@ -2944,6 +2957,9 @@ function ProfileFeedCard({ person, src, bio, bundle }) {
       main={<p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p>}
       targetLabel={"@" + person.handle}
       bundle={bundle}
+      score={score}
+      onOpenScore={() => {}}
+      scoreLabel={FEED_SCORE_LABEL}
       menuItems={FEED_PROFILE_MENU(person.handle)}
       menuLabel={"More about @" + person.handle}
       onOpen={() => {}}
@@ -2955,10 +2971,10 @@ function ProfileFeedCard({ person, src, bio, bundle }) {
    newest thing tagged with it, as a preview row — the chat card's
    last-message row, and the first thing the tag's page opens on — with its
    age where a card's timestamp stands. The opinion is the topic's Affinity,
-   with the tag page's own four ends. A Type has no license, is never cited
+   with the tag page's own four ends, and the score follows it. A Type has no license, is never cited
    and is not saved, and the tag page offers no share, so the card carries no
    ⋮ and no share — only what a tag has. The card opens the tag's page. */
-function TagFeedCard({ name, newest, age, bundle }) {
+function TagFeedCard({ name, newest, age, score, bundle }) {
   return (
     <PostCard
       lead={
@@ -2971,6 +2987,9 @@ function TagFeedCard({ name, newest, age, bundle }) {
       timestamp={age}
       targetLabel={name}
       bundle={bundle}
+      score={score}
+      onOpenScore={() => {}}
+      scoreLabel={FEED_SCORE_LABEL}
       stanceAxes={AFFINITY_AXES}
       showShare={false}
       onOpen={() => {}}

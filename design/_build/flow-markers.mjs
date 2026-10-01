@@ -296,7 +296,9 @@ Object.assign(FLOW_MARKERS, {
   /* The feed with all four kinds on (the three-feed-cards round). Numbered in
      reading order down the column: each card's own door takes its own number
      because each lands somewhere different, and what the cards repeat — the
-     author chip, the tag chips, the share — takes one number each (`all`).
+     author chip, the tag chips, the share, the score — takes one number each
+     (`all`); the score's under both its spoken names, since it is one figure
+     opening one trace on every card.
      The faces share one via with their skip-links, the feed's convention,
      except the topic's: its pad is an Affinity's, so it keeps its own number
      the way `TagPage`'s does. The band's chats and bell close the list rather
@@ -326,6 +328,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: ">More</button>", tag: "button" },
     { n: 16, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 17, find: ">Post score</span>", tag: "button" },
+    { n: 17, find: ">Feed score</span>", tag: "button", all: true },
     { n: 18, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(19),
     { n: 24, find: 'aria-label="Chats"', tag: "button" },

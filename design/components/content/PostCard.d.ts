@@ -102,7 +102,7 @@ export interface PostCardProps {
   /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen
-   * explanation is item 13's Post score drill-down, still undesigned.
+   * explanation is the Post score drill-down (`FeedEntry` and below).
    */
   score?: string;
   /** Opens the score's detail surface (readme §7.1). */
@@ -205,6 +205,12 @@ export interface PostCardProps {
    * the control's own. Additive.
    */
   stanceAxes?: import("../stance/StancePad").PadAxes;
+  /**
+   * The score's accessible name, for a feed kind that is not a post — the
+   * glyph and the number are the same figure on every ranked card. Defaults
+   * to "Post score". Additive.
+   */
+  scoreLabel?: string;
   /**
    * Squares the top-left corner so a row flag (TaggedRow) fuses with the
    * card. Defaults to false.

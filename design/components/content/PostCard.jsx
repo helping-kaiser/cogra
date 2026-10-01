@@ -134,6 +134,12 @@ export function PostCard({
      Additive: given neither, the card renders exactly as before. */
   menuLabel = "More on this post",
   stanceAxes,
+  /* THE SCORE'S SPOKEN NAME (the feed-cards rework, 2026-10-01). The figure is
+     one figure on every ranked card — the paths leading to the thing, whatever
+     kind it is (jakob) — so the glyph and the number never change. Only the
+     name a screen reader speaks does, because `Post score` would misname a
+     person or a tag riding this shell. Additive: a post card is unchanged. */
+  scoreLabel = "Post score",
   node,
 }) {
   const detail = variant === "detail";
@@ -487,7 +493,7 @@ export function PostCard({
             />
           )}
           {score !== undefined && (
-            <ExplainableNumber glyph="graph" label="Post score" value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
+            <ExplainableNumber glyph="graph" label={scoreLabel} value={score} onOpenDetail={onOpenScore ?? (() => {})} node={node && "score"} />
           )}
           {/* COMMENTS get their own affordance rather than living behind a tap on
               the card, because "read the replies" is a different intent from
