@@ -735,8 +735,8 @@ stands, and the rest of the surface stays readable.
   offered (`WriteRuleFailed`). A refusal that is our bug takes the same
   panel in its own words, with `Try again` (`SealFaultBug`).
 
-Every line here is blessed (the failure pack's and the failure fixes'
-lines, jakob 2026-10-01), save one a line marks as still flagged.
+Every line here is blessed (the failure pack's, the failure fixes' and
+the review fixes' lines, jakob 2026-10-01).
 *Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
@@ -805,10 +805,9 @@ lines, jakob 2026-10-01), save one a line marks as still flagged.
   own "?" opening `Why signing waits` (*The "?" dialogs*). **Drawn** on
   `WriteRuleFailed`. Reached from a reply's seal, which keeps no draft
   (readme §13, *The reply pack*), the fact's last clause swaps to what is true
-  there: `Nothing was signed or spent — your reply is still here.`
-  *(The reply-scale clause is the one line here still flagged — new
-  2026-10-01; the reply-scale way out is owed, backlog item 117.)* The
-  words name no
+  there: `Nothing was signed or spent — your reply is still here.`,
+  and the way out under the panel reads `Not now`, back to the reply's
+  seal with the words still there (jakob 2026-10-01). The words name no
   payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much

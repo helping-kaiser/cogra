@@ -1596,7 +1596,7 @@
     { "from": "WriteRuleFailed", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "WriteRuleFailed", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "WriteRuleFailed", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "WriteRuleFailed", "via": 7, "kind": "cancel", "label": "Keep the draft, sign later", "to": [{ "terminal": "back", "case": "leaves — the draft stays on this device and is offered back the next time you compose" }] },
+    { "from": "WriteRuleFailed", "via": 7, "kind": "cancel", "label": "Keep the draft, sign later", "to": [{ "terminal": "back", "case": "leaves — the draft stays on this device and is offered back the next time you compose" }, { "board": "ReplySeal", "case": "reached from a reply's seal, the way out reads Not now — the notice goes and the reply's seal stands again, the words still in its composer" }] },
     { "from": "WriteRuleFailed", "via": 8, "kind": "detour", "label": "? — Why signing waits (the notice's own)", "to": [{ "board": "HelpDialog", "case": "the write rule's text — how the stop resolves, by the stopper exception" }] },
     { "from": "SealFaultBug", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
     { "from": "SealFaultBug", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },

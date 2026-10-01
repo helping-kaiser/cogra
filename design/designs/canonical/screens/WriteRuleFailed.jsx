@@ -35,13 +35,14 @@
    one act its surface exists for may carry its own "?" (readme §13, the copy
    rule), so no later pass folds it into the header's.
 
-   AT REPLY SCALE THE DRAFT CLAUSE SAYS WHAT IS TRUE THERE (jakob 2026-10-01:
-   conditional). A reply keeps no draft (readme §13, *The reply pack*), so
-   reached from a reply's seal the fact ends `your reply is still here` — the
-   seal still reads it back, and its back arrow returns to the composer with
-   the words — and the "?" says the same. The reply-scale way out is not
-   drawn: `Keep the draft, sign later` is the post's, and what replaces it is
-   owed (backlog item 117). */
+   AT REPLY SCALE THE FACT AND THE WAY OUT SAY WHAT IS TRUE THERE (jakob
+   2026-10-01: conditional). A reply keeps no draft and cannot wait as pending
+   (readme §13, *The reply pack*), so `Keep the draft, sign later` would be
+   false there. Reached from a reply's seal, the fact ends `your reply is
+   still here`, the "?" says the same, and the way out reads `Not now` — the
+   word the pad's and the reply door's notices already use — returning to the
+   reply's seal with the words still in its composer. Both conditionals ride
+   this board, the post's seal drawn, the reply's said. */
 export function Screen() {
   return <ComposeSealBody state="writeRule" />;
 }

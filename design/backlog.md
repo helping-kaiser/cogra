@@ -3775,14 +3775,13 @@ ruling:
 - ~~**The write rule's words where no draft is kept**~~ — the words
   closed 2026-10-01 (jakob: conditional): reached from a reply's seal,
   the fact ends `your reply is still here`, and the "?" says the same
-  (copy-voice, *Faults by code*; readme §13, *The review fixes*). The
-  clause is new and flagged for blessing.
-- **The write rule's way out at reply scale** (what is left of the
-  entry above). `WriteRuleFailed`'s `Keep the draft, sign later` is the
-  post's, and a reply keeps no draft, so the panel's way out from a
-  reply's seal is false there and undrawn. A ruling: what replaces it —
-  the seal's own Back to the composer, `Discard the reply`
-  (`ReplySealKeyAbsent`'s), or a kept reply draft.
+  (copy-voice, *Faults by code*; readme §13, *The review fixes*),
+  blessed the same day.
+- ~~**The write rule's way out at reply scale**~~ — closed 2026-10-01
+  (jakob): reached from a reply's seal, the way out reads `Not now`,
+  the pad's and the reply door's word, and returns to the reply's seal
+  with the words still in its composer (readme §13, *The closing
+  batch*).
 
 ### 118 · What the support stack left open · *design* · **filed 2026-10-01** · **report edges closed 2026-10-01**
 
