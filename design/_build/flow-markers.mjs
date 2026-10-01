@@ -352,6 +352,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "View 2 replies", tag: "button" },
     { n: 7, find: "Add a comment</label>", tag: "label" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+    // @sol's comment is the reader's own (jakob 2026-10-01), so its Edit
+    // stands beside Reply — appended so no via renumbers.
+    { n: 9, find: ">Edit</button>", tag: "button", all: true },
   ],
   // The same sheet at the end of the reply flow (item 85): the same controls,
   // minus the "View n replies" line the landing has already opened — so every
@@ -367,6 +370,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: "Add a comment</label>", tag: "label" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
+    // The landed reply and the 3h comment are the reader's own: one Edit,
+    // drawn twice, one number.
+    { n: 8, find: ">Edit</button>", tag: "button", all: true },
   ],
   // The thread after the reader's own Remove (the comment-removal round): the
   // same sheet with the same controls, so ReplyEntry's numbers. The removed
@@ -1320,6 +1326,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
   ],
   ReportProblem: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="What happened"', tag: "div" },
+    { n: 3, find: ">Send by email</button>", tag: "button" },
+  ],
+  // The same page before a word (jakob 2026-10-01): the same three controls,
+  // the commit disabled with its reason above it — so the same numbers.
+  ReportProblemEmpty: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="What happened"', tag: "div" },
     { n: 3, find: ">Send by email</button>", tag: "button" },

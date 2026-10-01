@@ -22,7 +22,9 @@
    reserves it for "an open reply or edit composer, rendered between the card
    and its replies", and the words stand above the older replies. It wears
    `pending`: it is signed, not yet settled, and the marker says so in the
-   product's own words.
+   product's own words. It is the reader's own, so it wears `Edit` beside
+   `Reply` (`CommentCard`'s `own`, jakob 2026-10-01), as @sol's 3h comment
+   further down does.
 
    THAT PLACE IS OWED A REDRAW (the reply pack, 2026-09-30). A branch reads
    oldest first (readme §13, *Comments live in a sheet*), so by the rule the

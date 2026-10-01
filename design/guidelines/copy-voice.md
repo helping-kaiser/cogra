@@ -114,8 +114,8 @@ glyph used as punctuation.
 - `Still settling` — content authored, not yet ordered. The same words
   label the feed filter's *Also show* chip, on by default (blessed
   2026-10-01, jakob): switched off, the feed keeps to what has landed,
-  and the trigger reads the deviation as `settled only` — *new, flagged
-  for blessing*.
+  and the trigger reads the deviation as `settled only` (blessed
+  2026-10-01, jakob).
 - `Edited` — an edit, marked softly.
 - `Nothing was signed just now.` — the coach mark's first line.
 - `Signing needs your key, which isn't in this browser — the write waits
@@ -131,6 +131,11 @@ glyph used as punctuation.
   comment. *An* opinion, never *your* opinion (jakob, 2026-09-30): the
   reply's own starts at the default and rides the reply, and "your
   opinion" reads as overwriting the one the reader already gave.
+- `Reply to @tobias — 89 characters.` and `Reply to @tobias's comment`
+  — the reply seal's read-back note and its act row when the reply
+  answers a comment (`ReplySealComment`; the reply pack, 2026-09-30). A
+  comment has no title, so it is named by its author's handle; only
+  these two lines change with the target. *Blessed, jakob 2026-10-01.*
 
 ## Naming
 
@@ -267,13 +272,16 @@ title, at most two short paragraphs, Close. The texts, verbatim
   this device. *(One text for all four key-absent surfaces, the key-loss
   round: nothing in it assumes a write in progress.)*
 - **Why signing waits** (the write rule's notice — the seal
-  and the stance pad): Each signing is paid for, and there's only so
-  much to go around at a time. When it runs short, signing waits —
-  nothing you asked for was signed, and nothing was spent. / Nothing
-  needs fixing on your side. Your draft is kept, and an opinion can
-  simply be given again. It frees up as time passes, so try again a
-  little later. *(New 2026-10-01, the stopper exception's first dialog,
-  flagged for blessing. Payer-neutral by the V1.0 scope cut.)*
+  and the stance pad): There's a limit to how many signed actions can
+  go through in a short time — it keeps the network safe from flooding.
+  You've hit it for now. / Nothing was signed or spent, and your draft
+  is kept. Try again in a little while. *(Blessed, jakob 2026-10-01 —
+  the stopper exception's first dialog. One dialog, its draft clause
+  true per surface: on the pad, which keeps no draft, the second
+  paragraph reads `Nothing was signed or spent. Try again in a little
+  while.`; from a reply's seal, which keeps none either, `Nothing was
+  signed or spent, and your reply is still here. Try again in a little
+  while.` Payer-neutral by the V1.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -386,6 +394,16 @@ Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
 every response, remain." — and `Removed under the platform's rules` —
 "A passed proposal removed it. The decision is public."
+
+At comment scale the author's mark swaps its noun and nothing else
+(the comment-removal round; blessed, jakob 2026-10-01). The removed
+comment's second line is `The comment's place in the thread, and every
+response, remain.` (`CommentRemoved`). The confirm is titled `Remove
+this comment?` over `The words and pictures leave every reader's view,
+along with every earlier version's. A visible mark stays in their place
+— "Removed by its author" — and the comment's spot in its thread stays
+with it.` (`CommentRemoveConfirm`), then the post's own `This is
+immediate and permanent.`, `Remove` and `Keep it`.
 
 ## Staging a video
 
@@ -505,6 +523,12 @@ that staged them, because no rule turns "References" into "citation".
 A count already made of words (`1 more`, on the rows that offer an
 act) keeps them and says itself.
 
+**`Added`** — the end of a picker row's spoken name once the row is
+staged (`ReferenceRow`'s `staged`; the pickers' multi-add, jakob
+2026-10-01). The added mark that shows it is a glyph, hidden from the
+accessibility tree, so a listener hears the state in this word: "saltmarsh,
+Added". *New 2026-10-01, flagged for blessing.*
+
 ## The staged-act snackbar
 
 An applicant's second tap of a kind already staged answers here instead
@@ -534,7 +558,7 @@ a quick answer never flashes a word.
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
 `Signing in…`, and `Create account` becomes `Creating account…`. *(All
-of these are new with the failure pack and flagged for blessing.)*
+of these arrived with the failure pack; blessed, jakob 2026-10-01.)*
 
 ## Field errors
 
@@ -711,15 +735,16 @@ stands, and the rest of the surface stays readable.
   offered (`WriteRuleFailed`). A refusal that is our bug takes the same
   panel in its own words, with `Try again` (`SealFaultBug`).
 
-Lines marked *new* arrived with the failure pack and are flagged for
-blessing. Unmarked lines are already blessed or already drawn.
+Every line here is blessed (the failure pack's and the failure fixes'
+lines, jakob 2026-10-01), save one a line marks as still flagged.
+*Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
 
 - Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
   `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it.
 - A hold's row: `That didn't sign.` with `Retry`. **Drawn** on
-  `RowSigning`. *New.*
+  `RowSigning`.
 - A read with nothing loaded: `Can't reach the server. Check your
   connection and try again.` A read with content on screen is written
   per surface (*Missing and unreachable*).
@@ -729,19 +754,19 @@ blessing. Unmarked lines are already blessed or already drawn.
 - `UNAUTHENTICATED`, `REFRESH_TOKEN_INVALID` mid-session — the
   surface: the sign-in screen, with the draft and any picks kept on
   the device. `You've been signed out. Sign in again to carry on.`
-  *New; copy-only — its board is owed.*
+  *Copy-only — its board is owed.*
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
-  for a fault the server answered. *New.*
+  for a fault the server answered.
 - `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
   is in your inbox.` The client gates acting on verification, so this
-  is the rare case that slips past the gate. *New; copy-only.*
+  is the rare case that slips past the gate. *Copy-only.*
 - `RATE_LIMITED` — in place, in SignInError's slot: `Too many tries.
-  Wait a little, then try again.` The submit stays. *New; copy-only.*
+  Wait a little, then try again.` The submit stays. *Copy-only.*
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
-  doesn't exist.` *New; copy-only — the boards are owed.*
+  doesn't exist.` *Copy-only — the boards are owed.*
 - `BAD_INPUT` — on the field, in the field's own words. Where no field
   is named, in place: `That didn't go through. Try again.`
 
@@ -752,11 +777,10 @@ blessing. Unmarked lines are already blessed or already drawn.
 - `HANDLE_TAKEN` — on the field: `That handle is taken.` **Drawn** on
   `JoinErrors`.
 - `EMAIL_IN_USE` — on the field: `That email already has an account.`
-  *New; copy-only.*
+  *Copy-only.*
 - `WEAK_PASSWORD` — on the field. The length half is `A password is at
   least 12 characters.` The breach half is `That password has turned up
-  in a data breach — pick another one.` *The breach half is new;
-  copy-only.*
+  in a data breach — pick another one.` *The breach half is copy-only.*
 - `INVITE_UNUSABLE` — the surface: `This invite can't be used anymore`
   (`JoinInvalid`).
 - `ASK_LINK_UNUSABLE` — the surface, in `JoinInvalid`'s construction.
@@ -779,16 +803,20 @@ blessing. Unmarked lines are already blessed or already drawn.
   to go around at a time. Nothing was signed or spent — your draft is
   kept.`, with `Keep the draft, sign later` under it, and the panel's
   own "?" opening `Why signing waits` (*The "?" dialogs*). **Drawn** on
-  `WriteRuleFailed`. *New.* The words name no payer (the V1.0 scope
-  cut). On a pad the same panel stands where the landing line and Set
-  were, in `PadKeyAbsent`'s shape: `You can't sign right now` over `Each
-  signing is paid for, and there's only so much to go around at a time.
-  Nothing was signed or spent.` — a pad has no draft — with the same
-  "?" and `Not now` under it; the pick is not kept. **Drawn** on
-  `PadWriteRule`. On a hold's row the quiet line reads `You can't sign
-  right now.` in the pending marker's register, never the failure
-  voice, with no Retry. **Drawn** on `RowWriteRule`. *New 2026-10-01,
-  flagged for blessing.*
+  `WriteRuleFailed`. Reached from a reply's seal, which keeps no draft
+  (readme §13, *The reply pack*), the fact's last clause swaps to what is true
+  there: `Nothing was signed or spent — your reply is still here.`
+  *(The reply-scale clause is the one line here still flagged — new
+  2026-10-01; the reply-scale way out is owed, backlog item 117.)* The
+  words name no
+  payer (the V1.0 scope cut). On a pad the same panel stands where the
+  landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
+  right now` over `Each signing is paid for, and there's only so much
+  to go around at a time. Nothing was signed or spent.` — a pad has no
+  draft — with the same "?" and `Not now` under it; the pick is not
+  kept. **Drawn** on `PadWriteRule`. On a hold's row the quiet line
+  reads `You can't sign right now.` in the pending marker's register,
+  never the failure voice, with no Retry. **Drawn** on `RowWriteRule`.
 - **One staged act refused** (the field-level refusal on
   `references.<index>.target`; jakob 2026-10-01). A target that landed
   never stops answering, so two cases exist, and they read nothing
@@ -797,8 +825,8 @@ blessing. Unmarked lines are already blessed or already drawn.
     the reader's own or anyone else's, and its staged act expired. On
     the row: `This post didn't land, so it can't be cited.` with
     `Remove it`; a comment takes `This comment didn't land, so it can't
-    be cited.` **Drawn** on `SealFaultRow`. *New 2026-10-01, flagged
-    for blessing.*
+    be cited.` **Drawn** on `SealFaultRow`, where the line wraps to a
+    second line on the row — accepted as drawn.
   - **Any other refusal** — a bug the picking stage should have
     blocked. A notice in the commit's place, never the failure voice:
     `This shouldn't have happened` over `That's a fault on our side,
@@ -807,12 +835,11 @@ blessing. Unmarked lines are already blessed or already drawn.
     the post` under it; the post-scale ask is `Discard this post?` · `The
     draft goes, with its pictures, tags and citations. Nothing was
     signed, so nothing else changes.` · `Discard it` · `Keep the draft`.
-    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. *New
-    2026-10-01, flagged for blessing.*
+    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`.
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
-through.` with `Retry`, in the hold's vehicle. *New; copy-only.*
+through.` with `Retry`, in the hold's vehicle. *Copy-only.*
 
 ## The reset and verify landings
 
@@ -906,8 +933,9 @@ current session's status is the platform noun — `This browser` on web,
 stands, with `Changing your password signs out every other device.`
 under them — the fact `ResetNew` already says, moved in front of the act.
 
-**About** — the support stack (jakob, 2026-10-01; every line here *new,
-flagged for blessing*). Three rows join the group after `About CoGra`
+**About** — the support stack (jakob, 2026-10-01; every line here
+blessed the same day, save the empty report's, still flagged). Three
+rows join the group after `About CoGra`
 and before `Privacy` and `Terms`, each one string for app and web:
 
 - `What's new`, its value the version running here (`0.1.2`). It opens
@@ -927,6 +955,10 @@ and before `Privacy` and `Terms`, each one string for app and web:
   no account, no key, nothing you've posted. It's sent from your own
   email, so we can write back.` The commitment is `Send by email`,
   because the press opens the reader's mail and sends nothing itself.
+  With the field empty it stays visible and disabled, `Nothing to send
+  yet` right above it — the edit foot's zero, `Nothing to sign yet`,
+  with the report's verb (`ReportProblemEmpty`; *new 2026-10-01,
+  flagged for blessing*). Leaving with Back keeps the words.
 - `Contact`, its value the address it writes to — a plain mail door,
   kept apart from the report so reports stay structured.
 
@@ -1077,6 +1109,14 @@ this reader.
 application's key was made on another device. Restore it here with your
 recovery code, or make a new key — until you're approved, a new one
 costs nothing.` — `Restore the key` · `Make a new key`.
+
+**A reply with the key elsewhere** keeps no draft, so its two notices
+say what is left (the reply pack, 2026-09-30). At the door, before a
+word is written (`ReplyKeyAbsent`): `A reply can't wait as pending —
+restore the key before you write.` with `Not now` under it. At the
+seal, when the key left mid-write (`ReplySealKeyAbsent`): `A reply
+can't wait as pending — restore the key to sign this one.` with
+`Discard the reply` under it. *Blessed, jakob 2026-10-01.*
 
 **A pick kept pending** wears `Waiting for your key` under the post's
 anchor, in `PendingMarker`'s quiet type — never `Still settling`, which

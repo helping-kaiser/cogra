@@ -9,6 +9,11 @@
    first (readme §13, *Comments live in a sheet*). The fixtures' times say it —
    @tobias 1h over @mira 2h over @sol 3h, and @sol's branch 40m before 22m.
 
+   @SOL'S COMMENT IS THE READER'S OWN (jakob 2026-10-01: "'own' should be added
+   to the existing boards so it is clear that you can interact differently with
+   your own comments"). It wears `CommentCard`'s `own` — `Edit` beside `Reply`,
+   the anatomy `ReplyMedia` drew first — and its ⋮ opens `CommentMenuOwn`.
+
    The thread and the detail beneath it are `_shared.jsx` helpers, because the
    comment's own overflow menu draws this same board with one more sheet on it. */
 export function Screen() {

@@ -18,3 +18,10 @@ Use `ReferenceRow` for every entry in the topics-and-references sheet, and for s
 ```jsx
 <ReferenceRow kind="topic" name="coastroad" pair={{ pDirected: 0.1, pInterest: 1 }} pending onOpen={open} />
 ```
+
+**In a picker, `staged` marks a row already added** (jakob 2026-10-01, the pickers' multi-add). A pick stages at once and the picker stays open, so the row shows it: the add mark becomes `check` in `--on-surface`, and the row's spoken name ends "Added". A tap on a staged row changes nothing — un-staging happens in the composer, where the staged chips carry their ×.
+
+```jsx
+<ReferenceRow kind="topic" name="saltmarsh" staged onOpen={stage} />
+<ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={stage} />
+```

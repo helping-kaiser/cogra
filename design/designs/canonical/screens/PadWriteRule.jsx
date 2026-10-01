@@ -17,9 +17,14 @@
    the pool running dry and a per-member limit alike, and names no payer. The
    seal's "your draft is kept" drops: a pad has no draft.
 
-   ITS OWN "?", BY THE STOPPER EXCEPTION. The pad's own "?" in the corner
+   ITS OWN "?", BY THE STOPPER EXCEPTION (jakob 2026-10-01, ruled again in
+   review: the pad's notice carries it). The pad's own "?" in the corner
    explains opinions; the panel's opens `Why signing waits`, the seal panel's
-   dialog, because the stop is the same stop.
+   dialog, because the stop is the same stop — the limit on signed actions in
+   a short time, and that nothing was signed or spent. The dialog's draft
+   clause drops here, as the fact's does: its second paragraph reads `Nothing
+   was signed or spent. Try again in a little while.` (copy-voice, *The "?"
+   dialogs*).
 
    `NOT NOW` IS THE WAY OUT, and the pick is not kept. `ReplyKeyAbsent`'s word
    for a notice's exit that keeps nothing. A pick kept for the key waits on

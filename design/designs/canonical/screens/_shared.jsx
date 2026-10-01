@@ -1935,6 +1935,15 @@ const REMOVED_COMMENT_NOTE = "The comment's place in the thread, and every respo
    thread above it cut at the sheet's top edge. One number, so the three cannot
    disagree about where that is. */
 const REMOVED_COMMENT_SCROLL = 440;
+/* @SOL'S COMMENTS ARE THE READER'S, AND THEY SAY SO (jakob 2026-10-01: "'own'
+   should be added to the existing boards so it is clear that you can interact
+   differently with your own comments"). The 3h comment and the landed reply
+   wear `CommentCard`'s `own` — `Edit` beside `Reply` in the affordance row,
+   the anatomy `ReplyMedia` drew first — and their ⋮ holds the own menu's acts
+   (`OWN_COMMENT_MENU`'s `Remove` after Save and Cite; the card appends the
+   license). The removed comment keeps `own` but loses `Edit` with its payload:
+   there is nothing left on it to edit, the same reason its ⋮ goes. */
+const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 
 function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }) {
   const settledReply = (
@@ -1945,9 +1954,11 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }
         author={SOL}
         content="The third headland light is real — I have a print from 2019 that almost catches it. Almost."
         timestamp="now"
+        own
+        onEdit={() => {}}
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
+        menuItems={OWN_THREAD_MENU}
       />
     </ul>
   );
@@ -1992,9 +2003,11 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }
         author={SOL}
         content="Which headland is the third one, counting from the ferry landing?"
         timestamp="3h"
+        own
+        onEdit={removed ? undefined : () => {}}
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={removed ? [] : CARD_MENU}
+        menuItems={removed ? [] : OWN_THREAD_MENU}
         redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
         replies={[
           {
@@ -2218,6 +2231,83 @@ const RUNNING_VERSION = "0.1.2";
 const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
 const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+
+/* THE REPORT PAGE, whole (`ReportProblem`'s anatomy, shared the moment its
+   empty state drew it a second time). `words` is what the field holds. Empty,
+   `Send by email` stays where it is, visible and disabled, with the reason in
+   the foot's line right above it — the disabled-submit law (readme §4,
+   *Interaction states*; jakob 2026-10-01): never hidden, never live only to
+   refuse. `Nothing to send yet` is the edit foot's zero (`Nothing to sign
+   yet`) with the report's verb, in `ActsFooter`'s ink. */
+function ReportProblemBody({ words }) {
+  const empty = !words;
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          Report a problem
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          Say what happened, in your own words. Sending opens your email with everything below filled in — nothing goes
+          until you send it there.
+        </p>
+
+        <div style={{ marginTop: 24 }}>
+          <TextField id="report-what-happened" label="What happened" rows={4} value={words ?? ""} />
+        </div>
+
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
+          <FactRow label="To" value={REPORT_ADDRESS} />
+          <FactRow label="Version" value={RUNNING_VERSION} />
+          <FactRow label="Running on" value="Firefox on Ubuntu" />
+          <FactRow label="Time" value="01.10.2026, 14:32" last />
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <QuietNote>
+            That's all that goes with your words — no account, no key, nothing you've posted. It's sent from your own email,
+            so we can write back.
+          </QuietNote>
+        </div>
+
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+          {empty && (
+            <span
+              style={{
+                textAlign: "center",
+                fontSize: "var(--text-label-small)",
+                lineHeight: "var(--text-label-small--line-height)",
+                letterSpacing: "var(--text-label-small--letter-spacing)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Nothing to send yet
+            </span>
+          )}
+          <Button style={{ width: "100%" }} disabled={empty}>
+            Send by email
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
 
 function SettingsBody({ backup = "made", forget = false } = {}) {
   return (

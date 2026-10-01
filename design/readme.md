@@ -7524,6 +7524,61 @@ anatomies.
   edges gained the hold's two failure outcomes every other feed board's
   carry.
 
+### The review fixes — 2026-10-01
+
+jakob's rulings from his review of the day's rounds.
+
+- **Your own comments say so in the thread** (jakob: "'own' should be
+  added to the existing boards so it is clear that you can interact
+  differently with your own comments"). @sol's 3h comment and the landed
+  reply wear `CommentCard`'s `own`: `Edit` beside `Reply`, the anatomy
+  `ReplyMedia` drew first, wired to `CommentEdit` on `ReplyEntry` and
+  `ReplySettled`. Their ⋮ holds the own menu's acts. The removed comment
+  keeps `own` and loses `Edit` with its payload.
+- **A pick stages and the picker stays open** (both pickers, the shared
+  anatomy's law). A row tap stages at once, and so does the tag
+  picker's action key on the typed name; the reader goes on picking.
+  The staged row shows it: `ReferenceRow`'s `staged` turns the add mark
+  into `check` in `--on-surface`, the house *Selected* move, and its
+  spoken name ends `Added`. A tap on a row already added changes
+  nothing — un-staging is the composer's chip ×. `Done` and the header
+  back both leave with every pick kept; back is navigation, never an
+  undo. `TagPicker` draws two rows added and `ReferencePicker` one. The
+  row edges now stay on the picker, and `behavior/TagPicker.md` and the
+  new `behavior/ReferencePicker.md` hold the law.
+- **The write rule's "?" is reworded** (jakob rejected the old dialog as
+  "too mystical"): `Why signing waits` — a limit on how many signed
+  actions go through in a short time, keeping the network safe from
+  flooding, hit for now; nothing signed or spent, the draft kept, try
+  again in a little while. One dialog, its draft clause true per
+  surface: the pad, which jakob ruled keeps its "?", drops it, and a
+  reply's seal says the reply is still here.
+- **The write rule at reply scale** (jakob: conditional). Reached from
+  a reply's seal, `WriteRuleFailed`'s fact ends `your reply is still
+  here`. Its way out stays owed (backlog item 117).
+- **The report's two edges** (jakob ruled the defaults). Empty,
+  `Send by email` is visible and disabled with `Nothing to send yet`
+  above it (`ReportProblemEmpty`, the disabled-submit law); leaving with
+  Back keeps the words. The page moved into `_shared` as
+  `ReportProblemBody`.
+- **Blessed** (jakob): the failure pack's in-flight labels and faults by
+  code, the write rule's lines, the failure fixes' lines and the support
+  stack's, `settled only`, and the comment-removal strings. The reply
+  pack's comment-target seal lines and its two key-absent notices join
+  copy-voice as blessed.
+- **The lane's calls, flagged for review:** the added mark's glyph and
+  ink, and its spoken `Added`; the query kept after a pick, and the
+  typed name kept in the field after the action key; the pad's dialog
+  dropping only the draft clause; `your reply is still here` at reply
+  scale; `Nothing to send yet`, its place above the commit, and the
+  empty report as its own board; the composer's cap of ten references
+  noted but its at-cap list undrawn.
+- **The gate**: 238 → **239 screens**, 1664 → **1669 edges**, 1 gap,
+  **flows 64**, every one resolved. The witness was re-blessed once,
+  deliberately: `cite-something` now ends on the stage, which keeps the
+  picker open. Backlog item 119 files the post-MVP dateline sweep for
+  the histories' migration.
+
 ## 15. Index
 
 **Root**

@@ -52,7 +52,11 @@ Where each sidecar's words come from:
   already-published marker*), on the Details step's media row.
 - `TagPicker.md` — the typed-name row (readme §13, *The typed-name
   row*): the canonicalized typed name as the list's first row, and what
-  the keyboard's action key stages.
+  the keyboard's action key stages; and the pickers' multi-add (readme
+  §13, *The review fixes*): a pick stages and the picker stays open,
+  and `Done` and the header back both leave with every pick kept.
+- `ReferencePicker.md` — the same multi-add, at the citation picker:
+  the shared anatomy's law, in the same words.
 
 ## The grammar
 

@@ -1069,7 +1069,7 @@
     },
     {
       "name": "cite-something",
-      "description": "+ Cite something, wherever a composer offers it, opens the picker over everything citable; a result row lands the citation in the composer's references.",
+      "description": "+ Cite something, wherever a composer offers it, opens the picker over everything citable; a result row stages the citation in the composer's references, and the picker stays open for the next.",
       "status": "resolved",
       "startsOn": [
         "CommentEdit",
@@ -1087,7 +1087,7 @@
       ],
       "steps": [
         "start · «+ Cite something» on 12 boards → ReferencePicker",
-        "end · ReferencePicker · 5 «result rows» → back — the pick lands in the composer's references"
+        "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row's add mark turns to the added mark, and the picker stays open for the next"
       ],
       "boards": [
         "ReferencePicker",

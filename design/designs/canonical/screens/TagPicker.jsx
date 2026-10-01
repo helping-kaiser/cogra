@@ -57,11 +57,24 @@
    NO SKY ENTRY AND NO BOTTOM NAV — picking is a task, not the tab, which is
    `ReferencePicker`'s own reason.
 
+   A PICK STAGES AND THE PICKER STAYS OPEN (jakob, 2026-10-01). A tap on a
+   row — or the action key on the typed name — stages that tag in the composer
+   at once, and the reader goes on picking: tags come several at a time, and a
+   picker that closed on every pick would send the reader back through
+   "+ Add a tag" once per tag. The staged row says so where it stands, its add
+   mark turned to the added mark (`ReferenceRow`'s `staged`); here two of the
+   index's rows are in. The query stays as typed, so the list being picked from
+   does not move under the reader. A tap on a row already added changes
+   nothing: the picker only adds, and a staged tag leaves from the composer,
+   where its chip carries the ×. A row whose name the composer already holds
+   wears the added mark the moment the picker opens.
+
    `Done` AND THE HEADER BACK ARE ONE LEAVE (jakob, 2026-10-01). Both return to
-   the composer the picker was opened from, every staged tag kept; `Done` is the
-   affirmative twin, because a back arrow reads as an abort to a reader who has
-   finished adding tags. It is the full-width foot every wizard stage wears
-   (`ReplyDraft`'s `Next`), and every state of both pickers carries it. */
+   the composer the picker was opened from, every staged tag kept — back is
+   navigation, never an undo; `Done` is the affirmative twin, because a back
+   arrow reads as an abort to a reader who has finished adding tags. It is the
+   full-width foot every wizard stage wears (`ReplyDraft`'s `Next`), and every
+   state of both pickers carries it. */
 export function Screen() {
   return (
     <>
@@ -72,9 +85,9 @@ export function Screen() {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ReferenceRow kind="topic" name="salt" sub="Signs as #salt" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltmaps" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltmarsh" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltmarsh" staged onOpen={() => {}} />
         <ReferenceRow kind="topic" name="saltcrust" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltflats" trailing={<Icon name="add" size={20} />} onOpen={() => {}} />
+        <ReferenceRow kind="topic" name="saltflats" staged onOpen={() => {}} />
         <div style={{ flex: 1 }} />
         <p style={{ margin: 0, padding: "8px 24px 16px", fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
           Any name works, used or not — nobody owns a tag. It is yours the moment you sign.
