@@ -1320,6 +1320,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 23, find: ">What&#x27;s new</span>", tag: "button" },
     { n: 24, find: ">Report a problem</span>", tag: "button" },
     { n: 25, find: ">Contact</span>", tag: "button" },
+    // The kept picks' row (backlog item 113), inside the Key backup group and
+    // numbered by the same identity rule — the next free number.
+    { n: 26, find: " kept picks waiting</span>", tag: "button" },
   ],
   // The release chronicle: the way out, and one door per release — the same
   // control drawn three times, so one number.
@@ -1761,6 +1764,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Restore the key</button>", tag: "button" },
     { n: 3, find: ">Discard the reply</button>", tag: "button" },
   ],
+  // The reply's gated seal and its fault, pattern exemplars likewise: only the
+  // gate's own controls carry numbers; the rest is `ReplySeal`'s.
+  ReplySealUploading: [{ n: 1, find: ">Sign comment</button>", tag: "button" }],
+  ReplySealUploadFailed: [
+    { n: 1, find: ">Retry</button>", tag: "button" },
+    { n: 2, find: ">Sign comment</button>", tag: "button" },
+  ],
   EditCompose: [
     { n: 14, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
     { n: 14, find: "aria-label=\"#saltmaps — set how it relates\"", tag: "button" },
@@ -1775,11 +1785,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: "+ Add a tag", tag: "button" },
     { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "signing 3 things", tag: "button" },
+    { n: 11, find: "signing 5 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
+    { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
+    { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
   ],
   /* The same edit with an empty batch — `EditCompose`'s markers, minus the one
      control that stops being one. The acts footer is a plain span at zero, so
@@ -2282,20 +2294,33 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Un-tag</button>", tag: "button" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Set exact values for #saltmaps</button>", tag: "button" },
   ],
   // The composer's twin of the pad. It has no `Withdraw` — nothing is signed on
-  // that path yet — so its three live things are the pad, `Done` and the scrim.
+  // that path yet — so its live things are the pad, `Done`, the scrim and the
+  // non-drag route hidden until focused.
   TagPadCompose: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Set exact values for #coastroad</button>", tag: "button" },
   ],
   // The citation's twin of TagPad — the same pad over two signed axes, because
-  // both of a citation's parameters are signed. Same three controls.
+  // both of a citation's parameters are signed. Same controls.
   RefPair: [
     { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
+  ],
+  // The standing citation's sheet on an edit — RefPair's controls, and the
+  // removal in the walk-away's slot.
+  RefPairEdit: [
+    { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
+    { n: 2, find: ">Remove citation</button>", tag: "button" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
   ],
 });
 
@@ -2449,6 +2474,21 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Recovery code"', tag: "div" },
     { n: 3, find: "Don&#x27;t remember this account on this device", tag: "label" },
     { n: 4, find: ">Restore the key</button>", tag: "button" },
+  ],
+  // The kept picks' review (backlog item 113): every row's × is one control
+  // drawn three times, so the rows share a number — the pickers' rule.
+  KeptPicksReview: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'aria-label="Remove ', tag: "button", all: true },
+    { n: 3, find: ">Sign them</button>", tag: "button" },
+  ],
+  // Its seal: `ProfileEditSeal`'s five controls, in the same order.
+  KeptPicksSeal: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your picks are kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Sign the opinions</button>", tag: "button" },
+    { n: 5, find: ">Back</button>", tag: "button" },
   ],
   YourKeyGate: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },

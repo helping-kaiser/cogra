@@ -308,6 +308,24 @@
       "page": "entry"
     },
     {
+      "file": "KeptPicksReview.dc.html",
+      "title": "Restore · the kept picks' review",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "KeptPicksSeal.dc.html",
+      "title": "Restore · the kept picks' seal",
+      "x": 2880,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "RecoveryCodeMismatch.dc.html",
       "title": "Recovery code · the mismatch",
       "x": 1440,
@@ -815,6 +833,24 @@
       "file": "ReplySealKeyAbsent.dc.html",
       "title": "Reply · what you sign, key absent",
       "x": 7200,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplySealUploading.dc.html",
+      "title": "Reply · what you sign, waiting on uploads",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplySealUploadFailed.dc.html",
+      "title": "Reply · what you sign, an upload failed",
+      "x": 8160,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1443,18 +1479,18 @@
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 3256,
+      "w": 3190,
+      "h": 3455,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -5060,
+      "x": -5640,
       "y": 0,
-      "w": 4640,
+      "w": 5220,
       "h": 2416,
       "page": "comments",
       "title": "Comments · flow map"
@@ -1527,7 +1563,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 5369,
+      "h": 5438,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1645,7 +1681,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2613,
+      "h": 2670,
       "page": "profile"
     },
     {
@@ -2039,6 +2075,15 @@
       "file": "RefPair.dc.html",
       "title": "A staged citation's pair",
       "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "RefPairEdit.dc.html",
+      "title": "A standing citation's pair · editing",
+      "x": 4800,
       "y": 3180,
       "w": 390,
       "h": 844,

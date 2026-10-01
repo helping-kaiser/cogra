@@ -2,7 +2,7 @@ import React from "react";
 import { NodeMark } from "../content/ReferenceRow.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { BUTTON_CLASS } from "../core/Button.jsx";
-import { formatStancePair, nearestAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
+import { formatStancePair, formatStanceWords, nearestAnchor, SR_ONLY } from "../stance/StanceReadout.jsx";
 
 /* A reference already staged in a composer (item 17, the conformance round):
    the citation the author has committed to, shown back to them — the kind's
@@ -48,10 +48,18 @@ import { formatStancePair, nearestAnchor, SR_ONLY } from "../stance/StanceReadou
    `STANCE_ANCHORS` is drawn over, so the row reads the twenty faces, the same
    lookup `RefPair`'s readout uses. The anchor's WORD does not come with it:
    it names a feeling about a stance and this record is a citation, so the
-   spoken reading stays the pair exactly. */
-function Body({ kind, name, sub, src, pair, node }) {
+   spoken reading stays the pair exactly.
+
+   UNLESS THE PAIR IS A STANCE IN ITS OWN RIGHT (`stance`, the kept picks'
+   review, 2026-10-01). A kept pick is an opinion waiting to be signed, not a
+   citation, and its row reads the pair the way `StanceReadout` does — so the
+   spoken twin is the readout's own, the anchor's word and both axes named
+   (`Nice, For or against +0.10, How much reaches you +0.10`), and the drawing
+   is unchanged. */
+function Body({ kind, name, sub, src, pair, stance, node }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? nearestAnchor(pair) : null;
+  const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair)}` : exact;
   return (
     <>
       {/* The row stands on `surface-container-highest`, the tile's own tone,
@@ -83,15 +91,15 @@ function Body({ kind, name, sub, src, pair, node }) {
               {exact}
             </span>
           </span>
-          <span style={SR_ONLY}>{exact}</span>
+          <span style={SR_ONLY}>{spoken}</span>
         </>
       )}
     </>
   );
 }
 
-export function StagedReference({ kind = "post", name, sub, src, pair, onRemove, onEdit, node, nodeKey }) {
-  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} node={node} />;
+export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, onRemove, onEdit, node, nodeKey }) {
+  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} node={node} />;
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}

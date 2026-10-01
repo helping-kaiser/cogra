@@ -462,18 +462,37 @@ export function severanceParts(bundle, targetLabel) {
   return { raw, folded, capped: raw !== folded };
 }
 
+/* THE READOUTS' LABELS TRAVEL WITH THE RECORD FAMILY TOO (jakob's ruling, the
+   night batch 2026-10-01 — audit K5.3). A citation opened on an edit already
+   stands, and its records NET (`ReferenceClaim`, api-spec.md): a pick there is
+   one more record added to what stands, exactly the stance pad's arithmetic, so
+   it is read back in the stance pad's three readouts. But a citation is not an
+   opinion, so the two readouts that name the bundle take the family's labels
+   when it gives them, and a family that borrows the stance faces only as a
+   lossy readout (`anchorWord: false`) keeps the anchor's word out of what is
+   spoken — `RefPair`'s rule, carried into the masters. A family that names
+   none of these gets the stance's words unchanged. */
+function readoutWords(names) {
+  return {
+    current: (names && names.current) || "Current opinion",
+    resulting: (names && names.resulting) || "Resulting opinion",
+    anchorWord: !(names && names.anchorWord === false),
+  };
+}
+
 export function landingLine(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return "Adding it up…";
   if (landing.severed) return severanceWords(names).landing;
+  const { resulting } = readoutWords(names);
   if (landing.inert) {
     const directedInert = landing.landing.pDirected === 0;
     const interestInert = landing.landing.pInterest === 0;
-    if (directedInert && interestInert) return "Resulting opinion: carries nothing.";
-    if (directedInert) return "Resulting opinion: your side of it carries nothing.";
-    if (interestInert) return "Resulting opinion: what reaches you carries nothing.";
+    if (directedInert && interestInert) return `${resulting}: carries nothing.`;
+    if (directedInert) return `${resulting}: your side of it carries nothing.`;
+    if (interestInert) return `${resulting}: what reaches you carries nothing.`;
   }
   const readout = bundleReadout(landing.landing);
-  return `Resulting opinion ${readout.emoji} ${formatStancePair(landing.landing)}`;
+  return `${resulting} ${readout.emoji} ${formatStancePair(landing.landing)}`;
 }
 
 /* The confirmation a signed gesture leaves. Names where it LEFT the viewer.
@@ -558,11 +577,12 @@ export function standingParts(bundle, targetLabel, names = STANCE_AXIS_NAMES) {
   if (bundle === null || bundle.records === 0) return { sentence: `${ZERO_BUNDLE_EMOJI} No opinion on ${targetLabel} yet.` };
   if (bundle.severed) return { sentence: `${ZERO_BUNDLE_EMOJI} ${sever.gone(targetLabel)}` };
   const readout = bundleReadout(bundle.current, sever.zero);
+  const words = readoutWords(names);
   return {
-    label: "Current opinion",
+    label: words.current,
     emoji: readout.emoji,
     pair: formatStancePair(bundle.current),
-    spoken: `Current opinion: ${readout.label}, ${formatStanceWords(bundle.current, names)}`,
+    spoken: `${words.current}: ${words.anchorWord ? `${readout.label}, ` : ""}${formatStanceWords(bundle.current, names)}`,
   };
 }
 
@@ -571,11 +591,12 @@ export function landingParts(landing, names = STANCE_AXIS_NAMES) {
   if (landing === null || landing === undefined) return { sentence: "Adding it up…" };
   if (landing.severed || landing.inert) return { sentence: landingLine(landing, names) };
   const readout = bundleReadout(landing.landing, severanceWords(names).zero);
+  const words = readoutWords(names);
   return {
-    label: "Resulting opinion",
+    label: words.resulting,
     emoji: readout.emoji,
     pair: formatStancePair(landing.landing),
-    spoken: `Resulting opinion: ${readout.label}, ${formatStanceWords(landing.landing, names)}`,
+    spoken: `${words.resulting}: ${words.anchorWord ? `${readout.label}, ` : ""}${formatStanceWords(landing.landing, names)}`,
   };
 }
 
@@ -630,6 +651,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
 /** The current opinion and the pick — everything that sits above the field. */
 export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style, onOpenHistory }) {
   const anchor = nearestAnchor(pick);
+  const { anchorWord } = readoutWords(names);
   return (
     <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }}>
       <ReadoutBlock {...standingParts(bundle, targetLabel, names)} onOpenHistory={onOpenHistory} />
@@ -640,7 +662,7 @@ export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_
         label={PICK_LABEL}
         emoji={anchor.emoji}
         pair={formatStancePair(pick)}
-        spoken={`${PICK_LABEL}: ${anchor.label}, ${formatStanceWords(pick, names)}`}
+        spoken={`${PICK_LABEL}: ${anchorWord ? `${anchor.label}, ` : ""}${formatStanceWords(pick, names)}`}
       />
     </div>
   );

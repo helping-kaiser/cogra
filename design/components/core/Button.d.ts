@@ -27,6 +27,11 @@ export interface ButtonProps {
   type?: "button" | "submit";
   onClick?: () => void;
   ariaLabel?: string;
+  /**
+   * The id of the line that describes this button (`aria-describedby`) — a
+   * control whose cost is said beside it, like `Remove citation`'s.
+   */
+  describedBy?: string;
   /** Extra classes; the state-layer and focus classes are applied for you. */
   className?: string;
   style?: React.CSSProperties;

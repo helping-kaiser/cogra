@@ -3691,7 +3691,7 @@ annotation goes, or he rewords it and the note follows through
 `check-help-notes --write`. Both are one-line rulings; fold them
 into the next copy round's brief.
 
-### 113 · The kept picks' review board · *design* · **filed 2026-09-30**
+### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01**
 
 The key-loss round ruled a kept pick's life (readme §13, *The
 key-loss round*; `PadKeyAbsent`'s docblock): picks kept pending with
@@ -3705,7 +3705,32 @@ face and pair, dropping one before signing), what it signs as and
 what the snackbar says, and where the reader lands after. Drawing it
 closes the gap.
 
-### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30**
+**Drawn 2026-10-01** (jakob's rulings B1-B3; readme §13, *The kept
+picks' review*): `KeptPicksReview`, `KeptPicksSeal` and the settings
+row; the gap is closed. Left for rulings, none drawn:
+
+- **The anchor after the key is back.** A review left unsigned leaves the
+  posts' anchors wearing `Waiting for your key`, no longer true, and the
+  face's tap still opens `PadKeyAbsent`. What the anchor reads, and what
+  its tap opens, while the batch waits on the reader rather than the key.
+- **A kept pick whose target went.** A post removed or an account deleted
+  before the batch signs: the row's face, and whether the seal refuses
+  that act on its row (`SealFaultRow`'s shape) or the review drops it.
+- **A kept pick that would sever its bundle.** On a held post or topic, a
+  pick that nets the bundle to nothing goes through `SeveranceConfirm`
+  when signed alone; the batch has no such step.
+- **Kept vouches.** A kept vouch-back (`VouchBackPad` opens `VouchedIn`
+  when signed alone) or approval (`ApprovePad`, whose application may
+  expire meanwhile), signed in the batch.
+- **The write rule at kept-picks scale.** `WriteRuleFailed` draws the
+  post's seal and says the draft is kept; its clause and its way out for
+  the picks are owed, as the reply's were.
+- **Spoken drops.** Whether a dropped row is announced, as the pickers'
+  `PickAnnouncement` does, and where focus lands when a row leaves.
+- **The row's conditions.** Whether `3 kept picks waiting` shows while the
+  key has gone again, or over a sealed sign-out's picks.
+
+### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30** · **done 2026-10-01**
 
 Register a feed board that draws a clip — `FeedShapes` or
 `FeedCover` — under the `feed` node prefix, as the first round of the
@@ -3715,6 +3740,12 @@ their plain words, which item 111's node check then holds. Approved
 by jakob on 2026-09-30; the grammar and the plan are the design ⇄
 impl seam's entry 002 (dev-state `cogra/tmp_dev/design-impl-seam.md`)
 and the calibration-ID PR, #30.
+
+Done 2026-10-01: `FeedCover` registers under `feed`, named as `Feed`
+names its parts, and the card's discs carry `soundDisc` and `playDisc`.
+The stage law spans a post's clip and a comment card's, and only the
+post's is drawn, so `Feed.md` anchors the post's clip as
+`feed.card.media.frame` in its own lines and keeps *clip* for both.
 
 ### 115 · Ranked comment order, once ranking exists · *design* · **filed 2026-09-30** · **future**
 
@@ -3845,7 +3876,50 @@ rulings and left these calls for his eye:
   `Nothing carries this tag right now.` and the trace's kind-neutral
   `then what reached you`.
 
-### 121 · What the entry funnel round left for rulings · *design* · **filed 2026-10-01**
+### 121 · What the pads and edits round left open · *design + contract* · **filed 2026-10-01**
+
+The pads and edits round (readme §13, *The pads and the edit's
+withdrawals*) executed jakob's D1–D3 and left these for his eye:
+
+- **Strings flagged for blessing** (copy-voice, *The pads and the
+  edit's withdrawals*): `Set exact values for …`, `Current` /
+  `Resulting`, `Remove citation` and its two cost lines, `Undo` and its
+  spoken `Undo withdrawing …`, the five new acts labels, and `Signing
+  waits for it.` — with the carried-over `Un-tag`, `Withdrawn:` and
+  `Tags withdrawn`.
+- **The lane's calls.** The edit-time pick opens at the origin; the
+  removal's cost is a sentence over the foot, describing the control;
+  a records row is heard as `N things`; the failed gate is its own board
+  (`ReplySealUploadFailed`), its line offering Retry and no Remove.
+- **The comment edit's mirror** (audit K6.12, D38). `CommentEdit` still
+  draws no standing citations, no `Withdrawn:` lines and no
+  `RefPairEdit` route; `CommentEditActs` counts the old three kinds.
+- **The untypeable citation's row.** api-spec excludes such a citation
+  from editing, and the edit's rule is a row with no ×, but its name
+  slot (the claim serves only an L1 identifier) and any quiet reason
+  have no words, so no board draws it.
+- **A clip at the gate.** `UploadStatusLine` says "signing waits for
+  the pictures" for a video at both scales (`ReplyVideo/3`,
+  `ComposeDetailsVideo/9`); the video's words are unwritten.
+- **An untouched pick on `RefPairEdit`.** What `Done` stages with the
+  pick still at the origin is the stance pad's open question (audit
+  K10.2).
+- **"Signing proceeds"** on both gated seals' commit edges reads as
+  signing without a tap (audit K12.12, unruled).
+- **The tag half of the sharpening.** jakob's ruling names tags and
+  citations together ("we even need multiple acts to remove them");
+  api-spec makes the un-tag one newest-wins record, so the drawing counts
+  one. If a tag's withdrawal can cost more, that is a contract change.
+- **Contract seam** (for the relay): the edit's footer and acts card
+  count real records before Sign — one per edit, tag and citation
+  record, and `ReferenceClaim.withdrawalCost` per citation withdrawn,
+  which api-spec serves as the count "right now". Two things the
+  drawing cannot settle: whether the prepared batch's `writes` can
+  differ from the count shown (a revision landing between read and
+  prepare), and what the seal says if it does; and the batch's
+  all-or-none, which api-spec's edit docstring promises and its
+  cross-record section denies (audit K5.4).
+### 122 · What the entry funnel round left for rulings · *design* · **filed 2026-10-01**
 
 The entry funnel round (readme §13, *The entry funnel round*) executed
 jakob's K3 rulings (Block C items C1–C7, C19–C21) and left these calls

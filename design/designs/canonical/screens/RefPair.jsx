@@ -51,14 +51,32 @@
    is signed here either; the pair rides the citation's own record and the
    citation rides the composer's batch, so this sheet stages and the seal signs.
 
+   THE FIELD HAS A NON-DRAG ROUTE, AND IT IS REACHABLE (jakob's ruling, the
+   night batch 2026-10-01 — audit K10.1), `TagPad`'s exactly: `Set exact values
+   for The long way home — @ada`, the sheet's first control and hidden until
+   focused, swaps the field in place for `StanceAlternates` at `host="sheet"` —
+   the two tracks with the citation's names and poles over the full ±1 of both
+   signed slots, `Type exact values` one tap away — with the readout kept and
+   `Done` unchanged. The readout is `aria-live` (polite), and focus on open
+   lands on that first control, the dialog pattern's default (WAI-ARIA APG),
+   painting only under `:focus-visible`.
+
    THE SURFACE BENEATH IS DRAWN WHOLE (`ComposeDetailsBody`), the overlay rule
    from 2026-09-08: a sheet covers the surface the reader came from, and that
    surface is the real one, not a shortened stand-in of it. The reply's seal
    opens this same sheet — a comment's citation is a post's citation — the way
    it borrows the license and sensitive sheets from the compose page. */
 
-/* The four poles, named for the record family that fills the slots. */
-const CITATION_AXES = { left: "Barely", right: "Entirely", bottom: "Against", top: "For" };
+/* The four poles, named for the record family that fills the slots — and the
+   two questions, which only the non-drag route's tracks say aloud. */
+const CITATION_AXES = {
+  directed: "How much it leans on this",
+  interest: "For or against",
+  left: "Barely",
+  right: "Entirely",
+  bottom: "Against",
+  top: "For",
+};
 
 export function Screen() {
   return (
@@ -68,12 +86,16 @@ export function Screen() {
       <BottomSheet open ariaLabel="The long way home — @ada">
         <SheetTitle>The long way home — @ada</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
+          <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
+            Set exact values for The long way home — @ada
+          </button>
+
           {/* The pick's readout, in the pad's own block shape: the name of the
               quantity, then the face and the exact pair on the line below it.
               `aria-hidden` beside a screen-reader reading that names both axes —
               the numbers alone say nothing about which slot they fill, and the
               anchor's own word would name a stance this record is not. */}
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div aria-live="polite" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <span
               aria-hidden="true"
               style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}

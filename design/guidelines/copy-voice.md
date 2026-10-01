@@ -1009,7 +1009,9 @@ default read back through the trigger's own words (`Posts`). Under it:
 `Every feed starts from this. A change made inside a feed lasts until
 you change it back, on that device only.`
 
-**Key backup**: `Recovery code` and `Your key` are rows, not verbs. The
+**Key backup**: `Recovery code` and `Your key` are rows, not verbs — and,
+only while kept picks wait unsigned with the key here, `3 kept picks
+waiting` (*The key's lifecycle*, below; flagged). The
 shipped *Create a new recovery code* and *Show my key* were controls
 standing where a name belongs; the act keeps its words on the screen it
 happens on. The group's footnote: `Your key signs everything you publish
@@ -1250,6 +1252,28 @@ can't wait as pending — restore the key to sign this one.` with
 anchor, in `PendingMarker`'s quiet type — never `Still settling`, which
 means signed and not yet ordered.
 
+**The kept picks' review** (`KeptPicksReview`, `KeptPicksSeal`; jakob's
+rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, flagged
+for blessing*:
+
+- The review's title, `Kept picks`, and its one line: `These waited on
+  this device for your key, and nothing is signed yet. Remove any you no
+  longer mean — the rest sign together.` Each row's kind reads `Post` or
+  `Person`, the staged citations' words; its × keeps `StagedReference`'s
+  `Remove <name>`.
+- The commit, `Sign them` (the ruling's own words).
+- The last pick dropped: the snackbar `Nothing left to sign.` (a draft,
+  per the ruling).
+- The seal keeps the standard seal's words — `What you sign`, `Last step`,
+  `3 things, signed together`, `They land together, or none does.` — and
+  adds its own: each row's label `Opinion`, the X's name `Leave — your
+  picks are kept`, and the commit `Sign the opinions`.
+- Signed: the settled snackbar in its batch form, `Signed 3 things, still
+  settling.` — the signed-opinion snackbar's own opening, without a
+  `Current opinion`, since a batch holds more than one target.
+- The settings row, last in `Key backup`: `3 kept picks waiting` (`1 kept
+  pick waiting` in the singular). No status line.
+
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`
 
@@ -1362,9 +1386,11 @@ then the pair, on a flag attached to every card's top edge — the word
 names the act, the glyph and the numbers say what it claimed, and the
 tag itself is not repeated because the page is titled by it.
 
-**An unused tag is not a miss.** `Nothing carries this tag yet. The name
-is still a place — anyone can be the first to use it.` No "not found",
-because the tag was found; what is empty is the list. *Still a place*
+**An unused tag is not a miss.** `Nothing carries this tag right now.
+The name is still a place — anyone can use it.` No "not found",
+because the tag was found; what is empty is the list. No "first"
+either: the line states the present and promises no past (jakob
+2026-09-15, `TagPageEmpty`). *Still a place*
 is the fact the contract guarantees, said without saying Type, node or
 vacuous anchoring.
 
@@ -1503,6 +1529,50 @@ section · `Your feed is showing nothing — everything is switched off.`
 round, named here so the review pass has them in one place: `Un-tag`,
 the edit body's `Withdrawn: #coastroad`, and the acts card's
 `Tags withdrawn` row label.
+
+## The pads and the edit's withdrawals
+
+Drawn on `TagPad`, `TagPadCompose`, `RefPair`, `RefPairEdit`,
+`EditCompose`, `EditActs`, `ReplySealUploading` and
+`ReplySealUploadFailed` (readme §13, *The pads and the edit's
+withdrawals*). Every line here is the lane's wording, **flagged for
+blessing** — with the three carried-over strings above (`Un-tag`,
+`Withdrawn:`, `Tags withdrawn`), which this round puts to work again.
+
+**The non-drag route names its target.** `Set exact values for
+#saltmaps` — the hidden-until-focused control on a tag or citation
+sheet, the target's own name after `for`, the way `Choose your opinion
+on …` names its target. The tracks it swaps in say the family's own
+questions, already written: `How much it is about this` / `How sure
+you are` for a tag, `How much it leans on this` / `For or against` for
+a citation.
+
+**A standing citation's readouts.** `Current` and `Resulting`, with the
+pad's own `Your pick` between them — the stance pad's three, without
+the word *opinion*, because a citation is not one. Spoken, they carry
+the two axes and their values and never the anchor's word.
+
+**Removing a citation says its cost where the control is.** `Remove
+citation` — the walk-away's slot, a text button. Over the foot, after
+`Signed with the post, as its own action.`:
+
+- `Removing it signs 1 thing, paid on its own.`
+- `Removing it signs 3 things, each paid separately.` — the walk-back's
+  own cost phrases, at the count `withdrawalCost` serves.
+
+**A withdrawal reads back with its way back.** `Withdrawn: #coastroad`
+and `Withdrawn: Tide tables and the third headland — @juno`, one line
+per item, each ending in `Undo`, spoken `Undo withdrawing #coastroad`.
+
+**The edit's acts, every kind.** The row labels: `Edit`, `Tags added`,
+`Tags withdrawn`, `Tags revised`, `Citations added`, `Citations
+revised`, `Citations withdrawn`, `Cover changed`. A row's count is the
+records it signs, heard as `2 things` where a withdrawal takes two.
+
+**The reply's gate, failed.** `One picture didn't upload. Signing waits
+for it.` with `Retry` — the fact in error ink, the consequence in the
+quiet voice. The running line stays `Uploading 1 of 2 — signing waits
+for the pictures.`
 
 ## Saved, History and hiding
 
