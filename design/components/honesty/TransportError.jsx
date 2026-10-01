@@ -30,13 +30,19 @@ export function TransportError({ message }) {
    by rule, so the words are the short ones and the type is the pending
    marker's `label-small`: the fact in `--text-failure`, then `Retry` as a
    bare word at the end of the line (`InlineAction`, the upload error's
-   shape). Where retrying cannot change the answer — the write rule's
-   refusal — `onRetry` is omitted and the word is gone, never disabled. */
-export function SigningPending({ needsKey = false, restoreHref = "/restore", row = false, message, onRetry }) {
+   shape).
+
+   `quiet` IS THE WRITE RULE'S ROW LINE (jakob 2026-10-01, backlog item 117).
+   The write rule's refusal is a notice, not a fault — nothing was staged or
+   spent — so its line never takes `--text-failure`: it is the pending
+   marker's register, `--text-secondary`, announced politely
+   (`role="status"`), and it carries no Retry, because asking again at once
+   meets the same answer. The word is gone, never disabled. */
+export function SigningPending({ needsKey = false, restoreHref = "/restore", row = false, quiet = false, message, onRetry }) {
   if (row) {
     return (
       <p
-        role="alert"
+        role={quiet ? "status" : "alert"}
         style={{
           margin: 0,
           fontSize: "var(--text-label-small)",
@@ -46,8 +52,8 @@ export function SigningPending({ needsKey = false, restoreHref = "/restore", row
           whiteSpace: "nowrap",
         }}
       >
-        <span style={{ color: "var(--text-failure)" }}>{message ?? "That didn't sign."}</span>
-        {onRetry && (
+        <span style={{ color: quiet ? "var(--text-secondary)" : "var(--text-failure)" }}>{message ?? "That didn't sign."}</span>
+        {onRetry && !quiet && (
           <>
             {" "}
             <InlineAction size="sm" onClick={onRetry}>

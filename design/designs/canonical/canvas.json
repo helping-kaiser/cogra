@@ -1365,7 +1365,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 3100,
+      "h": 3256,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1374,7 +1374,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 2312,
+      "h": 2416,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1383,7 +1383,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 3707,
+      "h": 3915,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1401,7 +1401,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 3793,
+      "h": 4001,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1410,7 +1410,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1117,
+      "h": 1779,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -1443,10 +1443,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 5045,
+      "w": 3190,
+      "h": 5317,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1564,7 +1564,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2442,
+      "h": 2613,
       "page": "profile"
     },
     {
@@ -1625,6 +1625,24 @@
       "file": "ChangeEmail.dc.html",
       "title": "Settings · change your email",
       "x": 3360,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "WhatsNew.dc.html",
+      "title": "Settings · what's new",
+      "x": 4320,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ReportProblem.dc.html",
+      "title": "Settings · report a problem",
+      "x": 4800,
       "y": 1928,
       "w": 390,
       "h": 844,
@@ -1713,7 +1731,7 @@
     },
     {
       "file": "SealFaultRow.dc.html",
-      "title": "Seal · one thing can't be signed",
+      "title": "Seal · a cited post that didn't land",
       "x": 960,
       "y": 964,
       "w": 390,
@@ -1743,6 +1761,42 @@
       "title": "Signing · on the target's row",
       "x": 2880,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "PadWriteRule.dc.html",
+      "title": "Pad · the write rule says not now",
+      "x": 2400,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "RowWriteRule.dc.html",
+      "title": "Signing · the write rule on the target's row",
+      "x": 2880,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealFaultBug.dc.html",
+      "title": "Seal · this shouldn't have happened",
+      "x": 960,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealDiscardConfirm.dc.html",
+      "title": "Seal · discard this post?",
+      "x": 1440,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "patterns"
@@ -1877,7 +1931,7 @@
       "file": "Saved.dc.html",
       "title": "Saved · what you kept",
       "x": 0,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1886,7 +1940,7 @@
       "file": "SavedEmpty.dc.html",
       "title": "Saved · nothing kept yet",
       "x": 480,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1895,7 +1949,7 @@
       "file": "SavedUndo.dc.html",
       "title": "Saved · one just removed",
       "x": 2400,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1904,7 +1958,7 @@
       "file": "History.dc.html",
       "title": "History · what you have read",
       "x": 960,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1913,7 +1967,7 @@
       "file": "HistoryEmpty.dc.html",
       "title": "History · nothing seen yet",
       "x": 1440,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1922,7 +1976,7 @@
       "file": "SettingsHidden.dc.html",
       "title": "Settings · hidden accounts",
       "x": 1920,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1931,7 +1985,7 @@
       "file": "Notifications.dc.html",
       "title": "Notifications · what happened",
       "x": 0,
-      "y": 5543,
+      "y": 5731,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1940,7 +1994,7 @@
       "file": "NotificationsEmpty.dc.html",
       "title": "Notifications · nothing yet",
       "x": 480,
-      "y": 5543,
+      "y": 5731,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1949,7 +2003,7 @@
       "file": "Invites.dc.html",
       "title": "Invites · waiting and live",
       "x": 0,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1958,7 +2012,7 @@
       "file": "InvitesEmpty.dc.html",
       "title": "Invites · none out yet",
       "x": 480,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1967,7 +2021,7 @@
       "file": "InviteNew.dc.html",
       "title": "Invites · a new link",
       "x": 960,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1976,7 +2030,7 @@
       "file": "InviteExpiry.dc.html",
       "title": "Invites · how long it lasts",
       "x": 1440,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1985,7 +2039,7 @@
       "file": "InviteCreated.dc.html",
       "title": "Invites · the link is ready",
       "x": 1920,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1994,7 +2048,7 @@
       "file": "ApprovePad.dc.html",
       "title": "Invites · approving is vouching",
       "x": 2400,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2003,7 +2057,7 @@
       "file": "RejectConfirm.dc.html",
       "title": "Invites · closing an application",
       "x": 2880,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2012,7 +2066,7 @@
       "file": "VouchAsk.dc.html",
       "title": "Invites · someone asked you to vouch",
       "x": 3360,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2021,7 +2075,7 @@
       "file": "VouchAskPad.dc.html",
       "title": "Invites · answering the ask",
       "x": 3840,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2030,7 +2084,7 @@
       "file": "RejectAllConfirm.dc.html",
       "title": "Invites · closing a link's applications",
       "x": 4320,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2282,7 +2336,7 @@
       "x": -340,
       "y": 0,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal, the stance pad, and the two settings screens): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your first opinion': Vouching back signs your opinion of the person who vouched you in — your first one, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal, the stance pad, and the two settings screens): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nWRITE RULE · 'Why signing waits' (the seal and the stance pad): Each signing is paid for, and there's only so much to go around at a time. When it runs short, signing waits — nothing you asked for was signed, and nothing was spent. / Nothing needs fixing on your side. Your draft is kept, and an opinion can simply be given again. It frees up as time passes, so try again a little later.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your first opinion': Vouching back signs your opinion of the person who vouched you in — your first one, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
       "page": "patterns"
     },
     {

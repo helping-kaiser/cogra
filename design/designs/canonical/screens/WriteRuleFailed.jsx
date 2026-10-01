@@ -25,8 +25,14 @@
    later. The draft is offered back the next time they compose
    (`ComposeDraft`).
 
-   THE ONE "?" STAYS THE HEADER'S. How signing works already says each
-   signing is paid for; the panel has nothing to add a dialog would. */
+   TWO "?"s, BY THE STOPPER EXCEPTION (jakob 2026-10-01: "the '?' at the top
+   right is the general one for the seal and not for this specific problem").
+   The header's explains signing; the panel's, in `HelpDot`'s `inverse`,
+   opens `Why signing waits` — what the write rule is in payer-neutral words,
+   that nothing was signed, spent or lost, and that a little later it signs as
+   usual. A notice that stops the one act its surface exists for may carry its
+   own "?" (readme §13, the copy rule), so no later pass folds it into the
+   header's. */
 export function Screen() {
   return <ComposeSealBody state="writeRule" />;
 }

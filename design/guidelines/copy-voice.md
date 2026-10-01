@@ -227,7 +227,9 @@ phone itself`) rather than rendering twice.
 ## The "?" dialogs
 
 Compose keeps captions to one short line; the full explanation lives
-behind a small "?" (at most one per screen) opening a plain dialog:
+behind a small "?" (at most one per screen, save the stopper exception:
+a notice that stops the surface's one act carries its own beside the
+header's — readme §13, *The compose flow*) opening a plain dialog:
 title, at most two short paragraphs, Close. The texts, verbatim
 (browser wording shown; the app variant swaps the platform noun):
 
@@ -264,6 +266,14 @@ title, at most two short paragraphs, Close. The texts, verbatim
   key to any device. Until it's here, anything waiting on it stays on
   this device. *(One text for all four key-absent surfaces, the key-loss
   round: nothing in it assumes a write in progress.)*
+- **Why signing waits** (the write rule's notice — the seal
+  and the stance pad): Each signing is paid for, and there's only so
+  much to go around at a time. When it runs short, signing waits —
+  nothing you asked for was signed, and nothing was spent. / Nothing
+  needs fixing on your side. Your draft is kept, and an opinion can
+  simply be given again. It frees up as time passes, so try again a
+  little later. *(New 2026-10-01, the stopper exception's first dialog,
+  flagged for blessing. Payer-neutral by the V1.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -688,17 +698,18 @@ stands, and the rest of the surface stays readable.
   (`PadFailed`). A dialog keeps its pair and its commitment reads
   `Retry`. A form keeps its fields and the line takes SignInError's
   slot.
-- **On the row** — a fault about one staged act is said on that act's
-  row, with `Remove it` and no Retry (`SealFaultRow`). A hold, which
-  has no surface of its own, says its fault on the target's row
-  (`RowSigning`).
+- **On the row** — a cited post that never landed is said on its
+  citation's row, with `Remove it` and no Retry (`SealFaultRow`). A
+  hold, which has no surface of its own, says its fault on the target's
+  row (`RowSigning`).
 - **On the field** — a field's own line (*Field errors*, *Caps and
   their refusals*).
 - **The surface** — a fault that leaves nothing to act on takes the
   whole screen (`ProfileNotFound`, `VerifyExpired`, `JoinInvalid`).
 - **A notice** — not a fault at all: nothing was staged or spent, so
   the tertiary panel stands in the commit's place and no Retry is
-  offered (`WriteRuleFailed`).
+  offered (`WriteRuleFailed`). A refusal that is our bug takes the same
+  panel in its own words, with `Try again` (`SealFaultBug`).
 
 Lines marked *new* arrived with the failure pack and are flagged for
 blessing. Unmarked lines are already blessed or already drawn.
@@ -766,15 +777,38 @@ blessing. Unmarked lines are already blessed or already drawn.
 - `WRITE_RULE_FAILED` — a notice. On a seal it is `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent — your draft is
-  kept.`, with `Keep the draft, sign later` under it. **Drawn** on
+  kept.`, with `Keep the draft, sign later` under it, and the panel's
+  own "?" opening `Why signing waits` (*The "?" dialogs*). **Drawn** on
   `WriteRuleFailed`. *New.* The words name no payer (the V1.0 scope
-  cut). On a pad the same panel takes Set's place in `PadKeyAbsent`'s
-  shape. On a hold's row the quiet line reads `You can't sign right
-  now`, with no Retry. *New; copy-only — neither is drawn.*
-- **One staged act refused** — a citation whose target nothing answers
-  to any more (the field-level refusal on `references.<index>.target`):
-  on the row, `This can't be cited anymore.` with `Remove it`. **Drawn**
-  on `SealFaultRow`. *New.*
+  cut). On a pad the same panel stands where the landing line and Set
+  were, in `PadKeyAbsent`'s shape: `You can't sign right now` over `Each
+  signing is paid for, and there's only so much to go around at a time.
+  Nothing was signed or spent.` — a pad has no draft — with the same
+  "?" and `Not now` under it; the pick is not kept. **Drawn** on
+  `PadWriteRule`. On a hold's row the quiet line reads `You can't sign
+  right now.` in the pending marker's register, never the failure
+  voice, with no Retry. **Drawn** on `RowWriteRule`. *New 2026-10-01,
+  flagged for blessing.*
+- **One staged act refused** (the field-level refusal on
+  `references.<index>.target`; jakob 2026-10-01). A target that landed
+  never stops answering, so two cases exist, and they read nothing
+  alike:
+  - **A cited post that never landed** — picked while still settling,
+    the reader's own or anyone else's, and its staged act expired. On
+    the row: `This post didn't land, so it can't be cited.` with
+    `Remove it`; a comment takes `This comment didn't land, so it can't
+    be cited.` **Drawn** on `SealFaultRow`. *New 2026-10-01, flagged
+    for blessing.*
+  - **Any other refusal** — a bug the picking stage should have
+    blocked. A notice in the commit's place, never the failure voice:
+    `This shouldn't have happened` over `That's a fault on our side,
+    not yours. Nothing was signed or spent, and telling us helps us fix
+    it.`, `Try again` in the panel, then `Report a problem` and `Discard
+    the post` under it; the post-scale ask is `Discard this post?` · `The
+    draft goes, with its pictures, tags and citations. Nothing was
+    signed, so nothing else changes.` · `Discard it` · `Keep the draft`.
+    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. *New
+    2026-10-01, flagged for blessing.*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
@@ -871,6 +905,33 @@ current session's status is the platform noun — `This browser` on web,
 **Credentials**: `Password`, `Handle`, `Email`, each showing where it
 stands, with `Changing your password signs out every other device.`
 under them — the fact `ResetNew` already says, moved in front of the act.
+
+**About** — the support stack (jakob, 2026-10-01; every line here *new,
+flagged for blessing*). Three rows join the group after `About CoGra`
+and before `Privacy` and `Terms`, each one string for app and web:
+
+- `What's new`, its value the version running here (`0.1.2`). It opens
+  the release chronicle, titled by the row: each release's dateline
+  reads `Version 0.1.2 · current · 30.09.2026` for the running one and
+  `Version 0.1.1 · 28.09.2026` for the rest; each release ends in `See
+  it on GitHub`, named `See version 0.1.2 on GitHub` for a listener;
+  and the page's footnote reads `Newest first. Every release's full
+  notes and its code are public on GitHub.` A release's notes are
+  written when it ships, never here.
+- `Report a problem` opens the report: the heading `Report a problem`;
+  `Say what happened, in your own words. Sending opens your email with
+  everything below filled in — nothing goes until you send it there.`;
+  the field `What happened`; then the four facts that travel with the
+  words, as a read-back list — `To` · the address, `Version`, `Running
+  on`, `Time` — and under them `That's all that goes with your words —
+  no account, no key, nothing you've posted. It's sent from your own
+  email, so we can write back.` The commitment is `Send by email`,
+  because the press opens the reader's mail and sends nothing itself.
+- `Contact`, its value the address it writes to — a plain mail door,
+  kept apart from the report so reports stay structured.
+
+Both addresses (`reports@cogra.local`, `hello@cogra.local`) are
+placeholders until CoGra is on a server, and swap then.
 
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides

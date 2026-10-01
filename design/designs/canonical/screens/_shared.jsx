@@ -1251,15 +1251,26 @@ const REPLY_CITATION = "Tide tables and the third headland";
    - `offline` — no answer at all: the fault takes the commit's place,
      `TransportError`'s line over an outlined Retry and the same way back
      (`NetworkError`).
-   - `refused` — one staged act refused: its row says so with Remove it, and
-     the commit stays, because nothing was staged (`SealFaultRow`).
+   - `refused` — a cited post that never landed: its row says so with Remove
+     it, and the commit stays, because nothing was staged (`SealFaultRow`).
+   - `bug` — any other refusal of one staged act, which the picking stage
+     should have blocked: the commit's place takes `NoticePanel` in the bug's
+     words, with Try again, and Report a problem and Discard the post under
+     it (`SealFaultBug`).
    - `writeRule` — the write rule's refusal: nothing failed and nothing was
      spent, so the commit's place takes `NoticePanel`, and the way out keeps
      the draft (`WriteRuleFailed`). */
-const SEAL_REFUSED_CITATION = "This can't be cited anymore.";
+const SEAL_UNLANDED_CITATION = "This post didn't land, so it can't be cited.";
+const SEAL_BUG_TITLE = "This shouldn't have happened";
+const SEAL_BUG_FACT = "That's a fault on our side, not yours. Nothing was signed or spent, and telling us helps us fix it.";
 const WRITE_RULE_TITLE = "You can't sign right now";
 const WRITE_RULE_FACT =
   "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your draft is kept.";
+/* The write rule's own "?" — the stopper exception (jakob 2026-10-01). The
+   header's "?" explains signing; this one explains how the stop resolves, so
+   it rides the notice panel and is named by its dialog (copy-voice, *The "?"
+   dialogs*). The pad's notice carries the same one. */
+const WRITE_RULE_HELP = "Why signing waits";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
   return (
@@ -1300,7 +1311,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                     </span>
                   ),
                   count: "1",
-                  ...(state === "refused" ? { fault: { message: SEAL_REFUSED_CITATION, onRemove: () => {} } } : null),
+                  ...(state === "refused" ? { fault: { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } } : null),
                 },
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
@@ -1329,10 +1340,24 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
           </div>
         ) : state === "writeRule" ? (
           <>
-            <NoticePanel title={WRITE_RULE_TITLE}>
+            <NoticePanel title={WRITE_RULE_TITLE} helpLabel={WRITE_RULE_HELP} onHelp={() => {}}>
               <NoticeLine>{WRITE_RULE_FACT}</NoticeLine>
             </NoticePanel>
             <Button variant="text" style={{ width: "100%" }}>Keep the draft, sign later</Button>
+          </>
+        ) : state === "bug" ? (
+          <>
+            {/* Not a fault in `--error`, and not the write rule's notice: the
+                reader did nothing wrong and nothing was spent, so it is the
+                tertiary panel, and its words own the bug. */}
+            <NoticePanel title={SEAL_BUG_TITLE}>
+              <NoticeLine>{SEAL_BUG_FACT}</NoticeLine>
+              <Button variant="inverse" style={{ width: "100%" }}>Try again</Button>
+            </NoticePanel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              <Button variant="text" style={{ width: "100%" }}>Report a problem</Button>
+              <Button variant="text" style={{ width: "100%" }}>Discard the post</Button>
+            </div>
           </>
         ) : (
           <SealFooter signLabel="Sign and publish" busy={state === "signing"} busyLabel="Signing and publishing…" />
@@ -2180,6 +2205,19 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    stops promising a way back that does not exist — and `forget` is the
    don't-remember switch turned on. Both default to the page every other
    board draws. */
+/* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the
+   settings row, the release chronicle and the report's diagnostic line all
+   read the running version, and three boards disagreeing about it would be
+   the drift the constant exists to stop. The repo states 0.1.0; the boards
+   draw two patch releases later so the chronicle has a history to show.
+   Both addresses are placeholders until CoGra is on a server, on `.local`,
+   the repo's own genesis-account domain: real-shaped, and undeliverable, so
+   nothing sent before the swap reaches a stranger. */
+const RUNNING_VERSION = "0.1.2";
+const REPORT_ADDRESS = "reports@cogra.local";
+const CONTACT_ADDRESS = "hello@cogra.local";
+const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+
 function SettingsBody({ backup = "made", forget = false } = {}) {
   return (
     <>
@@ -2320,10 +2358,10 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
             batch-rulings round). The page's order is frequency, not taxonomy,
-            and these four rows are the least-reached on it — nobody opens
-            settings to re-watch an intro. They stand together because they are
-            one kind of row: four doors onto words about the product, none of
-            them a setting.
+            and these rows are the least-reached on it — nobody opens settings
+            to re-watch an intro. They stand together because they are one kind
+            of row: doors onto words about the product, or ways to answer it,
+            none of them a setting.
 
             NO FOOTNOTE. A group's footnote carries the fact a reader needs once
             and never again, and there is none here — every row's label already
@@ -2331,10 +2369,24 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
             PRIVACY AND TERMS ARE ROWS AND NOTHING ELSE. They open static legal
             documents, which are written rather than designed; a board drawing
-            one would be a drawing of text nobody in this repo writes. */}
+            one would be a drawing of text nobody in this repo writes.
+
+            THE SUPPORT STACK JOINS IT (jakob, 2026-10-01): `What's new`,
+            whose value is the version running here and which opens the
+            release chronicle (`WhatsNew`); `Report a problem`, the structured
+            report (`ReportProblem`); and `Contact`, a plain mail door kept
+            apart so reports stay reports. They sit after About CoGra and
+            before the legal pair — the product's own words first, then the
+            ways to answer it, then the documents. The two addresses are
+            placeholders until CoGra is on a server, the APK path's way:
+            real-shaped values on the repo's own `.local` domain, swapped
+            when the addresses exist. */}
         <SettingsGroup label="About">
           <SettingsRow label="Watch the intro again" onOpen={() => {}} />
           <SettingsRow label="About CoGra" onOpen={() => {}} />
+          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} />
+          <SettingsRow label="Report a problem" onOpen={() => {}} />
+          <SettingsRow label="Contact" value={CONTACT_ADDRESS} onOpen={() => {}} />
           <SettingsRow label="Privacy" onOpen={() => {}} />
           <SettingsRow label="Terms" onOpen={() => {}} />
         </SettingsGroup>

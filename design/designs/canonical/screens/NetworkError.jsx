@@ -26,9 +26,11 @@
      that did not verify — takes the commit's place, as drawn here, in its
      code's words (copy-voice, *Faults by code*); Retry asks the same thing
      again;
-   - a refusal of ONE STAGED ACT — a cited post or person nothing answers to
-     any more — is said on that act's row, with Remove it and no Retry, and
-     the commit stays, because a refusal stages nothing (`SealFaultRow`);
+   - a refusal of ONE STAGED ACT has two cases. A cited post that never
+     landed is said on that act's row, with Remove it and no Retry, and the
+     commit stays, because a refusal stages nothing (`SealFaultRow`). Any
+     other is a bug the picker should have blocked, said in the notice panel
+     in the commit's place, with Try again (`SealFaultBug`);
    - the WRITE RULE's refusal is not a fault at all: nothing was staged or
      spent, so the commit's place takes the notice panel and the way out keeps
      the draft (`WriteRuleFailed`).

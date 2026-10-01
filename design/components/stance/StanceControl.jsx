@@ -9,6 +9,7 @@ import { StanceCoachMark, padHelp, HelpLine, helpKey } from "./StanceCoachMark.j
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { SigningPending, TransportError } from "../honesty/TransportError.jsx";
+import { NoticePanel, NoticeLine } from "../honesty/NoticePanel.jsx";
 import {
   bundleReadout,
   clampPair,
@@ -78,6 +79,15 @@ import {
    what the in-flight states above wait on; `signing` draws them. */
 
 export const LONG_PRESS_MS = 500;
+
+/* The write rule's words at the pad's and the row's scale (copy-voice,
+   *Faults by code*). The seal's panel says the draft is kept; a pad has no
+   draft, so its fact stops at what was not signed or spent. The "?" is the
+   seal panel's own dialog, named by its title. */
+const WRITE_RULE_TITLE = "You can't sign right now";
+const WRITE_RULE_PAD_FACT = "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent.";
+const WRITE_RULE_HELP = "Why signing waits";
+const WRITE_RULE_ROW = "You can't sign right now.";
 
 /* THE ANCHOR ON A MEDIA SURFACE (jakob, review rounds 1 and 2). On the stream
    the control sits on whatever the clip happens to be showing, where the card's
@@ -181,8 +191,12 @@ export function StanceControl({
      pack). `"busy"` is the wait past 200ms, `"failed"` the signing that did
      not complete. With the pad closed it is the hold's, and the target's row
      carries it under the face; with the pad open it is Set's, and the pad's
-     commit row carries it. Additive — absent, the control renders exactly as
-     before. */
+     commit row carries it. `"writeRule"` (jakob 2026-10-01, backlog item
+     117) is the write rule's refusal, which is a notice and not a fault: on
+     the row a quiet line with no Retry, and in the pad the notice panel
+     standing where the landing line and the commit row would, in
+     `PadKeyAbsent`'s shape. Additive — absent, the control renders exactly
+     as before. */
   signing,
   node,
 }) {
@@ -460,6 +474,10 @@ export function StanceControl({
           }}
         />
       )}
+      {/* The write rule refused the hold: a notice, so the quiet register and
+          no Retry — the face never moved, and asking again at once meets the
+          same answer. */}
+      {rowSigning === "writeRule" && <SigningPending row quiet message={WRITE_RULE_ROW} />}
 
       {open && (
         <>
@@ -575,7 +593,25 @@ export function StanceControl({
               <>
                 <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} />
                 {padNote}
-                <StanceLandingLine landing={landing} names={axes} />
+                {padSigning !== "writeRule" && <StanceLandingLine landing={landing} names={axes} />}
+              </>
+            )}
+            {/* THE WRITE RULE REFUSED SET (jakob 2026-10-01, backlog item 117):
+                `PadKeyAbsent`'s shape. The pad stays open at the pick — nothing
+                the reader chose is lost from view — and the notice stands where
+                the landing line and the commit row would, carrying its own "?"
+                by the stopper exception. `Not now` is the way out
+                (`ReplyKeyAbsent`'s word for a notice's exit that keeps nothing):
+                no pick is kept, because nothing waits on the reader here, and
+                no Retry, because asking again at once meets the same answer. */}
+            {padSigning === "writeRule" && (
+              <>
+                <NoticePanel title={WRITE_RULE_TITLE} helpLabel={WRITE_RULE_HELP} onHelp={() => {}}>
+                  <NoticeLine>{WRITE_RULE_PAD_FACT}</NoticeLine>
+                </NoticePanel>
+                <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text" }), width: "100%" }}>
+                  Not now
+                </button>
               </>
             )}
             {/* One row: the walk-away on the left, the two decisions on the right.
@@ -588,6 +624,7 @@ export function StanceControl({
                 `Retry` — not a new commitment, the same one asked again. The
                 pick, the field and the way out are exactly as they were. */}
             {padSigning === "failed" && <TransportError message="That didn't send. Try again." />}
+            {padSigning !== "writeRule" && (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
               {!firstConnection && (bundle.records > 0 || bundle.severed === true) && (
                 <button
@@ -619,6 +656,7 @@ export function StanceControl({
                 {padSigning === "busy" ? "Setting…" : padSigning === "failed" ? "Retry" : "Set"}
               </button>
             </div>
+            )}
           </div>
         </>
       )}

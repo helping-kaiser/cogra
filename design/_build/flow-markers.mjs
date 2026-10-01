@@ -1303,6 +1303,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 20, find: ">About CoGra</span>", tag: "button" },
     { n: 21, find: ">Privacy</span>", tag: "button" },
     { n: 22, find: ">Terms</span>", tag: "button" },
+    // The support stack (2026-10-01), three rows inside the About group,
+    // numbered by the same identity rule — the next three free numbers.
+    { n: 23, find: ">What&#x27;s new</span>", tag: "button" },
+    { n: 24, find: ">Report a problem</span>", tag: "button" },
+    { n: 25, find: ">Contact</span>", tag: "button" },
+  ],
+  // The release chronicle: the way out, and one door per release — the same
+  // control drawn three times, so one number.
+  WhatsNew: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+  ],
+  ReportProblem: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="What happened"', tag: "div" },
+    { n: 3, find: ">Send by email</button>", tag: "button" },
   ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
@@ -1759,6 +1775,27 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Keep the draft, sign later</button>", tag: "button" },
+    // The panel's own "?" (the stopper exception, 2026-10-01), appended so no
+    // via renumbers.
+    { n: 8, find: 'aria-label="Why signing waits"', tag: "button" },
+  ],
+  /* The bug register (2026-10-01) is the same seal again — header and facts
+     keep `ComposeSeal`'s numbers — with its three ways out where the commit
+     stood, and the discard ask's pair over it, `ComposeDraftDiscard`'s way. */
+  SealFaultBug: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Try again</button>", tag: "button" },
+    { n: 8, find: ">Report a problem</button>", tag: "button" },
+    { n: 9, find: ">Discard the post</button>", tag: "button" },
+  ],
+  SealDiscardConfirm: [
+    { n: 1, find: ">Discard it</button>", tag: "button" },
+    { n: 2, find: ">Keep the draft</button>", tag: "button" },
   ],
   PadFailed: [
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
@@ -1767,6 +1804,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Walk it back</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Retry</button>", tag: "button" },
+  ],
+  // The write rule's pad (2026-10-01): `PadFailed`'s first two numbers, then
+  // the notice's own "?" and its way out where the commit row stood.
+  PadWriteRule: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Why signing waits"', tag: "button" },
+    { n: 4, find: ">Not now</button>", tag: "button" },
   ],
   // TWO "Restore the key" buttons stand on this board — the feed's own card
   // beneath the wash and the pad's notice above it — and both take the number,

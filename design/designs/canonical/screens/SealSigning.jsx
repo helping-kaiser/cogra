@@ -17,7 +17,7 @@
    EVERYTHING ELSE IS THE SEAL AS IT WAS. The outcome lands in the commit's
    place or leaves the seal: signed, it exits to the post; offline, the fault
    stands where the button is (`NetworkError`); refused, the row or the notice
-   says so (`SealFaultRow`, `WriteRuleFailed`). */
+   says so (`SealFaultRow`, `SealFaultBug`, `WriteRuleFailed`). */
 export function Screen() {
   return <ComposeSealBody state="signing" />;
 }

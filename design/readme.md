@@ -1298,7 +1298,11 @@ new post". Its result rows are the seed of the search design (item
 lives behind a small "?" — at most one per screen, top-right of the
 header or of the sheet/card it explains (the pads carry their own) —
 opening a plain dialog: title, at most two short paragraphs, Close.
-The eight dialog texts live in
+**The stopper exception** (jakob, 2026-10-01): a notice that stops the
+one act its surface exists for carries its own "?" on the panel,
+beside the header's. The header's "?" explains the surface; the
+stopper's explains how the stop resolves, and one dialog cannot do
+both. `WriteRuleFailed` is the first. The dialog texts live in
 [guidelines/copy-voice.md](guidelines/copy-voice.md). **Button
 rule:** filled and outlined pills render a TRUE 40px tall (border
 box) with 24px side padding and a 64px minimum width; header pills
@@ -7266,11 +7270,13 @@ in-flight state, and the only fault the seal knew was "offline".
   `SealFooter`'s `busy`, `SeveranceConfirm`'s `busy` and
   `StanceControl`'s `signing` carry it (`SealSigning`).
 - **The seal's faults speak `NetworkError`'s grammar** (jakob). A fault
-  about the whole signing takes the commit's place, as drawn. When one
-  staged act is refused, the refusal is said on that act's row, in the
+  about the whole signing takes the commit's place, as drawn. A cited
+  post that never landed is said on its citation's row, in the
   refused-file line's shape: the fact, then `Remove it`
-  (`SealFaultRow`). Nothing was staged, so the commit stays. Each
-  code's vehicle and words live in copy-voice, *Faults by code*.
+  (`SealFaultRow`). Nothing was staged, so the commit stays. Any other
+  refusal of one staged act is a bug (*The failure fixes and the
+  support stack*). Each code's vehicle and words live in copy-voice,
+  *Faults by code*.
 - **The write rule's refusal is a restoration surface, not a fault**
   (jakob; `WriteRuleFailed`, the V1.0 home of the pool-exhaustion
   fact). A refused pre-check stages nothing and spends nothing, so the
@@ -7375,6 +7381,75 @@ Small rulings jakob made in one sitting.
 - **The gate**: 229 screens, 1618 → **1622 edges** (the four `Done`s),
   1 gap, **flows 63**, every one resolved, the witness not re-blessed.
   The maps and the canvas manifests follow the moved boards.
+
+### The failure fixes and the support stack — 2026-10-01
+
+jakob's rulings, in session, on the failure pack's drawn premise and
+backlog item 117, and his confirmation of the support stack's shape.
+
+- **A picked target never stops answering, except one that never
+  landed.** No record is removed: a removed post is a reduced node, a
+  deleted account is a husk, and tags are not citable. The one real
+  case is a post picked while still settling — the reader's own or
+  anyone else's, with `Still settling` on in the filter (jakob: "it is
+  not only stuff i have created") — whose staged act then expires
+  unlanded. `SealFaultRow` draws it: the citation's row says the post
+  didn't land, with `Remove it`, and the commit stays.
+- **Every other refusal at that stage is a bug, and says so**
+  (`SealFaultBug`). The picker should have blocked it, so the seal
+  owns it in the notice register, not the failure voice: the tertiary
+  panel in the commit's place, `This shouldn't have happened`, nothing
+  signed or spent. Its three ways out are jakob's: `Try again` — a bug
+  can be transient, so asking again is a real way out here —
+  `Report a problem`, and `Discard the post`, which asks first
+  (`SealDiscardConfirm`). No row is marked.
+- **The stopper exception to one "?" per screen** (*The compose flow*'s
+  copy rule). A notice that stops the one act its surface exists for
+  carries its own "?" beside the header's: jakob, "the '?' at the top
+  right is the general one for the seal and not for this specific
+  problem". `WriteRuleFailed`'s panel opens `Why signing waits` — the
+  write rule in payer-neutral words, nothing lost, the draft kept, try a
+  little later — and `PadWriteRule`'s opens the same dialog.
+- **The support stack joins Settings' About group** (jakob, as
+  recommended): `What's new`, valued with the running version, opens
+  the release chronicle (`WhatsNew`) — the chronicle idiom applied to
+  the product, whole versions newest first, the running one marked,
+  each release with its door onto GitHub. `Report a problem` opens
+  `ReportProblem`: one field in the reader's own words, and everything
+  that travels with them read back before sending — the address, the
+  version, what it runs on and the time, nothing else — sent through
+  the reader's own mail. `Contact` is a plain mail door, apart from the
+  report. Both addresses are placeholders until CoGra is on a server
+  (jakob), on the repo's `.local` domain. One string per line for app
+  and web.
+- **The write rule at the pad's and the hold's scale** (backlog item
+  117's two vehicles). The pad keeps the pick in view and the notice
+  stands where the landing line and Set were — `PadKeyAbsent`'s shape,
+  drawn by `StanceControl`'s `signing="writeRule"` — with `Not now`,
+  and no pick is kept. The hold's row says `You can't sign right now.`
+  in the pending marker's register, never the failure voice, with no
+  Retry (`RowWriteRule`, `SigningPending`'s `quiet`). Every pad `Set`
+  that reaches `PadFailed`, and `PadFailed`'s `Retry`, now also reach
+  `PadWriteRule`; the thirty-six hold edges name the new plate beside
+  `RowSigning`.
+- **The lane's calls, flagged for review:** two seal boards rather than
+  one board of two states, because a seal is a whole screen; no row
+  marked in the bug state; a drawn post-scale discard ask rather than
+  pointing at `ComposeDraftDiscard`, whose words are about the roll; the
+  stack's order — About CoGra, What's new, Report a problem, Contact,
+  then the legal pair; the board fixture at `0.1.2` over the repo's
+  stated `0.1.0`; `.local` addresses; a full task page for the report
+  rather than a sheet, since the bug seal opens it too; `Not now` on the
+  pad, and the walk-away gone with the commit row, as on
+  `PadKeyAbsent`; the dialog's title worded without an apostrophe, which
+  the help-note check cannot parse.
+- **The gate**: 229 → **235 screens**, 1618 → **1642 edges**, 1 gap,
+  **flows 63**, every one resolved; the witness was not re-blessed.
+  `Settings`' frame grew to 2613 for its three new rows, and the
+  profile canvas's rows below it moved down 188. The settings sheets
+  re-render because the page under them grew; every pad and feed board
+  renders byte-identical. `ComposeSeal.md` gains the two refusals and
+  `Feed.md` the write rule's hold.
 
 ## 15. Index
 
