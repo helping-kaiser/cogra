@@ -769,7 +769,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `UNAUTHENTICATED`, `REFRESH_TOKEN_INVALID` mid-session — the
   surface: the sign-in screen, with the draft and any picks kept on
   the device. `You've been signed out. Sign in again to carry on.`
-  *Copy-only — its board is owed.*
+  **Drawn** on `SignInExpired`, where the welcome line stood, in its
+  secondary ink.
 - `INTERNAL`, `FORBIDDEN` — in place: `That didn't go through. Try
   again.` The house line says "can't reach the server", which is false
   for a fault the server answered.

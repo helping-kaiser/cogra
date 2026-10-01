@@ -128,6 +128,15 @@
       "page": "entry"
     },
     {
+      "file": "SignInExpired.dc.html",
+      "title": "Sign in · signed out mid-session",
+      "x": 2400,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "KeyCeremonyUnsupported.dc.html",
       "title": "Your key · this browser can't hold one",
       "x": 1920,
