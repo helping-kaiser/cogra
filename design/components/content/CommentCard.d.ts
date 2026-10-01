@@ -70,6 +70,17 @@ export interface CommentCardProps {
   targetKind?: string;
   /** Opens the target. Shown only when both `target` and this are set. */
   onOpenTarget?: () => void;
+  /**
+   * OPTION CANDIDATE (the feed-cards rework, 2026-10-01) — drawn only on the
+   * `FeedCommentOptions` board, pending jakob's pick; no screen wears it.
+   * How loudly the card names what it answers: `"line"` (default, the one-line
+   * pointer), `"quote"` (the target held above as `QuotedRow`, a door) or
+   * `"thread"` (the target as a head row, the comment hung under it on a
+   * connector rule). Needs `targetDetail`; falls back to `"line"` without it.
+   */
+  targetShape?: "line" | "quote" | "thread";
+  /** OPTION CANDIDATE — what the louder `targetShape`s draw. */
+  targetDetail?: { title: string; author: PostAuthor; snippet?: string; authorSrc?: string; cover?: string };
   /** Extra affordances in the same row as the stance control, Reply and Edit. */
   actions?: React.ReactNode;
   /** Extra overflow-menu items, appended after the license entry. */

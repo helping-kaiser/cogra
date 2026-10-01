@@ -11,6 +11,8 @@ import { Icon, NODE_GLYPHS } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 import { MediaGallery } from "../media/MediaAttachment.jsx";
 import { RedactedContent, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
+import { QuotedRow } from "../core/QuotedRow.jsx";
+import { NodeMark } from "./ReferenceRow.jsx";
 
 /* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
    stance control", in its top-level and nested variants. Extracted from
@@ -24,6 +26,21 @@ import { RedactedContent, SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
    "View n replies" line (`replyCount`); `replies` renders them expanded. */
 
 const MAX_INDENT_DEPTH = 1;
+
+/* The louder target shapes' door (option candidates, below): a bare button
+   around what it names, the state layer on the whole block. */
+const TARGET_DOOR = {
+  display: "block",
+  width: "100%",
+  border: 0,
+  background: "none",
+  padding: 0,
+  cursor: "pointer",
+  fontFamily: "var(--font-sans)",
+  color: "var(--on-surface)",
+  textAlign: "left",
+  borderRadius: "var(--radius-small)",
+};
 
 /* @handle tokens read as the person they name. Colour is ALL this is: a handle
    typed into a body is text, never a record — the mention that binds is the
@@ -73,6 +90,23 @@ export function CommentCard({
   target,
   targetKind = "post",
   onOpenTarget,
+  /* OPTION CANDIDATES — the feed-cards rework (2026-10-01), drawn only on the
+     comment card's option board (`FeedCommentOptions`) for jakob to pick
+     from; NO SCREEN WEARS THEM, and whichever he does not pick leaves the
+     master. `targetShape` says how loudly the comment names what it answers:
+     · "line" (the default, today's) — the one-line `On …` pointer.
+     · "quote" — the thing answered held above the comment as `QuotedRow`
+       holds it in a reply composer: its author's picture, its title and
+       handle, its first words, on the quoted tone. Here it is a door.
+     · "thread" — the post as a head row (its mark, its title, its author),
+       and the comment hanging under it on a connector rule, the way a reply
+       hangs under what it answers.
+     `targetDetail` carries what the two louder shapes need — { title, author,
+     snippet, authorSrc, cover }: the quote wears the author's picture, the
+     head row the post's own mark — and `target`/`onOpenTarget` stay the
+     door's label and its tap. */
+  targetShape = "line",
+  targetDetail,
   actions,
   menuItems = [],
   topics = [],
@@ -123,6 +157,34 @@ export function CommentCard({
       )}
     </>
   );
+  /* An option shape needs its detail and its door; without either the card
+     falls back to today's line, so a half-specified candidate never draws. */
+  const shape = target && onOpenTarget && targetDetail ? targetShape : "line";
+  /* The comment's own part — who, what, its topics — drawn once, standing
+     straight in the card or hung on the thread shape's connector. */
+  const ownPart = (
+    <>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
+        {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
+          {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
+          <OverflowMenu items={items} ariaLabel="More on this comment" />
+        </div>
+      </div>
+      {redacted ? (
+        <RedactedContent {...(redacted === true ? {} : redacted)} />
+      ) : sensitive ? (
+        <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
+          {body}
+        </SensitiveVeil>
+      ) : (
+        body
+      )}
+      {/* The same topics-and-citations line a post wears, one line —
+          a comment is content like any other and signs the same acts. */}
+      {!redacted && <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />}
+    </>
+  );
   return (
     <li
       style={{
@@ -143,7 +205,7 @@ export function CommentCard({
             thread surfaces simply pass no target. The glyph names the
             TARGET's kind (the semantic-atoms rule) — a post unless the
             comment answers something else. */}
-        {target && onOpenTarget && (
+        {target && onOpenTarget && shape === "line" && (
           <button
             type="button"
             onClick={onOpenTarget}
@@ -177,25 +239,35 @@ export function CommentCard({
             </span>
           </button>
         )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "var(--space-2)" }}>
-          {author && <ActorChip handle={author.handle} displayName={author.displayName} />}
-          <div style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", flex: "none" }}>
-            {timestamp && <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>{timestamp}</span>}
-            <OverflowMenu items={items} ariaLabel="More on this comment" />
-          </div>
-        </div>
-        {redacted ? (
-          <RedactedContent {...(redacted === true ? {} : redacted)} />
-        ) : sensitive ? (
-          <SensitiveVeil kind="compact" reason={sensitive.reason} source={sensitive.source}>
-            {body}
-          </SensitiveVeil>
-        ) : (
-          body
+        {/* ON A CARD THE QUOTE TAKES A HAIRLINE. `QuotedRow`'s tone is the
+            composer's contrast against the page; a card already stands on that
+            tone, so here the box would vanish into it, and the outline is what
+            keeps the quoted block contained. */}
+        {shape === "quote" && (
+          <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} className="cg-state cg-focus" style={{ ...TARGET_DOOR, border: "1px solid var(--border-hairline)", overflow: "hidden" }}>
+            <QuotedRow title={targetDetail.title + " — @" + targetDetail.author.handle} snippet={targetDetail.snippet} name={targetDetail.author.displayName} src={targetDetail.authorSrc} />
+          </button>
         )}
-        {/* The same topics-and-citations line a post wears, one line —
-            a comment is content like any other and signs the same acts. */}
-        {!redacted && <TopicsLine topics={topics} references={references} onOpenReferences={onOpenReferences} />}
+        {shape === "thread" ? (
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <button type="button" onClick={onOpenTarget} aria-label={`On ${target}`} className="cg-state cg-focus" style={{ ...TARGET_DOOR, display: "flex", alignItems: "center", gap: "var(--space-3)" }}>
+              <NodeMark kind={targetKind} src={targetDetail.cover} />
+              <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+                <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{targetDetail.title}</span>
+                <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{targetDetail.author.handle}</span>
+              </span>
+            </button>
+            {/* THE CONNECTOR. A rule down from the head's mark — centred on its
+                32px tile — to the comment, which hangs inset beside it the way
+                a reply hangs under what it answers. Hairline-quiet: it draws a
+                relation, not a frame. */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--card-gap)", marginLeft: "15px", paddingLeft: "27px", paddingTop: "var(--space-3)", borderLeft: "2px solid var(--border-hairline)" }}>
+              {ownPart}
+            </div>
+          </div>
+        ) : (
+          ownPart
+        )}
         {edited && <EditedMarker />}
         {pending && <PendingMarker />}
         {/* One affordance row, as on PostCard: the opinion leads, everything else

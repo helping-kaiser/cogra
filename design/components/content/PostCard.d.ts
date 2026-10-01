@@ -212,6 +212,12 @@ export interface PostCardProps {
    */
   scoreLabel?: string;
   /**
+   * OPTION CANDIDATE (the feed-cards rework, 2026-10-01) — drawn only on the
+   * `FeedProfileOptions` board, pending jakob's pick; no screen wears it. The
+   * opinion as the WIDE anchor, taking what the row leaves. Defaults to false.
+   */
+  stanceWide?: boolean;
+  /**
    * Squares the top-left corner so a row flag (TaggedRow) fuses with the
    * card. Defaults to false.
    */

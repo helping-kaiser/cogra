@@ -140,6 +140,13 @@ export function PostCard({
      name a screen reader speaks does, because `Post score` would misname a
      person or a tag riding this shell. Additive: a post card is unchanged. */
   scoreLabel = "Post score",
+  /* OPTION CANDIDATE — the feed-cards rework (2026-10-01), drawn only on the
+     profile card's option board (`FeedProfileOptions`) for jakob to pick
+     from; NO SCREEN WEARS IT. The opinion as the profile page wears it: the
+     WIDE anchor, its words beside the face, taking what the row leaves — the
+     profile actions row's geometry, carried onto a card that stands for a
+     person. Everything after it keeps its order. */
+  stanceWide = false,
   node,
 }) {
   const detail = variant === "detail";
@@ -475,7 +482,12 @@ export function PostCard({
               the bar, one without a bar does not. The card forwards them and
               invents nothing; the pad it opens is `StanceControl`'s own, whole,
               with every control the reader would really meet. */}
-          {showStance && (
+          {showStance && stanceWide && (
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <StanceControl wide targetLabel={targetLabel} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} {...(stanceAxes ? { axes: stanceAxes } : null)} />
+            </div>
+          )}
+          {showStance && !stanceWide && (
             <StanceControl
               targetLabel={targetLabel}
               bundle={bundle ?? undefined}
