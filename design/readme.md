@@ -308,7 +308,9 @@ growing field never walks the commitment out of reach (the growth law's
 `Done`, *The sheets-and-video round*) — every compose, reply and edit
 stage, the seals, the picture's crop, the profile edit, and the two
 pickers' `Done`. Nothing else: no spacer pushing a task page's action
-toward the bottom edge.
+toward the bottom edge. The one stated exception is `ReportProblem`:
+the read-back of what travels stands between its field and `Send by
+email`, because the honesty comes before the press (jakob 2026-10-01).
 
 **One design, both platforms, dark mode included** (jakob, 2026-09-17).
 Wherever Android and web can do the same thing, they look the same
