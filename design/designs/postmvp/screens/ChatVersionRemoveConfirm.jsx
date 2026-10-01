@@ -45,23 +45,20 @@ export function Screen() {
   return (
     <>
       <ChatHistoryBody />
-      <DialogSurface ariaLabel="Remove this version?">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Remove this version?
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Its name, picture and words leave every reader's view, and a mark stays in their place. The other versions keep standing. If this is the current version, the chat shows it as removed — an earlier version never takes its place.
-          </p>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            The chat decides this together. If your say is enough, it's removed at once; if not, it waits in the chat until enough members agree.
-          </p>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Remove this version?"
+        body={[
+          "Its name, picture and words leave every reader's view, and a mark stays in their place. The other versions keep standing. If this is the current version, the chat shows it as removed — an earlier version never takes its place.",
+          "The chat decides this together. If your say is enough, it's removed at once; if not, it waits in the chat until enough members agree.",
+        ]}
+        actions={
+          <>
             <Button variant="text">Remove version</Button>
             <Button>Keep it</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </>
+        }
+      />
     </>
   );
 }

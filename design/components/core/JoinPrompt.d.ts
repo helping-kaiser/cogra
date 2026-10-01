@@ -17,9 +17,21 @@ export declare function JoinPrompt(props: JoinPromptProps): JSX.Element | null;
  *  padding, and `--dialog-max-width` held clear of the screen edge by
  *  `--dialog-inset`. */
 export interface DialogSurfaceProps {
+  /** For a dialog whose content is a master that lays itself out —
+   *  `StanceAlternates`' chooser, the key notice. A dialog that asks passes the
+   *  three slots instead. */
   children?: React.ReactNode;
+  /** `headline-small`. Also the accessible name when `ariaLabel` is omitted. */
+  title?: React.ReactNode;
+  /** `body-medium` on `onSurfaceVariant`, 16px under the title: a string, a
+   *  list of paragraphs, or nodes for a body that needs more than words. */
+  body?: React.ReactNode | readonly React.ReactNode[];
+  /** The buttons, at the default size, end-aligned, 24px under the body. */
+  actions?: React.ReactNode;
   ariaLabel?: string;
   inline?: boolean;
+  /** The safe answer — cancel, keep, stay, close — which the scrim, Escape
+   *  and Android's Back all take. Never the destructive act. */
   onScrimPress?: () => void;
   /** Overrides the max only — the inset still holds, so no dialog reaches the
    *  edge. Every product dialog uses the default. */

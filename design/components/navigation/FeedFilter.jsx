@@ -30,9 +30,13 @@ import { HelpDot } from "../core/HelpDot.jsx";
    and §5 forbids drawing one, so the trigger says its state in words — which is
    better anyway: an icon cannot tell you that Newest is on.
 
-   IT APPLIES LIVE. Every tap changes the feed behind the sheet, because nothing
-   behind a sheet is inert and a filter with an Apply button makes the reader
-   commit to a guess. `Reset` is the one action, and dismissal is not a decision.
+   IT STAGES, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*; jakob
+   2026-10-01). Chips, the order, the seen toggle and `Reset` change the sheet
+   and nothing else: the feed behind it is visual only and does not move.
+   `Done` commits the staged filter and the feed re-queries ONCE; the scrim, a
+   swipe down and Back discard it, and the feed is what it was. The reason is
+   the ranker's: once it ships, every refetch runs the whole personalized
+   ranking, so five taps must never mean five rankings.
 
    TURNING EVERYTHING OFF IS ALLOWED. The control never prevents a choice (§8):
    a feed admitting nothing shows the empty state, which says what is switched off
@@ -240,18 +244,18 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    "?" goes then: on the heading's own row. The slot carries both, so the two
    readings differ where they must and nowhere else.
 
-   `foot` IS THE OTHER HALF OF THAT DIFFERENCE. Over a feed the filter applies
-   live and there is nothing to commit — the list behind it rearranges and the
-   reader watches it happen. Over settings nothing reacts, so the choice is
-   committed, and the sheet takes the Done row the license sheets take: a
-   hairline, the reading, the button, inside the sheet's own inset.
+   `foot` IS THE COMMIT, AND EVERY FILTER SHEET HAS ONE (the sheet law). It is
+   the Done row the license sheets take — a hairline, the reading, the button,
+   inside the sheet's own inset — and `FilterFoot` draws it. The reading is the
+   STAGED filter in the pill's own words, so the reader sees what Done will
+   commit before committing it.
 
    A SHEET WITH A FOOT OWNS ITS HEIGHT. Four kinds and four sections already
    outrun 88% of the screen, so a commitment appended after them would sit
    below the fold — the one control that must always be reachable, reachable
    only by scrolling. So the sections scroll inside the sheet and the foot is
    pinned under them, which is the anatomy `BottomSheet`'s own `height` exists
-   for. A sheet with no foot is sized by its content, exactly as before. */
+   for. A sheet with no foot is sized by its content. */
 export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
@@ -350,21 +354,50 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
   );
 }
 
+/* The Done row every filter sheet ends on: a hairline, the staged reading in
+   the pill's words, and the commit. `body-small` on `onSurfaceVariant`, the
+   license sheets' third anatomy. */
+export function FilterFoot({ reading, onDone }) {
+  return (
+    <div style={{ padding: "0 var(--space-6)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
+        <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          {reading}
+        </span>
+        <Button onClick={onDone}>Done</Button>
+      </div>
+    </div>
+  );
+}
+
+/* `value` is the COMMITTED filter — what the feed shows and the pill reads.
+   The sheet works on a staged copy taken when it opens; `onChange` fires once,
+   on Done, with the staged filter, and every other way out drops the copy. */
 export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics, node }) {
   const [open, setOpen] = React.useState(defaultOpen);
+  const [staged, setStaged] = React.useState(value);
+  const openSheet = () => {
+    setStaged(value);
+    setOpen(true);
+  };
+  const commit = () => {
+    setOpen(false);
+    if (onChange) onChange(staged);
+  };
 
   return (
     <>
-      <FilterTrigger reading={feedFilterSummary(value)} onOpen={() => setOpen(true)} expanded={open} ariaLabel={ariaLabel} node={node} />
+      <FilterTrigger reading={feedFilterSummary(value)} onOpen={openSheet} expanded={open} ariaLabel={ariaLabel} node={node} />
       <FeedFilterSheet
-        value={value}
-        onChange={onChange}
+        value={staged}
+        onChange={setStaged}
         onHelp={onHelp}
         open={open}
         onClose={() => setOpen(false)}
         ariaLabel={ariaLabel}
         topics={topics}
         onOpenTopics={onOpenTopics}
+        foot={<FilterFoot reading={feedFilterSummary(staged)} onDone={commit} />}
       />
     </>
   );

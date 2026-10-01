@@ -35,8 +35,10 @@ import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
    · Items are `label-large` at the 48px minimum target, left-aligned, one line
      each. No icons in the list: a mixed list of iconned and un-iconned rows is
      the way an icon set starts to look accidental (\u00a75).
-   · Escape closes it, a press outside closes it, and nothing behind it is inert \u2014
-     an overflow menu is not a decision the reader has to resolve.
+   · Escape closes it and a press outside closes it \u2014 an overflow menu is not a
+     decision the reader has to resolve. As a sheet it is modal like every sheet
+     (readme \u00a74, *Sheets*); anchored, it is a menu, which takes focus while it
+     is open and gives it back on close. Each row is its own commit.
    · Nothing in here takes `error` colouring. A destructive item is drawn like the
      rest; the confirmation it opens is where the weight belongs.
    · A ROW THAT NAMES AN ACTOR TAKES ITS WORDS FROM THE ACTOR'S MASTER. The hide

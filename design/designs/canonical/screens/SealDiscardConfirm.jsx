@@ -21,20 +21,17 @@ export function Screen() {
   return (
     <>
       <ComposeSealBody state="bug" />
-      <DialogSurface ariaLabel="Discard this post?">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Discard this post?
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            The draft goes, with its pictures, tags and citations. Nothing was signed, so nothing else changes.
-          </p>
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Discard this post?"
+        body="The draft goes, with its pictures, tags and citations. Nothing was signed, so nothing else changes."
+        actions={
+          <>
             <Button variant="text">Discard it</Button>
             <Button>Keep the draft</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </>
+        }
+      />
     </>
   );
 }

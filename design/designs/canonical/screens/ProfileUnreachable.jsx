@@ -28,7 +28,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back" />
+      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" />
       <div
         style={{
           flex: 1,

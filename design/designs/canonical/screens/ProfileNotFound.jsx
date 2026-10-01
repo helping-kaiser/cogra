@@ -22,7 +22,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="@marlow" backHref="#" backLabel="Back" />
+      <PageHeader title="@marlow" backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
         <EmptyState title="This profile doesn't exist." />
       </div>

@@ -50,24 +50,21 @@ export function Screen() {
   return (
     <>
       <ChatDetailsBody />
-      <DialogSurface ariaLabel="Leave Coast walkers?">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Leave Coast walkers?
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            It leaves your chats. You can still read it the way anyone can, but you can't write in it, and what its members encrypt from now on stays closed to you.
-          </p>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Leaving is signed, and it shows in the chat's history.
-          </p>
-          <TextField label="Why?" corner="Optional — shown in the chat's history" rows={1} value="" />
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Leave Coast walkers?"
+        body={[
+          "It leaves your chats. You can still read it the way anyone can, but you can't write in it, and what its members encrypt from now on stays closed to you.",
+          "Leaving is signed, and it shows in the chat's history.",
+          <TextField label="Why?" corner="Optional — shown in the chat's history" rows={1} value="" />,
+        ]}
+        actions={
+          <>
             <Button variant="text">Leave</Button>
             <Button>Stay</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </>
+        }
+      />
     </>
   );
 }

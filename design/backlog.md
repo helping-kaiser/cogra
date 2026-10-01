@@ -3999,3 +3999,45 @@ more obvious later.. snackbar is often missed (it just takes a couple of
 seconds looking away)". A briefed round when it matters: a vehicle that
 survives a glance away, still once per release, never forcing an update
 and never nagging.
+### 124 · What the navigation-and-sheets round left for rulings · *design* · **filed 2026-10-01**
+
+The navigation-and-sheets round (readme §13) executed jakob's two laws
+and the K11 recommendations, and left these for his eye:
+
+- **The sheet law's reach into the editing sheets.** The law says no
+  sheet applies live, but five sheets carrying a `Done` still edit in
+  place: the staged-tags and staged-citations sheets' × (`ComposeTags`,
+  `ComposeCitations`), the Show-all sheet's reorder and × (`ComposePicked`,
+  `EditPicked`) and the describe sheets' typing (`ComposeDescribe`,
+  `ComposeDescribeVideo`). Read literally, each stages until `Done` and
+  the scrim drops the edit — typed descriptions included. The Show-all
+  sheet's last-picture ×, which closes the manager on the spot (*The
+  compose last-picture ruling*), has no staged reading. Their edges and
+  docblocks are untouched until ruled.
+- **Which sheets the law governs.** The round read menu sheets (a row
+  is an act and its own commit) and read-only sheets (references,
+  opinions, Cited by, license terms, the comments thread) as keeping
+  the law by their shape. Confirm the reading.
+- **Two dialogs keep their own layout.** `StanceAlternates` (a chooser
+  with its "?" and three actions) and `ReplyKeyAbsent` (the key notice,
+  a master) still pass `children` to `DialogSurface` rather than the
+  slots.
+- **The drill-ins the tables do not reach yet.** `FeedEntry`'s level one
+  draws a fixed `Back to feed` though the score is tapped on many
+  surfaces; `ProfileStances`, `Notifications`, `About` and
+  `ChatsComingSoon` read a bare `Back`; the stream's own way out is
+  `Back to feed` though a profile's posts open it too.
+- **The derived details.** The deep-link highlight's rung (one up the
+  surface ladder from the sheet) and its one second; the license
+  joining rule's name for a non-zero pair (its two tier names, ` · `);
+  dialog bodies on `onSurfaceVariant` by M3's spec where most boards
+  had drawn `onSurface`; 16px between a dialog's paragraphs.
+- **The platform-veiled edit line is prose.** `Also veiled by the
+  platform's verdict` is written into `ComposeSensitive`'s docblock and
+  copy-voice; no board draws the edit's Sensitive row in that state.
+- **The chat's sign sheet** (post-MVP `ChatSignSheet`) still reads
+  `Public domain — your default`; the joining rule names no chat.
+- **Flagged for blessing** (copy-voice): `Back to Saved`, `Back to
+  History`, `Back to Notifications`, `Back to the stream`, `Back to the
+  opinions`, `Nothing changes until you press Done`, the joining rule
+  and its readings, `Also veiled by the platform's verdict`.

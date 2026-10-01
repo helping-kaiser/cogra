@@ -27,25 +27,20 @@ export function Screen() {
     <>
       <ReplyPadBody />
 
-      <DialogSurface ariaLabel="Toward what you answer">
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-            Toward what you answer
-          </h2>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Toward what you answer"
+        body={[
+          <p style={{ margin: 0 }}>
             Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It
             starts at a gentle <span aria-hidden="true">🙂</span>
             <ExactTail exact=" (+0.10 / +0.10)" spoken="Nice, For or against +0.10, How much reaches you +0.10" /> and rides
             the same signature as your reply.
-          </p>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-            Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.
-          </p>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button>Close</Button>
-          </div>
-        </div>
-      </DialogSurface>
+          </p>,
+          "Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.",
+        ]}
+        actions={<Button>Close</Button>}
+      />
     </>
   );
 }

@@ -33,21 +33,20 @@ export function Screen() {
     <>
       <InvitesBody />
 
-      <DialogSurface ariaLabel="Close all 4 applications from this link?">
-        <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-          Close all 4 applications from this link?
-        </h2>
-        <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-          All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.
-        </p>
-        <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-          This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.
-        </p>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <Button variant="text">Close them</Button>
-          <Button>Keep them</Button>
-        </div>
-      </DialogSurface>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Close all 4 applications from this link?"
+        body={[
+          "All four leave your list and all four people are told. Their accounts stay exactly as they are — signed in, and free to keep reading.",
+          "This is your call and nobody else's. Any member can still vouch any of them in, and each gets a link to ask with.",
+        ]}
+        actions={
+          <>
+            <Button variant="text">Close them</Button>
+            <Button>Keep them</Button>
+          </>
+        }
+      />
     </>
   );
 }

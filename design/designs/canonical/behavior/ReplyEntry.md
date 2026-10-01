@@ -21,3 +21,13 @@ WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is signed ou
 WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is an applicant -> the snackbar reads Comments open when you're in. AND NEVER the composer opens AND NEVER a comment stages
 
 ALWAYS the comments sheet's foot stands for every reader, signed out and applicant included
+
+WHEN a deep link opens the thread on a comment -> the comments sheet opens with that comment scrolled to the sheet's top AND the comment's branch stands expanded AND the comment wears a tonal highlight AND the highlight has faded WITHIN 1s
+
+WHEN a deep link opens the thread on a comment GIVEN reduced motion is set -> the comment's tonal highlight clears WITHIN 1s AND NEVER the highlight fades
+
+ALWAYS a deep-linked comment's highlight is a step up the surface ladder and never a hue
+
+WHEN back returns from a screen a control in the sheet opened -> the comments sheet stands open over the post at the offset it was left AND every branch the reader expanded stands expanded
+
+WHEN the post wizard that Cite in a new post opened closes with its X -> the comments sheet stands open over the post as it was left

@@ -8,7 +8,14 @@
    Posts, Comments, Profiles, Tags. The list is one, so the two filters trim
    together. The results beneath the sheet are `ExploreSearch`'s first two
    rows, the post and the tag — search returns no item, offer or message rows
-   in V1.0. */
+   in V1.0.
+
+   IT STAGES, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*). The
+   results beneath are visual only and do not move until Done, when the search
+   re-queries once; the scrim, a swipe down and Back discard. The foot is the
+   feed filter's own `FilterFoot`, reading the staged filter in the trigger's
+   word. The sheet is short enough that its content sizes it, so the foot ends
+   the content rather than being pinned under a scroll. */
 export function Screen() {
   return (
     <>
@@ -33,6 +40,7 @@ export function Screen() {
           ))}
         </FilterSection>
         <OrderSection order="ranked" />
+        <FilterFoot reading="Everything" />
       </BottomSheet>
     </>
   );

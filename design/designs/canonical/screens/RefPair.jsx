@@ -45,7 +45,10 @@
    THE READOUT STANDS ABOVE THE FIELD, because a thumb on the pad covers
    exactly the spot where feedback would otherwise appear.
 
-   `Done` CLOSES IT, and the scrim is the way out that keeps nothing —
+   `Done` CLOSES IT, and every other way out keeps nothing — the scrim, a swipe
+   down, Back and Escape alike (the sheet law), and a drag that starts on the
+   field moves the knob, never the sheet, which drags only from its handle and
+   title zone —
    `TagPair`'s grammar, because this is the same gesture on the same kind of
    surface: a sheet titled by the thing it edits, committing on close. Nothing
    is signed here either; the pair rides the citation's own record and the

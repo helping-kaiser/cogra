@@ -2,9 +2,18 @@ import React from "react";
 import { Icon } from "./Icon.jsx";
 
 /* The house page header (Android's TopAppBar): a back arrow, the page title, and
-   an optional trailing action — one pattern for every inner surface. The arrow is
-   a LINK, not history.back(), so a deep-linked visitor with no history still lands
-   somewhere sensible. Tab roots carry no back arrow.
+   an optional trailing action — one pattern for every inner surface. Tab roots
+   carry no back arrow.
+
+   THE ARROW IS HISTORY ON A READ DRILL-IN, A LINK IN THE ENTRY FUNNEL (readme §4,
+   *Navigation*; jakob's layer law, 2026-10-01). A post, a profile, a tag page
+   opened from anywhere — a deep link included — sits as a layer over the state
+   the reader came from, and the arrow returns to exactly that state; with no
+   prior state it falls back to the owning tab's root. `backLabel` names where it
+   goes by the screen's origin-noun table, and a board draws the cold entry's
+   label. The entry funnel's screens are reached from outside the app with
+   nothing beneath them, so their arrow is a link to a named board — `backHref`
+   is that link there, and the cold fallback's route everywhere else.
 
    The arrow is the Material `arrow_back` glyph, 24px on `onSurfaceVariant` — it
    replaced the interim `←` character when the icon exports landed (2026-08-26).

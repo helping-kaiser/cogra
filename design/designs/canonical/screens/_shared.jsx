@@ -50,6 +50,7 @@ const {
   FeedFilter,
   FeedFilterSheet,
   FilterTrigger,
+  FilterFoot,
   FilterSection,
   OrderSection,
   FEED_KINDS,
@@ -99,6 +100,7 @@ const {
   LicenseTerms,
   ATTRIBUTION_TIERS,
   PROVENANCE_TIERS,
+  LicenseSummary,
   NodeMark,
   TopicRemovable,
   StagedReference,
@@ -402,7 +404,13 @@ function KeyPledge() {
 
 /* The detail surface's header: back plus the ONE overflow. On a detail view the
    menu lives up here and the card's own dot yields (PostCard hides it in
-   detail) — two dots would be two menus for one post. */
+   detail) — two dots would be two menus for one post.
+
+   THE ARROW IS HISTORY AND ITS LABEL NAMES THE ORIGIN (the layer law, readme
+   §4, *Navigation*): `Back to Saved`, `Back to the search`, `Back to #saltmaps`
+   — the post detail's noun table, readme §13, the navigation-and-sheets round.
+   `Back to feed` is what the boards draw, because it is the cold entry's label
+   as well as the feed's: the state that stands with no route behind it. */
 function DetailHeader({ items, node }) {
   return (
     <PageHeader
@@ -529,15 +537,17 @@ const REMOVE_CONFIRM_COPY = {
 function RemoveDialog({ kind, overSheet = false }) {
   const { title, body } = REMOVE_CONFIRM_COPY[kind];
   const dialog = (
-    <DialogSurface ariaLabel={title}>
-      <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>{title}</h2>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{body}</p>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>This is immediate and permanent.</p>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-        <Button variant="text">Remove</Button>
-        <Button>Keep it</Button>
-      </div>
-    </DialogSurface>
+    <DialogSurface
+      onScrimPress={() => {}}
+      title={title}
+      body={[body, "This is immediate and permanent."]}
+      actions={
+        <>
+          <Button variant="text">Remove</Button>
+          <Button>Keep it</Button>
+        </>
+      }
+    />
   );
   return overSheet ? <div style={{ position: "fixed", inset: 0, zIndex: 43 }}>{dialog}</div> : dialog;
 }
@@ -894,11 +904,15 @@ function ProfileOwnBody({ tail = null }) {
    THE HEADER BAR CARRIES ONLY THE WAY BACK (the band law, jakob 2026-09-11).
    The ⋮ came down into the actions row, where Message gave up the half of the
    row it did not need; a detail surface's top bar is where a reader looks for
-   the way out, and this page's rare acts belong beside its common ones. */
+   the way out, and this page's rare acts belong beside its common ones.
+
+   THE WAY BACK NAMES WHERE IT GOES — the profile's origin-noun table (readme
+   §13, the navigation-and-sheets round). The board draws `Back to feed`, the
+   cold entry's label and the feed's alike. */
 function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back" />
+      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -939,7 +953,7 @@ function ProfileOtherBody({ bundle } = {}) {
 function ProfileDeletedBody() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -1368,7 +1382,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow label="License" value={<LicenseSummary />} action="Change" />
           {/* One number: what reaches you about your own post is not a choice,
               so the row states the one value the author set. */}
           <FactRow
@@ -1560,7 +1574,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
             value={<StanceReadout pair={{ pDirected: 0.1, pInterest: 0.1 }} />}
             action="Adjust"
           />
-          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow label="License" value={<LicenseSummary />} action="Change" />
           <FactRow label="Sensitive" value="Not marked" action="Mark" last />
         </div>
 

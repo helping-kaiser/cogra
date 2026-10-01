@@ -18,7 +18,7 @@ const ADA_SECOND_POST = {
 export function Screen() {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back" />
+      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader

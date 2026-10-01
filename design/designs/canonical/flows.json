@@ -31,9 +31,9 @@
     },
     {
       "name": "narrow-the-feed",
-      "description": "The band's filter trigger opens the filter sheet; the sheet applies live, and tapping out leaves the reader on the narrowed feed.",
+      "description": "The band's filter trigger opens the filter sheet; the chips stage, and Done commits — the feed re-queries once and the reader lands on the narrowed feed.",
       "start": { "board": "Feed", "via": 1 },
-      "end": { "board": "FeedSheet", "via": 6, "case": "narrowed" }
+      "end": { "board": "FeedSheet", "via": 8, "case": "narrowed — the feed re-queries once" }
     },
     {
       "name": "sign-in",
@@ -170,21 +170,21 @@
     },
     {
       "name": "close-the-filter-unchanged",
-      "description": "The filter sheet opened and shut with nothing touched leaves the feed exactly as it was.",
+      "description": "The filter sheet dismissed leaves the feed exactly as it was — whatever was staged is dropped, and nothing re-queries.",
       "start": { "board": "Feed", "via": 1 },
-      "end": { "board": "FeedSheet", "via": 6, "case": "unchanged" }
+      "end": { "board": "FeedSheet", "via": 6 }
     },
     {
       "name": "filter-the-feed-to-nothing",
       "description": "Every kind switched off leaves a feed with nothing left to show — the empty state carrying its own way back.",
       "start": { "board": "Feed", "via": 1 },
-      "end": { "board": "FeedSheet", "via": 6, "case": "everything off" }
+      "end": { "board": "FeedSheet", "via": 8, "case": "everything off — the feed re-queries once" }
     },
     {
       "name": "filter-the-feed-far-from-the-default",
       "description": "A filter pushed far enough from the default that the trigger counts the changes instead of naming them.",
       "start": { "board": "Feed", "via": 1 },
-      "end": { "board": "FeedSheet", "via": 6, "case": "far from the default" }
+      "end": { "board": "FeedSheet", "via": 8, "case": "far from the default — the feed re-queries once" }
     },
     {
       "name": "undo-the-narrowing",
@@ -196,13 +196,13 @@
       "name": "search-into-a-thread",
       "description": "Typing in Explore brings results as they are typed; a comment result opens the thread that comment sits in.",
       "start": { "board": "Explore", "via": 1, "case": "typing — results as you type" },
-      "end": { "board": "ExploreSearch", "via": 5, "case": "the comment in its thread" }
+      "end": { "board": "ExploreSearch", "via": 5 }
     },
     {
       "name": "narrow-a-search",
-      "description": "The results' Everything trigger opens the search filter; the sheet applies live, and tapping out leaves the reader on the narrowed results.",
+      "description": "The results' Everything trigger opens the search filter; the chips stage, and Done commits — the search re-queries once and the reader lands on the narrowed results.",
       "start": { "board": "ExploreSearch", "via": 2 },
-      "end": { "board": "ExploreFilter", "via": 5 }
+      "end": { "board": "ExploreFilter", "via": 6 }
     },
     {
       "name": "reply-to-a-comment",

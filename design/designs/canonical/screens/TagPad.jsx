@@ -55,7 +55,10 @@
    that covers the surface it came from has to say what it is — and the tag is
    what the reader tapped, so the two cannot drift.
 
-   `Done` CLOSES IT, and the scrim is the way out that keeps nothing. Nothing is
+   `Done` CLOSES IT, and every other way out keeps nothing — the scrim, a swipe
+   down, Back and Escape alike (the sheet law, readme §4, *Sheets*). THE FIELD
+   OWNS ITS POINTERS: a drag that starts on the field moves the knob, never the
+   sheet, which drags only from its handle and title zone. Nothing is
    signed here: the pair rides the tag's own record and the tag rides the
    composer's batch, so this sheet stages and the seal signs.
 

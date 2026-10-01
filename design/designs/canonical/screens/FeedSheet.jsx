@@ -1,7 +1,10 @@
 /* The feed's filter sheet, open — the whole control lives here: four kinds that
    combine, the one topic that does not, forms of post, the Order section with
-   the seen toggle (shared with search), what else is admitted, and Reset. It
-   applies live; dismissal is not a decision.
+   the seen toggle (shared with search), what else is admitted, Reset, and the
+   Done row. It stages: the feed behind the sheet is visual only and does not
+   move until Done commits, when it re-queries once; the scrim, a swipe down
+   and Back discard (the sheet law, readme §4, *Sheets*). The foot reads the
+   staged filter, here the default.
 
    THE FOUR ARE THE KINDS V1.0 SERVES (readme §13, the V1.0 scope cut,
    2026-09-25): Posts, Comments, Profiles, Tags. A kind list follows the

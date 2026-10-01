@@ -47,40 +47,18 @@ export function Screen() {
           <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
         </div>
       </div>
-      <DialogSurface ariaLabel="Sign out without a backup?">
-        <h2
-          style={{
-            margin: 0,
-            fontSize: "var(--text-headline-small)",
-            lineHeight: "var(--text-headline-small--line-height)",
-            fontWeight: "var(--text-headline-small--font-weight)",
-          }}
-        >
-          Sign out without a backup?
-        </h2>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
-          This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you
-          kept pending here, locked until you sign in on this browser again. Erase them instead, and no one — including
-          CoGra — can bring them back.
-        </p>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, marginTop: 24 }}>
-          <Button size="sm">Make a recovery code</Button>
-          <Button variant="text" size="sm">
-            Sign out, keep it locked
-          </Button>
-          <Button variant="text" size="sm">
-            Erase it and sign out
-          </Button>
-        </div>
-      </DialogSurface>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Sign out without a backup?"
+        body="This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in on this browser again. Erase them instead, and no one — including CoGra — can bring them back."
+        actions={
+          <>
+            <Button>Make a recovery code</Button>
+            <Button variant="text">Sign out, keep it locked</Button>
+            <Button variant="text">Erase it and sign out</Button>
+          </>
+        }
+      />
     </>
   );
 }

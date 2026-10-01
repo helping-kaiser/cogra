@@ -14,6 +14,14 @@
    your own comments"). It wears `CommentCard`'s `own` — `Edit` beside `Reply`,
    the anatomy `ReplyMedia` drew first — and its ⋮ opens `CommentMenuOwn`.
 
+   IT IS MODAL OVER ITS SCRIM, AT ONE DETENT (readme §4, *Sheets*). The sliver
+   of post above it takes no tap; the sheet drags down only from its handle
+   area or from the thread at its scroll-top. It is the default open; a deep
+   link lands it on a comment — scrolled to the sheet's top, its branch
+   expanded, a brief tonal highlight that fades — and a forward navigation out
+   of it comes back to it at its offset with its branches still expanded
+   (readme §4, *Navigation*; the behavior sidecar's lines).
+
    The thread and the detail beneath it are `_shared.jsx` helpers, because the
    comment's own overflow menu draws this same board with one more sheet on it. */
 export function Screen() {

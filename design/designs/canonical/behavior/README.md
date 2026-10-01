@@ -59,6 +59,9 @@ Where each sidecar's words come from:
   comment-removal round*); and the foot's gates — the join prompt for a
   guest, and for an applicant the snackbar, since applicants do not
   comment in V1.0 (readme §13, *The applicant's life round*).
+  comment-removal round*); and the landing on a deep-linked comment and
+  the sheet's return from a forward navigation, the X of a cite
+  included (readme §4, *Navigation*).
 - `FeedKinds.md` — the feed cards (readme §13, *The feed cards,
   ruled*): the unified row's order, the law that a comment's replies live
   in its thread and never in the feed, where the comment card's door and

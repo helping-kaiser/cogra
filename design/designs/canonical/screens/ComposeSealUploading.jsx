@@ -29,7 +29,7 @@ export function Screen() {
         />
 
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow label="License" value="Public domain — your default" action="Change" />
+          <FactRow label="License" value={<LicenseSummary />} action="Change" />
           <FactRow
             label="Your opinion"
             value={<OwnStanceReadout pDirected={0.1} />}

@@ -21,24 +21,15 @@ export function Screen() {
     <>
       <ChatsHomeBody />
       <div style={{ position: "relative", zIndex: 50 }}>
-        <DialogSurface ariaLabel="How chats work">
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-              How chats work
-            </h2>
-            <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-              Chats are public: anyone can read a chat and see who is in it and who talks to whom. The lock beside the field encrypts
-              the message you are writing, so only the chat's members can read its words — everyone can still see that it was sent.
-            </p>
-            <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-              Sending signs the message in your name, like any post. Press and hold the send arrow to see exactly what you sign. A sent
-              message never changes — a correction is the next message.
-            </p>
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button>Close</Button>
-            </div>
-          </div>
-        </DialogSurface>
+        <DialogSurface
+          onScrimPress={() => {}}
+          title="How chats work"
+          body={[
+            "Chats are public: anyone can read a chat and see who is in it and who talks to whom. The lock beside the field encrypts the message you are writing, so only the chat's members can read its words — everyone can still see that it was sent.",
+            "Sending signs the message in your name, like any post. Press and hold the send arrow to see exactly what you sign. A sent message never changes — a correction is the next message.",
+          ]}
+          actions={<Button>Close</Button>}
+        />
       </div>
     </>
   );

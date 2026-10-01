@@ -28,18 +28,17 @@ export function Screen() {
       <PageHeader title="Edit history" backHref="#" backLabel="Back to the post" />
       <PostChronicle own />
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
-      <DialogSurface ariaLabel="Remove this version?">
-        <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>
-          Remove this version?
-        </h2>
-        <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
-          Its words and pictures leave every reader's view, and a mark stays in their place. The other versions keep standing. If this is the current version, the post shows it as removed — an earlier version never takes its place.
-        </p>
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <Button variant="text">Remove version</Button>
-          <Button>Keep it</Button>
-        </div>
-      </DialogSurface>
+      <DialogSurface
+        onScrimPress={() => {}}
+        title="Remove this version?"
+        body="Its words and pictures leave every reader's view, and a mark stays in their place. The other versions keep standing. If this is the current version, the post shows it as removed — an earlier version never takes its place."
+        actions={
+          <>
+            <Button variant="text">Remove version</Button>
+            <Button>Keep it</Button>
+          </>
+        }
+      />
     </>
   );
 }

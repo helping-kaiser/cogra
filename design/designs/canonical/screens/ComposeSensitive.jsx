@@ -30,7 +30,23 @@
    passes) — and the closing word only stops being available. A `Done` that
    vanished would leave a reader hunting for the way out of a sheet they
    cannot leave. This board draws the at-rest state; the disabled one is this
-   sentence, not a second board. */
+   sentence, not a second board.
+
+   `Mark` OPENS IT WITH THE SWITCH ON (jakob 2026-10-01): the tap was the
+   intent, so the board draws the sheet as it opens. Switched off, the reason
+   keeps its text but disables, and an off switch drops it at signing — the api
+   refuses a reason without the mark.
+
+   IT COMMITS ON `Done` (the sheet law, readme §4, *Sheets*). The switch and the
+   reason stage; Done carries them to the seal's row (`Marked`); the scrim, a
+   swipe down and Back discard, and the row is what it was.
+
+   AT EDIT, A POST THE PLATFORM VEILED. The switch binds only the author's own
+   mark (`sensitiveSelfMark`), never the moderator's verdict, so on a post the
+   platform veiled and its author did not, the edit's Sensitive row reads `Not
+   marked` with a quiet line under it — `Also veiled by the platform's
+   verdict` — and the author is not left reading an off switch over a veiled
+   post. The line is this sentence, not a second board. */
 export function Screen() {
   return (
     <>

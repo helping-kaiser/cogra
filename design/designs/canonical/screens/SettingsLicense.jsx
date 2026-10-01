@@ -27,10 +27,10 @@
    the two cannot drift — the same rule the Reading row keeps with the filter's
    accessible name.
 
-   `Done` CLOSES IT, the way the seal's does — and the way the Reading row's
-   sheet does. Over settings nothing reacts behind a sheet to be watched, so
-   both of the page's sheets commit rather than apply live; the feed's own
-   filter is the one that can be watched, and it is the one with no `Done`. */
+   `Done` COMMITS IT, the way the seal's does and the Reading row's sheet does —
+   every sheet carries a commit, and the scrim, a swipe down and Back discard
+   (the sheet law, readme §4, *Sheets*). The foot reads `licenseSummary`, the
+   one joining rule the seal's row reads too. */
 export function Screen() {
   return (
     <>
@@ -52,7 +52,7 @@ export function Screen() {
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
             <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
-              Public domain — nobody owes you a name, and uses go unlogged.
+              <LicenseSummary />
             </span>
             <Button>Done</Button>
           </div>

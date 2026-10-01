@@ -220,6 +220,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: "aria-pressed=", tag: "button", all: true },
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 6, find: ">Done</button>", tag: "button" },
   ],
   ExploreNone: [...searchShell("brackish cartography", 4)],
   Feed: [
@@ -232,10 +233,10 @@ Object.assign(FLOW_MARKERS, {
     ...nav(11),
   ],
   /* The sheet's chips all share via 2, the topic chips included (the topic
-     round): every chip in here applies live and in place, which is one act
-     whatever it narrows, and WHICH feed the reader lands on is what via 6 —
-     the way out — enumerates. The door to the full list is the one new
-     control, so it is the one new number. */
+     round): every chip in here stages in place, which is one act whatever it
+     narrows, and WHICH feed the reader lands on is what via 8 — `Done`, the
+     commit (the sheet law) — enumerates. The door to the full list and the
+     commit each take the next free number. */
   FeedSheet: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button", all: true },
@@ -244,6 +245,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">All your topics</button>", tag: "button" },
+    { n: 8, find: ">Done</button>", tag: "button" },
   ],
   /* The feed narrowed to one topic. Neither card carries a reference, so the
      numbering closes over the slot `FeedNarrowed` keeps for one. */
@@ -723,6 +725,7 @@ Object.assign(FLOW_MARKERS, {
   ComposeDraftDiscard: [
     { n: 1, find: ">Discard it</button>", tag: "button" },
     { n: 2, find: ">Keep the draft</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   ComposeSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1176,11 +1179,11 @@ Object.assign(FLOW_MARKERS, {
   // The failed next page is this board's whole subject; the profile beneath it
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
   ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
-  ProfileNotFound: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  ProfileNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   PostNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   CommentNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   ProfileUnreachable: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: ">Retry</button>", tag: "button" },
     ...nav(3),
   ],
@@ -1190,7 +1193,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
   ],
   ProfileOther: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
@@ -1205,7 +1208,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(8),
   ],
   ProfileOtherHeld: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Your opinion on @ada', tag: "button" },
@@ -1230,7 +1233,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(6),
   ],
   ProfilePosts: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
@@ -1254,7 +1257,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(16),
   ],
   ProfileComments: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
     { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
@@ -1457,6 +1460,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">Done</button>", tag: "button" },
   ],
   // Two password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated
@@ -1653,6 +1657,7 @@ Object.assign(FLOW_MARKERS, {
   GuestGate: [
     { n: 1, find: ">Keep browsing</button>", tag: "button" },
     { n: 2, find: ">Sign in or join</button>", tag: "button", all: true },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
 });
 
@@ -1935,6 +1940,7 @@ Object.assign(FLOW_MARKERS, {
   SealDiscardConfirm: [
     { n: 1, find: ">Discard it</button>", tag: "button" },
     { n: 2, find: ">Keep the draft</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   PadFailed: [
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
@@ -1983,6 +1989,7 @@ Object.assign(FLOW_MARKERS, {
   DiscardConfirm: [
     { n: 1, find: ">Keep writing</button>", tag: "button" },
     { n: 2, find: ">Discard</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
 });
 
@@ -2117,7 +2124,7 @@ Object.assign(FLOW_MARKERS, {
   // a person there is none of. The ⋮ is appended last (jakob 2026-09-12), so no
   // via on this board renumbers behind it.
   ProfileDeleted: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="Opinions on and by this account"', tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
     { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
@@ -2161,7 +2168,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 20, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchAsk: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: ">Not now</button>", tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on @noor"', tag: "button" },
     { n: 3, find: ">Choose your opinion on @noor</button>", tag: "button" },

@@ -44,6 +44,15 @@ export interface LicenseReading {
 
 export declare function licenseReadings(license: License): readonly LicenseReading[];
 
+/** The author's reading of a pair, by one joining rule: the pair's name
+ *  (`Public domain` for the zero pair, else its two tier names joined by
+ *  ` · `), a dash, then the two tier hints joined by `, and`. What the seal's
+ *  License row, the license sheets' foot and the settings default all read. */
+export declare function licenseSummary(license?: License): string;
+
+/** `licenseSummary` as an element, for a slot that takes one. */
+export declare function LicenseSummary(props: { license?: License }): string;
+
 /** The words of the menu row that opens the terms — assigned once, spelled by
  *  every surface that offers it. */
 export declare const LICENSE_MENU_LABEL: string;
