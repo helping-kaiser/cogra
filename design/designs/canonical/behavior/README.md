@@ -27,7 +27,10 @@ Where each sidecar's words come from:
   clip *qualifies* at 70% visibility or more and unveiled, the
   *incumbent* is the playing clip, the *stage* is the one clip a scroll
   surface plays, and the *hard top* is where the surface cannot scroll
-  further up. Its hold lines are the failure pack's (readme §13, *The
+  further up. A post's clip is `feed.card.media.frame`, registered on
+  `FeedCover`; a comment card's clip stays plain words until a
+  registered board draws one, so the law's lines keep *clip* for both.
+  Its hold lines are the failure pack's (readme §13, *The
   failure pack*): a signed act waits for its signature, the 200ms law
   decides when the row says `Signing…`, and a hold that fails says so
   on the target's row, never on the snackbar — and one the write rule
@@ -68,6 +71,11 @@ Where each sidecar's words come from:
   graph edges' cases, and the readme §13 rounds and copy-voice sections
   those cite. `ComposeDetails.md` and `ComposeSeal.md` carry those lines
   beside their own.
+- Every other board on the feed and comments pages (readme §13, *The
+  feed and comments behavior pass*) — its own docblock, the readme §13
+  records it names, its flow edges' outcomes and its copy-voice
+  strings, in their words. `FeedCover.md` and `PostDetail.md` name
+  their elements by node path.
 
 ## The grammar
 
@@ -152,7 +160,7 @@ And it checks nodes, against `nodes.json`:
 - a node path in any line is a registered one — a line never names an
   element the built boards do not carry;
 - on a registered screen (`Feed`, `PostDetail` and `ComposeDetails`, the
-  calibration screens, so far), plain words that spell one of its nodes
+  calibration screens, and `FeedCover`, the feed's clip, so far), plain words that spell one of its nodes
   fail: "the media row" on `ComposeDetails` is written
   `composeDetails.mediaRow`. The check knows a node by the words of a
   compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word

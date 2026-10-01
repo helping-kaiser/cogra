@@ -1,25 +1,33 @@
 # FeedCover · `spec:design:behavior-feed-cover`
 
-ALWAYS a clip on a card wears the sound control and nothing else GIVEN the device allows autoplay
+ALWAYS feed.card.media.frame wears its clip's stored still until playback first starts
 
-ALWAYS a clip on a card wears no play and pause, no duration and no timeline
+ALWAYS a clip with no chosen cover shows its own frame 0 as its still
 
-ALWAYS a clip's still holds until its playback first starts
+WHEN feed.card.media.frame's clip first starts playing -> the stored still gives way to playback AND NEVER the stored still returns
 
-WHEN a clip's playback has started -> NEVER its still comes back
+WHEN feed.card.media.frame's clip stops being the playing clip -> it freezes on the frame it reached AND NEVER the stored still returns
 
 WHEN a clip on a card plays to its end -> it loops
 
-WHEN a clip stops being the playing one -> it freezes on the frame it reached AND NEVER its still comes back
+ALWAYS feed.card.media.frame carries feed.card.media.frame.soundDisc and no other control GIVEN the device allows autoplay
+
+ALWAYS a clip on a card wears no play and pause, no duration and no timeline
+
+ALWAYS feed.card.media.frame carries feed.card.media.frame.playDisc in the place of feed.card.media.frame.soundDisc GIVEN the device suppresses autoplay
+
+ALWAYS the device suppresses autoplay GIVEN it asks for reduced motion or data saver
+
+ALWAYS no clip on the feed starts on its own GIVEN the device suppresses autoplay
+
+WHEN tap feed.card.media.frame.playDisc -> feed.card.media.frame's clip plays where it stands in the feed AND NEVER the post opens
+
+WHEN tap feed.card.media.frame.soundDisc GIVEN sound is off -> sound turns on for every clip on every surface
+
+WHEN tap feed.card.media.frame.soundDisc GIVEN sound is on -> sound turns off for every clip on every surface
+
+ALWAYS a clip starts muted GIVEN the reader has not turned sound on
 
 ALWAYS a clip 16:9 or square displays at its own shape, and a clip taller than 4:5 centre-crops to 4:5
 
 ALWAYS no clip is letterboxed
-
-ALWAYS a clip with no chosen cover shows its own frame 0 as its still
-
-WHEN the device suppresses autoplay -> the card wears a play disc in the sound control's place AND NEVER the clip starts on its own
-
-WHEN tap the play disc -> the clip plays in the feed where it stands
-
-WHEN tap the sound control -> sound turns on or off as the one sticky decision every video shares
