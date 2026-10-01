@@ -429,6 +429,96 @@ the wait is determinate — progress that says how far along it is. The
 **pull-to-refresh spinner** is the one named exception: it answers the
 gesture at once, because the pull itself asked for it.
 
+### Navigation
+
+**A direct link opens as a layer over the app** (jakob 2026-10-01, the
+layer law). A shared post, a reel, a profile, a comment — any deep link,
+from a chat in another app, a notification or a mail — opens ON TOP of
+the state the app was in, and back (the gesture, system Back, the
+header's arrow) returns to exactly that state: the stream at the clip
+the reader was on, the feed at its scroll, the sheet that was up.
+Following a link never costs the reader what they were doing. **With no
+prior state** — the app opened cold by the link — back lands on the
+owning tab's root: a post, a comment or a profile on Feed, a tag on
+Explore.
+
+**The header's arrow is history, and names where it goes.** On every
+read drill-in the arrow returns to where the reader came from, and its
+label names that place by an origin-noun table built from the screen's
+actual arriving edges — the tag page's (*The tag-page smalls*), the post
+detail's and the profile's (*The navigation-and-sheets round*). A cold
+entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
+page, and the boards draw that state. **The entry funnel is the
+exception**: its screens are reached from outside the app with nothing
+beneath them, so their arrows are links that name a board (*The shell
+round's stops*) — `VouchAsk`'s arrow and its `Not now` land on Feed.
+
+**A sheet that launched a forward navigation comes back.** A chip in the
+comments sheet, a holder in an opinions sheet, `All your topics` in the
+filter, `Cite in a new post` in a comment's menu: back from wherever it
+led returns the screen with its sheet up, at the sheet's offset, its
+expanded branches still expanded. The cite's wizard X returns the thread
+as it was; publishing lands on the new post, as it does everywhere.
+**A process the OS ended in the background restores** by the platform's
+convention — Android's saved state, the browser's history entry — the
+in-surface state included: the pager's page, a clip's position, an
+expanded `More` or branch, a half-typed query or reply. **A restart is a
+cold launch only** — the app closed by the reader, or updated — and
+that lands on Feed's root, fresh.
+
+**Landing on a comment is one statement for every deep link** (jakob
+2026-10-01). A notification, a Saved row, a search result, a Cited by
+row or a shared link that opens a thread on a comment opens the comments
+sheet with that comment scrolled to the sheet's top, its branch
+expanded, and a brief tonal highlight on it — one rung up the surface
+ladder, never a hue — that holds about a second and fades. Under reduced
+motion it clears without fading. A notification whose target has moved
+on lands on the target as it now stands, with no special notice: a
+`ready for your approval` row opens Invites, the application in its
+current state or gone.
+
+### Sheets
+
+**Every sheet carries a commit, and dismissal discards** (jakob
+2026-10-01, the sheet law). A sheet that holds a choice stages it:
+nothing applies until the sheet's commit — `Done`, `Save`, the act its
+foot names — and the commit applies. The scrim, a swipe down, system
+Back and Escape all discard: the sheet closes and everything is what it
+was. **There are no live-apply sheets.** A sheet with nothing to stage
+keeps the law by its shape: a menu's row is an act and its own commit,
+and a sheet that only lists or reads has nothing to apply.
+
+The feed's filter is where the law pays, and the reason is jakob's:
+today a refetch is the newest twenty posts, but once the ranker ships
+every refetch runs the whole personalized ranking with the current
+arguments and hands back the reordered list of ids — potentially
+thousands or millions, not twenty. Five taps must never mean five
+rankings, so the filter's chips stage, `Done` commits, and the feed
+re-queries once per visit. It stands until readers show otherwise: if
+feedback says people expect collapsing the sheet to submit, the law is
+revisited (jakob 2026-10-01).
+
+**A sheet is modal.** It dims and covers what it was opened over, and
+assistive tech is told what the eye is: focus moves into the sheet,
+stays inside it while it is up, and returns to the control that opened
+it (§10). Nothing beneath the scrim takes a tap — the sliver of feed
+above the filter sheet is visual only. The opinion pad is modal the same
+way. The comments sheet is modal over its scrim at a single detent.
+
+**The drag is the platform's** — M3's modal bottom sheet. The sheet
+follows the finger from its handle area, and from a list at its
+scroll-top; it dismisses past about **25 %** of its height or on a
+downward fling, and otherwise snaps back. No intermediate detents. A
+sheet hosting a pad drags only from its handle and title zone: the
+pad's field consumes every pointer that starts on it. **The viewer's
+gestures are the platform photo viewer's**: a double tap toggles zoom,
+capped at about 4×; while zoomed, a pan wins over paging and dismissal;
+zoom resets on paging; a swipe down drags the frame with the black
+fading, closes past about **20 %** of the screen's height or on a
+fling, and otherwise snaps back; under reduced motion the close is
+plain. Two thresholds, stated apart: 25 % for a sheet, 20 % for the
+viewer.
+
 ### Imagery
 
 **An avatar is the actor's picture where they have one**, and a
@@ -839,6 +929,19 @@ minimum targets — the platform bar (48dp, 44pt), which the house holds
 over WCAG AA's 24px floor. Every icon-only control is labelled. **Every drag
 gesture has a non-drag equivalent.** Both themes are designed.
 
+**Focus has four rules** (WCAG 2.4.3; the WAI-ARIA dialog pattern), for
+every sheet, pad and dialog — each modal (§4, *Sheets*):
+
+- **Opening** moves focus to the surface's title, else its first
+  control, and holds it inside until the surface closes.
+- **Closing** returns focus to the control that opened it — or, if that
+  control is gone, to what now stands in its place.
+- **A row that removes itself** (hide, unsave, revoke, untag) hands
+  focus to the next row, else the previous, else the list's empty state.
+- **A forward navigation** lands focus on the new screen's title, and
+  back returns it to the control that left; a sheet that comes back — a
+  return, a signed reply, a deep link — lands it on the row it opens on.
+
 ---
 
 ## 11. Divergences from the source
@@ -921,6 +1024,16 @@ them** — the shell was extracted so the dialogs could not drift, and a
 per-board width is exactly that drift; `width` overrides the max for a
 dialog that genuinely cannot live at the house size, and no dialog in
 the product does.
+
+**One anatomy, owned by the shell** (jakob 2026-10-01). `DialogSurface`
+takes `title`, `body` and `actions` and lays them out by M3's dialog
+spec: the title in `headline-small`, the body in `body-medium` on
+`onSurfaceVariant` (M3's supporting text), 16px from title to body and
+24px from body to actions, and the actions at the default button size,
+aligned to the end. A board passes words and buttons, never a layout,
+so no two dialogs can drift apart. **The scrim and system Back take the safe
+answer** — cancel, keep, stay — never the destructive act, and never an
+answer the dialog does not offer.
 
 ### The stance control
 
@@ -3123,8 +3236,9 @@ Three stops the w1-web conform lane filed against the shell (backlog
 item 43), ruled by jakob the same day. The middle one is a rule for the
 whole canvas rather than a fix to one board.
 
-- **The entry arrows name boards.** The header's arrow is a link and
-  never history, so a deep-linked visitor has to land somewhere: the
+- **The entry arrows name boards.** In the entry funnel the header's
+  arrow is a link and never history, so a visitor arriving from outside
+  the app has to land somewhere (§4, *Navigation*): the
   three entry screens that pointed at `back` now name a destination.
   `InviteEntry` and `SignIn` are roots of the funnel and up from a root
   is the public front door, `FeedBare`. `Restore` is reached only from
@@ -3617,13 +3731,16 @@ four-rung ladder.
   kept-draft rules govern what a second tap meets.
 - **A transient is not state.** A sheet or dialog that was up when the
   reader left is gone when they return; a tab restores its screen and
-  its scroll, never what was covering them.
+  its scroll, never what was covering them. Back is not a tab switch:
+  a sheet that launched a forward navigation comes back with its
+  screen (§4, *Navigation*).
 - **Every viewer class climbs the same ladder.** Guest, applicant and
   key-absent readers get the identical four rungs, and the gates in
   front of the slots are unchanged — one shell for everyone is the
   bar's standing rule, and the ladder is part of the shell.
-- **The state is the session's.** A restart lands on Feed's root,
-  fresh; nothing is promised across launches.
+- **The state is the session's.** A restart — a cold launch, never a
+  process the OS ended in the background (§4, *Navigation*) — lands on
+  Feed's root, fresh; nothing is promised across launches.
 - **Back is the platform's.** Android's system back pops within the
   current stack, then from another tab's root to Feed's root, then
   leaves — never a tab switch mid-stack. On the web the tabs are
