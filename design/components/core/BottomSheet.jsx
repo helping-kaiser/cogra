@@ -6,17 +6,35 @@ import React from "react";
 
    WHY A SHEET AND NOT A DIALOG. A dialog is a question the reader has to answer
    before anything else can happen. A sheet is a drawer of choices they opened and
-   can close by looking away — so it comes from the edge they pulled it from, it
-   does not trap focus, and nothing behind it is inert. Choosing a dialog for a
-   drawer is how a product starts asking permission to show a menu.
+   can drop — so it comes from the edge they pulled it from, and the scrim, a
+   swipe down, Back and Escape all put it away. Choosing a dialog for a drawer is
+   how a product starts asking permission to show a menu.
+
+   IT IS MODAL — M3's modal bottom sheet (readme §4, *Sheets*; jakob
+   2026-10-01). It dims and covers what it was opened over, and assistive tech
+   is told what the eye is: focus moves into the sheet when it opens, stays
+   inside while it is up, and returns to the control that opened it when it
+   closes (readme §10). Nothing beneath the scrim takes a tap.
+
+   IT COMMITS ON ITS COMMIT, AND EVERY OTHER WAY OUT DISCARDS (the sheet law).
+   A sheet that holds a choice stages it until its `Done` — or whatever its foot
+   names — and the scrim, a swipe down, Back and Escape leave everything as it
+   was. A menu's row is its own commit; a sheet that only lists has nothing to
+   apply.
 
    Rules it keeps:
    · `surfaceContainerHigh` at the 28px rung — a rung higher when it is
      `stacked` — TOP CORNERS ONLY: the bottom edge is the screen's, and a
      rounded bottom on a surface flush to the edge draws a gap that is not
      there.
-   · The grab handle is `outlineVariant`, 32×4, and it is not a control: it says
-     which edge this came from and which way it goes back.
+   · The grab handle is `outlineVariant`, 32×4, and it is not a button: it marks
+     the handle area a drag starts from, and says which edge this came from and
+     which way it goes back.
+   · THE DRAG IS M3's. The sheet follows the finger from its handle area, and
+     from a list at its scroll-top; it dismisses past about 25 % of its height
+     or on a downward fling, and otherwise snaps back. No intermediate detents —
+     `tallest` included. A sheet hosting a pad drags only from the handle and
+     title zone; the field owns every pointer that starts on it.
    · It covers the bottom bar rather than sitting above it. A sheet is a decision
      surface; a navigation bar under it would offer to leave mid-decision.
    · Scrim at 50%, and pressing it closes. Escape closes. Both because a drawer
@@ -77,13 +95,34 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
     return () => clearTimeout(timer);
   }, [open, shown]);
 
+  /* FOCUS IN, CONTAINED, RETURNED (readme §10). Opening moves focus to the
+     sheet; Tab cycles inside it; closing hands focus back to whatever held it
+     before — the control that opened the sheet. */
+  const surfaceRef = React.useRef(null);
   React.useEffect(() => {
     if (!open || inline) return undefined;
+    const opener = document.activeElement;
+    if (surfaceRef.current) surfaceRef.current.focus();
     const onKey = (event) => {
       if (event.key === "Escape" && onClose) onClose();
+      if (event.key !== "Tab" || !surfaceRef.current) return;
+      const stops = surfaceRef.current.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      if (stops.length === 0) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (opener && typeof opener.focus === "function") opener.focus();
+    };
   }, [open, inline, onClose]);
 
   /* The wash's layer; the surface rides one above it, so a stacked sheet's wash
@@ -92,8 +131,10 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
 
   const surface = (
     <div
+      ref={surfaceRef}
+      tabIndex={inline ? undefined : -1}
       role="dialog"
-      aria-modal="false"
+      aria-modal={inline ? undefined : "true"}
       aria-label={ariaLabel}
       className={inline ? undefined : closing ? "cg-sheet-out" : "cg-sheet-in"}
       style={{
@@ -104,6 +145,8 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
         color: "var(--on-surface)",
         borderRadius: "var(--radius-extra-large) var(--radius-extra-large) 0 0",
         padding: "var(--space-2) 0 calc(var(--space-6) + env(safe-area-inset-bottom, 0px))",
+        // The surface takes focus only to hand it on; it is not a control.
+        outline: "none",
         ...(inline
           ? { position: "relative", width: "100%" }
           : {

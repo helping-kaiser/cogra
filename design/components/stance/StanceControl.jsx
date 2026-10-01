@@ -489,8 +489,13 @@ export function StanceControl({
             }}
             style={{ position: "fixed", inset: 0, zIndex: 10, touchAction: "none" }}
           />
+          {/* THE PAD IS MODAL FOR ASSISTIVE TECH, like every sheet (readme §4,
+              *Sheets*; §10): opening moves focus into it, focus stays inside
+              while it is up, and closing returns it to the face that opened
+              it. */}
           <div
-            role="group"
+            role="dialog"
+            aria-modal="true"
             aria-label={`Opinion pad for ${targetLabel}`}
             style={{
               ...parkedPadStyle(padInset),
