@@ -2640,28 +2640,40 @@ const SCORE_PATHS = [
 ];
 const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
 
-/* ScoreOrigin — THE POST THE SCORE BELONGS TO, carried on all four levels so a
-   reader four taps deep never loses what they are reading about.
+/* ScoreOrigin — THE THING THE SCORE BELONGS TO, carried on all four levels so
+   a reader four taps deep never loses what they are reading about.
 
    IT IS `QuotedRow`, which is the master for exactly this: the thing a surface
    is about, held above it, contained and inert. Inert is right here for the
-   master's own reason — the reader came from that post and the back arrow is
+   master's own reason — the reader came from that card and the back arrow is
    the way to it, so a second door would be a second answer to one question.
+
+   ONE TOP BLOCK PER KIND, ONE TRACE FOR ALL (jakob 2026-10-01: the score is
+   about the paths leading there, not the kind of thing it is). Every ranked
+   card opens the same four levels, so only the held thing changes, each in
+   the words its own card already uses: a post by its title and author, a
+   comment — which has no title — by its author's handle over its first words
+   (`QuotedRow`'s rule), a person by their name over their handle, a tag by
+   its name beside its `#` tile, whose tile takes the darker tone because the
+   quote's own box is the tile's default (`NodeMark`'s `onCard`). Drawn side
+   by side on `FeedEntryKinds`.
 
    THE SCORE UNDER IT IS PLAIN TEXT, NEVER `ExplainableNumber`. That master is
    the affordance and never the explanation; here the reader is standing inside
    the explanation, so a control that opened it again would open nothing. It
    keeps the master's own register — the label quiet, the value on-surface at
    500 — because it is the same figure, read rather than pressed. */
-function ScoreOrigin({ score = "15.20" }) {
+const SCORE_ORIGINS = {
+  post: { title: "The long way home — @ada", snippet: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.", name: ADA.displayName, src: "comment-camera.jpg" },
+  comment: { title: "@tobias", snippet: TOBIAS_COMMENT, name: TOBIAS.displayName },
+  person: { title: MIRA.displayName, snippet: "@" + MIRA.handle, name: MIRA.displayName, src: "inviter.jpg" },
+  topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard /> },
+};
+
+function ScoreOrigin({ kind = "post", score = "15.20" }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <QuotedRow
-        title="The long way home — @ada"
-        snippet="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
-        name={ADA.displayName}
-        src="comment-camera.jpg"
-      />
+      <QuotedRow {...SCORE_ORIGINS[kind]} />
       <span
         style={{
           display: "inline-flex",
@@ -3081,13 +3093,13 @@ const FEED_LEAD_TITLE = {
    REPLIES NEVER APPEAR IN THE FEED (jakob 2026-10-01). A comment's replies
    live in its thread, and the card carries no `View n replies` line: the feed
    ranks the comment, not its branch, and the door to the branch is the card. */
-const commentTarget = (parent) =>
-  parent.title
-    ? { kind: "post", label: `“${parent.title}” — @${parent.author.handle}`, title: parent.title, sub: "@" + parent.author.handle, cover: parent.media?.[0]?.src }
-    : { kind: "comment", label: `@${parent.author.handle}'s comment`, title: "@" + parent.author.handle, sub: parent.content };
+const commentTarget = (parent, kind) =>
+  kind === "comment"
+    ? { kind: "comment", label: `@${parent.author.handle}'s comment`, title: "@" + parent.author.handle, sub: parent.content }
+    : { kind: "post", label: `“${parent.title}” — @${parent.author.handle}`, title: parent.title, sub: "@" + parent.author.handle, cover: parent.media?.[0]?.src };
 
-function CommentFeedCard({ author, content, timestamp, parent, media, sensitive, topics = [], references = 0, score, bundle }) {
-  const target = commentTarget(parent);
+function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle }) {
+  const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
       author={author}
