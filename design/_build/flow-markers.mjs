@@ -1165,6 +1165,8 @@ Object.assign(FLOW_MARKERS, {
   // is `Profile`'s and is wired there (the pattern-exemplar exemption).
   ProfileMoreFailed: [{ n: 1, find: ">Retry</button>", tag: "button" }],
   ProfileNotFound: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  PostNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
+  CommentNotFound: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   ProfileUnreachable: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Retry</button>", tag: "button" },
