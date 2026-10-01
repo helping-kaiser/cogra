@@ -8,6 +8,8 @@ ALWAYS a clip's still holds until its playback first starts
 
 WHEN a clip's playback has started -> NEVER its still comes back
 
+WHEN a clip on a card plays to its end -> it loops
+
 WHEN a clip stops being the playing one -> it freezes on the frame it reached AND NEVER its still comes back
 
 ALWAYS a clip 16:9 or square displays at its own shape, and a clip taller than 4:5 centre-crops to 4:5
