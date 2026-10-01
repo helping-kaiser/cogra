@@ -63,6 +63,11 @@ Where each sidecar's words come from:
   picks' review*): one batch, signed only from its seal; the × that drops
   a pick with no confirm and no undo, and the last drop's exit; leaving
   unsigned keeps every pick.
+- The rest of the compose and media pages' sidecars (readme §13, *The
+  compose and media behavior pass*) — each board's own docblock, its
+  graph edges' cases, and the readme §13 rounds and copy-voice sections
+  those cite. `ComposeDetails.md` and `ComposeSeal.md` carry those lines
+  beside their own.
 
 ## The grammar
 

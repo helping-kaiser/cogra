@@ -7692,6 +7692,25 @@ batch the reader reviews first (jakob, 2026-09-30).
   gaps**, **flows 64**, every one resolved. The witness was re-blessed
   once, deliberately: the gap leaves the triage, and no flow moved.
   `Settings` grew a row taller; the maps follow the edges.
+### The compose and media behavior pass — 2026-10-01
+
+Pass C of the behavior home (jakob's F1: transcription only, unruled
+behavior filed, never invented), the compose and media pages.
+
+- **Every non-reference board on both pages has its sidecar.** Each line
+  transcribes a board's docblock, its graph edges' cases, and the rounds
+  above and copy-voice sections they cite: the wizard's two ways out and
+  its kept draft, the caps' late counter and refusals, the seal's
+  read-back and its faults, the growth law, the cover and frame-0 rules,
+  the veil and the control ladder. `ComposeDetails.md` and
+  `ComposeSeal.md` gain the lines their merged rulings bind. Reference
+  boards (the ladders, the shapes, the maps) owe none.
+- **What no ruling answers stays out of the sidecars** and waits for
+  jakob as filed questions: the cover step's Next before a face is
+  picked, the counting sheets at the fold's edge, the body fork's switch,
+  the words stage's empty Next, an edit's × on a pick made in the same
+  edit, and the viewer's third way out, where this record's reel round
+  says the backdrop and `ViewerPicture`'s docblock says a tap is not one.
 
 ## 15. Index
 
