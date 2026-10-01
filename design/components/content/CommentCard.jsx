@@ -117,9 +117,10 @@ export function CommentCard({
      pictures, the topics line and the license all go at once and the mark
      stands in their place — `true` for the default wording, or
      `RedactedContentProps` for the reason, the date and a note. The author,
-     the timestamp and the thread position survive around it. First drawn for a
-     removed VERSION in a comment's edit history, which wears the mark a
-     removed post wears. */
+     the timestamp and the thread position survive around it. Drawn for a
+     removed VERSION in a comment's edit history, and for a removed comment in
+     its thread (`CommentRemoved`), both wearing the mark a removed post
+     wears. */
   redacted,
   /* THE SCORE, WHERE THE COMMENT IS RANKED (the feed-cards rework, 2026-10-01).
      A comment met in the feed reached the reader by the same paths a post does,

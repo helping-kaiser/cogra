@@ -8,7 +8,9 @@ export interface FeedFilterValue {
   /** The seen toggle, default false — what you've seen stays out until you
    *  ask for it back. */
   seen?: boolean;
-  /** What the feed also admits: "sensitive", "removed". */
+  /** What the feed also admits: "sensitive", "removed", "settling". Default
+   *  `["settling"]` — still-settling content is in until switched off; a value
+   *  that omits the field reads as the default. */
   also?: readonly string[];
   /**
    * The one topic the feed is narrowed to — its name, hash and all — or null.

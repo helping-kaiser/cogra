@@ -12,7 +12,14 @@
    surface — it is the narrowing a reader already knows how to reach, in the
    control they already use for every other narrowing. The chips are the topics
    held FOR; the way to everything held, including the ones held against, is the
-   text button under them. */
+   text button under them.
+
+   "ALSO SHOW" CARRIES THREE CHIPS, AND `Still settling` IS ON (jakob,
+   2026-10-01; readme §13, the V1.0 scope cut). Content authored and not yet
+   landed reaches the feed by default, wearing its pending marker — the feed
+   as it has always been. Switched off, the feed keeps to what has landed, and
+   the trigger says so: `settled only`. `Sensitive` and `Removed` stay off
+   until asked for. */
 export function Screen() {
   return (
     <>

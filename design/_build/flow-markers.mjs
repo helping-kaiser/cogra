@@ -367,6 +367,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "Add a comment</label>", tag: "label" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The thread after the reader's own Remove (the comment-removal round): the
+  // same sheet with the same controls, so ReplyEntry's numbers. The removed
+  // comment has no ⋮ left; its author chip, its opinion and its Reply ride
+  // the thread's own numbers.
+  CommentRemoved: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: '<a href="/t/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 6, find: "View 2 replies", tag: "button" },
+    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
@@ -452,6 +469,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="What the search shows"', tag: "button" },
     { n: 5, find: ">Salt maps of the coast road<", tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
+    { n: 6, find: ">Done</button>", tag: "button" },
   ],
   /* A reference row per V1.0 kind, each its own edge to its own board (readme
      §13, the V1.0 scope cut): the person, the posts, the comment, numbered in
@@ -508,6 +526,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
   ],
+  // Your own comment's menu (the comment-removal round): CommentMenu's rows
+  // keep their numbers — the badge is an identity, not a position — and
+  // Remove takes the next free one.
+  CommentMenuOwn: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">License terms</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Remove</button>", tag: "button" },
+  ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
     { n: 2, find: ">Mention in a new post</button>", tag: "button" },
@@ -552,6 +582,14 @@ Object.assign(FLOW_MARKERS, {
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
   RemoveConfirm: [
+    { n: 1, find: ">Remove</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The same dialog at comment scale, over the thread (the comment-removal
+  // round): the post's numbers, because it is the post's dialog. The thread
+  // beneath is wired on `ReplyEntry`.
+  CommentRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
@@ -1268,6 +1306,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 20, find: ">About CoGra</span>", tag: "button" },
     { n: 21, find: ">Privacy</span>", tag: "button" },
     { n: 22, find: ">Terms</span>", tag: "button" },
+    // The support stack (2026-10-01), three rows inside the About group,
+    // numbered by the same identity rule — the next three free numbers.
+    { n: 23, find: ">What&#x27;s new</span>", tag: "button" },
+    { n: 24, find: ">Report a problem</span>", tag: "button" },
+    { n: 25, find: ">Contact</span>", tag: "button" },
+  ],
+  // The release chronicle: the way out, and one door per release — the same
+  // control drawn three times, so one number.
+  WhatsNew: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+  ],
+  ReportProblem: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="What happened"', tag: "div" },
+    { n: 3, find: ">Send by email</button>", tag: "button" },
   ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
@@ -1724,6 +1778,27 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
     { n: 7, find: ">Keep the draft, sign later</button>", tag: "button" },
+    // The panel's own "?" (the stopper exception, 2026-10-01), appended so no
+    // via renumbers.
+    { n: 8, find: 'aria-label="Why signing waits"', tag: "button" },
+  ],
+  /* The bug register (2026-10-01) is the same seal again — header and facts
+     keep `ComposeSeal`'s numbers — with its three ways out where the commit
+     stood, and the discard ask's pair over it, `ComposeDraftDiscard`'s way. */
+  SealFaultBug: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Try again</button>", tag: "button" },
+    { n: 8, find: ">Report a problem</button>", tag: "button" },
+    { n: 9, find: ">Discard the post</button>", tag: "button" },
+  ],
+  SealDiscardConfirm: [
+    { n: 1, find: ">Discard it</button>", tag: "button" },
+    { n: 2, find: ">Keep the draft</button>", tag: "button" },
   ],
   PadFailed: [
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
@@ -1732,6 +1807,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Walk it back</button>", tag: "button" },
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Retry</button>", tag: "button" },
+  ],
+  // The write rule's pad (2026-10-01): `PadFailed`'s first two numbers, then
+  // the notice's own "?" and its way out where the commit row stood.
+  PadWriteRule: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Why signing waits"', tag: "button" },
+    { n: 4, find: ">Not now</button>", tag: "button" },
   ],
   // TWO "Restore the key" buttons stand on this board — the feed's own card
   // beneath the wash and the pad's notice above it — and both take the number,
@@ -2088,17 +2172,20 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">saltmarsh<", tag: "button" },
     { n: 4, find: ">saltcrust<", tag: "button" },
     { n: 4, find: ">saltflats<", tag: "button" },
+    { n: 5, find: ">Done</button>", tag: "button" },
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">#SaltMaps<", tag: "div" },
     { n: 4, find: ">saltmaps<", tag: "button" },
+    { n: 5, find: ">Done</button>", tag: "button" },
   ],
   TagPickerRefused: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
     { n: 2, find: 'aria-label="How searching works"', tag: "button" },
     { n: 3, find: ">#salt maps<", tag: "div" },
+    { n: 4, find: ">Done</button>", tag: "button" },
   ],
   TagPad: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },

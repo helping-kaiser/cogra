@@ -53,7 +53,7 @@ import { UploadErrorLine } from "./UploadNotice.jsx";
 
    A REFUSED ACT IS SAID ON ITS OWN ROW (jakob, the failure pack: the seal's
    faults speak `NetworkError`'s grammar). When the signing is refused because
-   of one staged act — a cited post or person nothing answers to any more — the
+   of one staged act — a cited post that never landed (jakob 2026-10-01) — the
    fault sits where that act is read back, not at the foot: the refused-file
    line's shape, `UploadErrorLine`, with the fact in the failure voice and
    `Remove it` as the only way out, because signing again cannot change the

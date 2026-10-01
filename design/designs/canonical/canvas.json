@@ -1174,25 +1174,25 @@
     {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
-      "x": 0,
-      "y": 1060,
+      "x": 3360,
+      "y": 964,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "profile"
     },
     {
       "file": "AvatarSeal.dc.html",
       "title": "Profile picture · what you sign",
-      "x": 480,
-      "y": 1060,
+      "x": 3840,
+      "y": 964,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "profile"
     },
     {
       "file": "ComposePickVideo.dc.html",
       "title": "Pick · a video is the whole post",
-      "x": 960,
+      "x": 0,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1201,7 +1201,7 @@
     {
       "file": "ComposePickVideoCover.dc.html",
       "title": "Pick · the clip wears its cover",
-      "x": 3360,
+      "x": 2400,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1210,7 +1210,7 @@
     {
       "file": "CoverCrop.dc.html",
       "title": "Cover · a picture of your own",
-      "x": 1440,
+      "x": 480,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1219,7 +1219,7 @@
     {
       "file": "ComposeDescribeVideo.dc.html",
       "title": "Describe the video",
-      "x": 1920,
+      "x": 960,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1228,7 +1228,7 @@
     {
       "file": "EditComposeVideo.dc.html",
       "title": "Edit post · a video body",
-      "x": 2400,
+      "x": 1440,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1237,7 +1237,7 @@
     {
       "file": "ComposeCoverPlaying.dc.html",
       "title": "Cover · the preview playing",
-      "x": 2880,
+      "x": 1920,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1291,29 +1291,29 @@
     {
       "file": "ReaderPostMenu.dc.html",
       "title": "Post · the reader's menu",
-      "x": 1920,
-      "y": 2120,
+      "x": 480,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "PostLicense.dc.html",
       "title": "Post · the license sheet",
-      "x": 2400,
-      "y": 2120,
+      "x": 960,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "PostDetail.dc.html",
       "title": "Post · the detail view",
-      "x": 1440,
-      "y": 2120,
+      "x": 0,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "ViewerPicture.dc.html",
@@ -1383,7 +1383,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4199,
+      "h": 4238,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1392,7 +1392,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 3087,
+      "h": 3256,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1401,7 +1401,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 1719,
+      "h": 2416,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1410,7 +1410,7 @@
       "x": -6220,
       "y": 0,
       "w": 5800,
-      "h": 3043,
+      "h": 3941,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1425,10 +1425,10 @@
     },
     {
       "file": "MapMedia.dc.html",
-      "x": -3030,
+      "x": -2450,
       "y": 0,
-      "w": 2610,
-      "h": 3793,
+      "w": 2030,
+      "h": 4001,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1437,7 +1437,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1117,
+      "h": 1779,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -1470,10 +1470,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 5019,
+      "w": 3190,
+      "h": 5317,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1591,7 +1591,7 @@
       "x": 0,
       "y": 1928,
       "w": 390,
-      "h": 2442,
+      "h": 2613,
       "page": "profile"
     },
     {
@@ -1652,6 +1652,24 @@
       "file": "ChangeEmail.dc.html",
       "title": "Settings · change your email",
       "x": 3360,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "WhatsNew.dc.html",
+      "title": "Settings · what's new",
+      "x": 4320,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ReportProblem.dc.html",
+      "title": "Settings · report a problem",
+      "x": 4800,
       "y": 1928,
       "w": 390,
       "h": 844,
@@ -1740,7 +1758,7 @@
     },
     {
       "file": "SealFaultRow.dc.html",
-      "title": "Seal · one thing can't be signed",
+      "title": "Seal · a cited post that didn't land",
       "x": 960,
       "y": 964,
       "w": 390,
@@ -1770,6 +1788,42 @@
       "title": "Signing · on the target's row",
       "x": 2880,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "PadWriteRule.dc.html",
+      "title": "Pad · the write rule says not now",
+      "x": 2400,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "RowWriteRule.dc.html",
+      "title": "Signing · the write rule on the target's row",
+      "x": 2880,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealFaultBug.dc.html",
+      "title": "Seal · this shouldn't have happened",
+      "x": 960,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealDiscardConfirm.dc.html",
+      "title": "Seal · discard this post?",
+      "x": 1440,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "patterns"
@@ -1904,7 +1958,7 @@
       "file": "Saved.dc.html",
       "title": "Saved · what you kept",
       "x": 0,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1913,7 +1967,7 @@
       "file": "SavedEmpty.dc.html",
       "title": "Saved · nothing kept yet",
       "x": 480,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1922,7 +1976,7 @@
       "file": "SavedUndo.dc.html",
       "title": "Saved · one just removed",
       "x": 2400,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1931,7 +1985,7 @@
       "file": "History.dc.html",
       "title": "History · what you have read",
       "x": 960,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1940,7 +1994,7 @@
       "file": "HistoryEmpty.dc.html",
       "title": "History · nothing seen yet",
       "x": 1440,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1949,7 +2003,7 @@
       "file": "SettingsHidden.dc.html",
       "title": "Settings · hidden accounts",
       "x": 1920,
-      "y": 4473,
+      "y": 4661,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1958,7 +2012,7 @@
       "file": "Notifications.dc.html",
       "title": "Notifications · what happened",
       "x": 0,
-      "y": 5543,
+      "y": 5731,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1967,7 +2021,7 @@
       "file": "NotificationsEmpty.dc.html",
       "title": "Notifications · nothing yet",
       "x": 480,
-      "y": 5543,
+      "y": 5731,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1976,7 +2030,7 @@
       "file": "Invites.dc.html",
       "title": "Invites · waiting and live",
       "x": 0,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1985,7 +2039,7 @@
       "file": "InvitesEmpty.dc.html",
       "title": "Invites · none out yet",
       "x": 480,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1994,7 +2048,7 @@
       "file": "InviteNew.dc.html",
       "title": "Invites · a new link",
       "x": 960,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2003,7 +2057,7 @@
       "file": "InviteExpiry.dc.html",
       "title": "Invites · how long it lasts",
       "x": 1440,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2012,7 +2066,7 @@
       "file": "InviteCreated.dc.html",
       "title": "Invites · the link is ready",
       "x": 1920,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2021,7 +2075,7 @@
       "file": "ApprovePad.dc.html",
       "title": "Invites · approving is vouching",
       "x": 2400,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2030,7 +2084,7 @@
       "file": "RejectConfirm.dc.html",
       "title": "Invites · closing an application",
       "x": 2880,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2039,7 +2093,7 @@
       "file": "VouchAsk.dc.html",
       "title": "Invites · someone asked you to vouch",
       "x": 3360,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2048,7 +2102,7 @@
       "file": "VouchAskPad.dc.html",
       "title": "Invites · answering the ask",
       "x": 3840,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2057,7 +2111,7 @@
       "file": "RejectAllConfirm.dc.html",
       "title": "Invites · closing a link's applications",
       "x": 4320,
-      "y": 6607,
+      "y": 6795,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2110,20 +2164,20 @@
     {
       "file": "PostOpinions.dc.html",
       "title": "Post · opinions on it",
-      "x": 2880,
-      "y": 2120,
+      "x": 1440,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "ReaderPostMenuNarrow.dc.html",
       "title": "Post · the reader's menu, narrow phone",
-      "x": 3360,
-      "y": 2120,
+      "x": 1920,
+      "y": 4676,
       "w": 320,
       "h": 568,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "CommentOpinionsEmpty.dc.html",
@@ -2137,11 +2191,11 @@
     {
       "file": "CitedBy.dc.html",
       "title": "Post · what cites it",
-      "x": 3840,
-      "y": 2120,
+      "x": 2400,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "CommentCitedByEmpty.dc.html",
@@ -2166,6 +2220,33 @@
       "title": "Comments · key absent, at the reply's door",
       "x": 4320,
       "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "CommentMenuOwn.dc.html",
+      "title": "Comment · your own, the menu over the thread",
+      "x": 0,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "CommentRemoveConfirm.dc.html",
+      "title": "Comment · remove, think twice",
+      "x": 480,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "CommentRemoved.dc.html",
+      "title": "Comments · your comment, removed by you",
+      "x": 960,
+      "y": 2120,
       "w": 390,
       "h": 844,
       "page": "comments"
@@ -2282,7 +2363,7 @@
       "x": -340,
       "y": 0,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal, the stance pad, and the two settings screens): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your first opinion': Vouching back signs your opinion of the person who vouched you in — your first one, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal, the stance pad, and the two settings screens): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nWRITE RULE · 'Why signing waits' (the seal and the stance pad): Each signing is paid for, and there's only so much to go around at a time. When it runs short, signing waits — nothing you asked for was signed, and nothing was spent. / Nothing needs fixing on your side. Your draft is kept, and an opinion can simply be given again. It frees up as time passes, so try again a little later.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your first opinion': Vouching back signs your opinion of the person who vouched you in — your first one, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Every change applies as you tap; nothing here is signed or shared. / It lasts until you change it, on this device only. Your default lives in settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
       "page": "patterns"
     },
     {
@@ -2363,6 +2444,14 @@
       "y": 1060,
       "w": 290,
       "text": "COMMENTS · The reply composer\n\nThe comment box in the thread is an ENTRY, not a composer: tapping it opens the same full-focus flow, pre-targeted, parent pinned. Two steps — words, then the seal. A comment is TEXT PLUS OPTIONAL MEDIA (comment.md; text required) — deliberately asymmetric to the post's words-XOR-media body, because an answer is words first; '+ Add pictures' rides the writing step, and COMMENTS HAVE NO PICK STAGE (ruled 2026-08-31): it opens the platform's own picker — Android's photo-picker sheet, the browser's file dialog on web — never the post wizard's grid; the web board adds the drop-anywhere path. Comment pictures never crop, so they upload at pick; descriptions ride the signed act (detached from the upload — no race, nothing gates) and are entered from the describe counter. A reply answers a post or a comment, and the composer and the seal are one surface each, only the lines that name the target differing (the reply pack, 2026-09-30): a post is quoted by its title and handle, a comment by its author's handle over its first words. The reply's stance on what it answers (+0.10 / +0.10 default) is DISCLOSED on the seal and adjustable on the full two-axis pad: 'Replying also signs an opinion on what it answers.' — an opinion, never 'your opinion'. KEY ABSENT meets the reader at the door, before a word is written; a key lost mid-write gets the seal's fallback — restore, or discard. Topics and citations can join a comment from its seal, each row raising the count. COMMENT VIDEO (jakob 2026-09-02): a comment's media grammar is the post's at comment caps — four pictures OR one video with its cover, never both kinds. Entry is unchanged (the platform picker; a video pick lands in the video state), there is still no pick stage and no crop, and the cover row is ComposeCover's inlined at comment scale, because the comment composer is one screen and has no stage to give it. Caps as facts: a picture 10 MiB (10 per post, 4 per comment), a video 100 MiB in a post and 50 MiB in a comment, a cover 10 MiB. A FILE THE SURFACE REFUSES — over its cap, or a format nothing here reads — is refused WHERE IT WAS OFFERED, a line in the composer's media row: never a dialog, never a snackbar. The line names the cap it broke, and that is the only place a cap is named. Its one way out is Remove it — never Retry, which cannot make a file smaller or a format readable. Round 2 (jakob, same day): A VIDEO TAKES ONE DESCRIPTION for the whole clip and its cover takes none — the counter reads 'Describe the video · 0 of 1 described' and opens the same describe sheet. THE ADD LABEL FOLLOWS THE STATE: empty reads '+ Add pictures or a video', with pictures '+ Add pictures · n of 4' (the video is out — the grammar is exclusive), with a video no add control at all. WEB TAKES THE VIDEO BOARD 1:1 (file dialog + the drop path; no web board, the avatar blessing's form) and the drop hint grows to 'pictures or a video'. SCREENS WRITE MB while the caps are enforced in MiB — 50 MiB is 52.4 MB, so the readable number under-promises and never refuses a file the product would take. Boards: write (words) · pictures attached · pictures on the web · a video and its cover · files refused · the pad · what you sign · both answering a comment · the seal with the key absent.",
+      "page": "comments"
+    },
+    {
+      "id": "sec-comment-remove",
+      "x": -340,
+      "y": 2120,
+      "w": 290,
+      "text": "COMMENTS · Removing your own comment\n\nIN V1.0 (jakob 2026-10-01): the erasure half at comment scale, drawn in the post's own idiom. Your own comment's ⋮ opens the reader's sheet with REMOVE joined as the last of the acts — after Save and Cite, before the two readings, the license closing it; no Edit row (the card carries Edit) and no sensitive row (the mark rides the edit). Remove raises the post's think-twice dialog with the nouns swapped: the safe action filled, the removal a text button, no error colour. Removal takes the payload, never the record (comment.md §5): the comment keeps its place in the thread, its author and its time, and 'Removed by its author' stands where its words were. The replies beneath keep their parent and stay readable — removal never breaks a thread, and nothing disappears in silence. Like a removed post, the removed comment has no menu left. Boards: your own comment's menu · remove, think twice · your comment, removed.",
       "page": "comments"
     },
     {

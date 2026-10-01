@@ -18,4 +18,6 @@ The stance control, `Reply`, `Edit`, and anything passed as `actions` share **on
 
 **`sensitive` veils the whole body as one comment-scale block** — words and pictures together, replaced rather than covered, since a comment is too short to wash in place twice over. The author, timestamp, topics and stance control stay readable: that frame is the comment's answer to a post's title staying outside the veil. The block names its `source` — `"author"` for the author's own warning, `"platform"` for a verdict — with `reason` after it.
 
+**`redacted` draws a removed comment's skeleton** — the words, the pictures, the topics line and the license go at once, and `RedactedContent` stands in their place, while the author, the timestamp and the thread position stay. A comment removed by its author keeps its spot in the thread and its replies under it (comment.md §5): pass `{ reason: "author", when, note }` with the comment's own second line as `note`, and no `menuItems`, so the ⋮ goes with the payload as it does on a removed post.
+
 **A row flag can fuse with the card.** `attach` squares the top-left corner so `TaggedRow`'s claim flag (the tag page) and the card paint as one folder-tab silhouette; every other surface leaves it off.

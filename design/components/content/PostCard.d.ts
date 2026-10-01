@@ -98,7 +98,7 @@ export interface PostCardProps {
    * the pad closed, Set's state with it open. Pass-through to
    * `StanceControl`'s `signing`.
    */
-  stanceSigning?: "busy" | "failed";
+  stanceSigning?: "busy" | "failed" | "writeRule";
   /**
    * The Post score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen

@@ -39,3 +39,5 @@ WHEN the hold's signing answers within 200ms of the hold -> NEVER the line Signi
 WHEN the hold's signing is taken -> feed.card.actionRow.stance.anchor.face moves to the new opinion AND the snackbar confirms the signature
 
 WHEN the hold's signing does not go through -> feed.card.actionRow.stance.anchor.face stays where it was AND the line under it reads That didn't sign. followed by Retry AND NEVER the snackbar carries the failure
+
+WHEN the hold's signing is refused by the write rule -> feed.card.actionRow.stance.anchor.face stays where it was AND the line under it reads You can't sign right now. AND NEVER Retry appears AND NEVER the line takes the failure voice

@@ -1298,7 +1298,11 @@ new post". Its result rows are the seed of the search design (item
 lives behind a small "?" — at most one per screen, top-right of the
 header or of the sheet/card it explains (the pads carry their own) —
 opening a plain dialog: title, at most two short paragraphs, Close.
-The eight dialog texts live in
+**The stopper exception** (jakob, 2026-10-01): a notice that stops the
+one act its surface exists for carries its own "?" on the panel,
+beside the header's. The header's "?" explains the surface; the
+stopper's explains how the stop resolves, and one dialog cannot do
+both. `WriteRuleFailed` is the first. The dialog texts live in
 [guidelines/copy-voice.md](guidelines/copy-voice.md). **Button
 rule:** filled and outlined pills render a TRUE 40px tall (border
 box) with 24px side padding and a 64px minimum width; header pills
@@ -6983,7 +6987,8 @@ to compete got their chooser.
 - **Removing your own comment is V1.0** (jakob 2026-09-25): the comment
   menu carries Remove, the confirm speaks at comment scale, and a
   thread draws the removed comment's mark — the erasure half of the
-  roadmap's slice 8, mandated at launch.
+  roadmap's slice 8, mandated at launch. Drawn in *The comment-removal
+  round*.
 - **`Still settling` joins the filter's "Also show", default on** — the
   landed-only control the slice-3 rework promises.
 - **Topic follow ships whole** — the tag page's row, `YourTopics` and
@@ -7292,11 +7297,13 @@ in-flight state, and the only fault the seal knew was "offline".
   `SealFooter`'s `busy`, `SeveranceConfirm`'s `busy` and
   `StanceControl`'s `signing` carry it (`SealSigning`).
 - **The seal's faults speak `NetworkError`'s grammar** (jakob). A fault
-  about the whole signing takes the commit's place, as drawn. When one
-  staged act is refused, the refusal is said on that act's row, in the
+  about the whole signing takes the commit's place, as drawn. A cited
+  post that never landed is said on its citation's row, in the
   refused-file line's shape: the fact, then `Remove it`
-  (`SealFaultRow`). Nothing was staged, so the commit stays. Each
-  code's vehicle and words live in copy-voice, *Faults by code*.
+  (`SealFaultRow`). Nothing was staged, so the commit stays. Any other
+  refusal of one staged act is a bug (*The failure fixes and the
+  support stack*). Each code's vehicle and words live in copy-voice,
+  *Faults by code*.
 - **The write rule's refusal is a restoration surface, not a fault**
   (jakob; `WriteRuleFailed`, the V1.0 home of the pool-exhaustion
   fact). A refused pre-check stages nothing and spends nothing, so the
@@ -7326,6 +7333,150 @@ in-flight state, and the only fault the seal knew was "offline".
   end. `NetworkError` stands on `ComposeSealBody` and renders
   byte-identical. The maps follow the edges. `Feed.md` gains the hold's
   lines, and `ComposeSeal.md` opens with the commit in flight.
+
+### The comment-removal round — 2026-10-01
+
+Removing your own comment is V1.0 (jakob 2026-10-01, the audit's R-1,
+option (a); *The V1.0 scope cut*). It is the erasure half at comment
+scale, drawn in the post's idiom, three boards in a row on the comments
+page.
+
+- **Your own comment's menu carries `Remove`** (`CommentMenuOwn`,
+  `OWN_COMMENT_MENU`). The row stands as the last of the acts: after
+  Save and Cite, before the two readings, with the license closing the
+  menu. That is the own-post menu's place for it, and the place
+  `ChatMessageMenuOwn` takes at message scale. The menu has no Edit
+  row, because the card carries Edit. It has no sensitive row, because
+  a comment's mark rides its edit. Every comment ⋮ edge gains the
+  own-comment case.
+- **The confirm is the post's dialog with the nouns swapped**
+  (`CommentRemoveConfirm`). `RemoveConfirm`'s body moved to `_shared` as
+  `RemoveDialog`, one anatomy keyed by kind, and the post's board renders
+  byte-identical. The comment's dialog uses copy-voice's whole-comment
+  body: the mark keeps *the comment's spot in its thread*. Over the
+  thread it is lifted by `ReplyKeyAbsent`'s layer glue.
+- **The removed comment keeps its place** (`CommentRemoved`, the
+  sheet's `removed`). Comment nodes are never deleted (comment.md §5).
+  The card keeps its author, its time and its place in the order, and
+  `Removed by its author` stands where its words were. The mark's
+  second line names the comment. The two replies under it stay in place
+  and readable. The reader's position holds across the three boards at
+  one offset (`REMOVED_COMMENT_SCROLL`, `ReplySettled`'s `scrolledBy`),
+  so their own comment and its branch are in view.
+- **A removed comment keeps what a removed post keeps.** Its ⋮ goes
+  with the payload, the `Removed` rule. Its author chip, its opinion and
+  its Reply stay, the comment-scale twin of the removed post's open
+  thread.
+- **The comment register points at the drawn confirm.** In post-MVP,
+  `CommentHistoryOwn`'s `Remove the whole comment` hands off to
+  canonical's `CommentRemoveConfirm`, as the post's register always
+  handed off to `RemoveConfirm`.
+- **The gate**: 229 → **232 screens**, 1618 → **1636 edges**, 1 gap,
+  **flows 64**, every one resolved. The witness was re-blessed once,
+  deliberately: `remove-your-comment` joins `remove-your-post`, and
+  `cite-a-post`'s census grew by the own-comment menu. `ReplyEntry.md`
+  gains the mark's line and the kept-replies invariant.
+
+### The morning fixes — 2026-10-01
+
+Small rulings jakob made in one sitting.
+
+- **Both pickers end in `Done`** (jakob: "'Done' is my word of choice
+  there as you are 'done' adding hashtags"). `TagPicker`, its two
+  states and `ReferencePicker` carry the full-width foot every wizard
+  stage wears. `Done` and the header back are one leave: both return to
+  the composer with every staged pick kept, and `Done` is the
+  affirmative twin, because a back arrow reads as an abort. On the
+  refused name it still leaves, adding nothing.
+- **The reply composer's words are a field.** `ReplyDraft` and the
+  reply's five media states draw `WordsBody`, the growing body box, at
+  a three-line minimum (`CommentEdit`'s own) under the growth law, with
+  a comment's 2,000-character cap.
+- **The post detail lives on Feed, the avatar pair on Profile.** The
+  detail view, the reader's menu at both widths, the license and
+  opinions sheets and `CitedBy` move to the Feed & Search page, and the
+  profile picture's crop and seal to Profile. Media keeps the video and
+  picture boards.
+- **`Still settling` joins "Also show", on by default** (the scope
+  cut's chip, drawn). Off, the feed keeps to what has landed and the
+  trigger reads `settled only`. Every drawn feed is unchanged.
+- **A clip's poster reaches the canvas.** The canvas editor resolves a
+  board's pictures only through `src` and `url()`, so a clip's
+  `poster` drew an empty plate there. The shell now lays the poster
+  under each clip as a picture (`posterLayer`), and the clip still
+  paints over it wherever it renders.
+- **The gate**: 229 screens, 1618 → **1622 edges** (the four `Done`s),
+  1 gap, **flows 63**, every one resolved, the witness not re-blessed.
+  The maps and the canvas manifests follow the moved boards.
+
+### The failure fixes and the support stack — 2026-10-01
+
+jakob's rulings, in session, on the failure pack's drawn premise and
+backlog item 117, and his confirmation of the support stack's shape.
+
+- **A picked target never stops answering, except one that never
+  landed.** No record is removed: a removed post is a reduced node, a
+  deleted account is a husk, and tags are not citable. The one real
+  case is a post picked while still settling — the reader's own or
+  anyone else's, with `Still settling` on in the filter (jakob: "it is
+  not only stuff i have created") — whose staged act then expires
+  unlanded. `SealFaultRow` draws it: the citation's row says the post
+  didn't land, with `Remove it`, and the commit stays.
+- **Every other refusal at that stage is a bug, and says so**
+  (`SealFaultBug`). The picker should have blocked it, so the seal
+  owns it in the notice register, not the failure voice: the tertiary
+  panel in the commit's place, `This shouldn't have happened`, nothing
+  signed or spent. Its three ways out are jakob's: `Try again` — a bug
+  can be transient, so asking again is a real way out here —
+  `Report a problem`, and `Discard the post`, which asks first
+  (`SealDiscardConfirm`). No row is marked.
+- **The stopper exception to one "?" per screen** (*The compose flow*'s
+  copy rule). A notice that stops the one act its surface exists for
+  carries its own "?" beside the header's: jakob, "the '?' at the top
+  right is the general one for the seal and not for this specific
+  problem". `WriteRuleFailed`'s panel opens `Why signing waits` — the
+  write rule in payer-neutral words, nothing lost, the draft kept, try a
+  little later — and `PadWriteRule`'s opens the same dialog.
+- **The support stack joins Settings' About group** (jakob, as
+  recommended): `What's new`, valued with the running version, opens
+  the release chronicle (`WhatsNew`) — the chronicle idiom applied to
+  the product, whole versions newest first, the running one marked,
+  each release with its door onto GitHub. `Report a problem` opens
+  `ReportProblem`: one field in the reader's own words, and everything
+  that travels with them read back before sending — the address, the
+  version, what it runs on and the time, nothing else — sent through
+  the reader's own mail. `Contact` is a plain mail door, apart from the
+  report. Both addresses are placeholders until CoGra is on a server
+  (jakob), on the repo's `.local` domain. One string per line for app
+  and web.
+- **The write rule at the pad's and the hold's scale** (backlog item
+  117's two vehicles). The pad keeps the pick in view and the notice
+  stands where the landing line and Set were — `PadKeyAbsent`'s shape,
+  drawn by `StanceControl`'s `signing="writeRule"` — with `Not now`,
+  and no pick is kept. The hold's row says `You can't sign right now.`
+  in the pending marker's register, never the failure voice, with no
+  Retry (`RowWriteRule`, `SigningPending`'s `quiet`). Every pad `Set`
+  that reaches `PadFailed`, and `PadFailed`'s `Retry`, now also reach
+  `PadWriteRule`; the thirty-six hold edges name the new plate beside
+  `RowSigning`.
+- **The lane's calls, flagged for review:** two seal boards rather than
+  one board of two states, because a seal is a whole screen; no row
+  marked in the bug state; a drawn post-scale discard ask rather than
+  pointing at `ComposeDraftDiscard`, whose words are about the roll; the
+  stack's order — About CoGra, What's new, Report a problem, Contact,
+  then the legal pair; the board fixture at `0.1.2` over the repo's
+  stated `0.1.0`; `.local` addresses; a full task page for the report
+  rather than a sheet, since the bug seal opens it too; `Not now` on the
+  pad, and the walk-away gone with the commit row, as on
+  `PadKeyAbsent`; the dialog's title worded without an apostrophe, which
+  the help-note check cannot parse.
+- **The gate**: 229 → **235 screens**, 1618 → **1642 edges**, 1 gap,
+  **flows 63**, every one resolved; the witness was not re-blessed.
+  `Settings`' frame grew to 2613 for its three new rows, and the
+  profile canvas's rows below it moved down 188. The settings sheets
+  re-render because the page under them grew; every pad and feed board
+  renders byte-identical. `ComposeSeal.md` gains the two refusals and
+  `Feed.md` the write rule's hold.
 
 ## 15. Index
 

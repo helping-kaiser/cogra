@@ -420,12 +420,17 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
    points at it exactly the way it would point at anyone else's. It takes the
    reader menu's own position, second, so the thumb finds one row in one place
    on every menu that has it. */
+/* THE AUTHOR'S REMOVAL, one row on every own menu that has it — the post's and
+   the comment's (the comment-removal round). It stands as the LAST of the acts,
+   where the post's menu has always put it: the rarest act, and the one that
+   takes the content away. */
+const REMOVE_ROW = { label: "Remove", onSelect: () => {} };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
   { label: "Edit", onSelect: () => {} },
   { label: "Mark as sensitive", onSelect: () => {} },
-  { label: "Remove", onSelect: () => {} },
+  REMOVE_ROW,
   LICENSE_ROW,
 ];
 const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} }, LICENSE_ROW];
@@ -462,6 +467,54 @@ const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
 const CITED_BY_ROW = { label: "Cited by", onSelect: () => {} };
 
 const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+/* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01): the reader's
+   menu with `Remove` joined as the last of the acts — after Save and Cite,
+   before the two readings, the license closing it. That is `OWN_POST_MENU`'s
+   place for the row, and the one `ChatMessageMenuOwn` already took at message
+   scale.
+
+   NO EDIT ROW AND NO SENSITIVE ROW, though the post's own menu has both. A
+   comment's Edit is a button on its own card (`CommentCard`'s `own`), so a
+   menu row would be a second door to one act; and a comment's sensitive mark
+   rides its edit, which is where the post's row sends the reader too. */
+const OWN_COMMENT_MENU = [...CARD_MENU, REMOVE_ROW, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+
+/* THE THINK-TWICE DIALOG BEHIND AN AUTHOR'S `Remove`, ONE ANATOMY PER KIND
+   (`RemoveConfirm`'s, shared the moment the comment's confirm drew it a second
+   time). The nouns swap per kind and nothing else moves (jakob 2026-09-23,
+   copy-voice): what goes, the mark that stays in its place, that it is
+   immediate and permanent — and the safe answer is the filled one, `Remove`
+   carrying no colour, because a removal is not an error (jakob 2026-09-15). */
+const REMOVE_CONFIRM_COPY = {
+  post: {
+    title: "Remove this post?",
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the post's spot in threads stays with it.`,
+  },
+  comment: {
+    title: "Remove this comment?",
+    body: `The words and pictures leave every reader's view, along with every earlier version's. A visible mark stays in their place — "Removed by its author" — and the comment's spot in its thread stays with it.`,
+  },
+};
+
+/* `overSheet` lifts the dialog above a sheet it is raised over — the comments
+   thread — by `ReplyKeyAbsent`'s one layer of board glue: `DialogSurface` sits
+   on the base wash layer and the sheet one above it, so the dialog is the
+   thing raised last. Over the post detail there is no sheet to clear. */
+function RemoveDialog({ kind, overSheet = false }) {
+  const { title, body } = REMOVE_CONFIRM_COPY[kind];
+  const dialog = (
+    <DialogSurface ariaLabel={title}>
+      <h2 style={{ margin: 0, fontSize: "var(--text-headline-small)", lineHeight: "var(--text-headline-small--line-height)", fontWeight: "var(--text-headline-small--font-weight)" }}>{title}</h2>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{body}</p>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>This is immediate and permanent.</p>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+        <Button variant="text">Remove</Button>
+        <Button>Keep it</Button>
+      </div>
+    </DialogSurface>
+  );
+  return overSheet ? <div style={{ position: "fixed", inset: 0, zIndex: 43 }}>{dialog}</div> : dialog;
+}
 /* WHAT THE LICENSE ROW OPENS (readme §13, the menus round). The terms come up
    from the bottom edge over the surface the reader asked from, and go back to
    it the way any sheet does — the scrim, the swipe, Escape. A block unfolded
@@ -925,6 +978,13 @@ const REPLY_TARGETS = {
   },
 };
 
+/* THE REPLY'S WORDS ARE A FIELD (jakob, 2026-10-01): `WordsBody`'s box at a
+   minimum of three lines — `CommentEdit`'s own minimum for the same words —
+   capped at a comment's 2,000 characters. Every reply composer board draws it
+   from these two numbers, so the composer cannot disagree with itself. */
+const REPLY_WORDS_ROWS = 3;
+const REPLY_WORDS_CAP = 2000;
+
 function ReplyDraft({ target = "post" } = {}) {
   return (
     <>
@@ -932,10 +992,7 @@ function ReplyDraft({ target = "post" } = {}) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 24px", overflow: "hidden" }}>
         <QuotedRow {...REPLY_TARGETS[target].quoted} />
 
-        <p style={{ margin: 0, fontSize: "var(--text-body-large)", lineHeight: "var(--text-body-large--line-height)" }}>
-          The third headland light is real — I have a print from 2019 that almost catches it. Almost.
-          <Caret />
-        </p>
+        <WordsBody rows={REPLY_WORDS_ROWS} cap={REPLY_WORDS_CAP} paragraphs={["The third headland light is real — I have a print from 2019 that almost catches it. Almost."]} />
 
         <InlineAction size="sm" selfStart>+ Add pictures or a video</InlineAction>
 
@@ -1194,15 +1251,26 @@ const REPLY_CITATION = "Tide tables and the third headland";
    - `offline` — no answer at all: the fault takes the commit's place,
      `TransportError`'s line over an outlined Retry and the same way back
      (`NetworkError`).
-   - `refused` — one staged act refused: its row says so with Remove it, and
-     the commit stays, because nothing was staged (`SealFaultRow`).
+   - `refused` — a cited post that never landed: its row says so with Remove
+     it, and the commit stays, because nothing was staged (`SealFaultRow`).
+   - `bug` — any other refusal of one staged act, which the picking stage
+     should have blocked: the commit's place takes `NoticePanel` in the bug's
+     words, with Try again, and Report a problem and Discard the post under
+     it (`SealFaultBug`).
    - `writeRule` — the write rule's refusal: nothing failed and nothing was
      spent, so the commit's place takes `NoticePanel`, and the way out keeps
      the draft (`WriteRuleFailed`). */
-const SEAL_REFUSED_CITATION = "This can't be cited anymore.";
+const SEAL_UNLANDED_CITATION = "This post didn't land, so it can't be cited.";
+const SEAL_BUG_TITLE = "This shouldn't have happened";
+const SEAL_BUG_FACT = "That's a fault on our side, not yours. Nothing was signed or spent, and telling us helps us fix it.";
 const WRITE_RULE_TITLE = "You can't sign right now";
 const WRITE_RULE_FACT =
   "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your draft is kept.";
+/* The write rule's own "?" — the stopper exception (jakob 2026-10-01). The
+   header's "?" explains signing; this one explains how the stop resolves, so
+   it rides the notice panel and is named by its dialog (copy-voice, *The "?"
+   dialogs*). The pad's notice carries the same one. */
+const WRITE_RULE_HELP = "Why signing waits";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
   return (
@@ -1243,7 +1311,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                     </span>
                   ),
                   count: "1",
-                  ...(state === "refused" ? { fault: { message: SEAL_REFUSED_CITATION, onRemove: () => {} } } : null),
+                  ...(state === "refused" ? { fault: { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } } : null),
                 },
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
@@ -1272,10 +1340,24 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
           </div>
         ) : state === "writeRule" ? (
           <>
-            <NoticePanel title={WRITE_RULE_TITLE}>
+            <NoticePanel title={WRITE_RULE_TITLE} helpLabel={WRITE_RULE_HELP} onHelp={() => {}}>
               <NoticeLine>{WRITE_RULE_FACT}</NoticeLine>
             </NoticePanel>
             <Button variant="text" style={{ width: "100%" }}>Keep the draft, sign later</Button>
+          </>
+        ) : state === "bug" ? (
+          <>
+            {/* Not a fault in `--error`, and not the write rule's notice: the
+                reader did nothing wrong and nothing was spent, so it is the
+                tertiary panel, and its words own the bug. */}
+            <NoticePanel title={SEAL_BUG_TITLE}>
+              <NoticeLine>{SEAL_BUG_FACT}</NoticeLine>
+              <Button variant="inverse" style={{ width: "100%" }}>Try again</Button>
+            </NoticePanel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              <Button variant="text" style={{ width: "100%" }}>Report a problem</Button>
+              <Button variant="text" style={{ width: "100%" }}>Discard the post</Button>
+            </div>
           </>
         ) : (
           <SealFooter signLabel="Sign and publish" busy={state === "signing"} busyLabel="Signing and publishing…" />
@@ -1490,15 +1572,24 @@ function KeyAbsentNotice({ line }) {
    longer than the box shows, and the paragraphs drawn are the visible tail of
    it, so a count taken from them would be a lie about what is written. Over the
    cap the box takes the `--error` outline and the surface's own refusal renders
-   under it, which is `TextField`'s arrangement exactly. */
-function WordsBody({ paragraphs, cap, used, error }) {
+   under it, which is `TextField`'s arrangement exactly.
+
+   `rows` IS THE GROWTH LAW'S MINIMUM (readme §13, the sheets-and-video round).
+   Without it the box takes the whole column, which is the post's body: the
+   post IS its words. Given, the box opens at that many lines and grows with
+   the writing — `TextField`'s own `rows` rule — which is the reply composer's
+   words, written above what they answer and the pictures that join them. The
+   board draws the minimum, as every field does. */
+function WordsBody({ paragraphs, cap, used, error, rows }) {
   const spent = used ?? [...paragraphs.join("\n\n")].length;
   const over = cap != null && spent > cap;
+  const sized = rows != null;
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
+    <div style={sized ? { flex: "none", display: "flex", flexDirection: "column", gap: "var(--space-1)" } : { flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-1)", minHeight: 0 }}>
       <div
         style={{
-          flex: 1,
+          flex: sized ? "none" : 1,
+          minHeight: sized ? `calc(${rows} * var(--text-body-large--line-height) + 26px)` : undefined,
           display: "flex",
           flexDirection: "column",
           gap: 16,
@@ -1818,7 +1909,33 @@ const TOBIAS_REPLIES = [
    sheet does not follow it yet: by the rule it ends its branch, and moving it
    there puts its words below the frame at the kept offset — which way the
    landing brings it into view is still to be ruled, so the drawing waits. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
+/* `removed` DRAWS THE READER'S OWN COMMENT AFTER THEIR REMOVE (the
+   comment-removal round, 2026-10-01). @sol's comment is the reader's — the
+   foot's monogram says who is reading — and it is the one with a branch under
+   it, which is the point: removal takes the payload, never the record
+   (comment.md §5), so the card keeps its author, its time and its place in the
+   order, and `RedactedContent` stands where the words were. The replies keep
+   their parent and stay readable — removal never breaks a thread.
+
+   ITS SECOND LINE SWAPS THE NOUN. The author's mark ships the post's words —
+   "The post's place in the thread" — and a comment says its own, the way a
+   chat message carries its own second line.
+
+   A REMOVED COMMENT HAS NO MENU LEFT, the post's `Removed` rule: nothing on
+   its card is left to save, cite or read the terms of, so its ⋮ goes with the
+   payload. What survives is what survives a removed post — the author, the
+   opinion a reader can still give, and the way to answer. */
+const REMOVED_COMMENT_NOTE = "The comment's place in the thread, and every response, remain.";
+/* WHERE THE READER STANDS IN THE THREAD for the whole removal — the menu, the
+   dialog and the mark (`ReplySettled`'s `scrolledBy`, the reply-return
+   ruling's offset). @sol's comment stands third, below the fold of a sheet
+   drawn from its top, so the three boards keep the reader where they were when
+   they opened their comment's ⋮: the comment and its branch in view, the
+   thread above it cut at the sheet's top edge. One number, so the three cannot
+   disagree about where that is. */
+const REMOVED_COMMENT_SCROLL = 440;
+
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -1876,7 +1993,8 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
         timestamp="3h"
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
+        menuItems={removed ? [] : CARD_MENU}
+        redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
         replies={[
           {
             id: "r1",
@@ -2087,6 +2205,19 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    stops promising a way back that does not exist — and `forget` is the
    don't-remember switch turned on. Both default to the page every other
    board draws. */
+/* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the
+   settings row, the release chronicle and the report's diagnostic line all
+   read the running version, and three boards disagreeing about it would be
+   the drift the constant exists to stop. The repo states 0.1.0; the boards
+   draw two patch releases later so the chronicle has a history to show.
+   Both addresses are placeholders until CoGra is on a server, on `.local`,
+   the repo's own genesis-account domain: real-shaped, and undeliverable, so
+   nothing sent before the swap reaches a stranger. */
+const RUNNING_VERSION = "0.1.2";
+const REPORT_ADDRESS = "reports@cogra.local";
+const CONTACT_ADDRESS = "hello@cogra.local";
+const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+
 function SettingsBody({ backup = "made", forget = false } = {}) {
   return (
     <>
@@ -2227,10 +2358,10 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
             batch-rulings round). The page's order is frequency, not taxonomy,
-            and these four rows are the least-reached on it — nobody opens
-            settings to re-watch an intro. They stand together because they are
-            one kind of row: four doors onto words about the product, none of
-            them a setting.
+            and these rows are the least-reached on it — nobody opens settings
+            to re-watch an intro. They stand together because they are one kind
+            of row: doors onto words about the product, or ways to answer it,
+            none of them a setting.
 
             NO FOOTNOTE. A group's footnote carries the fact a reader needs once
             and never again, and there is none here — every row's label already
@@ -2238,10 +2369,24 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
             PRIVACY AND TERMS ARE ROWS AND NOTHING ELSE. They open static legal
             documents, which are written rather than designed; a board drawing
-            one would be a drawing of text nobody in this repo writes. */}
+            one would be a drawing of text nobody in this repo writes.
+
+            THE SUPPORT STACK JOINS IT (jakob, 2026-10-01): `What's new`,
+            whose value is the version running here and which opens the
+            release chronicle (`WhatsNew`); `Report a problem`, the structured
+            report (`ReportProblem`); and `Contact`, a plain mail door kept
+            apart so reports stay reports. They sit after About CoGra and
+            before the legal pair — the product's own words first, then the
+            ways to answer it, then the documents. The two addresses are
+            placeholders until CoGra is on a server, the APK path's way:
+            real-shaped values on the repo's own `.local` domain, swapped
+            when the addresses exist. */}
         <SettingsGroup label="About">
           <SettingsRow label="Watch the intro again" onOpen={() => {}} />
           <SettingsRow label="About CoGra" onOpen={() => {}} />
+          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} />
+          <SettingsRow label="Report a problem" onOpen={() => {}} />
+          <SettingsRow label="Contact" value={CONTACT_ADDRESS} onOpen={() => {}} />
           <SettingsRow label="Privacy" onOpen={() => {}} />
           <SettingsRow label="Terms" onOpen={() => {}} />
         </SettingsGroup>
