@@ -3010,6 +3010,240 @@ function TagFeedCard({ name, newest, age, score, bundle }) {
   );
 }
 
+/* ── THE FEED CARDS' OPTION BOARDS (the feed-cards rework, 2026-10-01) ─────
+   jakob, on the round above: the cards "need to be more unique.. the profile
+   card just looks like a text post that only has a body. the comment card is
+   better as it has the link to the original post but could be even more
+   distinct. the tag card also needs some work.. it needs to tell a better
+   story". So each card gets ONE working board holding its anatomies side by
+   side — today's card first, every option after it — for him to pick from.
+
+   THESE ARE WORKING BOARDS, NOT SCREENS. A comparison needs a frame no phone
+   has, so each is a `reference` board exactly as `FeedShapes` is: a wide
+   `FRAME`, wired nowhere, no flow numbers and no edges, because nothing on it
+   is a place a reader stands — each column is a card a reader WOULD meet on
+   `FeedKinds`. Whichever anatomy jakob picks replaces its card on that board;
+   the option props the masters grew for the others (`CommentCard`'s
+   `targetShape`, `PostCard`'s `stanceWide`) leave with them.
+
+   EVERY OPTION IS MASTERS. The cards are `CommentCard` and `PostCard`, the
+   marks `NodeMark`, the identity `MonogramAvatar`, the peeks `ContentRow` —
+   arranged, never redrawn. Each column names its option with `SectionLabel`
+   and says what it is for with `QuietNote`, the note register. */
+const OPTION_GAP = 48;
+const optionFrame = (columns, height) => ({
+  width: columns * 390 + (columns - 1) * OPTION_GAP,
+  height,
+  style: `display: flex; flex-direction: row; gap: ${OPTION_GAP}px; overflow: hidden;`,
+});
+
+function OptionColumn({ label, note, children }) {
+  return (
+    <div style={{ width: 390, flex: "none", display: "flex", flexDirection: "column" }}>
+      <SectionLabel>{label}</SectionLabel>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "8px 0 0" }}>{children}</div>
+      <div style={{ padding: "12px 24px 0" }}>
+        <QuietNote>{note}</QuietNote>
+      </div>
+    </div>
+  );
+}
+
+/* THE COMMENT'S FIXTURE, shared by its three columns so they differ by
+   anatomy alone: `FeedKinds`' comment, answering `ADA_POST`. */
+const OPTION_COMMENT = {
+  author: TOBIAS,
+  content: "That stretch after the second bend is the reason I keep a camera in the glovebox.",
+  timestamp: "1h",
+  target: "“The long way home” — @ada",
+  topics: ["glovebox", "coastroad"],
+  references: 1,
+  replyCount: 2,
+  score: "12.40",
+};
+
+/* The comment with its target louder — `CommentFeedCard` plus the option
+   candidate. The detail is `ADA_POST`'s own: its title, its author, the start
+   of its words, Ada's picture for the quote and the post's cover for the head
+   row's mark. */
+function CommentFeedCardOption({ shape, ...comment }) {
+  return (
+    <CommentCard
+      {...comment}
+      onOpenTarget={() => {}}
+      targetShape={shape}
+      targetDetail={{
+        title: ADA_POST.title,
+        author: ADA,
+        snippet: ADA_POST.description,
+        authorSrc: "comment-camera.jpg",
+        cover: ADA_POST.media[0].src,
+      }}
+      onOpenScore={() => {}}
+      scoreLabel={FEED_SCORE_LABEL}
+      onOpenReplies={() => {}}
+      onReply={() => {}}
+      license={{ attribution: 0, provenance: 0 }}
+      menuItems={CARD_MENU}
+    />
+  );
+}
+
+/* THE PERSON, TWO WAYS (option candidates). Both lead with the person at a
+   size a text post's author never takes, put the bio in the quiet colour
+   under them, and wear the opinion as the profile page does — the wide
+   anchor (`stanceWide`). They differ in the register of the identity:
+
+   · `contact` — the profile header's own compact shape at card scale: the
+     picture left, the name and handle beside it. A person met in the feed
+     reads as the top of their profile.
+   · `portrait` — the picture centred over the name, the shape a "someone you
+     might know" tile has everywhere. The card's ⋮ keeps its corner. */
+const OPTION_NAME = {
+  fontSize: "var(--text-title-medium)",
+  lineHeight: "var(--text-title-medium--line-height)",
+  fontWeight: "var(--text-title-medium--font-weight)",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+};
+const OPTION_BIO = {
+  margin: 0,
+  fontSize: "var(--text-body-medium)",
+  lineHeight: "var(--text-body-medium--line-height)",
+  color: "var(--text-secondary)",
+  display: "-webkit-box",
+  WebkitLineClamp: 2,
+  WebkitBoxOrient: "vertical",
+  overflow: "hidden",
+};
+
+function ProfileFeedCardOption({ shape, person, src, bio, score, bundle }) {
+  const contact = shape === "contact";
+  return (
+    <PostCard
+      lead={
+        contact ? (
+          <span style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", minWidth: 0 }}>
+            <MonogramAvatar name={person.displayName} src={src} size={56} />
+            <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+              <span style={OPTION_NAME}>{person.displayName}</span>
+              <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+            </span>
+          </span>
+        ) : (
+          /* The portrait leads below the header row, so the row holds nothing
+             but the ⋮ — an empty lead keeps it in its corner. */
+          <span aria-hidden="true" />
+        )
+      }
+      main={
+        contact ? (
+          <p style={OPTION_BIO}>{bio}</p>
+        ) : (
+          /* The portrait rises into the header row, which holds only the ⋮ in
+             its corner — the row's height plus the card's gap, so the picture
+             starts at the card's top padding rather than under an empty band. */
+          <span style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--space-1)", textAlign: "center", marginTop: -36 }}>
+            <MonogramAvatar name={person.displayName} src={src} size={72} />
+            <span style={{ ...OPTION_NAME, marginTop: "var(--space-2)" }}>{person.displayName}</span>
+            <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+            <p style={{ ...OPTION_BIO, marginTop: "var(--space-2)" }}>{bio}</p>
+          </span>
+        )
+      }
+      targetLabel={"@" + person.handle}
+      bundle={bundle}
+      score={score}
+      onOpenScore={() => {}}
+      scoreLabel={FEED_SCORE_LABEL}
+      stanceWide
+      menuItems={FEED_PROFILE_MENU(person.handle)}
+      menuLabel={"More about @" + person.handle}
+      onOpen={() => {}}
+    />
+  );
+}
+
+/* THE TAG, TWO WAYS (option candidates). jakob's story for the card: "this
+   is a hashtag that ranks high for you (based on your graph) and there might
+   be some interesting stuff to check out behind it". Today's card answers it
+   with ONE preview row, which reads as a post riding inside a tag. Both
+   options show MORE THAN ONE thing behind the tag, so the card reads as a
+   door to a place rather than a post with a header:
+
+   · `glimpse` — the story said in words first: under the name, a quiet line
+     naming whom it reaches the reader through (the drill-down's own `Through
+     @ada` vocabulary), and the body a glimpse — the newest things tagged,
+     as their marks side by side, the newest one's name beside them.
+   · `peek` — no new words at all: the `#` and the score do the talking, and
+     the body is the tag page's own list in miniature, its two newest things
+     as rows.
+
+   THE TAGGED THINGS ARE `TagPage`'s: Tobias's text post (1h), Sol's salt maps
+   (3d), Ada's comment on them (4d) — newest first, the page's order. */
+const OPTION_TAGGED = [
+  { kind: "post", title: "Low tide at six tomorrow — anyone walking the flats?", by: TOBIAS, age: "1h" },
+  { kind: "post", title: SOL_POST.title, by: SOL, age: "3d", cover: SOL_POST.media[0].src },
+  { kind: "comment", title: "Low tide is kinder to the rubbings than noon ever was.", by: ADA, age: "4d" },
+];
+const OPTION_WHY = "Reaches you through @ada and @tobias";
+
+function TagFeedCardOption({ shape, name, score, bundle }) {
+  const glimpse = shape === "glimpse";
+  const [newest, ...rest] = OPTION_TAGGED;
+  return (
+    <PostCard
+      lead={
+        <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+          <NodeMark kind="topic" />
+          {glimpse ? (
+            <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+              <FeedLeadName>{name}</FeedLeadName>
+              <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{OPTION_WHY}</span>
+            </span>
+          ) : (
+            <FeedLeadName>{name}</FeedLeadName>
+          )}
+        </span>
+      }
+      main={
+        glimpse ? (
+          <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
+            <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
+              {/* Each mark takes a hairline, for `QuotedRow`'s reason on the
+                  comment's quote: the tile's tone is the card's own. */}
+              {OPTION_TAGGED.map((thing) => (
+                <span key={thing.title} style={{ display: "flex", borderRadius: "var(--radius-small)", border: "1px solid var(--border-hairline)" }}>
+                  <NodeMark kind={thing.kind} src={thing.cover} />
+                </span>
+              ))}
+            </span>
+            <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+              <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
+              <span style={FEED_LEAD_SMALL}>@{newest.by.handle} · and {rest.length} more</span>
+            </span>
+          </span>
+        ) : (
+          <span style={{ display: "flex", flexDirection: "column" }}>
+            {OPTION_TAGGED.slice(0, 2).map((thing) => (
+              <ContentRow key={thing.title} variant="chronicle" chevron={false} inert glyph={thing.kind === "comment" ? "chat_bubble" : "dynamic_feed"} title={thing.title} second={"@" + thing.by.handle} trailing={thing.age} />
+            ))}
+          </span>
+        )
+      }
+      timestamp={glimpse ? newest.age : undefined}
+      targetLabel={name}
+      bundle={bundle}
+      score={score}
+      onOpenScore={() => {}}
+      scoreLabel={FEED_SCORE_LABEL}
+      stanceAxes={AFFINITY_AXES}
+      onOpen={() => {}}
+    />
+  );
+}
+
 /* ── THE TOPICS THE READER HOLDS (the topic round, 2026-09-14) ─────────────
    The set behind Explore's door and behind the feed filter's topic narrowing,
    so both read one fixture and the door's count cannot drift from the list it

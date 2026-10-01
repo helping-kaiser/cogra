@@ -7120,6 +7120,17 @@ they turn a kind on, on one new board, `FeedKinds`.
   stands as the `ShareButton` glyph every card's row ends with — one tap,
   the platform's own sheet. It rides all four tag-page boards through
   `TopicStanceRow`.
+- **The cards' anatomies wait on three working boards** (jakob
+  2026-10-01: the cards "need to be more unique"). `FeedCommentOptions`,
+  `FeedProfileOptions` and `FeedTagOptions` each hold today's card and two
+  anatomies side by side, captioned, for jakob's pick — `reference` boards
+  wired nowhere, as `FeedShapes` is. The options ride option-candidate props
+  (`CommentCard`'s `targetShape`, `PostCard`'s `stanceWide`) that no screen
+  wears; the picked anatomy replaces its card on `FeedKinds`, and the props
+  of the anatomies not picked leave the masters.
+- **The gate for the score, the share and the boards**: 1618 → **1619
+  edges** (the empty tag page's share), three reference boards, **1 gap**,
+  flows **63**, every one resolved. The witness was not re-blessed.
 - **Every ranked card wears the score** (jakob 2026-10-01: "every card
   should have the graph glyph and the score number next to it"). The rank
   is about the paths leading to a thing and never its kind, so the comment,
