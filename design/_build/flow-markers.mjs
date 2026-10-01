@@ -1326,6 +1326,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="What happened"', tag: "div" },
     { n: 3, find: ">Send by email</button>", tag: "button" },
   ],
+  // The same page before a word (jakob 2026-10-01): the same three controls,
+  // the commit disabled with its reason above it — so the same numbers.
+  ReportProblemEmpty: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="What happened"', tag: "div" },
+    { n: 3, find: ">Send by email</button>", tag: "button" },
+  ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
   // and every Unhide is one control drawn three times, so they share a number.

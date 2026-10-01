@@ -2231,6 +2231,83 @@ const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
 const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
 
+/* THE REPORT PAGE, whole (`ReportProblem`'s anatomy, shared the moment its
+   empty state drew it a second time). `words` is what the field holds. Empty,
+   `Send by email` stays where it is, visible and disabled, with the reason in
+   the foot's line right above it — the disabled-submit law (readme §4,
+   *Interaction states*; jakob 2026-10-01): never hidden, never live only to
+   refuse. `Nothing to send yet` is the edit foot's zero (`Nothing to sign
+   yet`) with the report's verb, in `ActsFooter`'s ink. */
+function ReportProblemBody({ words }) {
+  const empty = !words;
+  return (
+    <>
+      <PageHeader backHref="#" backLabel="Back" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          Report a problem
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          Say what happened, in your own words. Sending opens your email with everything below filled in — nothing goes
+          until you send it there.
+        </p>
+
+        <div style={{ marginTop: 24 }}>
+          <TextField id="report-what-happened" label="What happened" rows={4} value={words ?? ""} />
+        </div>
+
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
+          <FactRow label="To" value={REPORT_ADDRESS} />
+          <FactRow label="Version" value={RUNNING_VERSION} />
+          <FactRow label="Running on" value="Firefox on Ubuntu" />
+          <FactRow label="Time" value="01.10.2026, 14:32" last />
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <QuietNote>
+            That's all that goes with your words — no account, no key, nothing you've posted. It's sent from your own email,
+            so we can write back.
+          </QuietNote>
+        </div>
+
+        <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+          {empty && (
+            <span
+              style={{
+                textAlign: "center",
+                fontSize: "var(--text-label-small)",
+                lineHeight: "var(--text-label-small--line-height)",
+                letterSpacing: "var(--text-label-small--letter-spacing)",
+                color: "var(--text-secondary)",
+              }}
+            >
+              Nothing to send yet
+            </span>
+          )}
+          <Button style={{ width: "100%" }} disabled={empty}>
+            Send by email
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 function SettingsBody({ backup = "made", forget = false } = {}) {
   return (
     <>

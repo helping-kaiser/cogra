@@ -940,6 +940,10 @@ and before `Privacy` and `Terms`, each one string for app and web:
   no account, no key, nothing you've posted. It's sent from your own
   email, so we can write back.` The commitment is `Send by email`,
   because the press opens the reader's mail and sends nothing itself.
+  With the field empty it stays visible and disabled, `Nothing to send
+  yet` right above it — the edit foot's zero, `Nothing to sign yet`,
+  with the report's verb (`ReportProblemEmpty`; *new 2026-10-01,
+  flagged for blessing*). Leaving with Back keeps the words.
 - `Contact`, its value the address it writes to — a plain mail door,
   kept apart from the report so reports stay structured.
 

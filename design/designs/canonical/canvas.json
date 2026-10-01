@@ -1410,7 +1410,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1779,
+      "h": 1818,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -1443,10 +1443,10 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3610,
+      "x": -3900,
       "y": 0,
-      "w": 3190,
-      "h": 5317,
+      "w": 3480,
+      "h": 5369,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1643,6 +1643,15 @@
       "file": "ReportProblem.dc.html",
       "title": "Settings · report a problem",
       "x": 4800,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ReportProblemEmpty.dc.html",
+      "title": "Settings · report a problem, before a word",
+      "x": 5280,
       "y": 1928,
       "w": 390,
       "h": 844,
