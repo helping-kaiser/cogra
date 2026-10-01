@@ -3705,7 +3705,7 @@ face and pair, dropping one before signing), what it signs as and
 what the snackbar says, and where the reader lands after. Drawing it
 closes the gap.
 
-### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30**
+### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30** · **done 2026-10-01**
 
 Register a feed board that draws a clip — `FeedShapes` or
 `FeedCover` — under the `feed` node prefix, as the first round of the
@@ -3715,6 +3715,12 @@ their plain words, which item 111's node check then holds. Approved
 by jakob on 2026-09-30; the grammar and the plan are the design ⇄
 impl seam's entry 002 (dev-state `cogra/tmp_dev/design-impl-seam.md`)
 and the calibration-ID PR, #30.
+
+Done 2026-10-01: `FeedCover` registers under `feed`, named as `Feed`
+names its parts, and the card's discs carry `soundDisc` and `playDisc`.
+The stage law spans a post's clip and a comment card's, and only the
+post's is drawn, so `Feed.md` anchors the post's clip as
+`feed.card.media.frame` in its own lines and keeps *clip* for both.
 
 ### 115 · Ranked comment order, once ranking exists · *design* · **filed 2026-09-30** · **future**
 
