@@ -2210,20 +2210,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Un-tag</button>", tag: "button" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Set exact values for #saltmaps</button>", tag: "button" },
   ],
   // The composer's twin of the pad. It has no `Withdraw` — nothing is signed on
-  // that path yet — so its three live things are the pad, `Done` and the scrim.
+  // that path yet — so its live things are the pad, `Done`, the scrim and the
+  // non-drag route hidden until focused.
   TagPadCompose: [
     { n: 1, find: 'aria-label="The pair this tag signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Set exact values for #coastroad</button>", tag: "button" },
   ],
   // The citation's twin of TagPad — the same pad over two signed axes, because
-  // both of a citation's parameters are signed. Same three controls.
+  // both of a citation's parameters are signed. Same controls.
   RefPair: [
     { n: 1, find: 'aria-label="The pair this citation signs"', tag: "div" },
     { n: 2, find: ">Done</button>", tag: "button" },
     { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 4, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
   ],
 });
 

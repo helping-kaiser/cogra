@@ -1145,17 +1145,20 @@
     { "from": "TagPickerRefused", "via": 4, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the composer it was opened from, every staged tag kept and nothing added — the header back's leave, said affirmatively" }] },
 
     { "from": "TagPad", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — the drag stops at the floor, and nothing signs until the seal" }] },
-    { "from": "TagPad", "via": 2, "kind": "advance", "label": "Withdraw", "to": [{ "terminal": "back", "case": "the sheet closes — the chip leaves the row for the body's withdrawn line, and the acts card counts one more" }] },
+    { "from": "TagPad", "via": 2, "kind": "advance", "label": "Un-tag", "to": [{ "terminal": "back", "case": "the sheet closes — the chip leaves the row for the body's withdrawn line, and the acts card counts one more" }] },
     { "from": "TagPad", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
     { "from": "TagPad", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+    { "from": "TagPad", "via": 5, "kind": "advance", "label": "Set exact values for #saltmaps (hidden until focused)", "to": [{ "terminal": "self", "case": "the field gives way, in place, to the two tracks with the tag's bound and poles — Type exact values one tap away; the readout and Done stay" }] },
 
     { "from": "TagPadCompose", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — the drag stops at the floor, and nothing signs until the seal" }] },
     { "from": "TagPadCompose", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the chip carries the pair it was given" }] },
     { "from": "TagPadCompose", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+    { "from": "TagPadCompose", "via": 4, "kind": "advance", "label": "Set exact values for #coastroad (hidden until focused)", "to": [{ "terminal": "self", "case": "the field gives way, in place, to the two tracks with the tag's bound and poles — Type exact values one tap away; the readout and Done stay" }] },
 
     { "from": "RefPair", "via": 1, "kind": "advance", "label": "the pad", "to": [{ "terminal": "self", "case": "the pair moves — nothing signs until the seal" }] },
     { "from": "RefPair", "via": 2, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the staged row carries the pair it was given" }] },
     { "from": "RefPair", "via": 3, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the pair is what it was" }] },
+    { "from": "RefPair", "via": 4, "kind": "advance", "label": "Set exact values for the citation (hidden until focused)", "to": [{ "terminal": "self", "case": "the field gives way, in place, to the two tracks over both signed slots — Type exact values one tap away; the readout and Done stay" }] },
 
     { "from": "TagPage", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to wherever the reader came from, and the label names that origin by the noun table (readme, the tag-page smalls) — `Back to Explore`, `Back to the search`, `Back to Your topics`, `Back to feed`, `Back to the post`, `Back to the comments`, `Back to the profile`, `Back to #<thattag>`; a cold entry with no history falls back to `Back to Explore`, the state the family's boards draw" }] },
     { "from": "TagPage", "via": 2, "kind": "advance", "label": "choose your stance (the accessible path)", "to": [{ "terminal": "self", "case": "the alternates open on whichever stance it belongs to" }, { "board": "VouchBackPad", "case": "the pad, where that is the reader's chosen input (master board)" }] },
