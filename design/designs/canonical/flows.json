@@ -322,6 +322,15 @@
       "end": { "board": "RemoveConfirm", "via": 1, "to": "Removed" }
     },
     {
+      "name": "remove-your-comment",
+      "description": "Your own comment's menu carries Remove; it asks once, then leaves the mark — the comment is redacted where it stood in its thread, its replies still under it, never silently erased.",
+      "start": { "board": "ReplyMedia", "via": 2, "to": "CommentMenuOwn" },
+      "waypoints": [
+        { "board": "CommentMenuOwn", "via": 7 }
+      ],
+      "end": { "board": "CommentRemoveConfirm", "via": 1, "to": "CommentRemoved" }
+    },
+    {
       "name": "set-the-cover-and-order",
       "description": "Show all opens the picked batch as a list; dragging sets the order, the first picture is the cover, and Done returns wherever the sheet opened.",
       "start": { "board": "ComposePick", "via": 5 },

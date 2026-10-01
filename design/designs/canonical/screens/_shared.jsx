@@ -1871,7 +1871,33 @@ const TOBIAS_REPLIES = [
    sheet does not follow it yet: by the rule it ends its branch, and moving it
    there puts its words below the frame at the kept offset — which way the
    landing brings it into view is still to be ruled, so the drawing waits. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
+/* `removed` DRAWS THE READER'S OWN COMMENT AFTER THEIR REMOVE (the
+   comment-removal round, 2026-10-01). @sol's comment is the reader's — the
+   foot's monogram says who is reading — and it is the one with a branch under
+   it, which is the point: removal takes the payload, never the record
+   (comment.md §5), so the card keeps its author, its time and its place in the
+   order, and `RedactedContent` stands where the words were. The replies keep
+   their parent and stay readable — removal never breaks a thread.
+
+   ITS SECOND LINE SWAPS THE NOUN. The author's mark ships the post's words —
+   "The post's place in the thread" — and a comment says its own, the way a
+   chat message carries its own second line.
+
+   A REMOVED COMMENT HAS NO MENU LEFT, the post's `Removed` rule: nothing on
+   its card is left to save, cite or read the terms of, so its ⋮ goes with the
+   payload. What survives is what survives a removed post — the author, the
+   opinion a reader can still give, and the way to answer. */
+const REMOVED_COMMENT_NOTE = "The comment's place in the thread, and every response, remain.";
+/* WHERE THE READER STANDS IN THE THREAD for the whole removal — the menu, the
+   dialog and the mark (`ReplySettled`'s `scrolledBy`, the reply-return
+   ruling's offset). @sol's comment stands third, below the fold of a sheet
+   drawn from its top, so the three boards keep the reader where they were when
+   they opened their comment's ⋮: the comment and its branch in view, the
+   thread above it cut at the sheet's top edge. One number, so the three cannot
+   disagree about where that is. */
+const REMOVED_COMMENT_SCROLL = 440;
+
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -1929,7 +1955,8 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0 }) {
         timestamp="3h"
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
+        menuItems={removed ? [] : CARD_MENU}
+        redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
         replies={[
           {
             id: "r1",

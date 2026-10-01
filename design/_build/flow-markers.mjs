@@ -364,6 +364,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "Add a comment</label>", tag: "label" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The thread after the reader's own Remove (the comment-removal round): the
+  // same sheet with the same controls, so ReplyEntry's numbers. The removed
+  // comment has no ⋮ left; its author chip, its opinion and its Reply ride
+  // the thread's own numbers.
+  CommentRemoved: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: '<a href="/t/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 6, find: "View 2 replies", tag: "button" },
+    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },

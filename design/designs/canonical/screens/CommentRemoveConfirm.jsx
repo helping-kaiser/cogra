@@ -8,14 +8,15 @@
    thread, where a post's place stands in threads (copy-voice, the whole-comment
    confirm).
 
-   THE SURFACE BENEATH IS THE THREAD, whole and inert: the menu has closed, and
-   the dialog comes up over the sheet the reader asked from — lifted above it
-   the way `ReplyKeyAbsent`'s notice is. */
+   THE SURFACE BENEATH IS THE THREAD, whole and inert, still where the reader
+   opened the menu (`REMOVED_COMMENT_SCROLL`): the menu has closed, and the
+   dialog comes up over the sheet the reader asked from — lifted above it the
+   way `ReplyKeyAbsent`'s notice is. */
 export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet />
+      <CommentsThreadSheet scrolledBy={REMOVED_COMMENT_SCROLL} />
       <RemoveDialog kind="comment" overSheet />
     </>
   );

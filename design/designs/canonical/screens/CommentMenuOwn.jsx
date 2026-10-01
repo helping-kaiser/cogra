@@ -1,7 +1,9 @@
 /* YOUR OWN COMMENT'S MENU, OVER THE THREAD (the comment-removal round,
    2026-10-01; jakob: removing your own comment is V1.0). `CommentMenu`'s board
    with one row more, so it is drawn the way that board is — stacked, a sheet on
-   the thread's sheet — and differs from it only in the list it is handed.
+   the thread's sheet — and differs from it in the list it is handed and in
+   where the thread stands beneath it: scrolled to the reader's own comment,
+   @sol's, at the offset the whole removal keeps (`REMOVED_COMMENT_SCROLL`).
 
    `Remove` STANDS AS THE LAST OF THE ACTS (`OWN_COMMENT_MENU`): Save and Cite
    lead, as on every menu that has them, then Remove, then the two readings, and
@@ -11,7 +13,7 @@ export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet />
+      <CommentsThreadSheet scrolledBy={REMOVED_COMMENT_SCROLL} />
 
       <BottomSheet open stacked ariaLabel="Comment actions">
         {OWN_COMMENT_MENU.map((item) => (
