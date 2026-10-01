@@ -3772,19 +3772,28 @@ ruling:
 - **The key-absent boards onto `NoticePanel`.** Five boards still draw
   the tertiary panel by hand. They also disagree on the corner and drop
   the title's letter-spacing.
-- **The write rule's words where no draft is kept** (found 2026-10-01).
-  The reply seals reach `WriteRuleFailed`, whose words and way out say
-  the draft is kept — but a reply keeps no draft (*The reply pack*). A
-  ruling: the reply-scale words and way out, or a kept reply draft.
+- ~~**The write rule's words where no draft is kept**~~ — the words
+  closed 2026-10-01 (jakob: conditional): reached from a reply's seal,
+  the fact ends `your reply is still here`, and the "?" says the same
+  (copy-voice, *Faults by code*; readme §13, *The review fixes*). The
+  clause is new and flagged for blessing.
+- **The write rule's way out at reply scale** (what is left of the
+  entry above). `WriteRuleFailed`'s `Keep the draft, sign later` is the
+  post's, and a reply keeps no draft, so the panel's way out from a
+  reply's seal is false there and undrawn. A ruling: what replaces it —
+  the seal's own Back to the composer, `Discard the reply`
+  (`ReplySealKeyAbsent`'s), or a kept reply draft.
 
-### 118 · What the support stack left open · *design* · **filed 2026-10-01**
+### 118 · What the support stack left open · *design* · **filed 2026-10-01** · **report edges closed 2026-10-01**
 
 The support stack (readme §13, *The failure fixes and the support
 stack*) drew the three rows and two boards. Still unruled:
 
-- **The report's edges.** Whether `Send by email` goes inert while the
-  field is empty, and whether words written survive leaving the screen
-  — the board draws a filled field and says neither.
+- ~~**The report's edges.**~~ — closed 2026-10-01 (jakob ruled the
+  defaults): empty, `Send by email` is visible and disabled with
+  `Nothing to send yet` above it (`ReportProblemEmpty`), and leaving
+  with Back keeps the words (readme §13, *The review fixes*). What a
+  sent report does to the kept words is not ruled.
 - **A running version behind the newest.** `WhatsNew` marks the
   running version as current; an install that is behind the newest
   release has no drawn reading yet.
