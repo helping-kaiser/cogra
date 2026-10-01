@@ -678,6 +678,7 @@
     { "from": "ReplySettled", "via": 5, "kind": "advance", "label": "Reply", "to": [{ "board": "ReplyComposeComment", "case": "the composer, pre-targeted at that comment" }, { "board": "ReplyKeyAbsent", "case": "key elsewhere — the notice meets the reader at the door, before a word is written" }] },
     { "from": "ReplySettled", "via": 6, "kind": "advance", "label": "Add a comment", "to": [{ "board": "ReplyCompose", "case": "the full-focus composer, parent pinned" }, { "board": "ReplyKeyAbsent", "case": "key elsewhere — the notice meets the reader at the door, before a word is written" }] },
     { "from": "ReplySettled", "via": 7, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
+    { "from": "ReplySettled", "via": 8, "kind": "advance", "label": "Edit (own comment)", "to": [{ "board": "CommentEdit", "case": "your own comment's edit — the landed reply's or the 3h comment's" }] },
 
     { "from": "ReplyEntry", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther" }] },
     { "from": "ReplyEntry", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "someone else's comment — the comment's sheet (master)" }, { "board": "CommentMenuOwn", "case": "your own comment — the same sheet with Remove among the acts" }] },
@@ -687,6 +688,7 @@
     { "from": "ReplyEntry", "via": 6, "kind": "detour", "label": "View n replies", "to": [{ "terminal": "self", "case": "the branch unfolds" }] },
     { "from": "ReplyEntry", "via": 7, "kind": "advance", "label": "Add a comment", "to": [{ "board": "ReplyCompose", "case": "the full-focus composer, parent pinned" }, { "board": "ReplyKeyAbsent", "case": "key elsewhere — the notice meets the reader at the door, before a word is written" }] },
     { "from": "ReplyEntry", "via": 8, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
+    { "from": "ReplyEntry", "via": 9, "kind": "advance", "label": "Edit (own comment)", "to": [{ "board": "CommentEdit", "case": "your own comment's edit" }] },
     { "from": "CommentRemoved", "via": 1, "kind": "advance", "label": "comment author chips", "to": [{ "board": "ProfileOther", "case": "the removed comment's chip too — its author survives the removal" }] },
     { "from": "CommentRemoved", "via": 2, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "someone else's comment — the comment's sheet (master); the removed comment has no ⋮ left" }, { "board": "CommentMenuOwn", "case": "another comment of your own — the same sheet with Remove among the acts" }] },
     { "from": "CommentRemoved", "via": 3, "kind": "advance", "label": "comment tag chips", "to": [{ "board": "TagPage" }] },

@@ -1934,6 +1934,15 @@ const REMOVED_COMMENT_NOTE = "The comment's place in the thread, and every respo
    thread above it cut at the sheet's top edge. One number, so the three cannot
    disagree about where that is. */
 const REMOVED_COMMENT_SCROLL = 440;
+/* @SOL'S COMMENTS ARE THE READER'S, AND THEY SAY SO (jakob 2026-10-01: "'own'
+   should be added to the existing boards so it is clear that you can interact
+   differently with your own comments"). The 3h comment and the landed reply
+   wear `CommentCard`'s `own` — `Edit` beside `Reply` in the affordance row,
+   the anatomy `ReplyMedia` drew first — and their ⋮ holds the own menu's acts
+   (`OWN_COMMENT_MENU`'s `Remove` after Save and Cite; the card appends the
+   license). The removed comment keeps `own` but loses `Edit` with its payload:
+   there is nothing left on it to edit, the same reason its ⋮ goes. */
+const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 
 function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }) {
   const settledReply = (
@@ -1944,9 +1953,11 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }
         author={SOL}
         content="The third headland light is real — I have a print from 2019 that almost catches it. Almost."
         timestamp="now"
+        own
+        onEdit={() => {}}
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={CARD_MENU}
+        menuItems={OWN_THREAD_MENU}
       />
     </ul>
   );
@@ -1991,9 +2002,11 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }
         author={SOL}
         content="Which headland is the third one, counting from the ferry landing?"
         timestamp="3h"
+        own
+        onEdit={removed ? undefined : () => {}}
         onReply={() => {}}
         license={{ attribution: 0, provenance: 0 }}
-        menuItems={removed ? [] : CARD_MENU}
+        menuItems={removed ? [] : OWN_THREAD_MENU}
         redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
         replies={[
           {
