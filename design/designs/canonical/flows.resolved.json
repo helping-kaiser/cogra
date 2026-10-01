@@ -3248,7 +3248,5 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": [
-    "Restore/4: the kept picks' review — picks kept pending on this device sign together, in one batch the reader reviews first"
-  ]
+  "gapsOnFlows": []
 }

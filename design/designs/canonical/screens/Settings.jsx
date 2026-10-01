@@ -71,7 +71,7 @@
    unsigned — the page's one row that comes and goes. Quiet: a navigating row
    and nothing more, no badge, no colour, no reminder anywhere else. */
 
-export const FRAME = { width: 390, height: 2613 };
+export const FRAME = { width: 390, height: 2670 };
 
 export function Screen() {
   return <SettingsBody keptPicks={3} />;
