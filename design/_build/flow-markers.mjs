@@ -1895,13 +1895,13 @@ Object.assign(FLOW_MARKERS, {
      row IS its content — a label naming it "a path" would say less than the
      trace already does. */
   FeedEntry: [
-    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    { n: 1, find: `aria-label="Back to feed"`, tag: "a" },
     { n: 2, find: ">Through ", tag: "button", all: true },
     { n: 3, find: `aria-label="Show 2 more paths"`, tag: "button" },
     ...nav(4),
   ],
   FeedEntryMoved: [
-    { n: 1, find: `aria-label="Back to the post"`, tag: "a" },
+    { n: 1, find: `aria-label="Back to feed"`, tag: "a" },
     ...nav(2),
   ],
   RankPath: [

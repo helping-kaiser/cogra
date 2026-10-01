@@ -2749,35 +2749,54 @@ const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
    quote's own box is the tile's default (`NodeMark`'s `onCard`). Drawn side
    by side on `FeedEntryKinds`.
 
-   THE SCORE UNDER IT IS PLAIN TEXT, NEVER `ExplainableNumber`. That master is
-   the affordance and never the explanation; here the reader is standing inside
-   the explanation, so a control that opened it again would open nothing. It
-   keeps the master's own register — the label quiet, the value on-surface at
-   500 — because it is the same figure, read rather than pressed. */
+   THE SCORE AND THE THING ARE ONE ENTITY (jakob 2026-10-01: "make it one
+   entity"). The figure hangs on the held thing's top-left as a flag, attached
+   the way the tag page hangs its claim on each row (`TaggedRow`): the flag's
+   tone over the row's, zero gap, and the row squaring its top-left corner
+   under it (`QuotedRow`'s `attach`), so flag and thing read as one folder-tab
+   silhouette — the number belongs to this thing, not floating near it.
+
+   IT IS THE GLYPH AND THE SIGNED NUMBER, no label word: `graph` and `+15.20`,
+   the drill-down's own register, where every path below it is signed and the
+   flag is their sum. Its spoken name stays `Feed score`, in a screen-reader
+   span. THE SIGN APPEARS ONLY HERE (jakob: the cards keep plain numbers, "we
+   dont need noise"); a negative wears its − everywhere, and a zero none.
+
+   IT IS PLAIN TEXT, NEVER `ExplainableNumber`. That master is the affordance
+   and never the explanation; here the reader is standing inside the
+   explanation, so a control that opened it again would open nothing. It keeps
+   the master's own register — the glyph quiet, the value on-surface at 500 —
+   because it is the same figure, read rather than pressed. */
 const SCORE_ORIGINS = {
   post: { title: "The long way home — @ada", snippet: "Took the coast road instead of the tunnel. Four hours longer, worth every minute.", name: ADA.displayName, src: "comment-camera.jpg" },
   comment: { title: "@tobias", snippet: TOBIAS_COMMENT, name: TOBIAS.displayName },
   person: { title: MIRA.displayName, snippet: "@" + MIRA.handle, name: MIRA.displayName, src: "inviter.jpg" },
   topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard /> },
 };
+const signedScore = (score) => (/^[−-]/.test(score) || /^0(\.0+)?$/.test(score) ? score : "+" + score);
 
 function ScoreOrigin({ kind = "post", score = "15.20" }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <QuotedRow {...SCORE_ORIGINS[kind]} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
       <span
         style={{
           display: "inline-flex",
-          alignItems: "baseline",
+          alignItems: "center",
+          alignSelf: "flex-start",
           gap: 6,
+          padding: "2px 10px",
+          background: "var(--surface-container-high)",
+          borderRadius: "var(--radius-small) var(--radius-small) 0 0",
           fontSize: "var(--text-body-small)",
           lineHeight: "var(--text-body-small--line-height)",
           color: "var(--text-secondary)",
         }}
       >
-        Feed score
-        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{score}</span>
+        <Icon name="graph" size={16} />
+        <span style={SR_ONLY}>Feed score</span>
+        <span style={{ color: "var(--on-surface)", fontWeight: 500 }}>{signedScore(score)}</span>
       </span>
+      <QuotedRow attach {...SCORE_ORIGINS[kind]} />
     </div>
   );
 }
@@ -2789,13 +2808,25 @@ function ScoreOrigin({ kind = "post", score = "15.20" }) {
    into a statistic about the post instead of a fact about the reader's own
    network.
 
-   IT ENDS ON THE POST, as a tile rather than a circle: people are circles
-   everywhere in this system (`NodeMark`), and a post is a thing with a face.
+   IT ENDS ON THE THING IT REACHED, in that thing's own mark (`NodeMark`,
+   the closing batch, jakob 2026-10-01): a post's cover tile, a comment's
+   glyph tile, a person's circle, a tag's `#` — the mark `ScoreOrigin` holds
+   above it, at the trace's size. People are circles everywhere in this
+   system, and every other kind is a tile.
 
    THE AVATARS ARE `aria-hidden` BY THE MASTER, so the trace carries its own
-   screen-reader line — the same discipline every stance readout takes. */
-function PathTrace({ people, size = 24 }) {
-  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then the post`;
+   screen-reader line — the same discipline every stance readout takes — and
+   the line is kind-neutral, ending `then what reached you`, the page title's
+   own words, because the mark beside it already says the kind. */
+const TRACE_ENDS = {
+  post: { kind: "post", src: "post-photo.jpg" },
+  comment: { kind: "comment" },
+  person: { kind: "person", name: MIRA.displayName, src: "inviter.jpg" },
+  topic: { kind: "topic" },
+};
+
+function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
+  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then what reached you`;
   return (
     <span style={{ display: "inline-flex", alignItems: "center" }}>
       {people.map((person, index) => (
@@ -2807,11 +2838,7 @@ function PathTrace({ people, size = 24 }) {
         </React.Fragment>
       ))}
       <span aria-hidden="true" style={{ width: 14, height: 1, background: "var(--border-hairline)", flex: "none" }} />
-      <img
-        src="post-photo.jpg"
-        alt=""
-        style={{ width: size, height: size, flex: "none", borderRadius: "var(--radius-extra-small)", objectFit: "cover", display: "block" }}
-      />
+      <NodeMark {...TRACE_ENDS[kind]} size={size} onCard={onCard} />
       <span style={SR_ONLY}>{spoken}</span>
     </span>
   );
@@ -2822,7 +2849,7 @@ function PathTrace({ people, size = 24 }) {
    40px disc, and a path is a chain. Everything else about the row is the
    master's — the card ground, the medium corner, the 12px padding, the chevron
    that says this opens another surface. */
-function PathRow({ people, through, value, onOpen }) {
+function PathRow({ people, through, value, onOpen, kind = "post" }) {
   return (
     <button
       type="button"
@@ -2845,7 +2872,7 @@ function PathRow({ people, through, value, onOpen }) {
       }}
     >
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 }}>
-        <PathTrace people={people} />
+        <PathTrace people={people} kind={kind} onCard />
         <span
           style={{
             fontSize: "var(--text-label-small)",

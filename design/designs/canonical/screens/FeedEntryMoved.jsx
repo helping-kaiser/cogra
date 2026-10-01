@@ -20,7 +20,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to the post" />
+      <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" />
       <ScoreColumn>
         {/* The score is a real 0.00 and not a dash: the sum of no paths is
             nothing, and the product's one number format says so. A dash is for a

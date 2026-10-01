@@ -1913,7 +1913,7 @@
     { "from": "ChatsComingSoon", "via": 5, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "ChatsComingSoon", "via": 6, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
-    { "from": "FeedEntry", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to the post the score was tapped on" }] },
+    { "from": "FeedEntry", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to where the score was tapped — the feed, as drawn, or any surface wearing it" }] },
     { "from": "FeedEntry", "via": 2, "kind": "advance", "label": "a path row", "to": [{ "board": "RankPath", "case": "the path, its steps and what it adds" }] },
     { "from": "FeedEntry", "via": 3, "kind": "detour", "label": "N more paths", "to": [{ "terminal": "self", "case": "the weakest paths unfold in place — never a second page (jakob 2026-09-11)" }] },
     { "from": "FeedEntry", "via": 4, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
@@ -1921,7 +1921,7 @@
     { "from": "FeedEntry", "via": 6, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "FeedEntry", "via": 7, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "FeedEntry", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
-    { "from": "FeedEntryMoved", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to the post the score was tapped on" }] },
+    { "from": "FeedEntryMoved", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to where the score was tapped — the feed, as drawn, or any surface wearing it" }] },
     { "from": "FeedEntryMoved", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
     { "from": "FeedEntryMoved", "via": 3, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "FeedEntryMoved", "via": 4, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },

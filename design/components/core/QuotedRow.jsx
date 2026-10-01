@@ -20,8 +20,13 @@ import { MonogramAvatar } from "../people/ActorChip.jsx";
 
 /* `mark` STANDS WHERE THE PICTURE STANDS, for a quoted thing whose face is
    not a person's (the feed cards, ruled 2026-10-01): a tag held above the
-   score's trace is its `#` tile, `NodeMark`'s, never a monogram. */
-export function QuotedRow({ title, snippet, name, src, mark }) {
+   score's trace is its `#` tile, `NodeMark`'s, never a monogram.
+
+   `attach` SQUARES THE TOP-LEFT CORNER under a flag, so flag and row read as
+   one folder-tab silhouette — `TaggedRow`'s attachment, which the score's
+   trace takes for the figure it hangs on the held thing (the closing batch,
+   jakob 2026-10-01). Given none, the row renders exactly as before. */
+export function QuotedRow({ title, snippet, name, src, mark, attach = false }) {
   return (
     <div
       style={{
@@ -31,6 +36,7 @@ export function QuotedRow({ title, snippet, name, src, mark }) {
         minHeight: "56px",
         padding: "var(--space-2) var(--space-3)",
         borderRadius: "var(--radius-small)",
+        ...(attach ? { borderTopLeftRadius: 0 } : null),
         background: "var(--surface-container-highest)",
       }}
     >

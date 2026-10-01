@@ -1671,6 +1671,16 @@ what the screen holds and nothing more, because the cover carried down
 from level one already says what it is all about. Sentence case, no
 colon, no subtitle.
 
+**The score on the held thing** carries no word (jakob 2026-10-01): the
+`graph` glyph and the signed figure, `+15.20`, hung on the thing's top-left;
+`Feed score` is its spoken name. The sign appears only there — every card
+keeps its plain figure, a negative keeping its `−` everywhere, a zero none.
+
+**A path's spoken shape** ends kind-neutral: `You, then @ada, then what
+reached you` — the title's own words, since the trace's last mark already
+says what kind of thing it reached. *New 2026-10-01, flagged for blessing.*
+The back arrow on level one reads `Back to feed`, for every kind.
+
 **The rule under the cover**, on level one: `Every path here starts with
 an opinion you gave.` This is the inbound-inert invariant
 (`feed-ranking.md` §1) in the reader's vocabulary — nothing anyone points
