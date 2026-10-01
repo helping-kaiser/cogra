@@ -1365,7 +1365,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 3191,
+      "h": 3243,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1383,7 +1383,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 3017,
+      "h": 3173,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1401,7 +1401,7 @@
       "x": -3030,
       "y": 0,
       "w": 2610,
-      "h": 3845,
+      "h": 4001,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1410,7 +1410,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1727,
+      "h": 1779,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -1446,7 +1446,7 @@
       "x": -3610,
       "y": 0,
       "w": 3190,
-      "h": 5135,
+      "h": 5291,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1761,6 +1761,24 @@
       "title": "Signing · on the target's row",
       "x": 2880,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "PadWriteRule.dc.html",
+      "title": "Pad · the write rule says not now",
+      "x": 2400,
+      "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "RowWriteRule.dc.html",
+      "title": "Signing · the write rule on the target's row",
+      "x": 2880,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "patterns"

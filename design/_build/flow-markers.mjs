@@ -1767,6 +1767,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Cancel</button>", tag: "button" },
     { n: 5, find: ">Retry</button>", tag: "button" },
   ],
+  // The write rule's pad (2026-10-01): `PadFailed`'s first two numbers, then
+  // the notice's own "?" and its way out where the commit row stood.
+  PadWriteRule: [
+    { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
+    { n: 2, find: 'aria-label="Opinion', tag: "div" },
+    { n: 2, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 3, find: 'aria-label="Why signing waits"', tag: "button" },
+    { n: 4, find: ">Not now</button>", tag: "button" },
+  ],
   // TWO "Restore the key" buttons stand on this board — the feed's own card
   // beneath the wash and the pad's notice above it — and both take the number,
   // the way the guest gate's two asks do: one edge covers them, because both

@@ -30,7 +30,9 @@ Where each sidecar's words come from:
   further up. Its hold lines are the failure pack's (readme §13, *The
   failure pack*): a signed act waits for its signature, the 200ms law
   decides when the row says `Signing…`, and a hold that fails says so
-  on the target's row, never on the snackbar.
+  on the target's row, never on the snackbar — and one the write rule
+  refuses says so quietly there, with no Retry (copy-voice, *Faults by
+  code*).
 - `ComposeSeal.md` — the failure pack's commit in flight: the label
   swap after 200ms, the inert commit, and the fault in the commit's
   place, in the words of readme §13 and copy-voice (*In-flight labels*);

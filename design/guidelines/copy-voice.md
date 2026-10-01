@@ -773,9 +773,15 @@ blessing. Unmarked lines are already blessed or already drawn.
   kept.`, with `Keep the draft, sign later` under it, and the panel's
   own "?" opening `Why signing waits` (*The "?" dialogs*). **Drawn** on
   `WriteRuleFailed`. *New.* The words name no payer (the V1.0 scope
-  cut). On a pad the same panel takes Set's place in `PadKeyAbsent`'s
-  shape. On a hold's row the quiet line reads `You can't sign right
-  now`, with no Retry. *New; copy-only — neither is drawn.*
+  cut). On a pad the same panel stands where the landing line and Set
+  were, in `PadKeyAbsent`'s shape: `You can't sign right now` over `Each
+  signing is paid for, and there's only so much to go around at a time.
+  Nothing was signed or spent.` — a pad has no draft — with the same
+  "?" and `Not now` under it; the pick is not kept. **Drawn** on
+  `PadWriteRule`. On a hold's row the quiet line reads `You can't sign
+  right now.` in the pending marker's register, never the failure
+  voice, with no Retry. **Drawn** on `RowWriteRule`. *New 2026-10-01,
+  flagged for blessing.*
 - **One staged act refused** (the field-level refusal on
   `references.<index>.target`; jakob 2026-10-01). A target that landed
   never stops answering, so two cases exist, and they read nothing
