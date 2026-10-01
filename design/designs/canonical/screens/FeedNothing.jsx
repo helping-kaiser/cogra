@@ -1,7 +1,7 @@
 /* Everything switched off — allowed at the chip, answered by the feed: the
    empty state says what is off and offers the way back (item 4's rule — the
    control never prevents a choice). The trigger reads "Nothing". */
-const NOTHING = { kinds: [], forms: ["text", "photos", "video"], order: "ranked", seen: true, also: [] };
+const NOTHING = { kinds: [], forms: ["text", "photos", "video"], order: "ranked", seen: true, also: ["settling"] };
 
 export function Screen() {
   return (

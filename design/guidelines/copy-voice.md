@@ -111,7 +111,11 @@ glyph used as punctuation.
 
 ## Honesty phrasings to reuse verbatim
 
-- `Still settling` — content authored, not yet ordered.
+- `Still settling` — content authored, not yet ordered. The same words
+  label the feed filter's *Also show* chip, on by default (blessed
+  2026-10-01, jakob): switched off, the feed keeps to what has landed,
+  and the trigger reads the deviation as `settled only` — *new, flagged
+  for blessing*.
 - `Edited` — an edit, marked softly.
 - `Nothing was signed just now.` — the coach mark's first line.
 - `Signing needs your key, which isn't in this browser — the write waits

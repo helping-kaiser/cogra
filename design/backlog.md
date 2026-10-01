@@ -3559,7 +3559,8 @@ The application queue, in order:
    blessing.
 5. **New drawings**: comment removal at comment scale (menu row,
    confirm, the removed comment's mark in a thread); the `Still
-   settling` chip under "Also show".
+   settling` chip under "Also show" *(drawn 2026-10-01, on by
+   default, `FeedSheet`)*.
 6. **The three feed cards** (comment, profile, tag in the feed)
    *(drawn 2026-09-30, jakob's fifteen-first ruling; `FeedKinds`,
    readme §13 *The three feed cards*, calls flagged for his review)*.
