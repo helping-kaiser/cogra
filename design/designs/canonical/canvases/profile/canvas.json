@@ -47,9 +47,9 @@
     },
     {
       "file": "MapProfile.dc.html",
-      "x": -3900,
+      "x": -4190,
       "y": 0,
-      "w": 3480,
+      "w": 3770,
       "h": 5369,
       "page": "profile",
       "title": "Profile · flow map"
@@ -238,6 +238,15 @@
       "file": "WhatsNew.dc.html",
       "title": "Settings · what's new",
       "x": 4320,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "WhatsNewBehind.dc.html",
+      "title": "Settings · what's new, a newer version out",
+      "x": 5760,
       "y": 1928,
       "w": 390,
       "h": 844,

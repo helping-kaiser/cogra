@@ -316,6 +316,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedNewerVersion.dc.html",
+      "title": "Feed · a newer version, said once",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -425,9 +434,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5060,
+      "x": -5350,
       "y": 0,
-      "w": 4640,
+      "w": 4930,
       "h": 4309,
       "page": "feed",
       "title": "Feed & Search · flow map"
