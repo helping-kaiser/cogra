@@ -75,6 +75,8 @@ const {
   OwnStanceReadout,
   StanceValue,
   StanceSlider,
+  StanceStanding,
+  StanceLandingLine,
   TAG_RANGES,
   TaggedRow,
   TransportError,
@@ -1513,8 +1515,14 @@ const replyCitedRow = () => ({
    line and the act row's value name it. `keyAbsent` is the seal with the key
    elsewhere (`ReplySealKeyAbsent`) — every row unchanged, the key notice where
    the footer stood, and the header's "?" kept beside the notice's own, by the
-   stopper exception (readme §13, *The failure fixes and the support stack*). */
-function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
+   stopper exception (readme §13, *The failure fixes and the support stack*).
+
+   `uploading` is the seal gated on the reply's media (jakob's ruling, the night
+   batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
+   true }` once one has not. Every row is unchanged; `UploadStatusLine` stands
+   over the foot, and `Sign comment` is disabled while it shows
+   (`ReplySealUploading`, `ReplySealUploadFailed`). */
+function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
     <>
@@ -1563,7 +1571,15 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false }) {
             <Button variant="text" style={{ width: "100%" }}>Discard the reply</Button>
           </>
         ) : (
-          <SealFooter signLabel="Sign comment" />
+          <>
+            {uploading &&
+              (uploading.failed ? (
+                <UploadStatusLine failed onRetry={() => {}} />
+              ) : (
+                <UploadStatusLine done={uploading.done} total={uploading.total} />
+              ))}
+            <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
+          </>
         )}
       </div>
     </>
@@ -1782,6 +1798,34 @@ function ComposeDetailsBody({
    change was whitespace the record does not carry. The batch already knows: it
    is what the acts sheet lists and what the footer counts, so the guard reads
    the number that was always there. */
+/* A STAGED WITHDRAWAL, READ BACK WHERE THE THING STOOD, WITH ITS WAY BACK
+   (jakob's ruling, the night batch 2026-10-01 — audit K5.3). A tag taken off a
+   post, or a citation removed from it, is a record in the edit's batch, not an
+   erasure: the chip or the row leaves its block, and this line stands under the
+   block naming what goes. `Undo` unstages that one withdrawal — the chip or the
+   row returns as it stood, and the acts card counts its records off again. One
+   line per item, so each carries its own `Undo`.
+
+   RE-PICKING A WITHDRAWN NAME IS THE SAME UNDO. Choosing `#coastroad` again in
+   the tag picker, or the same post in the reference picker, unstages its
+   withdrawal rather than staging a second, cancelling record: one staged act
+   per name (behavior/TagPicker.md, behavior/ReferencePicker.md). */
+function WithdrawnLine({ name }) {
+  return (
+    <QuietNote>
+      Withdrawn: {name}{" "}
+      <InlineAction size="sm" ariaLabel={`Undo withdrawing ${name}`}>
+        Undo
+      </InlineAction>
+    </QuietNote>
+  );
+}
+
+/* What the post edit's References block holds withdrawn — another author's
+   post the edit stops citing. Its removal stages `withdrawalCost` counter-records,
+   and this one was revised upward past 1, so it stages two. */
+const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
+
 function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
@@ -1814,7 +1858,7 @@ function EditComposeBody({ unchanged = false } = {}) {
             <TopicRemovable topic="saltmaps" onEdit={() => {}} />
           </div>
           <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-          <QuietNote>Withdrawn: #coastroad</QuietNote>
+          {!unchanged && <WithdrawnLine name="#coastroad" />}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -1822,7 +1866,8 @@ function EditComposeBody({ unchanged = false } = {}) {
           {/* The composer's whole staged form, as `ComposeDetails` draws it:
               the kind under the name, and the pair the citation signs. An edit
               stages the same citation a first draft does, so it shows back the
-              same facts. */}
+              same facts. The row opens `RefPairEdit` — the citation already
+              stands, so its pick adds a record — and its × withdraws it. */}
           <StagedReference
             kind="post"
             name="The long way home — @ada"
@@ -1832,6 +1877,7 @@ function EditComposeBody({ unchanged = false } = {}) {
             onEdit={() => {}}
           />
           <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+          {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -1849,7 +1895,9 @@ function EditComposeBody({ unchanged = false } = {}) {
 
         <div style={{ flex: 1 }} />
 
-        <ActsFooter count={unchanged ? 0 : 3} />
+        {/* Five things: the edit, #saltmaps added, #coastroad withdrawn, and the
+            citation's withdrawal at its two counter-records (`EditActs`). */}
+        <ActsFooter count={unchanged ? 0 : 5} />
         <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>
       </div>
     </>

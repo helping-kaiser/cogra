@@ -1409,6 +1409,50 @@ round, named here so the review pass has them in one place: `Un-tag`,
 the edit body's `Withdrawn: #coastroad`, and the acts card's
 `Tags withdrawn` row label.
 
+## The pads and the edit's withdrawals
+
+Drawn on `TagPad`, `TagPadCompose`, `RefPair`, `RefPairEdit`,
+`EditCompose`, `EditActs`, `ReplySealUploading` and
+`ReplySealUploadFailed` (readme §13, *The pads and the edit's
+withdrawals*). Every line here is the lane's wording, **flagged for
+blessing** — with the three carried-over strings above (`Un-tag`,
+`Withdrawn:`, `Tags withdrawn`), which this round puts to work again.
+
+**The non-drag route names its target.** `Set exact values for
+#saltmaps` — the hidden-until-focused control on a tag or citation
+sheet, the target's own name after `for`, the way `Choose your opinion
+on …` names its target. The tracks it swaps in say the family's own
+questions, already written: `How much it is about this` / `How sure
+you are` for a tag, `How much it leans on this` / `For or against` for
+a citation.
+
+**A standing citation's readouts.** `Current` and `Resulting`, with the
+pad's own `Your pick` between them — the stance pad's three, without
+the word *opinion*, because a citation is not one. Spoken, they carry
+the two axes and their values and never the anchor's word.
+
+**Removing a citation says its cost where the control is.** `Remove
+citation` — the walk-away's slot, a text button. Over the foot, after
+`Signed with the post, as its own action.`:
+
+- `Removing it signs 1 thing, paid on its own.`
+- `Removing it signs 3 things, each paid separately.` — the walk-back's
+  own cost phrases, at the count `withdrawalCost` serves.
+
+**A withdrawal reads back with its way back.** `Withdrawn: #coastroad`
+and `Withdrawn: Tide tables and the third headland — @juno`, one line
+per item, each ending in `Undo`, spoken `Undo withdrawing #coastroad`.
+
+**The edit's acts, every kind.** The row labels: `Edit`, `Tags added`,
+`Tags withdrawn`, `Tags revised`, `Citations added`, `Citations
+revised`, `Citations withdrawn`, `Cover changed`. A row's count is the
+records it signs, heard as `2 things` where a withdrawal takes two.
+
+**The reply's gate, failed.** `One picture didn't upload. Signing waits
+for it.` with `Retry` — the fact in error ink, the consequence in the
+quiet voice. The running line stays `Uploading 1 of 2 — signing waits
+for the pictures.`
+
 ## Saved, History and hiding
 
 Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,

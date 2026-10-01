@@ -59,7 +59,10 @@ Where each sidecar's words come from:
   §13, *The review fixes*): a pick stages and the picker stays open,
   and `Done` and the header back both leave with every pick kept; and
   the staged section (readme §13, *The closing batch*): a picked row
-  moves above the list, and its × un-stages it.
+  moves above the list, and its × un-stages it; and the edit's re-pick
+  (readme §13, *The pads and the edit's withdrawals*): picking a name
+  the edit has withdrawn unstages the withdrawal, one staged act per
+  name.
 - `ReferencePicker.md` — the same multi-add and staged section, at the
   citation picker: the shared anatomy's law, in the same words.
 - `KeptPicksReview.md` — the kept picks' review (readme §13, *The kept
@@ -76,6 +79,8 @@ Where each sidecar's words come from:
   records it names, its flow edges' outcomes and its copy-voice
   strings, in their words. `FeedCover.md` and `PostDetail.md` name
   their elements by node path.
+  citation picker: the shared anatomy's law, in the same words; and the
+  same re-pick, for a citation the edit has withdrawn.
 
 ## The grammar
 

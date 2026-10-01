@@ -76,7 +76,8 @@
    IT STAGES, AND THE SEAL SIGNS. The sheet closes, the chip leaves the row, and
    what stands in its place is the `Withdrawn:` line the edit body already
    carries — one more action for the acts card, which the edit seals together
-   with everything else (item 37). Nothing asks twice. The seal is the willing
+   with everything else (item 37) — and that line's `Undo`, or picking the name
+   again, takes the withdrawal back (audit K5.3). Nothing asks twice. The seal is the willing
    act, and a confirmation over a change that is staged and reversible would be
    a second layer guarding nothing.
 
@@ -89,12 +90,37 @@
    a fair reading of the lowest value the field offers, and never was one of
    zero.
 
+   THE FIELD HAS A NON-DRAG ROUTE, AND IT IS REACHABLE (jakob's ruling, the
+   night batch 2026-10-01 — audit K10.1). §10: every drag gesture has a non-drag
+   equivalent, and the field is a drag. `Set exact values for #saltmaps` is the
+   sheet's first control, visually hidden until focused — the skip-link idiom
+   `StanceControl` already uses, so nothing changes for a reader who drags. It
+   swaps the field, in place, for `StanceAlternates` at `host="sheet"`: the two
+   tracks with this family's names, poles and `TAG_RANGES`, and `Type exact
+   values` one tap away. The readout above stays, `Done` is unchanged, and no
+   dialog stacks over the sheet. The swap is a state of this sheet and is not
+   drawn a second time (readme §13, *The tag pad*).
+   · THE READOUT IS `aria-live` (polite): a track or a typed value that moves
+     the pair is heard as the face's word and both values, never only seen.
+   · FOCUS ON OPEN lands on the sheet's first control — this one — the dialog
+     pattern's default (WAI-ARIA APG): a keyboard, switch or screen-reader
+     reader meets the non-drag route before the field. It paints only under
+     `:focus-visible`, so a tap that opened the sheet shows nothing new.
+
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule from
    2026-09-08: a sheet covers the surface the reader came from, and that surface
    is the real one, not a shortened stand-in of it. */
 
-/* The four poles, named for the record family that fills the slots. */
-const TAG_AXES = { left: "Barely", right: "Entirely", bottom: "Guessing", top: "Certain" };
+/* The four poles, named for the record family that fills the slots — and the
+   two questions, which only the non-drag route's tracks say aloud. */
+const TAG_AXES = {
+  directed: "How much it is about this",
+  interest: "How sure you are",
+  left: "Barely",
+  right: "Entirely",
+  bottom: "Guessing",
+  top: "Certain",
+};
 
 export function Screen() {
   return (
@@ -104,12 +130,16 @@ export function Screen() {
       <BottomSheet open ariaLabel="#saltmaps">
         <SheetTitle>#saltmaps</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "0 24px 4px" }}>
+          <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
+            Set exact values for #saltmaps
+          </button>
+
           {/* The pick's readout, in the pad's own block shape: the name of the
               quantity, then the face and the exact pair on the line below it.
               `aria-hidden` beside a screen-reader reading that carries the
               anchor's word and names both axes — the numbers alone say nothing
               about which slot they fill. */}
-          <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div aria-live="polite" style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <span
               aria-hidden="true"
               style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}

@@ -7730,6 +7730,71 @@ than written.
   and the reply's uploading seal. Their sidecars hold everything else.
 - **The gate**: screens and edges unchanged; `nodes.json` gains
   `FeedCover` and two paths; 72 sidecars, every one green.
+### The pads and the edit's withdrawals — 2026-10-01
+
+jakob's night rulings D1–D3 (audit K10.1, K5.3, K6.2), executed in one
+lane. D1 and D3 as recommended; D2 as recommended with his sharpening.
+
+- **The tag and citation sheets have a non-drag route** (K10.1; jakob:
+  "the pads should be pads"). Nothing visible changes. `TagPad`,
+  `TagPadCompose` and `RefPair` open on a first control hidden until
+  focused — `Set exact values for #saltmaps`, the stance control's
+  skip-link idiom — that swaps the field, in place, for the two tracks
+  with the family's names, poles and bound, `Type exact values` a tap
+  away; the readout and `Done` stay, and no dialog stacks over the
+  sheet. The readout is `aria-live`, and focus on open lands on that
+  first control, the dialog pattern's default (WAI-ARIA APG). The swap
+  is a state and is not drawn a second time (*The tag pad*).
+- **`StanceAlternates` travels with the record family.** It takes
+  `ranges`, `title` and `commitLabel`, draws the walk-away only when it
+  is handed one, and at `host="sheet"` renders in a sheet's field
+  instead of as a dialog. The stance readouts take a family's
+  `current` and `resulting` labels and `anchorWord: false`; every
+  stance board renders unchanged.
+- **A standing citation opens `RefPairEdit` on an edit** (K5.3). A
+  citation's records net, so the pick is one additive record, read back
+  as the stance pad reads one: `Current`, `Your pick`, and `Resulting`
+  under the field. The pick opens at the origin.
+- **Withdrawing costs records, said inline; Sign is the confirmation**
+  (jakob's pick — no second dialog). `Remove citation` takes the
+  walk-away's slot, and the line over the foot says its cost in the
+  walk-back's words, `Removing it signs 1 thing, paid on its own.`
+  (`… N things, each paid separately.`). The count is
+  `ReferenceClaim.withdrawalCost`: jakob, verbatim, a bundled
+  connection with a magnitude over 1 on any dimension needs multiple
+  counter-acts, so the seal's count is the real counter-record count,
+  never one per removal. An un-tag is one record: a tag is
+  newest-wins.
+- **The edit reads its withdrawals back with an `Undo` each.** A tag or
+  citation withdrawn leaves a `Withdrawn:` line under its block, one
+  per item; `Undo` unstages it, and re-picking the same name in either
+  picker does the same — one staged act per name
+  (`behavior/TagPicker.md`, `behavior/ReferencePicker.md`). A citation
+  this app cannot type stands as a row with no × (api-spec excludes it
+  from editing). `EditComposeUnchanged` no longer draws a withdrawn
+  line its empty batch could not hold.
+- **`EditActs` counts the complete kind set in records**: `Edit`,
+  `Tags added`, `Tags withdrawn`, `Tags revised`, `Citations added`,
+  `Citations revised`, `Citations withdrawn`, `Cover changed`, a row
+  per kind in the batch. The drawn edit withdraws a citation revised
+  past 1, so its row reads `2` and the foot `You're signing 5 things`.
+- **The reply has its own gated seal** (K6.2). `ReplySealUploading` is
+  `ReplySealBody` at `uploading` — the reply's header, add-rows, facts
+  and no-draft X — with `UploadStatusLine` over a disabled `Sign
+  comment`; `ReplySealUploadFailed` is the gate's fault reading, `One
+  picture didn't upload. Signing waits for it.` and Retry. The four
+  reply edges that reached the post's `ComposeSealUploading` repoint to
+  it, and `ReplyVideoFailed`'s `Next` is inert while the clip is
+  failed. No board at reply scale says a draft is kept.
+- **The lane's calls, flagged for review** (backlog item 121): every new
+  string (copy-voice, *The pads and the edit's withdrawals*); the pick
+  opening at the origin; the removal cost as a sentence over the foot;
+  `2` heard as `2 things` on a records row; the failed gate as its own
+  board; the Retry-only gate line.
+- **The gate**: 243 → **246 screens**, 1673 → **1686 edges**, 1 gap,
+  **flows 64**, every one resolved. The witness was re-blessed once,
+  deliberately: `reply-while-the-pictures-upload` now runs through
+  `ReplySealUploading`.
 
 ## 15. Index
 

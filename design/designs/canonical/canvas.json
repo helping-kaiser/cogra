@@ -785,6 +785,24 @@
       "page": "comments"
     },
     {
+      "file": "ReplySealUploading.dc.html",
+      "title": "Reply · what you sign, waiting on uploads",
+      "x": 7680,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
+      "file": "ReplySealUploadFailed.dc.html",
+      "title": "Reply · what you sign, an upload failed",
+      "x": 8160,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "comments"
+    },
+    {
       "file": "DiscardConfirm.dc.html",
       "title": "Discard confirm · reply and edit",
       "x": 3840,
@@ -1407,18 +1425,18 @@
     },
     {
       "file": "MapCompose.dc.html",
-      "x": -3320,
+      "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 3256,
+      "w": 3190,
+      "h": 3455,
       "page": "compose",
       "title": "Compose · flow map"
     },
     {
       "file": "MapComments.dc.html",
-      "x": -5060,
+      "x": -5640,
       "y": 0,
-      "w": 4640,
+      "w": 5220,
       "h": 2416,
       "page": "comments",
       "title": "Comments · flow map"
@@ -1949,6 +1967,15 @@
       "file": "RefPair.dc.html",
       "title": "A staged citation's pair",
       "x": 2880,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
+      "file": "RefPairEdit.dc.html",
+      "title": "A standing citation's pair · editing",
+      "x": 4800,
       "y": 3180,
       "w": 390,
       "h": 844,

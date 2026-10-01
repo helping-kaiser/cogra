@@ -672,15 +672,15 @@
     },
     {
       "name": "reply-while-the-pictures-upload",
-      "description": "Next pressed while the pictures are still going up reaches the gated seal; signing waits for them, then the comment settles into the thread.",
+      "description": "Next pressed while the pictures are still going up reaches the reply's own gated seal; signing waits for them, then the comment settles into the thread.",
       "status": "resolved",
       "steps": [
-        "start · ReplyPictures · 3 «Next» → ComposeSealUploading — uploads still running — the gated seal (master on the media page)",
-        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
+        "start · ReplyPictures · 3 «Next» → ReplySealUploading — uploads still running — the reply's gated seal",
+        "end · ReplySealUploading · 1 «Sign comment (disabled)» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyPictures",
-        "ComposeSealUploading",
+        "ReplySealUploading",
         "ReplySettled"
       ]
     },
@@ -2107,8 +2107,7 @@
     },
     "ComposeSealUploading": {
       "flows": [
-        "publish-while-the-uploads-run",
-        "reply-while-the-pictures-upload"
+        "publish-while-the-uploads-run"
       ],
       "endpoint": []
     },
@@ -3037,6 +3036,12 @@
     "ReplySealKeyAbsent": {
       "flows": [
         "restore-your-key"
+      ],
+      "endpoint": []
+    },
+    "ReplySealUploading": {
+      "flows": [
+        "reply-while-the-pictures-upload"
       ],
       "endpoint": []
     },

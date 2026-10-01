@@ -18,9 +18,21 @@
    licence is published with the post and never changes, so the row shows what
    was declared and says why nothing can be done about it.
 
-   THE WITHDRAWN LINE IS A NOTE, not a control. A tag taken off is still an
-   act in the batch — the acts sheet counts it — but there is nothing to press
-   on the word itself, so it reads as the small true line it is.
+   A WITHDRAWAL READS BACK WHERE THE THING STOOD, WITH ITS `Undo` (jakob's
+   ruling, the night batch 2026-10-01 — audit K5.3). A tag taken off and a
+   citation removed are acts in the batch — the acts sheet counts them — so
+   each leaves a `Withdrawn:` line under its block, one per item, and the
+   line's `Undo` unstages that withdrawal. Re-picking the same name in a picker
+   does the same; it never stages a second, cancelling record.
+
+   A CITATION'S WITHDRAWAL COUNTS ITS REAL RECORDS. It is the severance shape —
+   the counter-records that net the bundle to (0, 0), each its own priced act —
+   so it adds `ReferenceClaim.withdrawalCost` to the count, possibly more than
+   one: the citation drawn withdrawn here was revised past 1 and stages two,
+   which is why the foot reads five. Sign is the confirmation (jakob): the
+   count is said on the foot and in the acts sheet, and no dialog asks again.
+   A citation this app cannot type stands in `References` as a row with no ×
+   and opens nothing — api-spec excludes it from editing.
 
    THE BODY IS `_shared.jsx`'s `EditComposeBody`, because the acts sheet stands
    on this edit and draws it whole. */

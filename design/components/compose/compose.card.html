@@ -59,6 +59,7 @@ function Demo(){return (
     <DescribeCounter described={1} total={3} onDescribe={()=>{}}/>
     <span className="lbl">UploadStatusLine — the seal's gate: the sign button is disabled while it shows</span>
     <UploadStatusLine done={2} total={4}/>
+    <UploadStatusLine failed onRetry={()=>{}}/>
     <span className="lbl">TopicRemovable — a piece of the thing being authored, not a Chip</span>
     <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
       <TopicRemovable topic="fieldnotes"/>

@@ -26,7 +26,16 @@
    cover is a separate upload of a separate asset — choosing one while the clip
    retries is not wasted work. What the door protects against is the opposite
    mistake: a strip demanding a decision from someone whose upload just failed,
-   about a picture their clip does not need. */
+   about a picture their clip does not need.
+
+   `Next` IS INERT WHILE THE CLIP IS FAILED (jakob's ruling, the night batch
+   2026-10-01 — audit K6.2). The seal can only wait on an upload that is
+   running, and this one is not: a seal reached now would be a gate waiting on
+   nothing. So `Next` stays where it is, disabled — the caps idiom, never
+   hidden — and the error line above it is the reason and the two ways on:
+   `Retry` starts the upload again, and with the clip going up `Next` reaches
+   the reply's own gated seal (`ReplySealUploading`); `Remove it` returns the
+   composer to words. */
 
 export function Screen() {
   return (
@@ -66,7 +75,7 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <Button style={{ width: "100%" }}>Next</Button>
+        <Button style={{ width: "100%" }} disabled>Next</Button>
       </div>
     </>
   );

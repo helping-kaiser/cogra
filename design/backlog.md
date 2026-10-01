@@ -3875,3 +3875,47 @@ rulings and left these calls for his eye:
 - **Two strings flagged for blessing** (copy-voice): the empty tag's
   `Nothing carries this tag right now.` and the trace's kind-neutral
   `then what reached you`.
+
+### 121 · What the pads and edits round left open · *design + contract* · **filed 2026-10-01**
+
+The pads and edits round (readme §13, *The pads and the edit's
+withdrawals*) executed jakob's D1–D3 and left these for his eye:
+
+- **Strings flagged for blessing** (copy-voice, *The pads and the
+  edit's withdrawals*): `Set exact values for …`, `Current` /
+  `Resulting`, `Remove citation` and its two cost lines, `Undo` and its
+  spoken `Undo withdrawing …`, the five new acts labels, and `Signing
+  waits for it.` — with the carried-over `Un-tag`, `Withdrawn:` and
+  `Tags withdrawn`.
+- **The lane's calls.** The edit-time pick opens at the origin; the
+  removal's cost is a sentence over the foot, describing the control;
+  a records row is heard as `N things`; the failed gate is its own board
+  (`ReplySealUploadFailed`), its line offering Retry and no Remove.
+- **The comment edit's mirror** (audit K6.12, D38). `CommentEdit` still
+  draws no standing citations, no `Withdrawn:` lines and no
+  `RefPairEdit` route; `CommentEditActs` counts the old three kinds.
+- **The untypeable citation's row.** api-spec excludes such a citation
+  from editing, and the edit's rule is a row with no ×, but its name
+  slot (the claim serves only an L1 identifier) and any quiet reason
+  have no words, so no board draws it.
+- **A clip at the gate.** `UploadStatusLine` says "signing waits for
+  the pictures" for a video at both scales (`ReplyVideo/3`,
+  `ComposeDetailsVideo/9`); the video's words are unwritten.
+- **An untouched pick on `RefPairEdit`.** What `Done` stages with the
+  pick still at the origin is the stance pad's open question (audit
+  K10.2).
+- **"Signing proceeds"** on both gated seals' commit edges reads as
+  signing without a tap (audit K12.12, unruled).
+- **The tag half of the sharpening.** jakob's ruling names tags and
+  citations together ("we even need multiple acts to remove them");
+  api-spec makes the un-tag one newest-wins record, so the drawing counts
+  one. If a tag's withdrawal can cost more, that is a contract change.
+- **Contract seam** (for the relay): the edit's footer and acts card
+  count real records before Sign — one per edit, tag and citation
+  record, and `ReferenceClaim.withdrawalCost` per citation withdrawn,
+  which api-spec serves as the count "right now". Two things the
+  drawing cannot settle: whether the prepared batch's `writes` can
+  differ from the count shown (a revision landing between read and
+  prepare), and what the seal says if it does; and the batch's
+  all-or-none, which api-spec's edit docstring promises and its
+  cross-record section denies (audit K5.4).
