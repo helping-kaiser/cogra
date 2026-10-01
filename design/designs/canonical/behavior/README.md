@@ -41,9 +41,10 @@ Where each sidecar's words come from:
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,
-  *Comments live in a sheet*); and the removed comment's mark in its own
+  *Comments live in a sheet*); the removed comment's mark in its own
   place, its replies kept under it (comment.md §5; readme §13, *The
-  comment-removal round*).
+  comment-removal round*); and the signed reply's landing, scrolled to
+  its new card (readme §13, *The curate rulings*).
 - `FeedKinds.md` — the feed cards (readme §13, *The feed cards,
   ruled*): the unified row's order, the law that a comment's replies live
   in its thread and never in the feed, where the comment card's door and
