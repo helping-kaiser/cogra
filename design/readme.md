@@ -2441,8 +2441,9 @@ the ruling that an applicant stages each kind of act once (2026-09-01).
   nothing about reaching the real surfaces changed.
 - **An exhausted kind answers in place.** Once an applicant has staged
   a post or a stance, the same control's next tap no longer opens
-  anything — it answers where it was pressed, "Your post is staged —
-  it lands with you." or the stance's equivalent. These are **self
+  anything — it answers where it was pressed, "Your post waits with
+  your application — it arrives with you." or the stance's equivalent
+  (copy-voice, *The staged-act snackbar*). These are **self
   outcomes marked info-true**, per the user-flow layer's rule that an
   all-informing `advance` fails the gate: here it does not, because
   the *first*-tap outcomes still advance to a real board, and only the

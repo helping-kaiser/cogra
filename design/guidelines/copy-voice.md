@@ -544,6 +544,10 @@ of opening the real surface again; one line per kind, same shape:
 
 - `Your post waits with your application — it arrives with you.`
 - `Your opinion waits with your application — it arrives with you.`
+The post's line is also the seal's answer for an applicant: `Sign and
+publish` stages the post rather than landing it, so the wizard closes onto
+the applicant's own feed with this line, never with `Signed — it's in the
+thread now, still settling.` (jakob 2026-10-01).
 
 ## In-flight labels
 

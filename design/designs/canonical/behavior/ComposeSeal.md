@@ -10,4 +10,6 @@ WHEN the signing does not go through GIVEN no answer reached the seal -> the fau
 
 WHEN the signing is refused for one staged citation GIVEN the cited post never landed -> that citation's row reads This post didn't land, so it can't be cited. followed by Remove it AND Sign and publish stays AND NEVER Retry appears
 
+WHEN Sign and publish is pressed GIVEN the reader is an applicant -> the wizard closes onto the applicant's own feed AND the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the detail view opens AND NEVER the snackbar reads Signed — it's in the thread now, still settling.
+
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the place of Sign and publish AND Try again, Report a problem and Discard the post stand with it AND everything above the foot stays as it was AND NEVER a line in the failure voice appears

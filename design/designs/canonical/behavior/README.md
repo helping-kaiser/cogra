@@ -37,7 +37,9 @@ Where each sidecar's words come from:
   swap after 200ms, the inert commit, and the fault in the commit's
   place, in the words of readme §13 and copy-voice (*In-flight labels*);
   and the two refusals of one staged act, the citation that never
-  landed and the bug (copy-voice, *Faults by code*).
+  landed and the bug (copy-voice, *Faults by code*); and an applicant's
+  exit, onto their own feed with the staged-act line (readme §13, *The
+  applicant's life round*; copy-voice, *The staged-act snackbar*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,
