@@ -1001,33 +1001,6 @@
       "page": "feed"
     },
     {
-      "file": "FeedCommentOptions.dc.html",
-      "title": "Feed · the comment card, three anatomies",
-      "x": 6240,
-      "y": 1060,
-      "w": 1266,
-      "h": 500,
-      "page": "feed"
-    },
-    {
-      "file": "FeedProfileOptions.dc.html",
-      "title": "Feed · the profile card, three anatomies",
-      "x": 7600,
-      "y": 1060,
-      "w": 1266,
-      "h": 420,
-      "page": "feed"
-    },
-    {
-      "file": "FeedTagOptions.dc.html",
-      "title": "Feed · the tag card, three anatomies",
-      "x": 8960,
-      "y": 1060,
-      "w": 1266,
-      "h": 420,
-      "page": "feed"
-    },
-    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
