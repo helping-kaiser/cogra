@@ -218,6 +218,24 @@
       "page": "entry"
     },
     {
+      "file": "FeedSecurityNotice.dc.html",
+      "title": "Signed in · the security notice",
+      "x": 2400,
+      "y": 4240,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "SignInLimited.dc.html",
+      "title": "Sign in · too many tries",
+      "x": 2400,
+      "y": 5204,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -456,7 +474,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 4424,
+      "h": 4489,
       "page": "entry",
       "title": "Entry · flow map"
     },

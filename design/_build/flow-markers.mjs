@@ -1640,6 +1640,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'data-field="Invite link"', tag: "div" },
     { n: 3, find: ">Use this link for your application</button>", tag: "button" },
   ],
+  // SignInError's anatomy to the element, so SignInError's numbers.
+  SignInLimited: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Email"', tag: "div" },
+    { n: 3, find: 'data-field="Password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: "Don&#x27;t remember this account on this device", tag: "label" },
+    { n: 6, find: ">Sign in</button>", tag: "button" },
+    { n: 7, find: ">Forgot password?</button>", tag: "button" },
+    { n: 8, find: ">New here? Enter your invite</button>", tag: "button" },
+    { n: 9, find: ">Just looking? Browse the feed", tag: "button" },
+    { n: 10, find: ">On Android? Download the app (APK)</button>", tag: "button" },
+  ],
+  FeedSecurityNotice: [
+    { n: 1, find: ">Change password</button>", tag: "button" },
+    { n: 2, find: ">Got it</button>", tag: "button" },
+  ],
 });
 
 /* The reply and edit wizards, the two overlays and the pattern boards

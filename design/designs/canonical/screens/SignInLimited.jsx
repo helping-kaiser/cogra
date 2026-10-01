@@ -1,17 +1,18 @@
-/* Sign in — the returning-member path off Main's borrowed view, Join, and
-   every guest gate's "Sign in or join" (readme §13, entry). The link stack
-   below the primary action stays flush with the screen's own gutter — plain
-   text rows, not a second row of pill buttons.
+/* SIGN IN · TOO MANY TRIES — the login backoff, said (jakob 2026-10-01,
+   audit K3.7; auth.md, *Rate limiting*).
 
-   SIGN-IN LANDS WHEREVER APP-OPEN LANDS FOR THAT ACCOUNT (jakob 2026-10-01,
-   audit K3.7). One rule, not a list to keep true: an account can be in
-   any of the states the shells draw — a member with or without the key
-   here, landed and not yet vouched back, in its deletion grace; an applicant
-   with tasks left, waiting, turned down, run out, or with the key made
-   elsewhere — and signing in is just the app opening for it, so each state
-   opens where an app-open in that state does. A pending security notice
-   (`LogInPayload.reuseDetectedAt`) rides along to that landing as a card.
-   A tripped login backoff answers here, as `SignInLimited`. */
+   THE BACKOFF IS THE ONE LIMIT THAT REFUSES VISIBLY. Consecutive failures arm
+   an exponential backoff, and the server says so rather than going silent —
+   so the form needs a line for it. It is `SignInError`'s anatomy exactly: the
+   same form-level fault line above the submit, in `NetworkError`'s voice, the
+   fields kept as typed.
+
+   IT NAMES NO FIGURE. The backoff grows with each failure and the client is
+   not told by how much, so the line says what to do and not how long — a
+   number here would be a countdown the product does not have, and a guess.
+   And it accuses no field and no account: the backoff arms identically for
+   an email that has no account behind it, which is what keeps the line from
+   telling a stranger that one exists. */
 export function Screen() {
   return (
     <>
@@ -43,6 +44,9 @@ export function Screen() {
           <TextField id="signin-email" label="Email" type="email" autoComplete="email" value="" />
           <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" />
           <Checkbox label="Don't remember this account on this device" />
+          <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", color: "var(--error)" }}>
+            Too many tries in a row. Wait a moment, then try again.
+          </p>
           <Button style={{ width: "100%" }}>Sign in</Button>
         </div>
 
