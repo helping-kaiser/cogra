@@ -34,7 +34,7 @@
    go through.` in the failure voice with `Retry`, which asks the comfort
    again, never a signature. The face never moved, because a comfort is not
    an opinion. The plate grows to hold the third card. */
-export const FRAME = { width: 390, height: 1500 };
+export const FRAME = { width: 390, height: 1600 };
 
 export function Screen() {
   return (

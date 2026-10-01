@@ -7664,6 +7664,70 @@ jakob's rulings closing the day's rounds, executed in one lane.
   staged citations' boards re-render for the card-tone mark, and the maps
   follow the edges.
 
+### The curate rulings — 2026-10-01
+
+jakob's night round on backlog items 116, 117, 118 and 120, the three
+spoken strings and the audit's K8.1, every one as recommended except the
+newer-version message, which he widened.
+
+- **The report keeps its read-back before the press**, the
+  two-placement law's one stated exception (§4). `ProfileEdit` and
+  post-MVP's `ChatEdit` read as wizard stages and keep their pinned
+  `Save`.
+- **The post seal's key notice keeps the header's "?"** beside its own,
+  by the stopper exception, as its reply-scale twin does.
+- **A signed reply lands by scrolling the thread to its card** (K6.6's
+  direction): the return anchors to the new card at its branch's end.
+  `ReplySettled` keeps its drawn offset.
+- **While a seal signs, it holds the reader.** For the label swap's
+  duration the back arrow, Back and the X are inert with the commit; the
+  fact rows stay readable; an app killed mid-sign says the outcome on
+  the next open with the ordinary settled or failure notice. Past 5s
+  the acts card's subline swaps to `Still signing — the network is slow
+  right now.` in olive `--tertiary` and nothing feigns progress
+  (`SealSigningSlow`, `ActsCard`'s `noteTone`) — §4's *Loading* names it
+  the law's second exception.
+- **The write rule's words are the solvency reading** until the
+  contract can tell its two gates apart; the split waits on the design ⇄
+  impl seam.
+- **The copy-only vehicles have boards.** `SignInExpired` is `SignIn`
+  with the signed-out sentence where the welcome line stood.
+  `PostNotFound` and `CommentNotFound` are `ProfileNotFound`'s
+  construction, back by the layer law and drawn cold. `RowSigning`'s
+  third card draws a failed comfort's revert on the row
+  (`StanceControl`'s `comfortFailed`). `VouchAskUnusable` says the dead
+  ask link in `JoinInvalid`'s construction.
+- **Every key-absent panel is `NoticePanel`**: the five boards, the
+  reply's `KeyAbsentNotice` and post-MVP's `WalletKeyAbsent` — one corner
+  rule, the title's letter-spacing restored.
+- **A stale install hears about the newer version twice, quietly**
+  (jakob: "one message might be helpfull"). `WhatsNewBehind` carries `A
+  newer version exists.` atop the chronicle with its release door; once
+  per release, on a cold app open, one snackbar on the feed's arrival
+  says `A newer version of CoGra is out.`, its action opening What's new,
+  a device-local seen flag per release (`FeedNewerVersion`) — the
+  Snackbar charter's one stated exception. A more obvious vehicle is
+  backlog item 121.
+- **The words path composes no description** (K8.1): `ComposeCited`
+  drops the field, and the media-to-words flip drops a standing
+  description with the last picture (`EditPicked`, `EditWords`).
+- **Blessed** (jakob): `Added — in the staged list.`, `Removed from the
+  staged list.` and `You, then several steps, then what reached you`.
+- **Flagged for blessing**: the slow line, the dead ask link's heading
+  and paragraph, the newer-version line and snackbar, and the
+  snackbar's action word `What's new`.
+- **The lane's calls, flagged for review:** the slow line standing in
+  the subline's place on a single-act seal too; its polite `status`
+  role; the signed-out sentence in the welcome line's secondary ink;
+  the not-found boards without a header title; the dead ask link with
+  no field and no way but back; the comfort's revert drawn as an unsave
+  on Sol's post; the newer release's notes left behind its door.
+- **The gate**: 243 → **250 screens**, 1673 → **1698 edges**, 1 gap,
+  **flows 64**, every one resolved. The two not-found boards' bottom
+  bars grow the census of the four publish flows' first step, 49 → 51
+  boards, so the witness wants a deliberate re-bless. `RowSigning` grew
+  to 1600 and `RowWriteRule` moved beside it on the patterns page.
+
 ## 15. Index
 
 **Root**
