@@ -3182,13 +3182,23 @@ const FEED_LEAD_TITLE = {
 
    REPLIES NEVER APPEAR IN THE FEED (jakob 2026-10-01). A comment's replies
    live in its thread, and the card carries no `View n replies` line: the feed
-   ranks the comment, not its branch, and the door to the branch is the card. */
+   ranks the comment, not its branch, and the door to the branch is the card.
+
+   ITS ⋮ IS THE COMMENT'S MENU (jakob 2026-10-01), the sheet every comment's ⋮
+   opens (`CommentMenu`), never the post card's: the card stands for a
+   comment, so its menu holds what a comment's does — Save and Cite, then
+   `Cited by` and `Opinions on this`, the license closing it. Your own
+   comment's adds `Remove` among the acts (`CommentMenuOwn`), as everywhere.
+   The card appends the license row itself, so the rows handed it stop short
+   of it. */
+const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
+const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 const commentTarget = (parent, kind) =>
   kind === "comment"
     ? { kind: "comment", label: `@${parent.author.handle}'s comment`, title: "@" + parent.author.handle, sub: parent.content }
     : { kind: "post", label: `“${parent.title}” — @${parent.author.handle}`, title: parent.title, sub: "@" + parent.author.handle, cover: parent.media?.[0]?.src };
 
-function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle }) {
+function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
@@ -3212,7 +3222,7 @@ function CommentFeedCard({ author, content, timestamp, parent, parentKind = "pos
       replyGlyph
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
-      menuItems={CARD_MENU}
+      menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}
     />
   );
 }
