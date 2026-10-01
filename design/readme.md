@@ -7660,6 +7660,39 @@ jakob's rulings closing the day's rounds, executed in one lane.
   staged citations' boards re-render for the card-tone mark, and the maps
   follow the edges.
 
+### The kept picks' review — 2026-10-01
+
+jakob's rulings B1-B3 (the night round), closing backlog item 113 and the
+canonical tree's one gap, `Restore/4`. Kept picks sign together, in one
+batch the reader reviews first (jakob, 2026-09-30).
+
+- **Review, then the standard seal.** `Restore the key` with picks kept
+  opens `KeptPicksReview` — from `Restore`, `RestoreError` and
+  `RestoreLength` alike. One row per kept pick, the staged section's
+  `StagedReference` with its ×: the target's face, its kind, the pair in
+  readout form, spoken as the readout speaks it (`stance`). `Sign them`
+  leads to `KeptPicksSeal`, the standard seal with the picks as its acts,
+  one `Opinion` row each, all or nothing; signed, the batch returns where
+  the review was opened from with `Signed 3 things, still settling.` The
+  seal idiom is untouched and nothing on it is removable.
+- **The × drops at once** — no confirm, no undo; nothing was signed, and
+  the pick is made again from its pad. The last drop closes the review
+  with `Nothing left to sign.`
+- **Leaving unsigned keeps them.** The arrow, the system's Back and the
+  seal's X keep every pick, and the Key backup group carries a quiet row,
+  `3 kept picks waiting`, that reopens the review — there only while that
+  is true.
+- **The lane's calls, flagged for review:** every new string (copy-voice,
+  *The key's lifecycle*); the restore's snackbar riding in over the review;
+  the review's pinned foot (ruling A2's wizard reading); one acts-card row
+  per pick rather than one per kind; the row's place, last in the group;
+  `WriteRuleFailed` as the seal's write-rule master. Backlog item 113 holds
+  the questions the drawing left.
+- **The gate**: 243 → **245 screens**, 1673 → **1682 edges**, 1 → **0
+  gaps**, **flows 64**, every one resolved. The witness was re-blessed
+  once, deliberately: the gap leaves the triage, and no flow moved.
+  `Settings` grew a row taller; the maps follow the edges.
+
 ## 15. Index
 
 **Root**
