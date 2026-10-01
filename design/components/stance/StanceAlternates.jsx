@@ -4,7 +4,7 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
 import { alternatesHelp, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { STANCE_AXES } from "./StancePad.jsx";
-import { clampDimension, severanceWords } from "./StanceReadout.jsx";
+import { clampDimension, severanceWords, STANCE_RANGES } from "./StanceReadout.jsx";
 
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
    machinery as the pad, different surface: they write the same two values, and the
@@ -72,6 +72,83 @@ function DirectEntry({ label, value, onChange, min = -1, max = 1 }) {
   );
 }
 
+/* THE TWO TRACKS AND THEIR SWAP — the part of the alternates every host shares.
+   The bound reaches both routes from one `ranges`, so the slider and the typed
+   field refuse the same values the field does. */
+function AlternateInputs({ showing, setShowing, pick, onPick, axes, ranges }) {
+  const directed = ranges.pDirected;
+  const interest = ranges.pInterest;
+  return (
+    <>
+      <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        {showing === "sliders" ? (
+          <>
+            <StanceSlider
+              label={axes.directed}
+              minLabel={axes.left}
+              maxLabel={axes.right}
+              min={directed.min}
+              max={directed.max}
+              value={pick.pDirected}
+              onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })}
+            />
+            <StanceSlider
+              label={axes.interest}
+              minLabel={axes.bottom}
+              maxLabel={axes.top}
+              min={interest.min}
+              max={interest.max}
+              value={pick.pInterest}
+              onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })}
+            />
+          </>
+        ) : (
+          <>
+            <DirectEntry label={axes.directed} min={directed.min} max={directed.max} value={pick.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
+            <DirectEntry label={axes.interest} min={interest.min} max={interest.max} value={pick.pInterest} onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })} />
+          </>
+        )}
+      </div>
+      {/* The other control, one tap away — never beside it. */}
+      <button
+        type="button"
+        onClick={() => setShowing((current) => (current === "sliders" ? "entry" : "sliders"))}
+        className={BUTTON_CLASS}
+        style={{
+          ...buttonStyle({ variant: "text", size: "sm" }),
+          alignSelf: "flex-start",
+          marginTop: "var(--space-2)",
+          color: "var(--text-secondary)",
+          fontSize: "var(--text-label-medium)",
+        }}
+      >
+        {showing === "sliders" ? "Type exact values" : "Use sliders"}
+      </button>
+    </>
+  );
+}
+
+/* THE ALTERNATES TRAVEL WITH THE RECORD FAMILY, AND SO DOES THEIR HOST (jakob's
+   ruling, the night batch 2026-10-01 — audit K10.1). The tag and citation
+   sheets carried a pad no keyboard, switch or screen reader could reach, and
+   this surface could not host them honestly: it took no bound, titled itself
+   "Choose your opinion", committed with "Sign it", and always offered a
+   walk-away. Each of those is now the caller's:
+
+   · `ranges` — the census's reach per slot (`TAG_RANGES` for a tag's pair, the
+     stance's ±1 otherwise), handed to both tracks and both typed fields.
+   · `title` and `commitLabel` — the dialog's name and its affirmative, for a
+     family whose act is not an opinion.
+   · `onSever` — the walk-away is drawn only when the caller hands one. An
+     opinion's control always does; a tag or citation sheet never does, because
+     its withdrawal is a control of the sheet's own (`Un-tag`, `Remove
+     citation`), never the far end of a pair.
+   · `host="sheet"` — no dialog at all. The sheet that hosts it keeps its own
+     title, its own `Done` and its own scrim; this renders only the readouts it
+     is handed, the two tracks, their swap and the landing, IN THE PLACE OF THE
+     FIELD. One commit, and no modal stacked over a sheet. The "?" stays the
+     dialog's: its lines teach the opinion's sign-it act, which a sheet that
+     stages and never signs does not have. */
 export function StanceAlternates({
   mode = "pad",
   pick,
@@ -85,6 +162,10 @@ export function StanceAlternates({
   inline = false,
   helpLabel = "How opinions work",
   axes = STANCE_AXES,
+  ranges = STANCE_RANGES,
+  title = "Choose your opinion",
+  commitLabel = "Sign it",
+  host = "dialog",
 }) {
   const [showing, setShowing] = React.useState(mode === "entry" ? "entry" : "sliders");
   // The same help affordance the pad carries, for the same reason: TWO VALUES per
@@ -109,8 +190,18 @@ export function StanceAlternates({
     const measured = slotRef.current?.offsetHeight;
     if (measured) setSlotHeight(measured);
   }, [explaining, showing]);
+  const inputs = <AlternateInputs showing={showing} setShowing={setShowing} pick={pick} onPick={onPick} axes={axes} ranges={ranges} />;
+  if (host === "sheet") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {children}
+        {inputs}
+        {landing}
+      </div>
+    );
+  }
   return (
-    <DialogSurface ariaLabel="Choose your opinion" inline={inline} onScrimPress={onCancel}>
+    <DialogSurface ariaLabel={title} inline={inline} onScrimPress={onCancel}>
       <div style={{ position: "relative" }}>
         <button
           type="button"
@@ -159,7 +250,7 @@ export function StanceAlternates({
             fontWeight: "var(--text-title-large--font-weight)",
           }}
         >
-          Choose your opinion
+          {title}
         </h2>
       </div>
       {/* The help replaces the readouts and the inputs alike. */}
@@ -189,58 +280,21 @@ export function StanceAlternates({
       ) : (
         <div ref={slotRef} style={{ display: "flex", flexDirection: "column" }}>
           {children}
-          <div style={{ marginTop: "var(--space-4)", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        {showing === "sliders" ? (
-          <>
-            <StanceSlider
-              label={axes.directed}
-              minLabel={axes.left}
-              maxLabel={axes.right}
-              value={pick.pDirected}
-              onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })}
-            />
-            <StanceSlider
-              label={axes.interest}
-              minLabel={axes.bottom}
-              maxLabel={axes.top}
-              value={pick.pInterest}
-              onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })}
-            />
-          </>
-        ) : (
-          <>
-            <DirectEntry label={axes.directed} value={pick.pDirected} onChange={(pDirected) => onPick && onPick({ ...pick, pDirected })} />
-            <DirectEntry label={axes.interest} value={pick.pInterest} onChange={(pInterest) => onPick && onPick({ ...pick, pInterest })} />
-          </>
-        )}
-      </div>
-      {/* The other control, one tap away — never beside it. */}
-      <button
-        type="button"
-        onClick={() => setShowing((current) => (current === "sliders" ? "entry" : "sliders"))}
-        className={BUTTON_CLASS}
-        style={{
-          ...buttonStyle({ variant: "text", size: "sm" }),
-          alignSelf: "flex-start",
-          marginTop: "var(--space-2)",
-          color: "var(--text-secondary)",
-          fontSize: "var(--text-label-medium)",
-        }}
-      >
-        {showing === "sliders" ? "Type exact values" : "Use sliders"}
-      </button>
-      {landing}
+          {inputs}
+          {landing}
         </div>
       )}
       <div style={{ marginTop: "var(--space-6)", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
-        <button type="button" onClick={onSever} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}>
-          {severanceWords(axes).control}
-        </button>
+        {onSever && (
+          <button type="button" onClick={onSever} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}>
+            {severanceWords(axes).control}
+          </button>
+        )}
         <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
           Cancel
         </button>
         <button type="button" disabled={busy} onClick={onCommit} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary", size: "sm", disabled: busy })}>
-          Sign it
+          {commitLabel}
         </button>
       </div>
     </DialogSurface>
