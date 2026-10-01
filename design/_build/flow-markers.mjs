@@ -1657,6 +1657,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: ">Change password</button>", tag: "button" },
     { n: 2, find: ">Got it</button>", tag: "button" },
   ],
+  VouchAskUnusable: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: ">Go to the feed</button>", tag: "button" },
+  ],
 });
 
 /* The reply and edit wizards, the two overlays and the pattern boards

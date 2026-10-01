@@ -218,6 +218,15 @@
       "page": "entry"
     },
     {
+      "file": "VouchAskUnusable.dc.html",
+      "title": "Invites · an ask that can't be taken up",
+      "x": 4800,
+      "y": 6795,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "FeedSecurityNotice.dc.html",
       "title": "Signed in · the security notice",
       "x": 2400,
