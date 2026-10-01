@@ -361,6 +361,33 @@
       "page": "feed"
     },
     {
+      "file": "ReaderPostMenu.dc.html",
+      "title": "Post · the reader's menu",
+      "x": 480,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostLicense.dc.html",
+      "title": "Post · the license sheet",
+      "x": 960,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "PostDetail.dc.html",
+      "title": "Post · the detail view",
+      "x": 0,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "MapComments.dc.html",
       "x": -5060,
       "y": 0,
@@ -374,7 +401,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 3017,
+      "h": 3629,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -451,6 +478,24 @@
       "page": "feed"
     },
     {
+      "file": "PostOpinions.dc.html",
+      "title": "Post · opinions on it",
+      "x": 1440,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "ReaderPostMenuNarrow.dc.html",
+      "title": "Post · the reader's menu, narrow phone",
+      "x": 1920,
+      "y": 4676,
+      "w": 320,
+      "h": 568,
+      "page": "feed"
+    },
+    {
       "file": "CommentOpinionsEmpty.dc.html",
       "title": "Comment · opinions on it, none yet",
       "x": 2880,
@@ -458,6 +503,15 @@
       "w": 390,
       "h": 844,
       "page": "comments"
+    },
+    {
+      "file": "CitedBy.dc.html",
+      "title": "Post · what cites it",
+      "x": 2400,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "CommentCitedByEmpty.dc.html",

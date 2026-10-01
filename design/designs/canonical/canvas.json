@@ -1147,25 +1147,25 @@
     {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
-      "x": 0,
-      "y": 1060,
+      "x": 3360,
+      "y": 964,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "profile"
     },
     {
       "file": "AvatarSeal.dc.html",
       "title": "Profile picture · what you sign",
-      "x": 480,
-      "y": 1060,
+      "x": 3840,
+      "y": 964,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "profile"
     },
     {
       "file": "ComposePickVideo.dc.html",
       "title": "Pick · a video is the whole post",
-      "x": 960,
+      "x": 0,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1174,7 +1174,7 @@
     {
       "file": "ComposePickVideoCover.dc.html",
       "title": "Pick · the clip wears its cover",
-      "x": 3360,
+      "x": 2400,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1183,7 +1183,7 @@
     {
       "file": "CoverCrop.dc.html",
       "title": "Cover · a picture of your own",
-      "x": 1440,
+      "x": 480,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1192,7 +1192,7 @@
     {
       "file": "ComposeDescribeVideo.dc.html",
       "title": "Describe the video",
-      "x": 1920,
+      "x": 960,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1201,7 +1201,7 @@
     {
       "file": "EditComposeVideo.dc.html",
       "title": "Edit post · a video body",
-      "x": 2400,
+      "x": 1440,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1210,7 +1210,7 @@
     {
       "file": "ComposeCoverPlaying.dc.html",
       "title": "Cover · the preview playing",
-      "x": 2880,
+      "x": 1920,
       "y": 1060,
       "w": 390,
       "h": 844,
@@ -1264,29 +1264,29 @@
     {
       "file": "ReaderPostMenu.dc.html",
       "title": "Post · the reader's menu",
-      "x": 1920,
-      "y": 2120,
+      "x": 480,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "PostLicense.dc.html",
       "title": "Post · the license sheet",
-      "x": 2400,
-      "y": 2120,
+      "x": 960,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "PostDetail.dc.html",
       "title": "Post · the detail view",
-      "x": 1440,
-      "y": 2120,
+      "x": 0,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "ViewerPicture.dc.html",
@@ -1356,7 +1356,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4199,
+      "h": 4238,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1365,7 +1365,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 3087,
+      "h": 3100,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1383,7 +1383,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 3017,
+      "h": 3629,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1398,9 +1398,9 @@
     },
     {
       "file": "MapMedia.dc.html",
-      "x": -3030,
+      "x": -2450,
       "y": 0,
-      "w": 2610,
+      "w": 2030,
       "h": 3793,
       "page": "media",
       "title": "Media · flow map"
@@ -1446,7 +1446,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5019,
+      "h": 5045,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -2083,20 +2083,20 @@
     {
       "file": "PostOpinions.dc.html",
       "title": "Post · opinions on it",
-      "x": 2880,
-      "y": 2120,
+      "x": 1440,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "ReaderPostMenuNarrow.dc.html",
       "title": "Post · the reader's menu, narrow phone",
-      "x": 3360,
-      "y": 2120,
+      "x": 1920,
+      "y": 4676,
       "w": 320,
       "h": 568,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "CommentOpinionsEmpty.dc.html",
@@ -2110,11 +2110,11 @@
     {
       "file": "CitedBy.dc.html",
       "title": "Post · what cites it",
-      "x": 3840,
-      "y": 2120,
+      "x": 2400,
+      "y": 4676,
       "w": 390,
       "h": 844,
-      "page": "media"
+      "page": "feed"
     },
     {
       "file": "CommentCitedByEmpty.dc.html",
