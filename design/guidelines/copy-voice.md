@@ -893,6 +893,33 @@ current session's status is the platform noun — `This browser` on web,
 stands, with `Changing your password signs out every other device.`
 under them — the fact `ResetNew` already says, moved in front of the act.
 
+**About** — the support stack (jakob, 2026-10-01; every line here *new,
+flagged for blessing*). Three rows join the group after `About CoGra`
+and before `Privacy` and `Terms`, each one string for app and web:
+
+- `What's new`, its value the version running here (`0.1.2`). It opens
+  the release chronicle, titled by the row: each release's dateline
+  reads `Version 0.1.2 · current · 30.09.2026` for the running one and
+  `Version 0.1.1 · 28.09.2026` for the rest; each release ends in `See
+  it on GitHub`, named `See version 0.1.2 on GitHub` for a listener;
+  and the page's footnote reads `Newest first. Every release's full
+  notes and its code are public on GitHub.` A release's notes are
+  written when it ships, never here.
+- `Report a problem` opens the report: the heading `Report a problem`;
+  `Say what happened, in your own words. Sending opens your email with
+  everything below filled in — nothing goes until you send it there.`;
+  the field `What happened`; then the four facts that travel with the
+  words, as a read-back list — `To` · the address, `Version`, `Running
+  on`, `Time` — and under them `That's all that goes with your words —
+  no account, no key, nothing you've posted. It's sent from your own
+  email, so we can write back.` The commitment is `Send by email`,
+  because the press opens the reader's mail and sends nothing itself.
+- `Contact`, its value the address it writes to — a plain mail door,
+  kept apart from the report so reports stay structured.
+
+Both addresses (`reports@cogra.local`, `hello@cogra.local`) are
+placeholders until CoGra is on a server, and swap then.
+
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
 underneath: `Your key and your draft are cleared from this browser when

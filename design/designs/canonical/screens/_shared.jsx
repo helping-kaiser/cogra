@@ -2112,6 +2112,19 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    stops promising a way back that does not exist — and `forget` is the
    don't-remember switch turned on. Both default to the page every other
    board draws. */
+/* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the
+   settings row, the release chronicle and the report's diagnostic line all
+   read the running version, and three boards disagreeing about it would be
+   the drift the constant exists to stop. The repo states 0.1.0; the boards
+   draw two patch releases later so the chronicle has a history to show.
+   Both addresses are placeholders until CoGra is on a server, on `.local`,
+   the repo's own genesis-account domain: real-shaped, and undeliverable, so
+   nothing sent before the swap reaches a stranger. */
+const RUNNING_VERSION = "0.1.2";
+const REPORT_ADDRESS = "reports@cogra.local";
+const CONTACT_ADDRESS = "hello@cogra.local";
+const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+
 function SettingsBody({ backup = "made", forget = false } = {}) {
   return (
     <>
@@ -2252,10 +2265,10 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
         {/* ABOUT SITS AFTER CREDENTIALS AND BEFORE LEAVING (jakob's ruling, the
             batch-rulings round). The page's order is frequency, not taxonomy,
-            and these four rows are the least-reached on it — nobody opens
-            settings to re-watch an intro. They stand together because they are
-            one kind of row: four doors onto words about the product, none of
-            them a setting.
+            and these rows are the least-reached on it — nobody opens settings
+            to re-watch an intro. They stand together because they are one kind
+            of row: doors onto words about the product, or ways to answer it,
+            none of them a setting.
 
             NO FOOTNOTE. A group's footnote carries the fact a reader needs once
             and never again, and there is none here — every row's label already
@@ -2263,10 +2276,24 @@ function SettingsBody({ backup = "made", forget = false } = {}) {
 
             PRIVACY AND TERMS ARE ROWS AND NOTHING ELSE. They open static legal
             documents, which are written rather than designed; a board drawing
-            one would be a drawing of text nobody in this repo writes. */}
+            one would be a drawing of text nobody in this repo writes.
+
+            THE SUPPORT STACK JOINS IT (jakob, 2026-10-01): `What's new`,
+            whose value is the version running here and which opens the
+            release chronicle (`WhatsNew`); `Report a problem`, the structured
+            report (`ReportProblem`); and `Contact`, a plain mail door kept
+            apart so reports stay reports. They sit after About CoGra and
+            before the legal pair — the product's own words first, then the
+            ways to answer it, then the documents. The two addresses are
+            placeholders until CoGra is on a server, the APK path's way:
+            real-shaped values on the repo's own `.local` domain, swapped
+            when the addresses exist. */}
         <SettingsGroup label="About">
           <SettingsRow label="Watch the intro again" onOpen={() => {}} />
           <SettingsRow label="About CoGra" onOpen={() => {}} />
+          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} />
+          <SettingsRow label="Report a problem" onOpen={() => {}} />
+          <SettingsRow label="Contact" value={CONTACT_ADDRESS} onOpen={() => {}} />
           <SettingsRow label="Privacy" onOpen={() => {}} />
           <SettingsRow label="Terms" onOpen={() => {}} />
         </SettingsGroup>

@@ -1265,6 +1265,22 @@ Object.assign(FLOW_MARKERS, {
     { n: 20, find: ">About CoGra</span>", tag: "button" },
     { n: 21, find: ">Privacy</span>", tag: "button" },
     { n: 22, find: ">Terms</span>", tag: "button" },
+    // The support stack (2026-10-01), three rows inside the About group,
+    // numbered by the same identity rule — the next three free numbers.
+    { n: 23, find: ">What&#x27;s new</span>", tag: "button" },
+    { n: 24, find: ">Report a problem</span>", tag: "button" },
+    { n: 25, find: ">Contact</span>", tag: "button" },
+  ],
+  // The release chronicle: the way out, and one door per release — the same
+  // control drawn three times, so one number.
+  WhatsNew: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+  ],
+  ReportProblem: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="What happened"', tag: "div" },
+    { n: 3, find: ">Send by email</button>", tag: "button" },
   ],
   // The hidden-accounts sheet over the settings page (the private-viewer-state
   // round). scanExempt like its two siblings, so only the sheet is numbered —
