@@ -2817,7 +2817,14 @@ function ScoreOrigin({ kind = "post", score = "15.20" }) {
    THE AVATARS ARE `aria-hidden` BY THE MASTER, so the trace carries its own
    screen-reader line — the same discipline every stance readout takes — and
    the line is kind-neutral, ending `then what reached you`, the page title's
-   own words, because the mark beside it already says the kind. */
+   own words, because the mark beside it already says the kind.
+
+   ONE HOP NAMES THE PERSON; MORE HOPS TAKE THE GENERIC FORM (jakob
+   2026-10-01). A path through one person is spoken `You, then @ada, then what
+   reached you`; a path through two or more is spoken `You, then several
+   steps, then what reached you`, because a chain of handles read aloud
+   buries the reached thing at its end. The row's `Through @kel and @wren`
+   still says who. */
 const TRACE_ENDS = {
   post: { kind: "post", src: "post-photo.jpg" },
   comment: { kind: "comment" },
@@ -2826,7 +2833,8 @@ const TRACE_ENDS = {
 };
 
 function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
-  const spoken = `You, then ${people.slice(1).map((p) => `@${p.handle}`).join(", then ")}, then what reached you`;
+  const between = people.length === 2 ? `@${people[1].handle}` : "several steps";
+  const spoken = `You, then ${between}, then what reached you`;
   return (
     <span style={{ display: "inline-flex", alignItems: "center" }}>
       {people.map((person, index) => (
