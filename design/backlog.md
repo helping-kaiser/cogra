@@ -1330,8 +1330,10 @@ change-histories round*; `copy-voice.md` carries the words).
    opinion` line.
 
 The chat container's own chronicle is drawn: the chat details round's
-`ChatHistory` (post-MVP). What is still owed: the comment master carries
-no redaction state, so a removed comment version has no mark to draw yet.
+`ChatHistory` (post-MVP). `CommentCard` carries the redaction state
+(`redacted`): a removed comment version wears the mark in
+`CommentHistoryOwn` (post-MVP), and a removed comment in its thread in
+`CommentRemoved` (readme §13, *The comment-removal round*).
 
 ### 35 · Video playback — decisions the transition fix surfaced · *design* · **ruled**
 
@@ -3558,9 +3560,11 @@ The application queue, in order:
    payer-neutral signing copy — new strings to copy-voice for
    blessing.
 5. **New drawings**: comment removal at comment scale (menu row,
-   confirm, the removed comment's mark in a thread); the `Still
-   settling` chip under "Also show" *(drawn 2026-10-01, on by
-   default, `FeedSheet`)*.
+   confirm, the removed comment's mark in a thread) *(drawn
+   2026-10-01 on jakob's R-1 ruling — readme §13, the comment-removal
+   round: `CommentMenuOwn`, `CommentRemoveConfirm`,
+   `CommentRemoved`)*; the `Still settling` chip under "Also show"
+   *(drawn 2026-10-01, on by default, `FeedSheet`)*.
 6. **The three feed cards** (comment, profile, tag in the feed)
    *(drawn 2026-09-30, jakob's fifteen-first ruling; `FeedKinds`,
    readme §13 *The three feed cards*, calls flagged for his review)*.

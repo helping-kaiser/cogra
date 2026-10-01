@@ -9,3 +9,7 @@ WHEN scroll settles anywhere below the thread's hard top GIVEN the incumbent sti
 ALWAYS the thread's top-level comments stand newest first
 
 ALWAYS the replies in a branch stand oldest first
+
+WHEN the author's confirmed Remove on their own comment lands -> the comment's words and pictures give way to the mark Removed by its author in the comment's own place AND NEVER the comment leaves the thread
+
+ALWAYS a removed comment's replies stay under it and readable

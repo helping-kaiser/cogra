@@ -364,6 +364,23 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: "Add a comment</label>", tag: "label" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
   ],
+  // The thread after the reader's own Remove (the comment-removal round): the
+  // same sheet with the same controls, so ReplyEntry's numbers. The removed
+  // comment has no ⋮ left; its author chip, its opinion and its Reply ride
+  // the thread's own numbers.
+  CommentRemoved: [
+    { n: 1, find: '<a href="/u/', tag: "a", all: true },
+    { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
+    { n: 3, find: '<a href="/t/', tag: "a", all: true },
+    { n: 4, find: 'aria-label="Your opinion on this comment', tag: "button", all: true },
+    { n: 4, find: 'aria-label="Give your opinion on this comment"', tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
+    { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 5, find: ">Reply</button>", tag: "button", all: true },
+    { n: 6, find: "View 2 replies", tag: "button" },
+    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
   ReplyMedia: [
     { n: 1, find: '<a href="/u/', tag: "a", all: true },
     { n: 2, find: 'aria-label="More on this comment"', tag: "button", all: true },
@@ -506,6 +523,18 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
   ],
+  // Your own comment's menu (the comment-removal round): CommentMenu's rows
+  // keep their numbers — the badge is an identity, not a position — and
+  // Remove takes the next free one.
+  CommentMenuOwn: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">License terms</button>", tag: "button" },
+    { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
+    { n: 5, find: ">Opinions on this</button>", tag: "button" },
+    { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Remove</button>", tag: "button" },
+  ],
   ProfileMenu: [
     { n: 1, find: ">Save</button>", tag: "button" },
     { n: 2, find: ">Mention in a new post</button>", tag: "button" },
@@ -550,6 +579,14 @@ Object.assign(FLOW_MARKERS, {
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
   RemoveConfirm: [
+    { n: 1, find: ">Remove</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
+  // The same dialog at comment scale, over the thread (the comment-removal
+  // round): the post's numbers, because it is the post's dialog. The thread
+  // beneath is wired on `ReplyEntry`.
+  CommentRemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
