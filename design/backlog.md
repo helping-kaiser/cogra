@@ -3691,7 +3691,7 @@ annotation goes, or he rewords it and the note follows through
 `check-help-notes --write`. Both are one-line rulings; fold them
 into the next copy round's brief.
 
-### 113 · The kept picks' review board · *design* · **filed 2026-09-30**
+### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01**
 
 The key-loss round ruled a kept pick's life (readme §13, *The
 key-loss round*; `PadKeyAbsent`'s docblock): picks kept pending with
@@ -3704,6 +3704,31 @@ drawing round: the review surface (which posts, each kept pick's
 face and pair, dropping one before signing), what it signs as and
 what the snackbar says, and where the reader lands after. Drawing it
 closes the gap.
+
+**Drawn 2026-10-01** (jakob's rulings B1-B3; readme §13, *The kept
+picks' review*): `KeptPicksReview`, `KeptPicksSeal` and the settings
+row; the gap is closed. Left for rulings, none drawn:
+
+- **The anchor after the key is back.** A review left unsigned leaves the
+  posts' anchors wearing `Waiting for your key`, no longer true, and the
+  face's tap still opens `PadKeyAbsent`. What the anchor reads, and what
+  its tap opens, while the batch waits on the reader rather than the key.
+- **A kept pick whose target went.** A post removed or an account deleted
+  before the batch signs: the row's face, and whether the seal refuses
+  that act on its row (`SealFaultRow`'s shape) or the review drops it.
+- **A kept pick that would sever its bundle.** On a held post or topic, a
+  pick that nets the bundle to nothing goes through `SeveranceConfirm`
+  when signed alone; the batch has no such step.
+- **Kept vouches.** A kept vouch-back (`VouchBackPad` opens `VouchedIn`
+  when signed alone) or approval (`ApprovePad`, whose application may
+  expire meanwhile), signed in the batch.
+- **The write rule at kept-picks scale.** `WriteRuleFailed` draws the
+  post's seal and says the draft is kept; its clause and its way out for
+  the picks are owed, as the reply's were.
+- **Spoken drops.** Whether a dropped row is announced, as the pickers'
+  `PickAnnouncement` does, and where focus lands when a row leaves.
+- **The row's conditions.** Whether `3 kept picks waiting` shows while the
+  key has gone again, or over a sealed sign-out's picks.
 
 ### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30**
 

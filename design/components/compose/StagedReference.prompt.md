@@ -13,4 +13,6 @@ A citation the author has committed to, held in the composer.
 
 `pair` is what the act signs, trailing and quiet, and it arrives as numbers — the row formats it with `formatStancePair`, draws the nearest of the twenty `STANCE_ANCHORS` beside it, and the digits ride a `cg-exact` span that paints only in geek mode (readme §13). `sub` is the second line — whose it is, or what it is. Both are optional; a staged reference with neither is still a complete row.
 
+`stance` says the pair is an opinion of its own — a kept pick in `KeptPicksReview` — so the spoken twin is `StanceReadout`'s, the anchor's word and both axes named; a citation's stays the bare pair. The drawing does not change.
+
 A staged reference is an act, so it joins the acts card rather than sitting beside it: the total has to count it, or the count and the content disagree.
