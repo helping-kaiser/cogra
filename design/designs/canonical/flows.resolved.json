@@ -1168,6 +1168,22 @@
       ]
     },
     {
+      "name": "remove-your-comment",
+      "description": "Your own comment's menu carries Remove; it asks once, then leaves the mark — the comment is redacted where it stood in its thread, its replies still under it, never silently erased.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyMedia · 2 «comment overflow ⋮» → CommentMenuOwn — your own comment — the same sheet with Remove among the acts",
+        "CommentMenuOwn · 7 «Remove» → CommentRemoveConfirm — the menu closes and the think-twice dialog comes up over the thread",
+        "end · CommentRemoveConfirm · 1 «Remove» → CommentRemoved — the visible mark — the comment keeps its place in the thread, never silent"
+      ],
+      "boards": [
+        "ReplyMedia",
+        "CommentMenuOwn",
+        "CommentRemoveConfirm",
+        "CommentRemoved"
+      ]
+    },
+    {
       "name": "set-the-cover-and-order",
       "description": "Show all opens the picked batch as a list; dragging sets the order, the first picture is the cover, and Done returns wherever the sheet opened.",
       "status": "resolved",
@@ -1634,12 +1650,13 @@
       "status": "resolved",
       "startsOn": [
         "CommentMenu",
+        "CommentMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» on 4 boards → ComposePick",
+        "start · «Cite in a new post» on 5 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1649,6 +1666,7 @@
         "ComposeWords",
         "ComposeCited",
         "CommentMenu",
+        "CommentMenuOwn",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
@@ -1884,6 +1902,27 @@
         "cite-a-post"
       ],
       "endpoint": []
+    },
+    "CommentMenuOwn": {
+      "flows": [
+        "cite-a-post",
+        "remove-your-comment"
+      ],
+      "endpoint": []
+    },
+    "CommentRemoveConfirm": {
+      "flows": [
+        "remove-your-comment"
+      ],
+      "endpoint": []
+    },
+    "CommentRemoved": {
+      "flows": [
+        "remove-your-comment"
+      ],
+      "endpoint": [
+        "remove-your-comment"
+      ]
     },
     "ComposeCited": {
       "flows": [
@@ -2945,10 +2984,12 @@
     },
     "ReplyMedia": {
       "flows": [
-        "edit-your-comment"
+        "edit-your-comment",
+        "remove-your-comment"
       ],
       "endpoint": [
-        "edit-your-comment"
+        "edit-your-comment",
+        "remove-your-comment"
       ]
     },
     "ReplyMediaErrors": {
