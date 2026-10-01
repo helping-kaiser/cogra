@@ -9,6 +9,9 @@
    signed-in answer `/join/<id>` owes (web.md: the re-arm's context action on
    the link page). The arrival chip flips between the two. Either way the link
    is never typed twice: a held link is in the field already (WCAG 3.3.7).
+   A signed-in reader with nothing to re-arm — a member, the link's own
+   issuer, an applicant whose application is still live — lands where
+   app-open lands for them instead, and a snackbar says why.
 
    IT IS NOT `Join`. The account exists, the email is proved and the key is
    attached; only the application is new. So there is no handle, no address
