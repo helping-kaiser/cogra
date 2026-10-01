@@ -3731,7 +3731,12 @@ setting's words and home, and what the thread shows for comments the
 ranker cannot score — the feed's and search's unranked tail are the
 precedents.
 
-### 116 · The settled reply's landing needs a redraw · *design* · **filed 2026-09-30**
+### 116 · The settled reply's landing needs a redraw · *design* · **closed 2026-10-01**
+
+**Closed** (jakob 2026-10-01, as recommended): the landing scrolls the
+thread to the new card, K6.6's direction, and the board keeps its drawn
+offset (`ReplySettled`'s docblock, `behavior/ReplyEntry.md`; readme §13,
+*The curate rulings*).
 
 The thread-order rule (newest first at the top level, oldest first in
 a branch) puts a landed reply at the end of its branch — and at
@@ -3742,36 +3747,40 @@ choice for jakob: the landing scrolls the thread to the new card
 (K6.6's direction), or the board takes a larger offset that keeps the
 card in view. Drawn once ruled.
 
-### 117 · What the failure pack left owed · *design* · **filed 2026-09-30**
+### 117 · What the failure pack left owed · *design* · **filed 2026-09-30** · **narrowed 2026-10-01** (the second gate waits on the seam)
 
 The failure pack (readme §13, *The failure pack*) recorded the three
 K4 laws and drew five boards. Every vehicle the laws name is written
 in copy-voice, *Faults by code*. These are still owed a board or a
 ruling:
 
-- **Boards for copy-only vehicles.** The session-expired sign-in
-  screen, `This post doesn't exist.` and `This comment doesn't exist.`,
-  a comfort's revert on the target's row, and the words for a dead ask
-  link.
+- ~~**Boards for copy-only vehicles.**~~ — closed 2026-10-01 (jakob, as
+  recommended): `SignInExpired`, `PostNotFound`, `CommentNotFound`,
+  `RowSigning`'s third card for a comfort's revert, and
+  `VouchAskUnusable` with the dead ask link's words, flagged for
+  blessing (readme §13, *The curate rulings*).
 - ~~**The write rule on a pad and on a hold's row**~~ — closed
   2026-10-01 by `PadWriteRule` and `RowWriteRule` (readme §13, *The
   failure fixes and the support stack*).
-- **What else locks while a seal signs** (lane C's C26, unruled). Only
-  the commit goes inert. Whether Back, the header's X and the fact
-  rows' actions lock too, and what the reader sees if they leave
-  mid-signing, are open. So is the resumption of a signing interrupted
-  between the pre-sign and the approval.
-- **Past 5s.** The loading law asks for determinate progress past 5s,
-  and a label swap has no progress to show. Whether a slow signing
-  names its steps or keeps the participle is open.
+- ~~**What else locks while a seal signs**~~ — closed 2026-10-01 (jakob,
+  as recommended): for the label swap's duration the back arrow, Back
+  and the X lock too, the fact rows stay readable, and an app killed
+  mid-sign says the outcome on the next open with the ordinary settled
+  or failure notice (`SealSigning`; readme §13, *The curate rulings*).
+- ~~**Past 5s.**~~ — closed 2026-10-01 (jakob, as recommended): the acts
+  card's subline swaps to an honest olive line, no fake progress
+  (`SealSigningSlow`; its words flagged for blessing).
 - **The write rule's second gate.** One code carries W1 (solvency) and
   W2a (the stamp wall). The drawn words fit the first, which is the
   pool-exhaustion fact. A member below the wall is not short of
   payment, and the contract cannot yet tell the surface which gate
-  refused.
-- **The key-absent boards onto `NoticePanel`.** Five boards still draw
-  the tertiary panel by hand. They also disagree on the corner and drop
-  the title's letter-spacing.
+  refused. jakob 2026-10-01: until it can, the drawn words stand as the
+  solvency reading (`WriteRuleFailed`'s docblock); splitting the code or
+  adding a gate field is the design ⇄ impl seam's entry, and the item
+  waits on it.
+- ~~**The key-absent boards onto `NoticePanel`.**~~ — closed 2026-10-01:
+  the five boards, the reply's `KeyAbsentNotice` and post-MVP's
+  `WalletKeyAbsent` wear the master (readme §13, *The curate rulings*).
 - ~~**The write rule's words where no draft is kept**~~ — the words
   closed 2026-10-01 (jakob: conditional): reached from a reply's seal,
   the fact ends `your reply is still here`, and the "?" says the same
@@ -3783,7 +3792,7 @@ ruling:
   with the words still in its composer (readme §13, *The closing
   batch*).
 
-### 118 · What the support stack left open · *design* · **filed 2026-10-01** · **report edges closed 2026-10-01**
+### 118 · What the support stack left open · *design* · **filed 2026-10-01** · **report edges and the behind version closed 2026-10-01**
 
 The support stack (readme §13, *The failure fixes and the support
 stack*) drew the three rows and two boards. Still unruled:
@@ -3793,9 +3802,11 @@ stack*) drew the three rows and two boards. Still unruled:
   `Nothing to send yet` above it (`ReportProblemEmpty`), and leaving
   with Back keeps the words (readme §13, *The review fixes*). What a
   sent report does to the kept words is not ruled.
-- **A running version behind the newest.** `WhatsNew` marks the
-  running version as current; an install that is behind the newest
-  release has no drawn reading yet.
+- ~~**A running version behind the newest.**~~ — closed 2026-10-01
+  (jakob, with a deviation): a quiet line atop the chronicle
+  (`WhatsNewBehind`) and one snackbar per release on a cold open
+  (`FeedNewerVersion`), both lines flagged for blessing (readme §13, *The
+  curate rulings*). A more obvious vehicle is item 121.
 - **The addresses' swap.** `reports@cogra.local` and
   `hello@cogra.local` (`_shared.jsx`, the support stack's fixtures)
   swap for real addresses once CoGra is on a server.
@@ -3821,26 +3832,35 @@ a V1.0 line, not post-MVP, so the sweep leaves it standing, and item 110
 draws it in that form; the rewritten dateline paragraph keeps it as the
 form's owner.
 
-### 120 · What the closing batch left for rulings · *design* · **filed 2026-10-01**
+### 120 · What the closing batch left for rulings · *design* · **closed 2026-10-01**
 
 The closing batch (readme §13, *The closing batch*) executed jakob's
-rulings and left these calls for his eye:
+rulings and left these calls for his eye. Every one is settled:
 
-- **The report's placement.** `ReportProblem` and its empty state
-  already drew `Send by email` in content flow; what stands between the
-  field and the commit is the read-back of what travels, which the
-  board's honesty paragraph puts before the press. Whether the commit
-  moves up to follow the field, under the two-placement law, is
-  unruled.
-- **The profile and chat edits.** `ProfileEdit` (and post-MVP's
-  `ChatEdit`, its anatomy) lead to a seal and were drawn by the wizard
-  ruling, so their `Save` keeps its pinned foot; if jakob reads them as
-  task pages, both move into content flow.
-- **The post seal's key notice.** `ReplySealKeyAbsent` now keeps the
-  header's "?" beside the notice's by the stopper exception;
-  `ComposeKeyAbsent`, its post-scale twin, still gives the header's up.
-- **A pick's announcement.** A picked row moves into the staged section,
-  and nothing spoken says so at the moment of the pick.
-- **Two strings flagged for blessing** (copy-voice): the empty tag's
-  `Nothing carries this tag right now.` and the trace's kind-neutral
-  `then what reached you`.
+- ~~**The report's placement.**~~ — closed 2026-10-01 (jakob, as
+  recommended): the read-back stays between the field and `Send by
+  email`, the two-placement law's stated exception (readme §4; *The
+  curate rulings*).
+- ~~**The profile and chat edits.**~~ — closed 2026-10-01 (jakob, as
+  recommended): `ProfileEdit` and `ChatEdit` read as wizard stages and
+  keep their pinned `Save` (*The curate rulings*).
+- ~~**The post seal's key notice.**~~ — closed 2026-10-01 (jakob, as
+  recommended): `ComposeKeyAbsent` keeps the header's "?" beside the
+  notice's, as its reply-scale twin does (*The curate rulings*).
+- ~~**A pick's announcement.**~~ — closed 2026-10-01 by the fabric
+  close (#44): the pickers speak `Added — in the staged list.` and
+  `Removed from the staged list.` (`PickAnnouncement`), blessed in *The
+  curate rulings*.
+- ~~**Two strings flagged for blessing.**~~ — closed 2026-10-01: jakob
+  blessed `Nothing carries this tag right now.` and `then what reached
+  you` in the fabric close (#44).
+
+### 121 · A more obvious newer-version message · *design* · **filed 2026-10-01** · **future**
+
+The behind-version ruling (readme §13, *The curate rulings*) says a newer
+release once per release, on a cold open, as a snackbar on the feed's
+arrival (`FeedNewerVersion`). jakob 2026-10-01: "maybe foing for something
+more obvious later.. snackbar is often missed (it just takes a couple of
+seconds looking away)". A briefed round when it matters: a vehicle that
+survives a glance away, still once per release, never forcing an update
+and never nagging.
