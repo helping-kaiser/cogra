@@ -1027,6 +1027,7 @@
     { "from": "ComposeKeyAbsent", "via": 4, "kind": "detour", "label": "? — Your key", "to": [{ "board": "HelpDialog", "case": "the Your-key text" }] },
     { "from": "ComposeKeyAbsent", "via": 5, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore" }] },
     { "from": "ComposeKeyAbsent", "via": 6, "kind": "cancel", "label": "Keep the draft, restore later", "to": [{ "terminal": "back", "case": "leaves — the draft stays on this device" }] },
+    { "from": "ComposeKeyAbsent", "via": 7, "kind": "detour", "label": "? — Signed actions", "to": [{ "board": "HelpDialog", "case": "the Signed-actions text — the header's, beside the notice's by the stopper exception" }] },
 
     { "from": "ComposeWords", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePick", "case": "one stage back — the pick" }] },
     { "from": "ComposeWords", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },

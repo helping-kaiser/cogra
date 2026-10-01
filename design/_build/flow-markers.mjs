@@ -779,6 +779,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Your key"', tag: "button" },
     { n: 5, find: ">Restore the key</button>", tag: "button" },
     { n: 6, find: ">Keep the draft, restore later</button>", tag: "button" },
+    // The header's "?" beside the notice's (the stopper exception, A3 of the
+    // 2026-10-01 night round), appended so no via renumbers.
+    { n: 7, find: 'aria-label="How signing works"', tag: "button" },
   ],
   ComposeLicense: [
     { n: 1, find: 'aria-label="License"', tag: "button" },
