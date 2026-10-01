@@ -1675,8 +1675,8 @@ colon, no subtitle.
 keeps its plain figure, a negative keeping its `−` everywhere, a zero none.
 
 **A path's spoken shape** ends kind-neutral: `You, then @ada, then what
-reached you` — the title's own words, since the trace's last mark already
-says what kind of thing it reached. *New 2026-10-01, flagged for blessing.*
+reached you` — blessed (jakob 2026-10-01). The title's own words, since the
+trace's last mark already says what kind of thing it reached.
 The back arrow on level one reads `Back to feed`, for every kind.
 
 **The rule under the cover**, on level one: `Every path here starts with
@@ -1759,9 +1759,9 @@ the full line would not fit its one line, it compresses to `Through @ada`,
 the strongest path's person — blessed; a handle so long that even that does
 not fit ellipsizes, `ActorChip`'s truncation law ("…").
 
-**The empty tag's line**: `Nothing carries this tag right now.` — where the
-glimpse would stand when nothing carries the tag, `TagPageEmpty`'s own first
-sentence. *New 2026-10-01, flagged for blessing.*
+**The empty tag's line**: `Nothing carries this tag right now.` — blessed
+(jakob 2026-10-01). Where the glimpse would stand when nothing carries the
+tag, `TagPageEmpty`'s own first sentence.
 
 **A comment's head row, over a removed post**: `Removed by its author` in
 the title's place, the removal mark's own line in the system's voice, over
