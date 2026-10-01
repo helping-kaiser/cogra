@@ -1194,12 +1194,18 @@ const REPLY_CITATION = "Tide tables and the third headland";
    - `offline` — no answer at all: the fault takes the commit's place,
      `TransportError`'s line over an outlined Retry and the same way back
      (`NetworkError`).
-   - `refused` — one staged act refused: its row says so with Remove it, and
-     the commit stays, because nothing was staged (`SealFaultRow`).
+   - `refused` — a cited post that never landed: its row says so with Remove
+     it, and the commit stays, because nothing was staged (`SealFaultRow`).
+   - `bug` — any other refusal of one staged act, which the picking stage
+     should have blocked: the commit's place takes `NoticePanel` in the bug's
+     words, with Try again, and Report a problem and Discard the post under
+     it (`SealFaultBug`).
    - `writeRule` — the write rule's refusal: nothing failed and nothing was
      spent, so the commit's place takes `NoticePanel`, and the way out keeps
      the draft (`WriteRuleFailed`). */
-const SEAL_REFUSED_CITATION = "This can't be cited anymore.";
+const SEAL_UNLANDED_CITATION = "This post didn't land, so it can't be cited.";
+const SEAL_BUG_TITLE = "This shouldn't have happened";
+const SEAL_BUG_FACT = "That's a fault on our side, not yours. Nothing was signed or spent, and telling us helps us fix it.";
 const WRITE_RULE_TITLE = "You can't sign right now";
 const WRITE_RULE_FACT =
   "Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent — your draft is kept.";
@@ -1248,7 +1254,7 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
                     </span>
                   ),
                   count: "1",
-                  ...(state === "refused" ? { fault: { message: SEAL_REFUSED_CITATION, onRemove: () => {} } } : null),
+                  ...(state === "refused" ? { fault: { message: SEAL_UNLANDED_CITATION, onRemove: () => {} } } : null),
                 },
           ]}
           total={`${1 + tags.length + cited} things, signed together`}
@@ -1281,6 +1287,20 @@ function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
               <NoticeLine>{WRITE_RULE_FACT}</NoticeLine>
             </NoticePanel>
             <Button variant="text" style={{ width: "100%" }}>Keep the draft, sign later</Button>
+          </>
+        ) : state === "bug" ? (
+          <>
+            {/* Not a fault in `--error`, and not the write rule's notice: the
+                reader did nothing wrong and nothing was spent, so it is the
+                tertiary panel, and its words own the bug. */}
+            <NoticePanel title={SEAL_BUG_TITLE}>
+              <NoticeLine>{SEAL_BUG_FACT}</NoticeLine>
+              <Button variant="inverse" style={{ width: "100%" }}>Try again</Button>
+            </NoticePanel>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              <Button variant="text" style={{ width: "100%" }}>Report a problem</Button>
+              <Button variant="text" style={{ width: "100%" }}>Discard the post</Button>
+            </div>
           </>
         ) : (
           <SealFooter signLabel="Sign and publish" busy={state === "signing"} busyLabel="Signing and publishing…" />

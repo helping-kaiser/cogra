@@ -691,17 +691,18 @@ stands, and the rest of the surface stays readable.
   (`PadFailed`). A dialog keeps its pair and its commitment reads
   `Retry`. A form keeps its fields and the line takes SignInError's
   slot.
-- **On the row** — a fault about one staged act is said on that act's
-  row, with `Remove it` and no Retry (`SealFaultRow`). A hold, which
-  has no surface of its own, says its fault on the target's row
-  (`RowSigning`).
+- **On the row** — a cited post that never landed is said on its
+  citation's row, with `Remove it` and no Retry (`SealFaultRow`). A
+  hold, which has no surface of its own, says its fault on the target's
+  row (`RowSigning`).
 - **On the field** — a field's own line (*Field errors*, *Caps and
   their refusals*).
 - **The surface** — a fault that leaves nothing to act on takes the
   whole screen (`ProfileNotFound`, `VerifyExpired`, `JoinInvalid`).
 - **A notice** — not a fault at all: nothing was staged or spent, so
   the tertiary panel stands in the commit's place and no Retry is
-  offered (`WriteRuleFailed`).
+  offered (`WriteRuleFailed`). A refusal that is our bug takes the same
+  panel in its own words, with `Try again` (`SealFaultBug`).
 
 Lines marked *new* arrived with the failure pack and are flagged for
 blessing. Unmarked lines are already blessed or already drawn.
@@ -775,10 +776,26 @@ blessing. Unmarked lines are already blessed or already drawn.
   cut). On a pad the same panel takes Set's place in `PadKeyAbsent`'s
   shape. On a hold's row the quiet line reads `You can't sign right
   now`, with no Retry. *New; copy-only — neither is drawn.*
-- **One staged act refused** — a citation whose target nothing answers
-  to any more (the field-level refusal on `references.<index>.target`):
-  on the row, `This can't be cited anymore.` with `Remove it`. **Drawn**
-  on `SealFaultRow`. *New.*
+- **One staged act refused** (the field-level refusal on
+  `references.<index>.target`; jakob 2026-10-01). A target that landed
+  never stops answering, so two cases exist, and they read nothing
+  alike:
+  - **A cited post that never landed** — picked while still settling,
+    the reader's own or anyone else's, and its staged act expired. On
+    the row: `This post didn't land, so it can't be cited.` with
+    `Remove it`; a comment takes `This comment didn't land, so it can't
+    be cited.` **Drawn** on `SealFaultRow`. *New 2026-10-01, flagged
+    for blessing.*
+  - **Any other refusal** — a bug the picking stage should have
+    blocked. A notice in the commit's place, never the failure voice:
+    `This shouldn't have happened` over `That's a fault on our side,
+    not yours. Nothing was signed or spent, and telling us helps us fix
+    it.`, `Try again` in the panel, then `Report a problem` and `Discard
+    the post` under it; the post-scale ask is `Discard this post?` · `The
+    draft goes, with its pictures, tags and citations. Nothing was
+    signed, so nothing else changes.` · `Discard it` · `Keep the draft`.
+    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. *New
+    2026-10-01, flagged for blessing.*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go

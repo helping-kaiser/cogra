@@ -1725,6 +1725,24 @@ Object.assign(FLOW_MARKERS, {
     // via renumbers.
     { n: 8, find: 'aria-label="Why signing waits"', tag: "button" },
   ],
+  /* The bug register (2026-10-01) is the same seal again — header and facts
+     keep `ComposeSeal`'s numbers — with its three ways out where the commit
+     stood, and the discard ask's pair over it, `ComposeDraftDiscard`'s way. */
+  SealFaultBug: [
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'aria-label="How signing works"', tag: "button" },
+    { n: 4, find: ">Change</button>", tag: "button" },
+    { n: 5, find: ">Adjust</button>", tag: "button" },
+    { n: 6, find: ">Mark</button>", tag: "button" },
+    { n: 7, find: ">Try again</button>", tag: "button" },
+    { n: 8, find: ">Report a problem</button>", tag: "button" },
+    { n: 9, find: ">Discard the post</button>", tag: "button" },
+  ],
+  SealDiscardConfirm: [
+    { n: 1, find: ">Discard it</button>", tag: "button" },
+    { n: 2, find: ">Keep the draft</button>", tag: "button" },
+  ],
   PadFailed: [
     { n: 1, find: 'aria-label="How opinions work"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion', tag: "div" },

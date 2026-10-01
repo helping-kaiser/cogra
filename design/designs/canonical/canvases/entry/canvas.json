@@ -447,7 +447,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 1117,
+      "h": 1727,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -471,7 +471,7 @@
     },
     {
       "file": "SealFaultRow.dc.html",
-      "title": "Seal · one thing can't be signed",
+      "title": "Seal · a cited post that didn't land",
       "x": 960,
       "y": 964,
       "w": 390,
@@ -501,6 +501,24 @@
       "title": "Signing · on the target's row",
       "x": 2880,
       "y": 964,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealFaultBug.dc.html",
+      "title": "Seal · this shouldn't have happened",
+      "x": 960,
+      "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "patterns"
+    },
+    {
+      "file": "SealDiscardConfirm.dc.html",
+      "title": "Seal · discard this post?",
+      "x": 1440,
+      "y": 1928,
       "w": 390,
       "h": 844,
       "page": "patterns"
