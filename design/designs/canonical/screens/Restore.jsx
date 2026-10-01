@@ -21,7 +21,10 @@
    (`…in this app now.` in the app) — and the key-absent state that sent them
    is gone: the settings row that opened restore re-renders as its key-present
    board (`SettingsBackup`, `YourKey`), the feed's task card leaves, and a
-   draft or a pick that waited on the key goes on to be signed. */
+   draft that waited on the key goes on to be signed. Picks kept pending do
+   not sign on their own: with any waiting, success opens the kept picks'
+   review (`KeptPicksReview`) under the same snackbar, and they sign together
+   from its seal, one batch the reader has looked over. */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `restoreBody: this.props.wording === "app" ? "Enter your recovery code to bring your signing key into this app." : "Enter your recovery code to bring your signing key onto this browser."`;
 
