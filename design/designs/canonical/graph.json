@@ -16,6 +16,7 @@
     "KeyDecline": "the without-a-backup dialog covers the ceremony — the arrow beneath the scrim is inactive in this state; only the dialog (and its scrim) is live",
     "KeyElsewhereNoBackup": "an exemplar of `KeyElsewhere`'s shell (the pattern-exemplar rule): only the no-backup card is its own, and it carries no control; the band, the post card and the nav are wired on `KeyElsewhere`",
     "ApplicantKeyElsewhere": "an exemplar of `ApplicantFeed`'s shell (the pattern-exemplar rule): only the key card and its two controls are its own; the band, the post card and the nav are wired on `ApplicantFeed`",
+    "ApplicantExpired": "an exemplar of `ApplicantRejected`'s shell (the pattern-exemplar rule): only the run-out card and its two controls are its own; the band, the post cards and the nav are wired on `ApplicantRejected`",
     "SignOutConfirm": "the sign-out dialog covers the settings page — every row beneath the scrim is inactive in this state, and wired on `Settings`; only the dialog (and its scrim) is live",
     "NoScreenLock": "the no-screen-lock warning covers the backup screen — the arrow and the commitment beneath the scrim are inactive in this state, and wired on `SettingsBackup`; only the dialog (and its scrim) is live",
     "VouchBackPad": "the scrim wash covers the shell — its semantic elements (band, nav, the vouch card's own controls) are inactive in this state; only the parked pad is live",
@@ -90,14 +91,16 @@
     "TagPageEmpty": "a tag everything has been untagged out of — the same page any chip opens, in the state an unbinding leaves it: the list empty, the topic's history not (jakob 2026-09-15); content, not a tap",
     "FeedEntryMoved": "a post whose paths have all aged out — the same screen the score opens, in the state the dust floor leaves it once every path’s last opinion has decayed past it; content, not a tap",
     "OnboardingSteps": "the first authenticated feed entry, from applicant on — the intro opens over the feed once, the seen flag server-side, and Settings' About group re-opens it here; content and a flag, not a tap",
-    "Main": "arrival through an invite link — the inviter's borrowed view",
-    "FeedBare": "app open, signed out, no link — the bare borrowed view",
+    "Main": "arrival through an invite link, live or no longer usable — the issuer's borrowed view, feed-first either way; the band and the guest gate then open Join for a live link and JoinInvalid for a dead one",
+    "FeedBare": "app open, signed out, no link — or a link that resolves to nothing, which carries no issuer — the bare borrowed view",
     "KeyElsewhere": "app open, signed in on a device the key is not on",
     "KeyElsewhereNoBackup": "app open, signed in on a device the key is not on, for an account with no backup to restore from — a state the account brings, not a tap",
     "ApplicantKeyElsewhere": "app open, an applicant signed in on a device their key is not on — a state the account brings, not a tap",
     "Verified": "opened from the verification mail",
     "ApplicantWaiting": "ApplicantFeed once every task card is done — time, not a tap",
     "ApplicantRejected": "the same applicant shell once the inviter has closed the application — the card flips where the reader is standing; somebody else's decision, not a tap",
+    "ApplicantExpired": "the same applicant shell once the application's window has passed with no answer — the card flips where the reader is standing, and comes back even if the waiting card was put away; time, not a tap",
+    "ApplicantRearm": "also an invite link opened by a signed-in applicant whose application is closed — the page arrives holding that link (the arrival chip's `link`), so it is never pasted twice; a link, not a tap",
     "VouchAsk": "opened from a rejected applicant's ask link, handed over outside the product — a link, not a tap",
     "VouchBack": "the approval landing — arrives with the next open, not a tap",
     "ReplyMedia": "a thread whose comments carry pictures — the same sheet, a state not a tap",
@@ -127,7 +130,7 @@
     "FeedDeleting": "the confirmed deletion's own state — the emailed link has been opened, and from then until the deadline the band rides every logged-in surface; the feed is where the canvas draws it",
     "ResetNew": "opened from the reset mail's link — the destination `Reset` promised, reached from the mail app and not by a tap of ours",
     "VerifiedApp": "the verification mail's link, opened where App Links hand the URL to the app rather than to a browser — platform, not a tap",
-    "VerifyExpired": "the same link, spent or timed out by the time it was opened — a link's age, not a tap"
+    "VerifyExpired": "the same link, spent or timed out by the time it was opened, in the app or in a browser — a link's age, not a tap"
   },
   "boardKinds": {
     "Theme": "reference",
@@ -156,7 +159,7 @@
   },
   "edges": [
     { "from": "Main", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
-    { "from": "Main", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
+    { "from": "Main", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "Join", "case": "the invite link held is live — the join form opens with it in hand, never the door; Join's own Sign in serves a returning reader" }, { "board": "JoinInvalid", "case": "the link held no longer works — it says so, and takes another" }] },
     { "from": "Main", "via": 3, "kind": "advance", "label": "Download the app (APK)", "to": [{ "terminal": "os", "case": "the browser downloads the APK" }] },
     { "from": "Main", "via": 4, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "Main", "via": 5, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
@@ -215,6 +218,12 @@
     { "from": "ApplicantFeed", "via": 18, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "ApplicantFeed", "via": 19, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ApplicantFeed", "via": 20, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+    { "from": "ApplicantFeed", "via": 21, "kind": "advance", "label": "Wrong address?", "to": [{ "board": "ApplicantEmail", "case": "the address is still unverified, so the new one alone changes it — no code goes to the old one (auth.md, the unverified carve-out)" }] },
+    { "from": "ApplicantEmail", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed", "case": "the arrow is a link, not history — back to the card the door was on; nothing was sent, and the old address stands" }] },
+    { "from": "ApplicantEmail", "via": 2, "kind": "advance", "label": "New email", "to": [{ "terminal": "self", "case": "typing" }] },
+    { "from": "ApplicantEmail", "via": 3, "kind": "advance", "label": "Current password", "to": [{ "terminal": "self", "case": "typing — the carve-out drops the old address's code, not the password" }] },
+    { "from": "ApplicantEmail", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
+    { "from": "ApplicantEmail", "via": 5, "kind": "advance", "label": "Change email", "to": [{ "board": "ApplicantFeed", "case": "a fresh link is on its way to the new address — the card prints it, the snackbar says where it went, and the link sent to the old one stops working" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
     { "from": "ApplicantWaiting", "via": 1, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "ApplicantWaiting", "via": 2, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },
@@ -232,7 +241,7 @@
     { "from": "ApplicantWaiting", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "ApplicantWaiting", "via": 15, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "ApplicantWaiting", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
-    { "from": "ApplicantWaiting", "via": 17, "kind": "back", "label": "Got it", "to": [{ "terminal": "self", "case": "the waiting card steps aside, and stays away on this device" }] },
+    { "from": "ApplicantWaiting", "via": 17, "kind": "back", "label": "Got it", "to": [{ "terminal": "self", "case": "the waiting card steps aside, and stays away on this device until the application's state changes — then that state's card comes back, put away or not" }] },
     { "from": "ApplicantWaiting", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
 
     { "from": "VouchBack", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
@@ -301,7 +310,7 @@
     { "from": "InviteEntryError", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
     { "from": "InviteEntryError", "via": 5, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare", "case": "no usable link — the bare view" }] },
 
-    { "from": "Join", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry" }] },
+    { "from": "Join", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry", "case": "the link was pasted at the door" }, { "board": "Main", "case": "the link was held from the arrival — back to the borrowed view it was opened from" }] },
     { "from": "Join", "via": 2, "kind": "advance", "label": "Handle field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Join", "via": 3, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "Join", "via": 4, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -313,7 +322,7 @@
     { "from": "About", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "back where it was opened — the join door, or settings" }] },
     { "from": "About", "via": 2, "kind": "detour", "label": "topic row", "to": [{ "terminal": "self", "case": "the topic unfolds, and folds again — each answers on its own, so opening a second leaves the first open" }] },
 
-    { "from": "JoinErrors", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry" }] },
+    { "from": "JoinErrors", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "InviteEntry", "case": "the link was pasted at the door" }, { "board": "Main", "case": "the link was held from the arrival — back to the borrowed view it was opened from" }] },
     { "from": "JoinErrors", "via": 2, "kind": "advance", "label": "Handle field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "JoinErrors", "via": 3, "kind": "advance", "label": "Email field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "JoinErrors", "via": 4, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
@@ -327,12 +336,12 @@
     { "from": "JoinInvalid", "via": 4, "kind": "advance", "label": "Already have an account? Sign in", "to": [{ "board": "SignIn" }] },
     { "from": "JoinInvalid", "via": 5, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare" }] },
 
-    { "from": "Verified", "via": 1, "kind": "advance", "label": "Back to CoGra", "to": [{ "board": "ApplicantFeed", "case": "application still running" }, { "board": "Feed", "case": "already a member" }] },
+    { "from": "Verified", "via": 1, "kind": "advance", "label": "Back to CoGra", "to": [{ "board": "ApplicantFeed", "case": "application still running" }, { "board": "Feed", "case": "already a member" }, { "board": "SignIn", "case": "signed out — the mail opened where no session is; the verification landed anyway, and sign-in lands wherever app-open lands for the account" }] },
 
     { "from": "VerifiedApp", "via": 1, "kind": "advance", "label": "Go to the feed", "to": [{ "board": "ApplicantFeed", "case": "application still running — the remaining task cards" }, { "board": "Feed", "case": "already a member" }] },
 
-    { "from": "VerifyExpired", "via": 1, "kind": "advance", "label": "Resend the link", "to": [{ "terminal": "self", "case": "a fresh link goes out — the same act the applicant feed's card offers" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
-    { "from": "VerifyExpired", "via": 2, "kind": "advance", "label": "Go to the feed", "to": [{ "board": "ApplicantFeed", "case": "application still running — the verify card is still there" }, { "board": "Feed", "case": "already a member" }] },
+    { "from": "VerifyExpired", "via": 1, "kind": "advance", "label": "Resend the link", "to": [{ "terminal": "self", "case": "a fresh link goes out — the same act the applicant feed's card offers" }, { "terminal": "self", "case": "signed out — an Email field opens in place above the pair, and the next press sends to what was typed, silently either way" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "VerifyExpired", "via": 2, "kind": "advance", "label": "Go to the feed", "to": [{ "board": "ApplicantFeed", "case": "application still running — the verify card is still there" }, { "board": "Feed", "case": "already a member" }, { "board": "SignIn", "case": "signed out — the label reads Sign in, and sign-in lands wherever app-open lands for the account" }] },
 
     { "from": "KeyCeremony", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantFeed" }, { "board": "ApplicantKeyElsewhere", "case": "opened from the key-elsewhere card — back to it, the attached key untouched" }] },
     { "from": "KeyCeremony", "via": 2, "kind": "advance", "label": "Create my recovery code", "to": [{ "board": "KeyConfirm" }] },
@@ -363,7 +372,7 @@
     { "from": "SignIn", "via": 5, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
     { "from": "SignIn", "via": 6, "kind": "advance", "label": "Sign in", "to": [{ "board": "Feed", "case": "member, key on this device" }, { "board": "KeyElsewhere", "case": "member, key not here" }, { "board": "ApplicantFeed", "case": "applicant" }, { "board": "SignInError", "case": "bad email or password" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "SignIn", "via": 7, "kind": "advance", "label": "Forgot password?", "to": [{ "board": "Reset" }] },
-    { "from": "SignIn", "via": 8, "kind": "advance", "label": "New here? Enter your invite", "to": [{ "board": "InviteEntry" }] },
+    { "from": "SignIn", "via": 8, "kind": "advance", "label": "New here? Enter your invite", "to": [{ "board": "InviteEntry" }, { "board": "Join", "case": "a live invite link is already held — the join form opens with it, and the door is never shown" }] },
     { "from": "SignIn", "via": 9, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare" }] },
     { "from": "SignIn", "via": 10, "kind": "advance", "label": "Download the app (APK)", "to": [{ "terminal": "os", "case": "the browser downloads the APK" }] },
 
@@ -374,7 +383,7 @@
     { "from": "SignInError", "via": 5, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
     { "from": "SignInError", "via": 6, "kind": "advance", "label": "Sign in", "to": [{ "board": "Feed", "case": "member, key on this device" }, { "board": "KeyElsewhere", "case": "member, key not here" }, { "board": "ApplicantFeed", "case": "applicant" }, { "terminal": "self", "case": "still failing — the line updates in place" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "SignInError", "via": 7, "kind": "advance", "label": "Forgot password?", "to": [{ "board": "Reset" }] },
-    { "from": "SignInError", "via": 8, "kind": "advance", "label": "New here? Enter your invite", "to": [{ "board": "InviteEntry" }] },
+    { "from": "SignInError", "via": 8, "kind": "advance", "label": "New here? Enter your invite", "to": [{ "board": "InviteEntry" }, { "board": "Join", "case": "a live invite link is already held — the join form opens with it, and the door is never shown" }] },
     { "from": "SignInError", "via": 9, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare" }] },
     { "from": "SignInError", "via": 10, "kind": "advance", "label": "Download the app (APK)", "to": [{ "terminal": "os", "case": "the browser downloads the APK" }] },
 
@@ -1580,7 +1589,7 @@
     { "from": "AvatarSeal", "via": 5, "kind": "back", "label": "Back", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
 
     { "from": "GuestGate", "via": 1, "kind": "back", "label": "Keep browsing", "to": [{ "terminal": "back", "case": "the ask closes — the read stays where it was" }] },
-    { "from": "GuestGate", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn" }] },
+    { "from": "GuestGate", "via": 2, "kind": "advance", "label": "Sign in or join", "to": [{ "board": "SignIn", "case": "no invite link held — the bare view's reader" }, { "board": "Join", "case": "a live invite link held — the join form opens with it in hand" }, { "board": "JoinInvalid", "case": "the link held no longer works" }] },
 
     { "from": "NetworkError", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ComposeLanded", "case": "reaches this time — the exemplar's signed landing" }, { "terminal": "self", "case": "still offline — the fault stays in place", "info": true }, { "board": "WriteRuleFailed", "case": "the write rule refuses — nothing staged or spent, the draft kept (master)" }, { "board": "SealFaultRow", "case": "a cited post that never landed — its row says so, with Remove it (master)" }, { "board": "SealFaultBug", "case": "any other refusal of one staged act — a bug the picker should have blocked: the notice owns it, with Try again, Report a problem and Discard the post (master)" }] },
     { "from": "SealFaultRow", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeDetails", "case": "one stage back" }, { "board": "ComposeDetailsVideo", "case": "one stage back — a clip body's details" }] },
@@ -2013,6 +2022,12 @@
     { "from": "ApplicantRejected", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ApplicantRejected", "via": 17, "kind": "advance", "label": "copy your ask link", "to": [{ "terminal": "self", "case": "the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows" }] },
     { "from": "ApplicantRejected", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
+    { "from": "ApplicantRejected", "via": 19, "kind": "advance", "label": "Use a fresh invite", "to": [{ "board": "ApplicantRearm", "case": "the door — the field empty, for a link the reader has been sent" }] },
+    { "from": "ApplicantExpired", "via": 1, "kind": "advance", "label": "copy your ask link", "to": [{ "terminal": "self", "case": "the ask link lands on the clipboard — Link copied; the same link the rejected card and the waiting card offer" }] },
+    { "from": "ApplicantExpired", "via": 2, "kind": "advance", "label": "Use a fresh invite", "to": [{ "board": "ApplicantRearm", "case": "the door — the field empty, for a link the reader has been sent" }] },
+    { "from": "ApplicantRearm", "via": 1, "kind": "back", "label": "back", "to": [{ "board": "ApplicantExpired", "case": "the arrow is a link, not history — from the door, back to the card it was on" }, { "board": "ApplicantRejected", "case": "the same, from the rejected card's door" }, { "terminal": "back", "case": "arrived by a link — the state the link opened over, or the reader's own landing when it opened the app cold (the layer law)" }] },
+    { "from": "ApplicantRearm", "via": 2, "kind": "advance", "label": "invite link field", "to": [{ "terminal": "self", "case": "typing — or holding the link it arrived with" }] },
+    { "from": "ApplicantRearm", "via": 3, "kind": "advance", "label": "Use this link for your application", "to": [{ "board": "ApplicantWaiting", "case": "the link checks out — a new application, approvable at once since both proofs are made, waiting on the link's issuer" }, { "terminal": "self", "case": "the link can't be used — the field says so in place, in JoinInvalid's heading" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
 
     { "from": "VouchAsk", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "out of the ask unanswered — an ask link is not used up, so the same one opens it again" }] },
     { "from": "VouchAsk", "via": 2, "kind": "cancel", "label": "Not now", "to": [{ "terminal": "back", "case": "nothing signed — the ask still stands, and the same link opens it again" }] },

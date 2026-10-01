@@ -191,6 +191,33 @@
       "page": "entry"
     },
     {
+      "file": "ApplicantExpired.dc.html",
+      "title": "Applicant · ran out of time",
+      "x": 3360,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantRearm.dc.html",
+      "title": "Applicant · a fresh invite",
+      "x": 3840,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "ApplicantEmail.dc.html",
+      "title": "Applicant · wrong address",
+      "x": 4320,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "SignIn.dc.html",
       "title": "Sign in",
       "x": 0,
@@ -1380,10 +1407,10 @@
     },
     {
       "file": "MapEntry.dc.html",
-      "x": -2450,
+      "x": -3320,
       "y": 0,
-      "w": 2030,
-      "h": 4238,
+      "w": 2900,
+      "h": 4424,
       "page": "entry",
       "title": "Entry · flow map"
     },

@@ -1616,6 +1616,32 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE ENTRY FUNNEL'S ROUND (jakob 2026-10-01, the audit's K3 blockers). The
+   new task pages number like the credential screens they borrow from — the
+   way back, the fields, the commitment. The two shell boards are exemplars,
+   so only their cards' controls carry numbers. Controls added to a wired
+   board take its next free number (the identity rule: a badge is not a
+   position). */
+FLOW_MARKERS.ApplicantFeed.push({ n: 21, find: ">Wrong address?</button>", tag: "button" });
+Object.assign(FLOW_MARKERS, {
+  ApplicantEmail: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="New email"', tag: "div" },
+    { n: 3, find: 'data-field="Current password"', tag: "div" },
+    { n: 4, find: 'aria-label="Show password"', tag: "button" },
+    { n: 5, find: ">Change email</button>", tag: "button" },
+  ],
+  ApplicantExpired: [
+    { n: 1, find: 'aria-label="Copy your ask link"', tag: "button" },
+    { n: 2, find: ">Use a fresh invite</button>", tag: "button" },
+  ],
+  ApplicantRearm: [
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 2, find: 'data-field="Invite link"', tag: "div" },
+    { n: 3, find: ">Use this link for your application</button>", tag: "button" },
+  ],
+});
+
 /* The reply and edit wizards, the two overlays and the pattern boards
    (legacy-conversion lane C, 2026-09-04): the last nine boards that had only
    hand markup. Their via numbers are the hand boards' own — every one
@@ -2037,6 +2063,7 @@ Object.assign(FLOW_MARKERS, {
     secondComments(9),
     ...nav(10),
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
+    { n: 19, find: ">Use a fresh invite</button>", tag: "button" },
   ],
   VouchAsk: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },

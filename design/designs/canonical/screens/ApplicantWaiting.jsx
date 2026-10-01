@@ -12,7 +12,14 @@
    nothing has no reason to hold the top of the feed for days. `Got it` is the
    card's only control, so it takes `TaskCard`'s secondary dress — outlined and
    left-aligned, the way `Resend the link` sits. The dismissal is remembered on
-   the device: putting it away twice would say the first tap did nothing. */
+   the device: putting it away twice would say the first tap did nothing.
+
+   A PUT-AWAY CARD COMES BACK WHEN THE STATE CHANGES (jakob 2026-10-01, audit
+   K3.4). The dismissal belongs to the wait, not to the application: once the
+   application is approved, closed or runs out, the shell shows that state's
+   card whether or not this one was put away — `ApplicantRejected`,
+   `ApplicantExpired` — because a reader who dismissed a wait has not
+   dismissed what ended it. */
 export function Screen() {
   return (
     <>
