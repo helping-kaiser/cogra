@@ -16,15 +16,19 @@
 
    ONE ROW, EITHER WORD. A cite stages a post, a mention stages a person, and
    the block cannot tell them apart because there is nothing to tell apart — a
-   Reference edge is a Reference edge, and only the far end differs. */
+   Reference edge is a Reference edge, and only the far end differs.
+
+   THE WORDS PATH HAS NO DESCRIPTION (jakob 2026-10-01, the audit's K8.1). A
+   description is how words stand beside pictures; with the body already
+   words it has no job, and the words edit carries none (`EditWords`) — a
+   description composed here would be lost to the first signed edit. So the
+   title is the only field above the tags. */
 export function Screen() {
   return (
     <>
       <WizardHeader title="Details" leaveLabel="Leave — your draft is kept" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
         <TextField label="Title" corner="Optional" cap={100} value="" />
-
-        <TextField label="Description" corner="Optional" rows={3} cap={500} value="" />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <FieldLabel>Tags</FieldLabel>
