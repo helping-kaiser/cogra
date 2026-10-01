@@ -534,8 +534,7 @@ the eye gets:
 - `Added — in the staged list.` — on a pick.
 - `Removed from the staged list.` — on a staged row's ×.
 
-Both blessed per jakob's direction (2026-10-01: "fix as recommended"), the
-exact wording flagged.
+Both blessed (jakob 2026-10-01).
 
 ## The staged-act snackbar
 
@@ -1711,9 +1710,8 @@ keeps its plain figure, a negative keeping its `−` everywhere, a zero none.
 reached you` — blessed (jakob 2026-10-01). The title's own words, since the
 trace's last mark already says what kind of thing it reached. One person
 on the path is named; a path through two or more takes the generic form,
-`You, then several steps, then what reached you` — blessed per jakob's
-direction (2026-10-01: "for longer paths we need generic wording"), the
-exact wording flagged. A chain of handles read aloud would bury the reached
+`You, then several steps, then what reached you` — blessed (jakob
+2026-10-01: "for longer paths we need generic wording"). A chain of handles read aloud would bury the reached
 thing at its end, and the row's `Through @kel and @wren` already says who.
 The back arrow on level one reads `Back to feed`, for every kind.
 

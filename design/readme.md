@@ -7654,8 +7654,7 @@ jakob's rulings closing the day's rounds, executed in one lane.
   already-published marker now reads with item 112's ruling.
 - **The lane's calls, flagged for review** (backlog item 120): the
   comment's two-line fold; the removed post's empty tile and its
-  secondary ink; `Nothing carries this tag right now.`; `then what
-  reached you`; no sign on a zero; the 46-character estimate behind the
+  secondary ink; no sign on a zero; the 46-character estimate behind the
   why-line's compression; `ProfileEdit` kept as a wizard stage; the
   report left as drawn; the staged rows' card-tone mark.
 - **The gate**: **243 screens**, 1671 → **1673 edges** (the two pickers'
