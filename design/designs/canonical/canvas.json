@@ -1365,7 +1365,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 3100,
+      "h": 3256,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1374,7 +1374,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 2312,
+      "h": 2416,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1383,7 +1383,7 @@
       "x": -4190,
       "y": 0,
       "w": 3770,
-      "h": 3707,
+      "h": 3915,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1401,7 +1401,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 3793,
+      "h": 4001,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1445,8 +1445,8 @@
       "file": "MapProfile.dc.html",
       "x": -3610,
       "y": 0,
-      "w": 2900,
-      "h": 5045,
+      "w": 3190,
+      "h": 5317,
       "page": "profile",
       "title": "Profile · flow map"
     },
