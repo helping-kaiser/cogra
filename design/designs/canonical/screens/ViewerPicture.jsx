@@ -24,9 +24,10 @@
    close. The description is read aloud to people who cannot see the frame;
    printed here it would become a caption its author never wrote.
 
-   THREE WAYS OUT: the X, a swipe DOWN, and back. A tap is not one of them. An
-   X, not a back arrow — this is a layer being dismissed, not a step being
-   walked.
+   THE WAYS OUT (jakob 2026-10-02): the X, a swipe DOWN and Android's Back,
+   everywhere; where a backdrop is visible — a wide screen — a tap on it closes
+   the viewer too. A tap on the picture is not one of them. An X, not a back
+   arrow — this is a layer being dismissed, not a step being walked.
 
    THE GESTURES ARE THE PLATFORM PHOTO VIEWER'S (readme §4, *Sheets*): double
    tap toggles zoom up to about 4×, a pan wins while zoomed, paging resets the

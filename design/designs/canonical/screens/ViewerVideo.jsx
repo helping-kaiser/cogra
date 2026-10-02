@@ -11,8 +11,9 @@
    nothing here draws a rotate control, and the bar carries no fullscreen toggle
    because this already is it.
 
-   The way out is the X, a swipe down, or back, exactly as for a picture — and
-   a tap is not one of them. */
+   The ways out are a picture's: the X, a swipe down and Android's Back,
+   everywhere, and a tap on the backdrop where one is visible — a wide screen.
+   A tap on the clip is not one of them. */
 export function Screen() {
   const { media } = MIRA_CLIP_POST;
   return <MediaViewer items={media} index={0} onClose={() => {}} elapsed="0:14" duration="0:41" progress={0.34} />;

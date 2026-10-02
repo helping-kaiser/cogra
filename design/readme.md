@@ -2523,8 +2523,9 @@ item 33, jakob's rulings the same day).
   beside it rather than being cropped to the edges. **No acts** on the
   viewer, and **the description is not shown**: alt text is read aloud
   to people who cannot see the frame, and printed under it it becomes
-  a caption its author never wrote. Three ways out — the X, a swipe
-  down, and the backdrop.
+  a caption its author never wrote. The ways out are the X, a swipe
+  down and Android's Back, everywhere; where a backdrop is visible — a
+  wide screen — a tap on it closes the viewer too (jakob 2026-10-02).
 - **The round is masters, not markup.** Everything it drew that a second
   surface could want is in the system: the media family moved into
   **`components/media/`** and gained `PinnedClip` (the clip above the

@@ -23,3 +23,9 @@ WHEN the device is turned to landscape -> the viewer turns with it AND the clip 
 WHEN tap the X -> the viewer closes
 
 WHEN swipe down -> the viewer closes
+
+WHEN press Android Back -> the viewer closes
+
+WHEN tap the backdrop GIVEN a backdrop is visible beside the frame on a wide screen -> the viewer closes
+
+WHEN tap the clip -> NEVER the viewer closes

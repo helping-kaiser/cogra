@@ -4,8 +4,9 @@
  *
  * The frame is never cropped here — `contain`, centred, as large as the viewport
  * allows: whatever a card crops, the viewer restores. It is dismissed rather
- * than navigated away from — the X, a swipe down, and back close it, a tap
- * never does, and the route never changes.
+ * than navigated away from — the X, a swipe down and Android's Back close it
+ * everywhere, a tap on the backdrop does too where one is visible (a wide
+ * screen), a tap on the frame never does, and the route never changes.
  *
  * A picture pinch-zooms and the gallery's swipe and dots carry over — dots only,
  * no arrows, the count riding their accessible name. The row is windowed at seven
