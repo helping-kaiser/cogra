@@ -16,9 +16,11 @@ WHEN the incumbent falls below the 70% gate GIVEN no other clip qualifies -> the
 
 WHEN a clip starts to qualify GIVEN the stage is empty -> the topmost qualifying clip takes the stage
 
-WHEN scroll settles at the feed's hard top GIVEN a qualifying clip exists -> the stage re-elects to the first qualifying clip in feed order
+WHEN scroll settles at the feed's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in feed order
 
-WHEN an overscroll bounce settles back at the feed's hard top GIVEN a qualifying clip exists -> the stage re-elects to the first qualifying clip in feed order
+WHEN an overscroll bounce settles back at the feed's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in feed order
+
+ALWAYS a clip the reader started by its play disc keeps the stage GIVEN it still qualifies, at the feed's hard top included
 
 WHEN scroll settles anywhere below the hard top GIVEN the incumbent still qualifies -> NEVER the stage re-elects upward
 

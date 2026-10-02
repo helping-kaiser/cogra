@@ -37,8 +37,10 @@
    AN APPLICANT'S DELETION IS IMMEDIATE (jakob 2026-10-02). The seven days
    protect landed records, and before approval nothing has landed: an
    applicant's confirmed deletion runs at once, with no grace and no pending
-   state. This board draws the member's request; the applicant's words are
-   not drawn yet (backlog). */
+   state. An applicant whose address is not verified confirms in the app,
+   and that confirm suffices (jakob 2026-10-02): nothing has landed, so no
+   emailed link gates it. This board draws the member's request; the
+   applicant's words are not drawn yet (backlog). */
 
 const INSET = {
   marginTop: 24,

@@ -3,8 +3,11 @@
    layout (the ProfileHeader rule). The application card rides above the
    header; the chronicle holds the acts already staged, each marked as still
    settling (the ruling: an applicant stages each kind of act once). Invites
-   are the one dead control: the tap answers with the snackbar, drawn here —
-   an informational line, never a gate screen (jakob 2026-09-01).
+   are the one locked control: the tap answers with the snackbar, drawn here —
+   an informational line, never a gate screen (jakob 2026-09-01). The button
+   wears auth.md's locked look, the comment foot's pattern (jakob
+   2026-10-02): visibly inactive at the disabled opacity, still tappable,
+   answering `You can invite once you're in.`
 
    THE CARD NAMES THE APPROVER (the approver sweep, 2026-09-15). "Waiting on
    your inviter" named a person this reader does not have — the inviter is
@@ -45,6 +48,7 @@ export function Screen() {
             own
             onEdit={() => {}}
             onInvites={() => {}}
+            invitesOpacity="var(--state-disabled)"
             onAvatarChange={() => {}}
             onCounts={() => {}}
             menu={ownProfileMenu()}

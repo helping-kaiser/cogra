@@ -113,7 +113,7 @@ export const FLOW_MARKERS = {
   ],
   VouchBack: [
     filter,
-    { n: 2, find: ">Not now</button>", tag: "button" },
+    { n: 2, find: ">Got it</button>", tag: "button" },
     { n: 3, find: ">Vouch back</button>", tag: "button" },
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
     ...nav(13),
@@ -746,6 +746,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Keep the draft</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  /* The body fork's ask over the words stage (ruling 14). Only the dialog's
+     pair is stamped — the stage beneath the scrim is inert and every one of
+     its controls is wired on `ComposeWords`. */
+  ComposeBodyDiscard: [
+    { n: 1, find: ">Keep them</button>", tag: "button" },
+    { n: 2, find: ">Discard</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   ComposeSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
@@ -1366,13 +1374,18 @@ Object.assign(FLOW_MARKERS, {
     // numbered by the same identity rule — the next free number.
     { n: 26, find: " kept picks waiting</span>", tag: "button" },
   ],
-  // The release chronicle: the way out, and nothing else — the notes are read
-  // here.
-  WhatsNew: [{ n: 1, find: 'aria-label="Back to settings"', tag: "a" }],
-  // The behind state: the way out, and the line's `Update now`.
+  // The release chronicle: the way out, and one door per release — the same
+  // control drawn three times, so one number.
+  WhatsNew: [
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
+    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+  ],
+  // The behind state: the way out, the line's `Update now`, and the cards'
+  // release doors — one control drawn four times, so one number.
   WhatsNewBehind: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: ">Update now</button>", tag: "button" },
+    { n: 3, find: ">See it on GitHub</button>", tag: "button", all: true },
   ],
   ReportProblem: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -2166,9 +2179,9 @@ Object.assign(FLOW_MARKERS, {
    `VouchAskPad` IS `ApprovePad`'S, for the same reason: the same pad doing the
    same act, so the same four numbers in the same order. Its card's `Not now`
    and its way back sit under the wash and carry none, exactly as
-   `VouchBackPad`'s do — they carry their numbers one board earlier instead, on
-   `VouchAsk`, which is the same surface with the pad closed and nothing
-   dimmed. The landing numbers what a landing has: the way back, the decline,
+   `VouchBackPad`'s `Got it` does — they carry their numbers one board
+   earlier instead, on `VouchAsk`, which is the same surface with the pad
+   closed and nothing dimmed. The landing numbers what a landing has: the way back, the decline,
    and the affordance that opens the pad. */
 Object.assign(FLOW_MARKERS, {
   ApplicantRejected: [

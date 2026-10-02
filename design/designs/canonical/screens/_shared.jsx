@@ -2118,7 +2118,10 @@ const REMOVED_COMMENT_SCROLL = 440;
    there is nothing left on it to edit, the same reason its ⋮ goes. */
 const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity }) {
+/* `replyOpacity` LOCKS EVERY `Reply` IN THE THREAD for an applicant reader
+   (jakob 2026-10-02), the foot's `footOpacity` twin: `CommentCard` carries it
+   down to the replies, so one value locks the whole thread's Reply buttons. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2130,6 +2133,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         own
         onEdit={() => {}}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={OWN_THREAD_MENU}
       />
@@ -2143,6 +2147,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         timestamp="1h"
         bundle={mkBundle(0.1, 0.1)}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         replyCount={2}
         onOpenReplies={landed ? undefined : () => {}}
         replies={landed ? TOBIAS_REPLIES : []}
@@ -2169,6 +2174,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         ]}
         sensitive={{ reason: "A dead seabird in the second frame." }}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={CARD_MENU}
       />
@@ -2179,6 +2185,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         own
         onEdit={removed ? undefined : () => {}}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={removed ? [] : OWN_THREAD_MENU}
         redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
@@ -2414,11 +2421,17 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `Update now` opens CoGra's Play Store listing, which does not exist until
    the app is published; until then the id is the `.local` domain's own
    reverse name — real-shaped, and no stranger's listing can hold it. It swaps
-   for the real listing when CoGra is published (backlog item 118). */
+   for the real listing when CoGra is published (backlog item 118).
+
+   THE RELEASES' PUBLIC PAGES ARE THE CHRONICLE'S DEEPER LEVEL (jakob
+   2026-10-02, the fix-fix round's ruling 0). Each release card's door opens
+   `RELEASES_URL` + `/tag/v<version>` — that release's full notes and its
+   code. Only the cards lead there; `Update now` leads to the download. */
 const RUNNING_VERSION = "0.1.2";
 const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
 const STORE_LISTING_URL = "https://play.google.com/store/apps/details?id=local.cogra.app";
+const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
 
 /* THE RELEASE CHRONICLE, whole (`WhatsNew`'s anatomy, shared the moment its
    behind state drew it a second time). The notes are fixture, not copy. */
@@ -2470,7 +2483,14 @@ const UPDATE_NOW = "Update now";
 /* THE DATELINE'S WORD NAMES WHAT A VERSION IS TO THIS DEVICE (jakob
    2026-10-02, curate 1): the one running here is `installed`, and a release
    past it is `newest` — never `current`, which a stale running version is
-   not. The rest carry no word. */
+   not. The rest carry no word.
+
+   EVERY CARD ENDS IN ITS RELEASE'S DOOR, `See it on GitHub` (ruling 0): the
+   cards are the patch notes, and the door is the only way to the deeper
+   level — `RELEASES_URL` + `/tag/v<version>`. The doors are named for their
+   release, because controls reading the same words a thumb apart tell a
+   listener the verb and not the object (copy-voice, *The settings page*,
+   `Copy the PEM block`'s rule). */
 function Release({ version, date, installed = false, newest = false, notes }) {
   const word = installed ? " · installed" : newest ? " · newest" : "";
   return (
@@ -2491,6 +2511,9 @@ function Release({ version, date, installed = false, newest = false, notes }) {
               {line}
             </p>
           ))}
+          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
+            See it on GitHub
+          </InlineAction>
         </Card>
       </div>
     </>

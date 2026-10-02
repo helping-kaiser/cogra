@@ -22,4 +22,6 @@ WHEN press Android Back -> the viewer closes
 
 WHEN tap the backdrop GIVEN a backdrop is visible beside the frame on a wide screen -> the viewer closes
 
+WHEN tap the ground beside the frame GIVEN the phone is rotated and the frame leaves ground at its sides -> the viewer closes
+
 WHEN tap the picture -> NEVER the viewer closes

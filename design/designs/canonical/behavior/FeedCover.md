@@ -24,6 +24,8 @@ WHEN tap feed.card.media.frame.playDisc -> feed.card.media.frame's clip plays wh
 
 WHEN feed.card.media.frame's clip falls below the 70% gate GIVEN it took the stage by feed.card.media.frame.playDisc -> the stage law's ordinary succession takes over
 
+WHEN scroll settles at the feed's hard top GIVEN feed.card.media.frame's clip took the stage by feed.card.media.frame.playDisc and still qualifies -> NEVER the stage re-elects AND NEVER the clip stops
+
 WHEN tap feed.card.media.frame.soundDisc GIVEN sound is off -> sound turns on for every clip on every surface
 
 WHEN tap feed.card.media.frame.soundDisc GIVEN sound is on -> sound turns off for every clip on every surface
