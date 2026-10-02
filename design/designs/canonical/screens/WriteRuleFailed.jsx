@@ -48,7 +48,12 @@
    still here`, the "?" says the same, and the way out reads `Not now` — the
    word the pad's and the reply door's notices already use — returning to the
    reply's seal with the words still in its composer. Both conditionals ride
-   this board, the post's seal drawn, the reply's said. */
+   this board, the post's seal drawn, the reply's said.
+
+   AT KEPT-PICKS SCALE THE SAME MIRROR (jakob 2026-10-02, kept picks 5).
+   Reached from `KeptPicksSeal`, the fact ends `your picks are still kept.`
+   and the way out reads `Not now`, back to `KeptPicksReview` with every pick
+   still in it. Said here, not drawn. */
 export function Screen() {
   return <ComposeSealBody state="writeRule" />;
 }

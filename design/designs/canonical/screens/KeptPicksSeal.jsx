@@ -22,7 +22,16 @@
    opened from, with the usual settled snackbar in its batch form, `Signed 3
    things, still settling.`, and each target's anchor wears `Still settling`
    until its record is ordered. The X leaves with every pick still kept, as
-   leaving the review does. */
+   leaving the review does.
+
+   THE WRITE RULE AT THIS SCALE MIRRORS THE REPLY'S (jakob 2026-10-02, kept
+   picks 5). `WriteRuleFailed` is the master: the fact ends `your picks are
+   still kept.`, and the way out under the panel reads `Not now`, back to the
+   review with every pick still in it.
+
+   NO SEVERANCE STEP. A pick that nets its bundle to nothing said so on its
+   review row, and `Sign the opinions` is its confirmation (kept picks 3);
+   the seal raises no `SeveranceConfirm`. */
 export function Screen() {
   return (
     <>

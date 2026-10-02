@@ -881,8 +881,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   (readme §13, *The reply pack*), the fact's last clause swaps to what is true
   there: `Nothing was signed or spent — your reply is still here.`,
   and the way out under the panel reads `Not now`, back to the reply's
-  seal with the words still there (jakob 2026-10-01). The words name no
-  payer (the V1.0 scope cut). On a pad the same panel stands where the
+  seal with the words still there (jakob 2026-10-01). Reached from the
+  kept picks' seal, the same mirror: `Nothing was signed or spent — your
+  picks are still kept.` and `Not now`, back to the review (jakob
+  2026-10-02; *flagged*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -1327,7 +1329,10 @@ can't wait as pending — restore the key to sign this one.` with
 
 **A pick kept pending** wears `Waiting for your key` under the post's
 anchor, in `PendingMarker`'s quiet type — never `Still settling`, which
-means signed and not yet ordered.
+means signed and not yet ordered. Once the key is back and the review
+waits unsigned, the same line reads `Waiting for your review`, spoken in
+the anchor's name as `waiting for your review` (jakob 2026-10-02, kept
+picks 1; *new 2026-10-02, flagged for blessing*).
 
 **The kept picks' review** (`KeptPicksReview`, `KeptPicksSeal`; jakob's
 rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, flagged
@@ -1350,6 +1355,22 @@ for blessing*:
   `Current opinion`, since a batch holds more than one target.
 - The settings row, last in `Key backup`: `3 kept picks waiting` (`1 kept
   pick waiting` in the singular). No status line.
+
+The kept-picks rulings (jakob 2026-10-02) add these, each *new
+2026-10-02, flagged for blessing*:
+
+- A dropped row is spoken in the pickers' status idiom: `Removed — 2
+  picks left.` (`Removed — 1 pick left.` in the singular).
+- A row whose target was removed or redacted wears the target's removal
+  mark in the name's place — `Removed by its author`, `Removed under the
+  platform's rules`, `Deleted account` — and its × is named `Remove this
+  pick: Post, Removed by its author`.
+- A row whose pick would net its bundle to nothing says so under its
+  kind in the family's landing words: `This takes you back to zero.` (a
+  person or a post), `This leaves you with no opinion towards it.` (a
+  topic).
+- The write rule at this scale: the fact ends `Nothing was signed or
+  spent — your picks are still kept.`, and the way out reads `Not now`.
 
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`

@@ -2325,8 +2325,9 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `keptPicks` is the count of picks still waiting after their review was
    left unsigned (backlog item 113, jakob's ruling B3): a quiet row in the
    Key backup group, after `Your key`, reading `3 kept picks waiting`, that
-   reopens `KeptPicksReview`. It exists only while that is true — kept picks
-   with the key here and their batch unsigned — so it defaults to none, and
+   reopens `KeptPicksReview`. It exists only while that is true — the key
+   here and unsigned kept picks waiting; with the key gone again, the
+   waiting-for-key state owns the surface — so it defaults to none, and
    `Settings`, which draws the page whole, draws it present to show its
    place in the order. */
 /* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the

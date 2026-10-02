@@ -92,8 +92,10 @@
    113, jakob's ruling B3): `3 kept picks waiting`, last in the Key backup
    group, opening `KeptPicksReview` again. It is there only while picks kept
    with the key elsewhere wait, the key is back, and their review was left
-   unsigned — the page's one row that comes and goes. Quiet: a navigating row
-   and nothing more, no badge, no colour, no reminder anywhere else. */
+   unsigned — the page's one row that comes and goes. If the key goes again,
+   the row goes with it and the waiting-for-key state owns the surface
+   (jakob 2026-10-02, kept picks 7). Quiet: a navigating row and nothing
+   more, no badge, no colour, no reminder anywhere else. */
 
 export const FRAME = { width: 390, height: 2670 };
 
