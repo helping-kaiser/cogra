@@ -28,8 +28,9 @@ Where each sidecar's words come from:
   *incumbent* is the playing clip, the *stage* is the one clip a scroll
   surface plays, and the *hard top* is where the surface cannot scroll
   further up. A post's clip is `feed.card.media.frame`, registered on
-  `FeedCover`; a comment card's clip stays plain words until a
-  registered board draws one, so the law's lines keep *clip* for both.
+  `FeedCover`, and a comment card's is `feed.commentCard.media.frame`,
+  registered on `FeedCommentShapes`; the law's lines name both, and keep
+  *clip* where a line holds for either.
   Its hold lines are the failure pack's (readme §13, *The
   failure pack*): a signed act waits for its signature, the 200ms law
   decides when the row says `Signing…`, and a hold that fails says so
@@ -182,7 +183,8 @@ And it checks nodes, against `nodes.json`:
 - a node path in any line is a registered one — a line never names an
   element the built boards do not carry;
 - on a registered screen (`Feed`, `PostDetail` and `ComposeDetails`, the
-  calibration screens, and `FeedCover`, the feed's clip, so far), plain words that spell one of its nodes
+  calibration screens, `FeedCover`, the feed's clip, and
+  `FeedCommentShapes`, a comment card's clip, so far), plain words that spell one of its nodes
   fail: "the media row" on `ComposeDetails` is written
   `composeDetails.mediaRow`. The check knows a node by the words of a
   compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word

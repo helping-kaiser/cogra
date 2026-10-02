@@ -149,6 +149,11 @@ export function CommentCard({
      by a rank. Additive: given none, the card renders exactly as before. */
   score,
   onOpenScore,
+  /* THE DATA-NODE NAME its placer gives this card (design ⇄ impl seam 002),
+     keyed by the author's handle — `PostCard`'s rule. Given one, it names the
+     card's media too: `media`, `frame` per item, and a clip's `soundDisc`.
+     Given none, the card renders exactly as before. */
+  node,
   children,
 }) {
   // Same rule as PostCard: the license is a rare read, so it arrives from the
@@ -224,8 +229,12 @@ export function CommentCard({
           pictures and clips fill it, display-cropped and centred, while the
           bytes travel uncropped; at most four ride one comment. */}
       {Array.isArray(media) && media.length > 0 && (onOpen ? (
-        <div onClick={open}>
-          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
+        <div onClick={open} data-node={node && "media"}>
+          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" node={node && "media"} />
+        </div>
+      ) : node ? (
+        <div data-node="media">
+          <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" node="media" />
         </div>
       ) : (
         <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />
@@ -270,7 +279,7 @@ export function CommentCard({
     >
       {/* `attach` squares the top-left corner so a row flag (TaggedRow) fuses
           with the card (jakob's review, the tag round). */}
-      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined}>
+      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} node={node} nodeKey={node && author?.handle}>
         {/* The comment's TARGET pointer (jakob 2026-09-01): where a comment
             shows OUT of its thread — the profile's comments view, a search
             result — the card leads with what it answers, one line, one tap to

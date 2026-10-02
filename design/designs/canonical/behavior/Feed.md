@@ -4,7 +4,7 @@ ALWAYS at most one clip plays on the feed
 
 ALWAYS feed.card.media.frame competes for the feed's one stage GIVEN it holds a clip
 
-ALWAYS a comment card's clip competes for the same stage as feed.card.media.frame
+ALWAYS feed.commentCard.media.frame competes for the same stage as feed.card.media.frame GIVEN it holds a clip
 
 ALWAYS the playing clip keeps the stage GIVEN it still qualifies and the scroll has not settled at the feed's hard top
 
