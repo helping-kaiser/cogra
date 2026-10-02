@@ -214,6 +214,29 @@ one, but the words would win anyway — an arrow alone reaches a listener
 as "button" and a reader as a guess, for a control that exists to be
 obvious.
 
+## The filter pill's state words
+
+The trigger over a feed or search speaks how the view departs from the
+reader's default, and it speaks each axis's **state**, never the
+direction (jakob 2026-10-02, the residue round's Q2): a state reads the
+same whether it departs from the app's default or back toward it. The
+head names the kinds always; every other axis speaks only when it
+departs, in lowercase after a `·`:
+
+- **Kinds** (the head): one kind's name, `2 kinds`, `Nothing`.
+- **Forms**: the forms held, `text + photos`; every form, `all forms`.
+- **Order**: `newest`, `ranked`.
+- **Seen**: `showing seen`; off, `hiding seen`.
+- **Also show**: a chip on joins the `+` list, `+ sensitive` or
+  `+ still settling`; `Sensitive` or `Removed` off, `hiding sensitive`
+  or `hiding removed`; `Still settling` off, `settled only`.
+- **Topic**: the tag's own name (*Topics*). A default never holds one,
+  so it has no word for its absence.
+
+*New 2026-10-02, flagged for blessing:* `all forms`, `hiding seen`,
+`+ still settling`, `hiding sensitive`, `hiding removed`. The rest are
+the trigger's words as already drawn.
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees

@@ -40,6 +40,8 @@ ALWAYS the trigger speaks only the deviations from the reader's default
 
 ALWAYS the trigger speaks a deviation back toward the app's default like any other GIVEN the reader's own default differs from the app's
 
+ALWAYS the trigger speaks each departing axis's state, never the direction it departs in
+
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
