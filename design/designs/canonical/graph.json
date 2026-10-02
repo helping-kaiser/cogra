@@ -795,8 +795,8 @@
     { "from": "ReplyMedia", "via": 8, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — back to where it was opened" }] },
     { "from": "ReplyMedia", "via": 9, "kind": "advance", "label": "video sound", "to": [{ "terminal": "self", "case": "the one control a video wears — the sticky decision every video shares" }] },
 
-    { "from": "CommentEdit", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyMedia", "case": "empty — leaves at once" }] },
-    { "from": "CommentEdit", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyMedia", "case": "empty — leaves at once" }] },
+    { "from": "CommentEdit", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "changed since it opened — the confirm" }, { "board": "ReplyMedia", "case": "unchanged — leaves at once" }] },
+    { "from": "CommentEdit", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "changed since it opened — the confirm" }, { "board": "ReplyMedia", "case": "unchanged — leaves at once" }] },
     { "from": "CommentEdit", "via": 3, "kind": "detour", "label": "? — Editing", "to": [{ "board": "HelpDialog", "case": "the Editing text" }] },
     { "from": "CommentEdit", "via": 4, "kind": "advance", "label": "Words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "CommentEdit", "via": 5, "kind": "advance", "label": "remove picture ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }] },
@@ -810,8 +810,8 @@
     { "from": "CommentEdit", "via": 14, "kind": "advance", "label": "staged tag chip", "to": [{ "board": "TagPad" }] },
     { "from": "CommentEdit", "via": 13, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive", "case": "the sensitive sheet (master on the compose page)" }] },
 
-    { "from": "CommentEditVideo", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyMedia", "case": "empty — leaves at once" }] },
-    { "from": "CommentEditVideo", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }, { "board": "ReplyMedia", "case": "empty — leaves at once" }] },
+    { "from": "CommentEditVideo", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "board": "DiscardConfirm", "case": "changed since it opened — the confirm" }, { "board": "ReplyMedia", "case": "unchanged — leaves at once" }] },
+    { "from": "CommentEditVideo", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "board": "DiscardConfirm", "case": "changed since it opened — the confirm" }, { "board": "ReplyMedia", "case": "unchanged — leaves at once" }] },
     { "from": "CommentEditVideo", "via": 3, "kind": "detour", "label": "? — Editing", "to": [{ "board": "HelpDialog", "case": "the Editing text" }] },
     { "from": "CommentEditVideo", "via": 4, "kind": "advance", "label": "Words", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "CommentEditVideo", "via": 5, "kind": "advance", "label": "remove video ×", "to": [{ "terminal": "self", "case": "the clip leaves whole — the comment is its words; the clip is never swapped" }] },

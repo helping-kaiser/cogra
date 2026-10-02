@@ -908,7 +908,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     the post` under it; the post-scale ask is `Discard this post?` · `The
     draft goes, with its pictures, tags and citations. Nothing was
     signed, so nothing else changes.` · `Discard it` · `Keep the draft`.
-    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`.
+    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. At comment
+    scale the way out names what is lost (jakob 2026-10-02): `Discard
+    the reply` on a reply's seal, `Discard the edit` on a comment edit —
+    never `Discard the post`. *`Discard the edit` new 2026-10-02, flagged
+    for blessing.*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
@@ -2446,6 +2450,11 @@ tap on it used to reach nothing, and now it raises this:
 - The shield over the roll is named `Answer your draft before starting a
   new post` — what a screen reader meets where a sighted reader meets a
   dimmed grid.
+
+**The comment edit's ask** (`DiscardConfirm`, jakob 2026-10-02). The
+edit asks only when it changed since it opened, and its title says what
+goes: `Discard the changes?`, over the shared dialog's `Nothing is
+kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
 
 ## The already-published marker
 
