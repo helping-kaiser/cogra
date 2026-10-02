@@ -333,16 +333,47 @@ function FeedList({ children }) {
    THE TITLE KEEPS ITS ROW. The mark shares the heading's line rather than
    taking one of its own, so a task card is the height it always was and the
    column's rhythm does not change around it. `border-box` keeps the ring inside
-   the card's own width wherever the card is not a stretched feed child. */
-function TaskCard({ title, body, children }) {
+   the card's own width wherever the card is not a stretched feed child.
+
+   A CARD THAT NEEDS THE READER'S ACTION WEARS THE OLIVE (jakob 2026-10-02,
+   the olive split). `tone="notice"` puts the card on the account-notice
+   register — `tertiary-container` with its `on-` pair, the ground
+   `NoticePanel` wears — so a step the reader still owes (verify the email,
+   restore the key, the security notice) cannot be scrolled past as one more
+   post. Its filled action is `Button`'s `inverse`, the register's own. A card
+   that only says how things stand (waiting, approved and landing) keeps the
+   feed card's ground, so the olive keeps its force. The ring and the mark
+   ride both: they say who speaks, the ground says whether it asks.
+
+   ON THE OLIVE, EVERY INK IS THE REGISTER'S. `primary` on `tertiary-container`
+   measures 2.8:1 in the light theme and about 1:1 in the dark — under §10's
+   AA floor for a label and under 3:1 for the mark — and the page's own inks
+   fare no better (`on-surface-variant` 4.0:1 light, `on-surface` 1.8:1
+   dark). So the card scopes `--primary`, `--outline`, `--on-surface`,
+   `--on-surface-variant` and `--text-secondary` to `on-tertiary-container`
+   (4.6:1): the mark, an outlined or text button, an inline action and a
+   master drawn inside the card (the ask link's block) all read in the
+   panel's own pair — the reason `inverse` exists, carried to the rest. */
+function TaskCard({ title, body, tone, children }) {
+  const notice = tone === "notice";
+  const ground = notice ? "var(--tertiary-container)" : "var(--surface-card)";
   return (
     <Card
       style={{
         flex: "none",
         boxSizing: "border-box",
         border: "var(--ring-task-width) solid transparent",
-        background:
-          "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
+        background: `linear-gradient(${ground}, ${ground}) padding-box, var(--ring-task) border-box`,
+        ...(notice
+          ? {
+              color: "var(--on-tertiary-container)",
+              "--primary": "var(--on-tertiary-container)",
+              "--outline": "var(--on-tertiary-container)",
+              "--on-surface": "var(--on-tertiary-container)",
+              "--on-surface-variant": "var(--on-tertiary-container)",
+              "--text-secondary": "var(--on-tertiary-container)",
+            }
+          : {}),
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -1539,9 +1570,11 @@ const replyCitedRow = () => ({
 
    `uploading` is the seal gated on the reply's media (jakob's ruling, the night
    batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
-   true }` once one has not. Every row is unchanged; `UploadStatusLine` stands
-   over the foot, and `Sign comment` is disabled while it shows
-   (`ReplySealUploading`, `ReplySealUploadFailed`). */
+   true }` once one has not, with `media: "video"` for a clip so the line
+   reads `…signing waits for the video.` (jakob 2026-10-02, pads 3). Every
+   row is unchanged; `UploadStatusLine` stands over the foot, and `Sign
+   comment` is disabled while it shows (`ReplySealUploading`,
+   `ReplySealUploadFailed`). */
 function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
@@ -1596,7 +1629,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
               (uploading.failed ? (
                 <UploadStatusLine failed onRetry={() => {}} />
               ) : (
-                <UploadStatusLine done={uploading.done} total={uploading.total} />
+                <UploadStatusLine done={uploading.done} total={uploading.total} media={uploading.media} />
               ))}
             <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
           </>
@@ -1726,13 +1759,19 @@ function ComposeWordsBody({ paragraphs = WORDS_STAGE_BODY, used, error, nextDisa
    round), so the stage near its caps is this stage and not a copy of it. The
    defaults are the canonical fixtures; `ComposeDetailsCaps` passes longer ones
    and the refusal that belongs to the surface, and `nextDisabled` is what a
-   field over its cap does to the step. Nothing else about the stage moves. */
+   field over its cap does to the step. Nothing else about the stage moves.
+
+   `words` IS THE SAME STAGE ON THE WORDS PATH (jakob 2026-10-02, curate 2):
+   no media row, no describe row and no Description — a words post carries
+   no description — and everything else as it stands here
+   (`ComposeDetailsWords`). */
 function ComposeDetailsBody({
   title = "Salt maps of the coast road",
   titleError,
   description = "Rubbings from three weekends at low tide — paper against the salt crust.",
   descriptionError,
   nextDisabled = false,
+  words = false,
 }) {
   /* The element names are `ComposeDetails`'s calibration IDs (seam 002). They
      reach a built board only where the screen is registered (`NODE`); every
@@ -1741,17 +1780,21 @@ function ComposeDetailsBody({
     <>
       <WizardHeader title="Details" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <PickedRow
-          items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
-          caption="2 pictures — the body"
-          onManage={() => {}}
-          node="mediaRow"
-        />
-        <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
+        {!words && (
+          <>
+            <PickedRow
+              items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+              caption="2 pictures — the body"
+              onManage={() => {}}
+              node="mediaRow"
+            />
+            <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
+          </>
+        )}
 
         <TextField label="Title" corner="Optional" cap={100} value={title} error={titleError} node="title" />
 
-        <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} node="description" />
+        {!words && <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} node="description" />}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
           <FieldLabel node="label">Tags</FieldLabel>
@@ -1930,12 +1973,17 @@ function EditComposeBody({ unchanged = false } = {}) {
    law does not reach this field: it is drawn at its single line and stays
    there. Whether the foot ever goes live is the chats round's question — a
    chat is an inline signed send, and this foot inherits whatever that round
-   designs. */
-function CommentComposerFoot() {
+   designs.
+
+   AN APPLICANT'S FOOT IS LOCKED, NOT GONE (jakob 2026-10-02; auth.md's locked
+   look): the door stands visibly inactive at the disabled opacity and stays
+   tappable, the tap answering `You can comment once you're in.` `fieldOpacity`
+   carries it — `ReplyEntry`'s reader chip passes the applicant's reading. */
+function CommentComposerFoot({ fieldOpacity }) {
   return (
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
       <MonogramAvatar name="Sol Ferreira" />
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, opacity: fieldOpacity }}>
         <TextField label="Add a comment" rows={1} cap={2000} value="" />
       </div>
     </div>
@@ -1962,7 +2010,7 @@ function CommentComposerFoot() {
    margin. */
 const COMMENTS_GAP = 12;
 
-function CommentsSheet({ children, scrolledBy = 0 }) {
+function CommentsSheet({ children, scrolledBy = 0, footOpacity }) {
   return (
     <BottomSheet open tallest ariaLabel="Comments">
       <SheetTitle>Comments</SheetTitle>
@@ -1970,7 +2018,7 @@ function CommentsSheet({ children, scrolledBy = 0 }) {
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
       </ul>
-      <CommentComposerFoot />
+      <CommentComposerFoot fieldOpacity={footOpacity} />
     </BottomSheet>
   );
 }
@@ -2047,7 +2095,7 @@ const REMOVED_COMMENT_SCROLL = 440;
    there is nothing left on it to edit, the same reason its ⋮ goes. */
 const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }) {
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2065,7 +2113,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }
     </ul>
   );
   return (
-    <CommentsSheet scrolledBy={scrolledBy}>
+    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity}>
       <CommentCard
         author={TOBIAS}
         content={TOBIAS_COMMENT}
@@ -2325,8 +2373,9 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `keptPicks` is the count of picks still waiting after their review was
    left unsigned (backlog item 113, jakob's ruling B3): a quiet row in the
    Key backup group, after `Your key`, reading `3 kept picks waiting`, that
-   reopens `KeptPicksReview`. It exists only while that is true — kept picks
-   with the key here and their batch unsigned — so it defaults to none, and
+   reopens `KeptPicksReview`. It exists only while that is true — the key
+   here and unsigned kept picks waiting; with the key gone again, the
+   waiting-for-key state owns the surface — so it defaults to none, and
    `Settings`, which draws the page whole, draws it present to show its
    place in the order. */
 /* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the
@@ -2336,11 +2385,17 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    draw two patch releases later so the chronicle has a history to show.
    Both addresses are placeholders until CoGra is on a server, on `.local`,
    the repo's own genesis-account domain: real-shaped, and undeliverable, so
-   nothing sent before the swap reaches a stranger. */
+   nothing sent before the swap reaches a stranger.
+
+   THE STORE LISTING IS A PLACEHOLDER THE SAME WAY (jakob 2026-10-02, F2).
+   `Update now` opens CoGra's Play Store listing, which does not exist until
+   the app is published; until then the id is the `.local` domain's own
+   reverse name — real-shaped, and no stranger's listing can hold it. It swaps
+   for the real listing when CoGra is published (backlog item 118). */
 const RUNNING_VERSION = "0.1.2";
 const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
-const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+const STORE_LISTING_URL = "https://play.google.com/store/apps/details?id=local.cogra.app";
 
 /* THE RELEASE CHRONICLE, whole (`WhatsNew`'s anatomy, shared the moment its
    behind state drew it a second time). The notes are fixture, not copy. */
@@ -2348,7 +2403,7 @@ const RELEASES = [
   {
     version: RUNNING_VERSION,
     date: "30.09.2026",
-    current: true,
+    installed: true,
     notes: [
       "A reply says what it answers — a post by its title, a comment by its first words.",
       "While something signs, the button says what it's doing, and a signing that doesn't go through says so right where you were.",
@@ -2370,19 +2425,34 @@ const RELEASES = [
 ];
 
 /* A newer release than the one running here (jakob 2026-10-01, the A10
-   ruling) — the behind state's fixture, one patch on. */
-const NEWER_VERSION = "0.1.3";
+   ruling) — the behind state's fixture, one patch on, drawn atop the
+   chronicle as the newest. Its notes are fixture like the rest. */
+const NEWER_RELEASE = {
+  version: "0.1.3",
+  date: "02.10.2026",
+  newest: true,
+  notes: ["The filter's Reset brings back your own default."],
+};
 
 /* The behind state's two lines — drafts flagged for blessing (copy-voice,
    *The settings page*, About): the quiet line atop the chronicle, and the
-   once-per-release snackbar on a cold open's feed. */
+   once-per-release snackbar on a cold open's feed. Both carry `Update now`
+   (jakob 2026-10-02): the reader wants the new version, not its code, so
+   the door leads to the download — the store listing in the app, and on the
+   web a reload into the new version. One string for both. */
 const NEWER_VERSION_LINE = "A newer version exists.";
 const NEWER_VERSION_SNACKBAR = "A newer version of CoGra is out.";
+const UPDATE_NOW = "Update now";
 
-function Release({ version, date, current = false, notes }) {
+/* THE DATELINE'S WORD NAMES WHAT A VERSION IS TO THIS DEVICE (jakob
+   2026-10-02, curate 1): the one running here is `installed`, and a release
+   past it is `newest` — never `current`, which a stale running version is
+   not. The rest carry no word. */
+function Release({ version, date, installed = false, newest = false, notes }) {
+  const word = installed ? " · installed" : newest ? " · newest" : "";
   return (
     <>
-      <SectionLabel>{current ? `Version ${version} · current · ${date}` : `Version ${version} · ${date}`}</SectionLabel>
+      <SectionLabel>{`Version ${version}${word} · ${date}`}</SectionLabel>
       <div style={{ padding: "0 16px" }}>
         <Card>
           {notes.map((line) => (
@@ -2398,19 +2468,19 @@ function Release({ version, date, current = false, notes }) {
               {line}
             </p>
           ))}
-          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
-            See it on GitHub
-          </InlineAction>
         </Card>
       </div>
     </>
   );
 }
 
-/* `newer` is the version a running app is behind, or nothing. Given, one quiet
-   line stands atop the chronicle — the fact in `--text-secondary`, the door
-   onto that release's public page ending it, `ProfileMoreFailed`'s line shape
-   — and nothing else changes: no badge, no banner, no nagging. */
+/* `newer` is the release a running app is behind, or nothing. Given, one
+   quiet line stands atop the chronicle — the fact in `--text-secondary`,
+   `Update now` ending it, `ProfileMoreFailed`'s line shape — and the newer
+   release heads the list as the newest; nothing else changes: no badge, no
+   banner, no nagging. `Update now` opens the store listing
+   (`STORE_LISTING_URL`) in the app; on the web it reloads the page into the
+   new version. Its spoken name says which version it brings. */
 function WhatsNewBody({ newer }) {
   return (
     <>
@@ -2428,16 +2498,16 @@ function WhatsNewBody({ newer }) {
             }}
           >
             {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
-            <InlineAction size="sm" ariaLabel={`See version ${newer} on GitHub`} onClick={() => {}}>
-              See it on GitHub
+            <InlineAction size="sm" ariaLabel={`Update to version ${newer.version}`} onClick={() => {}}>
+              {UPDATE_NOW}
             </InlineAction>
           </p>
         )}
-        {RELEASES.map((release) => (
+        {(newer ? [newer, ...RELEASES] : RELEASES).map((release) => (
           <Release key={release.version} {...release} />
         ))}
         <div style={{ padding: "16px 24px 0" }}>
-          <QuietNote>Newest first. Every release's full notes and its code are public on GitHub.</QuietNote>
+          <QuietNote>Newest first.</QuietNote>
         </div>
       </div>
     </>
@@ -3831,6 +3901,41 @@ const ApplicationGroup = ({ label, count }) => (
     )}
   </div>
 );
+
+/* THE VOUCH CARD — `VouchBack`'s card, and the same card under the pad's wash
+   on `VouchBackPad`, so it is written once.
+
+   IT WEARS THE OLIVE REGISTER (jakob 2026-10-02, the olive split: a feed card
+   that asks the reader to act wears the account-notice register; one that only
+   informs stays neutral). `tertiary-container` ground, `on-tertiary-container`
+   ink for the title and the sentence alike, and the panel's own pair turned
+   over for the committing button (`Button`'s `inverse`) — `NoticePanel`'s
+   anatomy, held by a card. The way out is a text button in the panel's ink,
+   because a `primary` word on the olive is a second colour family arguing with
+   the panel's own, the same reason the filled button turns over. `body` and
+   `actions` are what the two boards differ in: the closed card says what the
+   button opens, and its row holds the buttons rather than the pad's anchor. */
+function VouchBackCard({ body, actions }) {
+  return (
+    <Card style={{ flex: "none", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <MonogramAvatar name="Mira Voss" src="inviter.jpg" size="lg" />
+        <h2
+          style={{
+            margin: 0,
+            fontSize: "var(--text-title-medium)",
+            lineHeight: "var(--text-title-medium--line-height)",
+            fontWeight: "var(--text-title-medium--font-weight)",
+          }}
+        >
+          @mira vouched you in
+        </h2>
+      </div>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{body}</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>{actions}</div>
+    </Card>
+  );
+}
 
 /* ONE LINE OF A PAD'S NOTE. `VouchBackPad` drew it first and drew it alone;
    the approval pad on the other side of the same handshake draws the identical

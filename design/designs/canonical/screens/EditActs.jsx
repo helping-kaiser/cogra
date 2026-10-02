@@ -11,7 +11,9 @@
    it stages is a row here, counted in the records it signs:
    · `Edit` — the post's new content state, one record.
    · `Tags added` · `Tags withdrawn` · `Tags revised` — one record per tag:
-     a tag is newest-wins, so its un-tag and its new pair are each one record.
+     a tag is newest-wins, so its new pair is one record, and a tag
+     withdrawal is ONE record — one fresh 0,0 layer, newest-wins; the drawing
+     counts 1 act (jakob 2026-10-02, pads 6).
    · `Citations added` · `Citations revised` — one record per citation: a
      revision is the one additive record `RefPairEdit` stages.
    · `Citations withdrawn` — `ReferenceClaim.withdrawalCost` records per

@@ -14,7 +14,9 @@
    `usable: false` with the handle), so the vantage rule lands on the same
    view; the band and the gate then open `JoinInvalid`, which says so and
    takes another link. A link that resolves to nothing carries no issuer and
-   lands on `FeedBare`, the bare view. */
+   lands on `FeedBare`, the bare view. Either dead arrival says so once, in
+   one snackbar over the unchanged landing: `This invite link has expired.`
+   (jakob 2026-10-02). */
 export function Screen() {
   return (
     <>

@@ -26,13 +26,22 @@ import { HelpDot } from "../core/HelpDot.jsx";
    never when at rest. The filter you have forgotten about is the one that
    confuses you — the default is silence.
 
+   THE DEFAULT IS THE READER'S (jakob 2026-10-02, pass C 10). Every feed
+   starts from the reader's default: the app's own (`FEED_FILTER_DEFAULT`)
+   until they set theirs in Settings, theirs from then on. The trigger speaks
+   deviations from THAT default, and the sheet's `Reset` restores it. Getting
+   back to CoGra's own default happens only in Settings, whose sheet is the one
+   place `Reset` means the app's default. The boards draw a reader who never
+   set one, so the two coincide on every one of them.
+
    NO GLYPH ON THE TRIGGER. There is no filter icon in the product's inlined set
    and §5 forbids drawing one, so the trigger says its state in words — which is
    better anyway: an icon cannot tell you that Newest is on.
 
    IT STAGES, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*; jakob
-   2026-10-01). Chips, the order, the seen toggle and `Reset` change the sheet
-   and nothing else: the feed behind it is visual only and does not move.
+   2026-10-01). Chips, the order, the seen toggle and the foot's `Reset` change
+   the sheet and nothing else: the feed behind it is visual only and does not
+   move.
    `Done` commits the staged filter and the feed re-queries ONCE; the scrim, a
    swipe down and Back discard it, and the feed is what it was. The reason is
    the ranker's: once it ships, every refetch runs the whole personalized
@@ -159,7 +168,13 @@ export function measureTriggerText(text) {
    collapses at the real edge — which makes the budget self-enforcing: a longer
    label or a new kind cannot quietly push the pill past its room. "Far from the
    default" is the useful fact at that point; which four ways is what the sheet
-   is for. */
+   is for.
+
+   THE WORDS ARE WRITTEN AGAINST THE APP'S DEFAULT, the one every drawn reader
+   holds. A reader whose own default differs hears deviations from theirs, and
+   the words for a deviation back toward the app's — `Ranked` under a Newest
+   default, the seen toggle off under an on one — are not written yet (backlog
+   12X-filter-olive). */
 export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_PX) {
   const kinds = value.kinds || [];
   const forms = value.forms || [];
@@ -245,10 +260,15 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    readings differ where they must and nowhere else.
 
    `foot` IS THE COMMIT, AND EVERY FILTER SHEET HAS ONE (the sheet law). It is
-   the Done row the license sheets take — a hairline, the reading, the button,
-   inside the sheet's own inset — and `FilterFoot` draws it. The reading is the
-   STAGED filter in the pill's own words, so the reader sees what Done will
-   commit before committing it.
+   the Done row the license sheets take — a hairline, then `Reset` in the
+   corner and `Done` at the end, inside the sheet's own inset — and
+   `FilterFoot` draws it. `Reset` lives there and nowhere in the sections
+   (jakob 2026-10-02): it stages the reader's default, and only `Done` commits.
+
+   THE FIXED SECTIONS COME FIRST, THE TOPICS LAST (jakob 2026-10-02). The topic
+   chips are the one section that grows — one per topic the reader holds for —
+   so it closes the body, and a long list of them never pushes the kinds, the
+   order or what else is admitted below the fold.
 
    A SHEET WITH A FOOT OWNS ITS HEIGHT. Four kinds and four sections already
    outrun 88% of the screen, so a commitment appended after them would sit
@@ -276,6 +296,15 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
           <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} />
         ))}
       </FilterSection>
+      <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
+      {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
+          the default is the feed as it has always been, and off is the
+          landed-only view. */}
+      <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
+        {FEED_ALSO.map((entry) => (
+          <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />
+        ))}
+      </FilterSection>
       {/* THE TOPIC FEED IS JUST ANOTHER FEED SETTING (jakob, 2026-09-14), so it
           is a section of this sheet and not a surface of its own. What it
           narrows to is one topic's feed: content reaching the viewer over Tag
@@ -298,7 +327,9 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
           AND THE DOOR OUT IS THE FULL LIST. This section holds what can narrow
           the feed; Your topics holds everything held, and the page a row opens
-          is where a topic is walked back. */}
+          is where a topic is walked back.
+
+          LAST IN THE BODY, because it is the section that grows. */}
       {topics.length > 0 && (
         <FilterSection label="One topic" hint="Topics you hold and are for. A topic you hold against stays a record — it just never narrows a feed.">
           {topics.map((topic) => (
@@ -314,18 +345,6 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
           </div>
         </FilterSection>
       )}
-      <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
-      {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
-          the default is the feed as it has always been, and off is the
-          landed-only view. */}
-      <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
-        {FEED_ALSO.map((entry) => (
-          <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />
-        ))}
-      </FilterSection>
-      <div style={{ padding: "0 var(--space-6)" }}>
-        <Button variant="text" size="sm" selfStart onClick={() => onChange && onChange(FEED_FILTER_DEFAULT)}>Reset</Button>
-      </div>
     </>
   );
 
@@ -342,8 +361,8 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
       )}
       {foot ? (
         <>
-          {/* `Reset` ends the scroll rather than the sheet, and keeps a section's
-              own gap between itself and the hairline below it. */}
+          {/* The last section keeps its own gap between itself and the
+              hairline below it. */}
           <div style={{ flex: 1, minHeight: 0, overflowY: "auto", paddingBottom: "var(--space-4)" }}>{sections}</div>
           {foot}
         </>
@@ -354,16 +373,27 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
   );
 }
 
-/* The Done row every filter sheet ends on: a hairline, the staged reading in
-   the pill's words, and the commit. `body-small` on `onSurfaceVariant`, the
-   license sheets' third anatomy. */
-export function FilterFoot({ reading, onDone }) {
+/* The Done row every filter sheet ends on: a hairline, `Reset` in the corner,
+   and the commit at the end (jakob 2026-10-02).
+
+   NO READING OF THE STAGED FILTER. A read-back in the pill's words works for
+   a change or two and cannot hold more — a reader who changed six things
+   would need a second sheet to see them (jakob). The sections above are the
+   staged filter, already in view.
+
+   `Reset` STAGES, `Done` COMMITS. `Reset` puts the reader's default back into
+   the sheet — the app's until they set their own in Settings, theirs after
+   (pass C 10) — and nothing applies until `Done`, the sheet law's one commit.
+   On the settings sheet the default being edited is the reader's own, so
+   there `Reset` stages CoGra's default: the one place a reader gets back to
+   it. Plain `Reset` (jakob, N3): the "?" is where a reader learns what it
+   restores. A text button, the quiet half of the row; `Done` keeps its seat. */
+export function FilterFoot({ onReset, onDone }) {
   return (
     <div style={{ padding: "0 var(--space-6)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-        <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
-          {reading}
-        </span>
+        <Button variant="text" onClick={onReset}>Reset</Button>
+        <span style={{ flex: 1 }} />
         <Button onClick={onDone}>Done</Button>
       </div>
     </div>
@@ -372,8 +402,10 @@ export function FilterFoot({ reading, onDone }) {
 
 /* `value` is the COMMITTED filter — what the feed shows and the pill reads.
    The sheet works on a staged copy taken when it opens; `onChange` fires once,
-   on Done, with the staged filter, and every other way out drops the copy. */
-export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics, node }) {
+   on Done, with the staged filter, and every other way out drops the copy.
+   `readerDefault` is what the foot's `Reset` stages: the reader's own default,
+   the app's until they set one in Settings. */
+export function FeedFilter({ value = FEED_FILTER_DEFAULT, readerDefault = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics, node }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const [staged, setStaged] = React.useState(value);
   const openSheet = () => {
@@ -397,7 +429,7 @@ export function FeedFilter({ value = FEED_FILTER_DEFAULT, onChange, onHelp, defa
         ariaLabel={ariaLabel}
         topics={topics}
         onOpenTopics={onOpenTopics}
-        foot={<FilterFoot reading={feedFilterSummary(staged)} onDone={commit} />}
+        foot={<FilterFoot onReset={() => setStaged(readerDefault)} onDone={commit} />}
       />
     </>
   );

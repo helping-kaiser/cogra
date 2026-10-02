@@ -187,8 +187,16 @@ export function StanceControl({
      but the reader made a pick and kept it, and the anchor has to say so or
      the pick reads as lost. The face shows the kept pick, and the honesty
      marker's quiet line under it says what it waits on. Additive — absent,
-     the control renders exactly as before. */
+     the control renders exactly as before.
+
+     WHAT IT WAITS ON FOLLOWS THE KEY (jakob 2026-10-02, kept picks 1). With
+     the key restored and the kept picks' review left unsigned, the pick waits
+     on the reader, not the key: `pendingReview` makes the line read `Waiting
+     for your review`, and the host wires the face's tap to the review
+     (`KeptPicksReview`), never the key notice. Should the key go again, the
+     host drops it and the line reads `Waiting for your key` once more. */
   pendingPick,
+  pendingReview = false,
   /* A SIGNED ACT IN FLIGHT, OR ONE THAT DID NOT GO THROUGH (the failure
      pack). `"busy"` is the wait past 200ms, `"failed"` the signing that did
      not complete. With the pad closed it is the hold's, and the target's row
@@ -351,7 +359,7 @@ export function StanceControl({
             restingFace === null
               ? `Give your opinion on ${targetLabel}`
               : pendingPick
-                ? `Your opinion on ${targetLabel}, waiting for your key: ${restingFace.label}, ${formatStancePair(restingPair)}.`
+                ? `Your opinion on ${targetLabel}, waiting for your ${pendingReview ? "review" : "key"}: ${restingFace.label}, ${formatStancePair(restingPair)}.`
                 : `Your opinion on ${targetLabel}: ${restingFace.label}, ${formatStancePair(restingPair)}. Press and hold to add a positive one.`
           }
           onClick={anchorBusy ? undefined : onTap}
@@ -465,7 +473,7 @@ export function StanceControl({
           </button>
         )}
       </div>
-      {pendingPick && <PendingMarker label="Waiting for your key" />}
+      {pendingPick && <PendingMarker label={pendingReview ? "Waiting for your review" : "Waiting for your key"} />}
       {/* THE ROW LINE (vehicle (b)): the hold's wait, quiet, and its failure,
           in the failure voice with the way to ask again. */}
       {rowSigning === "busy" && <PendingMarker label="Signing…" />}

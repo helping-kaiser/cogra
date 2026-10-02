@@ -37,6 +37,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeDetailsWords.dc.html",
+      "title": "Compose · details, the words path",
+      "x": 1440,
+      "y": 5300,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "ComposeSeal.dc.html",
       "title": "Compose · what you sign",
       "x": 1920,
@@ -527,7 +536,7 @@
       "x": -3610,
       "y": 0,
       "w": 3190,
-      "h": 3669,
+      "h": 4218,
       "page": "compose",
       "title": "Compose · flow map"
     },

@@ -13,8 +13,10 @@ import React from "react";
    colour arguing with the panel's own; the filled button there takes the
    panel's pair and turns it over — `on-tertiary-container` as the fill,
    `tertiary-container` as the label. Same shape, same weight, one colour
-   family. Use it only inside such a panel; on the page's ground it is `primary`
-   that carries a committing action.
+   family. Use it only on that ground — the panel, or a feed card wearing the
+   same olive because it needs the reader's action (the olive split, jakob
+   2026-10-02); on the page's ground it is `primary` that carries a committing
+   action.
 
    The pill at every size (Material's button shape, not a rung of the shape
    scale); both sizes carry `label-large`. Heights are TRUE heights (border-box):

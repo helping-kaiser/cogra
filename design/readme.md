@@ -251,6 +251,16 @@ designed, not derived by inversion.
   set, and it is a **teal, not a green** — harmonising a green into an
   orange palette lands it beside the olive `tertiary`, and red/green is
   the pair colour-blind readers lose.
+- **`tertiaryContainer` — the olive — is the account-notice register**:
+  the system speaking to the reader about their own account and what they
+  have to do about it. The key-absent and write-rule panels wear it
+  (`NoticePanel`), and so does every feed card that needs the reader's
+  action — verify the email, restore or bring the key, the security
+  notice, the vouch-back, a closed application's way back in (`TaskCard`'s
+  `tone="notice"`; jakob 2026-10-02, the olive split). A card that only
+  says how things stand keeps the feed card's ground, so the olive always
+  means "yours to do". Its filled button is `inverse`; it is never a
+  page's wash and never `error`.
 - Every `on`-pair meets WCAG AA (4.5:1), verified at generation.
 - **Material You dynamic colour is off.** The brand hue carries identity
   a wallpaper-derived palette would erase.
@@ -451,7 +461,9 @@ Explore.
 read drill-in the arrow returns to where the reader came from, and its
 label names that place by an origin-noun table built from the screen's
 actual arriving edges — the tag page's (*The tag-page smalls*), the post
-detail's and the profile's (*The navigation-and-sheets round*). A cold
+detail's and the profile's (*The navigation-and-sheets round*), the
+score's trace, the stream, the opinions page, Notifications and About's
+(*The nav-noun sweep*). A cold
 entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
 page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
@@ -1281,9 +1293,9 @@ may serve any actor's view of the shared record to any reader. So:
   ranking honest (§9); it exposes nothing the public record does not
   already carry.
 - **The borrowed view persists through the applicant days** and hands
-  over to the member's own view when the vouch-back is signed — that
-  signature alone. A landed member's opinion on anything else leaves
-  the view borrowed.
+  over to the member's own view with their first signed opinion, on
+  anyone: their own graph then exists, so their own feed does. The
+  vouch-back is not the gate.
 - **The vantage resolves to the most specific actor available**, and
   the band names whichever one it lands on. Anyone who arrived through
   an invite link borrows that link's ISSUER, and an applicant is still
@@ -1693,7 +1705,8 @@ media and comment editing.
   pictures never crop, so they upload at pick. Progress rides the
   thumbnails as rings; a failed picture is marked on its tile with
   `Retry · Remove it` beside the row; **the seal gates** — "Uploading
-  n of m — signing waits for the pictures", the sign button held
+  n of m — signing waits for the pictures" (`…for the video.` on a
+  clip), the sign button held
   until the content it signs exists.
 - **Descriptions (alt text) are authored, optional, never
   invented** — the component rule made enterable: per picture from
@@ -3591,10 +3604,10 @@ one sitting.
   destination, and a destination wearing a state says the state belongs
   to the place rather than to the act. The tags-and-references sheet is
   where the act is, so that is where it says it is still settling.
-- **The borrowed-view band dies after signing, not on approach.** While
-  the vouch-back is unsigned the reader has no stance of their own and
-  the view is still borrowed, so the band stands through the whole
-  approach to the pad and goes when the signature lands.
+- **The borrowed-view band dies after signing, not on approach.** Until
+  the member's first opinion is signed they have no stance of their own
+  and the view is still borrowed, so the band stands through the whole
+  approach to the pad and goes when that signature lands.
 - **The Collective founding-name force is removed.**
   `PrepareCollectiveInput`'s `displayName` is optional, an explicit null
   clears it exactly as on a person's profile, and a Collective with none
@@ -4780,12 +4793,12 @@ entry flow is complete and correct without it, so if the window
 closes the ceremony is what gets dropped, not a step the product
 needs.
 
-- **What the ceremony is ABOUT is the borrowed view ending.** A feed
-  is ranked from the viewer's own outgoing opinions; until the
-  vouch-back the new member had none and browsed from the vantage of
-  the link they came through. The signature is the moment their own view begins — that,
-  not a milestone badge, is the thing worth marking, and it lets the
-  copy stay concrete while the headline carries the metaphor.
+- **What the ceremony is ABOUT is the pair completed.** The vouch-back
+  opens the way both ways; and a feed is ranked from the viewer's own
+  outgoing opinions, so when it is the member's first one it is also
+  the moment the borrowed view ends and their own begins. That, not a
+  milestone badge, is the thing worth marking, and it lets the copy
+  stay concrete while the headline carries the metaphor.
 - **The sky is `SkyField`'s vocabulary, not a new drawing.** The
   Explore hero already draws the graph as weighted discs on hairlines
   in token colours ("Your sky — every account a star"). The ceremony
@@ -7931,18 +7944,9 @@ C19–C21, every one "as recommended"), executed in one lane.
   *Email change*, the unverified carve-out): the old address has proved
   nothing, and a mistyped one never receives a code.
 - **The reap is said once, as a consequence.** The verify card carries
-  one line saying an account left unverified for a day is removed; no
-  figure ticks, no other surface repeats it, and `VerifyExpired`
+  one line saying an account left unverified for seven days is removed;
+  no figure ticks, no other surface repeats it, and `VerifyExpired`
   promises the fresh link only to an account still waiting on it.
-- **A run-out application has its card.** `ApplicantExpired`,
-  `ApplicantRejected`'s shape with no verdict: what happened, what it
-  does not mean, the ask link in the rejected card's words. A waiting
-  card the reader put away comes back as whatever state ends the wait.
-- **A closed application re-arms from the shell.** Both closed cards
-  carry `Use a fresh invite`, opening `ApplicantRearm`; an invite link
-  opened by a signed-in applicant with a closed application opens the
-  same page holding the link. Signed-in readers with nothing to re-arm
-  land where app-open lands, with a snackbar.
 - **A held link is never pasted twice.** The landing stays feed-first;
   for a visitor holding a live invite link the band's `Sign in or join`,
   every guest gate's affirmative and SignIn's `New here?` open `Join`
@@ -7955,9 +7959,9 @@ C19–C21, every one "as recommended"), executed in one lane.
 - **Every reader of an ask link is answered.** `VouchAskUnusable` in
   `JoinInvalid`'s idiom for an applicant already in or waiting on
   someone else; a guest meets the ask and its affordance raises the
-  guest gate, sign-in coming back to it; an applicant, the asker and a
-  member who already has them queued land on their own landing with a
-  snackbar.
+  guest gate, sign-in coming back to it; an applicant and the asker land
+  on their own landing, and a member who already has them queued on
+  `Invites`, each with a snackbar.
 - **The verify landings work signed out.** `VerifyExpired` serves the
   app and the browser; signed out its way on reads `Sign in` and
   `Resend the link` asks for the address in place; `Verified`'s way on
@@ -8059,7 +8063,7 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
 - **Applicants do not comment in V1.0** (jakob's ruling). A comment
   cannot wait as pending, so it is not a kind that stages: the sheet's
   foot and `Reply` stay drawn and answer an applicant in place with
-  `Comments open when you're in.`
+  `You can comment once you're in.`
 - **Every account-needing slot asks on tap.** A guest meets `GuestGate`
   from the reader's post menu (Save, Cite, Hide), the profile menus
   (every row but Share), `Message`, the comment menu's Save and Cite,
@@ -8073,13 +8077,10 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
   control, flipping live to `VouchBack` when the record lands; the
   `keyAt` chip draws the key-absent variant, which says the landing
   comes from the device holding the key.
-- **The vouch-back stays reachable and alone ends the borrowed view.**
-  While the pair is incomplete the band carries `Vouch back`, so `Not
-  now` loses nothing; a first opinion on the member who vouched you in
-  is the vouch-back wherever it is signed and opens `VouchedIn`. An
-  opinion on anything else leaves the view borrowed. On `VouchedIn`
-  Android's Back is `Go to your feed`; a vouch-back that never lands is
-  an ordinary expired act, and the card and band return.
+- **The vouch-back stays reachable.** A first opinion on the member who
+  vouched you in is the vouch-back wherever it is signed and opens
+  `VouchedIn`. On `VouchedIn` Android's Back is `Go to your feed`; a
+  vouch-back that never lands is an ordinary expired act.
 - **The ask link rides the waiting card** (jakob's pick, (b)), its
   caption true for a live application: it stages nobody new until the
   answer comes.
@@ -8088,8 +8089,8 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
 - **Settings is one page for applicants too**; its docblock names each
   row's applicant state, and before any key both key rows read `Not
   made yet` and open the ceremony.
-- **Flagged for blessing**: the topic line; `Comments open when you're
-  in.`; About's `…signed by a key only you hold.`; the landing card's
+- **Flagged for blessing**: the topic line; About's `…signed by a key
+  only you hold.`; the landing card's
   title and both bodies; the waiting card's `Your ask link` and its
   caption.
 - **The gate**: 243 → **244 screens**, 1673 → **1694 edges**, 1 gap,
@@ -8199,6 +8200,201 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+### The applicant fix round — 2026-10-02
+
+jakob's morning review of the applicant pages and the vouch pair (C13
+revised by N2 (b), F4, F6, F7, the five applicant items), as recommended
+unless named.
+
+- **Any first opinion ends the borrowed view.** Their own graph exists,
+  so their own feed does: the member's first signed opinion, on anyone,
+  hands the feed over, and the vouch-back is not the gate. The band asks
+  for nothing — `Browsing from @mira's view — your first opinion starts
+  your own.` — and the vouch card's `Not now` puts it away for good,
+  silently. Vouching back stays possible forever from @mira's profile:
+  any opinion on her is the vouch-back and opens `VouchedIn`.
+- **The vouch card wears the olive register** (`VouchBackCard`): the
+  account-notice ground and ink, the committing button in `inverse`, the
+  way out in the panel's ink.
+- **The landed ask opens the person** (`VouchAskUnusable`): `See @noor's
+  profile`; the waiting case keeps the back arrow alone.
+- **The applicant-foot family**, jakob's words, blessed: `You can comment
+  once you're in.` on the comment foot and `Reply`, `You can invite once
+  you're in.` on `Invites`. The foot wears auth.md's locked look —
+  inactive, still tappable — drawn by `ReplyEntry`'s reader chip.
+- **The landing card's key-elsewhere variant offers `Restore the key`**:
+  restoring here lets the registration land here.
+- **The ask link's permanent home is `ProfileApplicant`**; Settings
+  carries none.
+- **An applicant's account deletion is immediate** — no 7-day grace,
+  since nothing has landed (`Settings`' applicant table, `DeleteAccount`).
+- **The turned-down shell's seal exit**: `Your post waits — it arrives
+  when someone vouches you in.` The rejected card's one way forward is
+  the ask link.
+- **Flagged for blessing**: the band's landed line, `See @noor's
+  profile`, the seal exit's line. The lane's calls are backlog item
+  128.
+- **The gate**: 267 screens, 1785 → **1786 edges**, 0 gaps, **flows
+  65**, every one resolved. The witness was re-blessed twice,
+  deliberately: the vouch-back flow's description, and the landing
+  card's restore door joining `restore-your-key`'s start.
+
+### The kept picks and the pads, ruled — 2026-10-02
+
+jakob's morning review ruled the kept picks' seven questions (backlog item
+113) and the pads round's residue (item 121), every one as recommended,
+with kept picks 2 dissolved by the never-delete law.
+
+- **The anchor follows the key.** With the key back and the review left
+  unsigned, a kept pick's line reads `Waiting for your review` and its tap
+  opens `KeptPicksReview` (`StanceControl`'s `pendingReview`); with the key
+  gone again, `Waiting for your key` and the key notice return.
+- **The review lists plain opinions only.** A kept vouch-back or approval
+  never joins the batch; a kept vouch-back surfaces as its own card,
+  keeping its ceremony (`VouchedIn`).
+- **Rows stay honest.** Nothing vanishes and signing stays valid; a
+  target removed or redacted while its pick waited wears the removed-mark
+  face on its row (`StagedReference`'s `removed`). A pick that would sever
+  its bundle says so inline in the family's landing words
+  (`consequence`), the `Remove citation` idiom; Sign is the confirmation
+  and the batch raises no `SeveranceConfirm`.
+- **The write rule mirrors the reply's**: reached from `KeptPicksSeal`,
+  the fact ends `your picks are still kept.` and `Not now` returns to the
+  review. A drop is spoken `Removed — 2 picks left.`, focus to the next
+  row. The settings row shows only while the key is here and unsigned
+  picks wait.
+- **The pads.** The comment edit's mirror of the withdrawal package is
+  ruled ("same semantics at comment scale") and filed as its own bite
+  (backlog 126). The untypeable citation's note reads `Comes
+  along as it is.` The upload gate names its content, `…signing waits for
+  the video.` on a clip (`UploadStatusLine`'s `media`). `Done` on an
+  untouched `RefPairEdit` pick stages nothing, as the scrim: an untouched
+  pad never makes an act. On a gated seal signing proceeds when the
+  uploads land — the reader already pressed Sign; the gate waits only for
+  bytes. A tag withdrawal is one record — one fresh 0,0 layer,
+  newest-wins; the drawing counts 1 act.
+- **Flagged for blessing** (copy-voice, *The key's lifecycle*, *Faults by
+  code*, *The pads and the edit's withdrawals*): `Waiting for your
+  review`, `Removed — 2 picks left.`, the removed row's × name, the
+  landing words reused as the severance line, `Nothing was signed or
+  spent — your picks are still kept.`, `…signing waits for the video.`,
+  `Comes along as it is.` What the drawings still owe is in items 113 and
+  121.
+- **The gate**: **267 screens**, **1785 edges** (two gain an outcome:
+  `Not now` back to the review, the untouched `Done`), 0 gaps, **flows
+  65**, every one resolved; the witness did not move. New sidecar:
+  `RefPairEdit.md`.
+
+### The nav-noun sweep — 2026-10-02
+
+The drill-ins the navigation-and-sheets round's tables did not reach
+(backlog 124; jakob: "Nav rest: yes") name their origin the same way,
+every noun already ruled. Each board draws the state its table marks
+as the board's own; the back edge in `graph.json` carries the table.
+
+- **The score's trace** (`FeedEntry`, `FeedEntryMoved`): `Back to feed` from the feed in any of its states (drawn),
+  `Back to the post` from a post's detail, clip detail, veiled twin or
+  `Removed`, `Back to #<thattag>` from a tag's page, `Back to the
+  profile` from a profile's posts.
+- **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
+  it narrowed (drawn), `Back to the post` from a post's pinned clip,
+  `Back to the profile` from a profile's posts.
+- **The opinions page** (`ProfileStances`): `Back to the profile`
+  (drawn; another's profile) or `Back to your profile` (the reader's
+  own). It drew a bare `Back`.
+- **Notifications** (both boards): `Back to feed` (drawn), `Back to
+  Explore` or `Back to your profile`, by the root the bell was tapped
+  on. It drew a bare `Back`.
+- **About**: `Back to settings` (drawn; settings opens it). It drew a
+  bare `Back`.
+- **Filed** (backlog 125): Wallet's noun for the bell's
+  origin, and the join form's for About's. The two off-slot dialogs
+  (`StanceAlternates`, `ReplyKeyAbsent`) are fine as they stand,
+  different anatomies.
+- **The gate**: 268 canonical screens, 1785 edges, 0 gaps, **flows 65**,
+  every one resolved; the witness did not move, no rebless. No new
+  string: every label is already blessed.
+
+### The no-expiry correction — 2026-10-02
+
+jakob's morning review (the fix round's entry lane): an application has
+no timer, and an invite link does not care who is signed in.
+
+- **The one expiry is the verification reap, at seven days** (jakob: a
+  day is short enough for a mail outage on our side to cost accounts).
+  The window runs from registration and an address change does not
+  restart it; the verify card says the consequence once, in the seven
+  days' words. A verified applicant waits on a vouch with no timer, and
+  an invite link's expiry bounds only the registration made through it
+  (auth.md, *Expiry*).
+- **A waiting or turned-down applicant's way in is a vouch** — the member
+  whose approval is in play, or anyone through the ask link. No board
+  draws a lapsed application or a second invite for an account that
+  exists.
+- **Invite links ignore sign-in.** One person may hold several accounts,
+  so a live link opened while signed in opens `Join` as a layer holding
+  the link; `Create account` switches this device to the new account,
+  the other's sessions staying valid, and back closes the layer onto the
+  signed-in state (§4, the layer law).
+- **The entry funnel's residue, ruled** (backlog item 122): a dead
+  invite link's arrival says `This invite link has expired.` once, over
+  the unchanged landing; `DeleteAccountConfirmed` committed unticked
+  stands confirmed account-only; the member who already has the asker
+  queued lands on `Invites`; `JoinInvalid` promises nothing about an
+  earlier account; an ask link that resolves to nobody opens
+  `VouchAskInvalid`, in `JoinInvalid`'s idiom, its arrow its one exit.
+- **Flagged for blessing** (copy-voice, *The fix round's entry lines*):
+  the verify card's seven-day line, `JoinInvalid`'s paragraph and
+  `VouchAskInvalid`'s paragraph. The lane's calls are backlog item
+  127.
+- **The gate**: 267 → **266 screens**, 1785 → **1781 edges**, **flows
+  66**, every one resolved. The witness was re-blessed once,
+  deliberately, for the new board's flow.
+
+### The filter-and-olive round — 2026-10-02
+
+jakob's morning review: the filter's foot, the newer-version doors, the
+curate residue and the olive split.
+
+- **Every filter sheet's foot is `Reset` and `Done`** (`FilterFoot`) —
+  the feed's, search's and the settings sheet's. No read-back of the
+  staged filter (jakob: it cannot scale past a few changes), and no
+  Reset row in the body. The topic section closes the feed sheet's
+  body: it is the one that grows, so it never pushes a fixed section
+  below the fold.
+- **The default is the reader's** (pass C 10). It is the app's until
+  the reader sets their own in Settings, theirs after; a feed's `Reset`
+  stages it and the trigger speaks deviations from it. CoGra's own
+  default comes back only in Settings, whose sheet's `Reset` stages it.
+  Search's `Reset` stages search's own resting state (`Everything`).
+- **`Update now` leads to the download, never to the code.** The
+  newer-version snackbar's action and `WhatsNewBehind`'s door open
+  CoGra's Play Store listing — a placeholder id until published, like
+  the `.local` addresses — and on the web reload into the new version.
+  What's new is the notes page and sends nowhere else: no release
+  carries a door, and the footnote reads `Newest first.`
+- **The dateline names what a version is to this device** (curate 1):
+  the running one `installed`, a release past it `newest`, which
+  heads the behind state's list.
+- **The words path has its own details board** (curate 2,
+  `ComposeDetailsWords`): the picture stage minus the media row, the
+  describe row and the Description. `ComposeWords`' Next lands on it.
+- **A signing seal's locked ways out keep their face** (curate 3): inert
+  for seconds, never dimmed.
+- **The olive split** (§4, *Colour*). Every feed card that needs the
+  reader's action wears the account-notice register — `TaskCard`'s
+  `tone="notice"`, `inverse` fill, the card's inks scoped to the
+  register's on-pair for contrast: verify the email, create, restore or
+  bring the key, the security notice, a closed application's way back
+  in, and the vouch-back. Waiting, approved-and-landing and a post that
+  didn't land stay on the feed card's ground.
+- **Flagged for blessing** (copy-voice): `Update now`, `Update to version
+  0.1.3`, `installed`, `newest`, the footnote `Newest first.`, and the
+  foot's `Reset` at its new seat.
+- **The gate**: 267 → **268 screens**, 1785 → **1795 edges**, 0 gaps,
+  **flows 65**, every one resolved. The witness was re-blessed once,
+  deliberately, for the new board: `publish-words` walks
+  `ComposeDetailsWords`, and `+ Cite something` starts on 13 boards.
 
 ### Pass C's rulings — 2026-10-02
 
@@ -8232,7 +8428,7 @@ below have their home here or where named.
 - **Search.** `ExploreUnscoped` draws item 105's line for Comments with
   no scope.
 - **Flagged for blessing** (copy-voice): `Discard the edit`. The open
-  residue is backlog item 12X-passc-20.
+  residue is backlog item 130.
 - **The gate**: **268 screens** (267 + `ExploreUnscoped`), 1785 →
   **1793 edges**, 0 gaps, flows 65, every one resolved; `nodes.json`
   gains `FeedCommentShapes`, 145 → 149 paths. The witness was re-blessed

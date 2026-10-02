@@ -12,6 +12,11 @@ export interface UploadStatusLineProps {
   /** 0..1 override for the ring; defaults to done/total. */
   progress?: number;
   /**
+   * The body's kind, so the gate names what it waits for: "…signing waits for
+   * the pictures." by default, "…signing waits for the video." for a clip.
+   */
+  media?: "pictures" | "video";
+  /**
    * The gate's fault reading: an upload failed while the seal waits. The
    * failure's fact (`message`), "Signing waits for it." and Retry; the sign
    * button stays disabled. `done`/`total` are unused while it shows.

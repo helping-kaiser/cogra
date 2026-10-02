@@ -55,8 +55,20 @@ import { formatStancePair, formatStanceWords, nearestAnchor, SR_ONLY } from "../
    citation, and its row reads the pair the way `StanceReadout` does — so the
    spoken twin is the readout's own, the anchor's word and both axes named
    (`Nice, For or against +0.10, How much reaches you +0.10`), and the drawing
-   is unchanged. */
-function Body({ kind, name, sub, src, pair, stance, node }) {
+   is unchanged.
+
+   A KEPT PICK'S TWO ROW STATES (jakob 2026-10-02, kept picks 2 and 3).
+   `removed` is the target's removal mark — `Removed by its author`, `Deleted
+   account` — for a target removed or redacted while the pick waited: nothing
+   leaves the graph, so the row stays and the pick still signs, but it wears
+   the standard removed-mark face instead of a live preview — the mark's tile
+   empty (`NodeMark`'s `redacted`), the mark's line in the name's place in the
+   system's voice, `text-secondary` at the body's weight, as a comment's head
+   row over a removed post reads. `consequence` is a pick that would net its
+   bundle to nothing: the row says so inline, in the family's own landing
+   words, the way `Remove citation` says its cost where the control is — Sign
+   is the confirmation, and no dialog follows. */
+function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? nearestAnchor(pair) : null;
   const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair)}` : exact;
@@ -66,14 +78,29 @@ function Body({ kind, name, sub, src, pair, stance, node }) {
           so its mark takes the card tone (`NodeMark`'s `onCard`, jakob's
           ruling on the tag card's `#`) — a staged tag's `#` would vanish
           into the row otherwise. */}
-      <NodeMark kind={kind} name={name} src={src} onCard node={node && "mark"} />
+      <NodeMark kind={kind} name={name} src={src} onCard redacted={Boolean(removed)} node={node && "mark"} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "name"}>
-          {name}
+        <span
+          style={{
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            ...(removed ? { fontWeight: 400, color: "var(--text-secondary)" } : null),
+          }}
+          data-node={node && "name"}
+        >
+          {removed || name}
         </span>
         {sub && (
           <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "kind"}>
             {sub}
+          </span>
+        )}
+        {consequence && (
+          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "consequence"}>
+            {consequence}
           </span>
         )}
       </span>
@@ -98,8 +125,8 @@ function Body({ kind, name, sub, src, pair, stance, node }) {
   );
 }
 
-export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, onRemove, onEdit, node, nodeKey }) {
-  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} node={node} />;
+export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, removed, consequence, onRemove, onEdit, node, nodeKey }) {
+  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} removed={removed} consequence={consequence} node={node} />;
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}
@@ -125,7 +152,7 @@ export function StagedReference({ kind = "post", name, sub, src, pair, stance = 
       )}
       <button
         type="button"
-        aria-label={`Remove ${name}`}
+        aria-label={removed ? `Remove this pick: ${sub ? `${sub}, ` : ""}${removed}` : `Remove ${name}`}
         onClick={onRemove}
         className="cg-state cg-focus"
         style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}

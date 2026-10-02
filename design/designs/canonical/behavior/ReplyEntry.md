@@ -18,7 +18,9 @@ WHEN the sheet reopens after the reader's reply is signed -> the thread scrolls 
 
 WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is signed out -> the join prompt opens over the comments sheet AND NEVER the composer opens
 
-WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is an applicant -> the snackbar reads Comments open when you're in. AND NEVER the composer opens AND NEVER a comment stages
+WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is an applicant -> the snackbar reads You can comment once you're in. AND NEVER the composer opens AND NEVER a comment stages
+
+ALWAYS Add a comment stands at the disabled opacity and stays tappable GIVEN the reader is an applicant
 
 ALWAYS the comments sheet's foot stands for every reader, signed out and applicant included
 

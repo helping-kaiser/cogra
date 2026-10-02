@@ -50,11 +50,15 @@ WHEN the hold's signing is refused by the write rule -> feed.card.actionRow.stan
 
 WHEN a read-side comfort on a card does not go through -> the comfort reverts AND the line under feed.card.actionRow.stance.anchor.face reads That didn't go through. followed by Retry AND NEVER the snackbar carries the failure
 
-WHEN the feed arrives after a cold app open GIVEN a release newer than the running version exists and this device has not announced it -> the snackbar reads A newer version of CoGra is out. with What's new AND this device marks that release announced
+WHEN the feed arrives after a cold app open GIVEN a release newer than the running version exists and this device has not announced it -> the snackbar reads A newer version of CoGra is out. with Update now AND this device marks that release announced
 
 WHEN the feed arrives GIVEN this device already announced the newest release -> NEVER the newer-version snackbar appears
 
-WHEN the newer-version snackbar's What's new is pressed -> What's new opens with the line A newer version exists. atop the list
+WHEN the newer-version snackbar's Update now is pressed GIVEN the app -> CoGra's Play Store listing opens
+
+WHEN the newer-version snackbar's Update now is pressed GIVEN the web -> the page reloads into the new version
+
+WHEN the newer-version snackbar's Update now is pressed -> NEVER a page of the code repository opens
 
 WHEN tap feed.bottomBar.feedSlot GIVEN another tab is showing and the feed was opened this session -> the feed comes back in the state it was left, its whole stack and its scroll AND NEVER the feed reloads
 

@@ -1,6 +1,14 @@
 /* The seal, gated on uploads (media slice): the acts card is the master
    ActsCard, the gate is UploadStatusLine, and the sign button is DISABLED
-   while it shows — nothing signs until the content it signs exists. */
+   while it shows — nothing signs until the content it signs exists.
+
+   THE GATE NAMES ITS CONTENT (jakob 2026-10-02, pads 3): pictures read
+   `…signing waits for the pictures.`, a clip from `ComposeDetailsVideo`
+   `…signing waits for the video.` (`UploadStatusLine`'s `media`).
+
+   SIGNING PROCEEDS WHEN THE UPLOADS LAND (jakob 2026-10-02, pads 5): the
+   reader already pressed Sign; the gate waits only for bytes, so no second
+   press is asked. */
 
 export function Screen() {
   return (

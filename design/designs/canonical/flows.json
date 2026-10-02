@@ -121,7 +121,7 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair and, as the member's first opinion, ends the borrowed view; the ceremony says so, and the member's own feed opens.",
       "start": { "board": "VouchBack", "via": 3 },
       "waypoints": [
         { "board": "VouchBackPad", "via": 4, "case": "the vouch-back — signed, the ceremony opens" }
@@ -155,6 +155,12 @@
         { "board": "VouchAsk", "via": 3, "to": "VouchAskPad" }
       ],
       "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
+    },
+    {
+      "name": "meet-an-ask-link-that-names-nobody",
+      "description": "An ask link whose id resolves to nobody says so in JoinInvalid's idiom, and its arrow returns the reader to whatever the link opened over.",
+      "start": { "board": "VouchAskInvalid" },
+      "end": { "board": "VouchAskInvalid", "via": 1 }
     },
     {
       "name": "restore-your-key",
@@ -251,8 +257,8 @@
       "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
-        { "board": "ComposeWords", "via": 3, "to": "ComposeDetails" },
-        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+        { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
+        { "board": "ComposeDetailsWords", "via": 8, "to": "ComposeSeal" }
       ],
       "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
     },

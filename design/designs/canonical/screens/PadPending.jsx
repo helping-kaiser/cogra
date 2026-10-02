@@ -11,6 +11,12 @@
    settling`, which means signed and not yet ordered. Tapping the face opens
    `PadKeyAbsent` again, holding the kept pick.
 
+   ONCE THE KEY IS BACK THE LINE FOLLOWS IT (jakob 2026-10-02, kept picks 1).
+   A review left unsigned leaves the pick waiting on the reader: the line
+   reads `Waiting for your review` (`StanceControl`'s `pendingReview`), and
+   the face's tap opens `KeptPicksReview`, never the old key notice. If the
+   key goes again, the plate drawn here owns the anchor once more.
+
    THE LIFECYCLE OF A KEPT PICK (`PadKeyAbsent` carries it in full): it lives
    on this device only, survives a restart, and waits beside any other kept
    picks until the key is restored — then they sign together, in one batch
@@ -21,11 +27,12 @@ export function Screen() {
       <CograBand trailing={<FeedFilter />} />
       <FeedList>
         <TaskCard
+          tone="notice"
           title="Your key isn't on this browser"
           body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending."
         >
           <div style={{ display: "flex" }}>
-            <Button size="sm">Restore the key</Button>
+            <Button variant="inverse" size="sm">Restore the key</Button>
           </div>
         </TaskCard>
         <PostCard {...ADA_POST} stancePendingPick={{ pDirected: 0.1, pInterest: 0.1 }} />

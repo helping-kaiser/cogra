@@ -11,10 +11,13 @@
    so each release says it exactly once on this device. Letting it time out,
    or dismissing it, costs nothing, and it never comes back.
 
-   ITS ACTION OPENS WHAT'S NEW (`WhatsNewBehind`), named `What's new`, the
-   settings row's own word: the Snackbar master takes one action word, and
-   the destination's name is the shortest true one. The lane's call, flagged
-   with the message for blessing (copy-voice, *The settings page*, About).
+   ITS ACTION IS `Update now`, AND IT LEADS TO THE DOWNLOAD (jakob
+   2026-10-02: "most users want to receive the new version and not check out
+   the code"). In the app it opens CoGra's Play Store listing — a placeholder
+   id until the app is published, like the `.local` addresses (F2); on the
+   web the same action reloads the page into the new version (F1). One
+   string, no platform noun. What's new is the notes page, reached from
+   Settings (`WhatsNewBehind`).
 
    THE SNACKBAR CHARTER'S STATED EXCEPTION. A snackbar is otherwise only a
    confirmation of a completed act; this one is jakob's deliberate second use,
@@ -29,7 +32,7 @@ export function Screen() {
         <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
         <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} />
       </FeedList>
-      <Snackbar message={NEWER_VERSION_SNACKBAR} action="What's new" offset={80} />
+      <Snackbar message={NEWER_VERSION_SNACKBAR} action={UPDATE_NOW} offset={80} />
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );

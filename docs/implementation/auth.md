@@ -285,11 +285,6 @@ values: the inviter chooses them at approval, which is the priced
 act. Links are single-use (one applicant slot) unless the inviter
 opens them to multi-use (many applicants until expiry).
 
-**Expiry floor.** A link shorter than 24 hours can strand a
-registrant who is still verifying, since their own account expires
-on that clock ("Expiry" below) — so clients keep their presets at
-or above it.
-
 **Revocation stops new staging only.** Revoking a link sets
 `revoked_at`: no further applicant can register through it, and
 applications already staged stay approvable — the inviter's queue
@@ -313,7 +308,6 @@ refusal, it is simply there.
 **It stands.** An invite link is a slot the inviter holds open for
 a while; an ask link points at a *person*, and a person does not
 expire — so there is no timer, no use count, and nothing to spend.
-What is bounded is the application it stages, never the capability.
 
 **Opening is a look; staging is an act.** A member who follows the
 URL first sees who is asking, through the anonymous `askLinkCheck`
@@ -322,21 +316,17 @@ right now — the same shape `inviteLinkCheck` gives the other
 direction. Putting the application in their queue is then a
 separate call, `stageApplicant` ([api-spec.md](api-spec.md)).
 Staging is deliberately not a side effect of opening: every other
-staging in this flow is an explicit call (`register`,
-`applyWithInvite`), reading a link has never written anything, and
-a member who follows a shared link out of curiosity must not
-acquire a queue entry for doing it. The staged entry is bounded
-like any other application — the staging member's client sets its
-window the way it sets an invite link's expiry, under the same
-floor above — and from there the entry is an ordinary one: the
-same approval, the same rejection, the same expiry.
+staging in this flow is an explicit call (`register`), reading a
+link has never written anything, and a member who follows a shared
+link out of curiosity must not acquire a queue entry for doing it.
+From there the staged entry is an ordinary application: the same
+approval, the same rejection.
 
 **One live application at a time.** The account rule does not bend
 here: while an application is live the ask link stages nobody new,
 and `askLinkCheck` reports that before a member commits to
 anything. An applicant asks one person at a time, and the answer —
-approval, rejection, or the window running out — is what frees the
-link again. The graph is untouched by any of it: several members
+approval or rejection — is what frees the link again. The graph is untouched by any of it: several members
 vouching is the primitive's own case
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)),
 and the queue being serial is a service constraint, not a
@@ -371,7 +361,11 @@ them).
    `inviteLinkCheck` query — usability (unexpired, not revoked,
    slot available) plus the inviter's handle, so an unusable link
    refuses before the form, and the form can show who is
-   vouching.
+   vouching. Sign-in state does not matter: a link opened while
+   signed in leads to the same form, since one person may hold
+   several accounts, and completing it signs this device into the
+   new account while the other account's sessions stay valid
+   ("Multi-account device custody" below).
 2. **Registration.** The applicant chooses handle, email, and
    password. The server creates a real account — the actor row
    (no key yet) and its login credentials, in the **applicant**
@@ -413,27 +407,27 @@ either order. That transition is what notifies the inviter
 ([notifications.md](notifications.md)): before it there is
 nothing for them to act on.
 
-**Expiry.** A never-verified account expires 24 hours after
+**Expiry.** A never-verified account expires 7 days after
 registration: the reaper deletes it — credentials, application,
-any uploaded backup — and frees the handle. Once verified, the
-account persists: a verified-but-never-approved applicant keeps
-their login indefinitely. The application row, not the account,
-is bounded by its link's expiry. A closed application re-arms
-without touching the account, from either end of the funnel: a
-fresh invite link through `applyWithInvite`
-([api-spec.md](api-spec.md)), or a member taking up the account's
-ask link ("The ask link" above).
+any uploaded backup — and frees the handle. The window runs from
+registration; an email change does not restart it. Once verified,
+the account persists: a verified-but-never-approved applicant
+keeps their login indefinitely, and its application waits on a
+vouch with no timer. An invite link's expiry bounds registration
+through it, never the application it started. A closed application
+opens again without touching the account when a member takes up
+the account's ask link ("The ask link" above).
 
 **Rejection.** The approver may close a staged application instead
 of approving it (`rejectApplication`, [api-spec.md](api-spec.md)),
 for applications in their own queue only. It sets `rejected_at`
-and ends the application the way expiry does — the row stays, the
-account persists with its login, its reads and its attached key.
-Nothing is deleted.
+and ends the application — the row stays, the account persists
+with its login, its reads and its attached key. Nothing is
+deleted.
 
 What it closes is **this inviter's queue entry, not the person.**
 One member declining to vouch is not the network's answer: the
-account goes on reading, and both re-arm paths above stay open.
+account goes on reading, and its ask link stays open.
 Deleting the account is never the way out of a rejection, and no
 surface offers it as one — which is also what makes rejection
 cheap enough to use on a queue full of applicants nobody invited.
@@ -441,7 +435,7 @@ cheap enough to use on a queue full of applicants nobody invited.
 **The applicant is told.** Rejection writes them an
 `APPLICATION_REJECTED` notification
 ([notifications.md](notifications.md)) pointing at their own
-application state, where both ways back are offered. The
+application state, where the ask link is offered. The
 alternative — a refusal discovered only by watching a status field
 go quiet — would leave someone waiting on a queue they have
 already left. Because it is a decision about a person and it
@@ -477,7 +471,7 @@ answers in place that it waits with the application. A staged
 act is visible only to its author, in their own chronicle —
 nothing is public before it is signed. It **signs at approval,
 automatically**, in the batch the vouch-in lands with; on
-rejection or expiry it stays on the device as the account's own
+rejection it stays on the device as the account's own
 draft, never sent. Every other acting surface stays visible but
 locked: styled as disabled yet still tappable, with the tap
 explaining that approval unlocks it. Account management —
@@ -566,19 +560,18 @@ next poll retries, and failing the read would turn a transient
 repair problem into a fetch error.
 
 **Reaper.** A periodic background job deletes never-verified
-accounts past their 24-hour bound — actor row, credentials,
+accounts past their 7-day bound — actor row, credentials,
 application, any key backup — freeing the handle and email.
 Deletion is legitimate exactly because nothing has touched L1: a
 pre-member account is pure L2 service state. Verified accounts
-are never reaped; an application past its window simply stops
-being approvable ("Expiry" above). The reaper is the normal
+are never reaped. The reaper is the normal
 cleanup path; it does not run as part of any user-facing request.
 
 **Registration collision.** `actors.handle` and
 `user_credentials.email` are UNIQUE; a duplicate registration
 refuses at the form (`HANDLE_TAKEN` / `EMAIL_IN_USE`). One
 carve-out keeps the experience independent of the sweep
-schedule: a never-verified account past its 24-hour bound is
+schedule: a never-verified account past its 7-day bound is
 dead even before the reaper sweeps it, so a registration
 claiming its handle or email replaces it in place. The
 constraints and replacement handling live with the schema in
@@ -742,7 +735,8 @@ changes it without the original-address code. That address has proved
 nothing, so the code protects nothing, and a mistyped address would
 never receive it; and the registration has already taken a
 single-use link's one slot, so without the carve-out the only way
-out is the 24-hour reap and a fresh invite ("Expiry" above). The password is still
+out is the 7-day reap and a new invite link ("Expiry" above). The
+password is still
 re-entered. The new address's verification link is the whole proof:
 opening it applies the change and verifies the email in the one step
 (step 4 of "Application"), and links sent to the replaced address stop
@@ -896,8 +890,7 @@ identity act. It works identically in every account state — an
 applicant signs out exactly as a member does, and the client
 keeps the sign-out surface reachable in the applicant shell.
 There is no separate "abandon application" act: a signed-out
-application keeps following its lifecycle ("Application" —
-expiry, re-arm).
+application keeps following its lifecycle ("Application").
 
 The one exception is the **"don't remember me" opt-in**, offered
 at login and restore: an account flagged with it has its key
@@ -937,7 +930,7 @@ limits survive restarts and hold across instances.
 - Login attempts — limited per IP and per account, with
   exponential backoff on consecutive failures; a successful
   login ends the run.
-- Application submits (`register`, `applyWithInvite`) — limited
+- Application submits (`register`) — limited
   per IP and per invite link.
 - Password-reset requests — limited per IP and per account.
 - Verification-email resend — limited per account.

@@ -94,6 +94,11 @@ export interface PostCardProps {
    */
   stancePendingPick?: { pDirected: number; pInterest: number };
   /**
+   * The key is back and the kept picks' review waits unsigned. Pass-through
+   * to `StanceControl`'s `pendingReview`.
+   */
+  stancePendingReview?: boolean;
+  /**
    * A signed act on this post in flight or failed — the hold's row line with
    * the pad closed, Set's state with it open; or a read-side comfort's
    * revert said on the row. Pass-through to `StanceControl`'s `signing`.

@@ -47,24 +47,24 @@ Where each sidecar's words come from:
   the two refusals of one staged act, the citation that never
   landed and the bug (copy-voice, *Faults by code*); and the ways out
   locked while it signs, the slow line past 5s and the outcome after a
-  kill (readme §13, *The curate rulings*).
-  and the two refusals of one staged act, the citation that never
-  landed and the bug (copy-voice, *Faults by code*); and an applicant's
-  exit, onto their own feed with the staged-act line (readme §13, *The
-  applicant's life round*; copy-voice, *The staged-act snackbar*).
+  kill (readme §13, *The curate rulings*); and an applicant's exit,
+  onto their own feed with the staged-act line, or with the turned-down
+  shell's own line when no application is live (readme §13, *The
+  applicant's life round* and *The applicant fix round*; copy-voice,
+  *The staged-act snackbar*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,
   *Comments live in a sheet*); the removed comment's mark in its own
   place, its replies kept under it (comment.md §5; readme §13, *The
-  comment-removal round*); and the signed reply's landing, scrolled to
-  its new card (readme §13, *The curate rulings*).
-  comment-removal round*); and the foot's gates — the join prompt for a
-  guest, and for an applicant the snackbar, since applicants do not
-  comment in V1.0 (readme §13, *The applicant's life round*).
-  comment-removal round*); and the landing on a deep-linked comment and
-  the sheet's return from a forward navigation, the X of a cite
-  included (readme §4, *Navigation*).
+  comment-removal round*); the signed reply's landing, scrolled to its
+  new card (readme §13, *The curate rulings*); the foot's gates — the
+  join prompt for a guest, and for an applicant the locked foot and its
+  line, since applicants do not comment in V1.0 (readme §13, *The
+  applicant's life round* and *The applicant fix round*); and the
+  landing on a deep-linked comment and the sheet's return from a
+  forward navigation, the X of a cite included (readme §4,
+  *Navigation*).
 - `FeedKinds.md` — the feed cards (readme §13, *The feed cards,
   ruled*): the unified row's order, the law that a comment's replies live
   in its thread and never in the feed, where the comment card's door and
@@ -86,7 +86,14 @@ Where each sidecar's words come from:
 - `KeptPicksReview.md` — the kept picks' review (readme §13, *The kept
   picks' review*): one batch, signed only from its seal; the × that drops
   a pick with no confirm and no undo, and the last drop's exit; leaving
-  unsigned keeps every pick.
+  unsigned keeps every pick. And the kept-picks rulings (readme §13, *The
+  kept picks and the pads, ruled*): plain opinions only, the removed-mark
+  face, the severance said on its row with Sign as the confirmation, the
+  write rule's `Not now` back to the review, the spoken drop, the anchor's
+  `Waiting for your review` and the settings row's conditions.
+- `RefPairEdit.md` — a standing citation's pair on an edit (readme §13,
+  *The kept picks and the pads, ruled*): the pick opens at the origin, and
+  `Done` on a pick never moved off it stages nothing, as the scrim does.
 - The rest of the compose and media pages' sidecars (readme §13, *The
   compose and media behavior pass*) — each board's own docblock, its
   graph edges' cases, and the readme §13 rounds and copy-voice sections

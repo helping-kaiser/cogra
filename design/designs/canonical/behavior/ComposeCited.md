@@ -12,13 +12,11 @@ WHEN tap + Cite something GIVEN a citation is staged -> the citation picker open
 
 ALWAYS no count stands under the title GIVEN more than 20 of its 100 characters remain
 
-ALWAYS no count stands under the description GIVEN more than 50 of its 500 characters remain
+ALWAYS the stage carries no description field
 
 WHEN typing passes the title's 100 characters -> the count reads N over in the error colour AND the line A title is at most 100 characters. takes the hint's place AND Next goes inert
 
-WHEN typing passes the description's 500 characters -> the count reads N over in the error colour AND the line A description is at most 500 characters. takes the hint's place AND Next goes inert
-
-WHEN press Next GIVEN the title and the description are empty -> NEVER Next refuses
+WHEN press Next GIVEN the title is empty -> NEVER Next refuses
 
 WHEN press the header back arrow -> the words stage comes back AND the reference still rides the draft
 
