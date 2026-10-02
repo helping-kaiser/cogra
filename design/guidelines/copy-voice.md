@@ -2577,12 +2577,13 @@ kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
 fix-fix round's ruling 14). Switching halves with something in the body
 asks first, and the title names the half that goes: `Discard the
 words?` from the words stage's `Add pictures instead`, `Discard the
-pictures?` from a pick stage's `Write words instead`. The body is `The
-rest of the draft stays.` — the reader loses only the half they leave.
-`Discard` (quiet) and `Keep them` (filled), `DiscardConfirm`'s
-weighting; nothing behind the scrim reads `Discard`, so the bare word
-cannot be misread. *Blessed, jakob 2026-10-02.* A clip's title and keep
-word are unruled (backlog 12X-fixfix-whatsnew).
+pictures?` from a pick stage's `Write words instead`, `Discard the
+video?` from a clip's (jakob 2026-10-02, the residue round's Q4). The
+body is `The rest of the draft stays.` — the reader loses only the half
+they leave. `Discard` (quiet) and `Keep them` (filled) — `Keep it` over
+the one clip — `DiscardConfirm`'s weighting; nothing behind the scrim
+reads `Discard`, so the bare word cannot be misread. *Blessed, jakob
+2026-10-02.*
 
 ## The already-published marker
 

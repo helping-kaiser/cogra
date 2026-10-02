@@ -10,12 +10,16 @@
    pictures, where its title reads `Discard the pictures?`. The body names
    only what goes: `The rest of the draft stays.` — the title, the tags and
    the citations ride on, so the reader loses exactly the half they are
-   leaving. A clip's own title, and its keep word, wait for a ruling
-   (backlog 12X-fixfix-whatsnew).
+   leaving.
+
+   A CLIP NAMES ITSELF (jakob 2026-10-02, the residue round's Q4). Over a
+   clip's stage `Write words instead` raises the same dialog titled `Discard
+   the video?`, its keep word `Keep it` — one clip, so the singular — over
+   the same `The rest of the draft stays.`
 
    THE SAFE ACTION IS THE FILLED ONE — `DiscardConfirm`'s weighting and §11's
-   rule: `Keep them` closes onto the stage as it was, and the quiet `Discard`
-   switches the body. No `error` colour: a reader switching halves is doing
+   rule: `Keep them` (`Keep it` over a clip) closes onto the stage as it was,
+   and the quiet `Discard` switches the body. No `error` colour: a reader switching halves is doing
    what they meant to. The scrim is the third answer, Keep's.
 
    THE STAGE BENEATH IS `ComposeWordsBody`, the same body `ComposeWords`
