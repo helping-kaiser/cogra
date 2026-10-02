@@ -510,7 +510,12 @@ noun, and a sheet is named by what it is a sheet of. Already blessed:
 topics`, `Back to the post`, `Back to the comments`, `Back to the
 profile`, `Back to #<thattag>`, `Back to your profile`, `Back to
 settings`; the score's trace, the stream, the opinions page,
-Notifications and About take their nouns from these and add none.
+Notifications and About take their nouns from these, and Notifications
+adds one: `Back to Wallet`, when the bell was tapped on Wallet's root —
+a named surface by its title, not in the MVP and still a place to go
+back to (jakob 2026-10-02, **blessed**). The entry funnel names no
+origin: from the join form, About's arrow reads a plain `Back`, as the
+form's own does.
 Added by the post detail's and the profile's tables, each flagged for
 blessing:
 
