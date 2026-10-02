@@ -8435,6 +8435,41 @@ below have their home here or where named.
   once, deliberately: the four compose flows' `New post` start counts 51
   boards.
 
+### The what's-new restore and the filter residue — 2026-10-02
+
+jakob's afternoon review of the fix round, rulings 0 and 10–19.
+
+- **The release cards keep their doors** (ruling 0: "this is the actual
+  list of patch notes and the only door to the deeper level"). Every
+  card on `WhatsNew` and `WhatsNewBehind`, the newest included, ends in
+  `See it on GitHub`, named for its release, onto `RELEASES_URL` +
+  `/tag/v<version>`. `Update now` leads to the download only; the
+  footnote stays `Newest first.`
+- **One default object everywhere** (10–12). The trigger speaks
+  deviations from the reader's default, a deviation back toward the
+  app's included, and the summary keys on that default. The reader's
+  Settings default reaches search's order and seen toggle; search's
+  kinds stay its own. The filter's "?" says `Reset brings back your
+  defaults, to change them go to settings.` — jakob's words.
+- **The olive lane calls stand** (13), as drawn.
+- **The body fork asks** (14), `ComposeBodyDiscard`: `Discard the
+  words?` or `Discard the pictures?` over `The rest of the draft
+  stays.`, a quiet `Discard` and a filled `Keep them` — the master
+  dialog for both directions, drawn over the words stage.
+- **Pass C's residue** (15–19). A rotated phone's side ground is a
+  backdrop the tap closes on. A clip the reader started by hand is never
+  stolen: the hard top re-elects autoplay-eligible stages only, on the
+  feed and in the thread. The comment-scale bug notice's discard acts at
+  once. A mixed unscoped search keeps its results with the scope line
+  under them. Only a fresh root load lights the bell's dot.
+- **Blessed** (copy-voice): `See it on GitHub` and its spoken names, the
+  Reset sentence, and the fork ask's words. The open residue is backlog
+  item 12X-fixfix-whatsnew.
+- **The gate**: 268 → **269 screens** (`ComposeBodyDiscard`), 1800 →
+  **1805 edges**, 0 gaps, flows 66, every one resolved. The witness was
+  re-blessed once, deliberately: `publish-words`, `cite-a-post` and
+  `mention-someone` walk `Write words instead`'s empty case.
+
 ## 15. Index
 
 **Root**
