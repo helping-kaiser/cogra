@@ -1306,11 +1306,19 @@ const SEAL_CITATIONS = [
    of them). Each pair is read the readout's way on both boards — the face,
    the digits in geek mode, and the anchor's word with both axes spoken
    (`StagedReference`'s `stance` on the review, `StanceReadout` on the
-   seal). */
+   seal).
+
+   THE THREE ROWS ARE THE REVIEW'S THREE STATES (jakob 2026-10-02, the
+   fix-fix round's 21). @ada's post is a plain pick. Mira's pick nets the
+   reader's standing bundle toward her to nothing — it is the exact opposite
+   of what they had said — so its row carries `consequence`, the person's
+   landing words. @juno's post was removed by its author while its pick
+   waited, so its row carries `removed`, the target's removal mark, and both
+   boards draw the mark where the name stood. */
 const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
-  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 } },
-  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 } },
+  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
+  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
 ];
 
 /* The one citation the reply's seal was drawn holding. It is a constant rather

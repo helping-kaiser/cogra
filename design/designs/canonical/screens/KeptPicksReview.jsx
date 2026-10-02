@@ -27,12 +27,17 @@
    never-delete law). A pick's target always exists, so every row stays and
    signing stays valid. A pick whose target was removed or redacted while it
    waited wears the standard removed-mark face on its row instead of a live
-   preview (`StagedReference`'s `removed`).
+   preview (`StagedReference`'s `removed`), as a removed post reads at the
+   head of its thread: the tile empty, `Removed by its author` where the name
+   stood, in the system's voice. Its × keeps its seat and drops the pick like
+   any other. The third row draws it (jakob 2026-10-02, the fix-fix round's 21).
 
    A PICK THAT WOULD SEVER ITS BUNDLE SAYS SO ON ITS ROW (jakob 2026-10-02,
    kept picks 3): the consequence inline, in the family's landing words, the
    way `Remove citation` says its cost (`StagedReference`'s `consequence`).
    Sign is the confirmation — no extra dialog, the D2 ruling's consistency.
+   The second row draws it: Mira's pick takes the reader back to zero toward
+   her, so it reads `This takes you back to zero.` under its kind.
 
    THE × DROPS AT ONCE (B2): no confirm, no undo. Nothing was signed, so
    nothing is lost that the reader cannot make again — the pick is re-made
