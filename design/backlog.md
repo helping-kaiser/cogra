@@ -4100,7 +4100,7 @@ already ruled, and left two without one:
   funnel exception; readme §13, *The applicant residue, ruled*). From the
   join form About's arrow reads a plain `Back`, as `Join`'s own does.
 
-### 126 · The comment edit mirrors the withdrawal package · *design* · **filed 2026-10-02**
+### 126 · The comment edit mirrors the withdrawal package · *design* · **filed 2026-10-02** · **closed 2026-10-02**
 
 Ruled by jakob on 2026-10-02 (the morning review, pads 1: "yes" to "rule
 now — same semantics at comment scale — draw as its own bite"): the
@@ -4114,6 +4114,11 @@ that open `RefPairEdit`, `Remove citation` with its cost said inline and
 Sign as the confirmation, a `Withdrawn:` line with its `Undo` per item,
 a tag withdrawal as one record, and the acts sheet's complete kind set
 counted in records.
+
+Closed 2026-10-02: drawn on `CommentEdit` and `CommentEditActs`, with
+`RefPairEdit` as the master at both scales (readme §13, *The comment
+edit's withdrawals*). What the drawing left open is item
+`12X-commentedit`.
 
 ### 127 · What the no-expiry correction left for rulings · *design* · **filed 2026-10-02** · **closed 2026-10-02**
 
@@ -4306,3 +4311,30 @@ come back together:
   and no summary line.
 - **The beyond-this-app face.** How the reading surfaces show a target
   that lives outside CoGra.
+
+### 12X-commentedit · What the comment edit's withdrawals left for rulings · *design + contract* · **filed 2026-10-02**
+
+The comment edit's round (readme §13, *The comment edit's withdrawals*)
+drew backlog 126 and left these for jakob's eye:
+
+- **The post's noun on the comment's sheets.** `TagPad` and
+  `RefPairEdit` are masters at both scales, and both say `Signed with
+  the post, as its own action.` Opened from `CommentEdit`, the line
+  names the wrong thing. Whether it reads `Signed with the comment, as
+  its own action.` there, or one wording serves both scales, is
+  unruled.
+- **The comment's standing citation.** The drawing needed a second
+  citation beside the withdrawn one. It cites `Sunday at the tide market
+  — @mira`, a post the corpus already holds (`Saved`, `History`). That
+  is a drawing-level choice, open to a different target.
+- **What neither edit draws.** The removed-mark row and the severing
+  line live on `KeptPicksReview`, and the gated Sign lives on the seals.
+  Neither edit draws them, so the mirror carried none. Two questions are
+  open at both scales: does a standing citation whose target was removed
+  wear the removed-mark face, and does an edit that took new pictures
+  gate its Sign on their upload?
+- **Contract seam** (for the relay): the comment edit stages tag and
+  citation withdrawals in its batch, a tag's at one record and a
+  citation's at `ReferenceClaim.withdrawalCost`. Its standing citations
+  take the one additive record `RefPairEdit` stages. api-spec has to
+  serve both for a comment's citations as it does for a post's.
