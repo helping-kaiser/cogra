@@ -8435,6 +8435,42 @@ below have their home here or where named.
   once, deliberately: the four compose flows' `New post` start counts 51
   boards.
 
+### The kept picks drawn — 2026-10-02
+
+jakob's afternoon review ruled the fix round's open drawings (the fix-fix
+round's 20–23), every one as recommended, every wording blessed.
+
+- **The gated commit stays enabled.** While the uploads run, `Sign and
+  publish` and `Sign comment` are drawn as at rest. Pressed, each swaps
+  in place to its in-flight word, the failure pack's idiom with the ways
+  out locked, and signing proceeds the moment the bytes land, with no
+  second press. `disabled` is now only the failed upload's
+  (`ReplySealUploadFailed`). New sidecar: `ReplySealUploading.md`.
+- **The review's rows draw all three states.** `KeptPicksReview` shows
+  a plain pick, a severing pick saying `This takes you back to zero.`
+  under its kind, and a pick whose post its author removed, which wears
+  the removed-mark face with its × in its seat. `KeptPicksSeal` reads
+  that target by its mark too.
+- **The post-restore anchor** is `PadPendingReview`, `PadPending`'s twin
+  plate: the everyday feed, the kept pick on the face and `Waiting for
+  your review` under it. The feed's stance-face edge carries the tap to
+  the review.
+- **A kept approval is the kept vouch-back's twin.** It gets its own card
+  on Invites, where approving lives, keeps its ceremony through
+  `ApprovePad`, and never joins the batch. It is written in the
+  docblocks and on both pads' key-elsewhere cases, with nothing new
+  drawn.
+- **The untypeable citation's row** stands on `EditCompose` with the
+  target's standard summary line in its name slot and `Comes along as
+  it is.` under it. It has no ×, opens nothing, and goes uncounted
+  (`StagedReference`'s `untyped`). The edit's fields now scroll under its
+  pinned foot.
+- **The gate**: 268 → **269 screens** (`PadPendingReview` at the foot of
+  the patterns page's `PadPending` column), **1800 edges** (the feed's
+  stance face gains one outcome), 0 gaps, flows 66, every one resolved, 132 sidecars. The
+  witness did not move. The open residue is backlog item
+  12X-fixfix-keptpicks.
+
 ## 15. Index
 
 **Root**
