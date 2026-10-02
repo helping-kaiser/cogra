@@ -382,7 +382,8 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That's more than a post carries — up to ten pictures.`
 - `That's more than a comment carries — up to four pictures.`
 
-**Screens say MB; the caps are MiB.** The limit enforced is the binary
+**Screens say MB; the caps are MiB** — MB on every user-facing surface,
+never MiB (jakob 2026-10-02). The limit enforced is the binary
 one — 50 MiB is 52.4 MB — so the number on screen under-promises and
 can never turn a file the product would have accepted into a refusal.
 The reverse, writing MiB, would be exact and unreadable.

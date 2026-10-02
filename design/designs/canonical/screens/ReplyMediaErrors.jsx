@@ -1,7 +1,8 @@
 /* The reply composer with part of a batch refused (comment video round,
    2026-09-02; the full refusal vocabulary, video conform round 2026-09-03).
    A comment's caps are 4 pictures at 10 MiB each, or one video at 50 MiB with
-   a cover at 10 MiB; a file over its cap, or one nothing here can read, never
+   a cover at 10 MiB — enforced in MiB, written MB on every screen (copy-voice,
+   *Refused files*); a file over its cap, or one nothing here can read, never
    joins the composer.
 
    The refusal is drawn WHERE THE FILE WAS OFFERED — the media row of the

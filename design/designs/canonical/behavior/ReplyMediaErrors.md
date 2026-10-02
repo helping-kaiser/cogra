@@ -2,6 +2,8 @@
 
 ALWAYS a comment's caps are four pictures at 10 MiB each, or one video at 50 MiB with a cover at 10 MiB
 
+ALWAYS a cap is enforced in MiB and written on screen in MB
+
 ALWAYS a file over its cap or in a format nothing here reads never joins the composer
 
 ALWAYS a refusal stands on the composer's media row where the file was offered, never in a dialog or a snackbar
