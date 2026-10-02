@@ -10,4 +10,4 @@ WHEN the signing is refused for one staged citation GIVEN the cited post never l
 
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the place of Sign comment AND Try again, Report a problem and Discard the reply stand with it AND everything above the foot stays as it was
 
-WHEN tap Discard the reply under the notice This shouldn't have happened -> the reply is discarded at once AND the thread returns AND NEVER a dialog asks
+WHEN tap Discard the reply under the notice This shouldn't have happened -> the discard dialog Discard this reply? opens over the seal with Nothing is kept. AND NEVER the reply is discarded unasked
