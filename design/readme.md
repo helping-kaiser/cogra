@@ -8196,6 +8196,51 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+### The kept picks and the pads, ruled — 2026-10-02
+
+jakob's morning review ruled the kept picks' seven questions (backlog item
+113) and the pads round's residue (item 121), every one as recommended,
+with kept picks 2 dissolved by the never-delete law.
+
+- **The anchor follows the key.** With the key back and the review left
+  unsigned, a kept pick's line reads `Waiting for your review` and its tap
+  opens `KeptPicksReview` (`StanceControl`'s `pendingReview`); with the key
+  gone again, `Waiting for your key` and the key notice return.
+- **The review lists plain opinions only.** A kept vouch-back or approval
+  never joins the batch; a kept vouch-back surfaces as its own card,
+  keeping its ceremony (`VouchedIn`).
+- **Rows stay honest.** Nothing vanishes and signing stays valid; a
+  target removed or redacted while its pick waited wears the removed-mark
+  face on its row (`StagedReference`'s `removed`). A pick that would sever
+  its bundle says so inline in the family's landing words
+  (`consequence`), the `Remove citation` idiom; Sign is the confirmation
+  and the batch raises no `SeveranceConfirm`.
+- **The write rule mirrors the reply's**: reached from `KeptPicksSeal`,
+  the fact ends `your picks are still kept.` and `Not now` returns to the
+  review. A drop is spoken `Removed — 2 picks left.`, focus to the next
+  row. The settings row shows only while the key is here and unsigned
+  picks wait.
+- **The pads.** The comment edit's mirror of the withdrawal package is
+  ruled ("same semantics at comment scale") and filed as its own bite
+  (backlog 12X-keptpads). The untypeable citation's note reads `Comes
+  along as it is.` The upload gate names its content, `…signing waits for
+  the video.` on a clip (`UploadStatusLine`'s `media`). `Done` on an
+  untouched `RefPairEdit` pick stages nothing, as the scrim: an untouched
+  pad never makes an act. On a gated seal signing proceeds when the
+  uploads land — the reader already pressed Sign; the gate waits only for
+  bytes. A tag withdrawal is one record — one fresh 0,0 layer,
+  newest-wins; the drawing counts 1 act.
+- **Flagged for blessing** (copy-voice, *The key's lifecycle*, *Faults by
+  code*, *The pads and the edit's withdrawals*): `Waiting for your
+  review`, `Removed — 2 picks left.`, the removed row's × name, the
+  landing words reused as the severance line, `Nothing was signed or
+  spent — your picks are still kept.`, `…signing waits for the video.`,
+  `Comes along as it is.` What the drawings still owe is in items 113 and
+  121.
+- **The gate**: **267 screens**, **1785 edges** (two gain an outcome:
+  `Not now` back to the review, the untouched `Done`), 0 gaps, **flows
+  65**, every one resolved; the witness did not move. New sidecar:
+  `RefPairEdit.md`.
 
 ## 15. Index
 
