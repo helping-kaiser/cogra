@@ -393,7 +393,7 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair and, as the member's first opinion, ends the borrowed view; the ceremony says so, and the member's own feed opens.",
       "status": "resolved",
       "steps": [
         "start · VouchBack · 3 «Vouch back» → VouchBackPad",
