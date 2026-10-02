@@ -221,8 +221,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Done</button>", tag: "button" },
+    { n: 7, find: ">Reset</button>", tag: "button" },
   ],
-  ExploreNone: [...searchShell("brackish cartography", 4)],
+  ExploreNone:[...searchShell("brackish cartography", 4)],
   Feed: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),

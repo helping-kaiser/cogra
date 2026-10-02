@@ -34,6 +34,10 @@ export interface FeedFilterValue {
  */
 export interface FeedFilterProps {
   value?: FeedFilterValue;
+  /** The reader's own default — what the foot's `Reset` stages and what the
+   *  trigger speaks deviations from. The app's default (`FEED_FILTER_DEFAULT`)
+   *  until the reader sets theirs in Settings (pass C 10). */
+  readerDefault?: FeedFilterValue;
   onChange?: (value: FeedFilterValue) => void;
   /** Opens "The filter" dialog — the sheet carries its own "?". */
   onHelp?: () => void;
@@ -67,9 +71,10 @@ export interface FeedFilterSheetProps {
    *  row, and the reading the surface owes. Omitted, the sheet is the feed's:
    *  no heading, the "?" in the corner. */
   lead?: JSX.Element;
-  /** The Done row — `FilterFoot`, the staged reading and the commit. Every
+  /** The Done row — `FilterFoot`, `Reset` in the corner and the commit. Every
    *  filter sheet takes one (the sheet law). Given one, the sheet owns its
-   *  height, the sections scroll inside it and this stays pinned under them. */
+   *  height, the sections scroll inside it and this stays pinned under them.
+   *  The topic section, the one that grows, closes the body. */
   foot?: JSX.Element;
   /** The topics the viewer may narrow to — see `FeedFilterProps.topics`. */
   topics?: readonly string[];
@@ -107,10 +112,14 @@ export interface FilterTriggerProps {
 
 export declare function FilterTrigger(props: FilterTriggerProps): JSX.Element;
 
-/** The Done row every filter sheet ends on (the sheet law): a hairline, the
- *  staged filter's reading in the pill's words, and the commit. */
+/** The Done row every filter sheet ends on (the sheet law): a hairline,
+ *  `Reset` in the corner, and the commit. No read-back of the staged filter —
+ *  the sections above it are that. */
 export interface FilterFootProps {
-  reading: string;
+  /** Stages the default back into the sheet — the reader's own on the feed and
+   *  search, CoGra's on the settings sheet that edits the reader's own.
+   *  Nothing applies until Done. */
+  onReset?: () => void;
   /** Commits the staged filter — the one re-query. */
   onDone?: () => void;
 }

@@ -22,17 +22,20 @@
    IT COMMITS ON DONE, LIKE EVERY SHEET (the sheet law, readme §4, *Sheets*).
    Chips stage; `Done` saves the default and the row reads it back; the scrim,
    a swipe down and Back discard, and the default is what it was — the way
-   `SettingsLicense` leaves it. The foot is `FilterFoot`, the license sheets'
-   third anatomy: a hairline, the reading, the button, inside the sheet's own
-   inset. The reading is the pill's word, `Posts`, so the row that opened this
-   sheet, the sheet's own foot and the trigger in every feed cannot say
-   different things.
+   `SettingsLicense` leaves it. The foot is `FilterFoot`, every filter sheet's
+   one row: a hairline, `Reset` in the corner, `Done` at the end, inside the
+   sheet's own inset. The row that opened this sheet reads the default back in
+   the pill's word, `Posts`, once Done has saved it.
+
+   HERE `Reset` MEANS COGRA'S DEFAULT (jakob 2026-10-02, pass C 10). On a
+   feed's sheet `Reset` stages the reader's own default; this sheet is where
+   that default is set, so its `Reset` stages the app's — the one place a
+   reader gets back to CoGra's defaults. Done saves it as theirs.
 
    THE FOOT IS PINNED AND THE SECTIONS SCROLL. Four sections already outrun the
    sheet's 88%, so a commitment placed after them would be the one control a
-   reader has to scroll to find — and `Reset` would still end at the screen's
-   bottom lip. `FeedFilterSheet` takes the height when it is given a foot, and
-   `Reset` ends the scroll instead of the sheet.
+   reader has to scroll to find. `FeedFilterSheet` takes the height when it is
+   given a foot.
 
    THE ORDER SECTION IS DRAWN AT ITS DESIGNED DEFAULT, `Ranked`. §13's standing
    ruling — the filter honestly reads Newest until slice 3's ranker ships —
@@ -57,7 +60,7 @@ export function Screen() {
             </div>
           </>
         }
-        foot={<FilterFoot reading="Posts" />}
+        foot={<FilterFoot />}
       />
     </>
   );

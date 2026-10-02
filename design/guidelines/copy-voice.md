@@ -1181,11 +1181,18 @@ arrive together.
 the filter's accessible name, and carries the group footnote's first
 sentence where a covering sheet hides the footnote: `Every feed starts
 from this.` The second sentence stays under the row, where the reader
-meets it first. The sections, hints and `Reset` are the feed's own. Its
-foot reads the choice back in the trigger's own word — `Posts`, nothing
-more, because the title has already asked the question and the note
-above has already said what the answer binds — and commits it with
-`Done`, the word both of the page's sheets use.
+meets it first. The sections and hints are the feed's own, and so is the
+foot: `Reset` in its corner and `Done`, the word both of the page's
+sheets use, at its end. Here `Reset` brings back CoGra's own default —
+the one place a reader gets back to it; on a feed's sheet the same word
+brings back the reader's default (readme §13, *The filter-and-olive
+round*).
+
+**Every filter sheet's foot** — the feed's, search's and the settings
+sheet's — is `Reset` and `Done`, nothing else: no read-back of the staged
+filter, because a reading that holds two changes cannot hold six
+(jakob 2026-10-02). `Reset` is plain (jakob, N3); what it restores is
+the reader's default, the app's until they set their own in Settings.
 
 **Change your password** (`ChangePassword`) opens with the row's
 footnote said where the act is, plus the half it could not say there:

@@ -531,6 +531,7 @@
     { "from": "ExploreFilter", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips, staged" }] },
     { "from": "ExploreFilter", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "ExploreSearch", "case": "the sheet closes and the staged filter is dropped — the results are what they were; swipe down, Back and Escape the same — the sheet law: nothing staged applies" }] },
     { "from": "ExploreFilter", "via": 6, "kind": "advance", "label": "Done", "to": [{ "board": "ExploreSearch", "case": "the sheet closes — the search re-queries once, narrowed" }] },
+    { "from": "ExploreFilter", "via": 7, "kind": "advance", "label": "Reset (the foot's corner)", "to": [{ "terminal": "self", "case": "stages the search's default — nothing narrowed, the order at rest, what the trigger reads as Everything; nothing applies until Done" }] },
 
     { "from": "ExploreNone", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing" }, { "board": "ExploreSearch", "case": "a name something carries" }] },
     { "from": "ExploreNone", "via": 2, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
@@ -622,7 +623,7 @@
     { "from": "FeedSheet", "via": 2, "kind": "advance", "label": "filter chips (kinds · forms · one topic · also show)", "to": [{ "terminal": "self", "case": "stages what the feed admits — the feed behind the sheet does not move until Done" }, { "terminal": "self", "case": "a topic chip stages that topic's feed — one at a time, and tapping the held one clears it" }] },
     { "from": "FeedSheet", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "stages the order" }] },
     { "from": "FeedSheet", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips, staged" }] },
-    { "from": "FeedSheet", "via": 5, "kind": "advance", "label": "Reset", "to": [{ "terminal": "self", "case": "stages the default" }] },
+    { "from": "FeedSheet", "via": 5, "kind": "advance", "label": "Reset (the foot's corner)", "to": [{ "terminal": "self", "case": "stages the reader's default — the app's until they set their own in Settings, theirs after; nothing applies until Done" }] },
     { "from": "FeedSheet", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes and the staged filter is dropped — the feed is what it was, not re-queried; swipe down, Back and Escape the same — the sheet law: nothing staged applies" }] },
     { "from": "FeedSheet", "via": 7, "kind": "advance", "label": "All your topics", "to": [{ "board": "YourTopics", "case": "everything held, the ones held against included — where a topic is walked back; back returns the feed with this sheet up, as it was left" }] },
     { "from": "FeedSheet", "via": 8, "kind": "advance", "label": "Done", "to": [{ "board": "Feed", "case": "unchanged — nothing to re-query" }, { "board": "FeedNarrowed", "case": "narrowed — the feed re-queries once" }, { "board": "FeedTopic", "case": "narrowed to one topic — the feed re-queries once" }, { "board": "FeedNothing", "case": "everything off — the feed re-queries once" }, { "board": "FeedFar", "case": "far from the default — the feed re-queries once" }, { "board": "FeedKinds", "case": "all four kinds on — comments, profiles and tags among the posts; the feed re-queries once" }] },
@@ -1978,7 +1979,7 @@
     { "from": "SettingsReading", "via": 2, "kind": "advance", "label": "filter chips (kinds · forms · also show)", "to": [{ "terminal": "self", "case": "stages what a feed starts out admitting" }] },
     { "from": "SettingsReading", "via": 3, "kind": "advance", "label": "Ranked / Newest", "to": [{ "terminal": "self", "case": "stages the default order" }] },
     { "from": "SettingsReading", "via": 4, "kind": "advance", "label": "show already seen", "to": [{ "terminal": "self", "case": "the toggle flips, staged" }] },
-    { "from": "SettingsReading", "via": 5, "kind": "advance", "label": "Reset", "to": [{ "terminal": "self", "case": "stages the shipped default" }] },
+    { "from": "SettingsReading", "via": 5, "kind": "advance", "label": "Reset (the foot's corner)", "to": [{ "terminal": "self", "case": "stages CoGra's own default — the one place a reader gets back to it; Done saves it as theirs" }] },
     { "from": "SettingsReading", "via": 6, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "Settings", "case": "the sheet closes — the default is what it was, the way SettingsLicense leaves it; swipe down, Back and Escape the same — the sheet law: nothing staged applies" }] },
     { "from": "SettingsReading", "via": 7, "kind": "advance", "label": "Done", "to": [{ "board": "Settings", "case": "the sheet closes — the default is saved, and the row reads it back" }] },
 
