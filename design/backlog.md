@@ -4243,7 +4243,7 @@ the filter residue*):
   The registry guards key rules append-only, so rewording it is a
   breaking change the seam agrees first.
 
-### 131 · What the what's-new restore and the filter residue left for rulings · *design* · **filed 2026-10-02**
+### 131 · What the what's-new restore and the filter residue left for rulings · *design* · **filed 2026-10-02** · **closed 2026-10-02**
 
 The fix-fix lane for rulings 0 and 10–19 (readme §13, *The what's-new
 restore and the filter residue*) executed them and left these for
@@ -4262,9 +4262,11 @@ jakob's eye:
 - ~~**Ruling 17's reason disagrees with the post scale.**~~ — closed
   2026-10-02 (the residue round's Q1): the comment-scale discard asks
   first, one grammar with the post scale.
-- **Strings flagged for blessing** (copy-voice, *The filter pill's state
-  words*): `all forms`, `hiding seen`, `+ still settling`, `hiding
-  sensitive`, `hiding removed`.
+- ~~**Strings flagged for blessing.**~~ — closed 2026-10-02: jakob
+  blessed all five, and ruled the head's full set reads `All kinds`
+  (never `4 kinds`) — the pill, the `FeedKinds` docblock and the
+  witnessed edge label follow, one named rebless (copy-voice, *The
+  filter pill's state words*).
 
 ### 132 · What the kept picks' drawing left open · *design + contract* · **filed 2026-10-02** · **closed 2026-10-02**
 

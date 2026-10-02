@@ -223,7 +223,9 @@ same whether it departs from the app's default or back toward it. The
 head names the kinds always; every other axis speaks only when it
 departs, in lowercase after a `·`:
 
-- **Kinds** (the head): one kind's name, `2 kinds`, `Nothing`.
+- **Kinds** (the head): one kind's name, `2 kinds`, `Nothing`; every
+  kind on, `All kinds` (jakob 2026-10-02 — the state, never the count,
+  at the full set).
 - **Forms**: the forms held, `text + photos`; every form, `all forms`.
 - **Order**: `newest`, `ranked`.
 - **Seen**: `showing seen`; off, `hiding seen`.
@@ -233,9 +235,9 @@ departs, in lowercase after a `·`:
 - **Topic**: the tag's own name (*Topics*). A default never holds one,
   so it has no word for its absence.
 
-*New 2026-10-02, flagged for blessing:* `all forms`, `hiding seen`,
-`+ still settling`, `hiding sensitive`, `hiding removed`. The rest are
-the trigger's words as already drawn.
+*New 2026-10-02, blessed (jakob 2026-10-02):* `all forms`, `hiding
+seen`, `+ still settling`, `hiding sensitive`, `hiding removed`,
+`All kinds`. The rest are the trigger's words as already drawn.
 
 ## Platform nouns
 

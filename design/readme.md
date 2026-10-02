@@ -8570,6 +8570,16 @@ jakob's third ruling round, on the fix-fix round's residue.
   one resolved, 133 sidecars. The witness did not move. Backlog 127 and
   132 close; 131 holds only the flagged state words.
 
+### The pill's full set — 2026-10-02
+
+jakob's last two words of the day (backlog 131, closed): the five
+state words are **blessed** (`all forms`, `hiding seen`, `+ still
+settling`, `hiding sensitive`, `hiding removed`), and the kinds head
+at the full set reads **`All kinds`**, never the count —
+`feedFilterSummary` says it, `FeedKinds` draws it, and its witnessed
+edge label follows (`filter chip (All kinds)`), re-blessed
+deliberately, that one line the whole diff.
+
 ## 15. Index
 
 **Root**
