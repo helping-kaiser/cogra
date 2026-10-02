@@ -26,9 +26,10 @@
    IT IS THE FEED BECAUSE THE FEED IS WHERE THE TAP WAS MADE. A card's ⋮ opens
    the reader's post menu (the master sheet `ReaderPostMenu` draws), so the
    whole gesture — ⋮, Hide @ada, the sheet closing — happens over this surface,
-   and the snackbar lands on it. Hidden from the post detail or from her
-   profile instead, the reader stays where they were and the feed looks like
-   this the next time they open it, minus the line.
+   and the snackbar lands on it. Hidden from the post detail instead, the same
+   snackbar lands on the detail and the reader stays on it (jakob 2026-10-02);
+   hidden from her profile, the reader stays where they were. Either way the
+   feed looks like this when they return to it, minus the line.
 
    IT IS `Feed` WITH ONE CARD REPLACED, not a fourth kind of feed board. The
    band, the filter, the cards and the bar are the feed's, drawn once — the

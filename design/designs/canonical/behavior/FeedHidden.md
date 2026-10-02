@@ -6,7 +6,7 @@ ALWAYS nothing marks the space a hidden person's rows left in the feed
 
 ALWAYS a hidden person's profile still opens and their comments still stand under other people's posts
 
-WHEN the reader hides a person from a post detail or their profile -> the reader stays where they were AND the feed next opened holds none of that person's rows
+WHEN the reader hides a person from a post detail or their profile -> the reader stays where they were AND the feed holds none of that person's rows when the reader returns to it
 
 WHEN tap Undo on the hide's snackbar -> the person is unhidden AND their posts come back AND the feed stands as it was before the hide
 

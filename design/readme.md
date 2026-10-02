@@ -3705,7 +3705,7 @@ four-rung ladder.
   one outcome reached two ways — a rung a reader has to be told about,
   and a control that tells them. The pill is the feed's alone, because
   the feed is the only root with a top the reader is trying to get back
-  to; it needs about three screens of depth, since shallower the
+  to; it needs 3 viewport-heights of depth (jakob 2026-10-02), since shallower the
   returning band has already brought the top within a flick; and it is
   drawn OUTSIDE the collapsing block, because height added to that block
   moves the band's own threshold and re-clamps the list (item 45.3).
@@ -5137,7 +5137,7 @@ closes a place where the canvas knew a rule and had never drawn it.
   collapsing band, centred under it, doing exactly what the rung does.
   The two are one outcome reached two ways, which is why the graph gives
   them one destination. **Feed only**, because only the feed has a top
-  the reader is trying to get back to, and only past about three screens
+  the reader is trying to get back to, and only past 3 viewport-heights
   of depth, because shallower the returning band has already brought the
   top within a flick.
 - **AND IT IS DRAWN OUTSIDE THE COLLAPSING BLOCK.** The region hides

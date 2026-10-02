@@ -1,6 +1,10 @@
 # FeedUnread · `spec:design:behavior-feed-unread`
 
-ALWAYS the bell carries a dot GIVEN something has arrived in the notifications list since the reader last opened it
+ALWAYS the bell carries a dot GIVEN something arrived in the notifications list since the reader last opened it and a root has loaded since it arrived
+
+WHEN a root loads GIVEN something arrived in the notifications list since the reader last opened it -> the bell's dot lights
+
+WHEN something arrives in the notifications list while the reader is on a root -> NEVER the bell's dot lights before that root's next load
 
 ALWAYS the bell's mark is a dot and never a count
 

@@ -12,7 +12,7 @@ WHEN tap Save -> the post is kept AND the sheet closes AND the snackbar reads Sa
 
 WHEN tap Save GIVEN the save does not go through -> the save reverts AND the target's row says so with Retry
 
-WHEN tap Hide with the author's handle GIVEN the menu was opened from the post being read -> the post being read stays AND the author's rows leave the feed AND NEVER a confirm step appears
+WHEN tap Hide with the author's handle GIVEN the menu was opened from the post being read -> the sheet closes AND the reader stays on the post being read AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
 
 WHEN tap Hide with the author's handle GIVEN the hide does not go through -> the hide reverts AND the target's row says so with Retry
 
