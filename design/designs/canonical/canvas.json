@@ -974,6 +974,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeBodyDiscard.dc.html",
+      "title": "Compose · discard the words?",
+      "x": 0,
+      "y": 5300,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "LadderMax.dc.html",
       "title": "Post ladder · the cap",
       "x": 480,

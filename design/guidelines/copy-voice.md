@@ -2528,6 +2528,17 @@ edit asks only when it changed since it opened, and its title says what
 goes: `Discard the changes?`, over the shared dialog's `Nothing is
 kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
 
+**The body fork's ask** (`ComposeBodyDiscard`, jakob 2026-10-02, the
+fix-fix round's ruling 14). Switching halves with something in the body
+asks first, and the title names the half that goes: `Discard the
+words?` from the words stage's `Add pictures instead`, `Discard the
+pictures?` from a pick stage's `Write words instead`. The body is `The
+rest of the draft stays.` — the reader loses only the half they leave.
+`Discard` (quiet) and `Keep them` (filled), `DiscardConfirm`'s
+weighting; nothing behind the scrim reads `Discard`, so the bare word
+cannot be misread. *Blessed, jakob 2026-10-02.* A clip's title and keep
+word are unruled (backlog 12X-fixfix-whatsnew).
+
 ## The already-published marker
 
 **Reusing media never blocks** (jakob 2026-09-30). An author may publish

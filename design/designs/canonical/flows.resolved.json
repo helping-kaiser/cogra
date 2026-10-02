@@ -780,7 +780,7 @@
       ],
       "steps": [
         "start · «nav · New post» on 51 boards → ComposePick",
-        "ComposePick · 4 «Write words instead» → ComposeWords",
+        "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1702,7 +1702,7 @@
       ],
       "steps": [
         "start · «Cite in a new post» — to ComposePick on 5 boards → ComposePick",
-        "ComposePick · 4 «Write words instead» → ComposeWords",
+        "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
       ],
@@ -1726,7 +1726,7 @@
       ],
       "steps": [
         "start · «Mention in a new post» — to ComposePick on 1 board → ComposePick",
-        "ComposePick · 4 «Write words instead» → ComposeWords",
+        "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
       ],

@@ -746,6 +746,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Keep the draft</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  /* The body fork's ask over the words stage (ruling 14). Only the dialog's
+     pair is stamped — the stage beneath the scrim is inert and every one of
+     its controls is wired on `ComposeWords`. */
+  ComposeBodyDiscard: [
+    { n: 1, find: ">Keep them</button>", tag: "button" },
+    { n: 2, find: ">Discard</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
+  ],
   ComposeSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
