@@ -778,14 +778,14 @@
       "steps": [
         "start · «nav · New post» on 50 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
-        "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
-        "ComposeDetails · 10 «Next» → ComposeSeal",
+        "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
+        "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
       ],
       "boards": [
         "ComposePick",
         "ComposeWords",
-        "ComposeDetails",
+        "ComposeDetailsWords",
         "ComposeSeal",
         "ComposeLanded",
         "ChatsComingSoon",
@@ -1105,6 +1105,7 @@
         "ComposeDetails",
         "ComposeDetailsCaps",
         "ComposeDetailsVideo",
+        "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
         "ReplyCited",
@@ -1113,7 +1114,7 @@
         "ReplySealComment"
       ],
       "steps": [
-        "start · «+ Cite something» on 12 boards → ReferencePicker",
+        "start · «+ Cite something» on 13 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row leaves the results for the staged section above them, wearing its ×, and the picker stays open for the next"
       ],
       "boards": [
@@ -1124,6 +1125,7 @@
         "ComposeDetails",
         "ComposeDetailsCaps",
         "ComposeDetailsVideo",
+        "ComposeDetailsWords",
         "EditCompose",
         "EditComposeUnchanged",
         "ReplyCited",
@@ -2016,8 +2018,7 @@
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-from-the-browser",
-        "publish-while-the-uploads-run",
-        "publish-words"
+        "publish-while-the-uploads-run"
       ],
       "endpoint": [
         "add-a-topic",
@@ -2041,6 +2042,13 @@
       "endpoint": [
         "give-a-vertical-clip-a-cover"
       ]
+    },
+    "ComposeDetailsWords": {
+      "flows": [
+        "cite-something",
+        "publish-words"
+      ],
+      "endpoint": []
     },
     "ComposeDraft": {
       "flows": [

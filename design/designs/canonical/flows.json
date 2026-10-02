@@ -257,8 +257,8 @@
       "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4 },
-        { "board": "ComposeWords", "via": 3, "to": "ComposeDetails" },
-        { "board": "ComposeDetails", "via": 10, "to": "ComposeSeal" }
+        { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
+        { "board": "ComposeDetailsWords", "via": 8, "to": "ComposeSeal" }
       ],
       "end": { "board": "ComposeSeal", "via": 7, "case": "signed — the detail view, still settling" }
     },

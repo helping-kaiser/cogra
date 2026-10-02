@@ -20,6 +20,11 @@
    outcome. The fact rows stay readable. An app killed mid-sign says the
    outcome on the next open with the ordinary settled or failure notice.
 
+   THE LOCKED WAYS OUT DO NOT DIM (jakob 2026-10-02, curate 3). They are inert
+   for seconds, and a dimmed arrow or X reads as broken, not as waiting — so
+   they keep their face, as the commit keeps its own, and nothing about them
+   is drawn differently on this plate.
+
    PAST 5s THE SUBLINE SAYS SO (`SealSigningSlow`): an honest olive line under
    the total, never a progress bar the signing cannot measure.
 

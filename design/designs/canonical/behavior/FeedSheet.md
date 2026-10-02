@@ -24,6 +24,20 @@ ALWAYS the feed admits content not yet landed, wearing Still settling GIVEN the 
 
 ALWAYS the feed admits only what has landed GIVEN the feed's filter has Still settling off
 
+ALWAYS the topic section is the last section of the sheet's body
+
+ALWAYS the sheet's foot holds Reset in its corner and Done at its end, and no section holds Reset
+
+ALWAYS the sheet's foot carries no reading of the staged filter
+
+ALWAYS the reader's default is the app's default GIVEN the reader has set no default of their own in Settings
+
+ALWAYS the reader's default is the one they set GIVEN the reader has set a default of their own in Settings
+
+WHEN tap Reset -> the sheet stages the reader's default AND NEVER the feed re-queries
+
+ALWAYS the trigger speaks only the deviations from the reader's default
+
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
 
 WHEN pull down inside the filter sheet -> NEVER the feed refreshes

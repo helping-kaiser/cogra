@@ -222,8 +222,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "already seen", tag: "label" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 6, find: ">Done</button>", tag: "button" },
+    { n: 7, find: ">Reset</button>", tag: "button" },
   ],
-  ExploreNone: [...searchShell("brackish cartography", 4)],
+  ExploreNone:[...searchShell("brackish cartography", 4)],
   Feed: [
     { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
@@ -605,6 +606,22 @@ Object.assign(FLOW_MARKERS, {
   ],
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
+  // The words path's details: the picture stage's controls minus the media
+  // row, the describe row and the Description, numbered in reading order.
+  ComposeDetailsWords: [
+    { n: 9, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 9, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
+    { n: 10, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'data-field="Title"', tag: "div" },
+    { n: 4, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 4, find: 'aria-label="Remove #coastroad"', tag: "button" },
+    { n: 5, find: "+ Add a tag", tag: "button" },
+    { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 7, find: "+ Cite something", tag: "button" },
+    { n: 8, find: ">Next</button>", tag: "button" },
+  ],
   RemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
@@ -1348,17 +1365,13 @@ Object.assign(FLOW_MARKERS, {
     // numbered by the same identity rule — the next free number.
     { n: 26, find: " kept picks waiting</span>", tag: "button" },
   ],
-  // The release chronicle: the way out, and one door per release — the same
-  // control drawn three times, so one number.
-  WhatsNew: [
-    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
-  ],
-  // The behind state: the newer release's door is a release door like the
-  // rest, so one number covers every door.
+  // The release chronicle: the way out, and nothing else — the notes are read
+  // here.
+  WhatsNew: [{ n: 1, find: 'aria-label="Back to settings"', tag: "a" }],
+  // The behind state: the way out, and the line's `Update now`.
   WhatsNewBehind: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: ">See it on GitHub</button>", tag: "button", all: true },
+    { n: 2, find: ">Update now</button>", tag: "button" },
   ],
   ReportProblem: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },

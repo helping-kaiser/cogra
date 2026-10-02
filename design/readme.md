@@ -251,6 +251,16 @@ designed, not derived by inversion.
   set, and it is a **teal, not a green** — harmonising a green into an
   orange palette lands it beside the olive `tertiary`, and red/green is
   the pair colour-blind readers lose.
+- **`tertiaryContainer` — the olive — is the account-notice register**:
+  the system speaking to the reader about their own account and what they
+  have to do about it. The key-absent and write-rule panels wear it
+  (`NoticePanel`), and so does every feed card that needs the reader's
+  action — verify the email, restore or bring the key, the security
+  notice, the vouch-back, a closed application's way back in (`TaskCard`'s
+  `tone="notice"`; jakob 2026-10-02, the olive split). A card that only
+  says how things stand keeps the feed card's ground, so the olive always
+  means "yours to do". Its filled button is `inverse`; it is never a
+  page's wash and never `error`.
 - Every `on`-pair meets WCAG AA (4.5:1), verified at generation.
 - **Material You dynamic colour is off.** The brand hue carries identity
   a wallpaper-derived palette would erase.
@@ -8336,6 +8346,51 @@ no timer, and an invite link does not care who is signed in.
 - **The gate**: 267 → **266 screens**, 1785 → **1781 edges**, **flows
   66**, every one resolved. The witness was re-blessed once,
   deliberately, for the new board's flow.
+
+### The filter-and-olive round — 2026-10-02
+
+jakob's morning review: the filter's foot, the newer-version doors, the
+curate residue and the olive split.
+
+- **Every filter sheet's foot is `Reset` and `Done`** (`FilterFoot`) —
+  the feed's, search's and the settings sheet's. No read-back of the
+  staged filter (jakob: it cannot scale past a few changes), and no
+  Reset row in the body. The topic section closes the feed sheet's
+  body: it is the one that grows, so it never pushes a fixed section
+  below the fold.
+- **The default is the reader's** (pass C 10). It is the app's until
+  the reader sets their own in Settings, theirs after; a feed's `Reset`
+  stages it and the trigger speaks deviations from it. CoGra's own
+  default comes back only in Settings, whose sheet's `Reset` stages it.
+  Search's `Reset` stages search's own resting state (`Everything`).
+- **`Update now` leads to the download, never to the code.** The
+  newer-version snackbar's action and `WhatsNewBehind`'s door open
+  CoGra's Play Store listing — a placeholder id until published, like
+  the `.local` addresses — and on the web reload into the new version.
+  What's new is the notes page and sends nowhere else: no release
+  carries a door, and the footnote reads `Newest first.`
+- **The dateline names what a version is to this device** (curate 1):
+  the running one `installed`, a release past it `newest`, which
+  heads the behind state's list.
+- **The words path has its own details board** (curate 2,
+  `ComposeDetailsWords`): the picture stage minus the media row, the
+  describe row and the Description. `ComposeWords`' Next lands on it.
+- **A signing seal's locked ways out keep their face** (curate 3): inert
+  for seconds, never dimmed.
+- **The olive split** (§4, *Colour*). Every feed card that needs the
+  reader's action wears the account-notice register — `TaskCard`'s
+  `tone="notice"`, `inverse` fill, the card's inks scoped to the
+  register's on-pair for contrast: verify the email, create, restore or
+  bring the key, the security notice, a closed application's way back
+  in, and the vouch-back. Waiting, approved-and-landing and a post that
+  didn't land stay on the feed card's ground.
+- **Flagged for blessing** (copy-voice): `Update now`, `Update to version
+  0.1.3`, `installed`, `newest`, the footnote `Newest first.`, and the
+  foot's `Reset` at its new seat.
+- **The gate**: 267 → **268 screens**, 1785 → **1795 edges**, 0 gaps,
+  **flows 65**, every one resolved. The witness was re-blessed once,
+  deliberately, for the new board: `publish-words` walks
+  `ComposeDetailsWords`, and `+ Cite something` starts on 13 boards.
 
 ## 15. Index
 

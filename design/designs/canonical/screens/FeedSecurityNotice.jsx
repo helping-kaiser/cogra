@@ -14,6 +14,10 @@
    mark, at the top of the column. It rides whichever shell sign-in lands on
    (an applicant's too); the canvas draws it on the feed, the most-landed one.
 
+   IT WEARS THE OLIVE (jakob 2026-10-02, the olive split): it asks the reader
+   to look at their password, so it stands on the account-notice register
+   (`tone="notice"`), its filled `Change password` in `inverse`.
+
    THE WORDS STAY CALM AND SAY THE ONE USEFUL THING. Nothing is urgent any
    more — the sessions are already gone — so the card names what was done and
    what the reader can do if the cause was theirs to fix: a password someone
@@ -30,11 +34,12 @@ export function Screen() {
       <CograBand trailing={<FeedFilter />} />
       <FeedList>
         <TaskCard
+          tone="notice"
           title="We signed out every device"
           body="A sign-in this account had already replaced was used again, which can mean someone else had a copy. If your password might be known to anyone, change it."
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <Button>Change password</Button>
+            <Button variant="inverse">Change password</Button>
             <Button variant="outline">Got it</Button>
           </div>
         </TaskCard>

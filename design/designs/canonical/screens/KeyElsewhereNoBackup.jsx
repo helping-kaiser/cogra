@@ -21,7 +21,11 @@
    flows): the card is this board's own, and the band, the post and the nav
    beneath it are `KeyElsewhere`'s, wired there — wiring them twice would give
    one control two edges. The card has no control, so nothing here carries a
-   number. The wording chip flips the title the way `KeyElsewhere`'s does. */
+   number. The wording chip flips the title the way `KeyElsewhere`'s does.
+
+   IT WEARS THE OLIVE LIKE `KeyElsewhere`'S CARD (jakob 2026-10-02, the olive
+   split): the action it asks for happens on the other device, and it is
+   still the reader's to take (`tone="notice"`). */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
 
@@ -31,6 +35,7 @@ export function Screen() {
       <CograBand trailing={<FeedFilter />} />
       <FeedList>
         <TaskCard
+          tone="notice"
           title="{{keyTitle}}"
           body="This account has no backup, so the key can't be brought here yet. Make a recovery code on the device that holds it, then restore it here. Until then, anything you sign waits as pending."
         />

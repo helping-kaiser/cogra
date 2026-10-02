@@ -13,9 +13,15 @@
    IT STAGES, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*). The
    results beneath are visual only and do not move until Done, when the search
    re-queries once; the scrim, a swipe down and Back discard. The foot is the
-   feed filter's own `FilterFoot`, reading the staged filter in the trigger's
-   word. The sheet is short enough that its content sizes it, so the foot ends
-   the content rather than being pinned under a scroll. */
+   feed filter's own `FilterFoot` — `Reset` in the corner, `Done` at the end;
+   every filter sheet's foot is the same row. The sheet is short enough that
+   its content sizes it, so the foot ends the content rather than being pinned
+   under a scroll.
+
+   `Reset` STAGES THE SEARCH'S DEFAULT: nothing narrowed, the Order section at
+   rest — what the trigger reads as `Everything`. The reader sets no default
+   of their own for search in Settings, so the reader's default here is the
+   app's (pass C 10). */
 export function Screen() {
   return (
     <>
@@ -40,7 +46,7 @@ export function Screen() {
           ))}
         </FilterSection>
         <OrderSection order="ranked" />
-        <FilterFoot reading="Everything" />
+        <FilterFoot />
       </BottomSheet>
     </>
   );

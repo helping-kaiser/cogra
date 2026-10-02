@@ -11,6 +11,11 @@
    than any of them: it is the only card in the product that has to deliver a
    no without the reader concluding they were thrown out.
 
+   IT WEARS THE OLIVE (jakob 2026-10-02, the olive split). The way in now
+   waits on the reader — the ask link sent to someone who is in — so the card
+   asks for their action and stands on the account-notice register
+   (`tone="notice"`); the waiting card, which asks nothing, does not.
+
    THE CARD CANNOT BE PUT AWAY. `ApplicantWaiting` earned its `Got it` by
    naming something to wait for; this card names the only route forward the
    reader has, and a route you can dismiss is a route you can lose.
@@ -60,6 +65,7 @@ export function Screen() {
       </CograBand>
       <FeedList>
         <TaskCard
+          tone="notice"
           title="@kel closed your application"
           body="That was @kel's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead."
         >

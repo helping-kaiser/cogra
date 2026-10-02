@@ -6,7 +6,13 @@
    signs the modest opinion on the spot — and a hold here would sign with a
    key that is not here. So the hold opens `PadKeyAbsent` exactly as the tap
    does: nothing signs silently, and the reader meets the notice before the
-   pick, never after it. A pick kept there waits on this device (`PadPending`). */
+   pick, never after it. A pick kept there waits on this device (`PadPending`).
+
+   THE CARD WEARS THE OLIVE (jakob 2026-10-02, the olive split): nothing the
+   reader signs lands until they restore the key, so it asks for their action
+   and stands on the account-notice register (`tone="notice"`) — the register
+   the key-absent panels already wear — its filled `Restore the key` in
+   `inverse`. */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
 
@@ -15,9 +21,9 @@ export function Screen() {
     <>
       <CograBand trailing={<FeedFilter />} />
       <FeedList>
-        <TaskCard title="{{keyTitle}}" body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.">
+        <TaskCard tone="notice" title="{{keyTitle}}" body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending.">
           <div style={{ display: "flex" }}>
-            <Button size="sm">Restore the key</Button>
+            <Button variant="inverse" size="sm">Restore the key</Button>
           </div>
         </TaskCard>
         <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />

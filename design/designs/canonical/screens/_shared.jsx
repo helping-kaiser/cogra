@@ -333,16 +333,47 @@ function FeedList({ children }) {
    THE TITLE KEEPS ITS ROW. The mark shares the heading's line rather than
    taking one of its own, so a task card is the height it always was and the
    column's rhythm does not change around it. `border-box` keeps the ring inside
-   the card's own width wherever the card is not a stretched feed child. */
-function TaskCard({ title, body, children }) {
+   the card's own width wherever the card is not a stretched feed child.
+
+   A CARD THAT NEEDS THE READER'S ACTION WEARS THE OLIVE (jakob 2026-10-02,
+   the olive split). `tone="notice"` puts the card on the account-notice
+   register — `tertiary-container` with its `on-` pair, the ground
+   `NoticePanel` wears — so a step the reader still owes (verify the email,
+   restore the key, the security notice) cannot be scrolled past as one more
+   post. Its filled action is `Button`'s `inverse`, the register's own. A card
+   that only says how things stand (waiting, approved and landing) keeps the
+   feed card's ground, so the olive keeps its force. The ring and the mark
+   ride both: they say who speaks, the ground says whether it asks.
+
+   ON THE OLIVE, EVERY INK IS THE REGISTER'S. `primary` on `tertiary-container`
+   measures 2.8:1 in the light theme and about 1:1 in the dark — under §10's
+   AA floor for a label and under 3:1 for the mark — and the page's own inks
+   fare no better (`on-surface-variant` 4.0:1 light, `on-surface` 1.8:1
+   dark). So the card scopes `--primary`, `--outline`, `--on-surface`,
+   `--on-surface-variant` and `--text-secondary` to `on-tertiary-container`
+   (4.6:1): the mark, an outlined or text button, an inline action and a
+   master drawn inside the card (the ask link's block) all read in the
+   panel's own pair — the reason `inverse` exists, carried to the rest. */
+function TaskCard({ title, body, tone, children }) {
+  const notice = tone === "notice";
+  const ground = notice ? "var(--tertiary-container)" : "var(--surface-card)";
   return (
     <Card
       style={{
         flex: "none",
         boxSizing: "border-box",
         border: "var(--ring-task-width) solid transparent",
-        background:
-          "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
+        background: `linear-gradient(${ground}, ${ground}) padding-box, var(--ring-task) border-box`,
+        ...(notice
+          ? {
+              color: "var(--on-tertiary-container)",
+              "--primary": "var(--on-tertiary-container)",
+              "--outline": "var(--on-tertiary-container)",
+              "--on-surface": "var(--on-tertiary-container)",
+              "--on-surface-variant": "var(--on-tertiary-container)",
+              "--text-secondary": "var(--on-tertiary-container)",
+            }
+          : {}),
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
@@ -1728,13 +1759,19 @@ function ComposeWordsBody({ paragraphs = WORDS_STAGE_BODY, used, error, nextDisa
    round), so the stage near its caps is this stage and not a copy of it. The
    defaults are the canonical fixtures; `ComposeDetailsCaps` passes longer ones
    and the refusal that belongs to the surface, and `nextDisabled` is what a
-   field over its cap does to the step. Nothing else about the stage moves. */
+   field over its cap does to the step. Nothing else about the stage moves.
+
+   `words` IS THE SAME STAGE ON THE WORDS PATH (jakob 2026-10-02, curate 2):
+   no media row, no describe row and no Description — a words post carries
+   no description — and everything else as it stands here
+   (`ComposeDetailsWords`). */
 function ComposeDetailsBody({
   title = "Salt maps of the coast road",
   titleError,
   description = "Rubbings from three weekends at low tide — paper against the salt crust.",
   descriptionError,
   nextDisabled = false,
+  words = false,
 }) {
   /* The element names are `ComposeDetails`'s calibration IDs (seam 002). They
      reach a built board only where the screen is registered (`NODE`); every
@@ -1743,17 +1780,21 @@ function ComposeDetailsBody({
     <>
       <WizardHeader title="Details" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <PickedRow
-          items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
-          caption="2 pictures — the body"
-          onManage={() => {}}
-          node="mediaRow"
-        />
-        <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
+        {!words && (
+          <>
+            <PickedRow
+              items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+              caption="2 pictures — the body"
+              onManage={() => {}}
+              node="mediaRow"
+            />
+            <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
+          </>
+        )}
 
         <TextField label="Title" corner="Optional" cap={100} value={title} error={titleError} node="title" />
 
-        <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} node="description" />
+        {!words && <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} node="description" />}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
           <FieldLabel node="label">Tags</FieldLabel>
@@ -2344,11 +2385,17 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    draw two patch releases later so the chronicle has a history to show.
    Both addresses are placeholders until CoGra is on a server, on `.local`,
    the repo's own genesis-account domain: real-shaped, and undeliverable, so
-   nothing sent before the swap reaches a stranger. */
+   nothing sent before the swap reaches a stranger.
+
+   THE STORE LISTING IS A PLACEHOLDER THE SAME WAY (jakob 2026-10-02, F2).
+   `Update now` opens CoGra's Play Store listing, which does not exist until
+   the app is published; until then the id is the `.local` domain's own
+   reverse name — real-shaped, and no stranger's listing can hold it. It swaps
+   for the real listing when CoGra is published (backlog item 118). */
 const RUNNING_VERSION = "0.1.2";
 const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
-const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+const STORE_LISTING_URL = "https://play.google.com/store/apps/details?id=local.cogra.app";
 
 /* THE RELEASE CHRONICLE, whole (`WhatsNew`'s anatomy, shared the moment its
    behind state drew it a second time). The notes are fixture, not copy. */
@@ -2356,7 +2403,7 @@ const RELEASES = [
   {
     version: RUNNING_VERSION,
     date: "30.09.2026",
-    current: true,
+    installed: true,
     notes: [
       "A reply says what it answers — a post by its title, a comment by its first words.",
       "While something signs, the button says what it's doing, and a signing that doesn't go through says so right where you were.",
@@ -2378,19 +2425,34 @@ const RELEASES = [
 ];
 
 /* A newer release than the one running here (jakob 2026-10-01, the A10
-   ruling) — the behind state's fixture, one patch on. */
-const NEWER_VERSION = "0.1.3";
+   ruling) — the behind state's fixture, one patch on, drawn atop the
+   chronicle as the newest. Its notes are fixture like the rest. */
+const NEWER_RELEASE = {
+  version: "0.1.3",
+  date: "02.10.2026",
+  newest: true,
+  notes: ["The filter's Reset brings back your own default."],
+};
 
 /* The behind state's two lines — drafts flagged for blessing (copy-voice,
    *The settings page*, About): the quiet line atop the chronicle, and the
-   once-per-release snackbar on a cold open's feed. */
+   once-per-release snackbar on a cold open's feed. Both carry `Update now`
+   (jakob 2026-10-02): the reader wants the new version, not its code, so
+   the door leads to the download — the store listing in the app, and on the
+   web a reload into the new version. One string for both. */
 const NEWER_VERSION_LINE = "A newer version exists.";
 const NEWER_VERSION_SNACKBAR = "A newer version of CoGra is out.";
+const UPDATE_NOW = "Update now";
 
-function Release({ version, date, current = false, notes }) {
+/* THE DATELINE'S WORD NAMES WHAT A VERSION IS TO THIS DEVICE (jakob
+   2026-10-02, curate 1): the one running here is `installed`, and a release
+   past it is `newest` — never `current`, which a stale running version is
+   not. The rest carry no word. */
+function Release({ version, date, installed = false, newest = false, notes }) {
+  const word = installed ? " · installed" : newest ? " · newest" : "";
   return (
     <>
-      <SectionLabel>{current ? `Version ${version} · current · ${date}` : `Version ${version} · ${date}`}</SectionLabel>
+      <SectionLabel>{`Version ${version}${word} · ${date}`}</SectionLabel>
       <div style={{ padding: "0 16px" }}>
         <Card>
           {notes.map((line) => (
@@ -2406,19 +2468,19 @@ function Release({ version, date, current = false, notes }) {
               {line}
             </p>
           ))}
-          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
-            See it on GitHub
-          </InlineAction>
         </Card>
       </div>
     </>
   );
 }
 
-/* `newer` is the version a running app is behind, or nothing. Given, one quiet
-   line stands atop the chronicle — the fact in `--text-secondary`, the door
-   onto that release's public page ending it, `ProfileMoreFailed`'s line shape
-   — and nothing else changes: no badge, no banner, no nagging. */
+/* `newer` is the release a running app is behind, or nothing. Given, one
+   quiet line stands atop the chronicle — the fact in `--text-secondary`,
+   `Update now` ending it, `ProfileMoreFailed`'s line shape — and the newer
+   release heads the list as the newest; nothing else changes: no badge, no
+   banner, no nagging. `Update now` opens the store listing
+   (`STORE_LISTING_URL`) in the app; on the web it reloads the page into the
+   new version. Its spoken name says which version it brings. */
 function WhatsNewBody({ newer }) {
   return (
     <>
@@ -2436,16 +2498,16 @@ function WhatsNewBody({ newer }) {
             }}
           >
             {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
-            <InlineAction size="sm" ariaLabel={`See version ${newer} on GitHub`} onClick={() => {}}>
-              See it on GitHub
+            <InlineAction size="sm" ariaLabel={`Update to version ${newer.version}`} onClick={() => {}}>
+              {UPDATE_NOW}
             </InlineAction>
           </p>
         )}
-        {RELEASES.map((release) => (
+        {(newer ? [newer, ...RELEASES] : RELEASES).map((release) => (
           <Release key={release.version} {...release} />
         ))}
         <div style={{ padding: "16px 24px 0" }}>
-          <QuietNote>Newest first. Every release's full notes and its code are public on GitHub.</QuietNote>
+          <QuietNote>Newest first.</QuietNote>
         </div>
       </div>
     </>

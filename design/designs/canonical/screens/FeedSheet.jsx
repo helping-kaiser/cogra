@@ -1,10 +1,20 @@
 /* The feed's filter sheet, open — the whole control lives here: four kinds that
-   combine, the one topic that does not, forms of post, the Order section with
-   the seen toggle (shared with search), what else is admitted, Reset, and the
-   Done row. It stages: the feed behind the sheet is visual only and does not
-   move until Done commits, when it re-queries once; the scrim, a swipe down
-   and Back discard (the sheet law, readme §4, *Sheets*). The foot reads the
-   staged filter, here the default.
+   combine, forms of post, the Order section with the seen toggle (shared with
+   search), what else is admitted, the one topic that does not combine, and the
+   foot — `Reset` in its corner, `Done` at its end. It stages: the feed behind
+   the sheet is visual only and does not move until Done commits, when it
+   re-queries once; the scrim, a swipe down and Back discard (the sheet law,
+   readme §4, *Sheets*).
+
+   THE TOPICS CLOSE THE BODY (jakob 2026-10-02). They are the section that
+   grows with the reader's own tags, so they sit last and never push a fixed
+   section below the unscrolled view.
+
+   `Reset` STAGES THE READER'S DEFAULT (jakob 2026-10-02, pass C 10): the
+   app's until they set their own in Settings, theirs after — and the pill
+   speaks deviations from the same default. CoGra's own default comes back
+   only in Settings. This reader never set one, so the sheet is drawn at the
+   app's.
 
    THE FOUR ARE THE KINDS V1.0 SERVES (readme §13, the V1.0 scope cut,
    2026-09-25): Posts, Comments, Profiles, Tags. A kind list follows the
