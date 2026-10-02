@@ -1893,74 +1893,87 @@ function WithdrawnLine({ name }) {
    and this one was revised upward past 1, so it stages two. */
 const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
 
+/* The citation the post edit holds as it is — one this app cannot type, read
+   by its target's standard summary line. */
+const EDIT_UNTYPED_CITATION = "Salt flats at first light — @juno";
+
 function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
       <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <PickedRow
-            items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
-            caption="2 pictures — the body"
-            onManage={() => {}}
-          />
-          <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
-          <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
-        </div>
-
-        <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
-
-        <TextField
-          label="Description"
-          corner="Optional"
-          rows={2}
-          cap={500}
-          value="Rubbings from three weekends at low tide — paper against the salt crust."
-        />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Tags</FieldLabel>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
-            <TopicRemovable topic="saltmaps" onEdit={() => {}} />
+        {/* The fields scroll under the pinned foot, the wizard reading: a
+            form taller than the phone runs on under it, and the foot stays
+            whole. */}
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <PickedRow
+              items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+              caption="2 pictures — the body"
+              onManage={() => {}}
+            />
+            <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
+            <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
           </div>
-          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-          {!unchanged && <WithdrawnLine name="#coastroad" />}
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>References</FieldLabel>
-          {/* The composer's whole staged form, as `ComposeDetails` draws it:
-              the kind under the name, and the pair the citation signs. An edit
-              stages the same citation a first draft does, so it shows back the
-              same facts. The row opens `RefPairEdit` — the citation already
-              stands, so its pick adds a record — and its × withdraws it. */}
-          <StagedReference
-            kind="post"
-            name="The long way home — @ada"
-            sub="Post"
-            src="post-photo.jpg"
-            pair={{ pDirected: 0.1, pInterest: 0.1 }}
-            onEdit={() => {}}
+          <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
+
+          <TextField
+            label="Description"
+            corner="Optional"
+            rows={2}
+            cap={500}
+            value="Rubbings from three weekends at low tide — paper against the salt crust."
           />
-          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
-          {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow
-            label="License"
-            value="Public domain"
-            action={
-              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                <Icon name="lock" size={16} />
-              </span>
-            }
-          />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
-        </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FieldLabel>Tags</FieldLabel>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
+              <TopicRemovable topic="saltmaps" onEdit={() => {}} />
+            </div>
+            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+            {!unchanged && <WithdrawnLine name="#coastroad" />}
+          </div>
 
-        <div style={{ flex: 1 }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FieldLabel>References</FieldLabel>
+            {/* The composer's whole staged form, as `ComposeDetails` draws it:
+                the kind under the name, and the pair the citation signs. An edit
+                stages the same citation a first draft does, so it shows back the
+                same facts. The row opens `RefPairEdit` — the citation already
+                stands, so its pick adds a record — and its × withdraws it. */}
+            <StagedReference
+              kind="post"
+              name="The long way home — @ada"
+              sub="Post"
+              src="post-photo.jpg"
+              pair={{ pDirected: 0.1, pInterest: 0.1 }}
+              onEdit={() => {}}
+            />
+            {/* A citation this app cannot type (jakob 2026-10-02, pads 2 and the
+                fix-fix round's 23): held as it is — no ×, opens nothing — its
+                name slot the target's standard summary line, as every picker
+                row reads, and its note in the second line's place. It signs
+                nothing, so the foot's count does not move. */}
+            <StagedReference kind="post" name={EDIT_UNTYPED_CITATION} untyped note="Comes along as it is." />
+            <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+            {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <FactRow
+              label="License"
+              value="Public domain"
+              action={
+                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+                  <Icon name="lock" size={16} />
+                </span>
+              }
+            />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          </div>
+        </div>
 
         {/* Five things: the edit, #saltmaps added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`EditActs`). */}

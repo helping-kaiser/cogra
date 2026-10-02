@@ -37,6 +37,15 @@ export interface StagedReferenceProps {
    * family's landing words, under the kind; Sign is the confirmation.
    */
   consequence?: string;
+  /**
+   * A citation this app cannot type, held on an edit as it is: no ×, and the
+   * row opens nothing even given `onEdit` (api-spec excludes it from
+   * editing). `name` is the target's standard summary line; pair it with
+   * `note` and no `sub` or `pair`.
+   */
+  untyped?: boolean;
+  /** A quiet line under the name — `Comes along as it is.` on an untyped row. */
+  note?: string;
   /** The × is its own button, named "Remove <name>". */
   onRemove?: () => void;
   /**
@@ -45,7 +54,7 @@ export interface StagedReferenceProps {
    * button named "<name> — set how it relates"; without it the row is inert.
    */
   onEdit?: () => void;
-  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `kind`, `consequence`, `pair` (`face`, `exact`), `remove`. */
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `kind`, `consequence`, `note`, `pair` (`face`, `exact`), `remove`. */
   node?: string;
   /** The row's content key — its position in the staged set, from 1. */
   nodeKey?: string;
