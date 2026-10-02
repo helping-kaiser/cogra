@@ -3325,7 +3325,5 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": [
-    "ApplicantRejected/19: the door dies with the no-expiry ruling (jakob 2026-10-02) — its removal from the rejected card is the applicant lane's in the fix round; this gap stands only until that merges"
-  ]
+  "gapsOnFlows": []
 }
