@@ -699,7 +699,7 @@
       "status": "resolved",
       "steps": [
         "start · ReplyPictures · 3 «Next» → ReplySealUploading — uploads still running — the reply's gated seal",
-        "end · ReplySealUploading · 1 «Sign comment (disabled)» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
+        "end · ReplySealUploading · 1 «Sign comment» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
       ],
       "boards": [
         "ReplyPictures",
@@ -1268,7 +1268,7 @@
       "steps": [
         "start · ComposeDetails · 10 «Next» → ComposeUploading — uploads still running — details keep writing (drawn on the media page)",
         "ComposeUploading · 11 «Next» → ComposeSealUploading — uploads still running — the gated seal",
-        "end · ComposeSealUploading · 7 «Sign and publish (disabled)» → ComposeLanded — uploads land — signing proceeds to the detail view, still settling"
+        "end · ComposeSealUploading · 7 «Sign and publish» → ComposeLanded — uploads land — signing proceeds to the detail view, still settling"
       ],
       "boards": [
         "ComposeDetails",
