@@ -2405,6 +2405,12 @@ own word, carried through from the button to the dialog to the
 notification to this card — four surfaces, one verb, so the product
 never tells two stories about one act.
 
+**About says the same, before it happens** — the applicant topic
+(*Getting in, and being let in*) closes its second paragraph on `If your
+application is closed, your account stays — anyone can still vouch you
+in.` (jakob 2026-10-02, **blessed**). An application has no timer, so
+closing is the one ending the page names.
+
 **The ask link is labelled by what to do with it**, not by what it is:
 `Ask someone you know to vouch for you`, with `Send it to anyone who is
 already in. It does not expire, and it works however many people you
