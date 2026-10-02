@@ -605,6 +605,8 @@ what becomes possible, and when.
 - `You can comment once you're in.` — the comment sheet's foot and a
   comment's `Reply`.
 - `You can invite once you're in.` — the profile's `Invites`.
+- `You can vouch once you're in.` — an applicant who opens someone's ask
+  link, where app-open lands for them (jakob 2026-10-02, **blessed**).
 
 Every control the family answers wears the locked look (auth.md):
 visibly inactive, still tappable — the foot, `Reply` and `Invites` alike
@@ -1019,7 +1021,8 @@ idiom, one pair per case:
 snackbar — the applicant and the asker where app-open lands for them, the
 member on `Invites`, where the row already is (jakob 2026-10-02):
 
-- `Vouching unlocks once your application is approved.` — an applicant.
+- `You can vouch once you're in.` — an applicant, in the applicant-foot
+  family's voice (jakob 2026-10-02, **blessed**).
 - `That's your own ask link — send it to someone who's already in.` —
   the asker.
 - `@noor is already waiting in your invites.` — a member who already has
