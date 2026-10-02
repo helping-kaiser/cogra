@@ -624,6 +624,11 @@ no application is live for the post to wait with, so the seal's exit
 says what it waits for instead: `Your post waits — it arrives when
 someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
 kept from the staged-act line — *new 2026-10-02, blessed (jakob 2026-10-02)*).
+The other two kinds answer a second tap on the turned-down shell in the
+same grammar (jakob 2026-10-02, **blessed**):
+
+- `Your opinion waits — it arrives when someone vouches you in.`
+- `Your topic waits — it arrives when someone vouches you in.`
 
 **Comments are not a kind that stages** (jakob 2026-10-01: applicants do
 not comment in V1.0). A staged comment would wear `Still settling` for a

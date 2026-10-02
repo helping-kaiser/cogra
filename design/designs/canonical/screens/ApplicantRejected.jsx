@@ -42,7 +42,10 @@
    New post still opens the wizard, and the seal stages the post on the
    device; with no application live, the exit's snackbar says what it waits
    for — `Your post waits — it arrives when someone vouches you in.` — never
-   that it waits with an application.
+   that it waits with an application. The other kinds' second taps answer
+   in the same grammar: `Your opinion waits — it arrives when someone
+   vouches you in.` and `Your topic waits — it arrives when someone vouches
+   you in.`
 
    THE BAND NAMES @kel STILL. The vantage rule resolves to the most specific
    actor an arrival carries, and the arrival is unchanged: this reader came
