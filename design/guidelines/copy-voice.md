@@ -324,10 +324,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
   *(An opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
-- **Your first opinion** (the vouch-back pad): Vouching back signs your
-  opinion of the person who vouched you in — your first one, and
-  your feed grows from it. / The pad is how you shape what reaches you —
-  for or against, and how much. Nothing is signed until Set.
+- **Your vouch back** (the vouch-back pad): Vouching back signs your
+  opinion of the person who vouched you in, and your feed grows from
+  it. / The pad is how you shape what reaches you — for or against, and
+  how much. Nothing is signed until Set. *(The title is blessed (jakob
+  2026-10-02); the first paragraph is new 2026-10-02, flagged for
+  blessing.)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -382,7 +384,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
 dialog's own subject, so a listener hears which explanation the tap
 brings: `Your key`, `License`, `Sensitive`, `How the filter works`,
 `What is CGT?`. The three stance pads take theirs the same way —
-`Your opinion on your post`, `Toward what you answer`, `Your first opinion`
+`Your opinion on your post`, `Toward what you answer`, `Your vouch back`
 — because one name across three surfaces says only that a dialog
 exists. `How opinions work` is the opinion control's own help, where the
 control itself is the subject.
@@ -1529,6 +1531,18 @@ vouch card's way out reads `Got it` (jakob 2026-10-02, **blessed**): it
 puts the card away for good and says nothing — no snackbar, no reminder —
 so its word promises no later. The way back to vouching stays on @mira's
 profile, forever.
+
+**The vouch card and its pad claim no order** — a member may opine on
+others first while the card stands, so one wording is true in every
+state (jakob 2026-10-02, **blessed**). The card's body, on `VouchBack`
+and `VouchBackPad`: `Vouch back to open the way from your side — your
+opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
+`Vouching opens the opinion control, set to a gentle default.`). The
+pad's title and its "?" read `Your vouch back`, and its first coaching
+line opens on the title: `Your vouch back. The pad is how you shape what
+reaches you — for or against, and how much.` The band's line keeps
+*first opinion*: the borrowed view does end on the first opinion,
+whoever it's toward.
 
 ## Unsaving, and the actor with no name left
 

@@ -15,19 +15,19 @@ export function Screen() {
       </CograBand>
       <FeedList>
         <VouchBackCard
-          body="Vouch back to open the way from your side — your first opinion, and your feed grows from it."
+          body="Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it."
           actions={
             <>
               <Button variant="text" style={{ color: "var(--on-tertiary-container)" }}>Got it</Button>
               <StanceControl
                 targetLabel="@mira"
-                helpLabel="Your first opinion"
+                helpLabel="Your vouch back"
                 defaultOpen
                 defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
                 padInset={80}
                 padNote={
                   <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                    <PadLine>Your first opinion. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
+                    <PadLine>Your vouch back. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
                     <PadLine>
                       Later, tap the small face under a post to open this — press and hold it instead and a gentle{" "}
                       <span aria-hidden="true">🙂</span>

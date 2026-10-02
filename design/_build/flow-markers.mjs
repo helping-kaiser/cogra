@@ -119,7 +119,7 @@ export const FLOW_MARKERS = {
     ...nav(13),
   ],
   VouchBackPad: [
-    { n: 1, find: 'aria-label="Your first opinion"', tag: "button" },
+    { n: 1, find: 'aria-label="Your vouch back"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion', tag: "div" },
     { n: 2, find: ">Choose your opinion on @mira</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
