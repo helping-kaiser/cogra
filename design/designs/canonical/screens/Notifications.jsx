@@ -31,7 +31,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="Notifications" backHref="#" backLabel="Back" />
+      <PageHeader title="Notifications" backHref="#" backLabel="Back to feed" />
       <ChronicleList>
         <ContentRow
           variant="chronicle"
