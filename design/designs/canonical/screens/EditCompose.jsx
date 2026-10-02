@@ -32,7 +32,8 @@
    which is why the foot reads five. Sign is the confirmation (jakob): the
    count is said on the foot and in the acts sheet, and no dialog asks again.
    A citation this app cannot type stands in `References` as a row with no ×
-   and opens nothing — api-spec excludes it from editing.
+   and opens nothing — api-spec excludes it from editing — and its note reads
+   `Comes along as it is.` (jakob 2026-10-02, pads 2).
 
    THE BODY IS `_shared.jsx`'s `EditComposeBody`, because the acts sheet stands
    on this edit and draws it whole. */

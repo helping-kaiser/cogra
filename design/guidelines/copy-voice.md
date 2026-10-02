@@ -1670,7 +1670,13 @@ records it signs, heard as `2 things` where a withdrawal takes two.
 **The reply's gate, failed.** `One picture didn't upload. Signing waits
 for it.` with `Retry` — the fact in error ink, the consequence in the
 quiet voice. The running line stays `Uploading 1 of 2 — signing waits
-for the pictures.`
+for the pictures.`, and names the body's own content: on a clip it
+reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
+content of course"; *new, flagged*).
+
+**The citation this app cannot type** stands on an edit as a row with
+no ×, and its note reads `Comes along as it is.` (jakob 2026-10-02, pads
+2; *new, flagged for blessing*).
 
 ## Saved, History and hiding
 
