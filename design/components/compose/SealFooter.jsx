@@ -18,10 +18,14 @@ import { Button } from "../core/Button.jsx";
    only "Sign" makes the author scroll up to find out what for. Back is the
    same word on all six, and takes no argument.
 
-   `disabled` IS THE UPLOAD'S GATE, not a validation state. Nothing signs until
-   the content it signs exists, so the seal that is still uploading wears it
-   and the words above the pair say why. A disabled button with no line
-   explaining it is the one shape this must never take.
+   THE UPLOAD'S GATE LEAVES THE COMMIT ENABLED (jakob 2026-10-02, the fix-fix
+   round's 20). Nothing signs until the content it signs exists, and the line
+   above the pair says so; a press while it shows is the signing in flight
+   below — inert from the press, `busy` past 200ms, the label swapped in
+   place — and signing proceeds the moment the bytes land, no second press. `disabled` is only the failed upload's: with nothing left to
+   wait for, the commit stops until Retry, and the line above says why. A
+   disabled button with no line explaining it is the one shape this must
+   never take.
 
    `busy` IS THE SIGNING IN FLIGHT (jakob, the failure pack). The commit is
    the one control a slow answer leaves pressable twice, so it goes inert and

@@ -957,7 +957,7 @@
     { "from": "ReplySealKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "restored — back to this seal, the reply intact" }] },
     { "from": "ReplySealKeyAbsent", "via": 3, "kind": "cancel", "label": "Discard the reply", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }] },
 
-    { "from": "ReplySealUploading", "via": 1, "kind": "advance", "label": "Sign comment (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
+    { "from": "ReplySealUploading", "via": 1, "kind": "advance", "label": "Sign comment (disabled)", "to": [{ "terminal": "self", "case": "enabled through the gate — pressed, it is inert at once and reads Signing comment… past 200ms, the ways out locked with it, and the press is held until the uploads land; never a second press" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
 
     { "from": "ReplySealUploadFailed", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ReplySealUploading", "case": "the upload starts again — the gate reads its running line" }] },
     { "from": "ReplySealUploadFailed", "via": 2, "kind": "advance", "label": "Sign comment (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the failed upload" }] },
@@ -1674,7 +1674,7 @@
     { "from": "ComposeSealUploading", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealUploading", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealUploading", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }] },
+    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "enabled through the gate — pressed, it is inert at once and reads Signing and publishing… past 200ms, the ways out locked with it, and the press is held until the uploads land; never a second press" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }] },
     { "from": "ComposeSealUploading", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeUploading", "case": "one stage back" }] },
 
     { "from": "ComposePickWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },

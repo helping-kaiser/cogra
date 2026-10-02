@@ -1572,9 +1572,11 @@ const replyCitedRow = () => ({
    batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
    true }` once one has not, with `media: "video"` for a clip so the line
    reads `…signing waits for the video.` (jakob 2026-10-02, pads 3). Every
-   row is unchanged; `UploadStatusLine` stands over the foot, and `Sign
-   comment` is disabled while it shows (`ReplySealUploading`,
-   `ReplySealUploadFailed`). */
+   row is unchanged; `UploadStatusLine` stands over the foot. While the
+   uploads run, `Sign comment` stays enabled and, pressed, swaps to `Signing
+   comment…` until the bytes land and the signing answers (the fix-fix
+   round's 20, `ReplySealUploading`); at the failed reading it is disabled
+   (`ReplySealUploadFailed`). */
 function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
@@ -1631,7 +1633,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
               ) : (
                 <UploadStatusLine done={uploading.done} total={uploading.total} media={uploading.media} />
               ))}
-            <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
+            <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
           </>
         )}
       </div>

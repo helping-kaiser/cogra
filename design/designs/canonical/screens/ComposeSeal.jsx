@@ -3,10 +3,10 @@
 
    IT IS `ComposeSealUploading` WITHOUT THE GATE. That board is this one caught
    mid-upload — the same header slots, the same acts card, the same three facts,
-   the same foot — with an upload line above the button and the button disabled
-   because nothing signs until the content it signs exists. Here the pictures
-   have landed, so the line is gone and the pair is live. Two boards, one
-   anatomy, and now one source for it.
+   the same foot — with an upload line above the button, because nothing signs
+   until the content it signs exists; a press there waits for the bytes. Here
+   the pictures have landed, so the line is gone. Two boards, one anatomy, and
+   now one source for it.
 
    THE STANCE IS THE `StanceReadout`, PAIR AND ALL. The row used to print a
    single number while the reference row two lines above printed the pair — one
