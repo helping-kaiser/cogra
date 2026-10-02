@@ -20,9 +20,15 @@
 
    THE WAY BACK IS THE LAYER LAW: a link opens over whatever the reader was
    doing and back returns there, or to the feed when the link opened the app
-   cold. `Go to the feed` is the plain way on, `VerifyExpired`'s. */
+   cold. It is also the whole of "not now".
+
+   THE LANDED CASE OPENS THEIR PROFILE (jakob 2026-10-02). @noor has a full
+   profile now, and the member who opened the ask came to vouch for them — they
+   will want to look, and most likely give an opinion. So the way on is `See
+   @noor's profile`, not the feed. The waiting case keeps the back arrow alone:
+   an applicant who has not landed has no public profile yet. */
 export const PROPS = { case: { editor: "enum", options: ["landed", "elsewhere"], default: "landed" } };
-export const VALS = `askTitle: this.props.case === "elsewhere" ? "@noor is waiting on someone else" : "@noor is already in", askBody: this.props.case === "elsewhere" ? "Another member is deciding on their application right now. If it ends without them getting in, this same link works again." : "Someone has vouched them in already, so this ask has nothing left to do."`;
+export const VALS = `askTitle: this.props.case === "elsewhere" ? "@noor is waiting on someone else" : "@noor is already in", askBody: this.props.case === "elsewhere" ? "Another member is deciding on their application right now. If it ends without them getting in, this same link works again." : "Someone has vouched them in already, so this ask has nothing left to do.", profileDoor: this.props.case === "elsewhere" ? "none" : "block"`;
 
 export function Screen() {
   return (
@@ -51,9 +57,9 @@ export function Screen() {
           {"{{askBody}}"}
         </p>
 
-        <div style={{ marginTop: 24 }}>
+        <div style={{ marginTop: 24, display: "{{profileDoor}}" }}>
           <Button variant="text" style={{ width: "100%" }}>
-            Go to the feed
+            See @noor's profile
           </Button>
         </div>
       </div>

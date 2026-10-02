@@ -1002,13 +1002,16 @@ password` (blessed, the credential screen's commitment) · `Got it`
 sign-in*, never the token underneath it.
 
 **An ask that can't be taken up** (`VouchAskUnusable`), in `JoinInvalid`'s
-idiom, one pair per case, then `Go to the feed` (blessed):
+idiom, one pair per case:
 
 - `@noor is already in` · `Someone has vouched them in already, so this
-  ask has nothing left to do.`
+  ask has nothing left to do.` — then `See @noor's profile` (jakob
+  2026-10-02, F4: the member came to vouch, so they will want to look;
+  *new 2026-10-02, flagged for blessing*).
 - `@noor is waiting on someone else` · `Another member is deciding on
   their application right now. If it ends without them getting in, this
-  same link works again.`
+  same link works again.` — the back arrow alone; nobody has a public
+  profile before they land.
 
 **The ask link's readers who cannot vouch through it** land where
 app-open lands, with a snackbar:

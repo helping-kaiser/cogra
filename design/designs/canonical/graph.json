@@ -2154,7 +2154,7 @@
     { "from": "VouchAsk", "via": 2, "kind": "cancel", "label": "Not now", "to": [{ "terminal": "back", "case": "nothing signed — the ask still stands, and the same link opens it again" }] },
     { "from": "VouchAsk", "via": 3, "kind": "advance", "label": "the stance affordance", "to": [{ "board": "VouchAskPad", "case": "the pad blooms over the ask — it opens at the standing low default, never at a value the link carried" }, { "board": "GuestGate", "case": "a guest — the gate rises over the ask, and signing in comes back to it" }] },
     { "from": "VouchAskUnusable", "via": 1, "kind": "back", "label": "back", "to": [{ "terminal": "back", "case": "the state the link opened over — or the feed, when the link opened the app cold (the layer law)" }] },
-    { "from": "VouchAskUnusable", "via": 2, "kind": "advance", "label": "Go to the feed", "to": [{ "board": "Feed", "case": "the reader's own feed" }] },
+    { "from": "VouchAskUnusable", "via": 2, "kind": "advance", "label": "See @noor's profile", "to": [{ "board": "ProfileOther", "case": "the landed case only — the person's profile, where the member can look and give an opinion (master, drawn on @ada's); the waiting case has no public profile yet and draws back alone" }] },
 
     { "from": "VouchAskPad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "VouchAskPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — the same standing low default the queue's own pad opens at" }] },

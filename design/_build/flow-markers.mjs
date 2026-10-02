@@ -1703,7 +1703,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   VouchAskUnusable: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">Go to the feed</button>", tag: "button" },
+    { n: 2, find: ">See @noor&#x27;s profile</button>", tag: "button" },
   ],
   // The email change's link and its in-flight row. The landing's one way on
   // reads by the side chip, so it is found by its hole.
