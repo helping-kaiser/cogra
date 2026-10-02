@@ -230,7 +230,7 @@ names both concretely (`…the notification settings of the browser or
 phone itself`) rather than rendering twice. About's key topic is one of
 these: `Everything you publish is signed by a key only you hold.` — no
 noun, one string for both (jakob 2026-10-01, the bare "device" retired;
-the wording **flagged for blessing**).
+the wording **blessed (jakob 2026-10-02)**).
 
 ## The "?" dialogs
 
@@ -470,7 +470,7 @@ The edit's Sensitive row binds only the author's own mark, never the
 moderator's verdict, so a post the platform veiled and its author did
 not reads `Not marked` with one quiet line under the row:
 
-- `Also veiled by the platform's verdict` — flagged for blessing (jakob
+- `Also veiled by the platform's verdict` — blessed (jakob 2026-10-02) (jakob
   2026-10-01 ruled the line; the exact wording is the recommendation's).
 
 ## Accessible names
@@ -519,8 +519,7 @@ a named surface by its title, not in the MVP and still a place to go
 back to (jakob 2026-10-02, **blessed**). The entry funnel names no
 origin: from the join form, About's arrow reads a plain `Back`, as the
 form's own does.
-Added by the post detail's and the profile's tables, each flagged for
-blessing:
+Added by the post detail's and the profile's tables, each blessed (jakob 2026-10-02):
 
 - `Back to Saved` · `Back to History` · `Back to Notifications` — the
   three named surfaces, by their titles.
@@ -588,8 +587,7 @@ of opening the real surface again; one line per kind, same shape:
 - `Your opinion waits with your application — it arrives with you.`
 - `Your topic waits with your application — it arrives with you.` — the
   Affinity on a tag page, its own once-each kind. Drafted from the
-  audit's recommendation (jakob 2026-10-01, "as recommended"); **flagged
-  for blessing**.
+  audit's recommendation (jakob 2026-10-01, "as recommended"); **blessed (jakob 2026-10-02)**.
 
 The post's line is also the seal's answer for an applicant: `Sign and
 publish` stages the post rather than landing it, so the wizard closes onto
@@ -598,8 +596,7 @@ thread now, still settling.` (jakob 2026-10-01). On the turned-down shell
 no application is live for the post to wait with, so the seal's exit
 says what it waits for instead: `Your post waits — it arrives when
 someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
-kept from the staged-act line — *new 2026-10-02, flagged for
-blessing*).
+kept from the staged-act line — *new 2026-10-02, blessed (jakob 2026-10-02)*).
 
 **Comments are not a kind that stages** (jakob 2026-10-01: applicants do
 not comment in V1.0). A staged comment would wear `Still settling` for a
@@ -754,8 +751,7 @@ domain`; every other pair is named by its two tier names joined by
 unlogged.` and `Credit always · Not logged — every use credits you, and
 uses go unlogged.` The seal's row carries no `your default`: the
 reading says what the post's terms are, wherever they came from. The
-rule and the eight non-zero readings it composes are flagged for
-blessing.
+rule and the eight non-zero readings it composes are blessed (jakob 2026-10-02).
 
 ## Staged references
 
@@ -839,7 +835,7 @@ stands, and the rest of the surface stays readable.
   panel in its own words, with `Try again` (`SealFaultBug`).
 
 Every line here is blessed (the failure pack's, the failure fixes' and
-the review fixes' lines, jakob 2026-10-01), except where marked flagged.
+the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 2026-10-02).
 *Copy-only* marks a line no board draws yet.
 
 **No answer at all** (offline; not a code):
@@ -857,7 +853,7 @@ keeps `Signing and publishing…` on its commit, and the subline under the
 seal's total reads `Still signing — the network is slow right now.` in the
 olive `--tertiary` ink. No progress is feigned, because a signing cannot
 measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
-2026-10-01, flagged for blessing.*
+2026-10-01, blessed (jakob 2026-10-02).*
 
 **Transport faults:**
 
@@ -921,7 +917,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   seal with the words still there (jakob 2026-10-01). Reached from the
   kept picks' seal, the same mirror: `Nothing was signed or spent — your
   picks are still kept.` and `Not now`, back to the review (jakob
-  2026-10-02; *flagged*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
+  2026-10-02; *blessed (jakob 2026-10-02)*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -951,8 +947,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     scale the way out names what is lost (jakob 2026-10-02): `Discard
     the reply` on a reply's seal, `Discard the edit` on a comment edit —
     never `Discard the post` — and it acts at once, with no ask (jakob
-    2026-10-02, the fix-fix round's ruling 17). *`Discard the edit` new 2026-10-02, flagged
-    for blessing.*
+    2026-10-02, the fix-fix round's ruling 17). *`Discard the edit` new 2026-10-02, blessed (jakob 2026-10-02).*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
@@ -998,7 +993,7 @@ consequence, once and as a consequence rather than a clock: `An account
 left unverified for seven days is removed — joining again then starts
 over.` *Reworded in the fix round 2026-10-02 (the reap is seven days, jakob:
 a day is short enough for a mail outage on our side to cost accounts),
-flagged for blessing.*
+blessed (jakob 2026-10-02).*
 
 **Wrong address?** (`ApplicantEmail`) keeps `ChangeEmail`'s heading,
 fields and commitment (`Change your email`, `New email`, `Current
@@ -1026,7 +1021,7 @@ idiom, one pair per case:
 - `@noor is already in` · `Someone has vouched them in already, so this
   ask has nothing left to do.` — then `See @noor's profile` (jakob
   2026-10-02, F4: the member came to vouch, so they will want to look;
-  *new 2026-10-02, flagged for blessing*).
+  *new 2026-10-02, blessed (jakob 2026-10-02)*).
 - `@noor is waiting on someone else` · `Another member is deciding on
   their application right now. If it ends without them getting in, this
   same link works again.` — the back arrow alone; nobody has a public
@@ -1048,7 +1043,7 @@ member on `Invites`, where the row already is (jakob 2026-10-02):
 Applications never run out of time and an invite link ignores sign-in
 (jakob 2026-10-02), so no line here speaks of a lapsed application or of
 a second invite for an account that exists. Each line is *new in the fix
-round*; the flagged ones wait for blessing.
+round*; every one blessed (jakob 2026-10-02).
 
 - `This invite link has expired.` — the one snackbar a dead invite link's
   arrival hears, over the unchanged landing (`Main`, or `FeedBare` for a
@@ -1057,14 +1052,13 @@ round*; the flagged ones wait for blessing.
   you for a new link.` — `JoinInvalid`'s paragraph. It promises nothing
   about an account made earlier, since an unverified one is reaped after
   seven days; `Already have an account? Sign in` stands right below it.
-  *Flagged for blessing.*
+  *Blessed (jakob 2026-10-02).*
 - `This ask link doesn't work` — the heading of an ask link that resolves
   to nobody (`VouchAskInvalid`), in `JoinInvalid`'s idiom. jakob's ruling,
   as recommended.
 - `Check that the whole link came through, or ask the person who sent it
   for it again.` — its paragraph: what the reader can check, and who can
-  help, with no guess at why the link resolves to nobody. *Flagged for
-  blessing.*
+  help, with no guess at why the link resolves to nobody. *Blessed (jakob 2026-10-02).*
 
 ## The settings page
 
@@ -1124,7 +1118,7 @@ you change it back, on that device only.`
 
 **Key backup**: `Recovery code` and `Your key` are rows, not verbs — and,
 only while kept picks wait unsigned with the key here, `3 kept picks
-waiting` (*The key's lifecycle*, below; flagged). The
+waiting` (*The key's lifecycle*, below; blessed (jakob 2026-10-02)). The
 shipped *Create a new recovery code* and *Show my key* were controls
 standing where a name belongs; the act keeps its words on the screen it
 happens on. The group's footnote: `Your key signs everything you publish
@@ -1154,7 +1148,7 @@ and before `Privacy` and `Terms`, each one string for app and web:
   only door to the deeper level, that release's public page (jakob
   2026-10-02, blessed); the newest release's card in the behind state
   carries its own. A release's notes are written when it ships, never
-  here. *`installed` and the footnote flagged for blessing,
+  here. *`installed` and the footnote blessed (jakob 2026-10-02),
   2026-10-02.*
 - **A running version behind the newest** (jakob 2026-10-01). Atop the
   chronicle, one quiet line: `A newer version exists.` ending in `Update
@@ -1170,7 +1164,7 @@ and before `Privacy` and `Terms`, each one string for app and web:
   release cards' door: in the app it opens
   CoGra's Play Store listing, on the web it reloads the page into the new
   version — one string, no platform noun. *`Update now`, `Update to
-  version 0.1.3`, `installed` and `newest` flagged for blessing,
+  version 0.1.3`, `installed` and `newest` blessed (jakob 2026-10-02),
   2026-10-02.*
 - `Report a problem` opens the report: the heading `Report a problem`;
   `Say what happened, in your own words. Sending opens your email with
@@ -1248,7 +1242,7 @@ sheet's — is `Reset` and `Done`, nothing else: no read-back of the staged
 filter, because a reading that holds two changes cannot hold six
 (jakob 2026-10-02). `Reset` is plain (jakob, N3); what it restores is
 the reader's default, the app's until they set their own in Settings.
-*The foot's `Reset` at its new seat flagged for blessing, 2026-10-02.*
+*The foot's `Reset` at its new seat blessed (jakob 2026-10-02).*
 
 **Change your password** (`ChangePassword`) opens with the row's
 footnote said where the act is, plus the half it could not say there:
@@ -1300,7 +1294,7 @@ did, and a control says what will happen. Last: `Until both sides land
 your account keeps the address it has, and a reset still goes there.`
 
 **The change in flight, and its ends** (jakob 2026-10-01, audit K3.21;
-*new 2026-10-01, flagged for blessing*, save the reused lines):
+*new 2026-10-01, blessed (jakob 2026-10-02)*, save the reused lines):
 
 - A landed side's row reads `sol@solferreira.art — confirmed`, the
   counterpart of `— still waiting`.
@@ -1393,11 +1387,10 @@ anchor, in `PendingMarker`'s quiet type — never `Still settling`, which
 means signed and not yet ordered. Once the key is back and the review
 waits unsigned, the same line reads `Waiting for your review`, spoken in
 the anchor's name as `waiting for your review` (jakob 2026-10-02, kept
-picks 1; *new 2026-10-02, flagged for blessing*).
+picks 1; *new 2026-10-02, blessed (jakob 2026-10-02)*).
 
 **The kept picks' review** (`KeptPicksReview`, `KeptPicksSeal`; jakob's
-rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, flagged
-for blessing*:
+rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, blessed (jakob 2026-10-02)*:
 
 - The review's title, `Kept picks`, and its one line: `These waited on
   this device for your key, and nothing is signed yet. Remove any you no
@@ -1418,7 +1411,7 @@ for blessing*:
   pick waiting` in the singular). No status line.
 
 The kept-picks rulings (jakob 2026-10-02) add these, each *new
-2026-10-02, flagged for blessing*:
+2026-10-02, blessed (jakob 2026-10-02)*:
 
 - A dropped row is spoken in the pickers' status idiom: `Removed — 2
   picks left.` (`Removed — 1 pick left.` in the singular).
@@ -1504,7 +1497,7 @@ whole screen:
 **The landed member's band** names the view and asks for nothing — no
 `Vouch back` word rides it, because the first opinion on anyone ends the
 borrowing (jakob 2026-10-02): `Browsing from @mira's view — your first
-opinion starts your own.` — *new 2026-10-02, flagged for blessing*. The
+opinion starts your own.` — *new 2026-10-02, blessed (jakob 2026-10-02)*. The
 vouch card's way out reads `Got it` (jakob 2026-10-02, **blessed**): it
 puts the card away for good and says nothing — no snackbar, no reminder —
 so its word promises no later. The way back to vouching stays on @mira's
@@ -1709,8 +1702,7 @@ the edit body's `Withdrawn: #coastroad`, and the acts card's
 Drawn on `TagPad`, `TagPadCompose`, `RefPair`, `RefPairEdit`,
 `EditCompose`, `EditActs`, `ReplySealUploading` and
 `ReplySealUploadFailed` (readme §13, *The pads and the edit's
-withdrawals*). Every line here is the lane's wording, **flagged for
-blessing** — with the three carried-over strings above (`Un-tag`,
+withdrawals*). Every line here is the lane's wording, **blessed (jakob 2026-10-02)** — with the three carried-over strings above (`Un-tag`,
 `Withdrawn:`, `Tags withdrawn`), which this round puts to work again.
 
 **The non-drag route names its target.** `Set exact values for
@@ -1748,7 +1740,7 @@ for it.` with `Retry` — the fact in error ink, the consequence in the
 quiet voice. The running line stays `Uploading 1 of 2 — signing waits
 for the pictures.`, and names the body's own content: on a clip it
 reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
-content of course"; *new, flagged*).
+content of course"; *new, blessed (jakob 2026-10-02)*).
 
 **The citation this app cannot type** stands on an edit as a row with
 no ×. Its name slot reads the target's standard summary line, as every
@@ -1991,7 +1983,7 @@ is going, because a reader who chose the sweep is waiting on something
 larger than one who did not.
 
 **The link's landing states the deadline** (`DeleteAccountConfirmed`;
-jakob 2026-10-01, audit K3.22; *new 2026-10-01, flagged for blessing*,
+jakob 2026-10-01, audit K3.22; *new 2026-10-01, blessed (jakob 2026-10-02)*,
 save the reused lines). The heading is the band's sentence on its first
 day, `Your account is deleted in 7 days` — or `Your account and
 everything you posted are deleted in 7 days` when the sweep is in — then
