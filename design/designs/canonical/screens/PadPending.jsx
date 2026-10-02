@@ -21,11 +21,12 @@ export function Screen() {
       <CograBand trailing={<FeedFilter />} />
       <FeedList>
         <TaskCard
+          tone="notice"
           title="Your key isn't on this browser"
           body="Restore it with your recovery code to post, vouch, and act. Until then, anything you sign waits as pending."
         >
           <div style={{ display: "flex" }}>
-            <Button size="sm">Restore the key</Button>
+            <Button variant="inverse" size="sm">Restore the key</Button>
           </div>
         </TaskCard>
         <PostCard {...ADA_POST} stancePendingPick={{ pDirected: 0.1, pInterest: 0.1 }} />

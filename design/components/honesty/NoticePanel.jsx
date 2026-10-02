@@ -19,7 +19,18 @@ import { HelpDot } from "../core/HelpDot.jsx";
    fill inside a tonal panel is a second colour family arguing with the
    panel's own. `corner` is the one thing the copies disagree on: the seal's
    panel sits beside the acts card and takes its `medium` rung; a page's
-   panel leads the page and takes `large`. */
+   panel leads the page and takes `large`.
+
+   THE REGISTER IS THE ACCOUNT NOTICE, AND IT REACHES THE FEED (jakob
+   2026-10-02, the olive split). `tertiary-container` — the olive — is how the
+   system speaks to the reader about their own account: this panel, and every
+   feed card that needs the reader's action (verify the email, restore or
+   bring the key, the security notice, the vouch-back, a closed application's
+   way back in), which wears the same ground and the same `inverse` fill
+   (`TaskCard`'s `tone="notice"`). A feed card that only says how things stand
+   — waiting, approved and landing, a post that didn't land with its draft
+   kept — keeps the feed card's ground, so the olive always means "this is
+   yours to do". It is never a page's wash and never a failure. */
 export function NoticePanel({ title, helpLabel, onHelp, corner = "medium", children }) {
   const body = React.Children.toArray(children);
   return (

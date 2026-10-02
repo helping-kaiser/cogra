@@ -251,6 +251,16 @@ designed, not derived by inversion.
   set, and it is a **teal, not a green** — harmonising a green into an
   orange palette lands it beside the olive `tertiary`, and red/green is
   the pair colour-blind readers lose.
+- **`tertiaryContainer` — the olive — is the account-notice register**:
+  the system speaking to the reader about their own account and what they
+  have to do about it. The key-absent and write-rule panels wear it
+  (`NoticePanel`), and so does every feed card that needs the reader's
+  action — verify the email, restore or bring the key, the security
+  notice, the vouch-back, a closed application's way back in (`TaskCard`'s
+  `tone="notice"`; jakob 2026-10-02, the olive split). A card that only
+  says how things stand keeps the feed card's ground, so the olive always
+  means "yours to do". Its filled button is `inverse`; it is never a
+  page's wash and never `error`.
 - Every `on`-pair meets WCAG AA (4.5:1), verified at generation.
 - **Material You dynamic colour is off.** The brand hue carries identity
   a wallpaper-derived palette would erase.

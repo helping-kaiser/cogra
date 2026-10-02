@@ -16,7 +16,12 @@
    from @mira's vantage, the application riding as a card — and it is wired
    there: this board is its exemplar (readme §13, Canvas pages and flows), and
    only the card's two controls carry numbers. The wording chip flips the
-   title the way `KeyElsewhere`'s does. */
+   title the way `KeyElsewhere`'s does.
+
+   IT WEARS THE OLIVE (jakob 2026-10-02, the olive split): the application
+   cannot move until the reader brings a key, so the card asks for their
+   action and stands on the account-notice register (`tone="notice"`), its
+   filled `Restore the key` in `inverse`. */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
 
@@ -28,11 +33,12 @@ export function Screen() {
       </CograBand>
       <FeedList>
         <TaskCard
+          tone="notice"
           title="{{keyTitle}}"
           body="Your application's key was made on another device. Restore it here with your recovery code, or make a new key — until you're approved, a new one costs nothing."
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <Button>Restore the key</Button>
+            <Button variant="inverse">Restore the key</Button>
             <Button variant="outline">Make a new key</Button>
           </div>
         </TaskCard>

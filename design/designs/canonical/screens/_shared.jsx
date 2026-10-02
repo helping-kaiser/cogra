@@ -333,16 +333,47 @@ function FeedList({ children }) {
    THE TITLE KEEPS ITS ROW. The mark shares the heading's line rather than
    taking one of its own, so a task card is the height it always was and the
    column's rhythm does not change around it. `border-box` keeps the ring inside
-   the card's own width wherever the card is not a stretched feed child. */
-function TaskCard({ title, body, children }) {
+   the card's own width wherever the card is not a stretched feed child.
+
+   A CARD THAT NEEDS THE READER'S ACTION WEARS THE OLIVE (jakob 2026-10-02,
+   the olive split). `tone="notice"` puts the card on the account-notice
+   register — `tertiary-container` with its `on-` pair, the ground
+   `NoticePanel` wears — so a step the reader still owes (verify the email,
+   restore the key, the security notice) cannot be scrolled past as one more
+   post. Its filled action is `Button`'s `inverse`, the register's own. A card
+   that only says how things stand (waiting, approved and landing) keeps the
+   feed card's ground, so the olive keeps its force. The ring and the mark
+   ride both: they say who speaks, the ground says whether it asks.
+
+   ON THE OLIVE, EVERY INK IS THE REGISTER'S. `primary` on `tertiary-container`
+   measures 2.8:1 in the light theme and about 1:1 in the dark — under §10's
+   AA floor for a label and under 3:1 for the mark — and the page's own inks
+   fare no better (`on-surface-variant` 4.0:1 light, `on-surface` 1.8:1
+   dark). So the card scopes `--primary`, `--outline`, `--on-surface`,
+   `--on-surface-variant` and `--text-secondary` to `on-tertiary-container`
+   (4.6:1): the mark, an outlined or text button, an inline action and a
+   master drawn inside the card (the ask link's block) all read in the
+   panel's own pair — the reason `inverse` exists, carried to the rest. */
+function TaskCard({ title, body, tone, children }) {
+  const notice = tone === "notice";
+  const ground = notice ? "var(--tertiary-container)" : "var(--surface-card)";
   return (
     <Card
       style={{
         flex: "none",
         boxSizing: "border-box",
         border: "var(--ring-task-width) solid transparent",
-        background:
-          "linear-gradient(var(--surface-card), var(--surface-card)) padding-box, var(--ring-task) border-box",
+        background: `linear-gradient(${ground}, ${ground}) padding-box, var(--ring-task) border-box`,
+        ...(notice
+          ? {
+              color: "var(--on-tertiary-container)",
+              "--primary": "var(--on-tertiary-container)",
+              "--outline": "var(--on-tertiary-container)",
+              "--on-surface": "var(--on-tertiary-container)",
+              "--on-surface-variant": "var(--on-tertiary-container)",
+              "--text-secondary": "var(--on-tertiary-container)",
+            }
+          : {}),
       }}
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
