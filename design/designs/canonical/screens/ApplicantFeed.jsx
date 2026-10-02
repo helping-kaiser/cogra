@@ -9,10 +9,11 @@
    the unverified carve-out) on `ApplicantEmail`.
 
    THE CONSEQUENCE IS SAID ONCE, HERE (jakob 2026-10-01, audit K3.3). An
-   account nobody verifies is reaped after a day, and the loss is silent and
-   total — so the card says it, in one line, as a consequence and not a clock:
-   no figure ticks down, and no other surface repeats it. `VerifyExpired` keeps
-   its reassurance to what is true. */
+   account nobody verifies is reaped after seven days (jakob 2026-10-02: a day
+   is short enough for a mail outage on our side to cost accounts), and the
+   loss is silent and total — so the card says it, in one line, as a
+   consequence and not a clock: no figure ticks down, and no other surface
+   repeats it. `VerifyExpired` keeps its reassurance to what is true. */
 export function Screen() {
   return (
     <>
@@ -46,7 +47,7 @@ export function Screen() {
               color: "var(--text-secondary)",
             }}
           >
-            An account left unverified for a day is removed — joining again then starts over.
+            An account left unverified for seven days is removed — joining again then starts over.
           </p>
           <Button variant="outline" selfStart>
             Resend the link
