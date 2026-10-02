@@ -37,14 +37,18 @@
      server-side and nothing is signed.
    - The post's anchor wears it (`PadPending`): the kept pick's face, and
      `Waiting for your key` under it. Tapping the face opens this pad again,
-     holding it; a new pick kept on the same post replaces it.
+     holding it; a new pick kept on the same post replaces it. Once the key
+     is back and the review waits unsigned, the line reads `Waiting for your
+     review` and the tap opens `KeptPicksReview` instead.
    - Several can wait at once, one per post. When the key is restored they
      sign together, in one batch the reader reviews first — never silently
      (jakob, 2026-09-30). `Restore the key` opens `KeptPicksReview`, one row
      per kept pick, each with a × that drops it at once; `Sign them` leads to
      the standard seal (`KeptPicksSeal`), which signs the batch all or
      nothing. A review left unsigned keeps them, and the settings page's Key
-     backup group carries `3 kept picks waiting` to reopen it.
+     backup group carries `3 kept picks waiting` to reopen it — only while
+     the key is here; if it goes again, the waiting-for-key state owns the
+     surface. A kept vouch-back or approval never joins the batch.
    - A remembered sign-out keeps them, as it keeps everything on the device.
      A sign-out that forgets the account clears them with the draft — and
      where it would also take an unbacked key, `SignOutConfirm` names all

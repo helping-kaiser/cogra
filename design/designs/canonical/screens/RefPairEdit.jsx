@@ -19,10 +19,10 @@
    THE PICK OPENS AT THE ORIGIN, as the stance pad's does: what it adds is
    what the reader drags, and a pick that opened at the contract's default
    +0.10 / +0.10 would add a mention's worth to a citation that already has
-   one. The board draws it moved, so the three readouts differ. What `Done`
-   does with a pick never moved off the origin is the stance pad's open
-   question (audit K10.2), owed to the same answer (backlog, *What the pads
-   and edits round left open*).
+   one. The board draws it moved, so the three readouts differ. `Done` on a
+   pick never moved off the origin closes the sheet staging nothing, as the
+   scrim does: an untouched pad never makes an act (jakob 2026-10-02, pads
+   4).
 
    `Remove citation` IS ITS OWN GESTURE, `TagPad`'s `Un-tag` said for this
    family: the walk-away pushed left of `Done`, a text button, no colour of its
@@ -51,7 +51,8 @@
 
    A CITATION THIS APP CANNOT TYPE IS NOT EDITABLE (api-spec: "Clients exclude
    such citations from editing"). Its row on the edit carries no × and opens
-   nothing, so it never reaches this sheet.
+   nothing, so it never reaches this sheet; its note reads `Comes along as it
+   is.`
 
    THE NON-DRAG ROUTE IS `RefPair`'s (audit K10.1): `Set exact values for The
    long way home — @ada`, the sheet's first control, hidden until focused and

@@ -1223,7 +1223,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(8),
   ],
   ProfileStances: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to the profile"', tag: "a" },
     { n: 2, find: ">On them</button>", tag: "button" },
     { n: 3, find: ">By them</button>", tag: "button" },
     { n: 4, find: ">Tobias Lindqvist</span>", tag: "button" },
@@ -1993,7 +1993,7 @@ Object.assign(FLOW_MARKERS, {
    differs, which is why that marker sits here and not in the sweep below. */
 Object.assign(FLOW_MARKERS, {
   Notifications: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: ">@ada commented on your post<", tag: "button" },
     { n: 3, find: ">@tobias replied to your comment<", tag: "button" },
     { n: 4, find: ">@sol gave an opinion on you<", tag: "button" },
@@ -2061,7 +2061,7 @@ Object.assign(FLOW_MARKERS, {
   CommentCitedByEmpty: [
     { n: 1, find: `class="cg-scrim-in"`, tag: "div", all: true },
   ],
-  NotificationsEmpty: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  NotificationsEmpty: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   /* The chats coming-soon screen (item 68) numbers like the bell's empty list:
      the same back-plus-nav anatomy, because it is the same list surface with
      nothing in it. */
@@ -2473,7 +2473,7 @@ Object.assign(FLOW_MARKERS, {
 // The About page: the way out, and the nine topic rows.
 Object.assign(FLOW_MARKERS, {
   About: [
-    { n: 1, find: 'aria-label="Back"', tag: "a" },
+    { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     // Nine rows, one control doing the same thing to its own topic — so they
     // share a number the way a feed's repeated per-post controls do, and one
     // edge covers them all.

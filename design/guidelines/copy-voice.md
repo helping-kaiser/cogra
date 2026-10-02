@@ -487,8 +487,10 @@ DO, the way the sound toggle already does:
 
 **The stream and the viewer**:
 
-- `Back to feed` — the stream's way out. Not "Close": the reader is
-  going back to the feed the stream narrowed, not shutting a layer. The
+- `Back to feed` — the stream's way out when it was opened from the
+  feed (a post's pinned clip or a profile's posts name that origin
+  instead; readme §13, *The nav-noun sweep*). Not "Close": the reader
+  is going back to the feed the stream narrowed, not shutting a layer. The
   feed takes no article anywhere in this vocabulary (jakob 2026-09-15):
   it is a named surface, like Explore and settings, rather than a common
   noun like the post or the wallet — and it is the destination a reader
@@ -505,8 +507,11 @@ round*). A named surface keeps its name, the feed's many states are one
 noun, and a sheet is named by what it is a sheet of. Already blessed:
 `Back to feed`, `Back to Explore`, `Back to the search`, `Back to Your
 topics`, `Back to the post`, `Back to the comments`, `Back to the
-profile`, `Back to #<thattag>`, `Back to your profile`. Added by the
-post detail's and the profile's tables, each flagged for blessing:
+profile`, `Back to #<thattag>`, `Back to your profile`, `Back to
+settings`; the score's trace, the stream, the opinions page,
+Notifications and About take their nouns from these and add none.
+Added by the post detail's and the profile's tables, each flagged for
+blessing:
 
 - `Back to Saved` · `Back to History` · `Back to Notifications` — the
   three named surfaces, by their titles.
@@ -881,8 +886,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   (readme §13, *The reply pack*), the fact's last clause swaps to what is true
   there: `Nothing was signed or spent — your reply is still here.`,
   and the way out under the panel reads `Not now`, back to the reply's
-  seal with the words still there (jakob 2026-10-01). The words name no
-  payer (the V1.0 scope cut). On a pad the same panel stands where the
+  seal with the words still there (jakob 2026-10-01). Reached from the
+  kept picks' seal, the same mirror: `Nothing was signed or spent — your
+  picks are still kept.` and `Not now`, back to the review (jakob
+  2026-10-02; *flagged*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -1326,7 +1333,10 @@ can't wait as pending — restore the key to sign this one.` with
 
 **A pick kept pending** wears `Waiting for your key` under the post's
 anchor, in `PendingMarker`'s quiet type — never `Still settling`, which
-means signed and not yet ordered.
+means signed and not yet ordered. Once the key is back and the review
+waits unsigned, the same line reads `Waiting for your review`, spoken in
+the anchor's name as `waiting for your review` (jakob 2026-10-02, kept
+picks 1; *new 2026-10-02, flagged for blessing*).
 
 **The kept picks' review** (`KeptPicksReview`, `KeptPicksSeal`; jakob's
 rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, flagged
@@ -1349,6 +1359,22 @@ for blessing*:
   `Current opinion`, since a batch holds more than one target.
 - The settings row, last in `Key backup`: `3 kept picks waiting` (`1 kept
   pick waiting` in the singular). No status line.
+
+The kept-picks rulings (jakob 2026-10-02) add these, each *new
+2026-10-02, flagged for blessing*:
+
+- A dropped row is spoken in the pickers' status idiom: `Removed — 2
+  picks left.` (`Removed — 1 pick left.` in the singular).
+- A row whose target was removed or redacted wears the target's removal
+  mark in the name's place — `Removed by its author`, `Removed under the
+  platform's rules`, `Deleted account` — and its × is named `Remove this
+  pick: Post, Removed by its author`.
+- A row whose pick would net its bundle to nothing says so under its
+  kind in the family's landing words: `This takes you back to zero.` (a
+  person or a post), `This leaves you with no opinion towards it.` (a
+  topic).
+- The write rule at this scale: the fact ends `Nothing was signed or
+  spent — your picks are still kept.`, and the way out reads `Not now`.
 
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`
@@ -1648,7 +1674,13 @@ records it signs, heard as `2 things` where a withdrawal takes two.
 **The reply's gate, failed.** `One picture didn't upload. Signing waits
 for it.` with `Retry` — the fact in error ink, the consequence in the
 quiet voice. The running line stays `Uploading 1 of 2 — signing waits
-for the pictures.`
+for the pictures.`, and names the body's own content: on a clip it
+reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
+content of course"; *new, flagged*).
+
+**The citation this app cannot type** stands on an edit as a row with
+no ×, and its note reads `Comes along as it is.` (jakob 2026-10-02, pads
+2; *new, flagged for blessing*).
 
 ## Saved, History and hiding
 
@@ -1981,7 +2013,8 @@ on the path is named; a path through two or more takes the generic form,
 `You, then several steps, then what reached you` — blessed (jakob
 2026-10-01: "for longer paths we need generic wording"). A chain of handles read aloud would bury the reached
 thing at its end, and the row's `Through @kel and @wren` already says who.
-The back arrow on level one reads `Back to feed`, for every kind.
+The back arrow on level one names the surface the score was tapped on
+(readme §13, *The nav-noun sweep*) and draws `Back to feed`, for every kind.
 
 **The rule under the cover**, on level one: `Every path here starts with
 an opinion you gave.` This is the inbound-inert invariant

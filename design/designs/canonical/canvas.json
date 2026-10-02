@@ -1491,7 +1491,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5438,
+      "h": 5360,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1518,7 +1518,7 @@
       "x": -5350,
       "y": 0,
       "w": 4930,
-      "h": 4556,
+      "h": 4647,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1581,7 +1581,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 6077,
+      "h": 5945,
       "page": "profile",
       "title": "Profile · flow map"
     },

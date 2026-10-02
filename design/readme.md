@@ -451,7 +451,9 @@ Explore.
 read drill-in the arrow returns to where the reader came from, and its
 label names that place by an origin-noun table built from the screen's
 actual arriving edges — the tag page's (*The tag-page smalls*), the post
-detail's and the profile's (*The navigation-and-sheets round*). A cold
+detail's and the profile's (*The navigation-and-sheets round*), the
+score's trace, the stream, the opinions page, Notifications and About's
+(*The nav-noun sweep*). A cold
 entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
 page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
@@ -1692,7 +1694,8 @@ media and comment editing.
   pictures never crop, so they upload at pick. Progress rides the
   thumbnails as rings; a failed picture is marked on its tile with
   `Retry · Remove it` beside the row; **the seal gates** — "Uploading
-  n of m — signing waits for the pictures", the sign button held
+  n of m — signing waits for the pictures" (`…for the video.` on a
+  clip), the sign button held
   until the content it signs exists.
 - **Descriptions (alt text) are authored, optional, never
   invented** — the component rule made enterable: per picture from
@@ -8186,6 +8189,83 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+
+### The kept picks and the pads, ruled — 2026-10-02
+
+jakob's morning review ruled the kept picks' seven questions (backlog item
+113) and the pads round's residue (item 121), every one as recommended,
+with kept picks 2 dissolved by the never-delete law.
+
+- **The anchor follows the key.** With the key back and the review left
+  unsigned, a kept pick's line reads `Waiting for your review` and its tap
+  opens `KeptPicksReview` (`StanceControl`'s `pendingReview`); with the key
+  gone again, `Waiting for your key` and the key notice return.
+- **The review lists plain opinions only.** A kept vouch-back or approval
+  never joins the batch; a kept vouch-back surfaces as its own card,
+  keeping its ceremony (`VouchedIn`).
+- **Rows stay honest.** Nothing vanishes and signing stays valid; a
+  target removed or redacted while its pick waited wears the removed-mark
+  face on its row (`StagedReference`'s `removed`). A pick that would sever
+  its bundle says so inline in the family's landing words
+  (`consequence`), the `Remove citation` idiom; Sign is the confirmation
+  and the batch raises no `SeveranceConfirm`.
+- **The write rule mirrors the reply's**: reached from `KeptPicksSeal`,
+  the fact ends `your picks are still kept.` and `Not now` returns to the
+  review. A drop is spoken `Removed — 2 picks left.`, focus to the next
+  row. The settings row shows only while the key is here and unsigned
+  picks wait.
+- **The pads.** The comment edit's mirror of the withdrawal package is
+  ruled ("same semantics at comment scale") and filed as its own bite
+  (backlog 126). The untypeable citation's note reads `Comes
+  along as it is.` The upload gate names its content, `…signing waits for
+  the video.` on a clip (`UploadStatusLine`'s `media`). `Done` on an
+  untouched `RefPairEdit` pick stages nothing, as the scrim: an untouched
+  pad never makes an act. On a gated seal signing proceeds when the
+  uploads land — the reader already pressed Sign; the gate waits only for
+  bytes. A tag withdrawal is one record — one fresh 0,0 layer,
+  newest-wins; the drawing counts 1 act.
+- **Flagged for blessing** (copy-voice, *The key's lifecycle*, *Faults by
+  code*, *The pads and the edit's withdrawals*): `Waiting for your
+  review`, `Removed — 2 picks left.`, the removed row's × name, the
+  landing words reused as the severance line, `Nothing was signed or
+  spent — your picks are still kept.`, `…signing waits for the video.`,
+  `Comes along as it is.` What the drawings still owe is in items 113 and
+  121.
+- **The gate**: **267 screens**, **1785 edges** (two gain an outcome:
+  `Not now` back to the review, the untouched `Done`), 0 gaps, **flows
+  65**, every one resolved; the witness did not move. New sidecar:
+  `RefPairEdit.md`.
+
+### The nav-noun sweep — 2026-10-02
+
+The drill-ins the navigation-and-sheets round's tables did not reach
+(backlog 124; jakob: "Nav rest: yes") name their origin the same way,
+every noun already ruled. Each board draws the state its table marks
+as the board's own; the back edge in `graph.json` carries the table.
+
+- **The score's trace** (`FeedEntry`, `FeedEntryMoved`): `Back to feed` from the feed in any of its states (drawn),
+  `Back to the post` from a post's detail, clip detail, veiled twin or
+  `Removed`, `Back to #<thattag>` from a tag's page, `Back to the
+  profile` from a profile's posts.
+- **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
+  it narrowed (drawn), `Back to the post` from a post's pinned clip,
+  `Back to the profile` from a profile's posts.
+- **The opinions page** (`ProfileStances`): `Back to the profile`
+  (drawn; another's profile) or `Back to your profile` (the reader's
+  own). It drew a bare `Back`.
+- **Notifications** (both boards): `Back to feed` (drawn), `Back to
+  Explore` or `Back to your profile`, by the root the bell was tapped
+  on. It drew a bare `Back`.
+- **About**: `Back to settings` (drawn; settings opens it). It drew a
+  bare `Back`.
+- **Filed** (backlog 125): Wallet's noun for the bell's
+  origin, and the join form's for About's. The two off-slot dialogs
+  (`StanceAlternates`, `ReplyKeyAbsent`) are fine as they stand,
+  different anatomies.
+- **The gate**: 268 canonical screens, 1785 edges, 0 gaps, **flows 65**,
+  every one resolved; the witness did not move, no rebless. No new
+  string: every label is already blessed.
+
 ### The no-expiry correction — 2026-10-02
 
 jakob's morning review (the fix round's entry lane): an application has
@@ -8217,7 +8297,7 @@ no timer, and an invite link does not care who is signed in.
 - **Flagged for blessing** (copy-voice, *The fix round's entry lines*):
   the verify card's seven-day line, `JoinInvalid`'s paragraph and
   `VouchAskInvalid`'s paragraph. The lane's calls are backlog item
-  12X-entry-noexpiry.
+  127.
 - **The gate**: 267 → **266 screens**, 1785 → **1781 edges**, **flows
   66**, every one resolved. The witness was re-blessed once,
   deliberately, for the new board's flow.
