@@ -1,7 +1,9 @@
 /* A STANDING CITATION'S PAIR, ON AN EDIT (jakob's ruling, the night batch
    2026-10-01 — audit K5.3, "as recommended" with his sharpening). What a
    citation row opens on a post being edited: the citation already stands, so
-   this is not `RefPair`, the sheet of a citation not yet signed.
+   this is not `RefPair`, the sheet of a citation not yet signed. It is the
+   master at both scales, as `TagPad` is: `CommentEdit`'s standing rows open
+   it too (backlog 126).
 
    A CITATION'S RECORDS NET (`ReferenceClaim`, api-spec.md): a citation revised
    twice folds to the sum of all three records, clipped to the census range.

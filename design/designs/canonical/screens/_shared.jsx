@@ -1974,6 +1974,87 @@ function EditComposeBody({ unchanged = false } = {}) {
   );
 }
 
+/* THE COMMENT EDIT, whole — `CommentEdit` itself, and what its acts sheet
+   stands on. It is `EditComposeBody` at comment scale (backlog 126, jakob
+   2026-10-02: "same semantics at comment scale"): the comment's own anatomy —
+   the words, the uncropped pictures, the tags, the citations, the locked
+   license — carrying the post edit's withdrawal package unchanged.
+
+   ITS CITATIONS STAND AS ROWS, each opening `RefPairEdit` — the same sheet the
+   post edit's rows open, a master at both scales as `TagPad` already is — and
+   each with the × that withdraws it. A tag or citation taken off leaves a
+   `Withdrawn:` line under its block with its `Undo` (`WithdrawnLine`), the
+   tag's withdrawal one record and the citation's its `withdrawalCost`
+   counter-records: the one withdrawn here was revised past 1 and stages two,
+   so the foot reads five. Sign is the confirmation; no dialog asks again.
+
+   THE FIELDS SCROLL UNDER THE PINNED FOOT, the post edit's reading: a comment
+   with its citations drawn runs taller than the phone. */
+function CommentEditBody() {
+  return (
+    <>
+      <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
+          <QuietNote>Your comment on "The long way home".</QuietNote>
+
+          <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." />
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FieldLabel>Pictures</FieldLabel>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} />
+              <InlineAction size="sm">+ Add pictures · 1 of 4</InlineAction>
+            </div>
+            <DescribeCounter described={1} total={1} onDescribe={() => {}} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FieldLabel>Tags</FieldLabel>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <TopicRemovable topic="glovebox" onEdit={() => {}} />
+            </div>
+            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+            <WithdrawnLine name="#coastroad" />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FieldLabel>References</FieldLabel>
+            <StagedReference
+              kind="post"
+              name="Sunday at the tide market — @mira"
+              sub="Post"
+              src="gallery-market.jpg"
+              pair={{ pDirected: 0.1, pInterest: 0.1 }}
+              onEdit={() => {}}
+            />
+            <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+            <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <FactRow
+              label="License"
+              value="Public domain"
+              action={
+                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+                  <Icon name="lock" size={16} />
+                </span>
+              }
+            />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          </div>
+        </div>
+
+        {/* Five things: the edit, #glovebox added, #coastroad withdrawn, and the
+            citation's withdrawal at its two counter-records (`CommentEditActs`). */}
+        <ActsFooter count={5} />
+        <Button style={{ width: "100%" }}>Sign the edit</Button>
+      </div>
+    </>
+  );
+}
+
 /* The comment sheet's composer foot: your face, and the field-shaped door
    that opens a comment. Every sheet of comments carries it, so it is
    written once.

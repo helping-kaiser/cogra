@@ -1751,9 +1751,9 @@ the edit body's `Withdrawn: #coastroad`, and the acts card's
 ## The pads and the edit's withdrawals
 
 Drawn on `TagPad`, `TagPadCompose`, `RefPair`, `RefPairEdit`,
-`EditCompose`, `EditActs`, `ReplySealUploading` and
-`ReplySealUploadFailed` (readme §13, *The pads and the edit's
-withdrawals*). Every line here is the lane's wording, **blessed (jakob 2026-10-02)** — with the three carried-over strings above (`Un-tag`,
+`EditCompose`, `EditActs`, `CommentEdit`, `CommentEditActs`,
+`ReplySealUploading` and `ReplySealUploadFailed` (readme §13, *The pads
+and the edit's withdrawals* and *The comment edit's withdrawals*). Every line here is the lane's wording, **blessed (jakob 2026-10-02)** — with the three carried-over strings above (`Un-tag`,
 `Withdrawn:`, `Tags withdrawn`), which this round puts to work again.
 
 **The non-drag route names its target.** `Set exact values for
