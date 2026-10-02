@@ -934,7 +934,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. At comment
     scale the way out names what is lost (jakob 2026-10-02): `Discard
     the reply` on a reply's seal, `Discard the edit` on a comment edit —
-    never `Discard the post`. *`Discard the edit` new 2026-10-02, flagged
+    never `Discard the post` — and it acts at once, with no ask (jakob
+    2026-10-02, the fix-fix round's ruling 17). *`Discard the edit` new 2026-10-02, flagged
     for blessing.*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
