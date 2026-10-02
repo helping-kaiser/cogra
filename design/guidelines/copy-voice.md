@@ -1403,6 +1403,11 @@ application's key was made on another device. Restore it here with your
 recovery code, or make a new key — until you're approved, a new one
 costs nothing.` — `Restore the key` · `Make a new key`.
 
+**The landing card with the key elsewhere** (`ApplicantLanding`, the
+`keyAt` chip) admits both doors: `Your key was made on another device —
+open CoGra there, or restore the key to land here.` — `Restore the key`
+under it (jakob 2026-10-02, **blessed**).
+
 **A reply with the key elsewhere** keeps no draft, so its two notices
 say what is left (the reply pack, 2026-09-30). At the door, before a
 word is written (`ReplyKeyAbsent`): `A reply can't wait as pending —

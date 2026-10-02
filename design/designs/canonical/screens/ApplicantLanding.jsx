@@ -23,7 +23,7 @@
    the way `Got it` sits on the waiting card — opening `Restore`. The card with
    the key here keeps no control: there the machine needs nothing. */
 export const PROPS = { keyAt: { editor: "enum", options: ["here", "elsewhere"], default: "here" } };
-export const VALS = `landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device, and it lands from there — open CoGra on that device." : "@mira approved your application. Nothing is needed from you while it lands.", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none"`;
+export const VALS = `landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device — open CoGra there, or restore the key to land here." : "@mira approved your application. Nothing is needed from you while it lands.", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none"`;
 
 export function Screen() {
   return (
