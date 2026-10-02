@@ -55,3 +55,25 @@ WHEN the feed arrives after a cold app open GIVEN a release newer than the runni
 WHEN the feed arrives GIVEN this device already announced the newest release -> NEVER the newer-version snackbar appears
 
 WHEN the newer-version snackbar's What's new is pressed -> What's new opens with the line A newer version exists. atop the list
+
+WHEN tap feed.bottomBar.feedSlot GIVEN another tab is showing and the feed was opened this session -> the feed comes back in the state it was left, its whole stack and its scroll AND NEVER the feed reloads
+
+WHEN tap feed.bottomBar.feedSlot GIVEN another tab is showing and the feed was not opened this session -> the feed arrives at its root, fresh
+
+WHEN tap feed.bottomBar.feedSlot GIVEN a screen deeper in the feed's stack is showing -> the feed's root comes back at the scroll it was left AND NEVER the feed reloads
+
+WHEN tap feed.bottomBar.feedSlot GIVEN the feed's root stands at its top -> the feed refreshes and loads what is new AND the platform's own refresh indicator shows
+
+WHEN pull down GIVEN the feed's root stands all the way at its top -> the feed refreshes and loads what is new AND the platform's own refresh indicator shows
+
+ALWAYS the feed refreshes only on the tap of feed.bottomBar.feedSlot at its top or on a pull down all the way at its top
+
+ALWAYS the system draws no refresh indicator of its own
+
+WHEN the reader comes back to the feed -> the list stands as it was left AND NEVER the feed reloads
+
+WHEN the reader comes back to the feed GIVEN a sheet or a dialog was up over it when they left -> the feed's screen and scroll stand AND NEVER the sheet or the dialog stands
+
+WHEN the app cold-launches -> the feed's root arrives fresh
+
+WHEN press Android Back GIVEN the feed's root is showing -> the app leaves

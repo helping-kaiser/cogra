@@ -37,7 +37,9 @@ Where each sidecar's words come from:
   refuses says so quietly there, with no Retry (copy-voice, *Faults by
   code*). A failed comfort's revert says so on the same row, and the
   newer-version snackbar speaks once per release on a cold open (readme
-  §13, *The curate rulings*).
+  §13, *The curate rulings*). The bar's re-tap ladder at the feed, and
+  its two refresh gestures, are the ladder's own words (readme §13, *The
+  bottom bar's re-tap ladder*).
 - `ComposeSeal.md` — the failure pack's commit in flight: the label
   swap after 200ms, the inert commit, and the fault in the commit's
   place, in the words of readme §13 and copy-voice (*In-flight labels*);

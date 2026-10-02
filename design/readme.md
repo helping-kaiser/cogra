@@ -3724,7 +3724,9 @@ four-rung ladder.
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
-  answers.
+  answers. **Explore at rest takes no pull-down** (jakob 2026-10-02):
+  multi-refresh is habitual behavior CoGra must not invite, because once
+  the ranker lives every refresh is a full re-rank.
 - **A stack is where a screen was opened FROM, never what it is
   about.** A post detail, an actor's profile and a tag page reached
   from the feed are Feed's stack, and one screen may sit in two tabs at
