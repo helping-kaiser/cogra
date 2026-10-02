@@ -455,6 +455,18 @@
       ]
     },
     {
+      "name": "meet-an-ask-link-that-names-nobody",
+      "description": "An ask link whose id resolves to nobody says so in JoinInvalid's idiom, and its arrow returns the reader to whatever the link opened over.",
+      "status": "resolved",
+      "steps": [
+        "start · VouchAskInvalid",
+        "end · VouchAskInvalid · 1 «back» → back — the state the link opened over — or the feed, when the link opened the app cold (the layer law)"
+      ],
+      "boards": [
+        "VouchAskInvalid"
+      ]
+    },
+    {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "status": "resolved",
@@ -3244,6 +3256,14 @@
         "answer-someones-ask-link"
       ]
     },
+    "VouchAskInvalid": {
+      "flows": [
+        "meet-an-ask-link-that-names-nobody"
+      ],
+      "endpoint": [
+        "meet-an-ask-link-that-names-nobody"
+      ]
+    },
     "VouchAskPad": {
       "flows": [
         "answer-someones-ask-link"
@@ -3302,5 +3322,7 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": []
+  "gapsOnFlows": [
+    "ApplicantRejected/19: the door dies with the no-expiry ruling (jakob 2026-10-02) — its removal from the rejected card is the applicant lane's in the fix round; this gap stands only until that merges"
+  ]
 }

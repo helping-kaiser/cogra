@@ -1697,6 +1697,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Go to the feed</button>", tag: "button" },
   ],
+  // The ask link that resolves to nobody (the fix round, jakob 2026-10-02):
+  // the arrow is its one control.
+  VouchAskInvalid: [{ n: 1, find: 'aria-label="Back"', tag: "a" }],
   // The email change's link and its in-flight row. The landing's one way on
   // reads by the side chip, so it is found by its hole.
   ChangeEmailLinked: [{ n: 1, find: ">{{linkedWay}}</button>", tag: "button" }],

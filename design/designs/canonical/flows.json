@@ -157,6 +157,12 @@
       "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
     },
     {
+      "name": "meet-an-ask-link-that-names-nobody",
+      "description": "An ask link whose id resolves to nobody says so in JoinInvalid's idiom, and its arrow returns the reader to whatever the link opened over.",
+      "start": { "board": "VouchAskInvalid" },
+      "end": { "board": "VouchAskInvalid", "via": 1 }
+    },
+    {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "start": { "control": "Restore the key", "except": ["Restore", "RestoreError", "RestoreLength"] },
