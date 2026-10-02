@@ -113,7 +113,7 @@ export const FLOW_MARKERS = {
   ],
   VouchBack: [
     filter,
-    { n: 2, find: ">Not now</button>", tag: "button" },
+    { n: 2, find: ">Got it</button>", tag: "button" },
     { n: 3, find: ">Vouch back</button>", tag: "button" },
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
     ...nav(13),
@@ -2166,9 +2166,9 @@ Object.assign(FLOW_MARKERS, {
    `VouchAskPad` IS `ApprovePad`'S, for the same reason: the same pad doing the
    same act, so the same four numbers in the same order. Its card's `Not now`
    and its way back sit under the wash and carry none, exactly as
-   `VouchBackPad`'s do — they carry their numbers one board earlier instead, on
-   `VouchAsk`, which is the same surface with the pad closed and nothing
-   dimmed. The landing numbers what a landing has: the way back, the decline,
+   `VouchBackPad`'s `Got it` does — they carry their numbers one board
+   earlier instead, on `VouchAsk`, which is the same surface with the pad
+   closed and nothing dimmed. The landing numbers what a landing has: the way back, the decline,
    and the affordance that opens the pad. */
 Object.assign(FLOW_MARKERS, {
   ApplicantRejected: [

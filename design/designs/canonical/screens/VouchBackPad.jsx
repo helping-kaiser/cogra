@@ -18,7 +18,7 @@ export function Screen() {
           body="Vouch back to open the way from your side — your first opinion, and your feed grows from it."
           actions={
             <>
-              <Button variant="text" style={{ color: "var(--on-tertiary-container)" }}>Not now</Button>
+              <Button variant="text" style={{ color: "var(--on-tertiary-container)" }}>Got it</Button>
               <StanceControl
                 targetLabel="@mira"
                 helpLabel="Your first opinion"

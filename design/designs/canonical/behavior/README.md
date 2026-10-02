@@ -59,9 +59,10 @@ Where each sidecar's words come from:
   place, its replies kept under it (comment.md §5; readme §13, *The
   comment-removal round*); the signed reply's landing, scrolled to its
   new card (readme §13, *The curate rulings*); the foot's gates — the
-  join prompt for a guest, and for an applicant the locked foot and its
-  line, since applicants do not comment in V1.0 (readme §13, *The
-  applicant's life round* and *The applicant fix round*); and the
+  join prompt for a guest, and for an applicant the locked foot and
+  `Reply` and their line, since applicants do not comment in V1.0 (readme
+  §13, *The applicant's life round*, *The applicant fix round* and *The
+  applicant residue, ruled*); and the
   landing on a deep-linked comment and the sheet's return from a
   forward navigation, the X of a cite included (readme §4,
   *Navigation*).

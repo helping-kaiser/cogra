@@ -86,7 +86,9 @@
      Delete account             open, as account management, and IMMEDIATE
                                 (jakob 2026-10-02): nothing has landed, so no
                                 7-day grace runs — the grace protects landed
-                                records, and an applicant has none
+                                records, and an applicant has none; with the
+                                address unverified, the in-app confirm
+                                suffices and no emailed link gates it
      About · the support stack  as for a member
 
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item

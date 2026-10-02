@@ -414,9 +414,12 @@ registration; an email change does not restart it. Once verified,
 the account persists: a verified-but-never-approved applicant
 keeps their login indefinitely, and its application waits on a
 vouch with no timer. An invite link's expiry bounds registration
-through it, never the application it started. A closed application
-opens again without touching the account when a member takes up
-the account's ask link ("The ask link" above).
+through it, never the application it started. The two clocks are
+independent: `createInviteLink`'s expiry presets carry no floor —
+a link may expire within the hour — and an account registered
+through it keeps its full 7-day verification window. A closed
+application opens again without touching the account when a member
+takes up the account's ask link ("The ask link" above).
 
 **Rejection.** The approver may close a staged application instead
 of approving it (`rejectApplication`, [api-spec.md](api-spec.md)),

@@ -123,6 +123,13 @@ export function CommentCard({
      score · the kind's own act · share). The act is `onReply`'s; only its
      drawing changes from the thread's text button to `GlyphAction`. */
   replyGlyph = false,
+  /* AN APPLICANT'S REPLY IS LOCKED, NOT GONE (jakob 2026-10-02; auth.md's
+     locked look, the comment foot's twin): the text `Reply` stands at the
+     disabled opacity and stays tappable, the tap answering `You can comment
+     once you're in.` The value is the opacity itself — `var(--state-disabled)`
+     — so a board's reader chip can pass it as a hole, exactly as the foot's
+     `fieldOpacity`; it carries down to the replies, as `signedIn` does. */
+  replyOpacity,
   /* SHARE CLOSES THE ROW where it is given — the feed card's — exactly as
      `PostCard`'s does. A thread passes none. */
   onShare,
@@ -379,7 +386,7 @@ export function CommentCard({
             <GlyphAction glyph="chat_bubble" label={author ? `Reply to @${author.handle}` : "Reply"} onPress={onReply} />
           )}
           {signedIn && onReply && !replyGlyph && (
-            <Button variant="text" size="sm" onClick={onReply}>
+            <Button variant="text" size="sm" onClick={onReply} style={replyOpacity !== undefined ? { opacity: replyOpacity } : undefined}>
               Reply
             </Button>
           )}
@@ -425,7 +432,7 @@ export function CommentCard({
       {replies.length > 0 && (
         <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
           {replies.map((reply) => (
-            <CommentCard key={reply.id} {...reply} depth={depth + 1} signedIn={signedIn} />
+            <CommentCard key={reply.id} {...reply} depth={depth + 1} signedIn={signedIn} replyOpacity={replyOpacity} />
           ))}
         </ul>
       )}
