@@ -2,8 +2,8 @@
    round; jakob's review 2026-09-09). What the Reading group's row opens: the
    default every feed opens with, set in the feed's own control.
 
-   ONE CONTROL, TWO ENDS OF ONE PROMISE. The filter's help text has always said
-   *Your default lives in settings*, and the feed's own snackbar says a change
+   ONE CONTROL, TWO ENDS OF ONE PROMISE. The filter's help text sends the
+   reader here to change their defaults, and the feed's own snackbar says a change
    made there *lasts until you change it, on this device only*. This is the
    other end, and it is the same sheet — `FeedFilterSheet`, the half of
    `FeedFilter` that is not the pill. A settings page that redrew the kinds

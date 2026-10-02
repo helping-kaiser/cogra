@@ -371,8 +371,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   newest is one choice, and what you've already seen stays out
   unless you ask for it back. Nothing changes until you press Done,
   and nothing here is signed or shared. / It lasts until you change it,
-  on this device only. Your default lives in settings. Reset brings
-  back your defaults, to change them go to settings. *(The Reset
+  on this device only. Reset brings back your defaults, to change
+  them go to settings. *(The Reset
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
   feed's, search's and the settings sheet.)*
 
