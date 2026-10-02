@@ -8192,6 +8192,44 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+### The applicant fix round — 2026-10-02
+
+jakob's morning review of the applicant pages and the vouch pair (C13
+revised by N2 (b), F4, F6, F7, the five applicant items), as recommended
+unless named.
+
+- **Any first opinion ends the borrowed view.** Their own graph exists,
+  so their own feed does: the member's first signed opinion, on anyone,
+  hands the feed over, and the vouch-back is not the gate. The band asks
+  for nothing — `Browsing from @mira's view — your first opinion starts
+  your own.` — and the vouch card's `Not now` puts it away for good,
+  silently. Vouching back stays possible forever from @mira's profile:
+  any opinion on her is the vouch-back and opens `VouchedIn`.
+- **The vouch card wears the olive register** (`VouchBackCard`): the
+  account-notice ground and ink, the committing button in `inverse`, the
+  way out in the panel's ink.
+- **The landed ask opens the person** (`VouchAskUnusable`): `See @noor's
+  profile`; the waiting case keeps the back arrow alone.
+- **The applicant-foot family**, jakob's words, blessed: `You can comment
+  once you're in.` on the comment foot and `Reply`, `You can invite once
+  you're in.` on `Invites`. The foot wears auth.md's locked look —
+  inactive, still tappable — drawn by `ReplyEntry`'s reader chip.
+- **The landing card's key-elsewhere variant offers `Restore the key`**:
+  restoring here lets the registration land here.
+- **The ask link's permanent home is `ProfileApplicant`**; Settings
+  carries none.
+- **An applicant's account deletion is immediate** — no 7-day grace,
+  since nothing has landed (`Settings`' applicant table, `DeleteAccount`).
+- **The turned-down shell's seal exit**: `Your post waits — it arrives
+  when someone vouches you in.` The rejected card's one way forward is
+  the ask link.
+- **Flagged for blessing**: the band's landed line, `See @noor's
+  profile`, the seal exit's line. The lane's calls are backlog item
+  12X-applicant-c13.
+- **The gate**: 267 screens, 1785 → **1786 edges**, 0 gaps, **flows
+  65**, every one resolved. The witness was re-blessed twice,
+  deliberately: the vouch-back flow's description, and the landing
+  card's restore door joining `restore-your-key`'s start.
 
 ## 15. Index
 

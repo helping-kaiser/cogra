@@ -4041,3 +4041,40 @@ and the K11 recommendations, and left these for his eye:
   History`, `Back to Notifications`, `Back to the stream`, `Back to the
   opinions`, `Nothing changes until you press Done`, the joining rule
   and its readings, `Also veiled by the platform's verdict`.
+
+### 12X-applicant-c13 · What the applicant fix round left for rulings · *design + contract* · **filed 2026-10-02**
+
+The applicant fix round (readme §13) executed jakob's morning rulings on
+the applicant pages and the vouch pair, and left these for his eye:
+
+- **"Your first opinion" on the vouch card and pad.** The card's body
+  (`…your first opinion, and your feed grows from it.`), the pad's title
+  and "?" (`Your first opinion`, copy-voice *The "?" dialogs*) and its
+  first coaching line say the vouch-back is the member's first opinion.
+  Under the revised rule a member may opine on others first while the
+  card still stands; whether the card leaves at the first opinion, or
+  its and the pad's words change, is unruled.
+- **`Not now` on a for-good dismissal.** The label promises a later the
+  dismissal no longer has; it stays until worded.
+- **Where "for good" is kept.** auth.md keeps the prompt's dismissal
+  device-local, reappearing on a new device; a dismissal for good needs
+  account state (design ⇄ impl seam).
+- **The other locked controls.** The ruling put auth.md's locked look on
+  the comment foot; a comment's `Reply` and the profile's `Invites`
+  still stand at full ink while answering an applicant the same way.
+- **The landing card's body with the restore door.** The key-elsewhere
+  body still says the landing comes from the other device alone.
+- **The turned-down shell's other staged-act lines.** The opinion's and
+  topic's second-tap lines still say they wait with an application none
+  is live for; the seal's line was the one ruled.
+- **An applicant's deletion, drawn.** `DeleteAccount`, its mail,
+  `DeleteAccountConfirmed` and the grace boards speak the member's seven
+  days; the applicant's words, and whether the emailed link still gates
+  an applicant who may hold no verified address, are undrawn.
+- **The ask link's applicant snackbar** (`Vouching unlocks once your
+  application is approved.`) sits outside the applicant-foot family.
+- **`ReplyEntry`'s reader chip** changes the foot only; the thread above
+  keeps the member's own comments, which an applicant cannot have.
+- **Strings flagged for blessing**: `Browsing from @mira's view — your
+  first opinion starts your own.`, `See @noor's profile`, `Your post
+  waits — it arrives when someone vouches you in.`
