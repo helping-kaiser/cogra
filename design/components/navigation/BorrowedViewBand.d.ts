@@ -10,9 +10,8 @@ export interface BorrowedViewBandProps {
   /** Overrides the default guest line ("Browsing from @handle's view — join
       to build your own.") — pass the applicant readings here. */
   line?: string;
-  /** The band's one action: "Sign in or join" for a guest; "Vouch back" for a
-      landed member whose vouch-back is not signed yet. Omit for signed-in
-      applicants. */
+  /** The one join entry ("Sign in or join"). Omit for any signed-in reader —
+      applicant or landed member. */
   actionLabel?: string;
   onAction?: () => void;
 }

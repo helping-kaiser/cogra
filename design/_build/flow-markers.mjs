@@ -102,18 +102,19 @@ export const FLOW_MARKERS = {
     { n: 20, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
   // ApplicantWaiting's shell with the card flipped, numbered to the number;
-  // the landing card has no control, so 17 stays unused here.
+  // the card's one control — the key-absent variant's restore — takes 17,
+  // the card's own number on the waiting board.
   ApplicantLanding: [
     ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
     secondComments(9),
     ...nav(10),
+    { n: 17, find: ">Restore the key</button>", tag: "button" },
     { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchBack: [
     filter,
     { n: 2, find: ">Not now</button>", tag: "button" },
-    // The band's `Vouch back` and the card's open the same pad: one number.
-    { n: 3, find: ">Vouch back</button>", tag: "button", all: true },
+    { n: 3, find: ">Vouch back</button>", tag: "button" },
     ...post({ author: 4, menu: 5, media: 6, more: 7, topic: 8, refs: 9, stance: 10, score: 11, comments: 12 }),
     ...nav(13),
   ],
@@ -1191,6 +1192,9 @@ Object.assign(FLOW_MARKERS, {
     ...ownProfile(),
     { n: 9, find: "First light over the flats", tag: "button" },
     ...nav(10),
+    // The ask link's permanent home (jakob 2026-10-02): the next free number
+    // after the bell's 15.
+    { n: 16, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
   ProfileOther: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1695,7 +1699,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   VouchAskUnusable: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
-    { n: 2, find: ">Go to the feed</button>", tag: "button" },
+    { n: 2, find: ">See @noor&#x27;s profile</button>", tag: "button" },
   ],
   // The ask link that resolves to nobody (the fix round, jakob 2026-10-02):
   // the arrow is its one control.
@@ -2158,7 +2162,6 @@ Object.assign(FLOW_MARKERS, {
     secondComments(9),
     ...nav(10),
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
-    { n: 19, find: ">Use a fresh invite</button>", tag: "button" },
     { n: 20, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchAsk: [

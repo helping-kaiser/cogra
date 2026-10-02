@@ -83,9 +83,10 @@
      Sessions · Credentials     as for a member
      Sign out (and its switch)  as for a member — an applicant signs out
                                 exactly as a member does (auth.md)
-     Delete account             open, as account management; what it removes
-                                before any record has landed is not yet ruled
-                                (backlog)
+     Delete account             open, as account management, and IMMEDIATE
+                                (jakob 2026-10-02): nothing has landed, so no
+                                7-day grace runs — the grace protects landed
+                                records, and an applicant has none
      About · the support stack  as for a member
 
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item

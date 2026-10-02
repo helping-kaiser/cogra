@@ -90,7 +90,7 @@ happen; the confirmation says what happened.**
 | `Nothing here yet — write the first post.` | `No results` |
 | `You're browsing as a guest — sign in or join to post and vouch.` | `Sign up now to unlock CoGra!` |
 | `It signs 3 things, each paid separately.` | `This may incur charges.` |
-| `Inviting unlocks once your application is approved.` | `Feature locked` |
+| `You can invite once you're in.` | `Feature locked` |
 
 Sentence case everywhere. No title case, no all-caps, no exclamation
 marks outside a genuine welcome (`Approved! Your registration is
@@ -585,14 +585,26 @@ of opening the real surface again; one line per kind, same shape:
 The post's line is also the seal's answer for an applicant: `Sign and
 publish` stages the post rather than landing it, so the wizard closes onto
 the applicant's own feed with this line, never with `Signed — it's in the
-thread now, still settling.` (jakob 2026-10-01).
+thread now, still settling.` (jakob 2026-10-01). On the turned-down shell
+no application is live for the post to wait with, so the seal's exit
+says what it waits for instead: `Your post waits — it arrives when
+someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
+kept from the staged-act line — *new 2026-10-02, flagged for
+blessing*).
 
 **Comments are not a kind that stages** (jakob 2026-10-01: applicants do
 not comment in V1.0). A staged comment would wear `Still settling` for a
-reply that cannot wait as pending, so the comment sheet's foot and a
-comment's `Reply` answer an applicant in place, as the dead Invites
-control does: `Comments open when you're in.` — **flagged for blessing**.
-A guest gets the join prompt there instead.
+reply that cannot wait as pending, so the comment sheet's foot answers an
+applicant in place. A guest gets the join prompt there instead.
+
+**The applicant-foot family** — jakob's own words, picked 2026-10-02
+(F7) and **blessed**: an applicant's locked control answers its tap with
+what becomes possible, and when.
+
+- `You can comment once you're in.` — the comment sheet's foot and a
+  comment's `Reply`. The foot wears the locked look (auth.md): visibly
+  inactive, still tappable.
+- `You can invite once you're in.` — the profile's `Invites`.
 
 ## In-flight labels
 
@@ -984,20 +996,22 @@ password` (blessed, the credential screen's commitment) · `Got it`
 sign-in*, never the token underneath it.
 
 **An ask that can't be taken up** (`VouchAskUnusable`), in `JoinInvalid`'s
-idiom, one pair per case, then `Go to the feed` (blessed):
+idiom, one pair per case:
 
 - `@noor is already in` · `Someone has vouched them in already, so this
-  ask has nothing left to do.`
+  ask has nothing left to do.` — then `See @noor's profile` (jakob
+  2026-10-02, F4: the member came to vouch, so they will want to look;
+  *new 2026-10-02, flagged for blessing*).
 - `@noor is waiting on someone else` · `Another member is deciding on
   their application right now. If it ends without them getting in, this
-  same link works again.`
+  same link works again.` — the back arrow alone; nobody has a public
+  profile before they land.
 
 **The ask link's readers who cannot vouch through it** each hear a
 snackbar — the applicant and the asker where app-open lands for them, the
 member on `Invites`, where the row already is (jakob 2026-10-02):
 
-- `Vouching unlocks once your application is approved.` — an applicant;
-  the register table's `Inviting unlocks…` line, turned to the act.
+- `Vouching unlocks once your application is approved.` — an applicant.
 - `That's your own ask link — send it to someone who's already in.` —
   the asker.
 - `@noor is already waiting in your invites.` — a member who already has
@@ -1438,6 +1452,13 @@ whole screen:
   the record, so there is no way back to offer and no second choice to
   make.
 
+**The landed member's band** names the view and asks for nothing — no
+`Vouch back` word rides it, because the first opinion on anyone ends the
+borrowing (jakob 2026-10-02): `Browsing from @mira's view — your first
+opinion starts your own.` — *new 2026-10-02, flagged for blessing*. The
+vouch card's `Not now` puts it away for good and says nothing: no
+snackbar, no reminder.
+
 ## Unsaving, and the actor with no name left
 
 Blessed with the close-out round.
@@ -1625,7 +1646,7 @@ default) · `When it settles`.
 section · `Your feed is showing nothing — everything is switched off.`
 · `Your sky — every account a star, sized by your own paths to it.` ·
 `These wait with your application and arrive with you.` ·
-`Invites open when you're in.` · `What you post now arrives with you.`
+`What you post now arrives with you.`
 
 **Carried over unchanged, and still unblessed** — drawn by the tag
 round, named here so the review pass has them in one place: `Un-tag`,

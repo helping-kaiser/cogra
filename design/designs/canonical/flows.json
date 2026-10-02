@@ -121,7 +121,7 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair and, as the member's first opinion, ends the borrowed view; the ceremony says so, and the member's own feed opens.",
       "start": { "board": "VouchBack", "via": 3 },
       "waypoints": [
         { "board": "VouchBackPad", "via": 4, "case": "the vouch-back — signed, the ceremony opens" }

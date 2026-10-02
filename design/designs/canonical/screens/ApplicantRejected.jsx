@@ -28,10 +28,16 @@
    that explains it and a card inside a card is two containers saying one
    thing.
 
-   THE FRESH-INVITE DOOR FOLLOWS IT (jakob 2026-10-01, audit K3.5). A closed
-   application re-arms from either end of the funnel (auth.md, *Rejection*):
-   the ask link is one, a fresh invite link the other. `Use a fresh invite`
-   opens `ApplicantRearm`, the same door `ApplicantExpired`'s card carries.
+   THE ASK LINK IS THE ONE WAY FORWARD (jakob 2026-10-02). The account exists
+   and nothing about it has a clock; the only thing missing is a vouch, and a
+   vouch comes from any member — the ask link is how the reader reaches one.
+   The block and its reading are the whole of what the card offers.
+
+   A POST SIGNED HERE WAITS FOR THE VOUCH (jakob 2026-10-02). From this shell
+   New post still opens the wizard, and the seal stages the post on the
+   device; with no application live, the exit's snackbar says what it waits
+   for — `Your post waits — it arrives when someone vouches you in.` — never
+   that it waits with an application.
 
    THE BAND NAMES @kel STILL. The vantage rule resolves to the most specific
    actor an arrival carries, and the arrival is unchanged: this reader came
@@ -65,9 +71,6 @@ export function Screen() {
             copyLabel="Copy your ask link"
             caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
           />
-          <Button variant="outline" selfStart>
-            Use a fresh invite
-          </Button>
         </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} />
         <PostCard {...TOBIAS_POST} signedIn={false} />

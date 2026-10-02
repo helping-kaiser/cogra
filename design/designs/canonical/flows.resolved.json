@@ -393,7 +393,7 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair and, as the member's first opinion, ends the borrowed view; the ceremony says so, and the member's own feed opens.",
       "status": "resolved",
       "steps": [
         "start · VouchBack · 3 «Vouch back» → VouchBackPad",
@@ -472,6 +472,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantKeyElsewhere",
+        "ApplicantLanding",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -481,12 +482,13 @@
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 8 boards → Restore",
+        "start · «Restore the key» on 9 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
         "Restore",
         "ApplicantKeyElsewhere",
+        "ApplicantLanding",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -1863,6 +1865,7 @@
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "restore-your-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
@@ -3322,7 +3325,5 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": [
-    "ApplicantRejected/19: the door dies with the no-expiry ruling (jakob 2026-10-02) — its removal from the rejected card is the applicant lane's in the fix round; this gap stands only until that merges"
-  ]
+  "gapsOnFlows": []
 }

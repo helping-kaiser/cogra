@@ -1283,9 +1283,9 @@ may serve any actor's view of the shared record to any reader. So:
   ranking honest (§9); it exposes nothing the public record does not
   already carry.
 - **The borrowed view persists through the applicant days** and hands
-  over to the member's own view when the vouch-back is signed — that
-  signature alone. A landed member's opinion on anything else leaves
-  the view borrowed.
+  over to the member's own view with their first signed opinion, on
+  anyone: their own graph then exists, so their own feed does. The
+  vouch-back is not the gate.
 - **The vantage resolves to the most specific actor available**, and
   the band names whichever one it lands on. Anyone who arrived through
   an invite link borrows that link's ISSUER, and an applicant is still
@@ -3592,10 +3592,10 @@ one sitting.
   destination, and a destination wearing a state says the state belongs
   to the place rather than to the act. The tags-and-references sheet is
   where the act is, so that is where it says it is still settling.
-- **The borrowed-view band dies after signing, not on approach.** While
-  the vouch-back is unsigned the reader has no stance of their own and
-  the view is still borrowed, so the band stands through the whole
-  approach to the pad and goes when the signature lands.
+- **The borrowed-view band dies after signing, not on approach.** Until
+  the member's first opinion is signed they have no stance of their own
+  and the view is still borrowed, so the band stands through the whole
+  approach to the pad and goes when that signature lands.
 - **The Collective founding-name force is removed.**
   `PrepareCollectiveInput`'s `displayName` is optional, an explicit null
   clears it exactly as on a person's profile, and a Collective with none
@@ -4779,12 +4779,12 @@ entry flow is complete and correct without it, so if the window
 closes the ceremony is what gets dropped, not a step the product
 needs.
 
-- **What the ceremony is ABOUT is the borrowed view ending.** A feed
-  is ranked from the viewer's own outgoing opinions; until the
-  vouch-back the new member had none and browsed from the vantage of
-  the link they came through. The signature is the moment their own view begins — that,
-  not a milestone badge, is the thing worth marking, and it lets the
-  copy stay concrete while the headline carries the metaphor.
+- **What the ceremony is ABOUT is the pair completed.** The vouch-back
+  opens the way both ways; and a feed is ranked from the viewer's own
+  outgoing opinions, so when it is the member's first one it is also
+  the moment the borrowed view ends and their own begins. That, not a
+  milestone badge, is the thing worth marking, and it lets the copy
+  stay concrete while the headline carries the metaphor.
 - **The sky is `SkyField`'s vocabulary, not a new drawing.** The
   Explore hero already draws the graph as weighted discs on hairlines
   in token colours ("Your sky — every account a star"). The ceremony
@@ -8049,7 +8049,7 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
 - **Applicants do not comment in V1.0** (jakob's ruling). A comment
   cannot wait as pending, so it is not a kind that stages: the sheet's
   foot and `Reply` stay drawn and answer an applicant in place with
-  `Comments open when you're in.`
+  `You can comment once you're in.`
 - **Every account-needing slot asks on tap.** A guest meets `GuestGate`
   from the reader's post menu (Save, Cite, Hide), the profile menus
   (every row but Share), `Message`, the comment menu's Save and Cite,
@@ -8063,13 +8063,10 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
   control, flipping live to `VouchBack` when the record lands; the
   `keyAt` chip draws the key-absent variant, which says the landing
   comes from the device holding the key.
-- **The vouch-back stays reachable and alone ends the borrowed view.**
-  While the pair is incomplete the band carries `Vouch back`, so `Not
-  now` loses nothing; a first opinion on the member who vouched you in
-  is the vouch-back wherever it is signed and opens `VouchedIn`. An
-  opinion on anything else leaves the view borrowed. On `VouchedIn`
-  Android's Back is `Go to your feed`; a vouch-back that never lands is
-  an ordinary expired act, and the card and band return.
+- **The vouch-back stays reachable.** A first opinion on the member who
+  vouched you in is the vouch-back wherever it is signed and opens
+  `VouchedIn`. On `VouchedIn` Android's Back is `Go to your feed`; a
+  vouch-back that never lands is an ordinary expired act.
 - **The ask link rides the waiting card** (jakob's pick, (b)), its
   caption true for a live application: it stages nobody new until the
   answer comes.
@@ -8078,8 +8075,8 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
 - **Settings is one page for applicants too**; its docblock names each
   row's applicant state, and before any key both key rows read `Not
   made yet` and open the ceremony.
-- **Flagged for blessing**: the topic line; `Comments open when you're
-  in.`; About's `…signed by a key only you hold.`; the landing card's
+- **Flagged for blessing**: the topic line; About's `…signed by a key
+  only you hold.`; the landing card's
   title and both bodies; the waiting card's `Your ask link` and its
   caption.
 - **The gate**: 243 → **244 screens**, 1673 → **1694 edges**, 1 gap,
@@ -8189,6 +8186,44 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+### The applicant fix round — 2026-10-02
+
+jakob's morning review of the applicant pages and the vouch pair (C13
+revised by N2 (b), F4, F6, F7, the five applicant items), as recommended
+unless named.
+
+- **Any first opinion ends the borrowed view.** Their own graph exists,
+  so their own feed does: the member's first signed opinion, on anyone,
+  hands the feed over, and the vouch-back is not the gate. The band asks
+  for nothing — `Browsing from @mira's view — your first opinion starts
+  your own.` — and the vouch card's `Not now` puts it away for good,
+  silently. Vouching back stays possible forever from @mira's profile:
+  any opinion on her is the vouch-back and opens `VouchedIn`.
+- **The vouch card wears the olive register** (`VouchBackCard`): the
+  account-notice ground and ink, the committing button in `inverse`, the
+  way out in the panel's ink.
+- **The landed ask opens the person** (`VouchAskUnusable`): `See @noor's
+  profile`; the waiting case keeps the back arrow alone.
+- **The applicant-foot family**, jakob's words, blessed: `You can comment
+  once you're in.` on the comment foot and `Reply`, `You can invite once
+  you're in.` on `Invites`. The foot wears auth.md's locked look —
+  inactive, still tappable — drawn by `ReplyEntry`'s reader chip.
+- **The landing card's key-elsewhere variant offers `Restore the key`**:
+  restoring here lets the registration land here.
+- **The ask link's permanent home is `ProfileApplicant`**; Settings
+  carries none.
+- **An applicant's account deletion is immediate** — no 7-day grace,
+  since nothing has landed (`Settings`' applicant table, `DeleteAccount`).
+- **The turned-down shell's seal exit**: `Your post waits — it arrives
+  when someone vouches you in.` The rejected card's one way forward is
+  the ask link.
+- **Flagged for blessing**: the band's landed line, `See @noor's
+  profile`, the seal exit's line. The lane's calls are backlog item
+  128.
+- **The gate**: 267 screens, 1785 → **1786 edges**, 0 gaps, **flows
+  65**, every one resolved. The witness was re-blessed twice,
+  deliberately: the vouch-back flow's description, and the landing
+  card's restore door joining `restore-your-key`'s start.
 
 ### The kept picks and the pads, ruled — 2026-10-02
 
