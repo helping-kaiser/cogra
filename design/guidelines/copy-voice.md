@@ -382,7 +382,8 @@ out (*Remove it*; never *Retry* — retrying cannot change the answer):
 - `That's more than a post carries — up to ten pictures.`
 - `That's more than a comment carries — up to four pictures.`
 
-**Screens say MB; the caps are MiB.** The limit enforced is the binary
+**Screens say MB; the caps are MiB** — MB on every user-facing surface,
+never MiB (jakob 2026-10-02). The limit enforced is the binary
 one — 50 MiB is 52.4 MB — so the number on screen under-promises and
 can never turn a file the product would have accepted into a refusal.
 The reverse, writing MiB, would be exact and unreadable.
@@ -927,7 +928,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     the post` under it; the post-scale ask is `Discard this post?` · `The
     draft goes, with its pictures, tags and citations. Nothing was
     signed, so nothing else changes.` · `Discard it` · `Keep the draft`.
-    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`.
+    **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. At comment
+    scale the way out names what is lost (jakob 2026-10-02): `Discard
+    the reply` on a reply's seal, `Discard the edit` on a comment edit —
+    never `Discard the post`. *`Discard the edit` new 2026-10-02, flagged
+    for blessing.*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
@@ -2511,6 +2516,11 @@ tap on it used to reach nothing, and now it raises this:
   new post` — what a screen reader meets where a sighted reader meets a
   dimmed grid.
 
+**The comment edit's ask** (`DiscardConfirm`, jakob 2026-10-02). The
+edit asks only when it changed since it opened, and its title says what
+goes: `Discard the changes?`, over the shared dialog's `Nothing is
+kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
+
 ## The already-published marker
 
 **Reusing media never blocks** (jakob 2026-09-30). An author may publish
@@ -2672,6 +2682,7 @@ scope in the query, the results region carries one quiet line where
 results would stand — the way, not an apology:
 
 - `Found through people and tags — start with @handle or #tag.`
+  **Drawn** on `ExploreUnscoped`, as the results region's empty state.
 
 ## Chats
 

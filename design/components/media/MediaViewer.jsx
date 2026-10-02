@@ -22,9 +22,11 @@ import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
      resolved against an indefinite height, a wide frame took its intrinsic size,
      and everything after it — the transport above all — was pushed outside the
      screen entirely.
-   · It is a place you back out of: the X, a swipe DOWN, and back — Escape on
-     a keyboard — close it, and it never changes the underlying route. A TAP IS
-     NOT A WAY OUT, neither on the frame nor on the ground beside it. The X
+   · It is a place you back out of: the X, a swipe DOWN and Android's Back —
+     Escape on a keyboard — close it everywhere, and it never changes the
+     underlying route. WHERE A BACKDROP IS VISIBLE — a wide screen — A TAP ON
+     IT CLOSES THE VIEWER TOO (jakob 2026-10-02); a tap on the frame never
+     does, and on a phone neither does one on the ground beside it. The X
      rather than a back arrow, because the reader is dismissing a layer, not
      walking a step of a journey — and the swipe is the gesture every
      full-screen media layer is dismissed with.

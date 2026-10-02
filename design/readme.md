@@ -1398,12 +1398,13 @@ keeps one local draft per target, on-device only, on the surfaces
 that keep drafts — the post wizard, the post edit, the profile
 picture; there the draft is the safety, so nothing asks on the way
 out. The reply wizard and the comment edit keep no draft: leaving
-them discards, so a non-empty composer is asked first — one shared
-dialog (the *DiscardConfirm* board) reading "Discard this reply?"
-or, from an edit, "Discard this edit?", body "Nothing is kept.", a
-quiet *Discard* beside a filled *Keep writing* — the safe answer
-carries the weight, as it does everywhere else. An empty composer leaves
-at once — a confirm with nothing to lose is noise. For the same reason
+them discards, so a non-empty composer, or an edit changed since it
+opened, is asked first — one shared dialog (the *DiscardConfirm* board)
+reading "Discard this reply?" or, from an edit, "Discard the changes?"
+(jakob 2026-10-02), body "Nothing is kept.", a quiet *Discard* beside a
+filled *Keep writing* — the safe answer carries the weight, as it does
+everywhere else. An empty composer or an unchanged edit leaves at once —
+a confirm with nothing to lose is noise. For the same reason
 a reply meets the key-absent notice at its door, before a word is
 written, and a key lost mid-write leaves its seal only restore or
 discard (*The reply pack*, below). Signing exits to
@@ -2536,8 +2537,9 @@ item 33, jakob's rulings the same day).
   beside it rather than being cropped to the edges. **No acts** on the
   viewer, and **the description is not shown**: alt text is read aloud
   to people who cannot see the frame, and printed under it it becomes
-  a caption its author never wrote. Three ways out — the X, a swipe
-  down, and the backdrop.
+  a caption its author never wrote. The ways out are the X, a swipe
+  down and Android's Back, everywhere; where a backdrop is visible — a
+  wide screen — a tap on it closes the viewer too (jakob 2026-10-02).
 - **The round is masters, not markup.** Everything it drew that a second
   surface could want is in the system: the media family moved into
   **`components/media/`** and gained `PinnedClip` (the clip above the
@@ -3716,7 +3718,7 @@ four-rung ladder.
   one outcome reached two ways — a rung a reader has to be told about,
   and a control that tells them. The pill is the feed's alone, because
   the feed is the only root with a top the reader is trying to get back
-  to; it needs about three screens of depth, since shallower the
+  to; it needs 3 viewport-heights of depth (jakob 2026-10-02), since shallower the
   returning band has already brought the top within a flick; and it is
   drawn OUTSIDE the collapsing block, because height added to that block
   moves the band's own threshold and re-clamps the list (item 45.3).
@@ -3736,7 +3738,9 @@ four-rung ladder.
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
-  answers.
+  answers. **Explore at rest takes no pull-down** (jakob 2026-10-02):
+  multi-refresh is habitual behavior CoGra must not invite, because once
+  the ranker lives every refresh is a full re-rank.
 - **A stack is where a screen was opened FROM, never what it is
   about.** A post detail, an actor's profile and a tag page reached
   from the feed are Feed's stack, and one screen may sit in two tabs at
@@ -5146,7 +5150,7 @@ closes a place where the canvas knew a rule and had never drawn it.
   collapsing band, centred under it, doing exactly what the rung does.
   The two are one outcome reached two ways, which is why the graph gives
   them one destination. **Feed only**, because only the feed has a top
-  the reader is trying to get back to, and only past about three screens
+  the reader is trying to get back to, and only past 3 viewport-heights
   of depth, because shallower the returning band has already brought the
   top within a flick.
 - **AND IT IS DRAWN OUTSIDE THE COLLAPSING BLOCK.** The region hides
@@ -7843,8 +7847,8 @@ behavior filed, never invented), the compose and media pages.
   jakob as filed questions: the cover step's Next before a face is
   picked, the counting sheets at the fold's edge, the body fork's switch,
   the words stage's empty Next, an edit's × on a pick made in the same
-  edit, and the viewer's third way out, where this record's reel round
-  says the backdrop and `ViewerPicture`'s docblock says a tap is not one.
+  edit, and the viewer's third way out — all ruled in *Pass C's
+  rulings*, below.
 ### The feed and comments behavior pass — 2026-10-01
 
 Pass C's first two pages (jakob, the night ruling round's F1): every
@@ -8391,6 +8395,45 @@ curate residue and the olive split.
   **flows 65**, every one resolved. The witness was re-blessed once,
   deliberately, for the new board: `publish-words` walks
   `ComposeDetailsWords`, and `+ Cite something` starts on 13 boards.
+
+### Pass C's rulings — 2026-10-02
+
+jakob's morning review ruled the behaviors pass C had filed, as
+recommended unless named. Each lands in its board's sidecar; the laws
+below have their home here or where named.
+
+- **Compose.** The cover step's Next before a pick proceeds coverless,
+  frame 0 the face. The counting sheets at the fold's edge switch the
+  seal's row to its single reading live beneath the sheet, and removing
+  the last closes the sheet. The body fork's switch asks first when the
+  body holds something and switches silently when empty. The words
+  stage's Next on an empty body is inert. An edit's × on a pick made in
+  the same edit unstages it.
+- **The viewer's ways out** are the X, a swipe down and Android's Back,
+  everywhere, and a backdrop tap where one is visible — the reel
+  round's record, `MediaViewer` and the viewer boards now read alike.
+- **The stage.** A play-disc tap makes its clip the incumbent. A comment
+  card's clip is drawn and registered (`FeedCommentShapes`, node
+  `feed.commentCard`), so the stage law names both clip paths.
+- **The feed.** `Feed.md` carries the re-tap ladder's rungs. `Back to
+  top` waits for 3 viewport-heights. The bell's dot lights on a root's
+  next load, never live. Hiding from the post detail keeps the reader
+  there under the same snackbar. Explore at rest takes no pull-down
+  (*The bottom bar's re-tap ladder* holds jakob's reason).
+- **Comments.** Square is the comment scale's shape in every docblock.
+  The comment edit asks only when it changed since it opened,
+  `Discard the changes?`; a bug notice at comment scale offers `Discard
+  the reply` or `Discard the edit`. Your topics' strongest-first order
+  is blessed. Screens write MB; the caps stay enforced in MiB.
+- **Search.** `ExploreUnscoped` draws item 105's line for Comments with
+  no scope.
+- **Flagged for blessing** (copy-voice): `Discard the edit`. The open
+  residue is backlog item 130.
+- **The gate**: **268 screens** (267 + `ExploreUnscoped`), 1785 →
+  **1793 edges**, 0 gaps, flows 65, every one resolved; `nodes.json`
+  gains `FeedCommentShapes`, 145 → 149 paths. The witness was re-blessed
+  once, deliberately: the four compose flows' `New post` start counts 51
+  boards.
 
 ## 15. Index
 

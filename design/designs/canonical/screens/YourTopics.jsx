@@ -41,12 +41,11 @@
    row opens the topic's page, where the one control stands; the act happens
    where the act is explained.
 
-   THE ORDER IS STRONGEST FIRST, by association — `ProfileStances`' order and
-   `PostOpinions`' after it, descending through the warm faces and past nothing
-   into the ones held against. Alphabetical is a shelf's order and this is not a
-   shelf: it is a set of positions, and the strongest is the one the reader is
-   most likely to be looking for. PROPOSED, not blessed — the alternative is
-   real and jakob's to pick.
+   THE ORDER IS STRONGEST FIRST, by association (blessed, jakob 2026-10-02) —
+   `ProfileStances`' order and `PostOpinions`' after it, descending through the
+   warm faces and past nothing into the ones held against. Alphabetical is a
+   shelf's order and this is not a shelf: it is a set of positions, and the
+   strongest is the one the reader is most likely to be looking for.
 
    THE COUNT ON EXPLORE'S DOOR IS THIS LIST'S LENGTH, five here and five rows
    below: the subpage is the only place that number can be checked. */

@@ -22,6 +22,8 @@ WHEN tap Describe the video -> the describe sheet opens on one description for t
 
 WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the footer counts one more AND NEVER a dialog asks
 
+WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
 WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the edit settling AND the clip points at the cover the edit set, if it set one
 
 WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks

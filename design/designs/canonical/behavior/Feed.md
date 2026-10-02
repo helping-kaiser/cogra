@@ -4,7 +4,7 @@ ALWAYS at most one clip plays on the feed
 
 ALWAYS feed.card.media.frame competes for the feed's one stage GIVEN it holds a clip
 
-ALWAYS a comment card's clip competes for the same stage as feed.card.media.frame
+ALWAYS feed.commentCard.media.frame competes for the same stage as feed.card.media.frame GIVEN it holds a clip
 
 ALWAYS the playing clip keeps the stage GIVEN it still qualifies and the scroll has not settled at the feed's hard top
 
@@ -59,3 +59,25 @@ WHEN the newer-version snackbar's Update now is pressed GIVEN the app -> CoGra's
 WHEN the newer-version snackbar's Update now is pressed GIVEN the web -> the page reloads into the new version
 
 WHEN the newer-version snackbar's Update now is pressed -> NEVER a page of the code repository opens
+
+WHEN tap feed.bottomBar.feedSlot GIVEN another tab is showing and the feed was opened this session -> the feed comes back in the state it was left, its whole stack and its scroll AND NEVER the feed reloads
+
+WHEN tap feed.bottomBar.feedSlot GIVEN another tab is showing and the feed was not opened this session -> the feed arrives at its root, fresh
+
+WHEN tap feed.bottomBar.feedSlot GIVEN a screen deeper in the feed's stack is showing -> the feed's root comes back at the scroll it was left AND NEVER the feed reloads
+
+WHEN tap feed.bottomBar.feedSlot GIVEN the feed's root stands at its top -> the feed refreshes and loads what is new AND the platform's own refresh indicator shows
+
+WHEN pull down GIVEN the feed's root stands all the way at its top -> the feed refreshes and loads what is new AND the platform's own refresh indicator shows
+
+ALWAYS the feed refreshes only on the tap of feed.bottomBar.feedSlot at its top or on a pull down all the way at its top
+
+ALWAYS the system draws no refresh indicator of its own
+
+WHEN the reader comes back to the feed -> the list stands as it was left AND NEVER the feed reloads
+
+WHEN the reader comes back to the feed GIVEN a sheet or a dialog was up over it when they left -> the feed's screen and scroll stand AND NEVER the sheet or the dialog stands
+
+WHEN the app cold-launches -> the feed's root arrives fresh
+
+WHEN press Android Back GIVEN the feed's root is showing -> the app leaves

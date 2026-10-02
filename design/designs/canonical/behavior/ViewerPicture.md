@@ -17,3 +17,9 @@ WHEN swipe the pager -> the next or the previous picture of the same set takes t
 WHEN tap the X -> the viewer closes
 
 WHEN swipe down -> the viewer closes
+
+WHEN press Android Back -> the viewer closes
+
+WHEN tap the backdrop GIVEN a backdrop is visible beside the frame on a wide screen -> the viewer closes
+
+WHEN tap the picture -> NEVER the viewer closes

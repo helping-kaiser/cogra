@@ -190,6 +190,27 @@
         ]
       }
     },
+    "FeedCommentShapes": {
+      "prefix": "feed",
+      "keys": {
+        "feed.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "feed.commentCard.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)"
+      },
+      "nodes": {
+        "feed.commentCard": [
+          "tobias"
+        ],
+        "feed.commentCard.media": [
+          "tobias"
+        ],
+        "feed.commentCard.media.frame": [
+          "tobias/1"
+        ],
+        "feed.commentCard.media.frame.soundDisc": [
+          "tobias/1"
+        ]
+      }
+    },
     "FeedCover": {
       "prefix": "feed",
       "keys": {

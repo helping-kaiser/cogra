@@ -6,6 +6,10 @@
    · ITS OWN PICTURES. A comment's pictures join its words inset, capped at a
      comment's height (readme §13), and in the feed they take the card's tap:
      the comment's thread, scrolled to it.
+   · ITS OWN CLIP (jakob 2026-10-02). A comment's clip plays as it does in
+     its thread (`ReplyMedia`): muted autoplay in the comment scale's square,
+     the sound disc and nothing else. It competes for the feed's one stage
+     with every post's clip, by the stage law (`behavior/Feed.md`).
    · ANSWERING A COMMENT. A reply reaches the feed like any comment, and its
      head row names a comment — which has no title — by its author's handle
      over its first words, `QuotedRow`'s rule, with the comment's own mark.
@@ -30,9 +34,15 @@
 
    A REFERENCE BOARD, like `FeedShapes`: wired nowhere, each card one a reader
    would meet on `FeedKinds`, which carries the wiring. So the board exports a
-   tall `FRAME` — a comparison cut off at 844px is one nobody can make. */
+   tall `FRAME` — a comparison cut off at 844px is one nobody can make.
 
-export const FRAME = { width: 390, height: 2280 };
+   REGISTERED under the feed's own prefix (jakob 2026-10-02), as `FeedCover`
+   is for a post's clip: the clip card alone is named, `commentCard`, so the
+   stage law's lines name a comment's clip by `feed.commentCard.media.frame`
+   beside a post's `feed.card.media.frame`. */
+export const NODE = "feed";
+
+export const FRAME = { width: 390, height: 2740 };
 
 const LONG_COMMENT =
   "Drove it twice this summer, once in each direction, and the second time I stopped at every lay-by between the tunnel mouth and the third headland. The light does something different on the way back — lower, warmer, and it catches the salt crust on the flats so the whole shore looks drawn in chalk. Worth the four hours, and worth doing backwards.";
@@ -50,6 +60,24 @@ export function Screen() {
           media={[{ src: "gallery-honey.jpg", ratio: "square", fit: "cover", alt: "A jar of honey in low sun." }]}
           topics={["tidemarket"]}
           score="9.80"
+        />
+        <CommentFeedCard
+          author={TOBIAS}
+          content="Eighteen seconds of the same headland, if the light comes through at all."
+          timestamp="30m"
+          parent={ADA_POST}
+          media={[
+            {
+              kind: "video",
+              src: "comment-clip.mp4",
+              poster: "comment-camera.jpg",
+              ratio: "square",
+              fit: "cover",
+              alt: "A film camera panning across the headland at low light.",
+            },
+          ]}
+          score="9.10"
+          node="commentCard"
         />
         <CommentFeedCard
           author={SOL}

@@ -26,4 +26,6 @@ WHEN press the header back arrow GIVEN the step was opened by the details stage'
 
 WHEN press Next GIVEN a cover is chosen -> the details stage opens AND NEVER an Add a cover door stands there
 
+WHEN press Next GIVEN the author has picked no face -> the details stage opens with the clip coverless AND the clip's frame 0 is its face AND NEVER Next waits for a pick
+
 WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks

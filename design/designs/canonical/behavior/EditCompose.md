@@ -24,6 +24,10 @@ WHEN tap the × of a tag the post already carries -> the withdrawal of that tag 
 
 WHEN tap the × of a citation the post already carries -> the withdrawal of that citation is staged in the batch AND the footer counts one more AND NEVER a dialog asks
 
+WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
+WHEN tap the × of a citation picked in this same edit -> the pick is unstaged AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
 WHEN tap a staged tag chip -> the tag's pair opens in a sheet over the edit
 
 WHEN tap a staged citation's row -> the citation's pair opens in a sheet over the edit

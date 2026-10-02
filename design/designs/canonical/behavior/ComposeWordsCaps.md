@@ -15,3 +15,7 @@ WHEN cutting brings the body within 5,000 characters -> the refusal and the erro
 WHEN press the header X -> the whole flow is left AND the draft is kept with its over-long words AND NEVER a dialog asks
 
 WHEN press the header back arrow -> the pick step comes back, one stage behind
+
+WHEN tap Add pictures instead GIVEN the body holds words -> an ask to discard the body opens over the stage AND NEVER the body switches before the ask is answered
+
+WHEN tap Add pictures instead GIVEN the body is empty -> the pick step opens AND NEVER an ask opens

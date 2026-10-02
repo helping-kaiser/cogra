@@ -19,3 +19,9 @@ WHEN tap the sound control -> sound turns on or off as the one sticky decision e
 WHEN tap the X -> the viewer closes
 
 WHEN swipe down -> the viewer closes
+
+WHEN press Android Back -> the viewer closes
+
+WHEN tap the backdrop GIVEN a backdrop is visible beside the frame on a wide screen -> the viewer closes
+
+WHEN tap the clip -> NEVER the viewer closes

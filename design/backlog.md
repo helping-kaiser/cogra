@@ -3500,6 +3500,9 @@ paragraph). One string still owed: the quiet line an unscoped
 indirect-kind selection shows (copy-voice candidate, awaiting
 blessing).
 
+Drawn 2026-10-02: the line, blessed, stands on `ExploreUnscoped`
+(readme §13, *Pass C's rulings*).
+
 ### 106 · Which frame the preview face means · *design* · **ruled + recorded 2026-09-24**
 
 Flagged by the implementation session 2026-09-24, building the
@@ -3764,6 +3767,10 @@ names its parts, and the card's discs carry `soundDisc` and `playDisc`.
 The stage law spans a post's clip and a comment card's, and only the
 post's is drawn, so `Feed.md` anchors the post's clip as
 `feed.card.media.frame` in its own lines and keeps *clip* for both.
+
+The comment card's clip followed 2026-10-02: `FeedCommentShapes`
+draws one and registers it as `feed.commentCard.media.frame`, which
+`Feed.md` now names beside the post's (readme §13, *Pass C's rulings*).
 
 ### 115 · Ranked comment order, once ranking exists · *design* · **filed 2026-09-30** · **future**
 
@@ -4206,3 +4213,42 @@ and left these for his eye:
 - **Strings flagged for blessing** (copy-voice): `Update now`, `Update
   to version 0.1.3`, `installed`, `newest`, `Newest first.`, and the
   foot's `Reset` at its new seat.
+
+### 130 · What pass C's rulings left open · *design* · **filed 2026-10-02**
+
+The pass-C round (readme §13, *Pass C's rulings*) wrote every ruled
+behavior; these are what the rulings did not reach.
+
+- **The body fork's ask is undrawn.** Switching words⇄pictures with a
+  body asks first (the discard idiom), and the sidecars say so in plain
+  words — but no board draws the ask, and its words are unruled.
+  Proposed, for blessing: `Discard the pictures?` (`the video?`, `the
+  words?`) over `The rest of the draft stays.`, a quiet `Discard` and a
+  filled `Keep them`; Discard switches the body, Keep closes onto the
+  stage as it was. Drawing it puts a second outcome on the `Write words
+  instead` edge, which `publish-words` walks without a case, so the
+  board lands with a flow case and a deliberate re-bless.
+- **A rotated phone's side ground.** The backdrop tap closes the viewer
+  where a backdrop is visible, on a wide screen. `ViewerLandscape`
+  leaves black ground beside a clip whose shape is not the screen's: is
+  that ground a backdrop the tap closes on?
+- **The play disc at the hard top.** A play-disc tap makes its clip the
+  incumbent, and a settle at the feed's hard top re-elects the first
+  qualifying clip even from a qualifying incumbent. Under suppressed
+  autoplay nothing starts on its own — does the hard top's re-election
+  stop a tapped clip lower down, and start nothing?
+- **The comment-scale bug notice's way out.** `Discard the reply` and
+  `Discard the edit` stand where the post's notice offers `Discard the
+  post`, which asks first (`SealDiscardConfirm`). Does the comment's ask
+  first too — `DiscardConfirm`, in its reply and edit words — or
+  discard at once?
+- **A mixed unscoped search.** Comments alone with no scope draws the
+  line (`ExploreUnscoped`). Posts and Comments together with no scope:
+  the posts' results with the line under them, or the results alone?
+- **The bell on a deep screen.** The dot lights on a root's next load.
+  Does a return to a root by back or by the bar count as a load, or
+  only an arrival and a refresh?
+- **The frame key's wording.** `KEY_RULES.frame` reads "the picture's
+  position in the post's media" and now also keys a comment's frames.
+  The registry guards key rules append-only, so rewording it is a
+  breaking change the seam agrees first.

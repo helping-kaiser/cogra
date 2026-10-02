@@ -20,7 +20,9 @@ ALWAYS the device suppresses autoplay GIVEN it asks for reduced motion or data s
 
 ALWAYS no clip on the feed starts on its own GIVEN the device suppresses autoplay
 
-WHEN tap feed.card.media.frame.playDisc -> feed.card.media.frame's clip plays where it stands in the feed AND NEVER the post opens
+WHEN tap feed.card.media.frame.playDisc -> feed.card.media.frame's clip plays where it stands in the feed AND it becomes the stage's incumbent AND NEVER the post opens
+
+WHEN feed.card.media.frame's clip falls below the 70% gate GIVEN it took the stage by feed.card.media.frame.playDisc -> the stage law's ordinary succession takes over
 
 WHEN tap feed.card.media.frame.soundDisc GIVEN sound is off -> sound turns on for every clip on every surface
 

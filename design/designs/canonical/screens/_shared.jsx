@@ -3561,7 +3561,7 @@ const commentTarget = (parent, kind) =>
           cover: parent.media?.[0]?.src,
         };
 
-function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false }) {
+function CommentFeedCard({ author, content, timestamp, parent, parentKind = "post", media, sensitive, topics = [], references = 0, score, bundle, own = false, node }) {
   const target = commentTarget(parent, parentKind);
   return (
     <CommentCard
@@ -3587,6 +3587,7 @@ function CommentFeedCard({ author, content, timestamp, parent, parentKind = "pos
       onShare={() => {}}
       license={{ attribution: 0, provenance: 0 }}
       menuItems={own ? FEED_OWN_COMMENT_MENU : FEED_COMMENT_MENU}
+      node={node}
     />
   );
 }

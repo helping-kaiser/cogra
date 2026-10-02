@@ -125,6 +125,8 @@ export interface CommentCardProps {
   score?: string;
   /** Opens the score's trace (`FeedEntry`). */
   onOpenScore?: () => void;
+  /** The data-node name its placer gives this card — keyed by the author's handle (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its media: `media` (`frame` per item, keyed by its position from 1, a clip's `soundDisc` or `playDisc`; `dots`). */
+  node?: string;
   /** An open reply or edit composer, rendered between the card and its replies. */
   children?: React.ReactNode;
   /**

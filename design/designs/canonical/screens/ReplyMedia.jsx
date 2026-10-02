@@ -1,6 +1,8 @@
 /* Comments carrying media, and the author's own comment (media slice,
-   2026-08-31): a single picture shows whole at its own ratio (comment pictures
-   never crop), multiples share the fixed square pager, and the viewer's own
+   2026-08-31): square is the comment scale's shape (readme §13, the reel
+   round), so a single picture fills the square, display-cropped and centred —
+   the bytes still travel uncropped — multiples share the fixed square pager,
+   and the viewer's own
    comment wears Edit and — once edited — the Edited marker. The sheet is the
    comments sheet of readme §13, unchanged.
 

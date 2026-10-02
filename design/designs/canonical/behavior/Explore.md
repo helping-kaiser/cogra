@@ -13,3 +13,5 @@ WHEN tap a recent search -> its query runs again
 ALWAYS Your topics' second line counts the topics the reader holds, the length of the list it opens
 
 WHEN tap the bar's Explore slot GIVEN Explore is at its top -> NEVER Explore refreshes
+
+WHEN pull down GIVEN Explore stands at rest -> NEVER Explore refreshes AND NEVER a refresh indicator shows

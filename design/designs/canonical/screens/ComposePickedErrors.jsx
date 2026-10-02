@@ -1,7 +1,8 @@
 /* The pick step with a batch part refused (comment video round, 2026-09-02;
    the full refusal vocabulary, video conform round 2026-09-03) — the
    post-scale twin of *Reply · files refused*. A post's caps are 10 pictures
-   at 10 MiB each, or one video at 100 MiB with a cover at 10 MiB.
+   at 10 MiB each, or one video at 100 MiB with a cover at 10 MiB — enforced in
+   MiB, written MB on every screen (copy-voice, *Refused files*).
 
    What was accepted is in the tray; what was refused is listed under it, each
    with the reason it broke. A refused file never joined the batch, so it
