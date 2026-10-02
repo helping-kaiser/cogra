@@ -1742,11 +1742,6 @@ for the pictures.`, and names the body's own content: on a clip it
 reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
 content of course"; *new, blessed (jakob 2026-10-02)*).
 
-**The citation this app cannot type** stands on an edit as a row with
-no ×. Its name slot reads the target's standard summary line, as every
-picker row does, and its note reads `Comes along as it is.` (jakob
-2026-10-02, pads 2 and the fix-fix round's 23; *blessed 2026-10-02*).
-
 ## Saved, History and hiding
 
 Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,

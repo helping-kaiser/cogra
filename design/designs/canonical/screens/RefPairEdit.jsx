@@ -49,11 +49,6 @@
    one, a single mention, says the singular. The acts card and the footer
    count the same number.
 
-   A CITATION THIS APP CANNOT TYPE IS NOT EDITABLE (api-spec: "Clients exclude
-   such citations from editing"). Its row on the edit carries no × and opens
-   nothing, so it never reaches this sheet; its note reads `Comes along as it
-   is.`
-
    THE NON-DRAG ROUTE IS `RefPair`'s (audit K10.1): `Set exact values for The
    long way home — @ada`, the sheet's first control, hidden until focused and
    where focus lands on open, swaps the field for the two tracks in place;

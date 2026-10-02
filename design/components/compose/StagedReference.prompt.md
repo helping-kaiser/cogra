@@ -17,6 +17,4 @@ A citation the author has committed to, held in the composer.
 
 A kept pick has two more row states. `removed` takes the target's removal mark (`Removed by its author`, `Deleted account`) when the target was removed or redacted while the pick waited: nothing leaves the graph, so the row stays and the pick still signs, wearing the removed-mark face — empty tile, the mark's line in the name's place in the system's voice. `consequence` takes the family's landing words (`This takes you back to zero.`) when the pick would net its bundle to nothing: said inline, the way `Remove citation` says its cost, with Sign as the confirmation and no dialog.
 
-`untyped` is a citation this app cannot type, held on an edit as it is: api-spec excludes it from editing, so the row has no × and opens nothing. Its `name` is the target's standard summary line, as every picker row reads, and its `note` reads `Comes along as it is.` — no `sub`, no `pair`, since nothing about it is chosen here. It signs nothing, so no acts card counts it.
-
 A staged reference is an act, so it joins the acts card rather than sitting beside it: the total has to count it, or the count and the content disagree.
