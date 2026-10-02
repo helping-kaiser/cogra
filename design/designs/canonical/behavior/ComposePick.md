@@ -37,3 +37,7 @@ WHEN make the platform back gesture -> the wizard leaves toward where compose be
 WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
 
 ALWAYS a reference brought by Cite in a new post or Mention in a new post rides the draft unseen until the details stage
+
+WHEN tap Write words instead GIVEN the body holds pictures or a clip -> an ask to discard the body opens over the stage AND NEVER the body switches before the ask is answered
+
+WHEN tap Write words instead GIVEN the body is empty -> the words stage opens AND NEVER an ask opens
