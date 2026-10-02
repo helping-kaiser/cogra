@@ -460,6 +460,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantKeyElsewhere",
+        "ApplicantLanding",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -469,12 +470,13 @@
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 8 boards → Restore",
+        "start · «Restore the key» on 9 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
         "Restore",
         "ApplicantKeyElsewhere",
+        "ApplicantLanding",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -1851,6 +1853,7 @@
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "restore-your-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
