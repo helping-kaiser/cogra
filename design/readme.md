@@ -7834,8 +7834,8 @@ behavior filed, never invented), the compose and media pages.
   jakob as filed questions: the cover step's Next before a face is
   picked, the counting sheets at the fold's edge, the body fork's switch,
   the words stage's empty Next, an edit's × on a pick made in the same
-  edit, and the viewer's third way out, where this record's reel round
-  says the backdrop and `ViewerPicture`'s docblock says a tap is not one.
+  edit, and the viewer's third way out — all ruled in *Pass C's
+  rulings*, below.
 ### The feed and comments behavior pass — 2026-10-01
 
 Pass C's first two pages (jakob, the night ruling round's F1): every
@@ -8199,6 +8199,45 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+
+### Pass C's rulings — 2026-10-02
+
+jakob's morning review ruled the behaviors pass C had filed, as
+recommended unless named. Each lands in its board's sidecar; the laws
+below have their home here or where named.
+
+- **Compose.** The cover step's Next before a pick proceeds coverless,
+  frame 0 the face. The counting sheets at the fold's edge switch the
+  seal's row to its single reading live beneath the sheet, and removing
+  the last closes the sheet. The body fork's switch asks first when the
+  body holds something and switches silently when empty. The words
+  stage's Next on an empty body is inert. An edit's × on a pick made in
+  the same edit unstages it.
+- **The viewer's ways out** are the X, a swipe down and Android's Back,
+  everywhere, and a backdrop tap where one is visible — the reel
+  round's record, `MediaViewer` and the viewer boards now read alike.
+- **The stage.** A play-disc tap makes its clip the incumbent. A comment
+  card's clip is drawn and registered (`FeedCommentShapes`, node
+  `feed.commentCard`), so the stage law names both clip paths.
+- **The feed.** `Feed.md` carries the re-tap ladder's rungs. `Back to
+  top` waits for 3 viewport-heights. The bell's dot lights on a root's
+  next load, never live. Hiding from the post detail keeps the reader
+  there under the same snackbar. Explore at rest takes no pull-down
+  (*The bottom bar's re-tap ladder* holds jakob's reason).
+- **Comments.** Square is the comment scale's shape in every docblock.
+  The comment edit asks only when it changed since it opened,
+  `Discard the changes?`; a bug notice at comment scale offers `Discard
+  the reply` or `Discard the edit`. Your topics' strongest-first order
+  is blessed. Screens write MB; the caps stay enforced in MiB.
+- **Search.** `ExploreUnscoped` draws item 105's line for Comments with
+  no scope.
+- **Flagged for blessing** (copy-voice): `Discard the edit`. The open
+  residue is backlog item 12X-passc-20.
+- **The gate**: **268 screens** (267 + `ExploreUnscoped`), 1785 →
+  **1793 edges**, 0 gaps, flows 65, every one resolved; `nodes.json`
+  gains `FeedCommentShapes`, 145 → 149 paths. The witness was re-blessed
+  once, deliberately: the four compose flows' `New post` start counts 51
+  boards.
 
 ## 15. Index
 
