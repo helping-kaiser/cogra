@@ -4024,7 +4024,18 @@ function ApprovePadNote({ handle }) {
    `approving` SWAPS THE READY ROW'S CONTROL for the stance anchor the pad
    blooms from. The row's one control is the row's one other act, and on the
    approval board that act is the opinion being given; the close stands down
-   while it is open, under the wash, where it could not be pressed anyway. */
+   while it is open, under the wash, where it could not be pressed anyway.
+
+   A KEPT APPROVAL SURFACES HERE AS ITS OWN CARD (jakob 2026-10-02, the
+   fix-fix round's 22). An approval set while the key was elsewhere waits on
+   the device as pending (`PadKeyAbsent`); once the key is back it never
+   joins the kept picks' batch — the review lists plain opinions only. It
+   surfaces on this page, where approving lives, with its ceremony kept: it
+   signs through the approval pad, and the vouch lands and notifies them as
+   any approval does. It is the kept vouch-back's twin, which surfaces as its
+   own card on the feed and signs through `VouchBackPad` into `VouchedIn`.
+   Neither twin is drawn as a state of its own: the ready row here, and the
+   vouch-back card there, are the cards they surface as. */
 function InvitesBody({ approving = false }) {
   return (
     <>

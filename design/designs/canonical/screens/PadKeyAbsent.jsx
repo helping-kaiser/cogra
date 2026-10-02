@@ -48,7 +48,9 @@
      nothing. A review left unsigned keeps them, and the settings page's Key
      backup group carries `3 kept picks waiting` to reopen it — only while
      the key is here; if it goes again, the waiting-for-key state owns the
-     surface. A kept vouch-back or approval never joins the batch.
+     surface. A kept vouch-back or approval never joins the batch: each
+     surfaces as its own card, ceremony kept — the vouch-back on the feed,
+     the approval on Invites.
    - A remembered sign-out keeps them, as it keeps everything on the device.
      A sign-out that forgets the account clears them with the draft — and
      where it would also take an unbacked key, `SignOutConfirm` names all

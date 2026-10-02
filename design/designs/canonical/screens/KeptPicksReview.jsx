@@ -21,7 +21,9 @@
    PLAIN OPINIONS ONLY (jakob 2026-10-02, kept picks 4). A kept vouch-back or
    approval never joins the batch: the review lists plain opinions and
    nothing else, and a kept vouch-back surfaces as its own card, keeping its
-   ceremony (`VouchedIn`).
+   ceremony (`VouchedIn`). A kept approval is its twin: its own card on
+   Invites, where approving lives, signed through `ApprovePad` (jakob
+   2026-10-02, the fix-fix round's 22).
 
    NOTHING VANISHES (jakob 2026-10-02, kept picks 2 dissolved — the
    never-delete law). A pick's target always exists, so every row stays and
