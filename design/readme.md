@@ -8608,7 +8608,7 @@ as recommended, the wordings are blessed").
 - **`ReplyEntry`'s applicant reading holds only others' comments**: the
   foot's face is @juno's, and @sol's comment carries no `Edit`.
 - **Flagged for blessing**: the vouch pad's "?" first paragraph and
-  `Delete my account`. The lane's calls are backlog item 12X-applicant128.
+  `Delete my account`. The lane's calls are backlog item 135.
 - **The gate**: 270 screens, 1805 → **1806 edges**, 0 gaps, flows 66,
   every one resolved, 133 → **134 sidecars**. The witness did not move.
 

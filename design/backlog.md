@@ -4307,7 +4307,7 @@ come back together:
 - **The beyond-this-app face.** How the reading surfaces show a target
   that lives outside CoGra.
 
-### 12X-applicant128 · What the applicant remainder left for rulings · *design + contract* · **filed 2026-10-02**
+### 135 · What the applicant remainder left for rulings · *design + contract* · **filed 2026-10-02**
 
 The applicant remainder (readme §13) executed jakob's six rulings and
 left these for his eye:
