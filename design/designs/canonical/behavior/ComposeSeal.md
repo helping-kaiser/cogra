@@ -8,6 +8,8 @@ WHEN the signing answers within 200ms of the press -> NEVER Sign and publish rea
 
 WHEN the back arrow, Back or the X is pressed GIVEN Sign and publish reads Signing and publishing… -> NEVER the seal is left AND the fact rows stay readable
 
+ALWAYS the back arrow, Back and the X keep their resting face GIVEN Sign and publish reads Signing and publishing…
+
 WHEN the signing has not answered 5s after the press -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
 
 WHEN the app opens again GIVEN it was closed while a signing was in flight -> the signing's outcome shows as the ordinary settled or failure notice
