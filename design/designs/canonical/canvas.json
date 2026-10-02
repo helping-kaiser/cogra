@@ -209,24 +209,6 @@
       "page": "entry"
     },
     {
-      "file": "ApplicantExpired.dc.html",
-      "title": "Applicant · ran out of time",
-      "x": 3360,
-      "y": 4184,
-      "w": 390,
-      "h": 844,
-      "page": "entry"
-    },
-    {
-      "file": "ApplicantRearm.dc.html",
-      "title": "Applicant · a fresh invite",
-      "x": 3840,
-      "y": 3180,
-      "w": 390,
-      "h": 844,
-      "page": "entry"
-    },
-    {
       "file": "ApplicantEmail.dc.html",
       "title": "Applicant · wrong address",
       "x": 4320,
@@ -240,6 +222,15 @@
       "title": "Invites · an ask that can't be taken up",
       "x": 4800,
       "y": 6795,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "VouchAskInvalid.dc.html",
+      "title": "Invites · an ask link that doesn't work",
+      "x": 4800,
+      "y": 7855,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -1500,7 +1491,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5299,
+      "h": 5490,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1527,7 +1518,7 @@
       "x": -5350,
       "y": 0,
       "w": 4930,
-      "h": 4556,
+      "h": 4647,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1590,7 +1581,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 5880,
+      "h": 6142,
       "page": "profile",
       "title": "Profile · flow map"
     },

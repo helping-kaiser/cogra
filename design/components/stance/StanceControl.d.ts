@@ -79,6 +79,13 @@ export interface StanceControlProps {
    */
   pendingPick?: StancePair;
   /**
+   * The key is back and the kept picks' review was left unsigned: the pick
+   * waits on the reader, so the line reads `Waiting for your review` and the
+   * host wires the face's tap to `KeptPicksReview`, never the key notice.
+   * Dropped again if the key goes. Only with `pendingPick`; off by default.
+   */
+  pendingReview?: boolean;
+  /**
    * A signed act in flight (`"busy"`, past 200ms) or one that did not go
    * through (`"failed"`). Pad closed, it is the hold's: the anchor is inert
    * while busy, and the target's row carries `Signing…` or `SigningPending`'s

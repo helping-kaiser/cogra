@@ -10,7 +10,7 @@
    The send stays silent whatever was typed, as `Reset`'s does.
 
    THE REASSURANCE IS LIMITED TO WHAT IS TRUE (jakob 2026-10-01, audit
-   K3.3). An account left unverified for a day is reaped, so the paragraph
+   K3.3). An account left unverified for seven days is reaped, so the paragraph
    promises the fresh link only to an account still waiting on it; the
    consequence itself is said once, on the verify card, and not again here.
 

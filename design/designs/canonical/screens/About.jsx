@@ -135,7 +135,7 @@ function Topic({ title, open = false, children }) {
 export function Screen() {
   return (
     <>
-      <PageHeader title="About CoGra" backHref="#" backLabel="Back" />
+      <PageHeader title="About CoGra" backHref="#" backLabel="Back to settings" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px" }}>
         <Topic title="What this is" open>
           {[

@@ -1539,9 +1539,11 @@ const replyCitedRow = () => ({
 
    `uploading` is the seal gated on the reply's media (jakob's ruling, the night
    batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
-   true }` once one has not. Every row is unchanged; `UploadStatusLine` stands
-   over the foot, and `Sign comment` is disabled while it shows
-   (`ReplySealUploading`, `ReplySealUploadFailed`). */
+   true }` once one has not, with `media: "video"` for a clip so the line
+   reads `…signing waits for the video.` (jakob 2026-10-02, pads 3). Every
+   row is unchanged; `UploadStatusLine` stands over the foot, and `Sign
+   comment` is disabled while it shows (`ReplySealUploading`,
+   `ReplySealUploadFailed`). */
 function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
@@ -1596,7 +1598,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
               (uploading.failed ? (
                 <UploadStatusLine failed onRetry={() => {}} />
               ) : (
-                <UploadStatusLine done={uploading.done} total={uploading.total} />
+                <UploadStatusLine done={uploading.done} total={uploading.total} media={uploading.media} />
               ))}
             <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
           </>
@@ -2330,8 +2332,9 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    `keptPicks` is the count of picks still waiting after their review was
    left unsigned (backlog item 113, jakob's ruling B3): a quiet row in the
    Key backup group, after `Your key`, reading `3 kept picks waiting`, that
-   reopens `KeptPicksReview`. It exists only while that is true — kept picks
-   with the key here and their batch unsigned — so it defaults to none, and
+   reopens `KeptPicksReview`. It exists only while that is true — the key
+   here and unsigned kept picks waiting; with the key gone again, the
+   waiting-for-key state owns the surface — so it defaults to none, and
    `Settings`, which draws the page whole, draws it present to show its
    place in the order. */
 /* THE SUPPORT STACK'S FIXTURES (jakob, 2026-10-01). Spelled once because the

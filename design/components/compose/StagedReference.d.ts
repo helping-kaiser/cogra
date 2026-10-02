@@ -24,6 +24,19 @@ export interface StagedReferenceProps {
    * `StanceReadout`'s, the anchor's word and both axes named.
    */
   stance?: boolean;
+  /**
+   * The target's removal mark — `Removed by its author`, `Deleted account` —
+   * for a kept pick whose target was removed or redacted while it waited. The
+   * row stays and still signs, wearing the removed-mark face: the mark's tile
+   * empty, the mark's line in the name's place in the system's voice. The ×
+   * is then named "Remove this pick: <sub>, <mark>".
+   */
+  removed?: string;
+  /**
+   * A kept pick that would net its bundle to nothing says so inline, in the
+   * family's landing words, under the kind; Sign is the confirmation.
+   */
+  consequence?: string;
   /** The × is its own button, named "Remove <name>". */
   onRemove?: () => void;
   /**
@@ -32,7 +45,7 @@ export interface StagedReferenceProps {
    * button named "<name> — set how it relates"; without it the row is inert.
    */
   onEdit?: () => void;
-  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `kind`, `pair` (`face`, `exact`), `remove`. */
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `kind`, `consequence`, `pair` (`face`, `exact`), `remove`. */
   node?: string;
   /** The row's content key — its position in the staged set, from 1. */
   nodeKey?: string;

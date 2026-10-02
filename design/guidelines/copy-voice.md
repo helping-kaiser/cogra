@@ -487,8 +487,10 @@ DO, the way the sound toggle already does:
 
 **The stream and the viewer**:
 
-- `Back to feed` — the stream's way out. Not "Close": the reader is
-  going back to the feed the stream narrowed, not shutting a layer. The
+- `Back to feed` — the stream's way out when it was opened from the
+  feed (a post's pinned clip or a profile's posts name that origin
+  instead; readme §13, *The nav-noun sweep*). Not "Close": the reader
+  is going back to the feed the stream narrowed, not shutting a layer. The
   feed takes no article anywhere in this vocabulary (jakob 2026-09-15):
   it is a named surface, like Explore and settings, rather than a common
   noun like the post or the wallet — and it is the destination a reader
@@ -505,8 +507,11 @@ round*). A named surface keeps its name, the feed's many states are one
 noun, and a sheet is named by what it is a sheet of. Already blessed:
 `Back to feed`, `Back to Explore`, `Back to the search`, `Back to Your
 topics`, `Back to the post`, `Back to the comments`, `Back to the
-profile`, `Back to #<thattag>`, `Back to your profile`. Added by the
-post detail's and the profile's tables, each flagged for blessing:
+profile`, `Back to #<thattag>`, `Back to your profile`, `Back to
+settings`; the score's trace, the stream, the opinions page,
+Notifications and About take their nouns from these and add none.
+Added by the post detail's and the profile's tables, each flagged for
+blessing:
 
 - `Back to Saved` · `Back to History` · `Back to Notifications` — the
   three named surfaces, by their titles.
@@ -893,8 +898,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   (readme §13, *The reply pack*), the fact's last clause swaps to what is true
   there: `Nothing was signed or spent — your reply is still here.`,
   and the way out under the panel reads `Not now`, back to the reply's
-  seal with the words still there (jakob 2026-10-01). The words name no
-  payer (the V1.0 scope cut). On a pad the same panel stands where the
+  seal with the words still there (jakob 2026-10-01). Reached from the
+  kept picks' seal, the same mirror: `Nothing was signed or spent — your
+  picks are still kept.` and `Not now`, back to the review (jakob
+  2026-10-02; *flagged*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -946,8 +953,8 @@ Blessed with the audit-states round:
   — if your account is still waiting on its email, the new link picks it
   back up.` — the two possibilities, the way forward, and the
   reassurance a reader who reads "expired" needs, kept to what is true:
-  an account left unverified for a day has been reaped (jakob
-  2026-10-01, audit K3.3). *New 2026-10-01, flagged for blessing.*
+  an account left unverified for seven days has been reaped (jakob
+  2026-10-01, audit K3.3; blessed 2026-10-02).
 - Signed out (audit K3.20), the dead link's way on reads `Sign in`, and
   `Resend the link` opens an `Email` field in place above the pair — the
   two existing words, so nothing new to bless; `Verified`'s `Back to
@@ -955,15 +962,18 @@ Blessed with the audit-states round:
 
 ## The entry funnel's round
 
-The audit's K3 blockers, ruled by jakob 2026-10-01 and drawn in one lane.
-Every line below is *new 2026-10-01, flagged for blessing*, unless it
-says it reuses a blessed one.
+The audit's K3 blockers, ruled by jakob 2026-10-01 and drawn in one lane;
+every line below was blessed by jakob 2026-10-02, unless it says it is new
+in the fix round.
 
 **The verify card prints the address and says the reap once**
 (`ApplicantFeed`). Its blessed body stays; under it `Sent to
 noor@fieldmail.org` with the door `Wrong address?`, then the
 consequence, once and as a consequence rather than a clock: `An account
-left unverified for a day is removed — joining again then starts over.`
+left unverified for seven days is removed — joining again then starts
+over.` *Reworded in the fix round 2026-10-02 (the reap is seven days, jakob:
+a day is short enough for a mail outage on our side to cost accounts),
+flagged for blessing.*
 
 **Wrong address?** (`ApplicantEmail`) keeps `ChangeEmail`'s heading,
 fields and commitment (`Change your email`, `New email`, `Current
@@ -972,34 +982,6 @@ password`, `Change email`) and says the carve-out in its own paragraph:
 needs. A fresh link goes there, and the one sent to noor@fieldmail.org
 stops working.` Its snackbar: `Sent — the link is on its way to
 noor@fieldnotes.org.`
-
-**The run-out application** (`ApplicantExpired`) says what happened and
-what it does not mean, in the rejected card's order, with no verdict:
-`Your application ran out of time` · `Nobody answered before its time
-was up, and that is all it means. Your account stays exactly as it is,
-you can keep reading, and any member you know can vouch you in.` *Ran
-out* and never *closed*, which is the rejection's verb. The ask link
-keeps the rejected card's three lines verbatim (`Ask someone you know to
-vouch for you`, its caption, `Copy your ask link`) — one link, one set
-of words wherever it is offered.
-
-**The fresh-invite door** on both closed cards: `Use a fresh invite`.
-Its page (`ApplicantRearm`) is titled by the door, with `Paste the new
-invite link, and your application starts again through it. Your account
-stays exactly as it is.` — or, arriving through a link, `This link from
-@sol can start your application again. Your account stays exactly as it
-is.` — the field `Invite link` (blessed), and `Use this link for your
-application`. A dead link answers in the field in `JoinInvalid`'s
-heading, `This invite can't be used anymore` (blessed).
-
-**An invite link opened signed in, with nothing to re-arm**, lands where
-app-open lands, with one snackbar per reader:
-
-- `You're already in — this invite is for someone new.` — a member.
-- `This is your own invite — send it to the person it's for.` — its
-  issuer.
-- `Your application is already waiting — this link isn't needed now.` —
-  an applicant whose application is live.
 
 **Sign in, too many tries** (`SignInLimited`): `Too many tries in a row.
 Wait a moment, then try again.` No figure — the backoff grows and the
@@ -1025,14 +1007,38 @@ idiom, one pair per case:
   same link works again.` — the back arrow alone; nobody has a public
   profile before they land.
 
-**The ask link's readers who cannot vouch through it** land where
-app-open lands, with a snackbar:
+**The ask link's readers who cannot vouch through it** each hear a
+snackbar — the applicant and the asker where app-open lands for them, the
+member on `Invites`, where the row already is (jakob 2026-10-02):
 
 - `Vouching unlocks once your application is approved.` — an applicant.
 - `That's your own ask link — send it to someone who's already in.` —
   the asker.
 - `@noor is already waiting in your invites.` — a member who already has
   them queued.
+
+### The fix round's entry lines — 2026-10-02
+
+Applications never run out of time and an invite link ignores sign-in
+(jakob 2026-10-02), so no line here speaks of a lapsed application or of
+a second invite for an account that exists. Each line is *new in the fix
+round*; the flagged ones wait for blessing.
+
+- `This invite link has expired.` — the one snackbar a dead invite link's
+  arrival hears, over the unchanged landing (`Main`, or `FeedBare` for a
+  link that resolves to nothing). jakob's ruling, as recommended.
+- `It may have expired or already been used. Ask the person who invited
+  you for a new link.` — `JoinInvalid`'s paragraph. It promises nothing
+  about an account made earlier, since an unverified one is reaped after
+  seven days; `Already have an account? Sign in` stands right below it.
+  *Flagged for blessing.*
+- `This ask link doesn't work` — the heading of an ask link that resolves
+  to nobody (`VouchAskInvalid`), in `JoinInvalid`'s idiom. jakob's ruling,
+  as recommended.
+- `Check that the whole link came through, or ask the person who sent it
+  for it again.` — its paragraph: what the reader can check, and who can
+  help, with no guess at why the link resolves to nobody. *Flagged for
+  blessing.*
 
 ## The settings page
 
@@ -1341,7 +1347,10 @@ can't wait as pending — restore the key to sign this one.` with
 
 **A pick kept pending** wears `Waiting for your key` under the post's
 anchor, in `PendingMarker`'s quiet type — never `Still settling`, which
-means signed and not yet ordered.
+means signed and not yet ordered. Once the key is back and the review
+waits unsigned, the same line reads `Waiting for your review`, spoken in
+the anchor's name as `waiting for your review` (jakob 2026-10-02, kept
+picks 1; *new 2026-10-02, flagged for blessing*).
 
 **The kept picks' review** (`KeptPicksReview`, `KeptPicksSeal`; jakob's
 rulings B1-B3, 2026-10-01). Every line here is *new 2026-10-01, flagged
@@ -1364,6 +1373,22 @@ for blessing*:
   `Current opinion`, since a batch holds more than one target.
 - The settings row, last in `Key backup`: `3 kept picks waiting` (`1 kept
   pick waiting` in the singular). No status line.
+
+The kept-picks rulings (jakob 2026-10-02) add these, each *new
+2026-10-02, flagged for blessing*:
+
+- A dropped row is spoken in the pickers' status idiom: `Removed — 2
+  picks left.` (`Removed — 1 pick left.` in the singular).
+- A row whose target was removed or redacted wears the target's removal
+  mark in the name's place — `Removed by its author`, `Removed under the
+  platform's rules`, `Deleted account` — and its × is named `Remove this
+  pick: Post, Removed by its author`.
+- A row whose pick would net its bundle to nothing says so under its
+  kind in the family's landing words: `This takes you back to zero.` (a
+  person or a post), `This leaves you with no opinion towards it.` (a
+  topic).
+- The write rule at this scale: the fact ends `Nothing was signed or
+  spent — your picks are still kept.`, and the way out reads `Not now`.
 
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`
@@ -1670,7 +1695,13 @@ records it signs, heard as `2 things` where a withdrawal takes two.
 **The reply's gate, failed.** `One picture didn't upload. Signing waits
 for it.` with `Retry` — the fact in error ink, the consequence in the
 quiet voice. The running line stays `Uploading 1 of 2 — signing waits
-for the pictures.`
+for the pictures.`, and names the body's own content: on a clip it
+reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
+content of course"; *new, flagged*).
+
+**The citation this app cannot type** stands on an edit as a row with
+no ×, and its note reads `Comes along as it is.` (jakob 2026-10-02, pads
+2; *new, flagged for blessing*).
 
 ## Saved, History and hiding
 
@@ -2003,7 +2034,8 @@ on the path is named; a path through two or more takes the generic form,
 `You, then several steps, then what reached you` — blessed (jakob
 2026-10-01: "for longer paths we need generic wording"). A chain of handles read aloud would bury the reached
 thing at its end, and the row's `Through @kel and @wren` already says who.
-The back arrow on level one reads `Back to feed`, for every kind.
+The back arrow on level one names the surface the score was tapped on
+(readme §13, *The nav-noun sweep*) and draws `Back to feed`, for every kind.
 
 **The rule under the cover**, on level one: `Every path here starts with
 an opinion you gave.` This is the inbound-inert invariant
@@ -2277,12 +2309,10 @@ handles; its buttons are the plural of the row's, `Close them` and
 **The row's close says what happens, not how it feels.** Its name is
 `Close @imke's application`, never "Reject" or "Decline": nothing is
 deleted and the person keeps the account they made. The dialog behind
-it opens `Close @imke's application?` and answers in two sentences —
-`Their account stays exactly as it is — signed in, and free to keep
-reading. The application just stops waiting on you.` and `A fresh
-invite link puts them back in this list.` The buttons are `Close it`
-and `Keep it`, `Keep it` being the house word for *don't*, from
-`RemoveConfirm` and `SeveranceConfirm`.
+it opens `Close @imke's application?` and answers in two sentences (*The
+reject extension's lines* below). The buttons are `Close it` and `Keep
+it`, `Keep it` being the house word for *don't*, from `RemoveConfirm`
+and `SeveranceConfirm`.
 
 **A live link's label is what it is, and its caption is when it dies.**
 `Single use · not used yet` and `Many uses`; the slot state rides the
