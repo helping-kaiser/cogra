@@ -10,6 +10,8 @@ WHEN press Sign comment GIVEN an upload is running -> Sign comment refuses a sec
 
 WHEN the signing has not answered 200ms after the press GIVEN Sign comment was pressed while the uploads ran -> Sign comment reads Signing comment… in its own place AND the header back arrow, Back and the header X refuse a press AND NEVER a spinner appears
 
+WHEN the signing has not answered 5s after the press GIVEN Sign comment was pressed while the uploads ran -> the subline under the total reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
+
 WHEN the last upload lands GIVEN Sign comment was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
 
 WHEN the last upload lands GIVEN Sign comment was not pressed -> the upload line goes AND Sign comment stays as it was

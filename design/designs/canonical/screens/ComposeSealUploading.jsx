@@ -14,7 +14,12 @@
    passes 200ms, never dimmed and no spinner, and the ways out locked with it
    for the swap's duration. Signing proceeds the moment the bytes land; no
    second press is asked. Unpressed, the line goes when the last upload lands
-   and the commit stands as it was. */
+   and the commit stands as it was.
+
+   THE SLOW LINE COUNTS FROM THE PRESS (jakob 2026-10-02, the residue round's
+   Q6): the reader's wait starts at their gesture, so 5s after it the acts
+   card's subline swaps to `Still signing — the network is slow right now.`,
+   whether the bytes have landed yet or not. */
 
 export function Screen() {
   return (
