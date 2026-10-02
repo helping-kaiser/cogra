@@ -29,17 +29,23 @@
    do not comment in V1.0, and the foot and every comment's `Reply` wear
    auth.md's locked look for them: visibly inactive at the disabled opacity,
    still tappable, the tap answering in place with `You can comment once
-   you're in.` — drawn here as the snackbar it raises. The chip changes the
-   foot and the Reply buttons and nothing else; the thread is the member's
-   fixture. */
+   you're in.` — drawn here as the snackbar it raises. An applicant cannot
+   have comments of their own (jakob 2026-10-02), so in their reading the
+   thread holds only others': the foot's face is @juno's, the canvas's
+   applicant, and @sol's comment is someone else's — no `Edit`, and its ⋮
+   opens `CommentMenu`. */
 export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
-export const VALS = `lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none"`;
+export const VALS = `lockOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none", memberShown: this.props.reader === "applicant" ? "none" : "flex", applicantShown: this.props.reader === "applicant" ? "flex" : "none"`;
 
 export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet footOpacity="{{lockOpacity}}" replyOpacity="{{lockOpacity}}" />
+      <CommentsThreadSheet
+        footOpacity="{{lockOpacity}}"
+        replyOpacity="{{lockOpacity}}"
+        shown={{ member: "{{memberShown}}", applicant: "{{applicantShown}}" }}
+      />
       <div style={{ display: "{{lockedLine}}" }}>
         <Snackbar message="You can comment once you're in." offset={88} />
       </div>

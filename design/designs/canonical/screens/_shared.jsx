@@ -1991,11 +1991,26 @@ function EditComposeBody({ unchanged = false } = {}) {
    AN APPLICANT'S FOOT IS LOCKED, NOT GONE (jakob 2026-10-02; auth.md's locked
    look): the door stands visibly inactive at the disabled opacity and stays
    tappable, the tap answering `You can comment once you're in.` `fieldOpacity`
-   carries it — `ReplyEntry`'s reader chip passes the applicant's reading. */
-function CommentComposerFoot({ fieldOpacity }) {
+   carries it — `ReplyEntry`'s reader chip passes the applicant's reading.
+
+   THE FACE IS THE READER'S: @sol, the member, and — where a reader chip passes
+   the `shown` holes — @juno, the canvas's applicant, in the applicant's
+   reading. */
+function CommentComposerFoot({ fieldOpacity, shown }) {
   return (
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
-      <MonogramAvatar name="Sol Ferreira" />
+      {shown ? (
+        <>
+          <span style={{ display: shown.member }}>
+            <MonogramAvatar name="Sol Ferreira" />
+          </span>
+          <span style={{ display: shown.applicant }}>
+            <MonogramAvatar name="Juno Baptiste" />
+          </span>
+        </>
+      ) : (
+        <MonogramAvatar name="Sol Ferreira" />
+      )}
       <div style={{ flex: 1, opacity: fieldOpacity }}>
         <TextField label="Add a comment" rows={1} cap={2000} value="" />
       </div>
@@ -2023,7 +2038,7 @@ function CommentComposerFoot({ fieldOpacity }) {
    margin. */
 const COMMENTS_GAP = 12;
 
-function CommentsSheet({ children, scrolledBy = 0, footOpacity }) {
+function CommentsSheet({ children, scrolledBy = 0, footOpacity, shown }) {
   return (
     <BottomSheet open tallest ariaLabel="Comments">
       <SheetTitle>Comments</SheetTitle>
@@ -2031,7 +2046,7 @@ function CommentsSheet({ children, scrolledBy = 0, footOpacity }) {
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
       </ul>
-      <CommentComposerFoot fieldOpacity={footOpacity} />
+      <CommentComposerFoot fieldOpacity={footOpacity} shown={shown} />
     </BottomSheet>
   );
 }
@@ -2108,10 +2123,49 @@ const REMOVED_COMMENT_SCROLL = 440;
    there is nothing left on it to edit, the same reason its ⋮ goes. */
 const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 
+/* @sol's 3h comment, the one with a branch under it — drawn as the reader's own
+   or as someone else's, so its words are written once. */
+const SOL_THREAD_COMMENT = {
+  author: SOL,
+  content: "Which headland is the third one, counting from the ferry landing?",
+  timestamp: "3h",
+  onReply: () => {},
+  license: { attribution: 0, provenance: 0 },
+  replies: [
+    {
+      id: "r1",
+      author: ADA,
+      content: "The one past the pines — the road dips right before it.",
+      timestamp: "40m",
+      onReply: () => {},
+      license: { attribution: 0, provenance: 0 },
+      menuItems: CARD_MENU,
+    },
+    {
+      id: "r2",
+      author: TOBIAS,
+      content: "@ada That dip floods at spring tide, mind the sign.",
+      timestamp: "22m",
+      onReply: () => {},
+      license: { attribution: 0, provenance: 0 },
+      menuItems: CARD_MENU,
+    },
+  ],
+};
+
+const NESTED_LIST = { margin: 0, padding: 0, listStyle: "none" };
+
 /* `replyOpacity` LOCKS EVERY `Reply` IN THE THREAD for an applicant reader
    (jakob 2026-10-02), the foot's `footOpacity` twin: `CommentCard` carries it
-   down to the replies, so one value locks the whole thread's Reply buttons. */
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity }) {
+   down to the replies, so one value locks the whole thread's Reply buttons.
+
+   `shown` DRAWS THE READER BOTH WAYS for a board's reader chip — two display
+   holes, `member` and `applicant`. An applicant cannot have comments of their
+   own (jakob 2026-10-02), so in the applicant's reading the foot's face is
+   @juno's and @sol's comment is someone else's: no `Edit`, the reader's ⋮.
+   Each reading's copy of that comment stands in its own list item, the other
+   one hidden. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity, shown }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2129,8 +2183,18 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
       />
     </ul>
   );
+  const solComment = { ...SOL_THREAD_COMMENT, replyOpacity };
+  const ownSol = (
+    <CommentCard
+      {...solComment}
+      own
+      onEdit={removed ? undefined : () => {}}
+      menuItems={removed ? [] : OWN_THREAD_MENU}
+      redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
+    />
+  );
   return (
-    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity}>
+    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity} shown={shown}>
       <CommentCard
         author={TOBIAS}
         content={TOBIAS_COMMENT}
@@ -2168,38 +2232,20 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         license={{ attribution: 0, provenance: 0 }}
         menuItems={CARD_MENU}
       />
-      <CommentCard
-        author={SOL}
-        content="Which headland is the third one, counting from the ferry landing?"
-        timestamp="3h"
-        own
-        onEdit={removed ? undefined : () => {}}
-        onReply={() => {}}
-        replyOpacity={replyOpacity}
-        license={{ attribution: 0, provenance: 0 }}
-        menuItems={removed ? [] : OWN_THREAD_MENU}
-        redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}
-        replies={[
-          {
-            id: "r1",
-            author: ADA,
-            content: "The one past the pines — the road dips right before it.",
-            timestamp: "40m",
-            onReply: () => {},
-            license: { attribution: 0, provenance: 0 },
-            menuItems: CARD_MENU,
-          },
-          {
-            id: "r2",
-            author: TOBIAS,
-            content: "@ada That dip floods at spring tide, mind the sign.",
-            timestamp: "22m",
-            onReply: () => {},
-            license: { attribution: 0, provenance: 0 },
-            menuItems: CARD_MENU,
-          },
-        ]}
-      />
+      {shown ? (
+        <>
+          <li style={{ display: shown.member, flexDirection: "column", listStyle: "none" }}>
+            <ul style={NESTED_LIST}>{ownSol}</ul>
+          </li>
+          <li style={{ display: shown.applicant, flexDirection: "column", listStyle: "none" }}>
+            <ul style={NESTED_LIST}>
+              <CommentCard {...solComment} menuItems={CARD_MENU} />
+            </ul>
+          </li>
+        </>
+      ) : (
+        ownSol
+      )}
     </CommentsSheet>
   );
 }
