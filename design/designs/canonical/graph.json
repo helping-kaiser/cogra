@@ -281,6 +281,7 @@
     { "from": "ApplicantLanding", "via": 14, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "ProfileApplicant" }] },
     { "from": "ApplicantLanding", "via": 15, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "ApplicantLanding", "via": 16, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
+    { "from": "ApplicantLanding", "via": 17, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "the key-absent variant only — the key comes here from its backup, and the registration then lands from this device" }] },
     { "from": "ApplicantLanding", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
     { "from": "ApplicantLanding", "via": 19, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
 

@@ -102,11 +102,13 @@ export const FLOW_MARKERS = {
     { n: 20, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
   // ApplicantWaiting's shell with the card flipped, numbered to the number;
-  // the landing card has no control, so 17 stays unused here.
+  // the card's one control — the key-absent variant's restore — takes 17,
+  // the card's own number on the waiting board.
   ApplicantLanding: [
     ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
     secondComments(9),
     ...nav(10),
+    { n: 17, find: ">Restore the key</button>", tag: "button" },
     { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchBack: [
