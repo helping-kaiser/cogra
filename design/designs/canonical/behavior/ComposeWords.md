@@ -12,6 +12,8 @@ WHEN typing passes the body's 5,000 characters -> the body takes the error outli
 
 ALWAYS the body's count counts the whole body in Unicode scalar values, never only what the box shows
 
+WHEN press Next GIVEN the body is empty -> Next stays inert AND NEVER the details stage opens AND NEVER an empty post reaches a seal
+
 WHEN press Next GIVEN a reference rides the draft -> the details stage opens with the reference staged
 
 WHEN press Next -> NEVER the crop or the cover step opens
