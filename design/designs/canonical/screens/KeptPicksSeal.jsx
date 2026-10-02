@@ -31,7 +31,14 @@
 
    NO SEVERANCE STEP. A pick that nets its bundle to nothing said so on its
    review row, and `Sign the opinions` is its confirmation (kept picks 3);
-   the seal raises no `SeveranceConfirm`. */
+   the seal raises no `SeveranceConfirm`. Mira's row here reads its pair and
+   nothing more.
+
+   A REMOVED TARGET READS BY ITS MARK HERE TOO (jakob 2026-10-02, the fix-fix
+   round's 21). The review's removed row wears the removal mark where the name
+   stood, and the seal reads it back the same way — `Removed by its author` in
+   the system's voice, `text-secondary` at the body's weight — over the pair it
+   still signs. */
 export function Screen() {
   return (
     <>
@@ -43,7 +50,16 @@ export function Screen() {
             countNoun: "opinion",
             value: (
               <span style={{ display: "flex", flexDirection: "column", padding: "6px 0", minWidth: 0 }}>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pick.name}</span>
+                <span
+                  style={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    ...(pick.removed ? { fontWeight: 400, color: "var(--text-secondary)" } : null),
+                  }}
+                >
+                  {pick.removed || pick.name}
+                </span>
                 <StanceReadout pair={pick.pair} />
               </span>
             ),

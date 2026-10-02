@@ -6,8 +6,10 @@ export interface SealFooterProps {
   /** Names what is being signed — "Sign and publish", "Sign the change". */
   signLabel?: string;
   backLabel?: string;
-  /** The upload's gate: nothing signs until the content it signs exists. Pair
-   *  it with the line that says why, never on its own. */
+  /** A failed upload's stop: the commit waits for Retry. Pair it with the
+   *  line that says why, never on its own. A running upload leaves the
+   *  commit enabled — a press there is the signing in flight, held until
+   *  the bytes land. */
   disabled?: boolean;
   /** The signing is in flight (past 200ms): the commit reads `busyLabel`
    *  and goes inert — not dimmed, no spinner. */

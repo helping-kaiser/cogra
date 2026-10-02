@@ -1306,11 +1306,19 @@ const SEAL_CITATIONS = [
    of them). Each pair is read the readout's way on both boards — the face,
    the digits in geek mode, and the anchor's word with both axes spoken
    (`StagedReference`'s `stance` on the review, `StanceReadout` on the
-   seal). */
+   seal).
+
+   THE THREE ROWS ARE THE REVIEW'S THREE STATES (jakob 2026-10-02, the
+   fix-fix round's 21). @ada's post is a plain pick. Mira's pick nets the
+   reader's standing bundle toward her to nothing — it is the exact opposite
+   of what they had said — so its row carries `consequence`, the person's
+   landing words. @juno's post was removed by its author while its pick
+   waited, so its row carries `removed`, the target's removal mark, and both
+   boards draw the mark where the name stood. */
 const KEPT_PICKS = [
   { kind: "post", name: "The long way home — @ada", sub: "Post", src: "post-photo.jpg", pair: { pDirected: 0.1, pInterest: 0.1 } },
-  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 } },
-  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 } },
+  { kind: "person", name: "Mira Voss", sub: "Person", pair: { pDirected: 0.55, pInterest: 0.2 }, consequence: "This takes you back to zero." },
+  { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
 ];
 
 /* The one citation the reply's seal was drawn holding. It is a constant rather
@@ -1572,9 +1580,11 @@ const replyCitedRow = () => ({
    batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
    true }` once one has not, with `media: "video"` for a clip so the line
    reads `…signing waits for the video.` (jakob 2026-10-02, pads 3). Every
-   row is unchanged; `UploadStatusLine` stands over the foot, and `Sign
-   comment` is disabled while it shows (`ReplySealUploading`,
-   `ReplySealUploadFailed`). */
+   row is unchanged; `UploadStatusLine` stands over the foot. While the
+   uploads run, `Sign comment` stays enabled and, pressed, swaps to `Signing
+   comment…` until the bytes land and the signing answers (the fix-fix
+   round's 20, `ReplySealUploading`); at the failed reading it is disabled
+   (`ReplySealUploadFailed`). */
 function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
@@ -1631,7 +1641,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
               ) : (
                 <UploadStatusLine done={uploading.done} total={uploading.total} media={uploading.media} />
               ))}
-            <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
+            <SealFooter signLabel="Sign comment" busyLabel="Signing comment…" disabled={Boolean(uploading && uploading.failed)} />
           </>
         )}
       </div>
@@ -1883,74 +1893,87 @@ function WithdrawnLine({ name }) {
    and this one was revised upward past 1, so it stages two. */
 const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
 
+/* The citation the post edit holds as it is — one this app cannot type, read
+   by its target's standard summary line. */
+const EDIT_UNTYPED_CITATION = "Salt flats at first light — @juno";
+
 function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
       <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <PickedRow
-            items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
-            caption="2 pictures — the body"
-            onManage={() => {}}
-          />
-          <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
-          <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
-        </div>
-
-        <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
-
-        <TextField
-          label="Description"
-          corner="Optional"
-          rows={2}
-          cap={500}
-          value="Rubbings from three weekends at low tide — paper against the salt crust."
-        />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Tags</FieldLabel>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
-            <TopicRemovable topic="saltmaps" onEdit={() => {}} />
+        {/* The fields scroll under the pinned foot, the wizard reading: a
+            form taller than the phone runs on under it, and the foot stays
+            whole. */}
+        <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <PickedRow
+              items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+              caption="2 pictures — the body"
+              onManage={() => {}}
+            />
+            <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
+            <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
           </div>
-          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-          {!unchanged && <WithdrawnLine name="#coastroad" />}
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>References</FieldLabel>
-          {/* The composer's whole staged form, as `ComposeDetails` draws it:
-              the kind under the name, and the pair the citation signs. An edit
-              stages the same citation a first draft does, so it shows back the
-              same facts. The row opens `RefPairEdit` — the citation already
-              stands, so its pick adds a record — and its × withdraws it. */}
-          <StagedReference
-            kind="post"
-            name="The long way home — @ada"
-            sub="Post"
-            src="post-photo.jpg"
-            pair={{ pDirected: 0.1, pInterest: 0.1 }}
-            onEdit={() => {}}
+          <TextField label="Title" corner="Optional" cap={100} value="Salt maps of the coast road" />
+
+          <TextField
+            label="Description"
+            corner="Optional"
+            rows={2}
+            cap={500}
+            value="Rubbings from three weekends at low tide — paper against the salt crust."
           />
-          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
-          {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
-        </div>
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <FactRow
-            label="License"
-            value="Public domain"
-            action={
-              <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-                <Icon name="lock" size={16} />
-              </span>
-            }
-          />
-          <FactRow label="Sensitive" value="Not marked" action="Mark" last />
-        </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FieldLabel>Tags</FieldLabel>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              <TopicRemovable topic="fieldnotes" onEdit={() => {}} />
+              <TopicRemovable topic="saltmaps" onEdit={() => {}} />
+            </div>
+            <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+            {!unchanged && <WithdrawnLine name="#coastroad" />}
+          </div>
 
-        <div style={{ flex: 1 }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <FieldLabel>References</FieldLabel>
+            {/* The composer's whole staged form, as `ComposeDetails` draws it:
+                the kind under the name, and the pair the citation signs. An edit
+                stages the same citation a first draft does, so it shows back the
+                same facts. The row opens `RefPairEdit` — the citation already
+                stands, so its pick adds a record — and its × withdraws it. */}
+            <StagedReference
+              kind="post"
+              name="The long way home — @ada"
+              sub="Post"
+              src="post-photo.jpg"
+              pair={{ pDirected: 0.1, pInterest: 0.1 }}
+              onEdit={() => {}}
+            />
+            {/* A citation this app cannot type (jakob 2026-10-02, pads 2 and the
+                fix-fix round's 23): held as it is — no ×, opens nothing — its
+                name slot the target's standard summary line, as every picker
+                row reads, and its note in the second line's place. It signs
+                nothing, so the foot's count does not move. */}
+            <StagedReference kind="post" name={EDIT_UNTYPED_CITATION} untyped note="Comes along as it is." />
+            <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
+            {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <FactRow
+              label="License"
+              value="Public domain"
+              action={
+                <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
+                  <Icon name="lock" size={16} />
+                </span>
+              }
+            />
+            <FactRow label="Sensitive" value="Not marked" action="Mark" last />
+          </div>
+        </div>
 
         {/* Five things: the edit, #saltmaps added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`EditActs`). */}
@@ -4037,7 +4060,18 @@ function ApprovePadNote({ handle }) {
    `approving` SWAPS THE READY ROW'S CONTROL for the stance anchor the pad
    blooms from. The row's one control is the row's one other act, and on the
    approval board that act is the opinion being given; the close stands down
-   while it is open, under the wash, where it could not be pressed anyway. */
+   while it is open, under the wash, where it could not be pressed anyway.
+
+   A KEPT APPROVAL SURFACES HERE AS ITS OWN CARD (jakob 2026-10-02, the
+   fix-fix round's 22). An approval set while the key was elsewhere waits on
+   the device as pending (`PadKeyAbsent`); once the key is back it never
+   joins the kept picks' batch — the review lists plain opinions only. It
+   surfaces on this page, where approving lives, with its ceremony kept: it
+   signs through the approval pad, and the vouch lands and notifies them as
+   any approval does. It is the kept vouch-back's twin, which surfaces as its
+   own card on the feed and signs through `VouchBackPad` into `VouchedIn`.
+   Neither twin is drawn as a state of its own: the ready row here, and the
+   vouch-back card there, are the cards they surface as. */
 function InvitesBody({ approving = false }) {
   return (
     <>

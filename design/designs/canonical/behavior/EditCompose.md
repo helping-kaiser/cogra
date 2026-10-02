@@ -32,6 +32,10 @@ WHEN tap a staged tag chip -> the tag's pair opens in a sheet over the edit
 
 WHEN tap a staged citation's row -> the citation's pair opens in a sheet over the edit
 
+ALWAYS a citation this app cannot type stands under References by its target's summary line, with the note Comes along as it is. and no remove control
+
+WHEN tap a citation this app cannot type -> NEVER anything opens AND NEVER the footer's count moves
+
 WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the edit settling
 
 WHEN press Sign the edit GIVEN the signing key is not on this device -> the key-absent seal stands AND nothing is staged or signed

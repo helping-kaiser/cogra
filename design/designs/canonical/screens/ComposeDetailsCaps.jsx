@@ -20,8 +20,7 @@
 
    NEXT IS DISABLED WHILE A FIELD IS OVER, which is what the title cap already
    does in the product: the step does not advance on words it cannot sign. The
-   badge stays on the control, and its edge says it goes nowhere — the seal's
-   own disabled Sign carries the same pair.
+   badge stays on the control, and its edge says it goes nowhere.
 
    THE REFUSAL IS THIS SURFACE'S OWN SENTENCE, not the atom's. Each field words
    its own error (copy-voice, *Field errors*); the count beside it is the only

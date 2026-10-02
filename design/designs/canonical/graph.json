@@ -157,6 +157,7 @@
     "LadderStates": "reference",
     "LadderTopics": "reference",
     "PadPending": "reference",
+    "PadPendingReview": "reference",
     "SealSigning": "reference",
     "SealSigningSlow": "reference",
     "FeedNewerVersion": "reference",
@@ -309,7 +310,7 @@
     { "from": "VouchBackPad", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog" }] },
     { "from": "VouchBackPad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick" }] },
     { "from": "VouchBackPad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "VouchBack", "case": "nothing staged" }] },
-    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }, { "board": "PadWriteRule", "case": "the write rule refuses — nothing staged or spent: the notice stands where the landing line and Set were, with Not now (master)" }] },
+    { "from": "VouchBackPad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "VouchedIn", "case": "the vouch-back — signed, the ceremony opens" }, { "terminal": "back", "case": "signed — the stance lands, back where the pad bloomed" }, { "board": "PadKeyAbsent", "case": "key elsewhere — once the key is back a kept vouch-back never joins the kept picks' batch: it surfaces as its own card and signs through this pad, its ceremony kept (VouchedIn)" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }, { "board": "PadWriteRule", "case": "the write rule refuses — nothing staged or spent: the notice stands where the landing line and Set were, with Not now (master)" }] },
 
     { "from": "PadStanding", "via": 1, "kind": "detour", "label": "? — how stances work", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "PadStanding", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick, and the landing line reads what it would come to" }] },
@@ -558,7 +559,7 @@
     { "from": "Feed", "via": 5, "kind": "detour", "label": "More (caption)", "to": [{ "terminal": "self", "case": "the caption unfolds" }] },
     { "from": "Feed", "via": 6, "kind": "advance", "label": "tag chip", "to": [{ "board": "TagPage" }] },
     { "from": "Feed", "via": 7, "kind": "advance", "label": "reference count", "to": [{ "board": "RefsSheet" }] },
-    { "from": "Feed", "via": 8, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }, { "terminal": "self", "case": "press-and-hold, not signed — the face stays where it was, and the row under it says so with Retry (the RowSigning plate)" }, { "terminal": "self", "case": "press-and-hold, refused by the write rule — the face stays where it was, and the row under it says You can't sign right now., quiet, with no Retry (the RowWriteRule plate)" }] },
+    { "from": "Feed", "via": 8, "kind": "advance", "label": "stance face", "to": [{ "terminal": "self", "case": "press-and-hold — a positive act lands" }, { "board": "VouchBackPad", "case": "tap — the pad blooms (master board)" }, { "board": "KeptPicksReview", "case": "tap on a pick kept while the key was elsewhere, the key now back and the review left unsigned — the anchor reads Waiting for your review, and the review opens with every kept pick still in it, never the key notice (the PadPendingReview plate)" }, { "terminal": "self", "case": "press-and-hold, not signed — the face stays where it was, and the row under it says so with Retry (the RowSigning plate)" }, { "terminal": "self", "case": "press-and-hold, refused by the write rule — the face stays where it was, and the row under it says You can't sign right now., quiet, with no Retry (the RowWriteRule plate)" }] },
     { "from": "Feed", "via": 9, "kind": "detour", "label": "Feed score", "to": [{ "board": "FeedEntry" }] },
     { "from": "Feed", "via": 10, "kind": "advance", "label": "comment count", "to": [{ "board": "ReplyEntry" }] },
     { "from": "Feed", "via": 11, "kind": "nav", "label": "nav · Feed", "to": [{ "terminal": "self", "case": "scrolled — back to the top" }, { "terminal": "self", "case": "at the top — the feed refreshes" }] },
@@ -958,7 +959,7 @@
     { "from": "ReplySealKeyAbsent", "via": 2, "kind": "advance", "label": "Restore the key", "to": [{ "board": "Restore", "case": "restored — back to this seal, the reply intact" }] },
     { "from": "ReplySealKeyAbsent", "via": 3, "kind": "cancel", "label": "Discard the reply", "to": [{ "board": "DiscardConfirm", "case": "something written — the confirm" }] },
 
-    { "from": "ReplySealUploading", "via": 1, "kind": "advance", "label": "Sign comment (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
+    { "from": "ReplySealUploading", "via": 1, "kind": "advance", "label": "Sign comment", "to": [{ "terminal": "self", "case": "enabled through the gate — pressed, it is inert at once and reads Signing comment… past 200ms, the ways out locked with it, and the press is held until the uploads land; never a second press" }, { "board": "ReplySettled", "case": "uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent" }] },
 
     { "from": "ReplySealUploadFailed", "via": 1, "kind": "advance", "label": "Retry", "to": [{ "board": "ReplySealUploading", "case": "the upload starts again — the gate reads its running line" }] },
     { "from": "ReplySealUploadFailed", "via": 2, "kind": "advance", "label": "Sign comment (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the failed upload" }] },
@@ -1678,7 +1679,7 @@
     { "from": "ComposeSealUploading", "via": 4, "kind": "advance", "label": "Change (license)", "to": [{ "board": "ComposeLicense" }] },
     { "from": "ComposeSealUploading", "via": 5, "kind": "advance", "label": "Adjust (your stance)", "to": [{ "board": "ComposePad" }] },
     { "from": "ComposeSealUploading", "via": 6, "kind": "advance", "label": "Mark (sensitive)", "to": [{ "board": "ComposeSensitive" }] },
-    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish (disabled)", "to": [{ "terminal": "self", "case": "disabled — signing waits for the pictures" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }] },
+    { "from": "ComposeSealUploading", "via": 7, "kind": "advance", "label": "Sign and publish", "to": [{ "terminal": "self", "case": "enabled through the gate — pressed, it is inert at once and reads Signing and publishing… past 200ms, the ways out locked with it, and the press is held until the uploads land; never a second press" }, { "board": "ComposeLanded", "case": "uploads land — signing proceeds to the detail view, still settling" }] },
     { "from": "ComposeSealUploading", "via": 8, "kind": "back", "label": "Back", "to": [{ "board": "ComposeUploading", "case": "one stage back" }] },
 
     { "from": "ComposePickWeb", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "the first stage — leaves toward where compose began, draft kept" }] },
@@ -2139,7 +2140,7 @@
     { "from": "ApprovePad", "via": 1, "kind": "detour", "label": "? — how vouching works", "to": [{ "board": "HelpDialog", "case": "the stances text" }] },
     { "from": "ApprovePad", "via": 2, "kind": "advance", "label": "the pad field", "to": [{ "terminal": "self", "case": "drag or tap sets the pick — it opens at the standing low default, never at a value the link carried" }] },
     { "from": "ApprovePad", "via": 3, "kind": "cancel", "label": "Cancel", "to": [{ "board": "Invites", "case": "nothing signed — the application is still waiting" }] },
-    { "from": "ApprovePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master)" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }, { "board": "PadWriteRule", "case": "the write rule refuses — nothing staged or spent: the notice stands where the landing line and Set were, with Not now (master)" }] },
+    { "from": "ApprovePad", "via": 4, "kind": "advance", "label": "Set", "to": [{ "board": "Invites", "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }, { "board": "PadKeyAbsent", "case": "key elsewhere — the write waits as pending (master); once the key is back the kept approval never joins the kept picks' batch: it surfaces as its own card on Invites, where approving lives, and signs through this pad, its ceremony kept" }, { "board": "PadFailed", "case": "not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)" }, { "board": "PadWriteRule", "case": "the write rule refuses — nothing staged or spent: the notice stands where the landing line and Set were, with Not now (master)" }] },
 
     { "from": "RejectConfirm", "via": 1, "kind": "advance", "label": "Close it", "to": [{ "board": "Invites", "case": "the row leaves this inviter's list and the applicant is told — their account stays a signed-in reader, and any other member can still vouch them in" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "RejectConfirm", "via": 2, "kind": "cancel", "label": "Keep it", "to": [{ "terminal": "back", "case": "the dialog closes — the application is still waiting" }] },

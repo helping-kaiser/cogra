@@ -643,6 +643,12 @@ entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
 `Signing in…`, and `Create account` becomes `Creating account…`. *(All
 of these arrived with the failure pack; blessed, jakob 2026-10-01.)*
 
+A seal gated on its uploads keeps its commit enabled, and a press there
+swaps to the same word while it waits for the bytes — `Signing and
+publishing…` on `ComposeSealUploading`, `Signing comment…` on
+`ReplySealUploading` — then signs with no second press (jakob
+2026-10-02, the fix-fix round's 20; no new words).
+
 ## Field errors
 
 The lines the errored entry and profile boards carry — a field's own
@@ -1427,6 +1433,12 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
 - The write rule at this scale: the fact ends `Nothing was signed or
   spent — your picks are still kept.`, and the way out reads `Not now`.
 
+The kept picks drawn (jakob 2026-10-02, the fix-fix round; *blessed
+2026-10-02*) reuse those words and add none: the seal's acts card reads a
+removed target by its removal mark where the name stood, `Removed by its
+author`, and the anchor's `Waiting for your review` stands on the everyday
+feed once the key is back (`PadPendingReview`).
+
 **A restore that worked** says where the key is now, in the platform
 noun: `Your key is on this browser now.` · `Your key is in this app now.`
 
@@ -1739,8 +1751,9 @@ reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
 content of course"; *new, flagged*).
 
 **The citation this app cannot type** stands on an edit as a row with
-no ×, and its note reads `Comes along as it is.` (jakob 2026-10-02, pads
-2; *new, flagged for blessing*).
+no ×. Its name slot reads the target's standard summary line, as every
+picker row does, and its note reads `Comes along as it is.` (jakob
+2026-10-02, pads 2 and the fix-fix round's 23; *blessed 2026-10-02*).
 
 ## Saved, History and hiding
 

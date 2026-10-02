@@ -3694,7 +3694,7 @@ annotation goes, or he rewords it and the note follows through
 `check-help-notes --write`. Both are one-line rulings; fold them
 into the next copy round's brief.
 
-### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01** · **ruled 2026-10-02**
+### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01** · **ruled 2026-10-02** · **closed 2026-10-02**
 
 The key-loss round ruled a kept pick's life (readme §13, *The
 key-loss round*; `PadKeyAbsent`'s docblock): picks kept pending with
@@ -3739,17 +3739,17 @@ All seven are recorded in readme §13, *The kept picks and the pads,
 ruled*, and in `behavior/KeptPicksReview.md`. Left by that round, for
 jakob's eye:
 
-- **The two row states are undrawn.** `StagedReference` carries `removed`
-  and `consequence`, but `KeptPicksReview`'s fixture draws three plain
-  picks; whether the review board shows a removed or a severing row (and
-  how `KeptPicksSeal`'s acts card names a removed target) is a drawing
-  call. The removed row's × name, `Remove this pick: Post, Removed by its
-  author`, is flagged.
-- **A kept approval's home.** Ruling 4 says approvals never join the
-  batch and gives a kept vouch-back its own card; where a kept approval
-  surfaces once the key is back is not said.
-- **The post-restore anchor is undrawn.** No board draws a feed with a
-  pick waiting for review; `PadPending` draws the key-absent state.
+- ~~**The two row states are undrawn.**~~ — drawn 2026-10-02 (jakob, the
+  fix-fix round's 21): `KeptPicksReview`'s second row severs (`This takes
+  you back to zero.`), its third wears the removed-mark face with its ×
+  in its seat, and `KeptPicksSeal` reads that target by its mark.
+- ~~**A kept approval's home.**~~ — closed 2026-10-02 (the fix-fix round's
+  22): its own card on Invites, ceremony kept, the kept vouch-back's twin
+  (`InvitesBody`'s docblock, `ApprovePad`'s key-elsewhere case).
+- ~~**The post-restore anchor is undrawn.**~~ — drawn 2026-10-02 (the
+  fix-fix round's 21): `PadPendingReview`, `PadPending`'s twin plate.
+
+All three are recorded in readme §13, *The kept picks drawn*.
 
 ### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30** · **done 2026-10-01**
 
@@ -3935,8 +3935,9 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
   126.
 - ~~**The untypeable citation's row.**~~ — note ruled 2026-10-02 (pads
   2): `Comes along as it is.`, flagged (`EditCompose`'s docblock). Its
-  name slot (the claim serves only an L1 identifier) still has no words,
-  so no board draws the row yet.
+  name slot — closed 2026-10-02 (the fix-fix round's 23): the target's
+  standard summary line, as every picker row; `EditCompose` draws the row
+  (`StagedReference`'s `untyped`; readme §13, *The kept picks drawn*).
 - ~~**A clip at the gate.**~~ — closed 2026-10-02 (pads 3, "per content
   of course"): `…signing waits for the video.` (`UploadStatusLine`'s
   `media`).
@@ -3946,11 +3947,10 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
 - ~~**"Signing proceeds"**~~ — closed 2026-10-02 (pads 5): signing
   proceeds when the uploads land; the reader already pressed Sign, and
   the gate waits only for bytes (`behavior/ComposeSealUploading.md`).
-  Left for jakob's eye: the gated seal is reached by `Next` with its
-  commit drawn `disabled`, so the press the ruling assumes has no drawn
-  moment — the sidecar now holds a press made during the gate until the
-  bytes land; how the commit looks pressable, and what it reads once
-  pressed, is a drawing call.
+  Its drawing — closed 2026-10-02 (the fix-fix round's 20): the commit
+  stays enabled through the gate and, pressed, swaps to its in-flight
+  word until the bytes land (`ComposeSealUploading`,
+  `ReplySealUploading`; readme §13, *The kept picks drawn*).
 - ~~**The tag half of the sharpening.**~~ — closed 2026-10-02 (pads 6): a
   tag withdrawal is one record — one fresh 0,0 layer, newest-wins; the
   drawing counts 1 act (`EditActs`, `TagPad`).
@@ -4268,3 +4268,27 @@ jakob's eye:
   the post` asks first (`SealDiscardConfirm`), as a reply's key-absent
   `Discard the reply` does (`DiscardConfirm`). The sidecars carry the
   ruled "at once"; one grammar would mean asking first instead.
+
+### 132 · What the kept picks' drawing left open · *design + contract* · **filed 2026-10-02**
+
+The kept picks drawn (readme §13, *The kept picks drawn*) executed the
+fix-fix round's 20–23 and left these:
+
+- **Two edge labels still say `(disabled)`.** `ComposeSealUploading`'s
+  `Sign and publish (disabled)` and `ReplySealUploading`'s `Sign comment
+  (disabled)` name a commit that now stays enabled; their cases say so.
+  Both labels sit in `flows.resolved.json`, so renaming them is a
+  deliberate re-bless whose diff is exactly those two lines.
+- **A held press when an upload fails.** A press made during the gate
+  waits for the bytes. If an upload then fails, `ReplySealUploadFailed`
+  draws the commit disabled at the fault reading: does the held press
+  drop (the label back, the ways out unlocked), and does Retry's landing
+  sign without a new press?
+- **The slow line at the gate.** Past 5s a signing seal swaps its subline
+  to `Still signing — the network is slow right now.` For a press held at
+  the gate, does the 5s count from the press or from the bytes landing?
+- **The untypeable citation's summary line has no source** (contract
+  seam). `ReferenceClaim.target` is null for a target this instance
+  cannot type, and only `targetId` is served; the row's name slot now
+  reads the target's standard summary line, which the contract does not
+  serve for such a claim.

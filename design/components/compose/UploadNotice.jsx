@@ -6,8 +6,10 @@ import { InlineAction } from "../core/Button.jsx";
    device; only the cropped export is uploaded), so most posts never see
    either — these appear only when the author outruns the network.
 
-   `UploadStatusLine` is THE SEAL'S GATE: while it shows, the sign button is
-   disabled, because nothing signs until the content it signs exists.
+   `UploadStatusLine` is THE SEAL'S GATE: nothing signs until the content it
+   signs exists. The sign button stays enabled while it runs — a press waits
+   for the bytes in the commit's in-flight word, then signs (jakob 2026-10-02)
+   — and is disabled only at the line's failed reading.
    `UploadErrorLine` is the failure's words — the tile wears the badge
    (`MediaThumb failed`), this line carries Retry and Remove, in error colour
    for the fact and primary for the ways out. Direction-by-words, as always.

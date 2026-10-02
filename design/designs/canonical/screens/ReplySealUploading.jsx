@@ -7,16 +7,20 @@
 
    IT IS `ReplySeal` WITH THE GATE OVER THE FOOT. `ReplySealBody` at
    `uploading`: the read-back, the acts card with its add-rows, the three
-   facts, the note — unchanged — and `UploadStatusLine` above `Sign comment`,
-   which is disabled while the line shows: nothing signs until the content it
-   signs exists. The header's X is the reply's own, `Leave — the reply is
-   discarded`, through `DiscardConfirm` as from every reply stage.
+   facts, the note — unchanged — and `UploadStatusLine` above `Sign comment`:
+   nothing signs until the content it signs exists. The header's X is the
+   reply's own, `Leave — the reply is discarded`, through `DiscardConfirm` as
+   from every reply stage.
 
    THE GATE NAMES ITS CONTENT (jakob 2026-10-02, pads 3): a clip from
    `ReplyVideo` reads `…signing waits for the video.`, pictures `…for the
-   pictures.` SIGNING PROCEEDS WHEN THE UPLOADS LAND (pads 5): the reader
-   already pressed Sign; the gate waits only for bytes, so no second press is
-   asked.
+   pictures.`
+
+   THE COMMIT STAYS ENABLED THROUGH THE GATE (jakob 2026-10-02, the fix-fix
+   round's 20), drawn as it is at rest. Pressed, its label swaps in place to
+   `Signing comment…` — the failure pack's label-swap idiom (`SealFooter`'s
+   `busy`), the ways out locked with it — and signing proceeds the moment the
+   bytes land; no second press is asked.
 
    THE GATE CAN FAIL. An upload that does not land while the reader waits here
    turns the line into its fault reading (`ReplySealUploadFailed`): the fact,

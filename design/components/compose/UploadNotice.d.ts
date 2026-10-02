@@ -1,7 +1,7 @@
 /**
- * The two upload notices. `UploadStatusLine` is the seal's gate — while it
- * shows, the sign button is disabled: nothing signs until the content it
- * signs exists. `UploadErrorLine` carries a failure's words and its ways out
+ * The two upload notices. `UploadStatusLine` is the seal's gate — nothing
+ * signs until the content it signs exists; while it runs the sign button
+ * stays enabled and a press waits for the bytes. `UploadErrorLine` carries a failure's words and its ways out
  * (Retry · Remove it); the failed tile itself wears `MediaThumb`'s badge. The
  * ways out follow the failure: a refused file — too big, or a format nothing
  * here reads — omits `onRetry`, because retrying cannot change the answer.

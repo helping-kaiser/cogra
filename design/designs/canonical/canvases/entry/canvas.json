@@ -510,7 +510,7 @@
       "x": -2740,
       "y": 0,
       "w": 2320,
-      "h": 1896,
+      "h": 2014,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -575,6 +575,15 @@
       "y": 964,
       "w": 390,
       "h": 1600,
+      "page": "patterns"
+    },
+    {
+      "file": "PadPendingReview.dc.html",
+      "title": "Key back · a pick waiting for your review",
+      "x": 2880,
+      "y": 2684,
+      "w": 390,
+      "h": 844,
       "page": "patterns"
     },
     {

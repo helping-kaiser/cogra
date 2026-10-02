@@ -1027,7 +1027,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Change</button>", tag: "button" },
     { n: 5, find: ">Adjust</button>", tag: "button" },
     { n: 6, find: ">Mark</button>", tag: "button" },
-    { n: 7, find: 'disabled=""', tag: "button" },
+    { n: 7, find: ">Sign and publish</button>", tag: "button" },
     { n: 8, find: ">Back</button>", tag: "button" },
   ],
   ComposePickWeb: [

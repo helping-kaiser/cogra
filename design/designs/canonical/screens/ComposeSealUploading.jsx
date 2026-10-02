@@ -1,14 +1,20 @@
 /* The seal, gated on uploads (media slice): the acts card is the master
-   ActsCard, the gate is UploadStatusLine, and the sign button is DISABLED
-   while it shows — nothing signs until the content it signs exists.
+   ActsCard, the gate is UploadStatusLine, and nothing signs until the content
+   it signs exists.
 
    THE GATE NAMES ITS CONTENT (jakob 2026-10-02, pads 3): pictures read
    `…signing waits for the pictures.`, a clip from `ComposeDetailsVideo`
    `…signing waits for the video.` (`UploadStatusLine`'s `media`).
 
-   SIGNING PROCEEDS WHEN THE UPLOADS LAND (jakob 2026-10-02, pads 5): the
-   reader already pressed Sign; the gate waits only for bytes, so no second
-   press is asked. */
+   THE COMMIT STAYS ENABLED THROUGH THE GATE (jakob 2026-10-02, the fix-fix
+   round's 20). `Sign and publish` is drawn as it is at rest, pressable while
+   the line shows. Pressed, its label swaps in place to the in-flight word,
+   `Signing and publishing…` — the failure pack's label-swap idiom
+   (`SealFooter`'s `busy`): inert from the press, the word once the wait
+   passes 200ms, never dimmed and no spinner, and the ways out locked with it
+   for the swap's duration. Signing proceeds the moment the bytes land; no
+   second press is asked. Unpressed, the line goes when the last upload lands
+   and the commit stands as it was. */
 
 export function Screen() {
   return (
@@ -50,7 +56,7 @@ export function Screen() {
 
         <UploadStatusLine done={2} total={4} />
 
-        <SealFooter signLabel="Sign and publish" disabled />
+        <SealFooter signLabel="Sign and publish" busyLabel="Signing and publishing…" />
       </div>
     </>
   );
