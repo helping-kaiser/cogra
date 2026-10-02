@@ -1726,13 +1726,19 @@ function ComposeWordsBody({ paragraphs = WORDS_STAGE_BODY, used, error, nextDisa
    round), so the stage near its caps is this stage and not a copy of it. The
    defaults are the canonical fixtures; `ComposeDetailsCaps` passes longer ones
    and the refusal that belongs to the surface, and `nextDisabled` is what a
-   field over its cap does to the step. Nothing else about the stage moves. */
+   field over its cap does to the step. Nothing else about the stage moves.
+
+   `words` IS THE SAME STAGE ON THE WORDS PATH (jakob 2026-10-02, curate 2):
+   no media row, no describe row and no Description — a words post carries
+   no description — and everything else as it stands here
+   (`ComposeDetailsWords`). */
 function ComposeDetailsBody({
   title = "Salt maps of the coast road",
   titleError,
   description = "Rubbings from three weekends at low tide — paper against the salt crust.",
   descriptionError,
   nextDisabled = false,
+  words = false,
 }) {
   /* The element names are `ComposeDetails`'s calibration IDs (seam 002). They
      reach a built board only where the screen is registered (`NODE`); every
@@ -1741,17 +1747,21 @@ function ComposeDetailsBody({
     <>
       <WizardHeader title="Details" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <PickedRow
-          items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
-          caption="2 pictures — the body"
-          onManage={() => {}}
-          node="mediaRow"
-        />
-        <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
+        {!words && (
+          <>
+            <PickedRow
+              items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
+              caption="2 pictures — the body"
+              onManage={() => {}}
+              node="mediaRow"
+            />
+            <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
+          </>
+        )}
 
         <TextField label="Title" corner="Optional" cap={100} value={title} error={titleError} node="title" />
 
-        <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} node="description" />
+        {!words && <TextField label="Description" corner="Optional" rows={3} cap={500} value={description} error={descriptionError} node="description" />}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node="tags">
           <FieldLabel node="label">Tags</FieldLabel>

@@ -18,7 +18,8 @@
    pictures (readme §13, the compose flow); with the body already words it has
    no job, and a second prose field beside the first would only ask the author
    which one the post is. The title stays: it names a post of either kind. The
-   words path composes none either (`ComposeCited`; jakob 2026-10-01).
+   words path composes none either (`ComposeDetailsWords`, `ComposeCited`;
+   jakob 2026-10-01).
 
    THE FLIP DROPS A STANDING DESCRIPTION (jakob 2026-10-01). When the last
    picture leaves in the manager and the post becomes words, the description

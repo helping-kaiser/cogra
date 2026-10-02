@@ -1,9 +1,10 @@
 /* THE DETAILS STAGE ON THE PICTURE PATH (readme §13, the menus round): the
    body is already picked, and this is where it gets its words. The twin of
-   `ComposeCited` — same wizard header, same References block — with the
-   media summary on top and the Description under the title, the two things
-   the words path has no use for (jakob 2026-10-01: a words post carries no
-   description).
+   the words path's details (`ComposeDetailsWords`, and `ComposeCited` with a
+   reference riding along) — same wizard header, same References block —
+   with the media summary on top and the Description under the title, the
+   two things the words path has no use for (jakob 2026-10-01: a words post
+   carries no description).
 
    THE ROW IS THE AFFORDANCE. `PickedRow` opens Show all and carries no Crop or
    Edit links of its own (jakob 2026-08-31, "none"); the crop step is one Back

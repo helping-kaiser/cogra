@@ -605,6 +605,22 @@ Object.assign(FLOW_MARKERS, {
   ],
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
+  // The words path's details: the picture stage's controls minus the media
+  // row, the describe row and the Description, numbered in reading order.
+  ComposeDetailsWords: [
+    { n: 9, find: "aria-label=\"#fieldnotes — set how it relates\"", tag: "button" },
+    { n: 9, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
+    { n: 10, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    { n: 1, find: 'aria-label="Back a step"', tag: "a" },
+    { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
+    { n: 3, find: 'data-field="Title"', tag: "div" },
+    { n: 4, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
+    { n: 4, find: 'aria-label="Remove #coastroad"', tag: "button" },
+    { n: 5, find: "+ Add a tag", tag: "button" },
+    { n: 6, find: 'aria-label="Remove The long way home', tag: "button" },
+    { n: 7, find: "+ Cite something", tag: "button" },
+    { n: 8, find: ">Next</button>", tag: "button" },
+  ],
   RemoveConfirm: [
     { n: 1, find: ">Remove</button>", tag: "button" },
     { n: 2, find: ">Keep it</button>", tag: "button" },
