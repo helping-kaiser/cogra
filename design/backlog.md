@@ -3930,26 +3930,20 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
   prepare), and what the seal says if it does; and the batch's
   all-or-none, which api-spec's edit docstring promises and its
   cross-record section denies (audit K5.4).
-### 122 · What the entry funnel round left for rulings · *design* · **filed 2026-10-01**
+### 122 · What the entry funnel round left for rulings · *design* · **filed 2026-10-01** · **narrowed 2026-10-02**
 
 The entry funnel round (readme §13, *The entry funnel round*) executed
 jakob's K3 rulings (Block C items C1–C7, C19–C21) and left these calls
-for his eye:
+for his eye. jakob ruled the numbered ones in the morning review of
+2026-10-02, as recommended, executed in readme §13, *The no-expiry
+correction*. Still open:
 
-- **The dead link's arrival.** The ruling kept the feed-first landing and
-  asked for the unusable-link arrival to be stated. The lane read it as
-  the same landing: a dead link still names its issuer, so it lands on
-  `Main` and the band and the gate open `JoinInvalid`; a link that
-  resolves to nothing lands on `FeedBare`. Nothing on arrival says the
-  link is dead.
-- **The wrong-address change keeps the password.** The carve-out drops the
-  old address's code and nothing else; whether a change of address
-  restarts the 24-hour reap is unruled, and auth.md keeps the clock at
-  registration.
-- **The deletion's landing.** `DeleteAccountConfirmed` takes
+- **The password on the carve-out.** `ApplicantEmail` drops the old
+  address's code and nothing else, so the password is still re-asked;
+  the call is drawn and unreviewed.
+- **The deletion landing's column.** `DeleteAccountConfirmed` takes
   `VerifyExpired`'s left column rather than `Verified`'s centred one,
-  because it carries a checkbox; what `Add it to the deletion` does with
-  the box unticked is unruled. Its signed-out line and its
+  because it carries a checkbox. Its signed-out line and its
   sweep-already-chosen heading are copy, not boards.
 - **The grace screen.** `DeleteAccountPending` drops the band (it would
   say its paragraph twice) and keeps the ruled `Cancel` as its button,
@@ -3958,20 +3952,33 @@ for his eye:
   yet made.
 - **The email change's failure landings** — the expired link and the
   taken address — are copy on `ChangeEmailLinked`, not boards.
-- **An expiry notification.** The shell's card returns when an
-  application runs out, but no tenth notification kind says so; the
-  contract has none either.
-- **Where the snackbars land.** The ask link's three non-vouching readers
-  and the invite link's three signed-in readers with nothing to re-arm
-  all land where app-open lands for them; whether the already-queued
-  member should land on `Invites` instead is open.
-- **Two neighbours of the rulings, untouched.** `JoinInvalid` still says
-  an existing account "is untouched", which the 24-hour reap makes false
-  for an unverified one (the honesty fix `VerifyExpired` got); and
-  `VerifiedApp` opened signed out has no stated way on.
-- **Strings flagged for blessing** (copy-voice, *The entry funnel's
-  round*, *Confirm the change* and *Deleting the account*): every new
-  line the round drew.
+- **`VerifiedApp` opened signed out** has no stated way on.
+
+Closed 2026-10-02 (jakob, as recommended; readme §13, *The no-expiry
+correction*):
+
+- ~~**The dead link's arrival.**~~ — one snackbar on arrival, `This
+  invite link has expired.`, over the unchanged landing (`Main`, or
+  `FeedBare` for a link that resolves to nothing).
+- ~~**Does an address change restart the reap?**~~ — no: the seven days
+  run from registration (auth.md, *Expiry*), and nothing on screen says
+  so.
+- ~~**The deletion landing's unticked commit.**~~ — committed unticked,
+  the deletion stands confirmed account-only; the checkbox is purely the
+  content opt-in.
+- ~~**An expiry notification.**~~ — dead: applications never run out.
+- ~~**Where the snackbars land.**~~ — the ask link's already-queued
+  member lands on `Invites`; the invite link's signed-in snackbars are
+  gone, since a live invite link opens `Join` for anyone signed in.
+- ~~**`JoinInvalid`'s "is untouched".**~~ — the paragraph promises
+  nothing about an earlier account; its reworded line is flagged in
+  copy-voice, *The fix round's entry lines*.
+- ~~**The ask link's unknown id**~~ (ASK_LINK_UNUSABLE) — drawn as
+  `VouchAskInvalid`, in `JoinInvalid`'s idiom; its paragraph is
+  flagged.
+- ~~**Strings flagged for blessing.**~~ — jakob blessed the round's lines
+  except those for a lapsed application and a second invite, which are
+  removed.
 - ~~**The report's placement.**~~ — closed 2026-10-01 (jakob, as
   recommended): the read-back stays between the field and `Send by
   email`, the two-placement law's stated exception (readme §4; *The
@@ -4041,3 +4048,26 @@ and the K11 recommendations, and left these for his eye:
   History`, `Back to Notifications`, `Back to the stream`, `Back to the
   opinions`, `Nothing changes until you press Done`, the joining rule
   and its readings, `Also veiled by the platform's verdict`.
+### 12X-entry-noexpiry · What the no-expiry correction left for rulings · *design* · **filed 2026-10-02**
+
+The fix round's entry lane (readme §13, *The no-expiry correction*)
+executed jakob's rulings and left these for his eye:
+
+- **A dead invite link opened while signed in.** N1 rules the live link
+  (the `Join` layer). A dead one lands a guest on the issuer's borrowed
+  view with the expiry snackbar, but a signed-in reader has no guest
+  view to land on. Proposal: the reader stays where they were (or on
+  their own landing, opened cold) and hears the same snackbar, `This
+  invite link has expired.`; nothing drawn until ruled.
+- **The dead-link snackbar's word.** `This invite link has expired.`
+  also answers a used-up single-use link, a revoked one and an id that
+  resolves to nothing — the ruled words, applied to every dead arrival.
+- **`VouchAskInvalid`'s exits.** The arrow is its one control: no person
+  stands behind the link, and the sibling `VouchAskUnusable`'s
+  waits-elsewhere case keeps back only. Its board sits at the foot of
+  `VouchAskUnusable`'s column on the profile page.
+- **`Join` opened signed in** still offers `Already have an account?
+  Sign in`, as the ruling's "same as a guest" draws it.
+- **Flagged for blessing** (copy-voice, *The fix round's entry lines*):
+  the verify card's seven-day line, `JoinInvalid`'s paragraph and
+  `VouchAskInvalid`'s paragraph.
