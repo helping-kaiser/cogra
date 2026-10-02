@@ -152,7 +152,7 @@ jobs:
       # measuring one compiler while every developer runs another.
       - name: The workflow's toolchain is the one rust-toolchain.toml names
         run: grep -qx "channel = \"${RUST_CHANNEL}\"" rust-toolchain.toml
-      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # master
         with:
           toolchain: ${{ env.RUST_CHANNEL }}
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
@@ -183,7 +183,7 @@ jobs:
       SQLX_OFFLINE: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # master
         with:
           toolchain: ${{ env.RUST_CHANNEL }}
           components: rustfmt, clippy
@@ -218,7 +218,7 @@ jobs:
       RUST_LOG: debug
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # master
         with:
           toolchain: ${{ env.RUST_CHANNEL }}
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
@@ -301,7 +301,7 @@ jobs:
       SQLX_OFFLINE: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de # master
+      - uses: dtolnay/rust-toolchain@7e38f4b43b4db5c8dd498af069a4f6196df1d067 # master
         with:
           toolchain: ${{ env.RUST_CHANNEL }}
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
@@ -340,7 +340,7 @@ jobs:
           # sdkmanager exits 1 on it. Everything else the build needs
           # (build-tools, platforms) Gradle installs itself.
           packages: platform-tools
-      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6
       # The Kotlin surface's own gate, the analogue of `cargo clippy` and
       # `npm run lint`: ktlint owns formatting, detekt the rules. Both run
       # against a baseline of what was already there, so what they fail on
