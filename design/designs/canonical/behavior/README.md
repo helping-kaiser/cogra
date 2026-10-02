@@ -83,7 +83,14 @@ Where each sidecar's words come from:
 - `KeptPicksReview.md` — the kept picks' review (readme §13, *The kept
   picks' review*): one batch, signed only from its seal; the × that drops
   a pick with no confirm and no undo, and the last drop's exit; leaving
-  unsigned keeps every pick.
+  unsigned keeps every pick. And the kept-picks rulings (readme §13, *The
+  kept picks and the pads, ruled*): plain opinions only, the removed-mark
+  face, the severance said on its row with Sign as the confirmation, the
+  write rule's `Not now` back to the review, the spoken drop, the anchor's
+  `Waiting for your review` and the settings row's conditions.
+- `RefPairEdit.md` — a standing citation's pair on an edit (readme §13,
+  *The kept picks and the pads, ruled*): the pick opens at the origin, and
+  `Done` on a pick never moved off it stages nothing, as the scrim does.
 - The rest of the compose and media pages' sidecars (readme §13, *The
   compose and media behavior pass*) — each board's own docblock, its
   graph edges' cases, and the readme §13 rounds and copy-voice sections

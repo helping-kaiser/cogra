@@ -1,12 +1,16 @@
 # ComposeSealUploading · `spec:design:behavior-compose-seal-uploading`
 
-ALWAYS the line Uploading N of M — signing waits for the pictures. stands above Sign and publish GIVEN an upload is running
+ALWAYS the line Uploading N of M — signing waits for the pictures. stands above Sign and publish GIVEN pictures are uploading
 
-ALWAYS Sign and publish stays visible and inert GIVEN an upload is running
+ALWAYS the line Uploading N of M — signing waits for the video. stands above Sign and publish GIVEN a clip is uploading
 
-WHEN press Sign and publish GIVEN an upload is running -> NEVER anything is signed
+ALWAYS Sign and publish stays visible GIVEN an upload is running
 
-WHEN the last upload lands -> the upload line goes AND Sign and publish answers
+WHEN press Sign and publish GIVEN an upload is running -> the press is held for the uploads AND NEVER anything is signed before the last upload lands
+
+WHEN the last upload lands GIVEN Sign and publish was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
+
+WHEN the last upload lands GIVEN Sign and publish was not pressed -> the upload line goes AND Sign and publish answers
 
 ALWAYS every act the signature commits is read back in the acts card while the uploads run
 
