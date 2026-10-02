@@ -96,6 +96,7 @@ export function PostCard({
   stanceDefaultPick,
   stanceOnOpenHistory,
   stancePendingPick,
+  stancePendingReview,
   stanceSigning,
   score,
   onOpenScore,
@@ -490,6 +491,7 @@ export function PostCard({
               defaultPick={stanceDefaultPick}
               onOpenHistory={stanceOnOpenHistory}
               pendingPick={stancePendingPick}
+              pendingReview={stancePendingReview}
               signing={stanceSigning}
               {...(stanceAxes ? { axes: stanceAxes } : null)}
               node={node && "stance"}
