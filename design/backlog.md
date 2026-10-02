@@ -3691,7 +3691,7 @@ annotation goes, or he rewords it and the note follows through
 `check-help-notes --write`. Both are one-line rulings; fold them
 into the next copy round's brief.
 
-### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01**
+### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01** · **ruled 2026-10-02**
 
 The key-loss round ruled a kept pick's life (readme §13, *The
 key-loss round*; `PadKeyAbsent`'s docblock): picks kept pending with
@@ -3709,26 +3709,44 @@ closes the gap.
 picks' review*): `KeptPicksReview`, `KeptPicksSeal` and the settings
 row; the gap is closed. Left for rulings, none drawn:
 
-- **The anchor after the key is back.** A review left unsigned leaves the
-  posts' anchors wearing `Waiting for your key`, no longer true, and the
-  face's tap still opens `PadKeyAbsent`. What the anchor reads, and what
-  its tap opens, while the batch waits on the reader rather than the key.
-- **A kept pick whose target went.** A post removed or an account deleted
-  before the batch signs: the row's face, and whether the seal refuses
-  that act on its row (`SealFaultRow`'s shape) or the review drops it.
-- **A kept pick that would sever its bundle.** On a held post or topic, a
-  pick that nets the bundle to nothing goes through `SeveranceConfirm`
-  when signed alone; the batch has no such step.
-- **Kept vouches.** A kept vouch-back (`VouchBackPad` opens `VouchedIn`
-  when signed alone) or approval (`ApprovePad`, whose application may
-  expire meanwhile), signed in the batch.
-- **The write rule at kept-picks scale.** `WriteRuleFailed` draws the
-  post's seal and says the draft is kept; its clause and its way out for
-  the picks are owed, as the reply's were.
-- **Spoken drops.** Whether a dropped row is announced, as the pickers'
-  `PickAnnouncement` does, and where focus lands when a row leaves.
-- **The row's conditions.** Whether `3 kept picks waiting` shows while the
-  key has gone again, or over a sealed sign-out's picks.
+- ~~**The anchor after the key is back.**~~ — closed 2026-10-02 (jakob,
+  kept picks 1): the anchor reads `Waiting for your review` and its tap
+  opens the review (`StanceControl`'s `pendingReview`).
+- ~~**A kept pick whose target went.**~~ — dissolved 2026-10-02 (kept
+  picks 2, the never-delete law): nothing vanishes and signing stays
+  valid; a removed or redacted target's row wears the removed-mark face
+  (`StagedReference`'s `removed`).
+- ~~**A kept pick that would sever its bundle.**~~ — closed 2026-10-02
+  (kept picks 3): the row says the consequence inline, and Sign is the
+  confirmation — no dialog (`StagedReference`'s `consequence`).
+- ~~**Kept vouches.**~~ — closed 2026-10-02 (kept picks 4): kept
+  vouch-backs and approvals never join the batch; the review lists plain
+  opinions only, and a kept vouch-back surfaces as its own card keeping
+  its ceremony.
+- ~~**The write rule at kept-picks scale.**~~ — closed 2026-10-02 (kept
+  picks 5): the fact ends `your picks are still kept.`, the way out reads
+  `Not now`, back to the review (`WriteRuleFailed`'s docblock).
+- ~~**Spoken drops.**~~ — closed 2026-10-02 (kept picks 6): `Removed — 2
+  picks left.`, focus to the next row.
+- ~~**The row's conditions.**~~ — closed 2026-10-02 (kept picks 7): the
+  row shows only while the key is here and unsigned picks wait; with the
+  key gone again, the waiting-for-key state owns the surface.
+
+All seven are recorded in readme §13, *The kept picks and the pads,
+ruled*, and in `behavior/KeptPicksReview.md`. Left by that round, for
+jakob's eye:
+
+- **The two row states are undrawn.** `StagedReference` carries `removed`
+  and `consequence`, but `KeptPicksReview`'s fixture draws three plain
+  picks; whether the review board shows a removed or a severing row (and
+  how `KeptPicksSeal`'s acts card names a removed target) is a drawing
+  call. The removed row's × name, `Remove this pick: Post, Removed by its
+  author`, is flagged.
+- **A kept approval's home.** Ruling 4 says approvals never join the
+  batch and gives a kept vouch-back its own card; where a kept approval
+  surfaces once the key is back is not said.
+- **The post-restore anchor is undrawn.** No board draws a feed with a
+  pick waiting for review; `PadPending` draws the key-absent state.
 
 ### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30** · **done 2026-10-01**
 
@@ -3902,25 +3920,32 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
   removal's cost is a sentence over the foot, describing the control;
   a records row is heard as `N things`; the failed gate is its own board
   (`ReplySealUploadFailed`), its line offering Retry and no Remove.
-- **The comment edit's mirror** (audit K6.12, D38). `CommentEdit` still
-  draws no standing citations, no `Withdrawn:` lines and no
-  `RefPairEdit` route; `CommentEditActs` counts the old three kinds.
-- **The untypeable citation's row.** api-spec excludes such a citation
-  from editing, and the edit's rule is a row with no ×, but its name
-  slot (the claim serves only an L1 identifier) and any quiet reason
-  have no words, so no board draws it.
-- **A clip at the gate.** `UploadStatusLine` says "signing waits for
-  the pictures" for a video at both scales (`ReplyVideo/3`,
-  `ComposeDetailsVideo/9`); the video's words are unwritten.
-- **An untouched pick on `RefPairEdit`.** What `Done` stages with the
-  pick still at the origin is the stance pad's open question (audit
-  K10.2).
-- **"Signing proceeds"** on both gated seals' commit edges reads as
-  signing without a tap (audit K12.12, unruled).
-- **The tag half of the sharpening.** jakob's ruling names tags and
-  citations together ("we even need multiple acts to remove them");
-  api-spec makes the un-tag one newest-wins record, so the drawing counts
-  one. If a tag's withdrawal can cost more, that is a contract change.
+- ~~**The comment edit's mirror**~~ — ruled 2026-10-02 (jakob, pads 1:
+  "same semantics at comment scale"), drawn as its own bite: item
+  12X-keptpads.
+- ~~**The untypeable citation's row.**~~ — note ruled 2026-10-02 (pads
+  2): `Comes along as it is.`, flagged (`EditCompose`'s docblock). Its
+  name slot (the claim serves only an L1 identifier) still has no words,
+  so no board draws the row yet.
+- ~~**A clip at the gate.**~~ — closed 2026-10-02 (pads 3, "per content
+  of course"): `…signing waits for the video.` (`UploadStatusLine`'s
+  `media`).
+- ~~**An untouched pick on `RefPairEdit`.**~~ — closed 2026-10-02 (pads
+  4): `Done` stages nothing, as the scrim; an untouched pad never makes
+  an act (`behavior/RefPairEdit.md`).
+- ~~**"Signing proceeds"**~~ — closed 2026-10-02 (pads 5): signing
+  proceeds when the uploads land; the reader already pressed Sign, and
+  the gate waits only for bytes (`behavior/ComposeSealUploading.md`).
+  Left for jakob's eye: the gated seal is reached by `Next` with its
+  commit drawn `disabled`, so the press the ruling assumes has no drawn
+  moment — the sidecar now holds a press made during the gate until the
+  bytes land; how the commit looks pressable, and what it reads once
+  pressed, is a drawing call.
+- ~~**The tag half of the sharpening.**~~ — closed 2026-10-02 (pads 6): a
+  tag withdrawal is one record — one fresh 0,0 layer, newest-wins; the
+  drawing counts 1 act (`EditActs`, `TagPad`).
+
+Recorded in readme §13, *The kept picks and the pads, ruled*.
 - **Contract seam** (for the relay): the edit's footer and acts card
   count real records before Sign — one per edit, tag and citation
   record, and `ReferenceClaim.withdrawalCost` per citation withdrawn,
@@ -4041,3 +4066,18 @@ and the K11 recommendations, and left these for his eye:
   History`, `Back to Notifications`, `Back to the stream`, `Back to the
   opinions`, `Nothing changes until you press Done`, the joining rule
   and its readings, `Also veiled by the platform's verdict`.
+
+### 12X-keptpads · The comment edit mirrors the withdrawal package · *design* · **filed 2026-10-02**
+
+Ruled by jakob on 2026-10-02 (the morning review, pads 1: "yes" to "rule
+now — same semantics at comment scale — draw as its own bite"): the
+comment edit takes the post edit's withdrawal package unchanged at
+comment scale. Item 121's bullet named the gap (audit K6.12, D38):
+`CommentEdit` draws no standing citations, no `Withdrawn:` lines and no
+`RefPairEdit` route, and `CommentEditActs` counts the old three kinds.
+A drawing round brings them level with `EditCompose` and `EditActs`
+(readme §13, *The pads and the edit's withdrawals*): standing citations
+that open `RefPairEdit`, `Remove citation` with its cost said inline and
+Sign as the confirmation, a `Withdrawn:` line with its `Undo` per item,
+a tag withdrawal as one record, and the acts sheet's complete kind set
+counted in records.
