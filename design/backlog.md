@@ -4018,15 +4018,16 @@ and the K11 recommendations, and left these for his eye:
   is an act and its own commit) and read-only sheets (references,
   opinions, Cited by, license terms, the comments thread) as keeping
   the law by their shape. Confirm the reading.
-- **Two dialogs keep their own layout.** `StanceAlternates` (a chooser
-  with its "?" and three actions) and `ReplyKeyAbsent` (the key notice,
-  a master) still pass `children` to `DialogSurface` rather than the
-  slots.
-- **The drill-ins the tables do not reach yet.** `FeedEntry`'s level one
-  draws a fixed `Back to feed` though the score is tapped on many
-  surfaces; `ProfileStances`, `Notifications`, `About` and
-  `ChatsComingSoon` read a bare `Back`; the stream's own way out is
-  `Back to feed` though a profile's posts open it too.
+- ~~**Two dialogs keep their own layout.**~~ — closed 2026-10-02
+  (jakob: the two off-slot dialogs are fine). `StanceAlternates` (a
+  chooser with its "?" and three actions) and `ReplyKeyAbsent` (the key
+  notice, a master) have different anatomies from the slotted dialog and
+  keep them (readme §13, *The nav-noun sweep*).
+- ~~**The drill-ins the tables do not reach yet.**~~ — closed 2026-10-02
+  for `FeedEntry`, `ProfileStances`, `Notifications`, `About` and the
+  stream (readme §13, *The nav-noun sweep*). Open: `ChatsComingSoon`
+  still reads a bare `Back`; Wallet's and the join form's nouns, filed
+  as 12X-nav-nouns below.
 - **The derived details.** The deep-link highlight's rung (one up the
   surface ladder from the sheet) and its one second; the license
   joining rule's name for a non-zero pair (its two tier names, ` · `);
@@ -4036,8 +4037,22 @@ and the K11 recommendations, and left these for his eye:
   platform's verdict` is written into `ComposeSensitive`'s docblock and
   copy-voice; no board draws the edit's Sensitive row in that state.
 - **The chat's sign sheet** (post-MVP `ChatSignSheet`) still reads
-  `Public domain — your default`; the joining rule names no chat.
+  `Public domain — your default`; the joining rule names no chat. Rides
+  the chats migration (jakob 2026-10-02).
 - **Flagged for blessing** (copy-voice): `Back to Saved`, `Back to
   History`, `Back to Notifications`, `Back to the stream`, `Back to the
   opinions`, `Nothing changes until you press Done`, the joining rule
   and its readings, `Also veiled by the platform's verdict`.
+
+### 12X-nav-nouns · Two origins the nav-noun tables have no noun for · *design* · **filed 2026-10-02**
+
+The nav-noun sweep (readme §13) named every drill-in's origins from nouns
+already ruled, and left two without one:
+
+- **Wallet, as the bell's origin.** Notifications opens from the bell on
+  every root band; `Back to feed`, `Back to Explore` and `Back to your
+  profile` are ruled, `WalletComingSoon` has no noun. By the named-surface
+  rule it would be `Back to Wallet`; unruled.
+- **The join form, as About's origin.** Its help dot opens About, and the
+  arrow returns the form as it was left; the entry funnel's boards have
+  no origin noun and `Join` draws a bare `Back`. Unruled.
