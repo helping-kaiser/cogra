@@ -1128,9 +1128,12 @@ and before `Privacy` and `Terms`, each one string for app and web:
   the release chronicle, titled by the row: each release's dateline
   reads `Version 0.1.2 · installed · 30.09.2026` for the running one and
   `Version 0.1.1 · 28.09.2026` for the rest, and the page's footnote
-  reads `Newest first.` The notes are read on the page; no release sends
-  the reader anywhere else. A release's notes are written when it ships,
-  never here. *`installed` and the footnote flagged for blessing,
+  reads `Newest first.` Each release's card ends in `See it on GitHub`,
+  named `See version 0.1.2 on GitHub` for a listener — the patch notes'
+  only door to the deeper level, that release's public page (jakob
+  2026-10-02, blessed); the newest release's card in the behind state
+  carries its own. A release's notes are written when it ships, never
+  here. *`installed` and the footnote flagged for blessing,
   2026-10-02.*
 - **A running version behind the newest** (jakob 2026-10-01). Atop the
   chronicle, one quiet line: `A newer version exists.` ending in `Update
@@ -1142,7 +1145,8 @@ and before `Privacy` and `Terms`, each one string for app and web:
   of CoGra is out.` with `Update now` as its action; a device-local seen
   flag per release means each release says it exactly once, and letting
   it pass costs nothing (`FeedNewerVersion`). **`Update now` leads to the
-  download, never to the code** (jakob 2026-10-02): in the app it opens
+  download, never to the code** (jakob 2026-10-02) — the code is the
+  release cards' door: in the app it opens
   CoGra's Play Store listing, on the web it reloads the page into the new
   version — one string, no platform noun. *`Update now`, `Update to
   version 0.1.3`, `installed` and `newest` flagged for blessing,

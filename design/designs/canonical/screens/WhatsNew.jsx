@@ -13,9 +13,15 @@
    and the page cannot disagree.
 
    EACH RELEASE'S NOTES ARE PLAIN WORDS about what a reader can now do, and
-   the page is where they are read: no release sends the reader elsewhere
-   (jakob 2026-10-02 — a reader wants the new version, not the code). The
-   words are platform-independent; the app and the web read one list.
+   each card ends in its own door, `See it on GitHub`, onto that release's
+   public page — the full notes and the code, at `RELEASES_URL` +
+   `/tag/v<version>` on the public repo (jakob 2026-10-02, the fix-fix
+   round's ruling 0: "this is the actual list of patch notes and the only
+   door to the deeper level"). The doors are named for their release,
+   because three controls reading the same words a thumb apart tell a
+   listener the verb and not the object (copy-voice, *The settings page*,
+   `Copy the PEM block`'s rule). The words are platform-independent; the
+   app and the web read one list.
 
    THE NOTES ARE FIXTURE, NOT COPY. What each release says is written when it
    ships; the board draws the shape a release's notes take.

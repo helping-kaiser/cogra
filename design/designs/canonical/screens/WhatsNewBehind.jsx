@@ -14,6 +14,11 @@
    same button reloads the page into the new version (F1). One string for
    both, with no platform noun. The What's new page stays the notes page.
 
+   EVERY RELEASE CARD KEEPS ITS DOOR (jakob 2026-10-02, the fix-fix round's
+   ruling 0), the newest one's included: `See it on GitHub`, named for its
+   release, onto that release's public page (`WhatsNew`'s anatomy). The
+   cards are the only way to the code; `Update now` never leads there.
+
    THE DATELINES SAY WHAT EACH VERSION IS TO THIS DEVICE (curate 1): the newer
    release heads the list as `newest`, the running one reads `installed` —
    never `current`, which a version behind the newest is not.
