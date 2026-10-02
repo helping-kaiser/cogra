@@ -8552,7 +8552,7 @@ jakob's third ruling round, on the fix-fix round's residue.
   draws no such row, and `StagedReference` carries no `untyped` or
   `note`. The edit's fields keep scrolling under its pinned foot. The
   row, the withdrawal's addressing by L1 identifier and the target's
-  face beyond this app wait for L1 (backlog 12X-fixfix-residue).
+  face beyond this app wait for L1 (backlog 133).
 - **The comment-scale bug notice's discard asks first**, one grammar
   with the post scale: `Discard the reply` and `Discard the edit` open
   `DiscardConfirm`'s ask.

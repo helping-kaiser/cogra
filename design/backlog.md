@@ -3936,7 +3936,7 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
 - ~~**The untypeable citation's row.**~~ — dissolved 2026-10-02 (the
   residue round): in the MVP only CoGra writes the graph, so every
   citation's target is typeable and no board draws the row. Parked
-  post-L1 as item 12X-fixfix-residue.
+  post-L1 as item 133.
 - ~~**A clip at the gate.**~~ — closed 2026-10-02 (pads 3, "per content
   of course"): `…signing waits for the video.` (`UploadStatusLine`'s
   `media`).
@@ -4284,9 +4284,9 @@ residue round*):
 - ~~**The untypeable citation's summary line has no source**~~ —
   dissolved 2026-10-02 (the residue round): the MVP draws no untypeable
   citation; the contract need moves with the row to item
-  12X-fixfix-residue.
+  133.
 
-### 12X-fixfix-residue · The citation this app cannot type, after L1 · *design + contract* · **filed 2026-10-02** · **post-L1**
+### 133 · The citation this app cannot type, after L1 · *design + contract* · **filed 2026-10-02** · **post-L1**
 
 Parked by jakob on 2026-10-02 (the residue round: "in the mvp no one can
 do such a thing… later we can tackle this"). In the MVP only CoGra
