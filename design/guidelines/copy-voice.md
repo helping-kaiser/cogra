@@ -603,9 +603,12 @@ applicant in place. A guest gets the join prompt there instead.
 what becomes possible, and when.
 
 - `You can comment once you're in.` — the comment sheet's foot and a
-  comment's `Reply`. The foot wears the locked look (auth.md): visibly
-  inactive, still tappable.
+  comment's `Reply`.
 - `You can invite once you're in.` — the profile's `Invites`.
+
+Every control the family answers wears the locked look (auth.md):
+visibly inactive, still tappable — the foot, `Reply` and `Invites` alike
+(jakob 2026-10-02).
 
 ## In-flight labels
 
