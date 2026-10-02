@@ -3831,6 +3831,41 @@ const ApplicationGroup = ({ label, count }) => (
   </div>
 );
 
+/* THE VOUCH CARD — `VouchBack`'s card, and the same card under the pad's wash
+   on `VouchBackPad`, so it is written once.
+
+   IT WEARS THE OLIVE REGISTER (jakob 2026-10-02, the olive split: a feed card
+   that asks the reader to act wears the account-notice register; one that only
+   informs stays neutral). `tertiary-container` ground, `on-tertiary-container`
+   ink for the title and the sentence alike, and the panel's own pair turned
+   over for the committing button (`Button`'s `inverse`) — `NoticePanel`'s
+   anatomy, held by a card. The way out is a text button in the panel's ink,
+   because a `primary` word on the olive is a second colour family arguing with
+   the panel's own, the same reason the filled button turns over. `body` and
+   `actions` are what the two boards differ in: the closed card says what the
+   button opens, and its row holds the buttons rather than the pad's anchor. */
+function VouchBackCard({ body, actions }) {
+  return (
+    <Card style={{ flex: "none", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <MonogramAvatar name="Mira Voss" src="inviter.jpg" size="lg" />
+        <h2
+          style={{
+            margin: 0,
+            fontSize: "var(--text-title-medium)",
+            lineHeight: "var(--text-title-medium--line-height)",
+            fontWeight: "var(--text-title-medium--font-weight)",
+          }}
+        >
+          @mira vouched you in
+        </h2>
+      </div>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{body}</p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>{actions}</div>
+    </Card>
+  );
+}
+
 /* ONE LINE OF A PAD'S NOTE. `VouchBackPad` drew it first and drew it alone;
    the approval pad on the other side of the same handshake draws the identical
    line, so it is written once here rather than twice on two boards that must

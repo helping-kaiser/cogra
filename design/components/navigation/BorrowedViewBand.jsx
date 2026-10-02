@@ -17,12 +17,12 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
    (§9); it exposes nothing the public record does not already carry.
 
    `action` drops away for the signed-in applicant, where the line changes
-   ("… while your application lands.") but the vantage point does not. A
-   landed member whose vouch-back is not signed yet carries `Vouch back`
-   instead: the vouch card's `Not now` puts the card away on one device, and
-   the band keeps the way to the pad while the pair is incomplete. The view
-   stays borrowed until the vouch-back itself is signed — an opinion on
-   anything else first does not end it.
+   ("… while your application lands.") but the vantage point does not, and
+   for a landed member who has not opined yet, whose line says what ends the
+   borrowing. The view ends on the member's first opinion, on anyone: their
+   own graph then exists, so their own feed does. The band carries no
+   vouch-back action — vouching back is the vouch card's, and @mira's
+   profile's for good.
 
    Naming a vantage needs no ranker, so the band stands from the start and the
    feed beneath it reads newest like every other until slice 3. The borrowed

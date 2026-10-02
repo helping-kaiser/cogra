@@ -1281,9 +1281,9 @@ may serve any actor's view of the shared record to any reader. So:
   ranking honest (§9); it exposes nothing the public record does not
   already carry.
 - **The borrowed view persists through the applicant days** and hands
-  over to the member's own view when the vouch-back is signed — that
-  signature alone. A landed member's opinion on anything else leaves
-  the view borrowed.
+  over to the member's own view with their first signed opinion, on
+  anyone: their own graph then exists, so their own feed does. The
+  vouch-back is not the gate.
 - **The vantage resolves to the most specific actor available**, and
   the band names whichever one it lands on. Anyone who arrived through
   an invite link borrows that link's ISSUER, and an applicant is still
@@ -3589,10 +3589,10 @@ one sitting.
   destination, and a destination wearing a state says the state belongs
   to the place rather than to the act. The tags-and-references sheet is
   where the act is, so that is where it says it is still settling.
-- **The borrowed-view band dies after signing, not on approach.** While
-  the vouch-back is unsigned the reader has no stance of their own and
-  the view is still borrowed, so the band stands through the whole
-  approach to the pad and goes when the signature lands.
+- **The borrowed-view band dies after signing, not on approach.** Until
+  the member's first opinion is signed they have no stance of their own
+  and the view is still borrowed, so the band stands through the whole
+  approach to the pad and goes when that signature lands.
 - **The Collective founding-name force is removed.**
   `PrepareCollectiveInput`'s `displayName` is optional, an explicit null
   clears it exactly as on a person's profile, and a Collective with none
@@ -4776,12 +4776,12 @@ entry flow is complete and correct without it, so if the window
 closes the ceremony is what gets dropped, not a step the product
 needs.
 
-- **What the ceremony is ABOUT is the borrowed view ending.** A feed
-  is ranked from the viewer's own outgoing opinions; until the
-  vouch-back the new member had none and browsed from the vantage of
-  the link they came through. The signature is the moment their own view begins — that,
-  not a milestone badge, is the thing worth marking, and it lets the
-  copy stay concrete while the headline carries the metaphor.
+- **What the ceremony is ABOUT is the pair completed.** The vouch-back
+  opens the way both ways; and a feed is ranked from the viewer's own
+  outgoing opinions, so when it is the member's first one it is also
+  the moment the borrowed view ends and their own begins. That, not a
+  milestone badge, is the thing worth marking, and it lets the copy
+  stay concrete while the headline carries the metaphor.
 - **The sky is `SkyField`'s vocabulary, not a new drawing.** The
   Explore hero already draws the graph as weighted discs on hairlines
   in token colours ("Your sky — every account a star"). The ceremony
@@ -8069,13 +8069,10 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
   control, flipping live to `VouchBack` when the record lands; the
   `keyAt` chip draws the key-absent variant, which says the landing
   comes from the device holding the key.
-- **The vouch-back stays reachable and alone ends the borrowed view.**
-  While the pair is incomplete the band carries `Vouch back`, so `Not
-  now` loses nothing; a first opinion on the member who vouched you in
-  is the vouch-back wherever it is signed and opens `VouchedIn`. An
-  opinion on anything else leaves the view borrowed. On `VouchedIn`
-  Android's Back is `Go to your feed`; a vouch-back that never lands is
-  an ordinary expired act, and the card and band return.
+- **The vouch-back stays reachable.** A first opinion on the member who
+  vouched you in is the vouch-back wherever it is signed and opens
+  `VouchedIn`. On `VouchedIn` Android's Back is `Go to your feed`; a
+  vouch-back that never lands is an ordinary expired act.
 - **The ask link rides the waiting card** (jakob's pick, (b)), its
   caption true for a live application: it stages nobody new until the
   answer comes.

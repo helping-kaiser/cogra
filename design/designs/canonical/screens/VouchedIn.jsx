@@ -3,13 +3,14 @@
    the network… you becoming part of the sky or sth", an animation welcome).
 
    WHAT THIS MOMENT ACTUALLY IS, in the product's own terms. The reader was
-   vouched in, landed, and has just Set their first opinion — on @mira, the
-   person who vouched for them. A feed is ranked from the viewer's OWN outgoing
-   opinions, so until this signature they had none and were browsing from
-   @mira's borrowed view (readme §13, the borrowed vantage). The signature is
-   the moment the borrowed view ends and their own begins. That — not a
-   milestone badge — is what the screen celebrates, and it is why the subline
-   can be entirely concrete while the headline carries the metaphor.
+   vouched in, landed, and has just Set their opinion on @mira, the person who
+   vouched for them — the pair is complete, the way open both ways. A feed is
+   ranked from the viewer's OWN outgoing opinions, and the first one, on
+   anyone, ends @mira's borrowed view (readme §13, the borrowed vantage); when
+   the vouch-back is that first one, this is also the moment their own view
+   begins. The completed pair — not a milestone badge — is what the screen
+   celebrates, and it is why the subline can be entirely concrete while the
+   headline carries the metaphor.
 
    THE SKY IS NOT NEW MATERIAL. `SkyField` already draws it on the Explore hero
    ("Your sky — every account a star, sized by your own paths to it", item 16):
@@ -30,8 +31,8 @@
 
    THE FIELD MAKES NO CLAIM ABOUT WEIGHTING, and the copy is careful not to make
    one. The Explore hero promises a sky "sized by your own paths to it"; on this
-   screen the reader has exactly one path, so a field drawn by that rule would
-   be one lit point and a dozen grey ones — true, and the wrong note for a
+   screen the reader has a path or a few, so a field drawn by that rule would
+   be a lit point or two and a dozen grey ones — true, and the wrong note for a
    welcome. So this is the sky as a picture of the network with the reader newly
    in it, and the screen's WORDS claim only what is certainly true: the opinion
    is signed, and the feed is theirs now. Nothing is promised that a later Sky
@@ -67,8 +68,8 @@
    while the opinion is signed and still settling. If it expires instead of
    landing, the reader gets the same did-not-land notice any expired act
    raises — nothing special to the ceremony — and since the pair is still
-   incomplete, the vouch card and the band's `Vouch back` return
-   (`VouchBack`).
+   incomplete, the vouch card returns (`VouchBack`) unless the reader had put
+   it away for good; @mira's profile keeps the way either way.
 
    ── THE MOTION ──────────────────────────────────────────────────────────────
    THIS IS A DECLARED DEVIATION, not an oversight. readme §4 Motion says

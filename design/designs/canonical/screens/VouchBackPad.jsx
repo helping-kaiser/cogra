@@ -5,45 +5,42 @@
 
    `PadLine` LIVES IN `_shared.jsx` (the invites round): the approval pad on
    the other side of this same handshake draws the identical line, and a pad's
-   own voice written twice is a pad's own voice that drifts. */
+   own voice written twice is a pad's own voice that drifts. The card beneath
+   the wash is `VouchBackCard`, `VouchBack`'s own, in its olive register. */
 export function Screen() {
   return (
     <>
       <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view — vouch back to start your own." />
+        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view — your first opinion starts your own." />
       </CograBand>
       <FeedList>
-        <Card style={{ flex: "none" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <MonogramAvatar name="Mira Voss" src="inviter.jpg" size="lg" />
-            <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>@mira vouched you in</h2>
-          </div>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
-            Vouch back to open the way from your side — your first opinion, and your feed grows from it.
-          </p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-            <Button variant="text">Not now</Button>
-            <StanceControl
-              targetLabel="@mira"
-              helpLabel="Your first opinion"
-              defaultOpen
-              defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
-              padInset={80}
-              padNote={
-                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                  <PadLine>Your first opinion. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
-                  <PadLine>
-                    Later, tap the small face under a post to open this — press and hold it instead and a gentle{" "}
-                    <span aria-hidden="true">🙂</span>
-                    <ExactTail exact=" (+0.10 / +0.10)" spoken="Nice, For or against +0.10, How much reaches you +0.10" />{" "}
-                    is signed on the spot.
-                  </PadLine>
-                  <PadLine>Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.</PadLine>
-                </div>
-              }
-            />
-          </div>
-        </Card>
+        <VouchBackCard
+          body="Vouch back to open the way from your side — your first opinion, and your feed grows from it."
+          actions={
+            <>
+              <Button variant="text" style={{ color: "var(--on-tertiary-container)" }}>Not now</Button>
+              <StanceControl
+                targetLabel="@mira"
+                helpLabel="Your first opinion"
+                defaultOpen
+                defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
+                padInset={80}
+                padNote={
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    <PadLine>Your first opinion. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
+                    <PadLine>
+                      Later, tap the small face under a post to open this — press and hold it instead and a gentle{" "}
+                      <span aria-hidden="true">🙂</span>
+                      <ExactTail exact=" (+0.10 / +0.10)" spoken="Nice, For or against +0.10, How much reaches you +0.10" />{" "}
+                      is signed on the spot.
+                    </PadLine>
+                    <PadLine>Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.</PadLine>
+                  </div>
+                }
+              />
+            </>
+          }
+        />
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 
