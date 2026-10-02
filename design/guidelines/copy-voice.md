@@ -513,7 +513,12 @@ noun, and a sheet is named by what it is a sheet of. Already blessed:
 topics`, `Back to the post`, `Back to the comments`, `Back to the
 profile`, `Back to #<thattag>`, `Back to your profile`, `Back to
 settings`; the score's trace, the stream, the opinions page,
-Notifications and About take their nouns from these and add none.
+Notifications and About take their nouns from these, and Notifications
+adds one: `Back to Wallet`, when the bell was tapped on Wallet's root —
+a named surface by its title, not in the MVP and still a place to go
+back to (jakob 2026-10-02, **blessed**). The entry funnel names no
+origin: from the join form, About's arrow reads a plain `Back`, as the
+form's own does.
 Added by the post detail's and the profile's tables, each flagged for
 blessing:
 
@@ -606,9 +611,14 @@ applicant in place. A guest gets the join prompt there instead.
 what becomes possible, and when.
 
 - `You can comment once you're in.` — the comment sheet's foot and a
-  comment's `Reply`. The foot wears the locked look (auth.md): visibly
-  inactive, still tappable.
+  comment's `Reply`.
 - `You can invite once you're in.` — the profile's `Invites`.
+- `You can vouch once you're in.` — an applicant who opens someone's ask
+  link, where app-open lands for them (jakob 2026-10-02, **blessed**).
+
+Every control the family answers wears the locked look (auth.md):
+visibly inactive, still tappable — the foot, `Reply` and `Invites` alike
+(jakob 2026-10-02).
 
 ## In-flight labels
 
@@ -1020,7 +1030,8 @@ idiom, one pair per case:
 snackbar — the applicant and the asker where app-open lands for them, the
 member on `Invites`, where the row already is (jakob 2026-10-02):
 
-- `Vouching unlocks once your application is approved.` — an applicant.
+- `You can vouch once you're in.` — an applicant, in the applicant-foot
+  family's voice (jakob 2026-10-02, **blessed**).
 - `That's your own ask link — send it to someone who's already in.` —
   the asker.
 - `@noor is already waiting in your invites.` — a member who already has
@@ -1482,8 +1493,10 @@ whole screen:
 `Vouch back` word rides it, because the first opinion on anyone ends the
 borrowing (jakob 2026-10-02): `Browsing from @mira's view — your first
 opinion starts your own.` — *new 2026-10-02, flagged for blessing*. The
-vouch card's `Not now` puts it away for good and says nothing: no
-snackbar, no reminder.
+vouch card's way out reads `Got it` (jakob 2026-10-02, **blessed**): it
+puts the card away for good and says nothing — no snackbar, no reminder —
+so its word promises no later. The way back to vouching stays on @mira's
+profile, forever.
 
 ## Unsaving, and the actor with no name left
 
@@ -2412,6 +2425,12 @@ any member you know can vouch you in instead.` *closed* is the control's
 own word, carried through from the button to the dialog to the
 notification to this card — four surfaces, one verb, so the product
 never tells two stories about one act.
+
+**About says the same, before it happens** — the applicant topic
+(*Getting in, and being let in*) closes its second paragraph on `If your
+application is closed, your account stays — anyone can still vouch you
+in.` (jakob 2026-10-02, **blessed**). An application has no timer, so
+closing is the one ending the page names.
 
 **The ask link is labelled by what to do with it**, not by what it is:
 `Ask someone you know to vouch for you`, with `Send it to anyone who is

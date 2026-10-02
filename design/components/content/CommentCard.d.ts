@@ -103,6 +103,12 @@ export interface CommentCardProps {
    * in the feed card's third slot instead of the thread's text button.
    */
   replyGlyph?: boolean;
+  /**
+   * The locked look on the text `Reply` for an applicant reader (auth.md):
+   * `var(--state-disabled)`, the button still tappable, its tap answering
+   * `You can comment once you're in.` Carried down to the replies.
+   */
+  replyOpacity?: string | number;
   /** Shows `ShareButton`, closing the row — the feed card's. A thread passes none. */
   onShare?: () => void;
   /** Extra affordances in the same row as the stance control, Reply and Edit. */

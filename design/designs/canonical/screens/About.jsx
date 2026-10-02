@@ -19,7 +19,10 @@
    flow's own grammar (readme §13), and the reason the join door can open it
    without the door losing its place. THE JOIN FORM KEEPS ITS VALUES across
    the detour: opened from Join's "?", back returns to the form with every
-   field as the reader left it, half-filled or not (jakob 2026-10-01).
+   field as the reader left it, half-filled or not (jakob 2026-10-01). From
+   the join form the arrow reads a plain `Back` — the funnel exception, whose
+   screens carry no origin nouns (jakob 2026-10-02); the board draws the
+   settings origin, `Back to settings`.
 
    THE KEY TOPIC NAMES NO PLATFORM. Read on the web or in the app, the page is
    one string, so the key is one "only you hold" rather than one on a bare
@@ -182,7 +185,7 @@ export function Screen() {
         <Topic title="Getting in, and being let in">
           {[
             "CoGra is invite-only. Somebody already here vouches for you, and until they have, you are an applicant: you can read everything, write one post, give one opinion and say how you feel about one topic.",
-            "These wait with your application and arrive with you. Until then only you can see them, and they are signed together with the vouch that lets you in. If your application is closed or expires, they stay on your device as drafts, and nothing is sent.",
+            "These wait with your application and arrive with you. Until then only you can see them, and they are signed together with the vouch that lets you in. If your application is closed, your account stays — anyone can still vouch you in.",
             "That is not a waiting period for its own sake. The first link to you is a real one, given by a person who stands behind it — which is the thing that keeps this place small enough to be honest.",
           ]}
         </Topic>

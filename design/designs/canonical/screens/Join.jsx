@@ -12,7 +12,14 @@
    the signed-in state. Create account makes the new account and switches
    this device to it; the other account's sessions stay valid wherever they
    are. Back closes the layer onto the signed-in state, untouched (readme §4,
-   the layer law).
+   the layer law). `Already have an account? Sign in` stays there too: it is
+   the account-switch door, the way onto another account the person already
+   holds (jakob 2026-10-02).
+
+   THE ARROW READS A BARE `Back` — the funnel exception (readme §4,
+   *Navigation*): the entry funnel's screens carry no origin nouns, and the
+   About page this form's "?" opens keeps the same plain `Back` on its way
+   back here (jakob 2026-10-02).
 
    THE DOOR'S ONE EXPLANATION IS A "?", NOT A FIFTH LINE (jakob's ruling, the
    batch-rulings round: "that sounds great maybe behind a '?'. i already dislike

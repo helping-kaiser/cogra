@@ -8,9 +8,10 @@
    the band names the view and asks for nothing — no `Vouch back` word rides
    it — and its line says what ends the borrowing.
 
-   THE CARD PUTS AWAY FOR GOOD, SILENTLY. `Not now` is a true dismiss: the
-   card does not come back and nothing stands in its place — no snackbar, no
-   reminder, no residue. Vouching back stays possible forever, from @mira's
+   THE CARD PUTS AWAY FOR GOOD, SILENTLY. `Got it` is a true dismiss, and its
+   word promises no later (jakob 2026-10-02): the card does not come back
+   and nothing stands in its place — no snackbar, no reminder, no residue.
+   Vouching back stays possible forever, from @mira's
    profile: ANY OPINION ON @mira IS THE VOUCH-BACK while the pair is
    incomplete, wherever it is signed — this card or her profile's anchor, the
    card put away or not — and it opens `VouchedIn`.
@@ -35,7 +36,7 @@ export function Screen() {
           actions={
             <>
               <Button variant="text" style={{ color: "var(--on-tertiary-container)" }}>
-                Not now
+                Got it
               </Button>
               <Button variant="inverse">Vouch back</Button>
             </>

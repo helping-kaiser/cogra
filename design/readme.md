@@ -469,6 +469,8 @@ page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
 beneath them, so their arrows are links that name a board (*The shell
 round's stops*) — `VouchAsk`'s arrow and its `Not now` land on Feed.
+A funnel arrow carries no origin noun: `Join` reads a plain `Back`, and
+About opened from the join form keeps that plain `Back`.
 
 **A sheet that launched a forward navigation comes back.** A chip in the
 comments sheet, a holder in an opinions sheet, `All your topics` in the
@@ -8210,7 +8212,7 @@ unless named.
   so their own feed does: the member's first signed opinion, on anyone,
   hands the feed over, and the vouch-back is not the gate. The band asks
   for nothing — `Browsing from @mira's view — your first opinion starts
-  your own.` — and the vouch card's `Not now` puts it away for good,
+  your own.` — and the vouch card's way out puts it away for good,
   silently. Vouching back stays possible forever from @mira's profile:
   any opinion on her is the vouch-back and opens `VouchedIn`.
 - **The vouch card wears the olive register** (`VouchBackCard`): the
@@ -8303,14 +8305,13 @@ as the board's own; the back edge in `graph.json` carries the table.
   (drawn; another's profile) or `Back to your profile` (the reader's
   own). It drew a bare `Back`.
 - **Notifications** (both boards): `Back to feed` (drawn), `Back to
-  Explore` or `Back to your profile`, by the root the bell was tapped
-  on. It drew a bare `Back`.
-- **About**: `Back to settings` (drawn; settings opens it). It drew a
-  bare `Back`.
-- **Filed** (backlog 125): Wallet's noun for the bell's
-  origin, and the join form's for About's. The two off-slot dialogs
-  (`StanceAlternates`, `ReplyKeyAbsent`) are fine as they stand,
-  different anatomies.
+  Explore`, `Back to Wallet` or `Back to your profile`, by the root the
+  bell was tapped on. It drew a bare `Back`.
+- **About**: `Back to settings` (drawn; settings opens it). From the
+  join form it reads a plain `Back` — the funnel exception (§4). It drew
+  a bare `Back`.
+- The two off-slot dialogs (`StanceAlternates`, `ReplyKeyAbsent`) are
+  fine as they stand, different anatomies.
 - **The gate**: 268 canonical screens, 1785 edges, 0 gaps, **flows 65**,
   every one resolved; the witness did not move, no rebless. No new
   string: every label is already blessed.
@@ -8435,6 +8436,42 @@ below have their home here or where named.
   once, deliberately: the four compose flows' `New post` start counts 51
   boards.
 
+### The applicant residue, ruled — 2026-10-02
+
+jakob's afternoon answer to the fix round's brief (items 1–9, 24, 25;
+backlog 125, 127, 128), as recommended, his wordings blessed.
+
+- **The nouns.** Notifications' table gains `Back to Wallet` — Wallet is
+  not in the MVP and is still a place to go back to. From the join form
+  About's arrow stays a plain `Back`, the funnel exception, as `Join`'s
+  own does (§4, *Navigation*).
+- **Dead links.** One word for every dead invite link — expired, used up,
+  revoked or resolving to nothing: `This invite link has expired.` Opened
+  signed in, a dead link moves nothing: the reader stays where they were
+  and hears the same snackbar. Nothing drawn (`Main`'s docblock).
+- **`Join` signed in** keeps `Already have an account? Sign in` — the
+  account-switch door.
+- **The vouch card's way out reads `Got it`**: the dismissal is for good,
+  and the way back to vouching is @mira's profile, forever.
+- **The applicant's locked controls.** A comment's `Reply` and the
+  profile's `Invites` wear the comment foot's locked look — visibly
+  inactive, still tappable, the tap answering with the family line
+  (`CommentCard`'s `replyOpacity`, `ProfileHeader`'s `invitesOpacity`;
+  `ReplyEntry`'s reader chip locks the thread's Reply buttons too). An
+  applicant who opens an ask link hears `You can vouch once you're in.`
+- **An applicant's deletion with an unverified address** is confirmed in
+  the app; no emailed link gates it (`DeleteAccount`, `Settings`).
+- **About's applicant topic** closes on `If your application is closed,
+  your account stays — anyone can still vouch you in.`
+- **Invite-link expiry and the seven-day verification window are
+  independent** (auth.md, *Expiry*): the presets carry no floor, and an
+  account made through a link that expires in an hour keeps its seven
+  days.
+- **Blessed** (copy-voice): `Back to Wallet`, `Got it`, `You can vouch
+  once you're in.`, About's line.
+- **The gate**: 268 screens, 1800 edges, 0 gaps, **flows 66**, every
+  one resolved; the witness did not move, no rebless.
+
 ### The what's-new restore and the filter residue — 2026-10-02
 
 jakob's afternoon review of the fix round, rulings 0 and 10–19.
@@ -8464,7 +8501,7 @@ jakob's afternoon review of the fix round, rulings 0 and 10–19.
   under them. Only a fresh root load lights the bell's dot.
 - **Blessed** (copy-voice): `See it on GitHub` and its spoken names, the
   Reset sentence, and the fork ask's words. The open residue is backlog
-  item 12X-fixfix-whatsnew.
+  item 131.
 - **The gate**: 268 → **269 screens** (`ComposeBodyDiscard`), 1800 →
   **1805 edges**, 0 gaps, flows 66, every one resolved. The witness was
   re-blessed once, deliberately: `publish-words`, `cite-a-post` and

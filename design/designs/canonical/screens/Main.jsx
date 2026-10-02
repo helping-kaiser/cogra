@@ -16,7 +16,16 @@
    takes another link. A link that resolves to nothing carries no issuer and
    lands on `FeedBare`, the bare view. Either dead arrival says so once, in
    one snackbar over the unchanged landing: `This invite link has expired.`
-   (jakob 2026-10-02). */
+   (jakob 2026-10-02).
+
+   ONE WORD FOR EVERY DEAD LINK (jakob 2026-10-02). Expired, used up, revoked
+   or resolving to nothing, the snackbar says `This invite link has expired.`
+   — the reader learns the link is dead, not why.
+
+   OPENED SIGNED IN, A DEAD LINK MOVES NOTHING (jakob 2026-10-02). A signed-in
+   reader has no guest view to land on, so they stay exactly where they were
+   — or on their own landing, opened cold — and hear the same snackbar.
+   Nothing is drawn for it. */
 export function Screen() {
   return (
     <>

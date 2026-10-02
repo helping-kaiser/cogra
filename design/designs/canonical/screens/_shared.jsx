@@ -2095,7 +2095,10 @@ const REMOVED_COMMENT_SCROLL = 440;
    there is nothing left on it to edit, the same reason its ⋮ goes. */
 const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity }) {
+/* `replyOpacity` LOCKS EVERY `Reply` IN THE THREAD for an applicant reader
+   (jakob 2026-10-02), the foot's `footOpacity` twin: `CommentCard` carries it
+   down to the replies, so one value locks the whole thread's Reply buttons. */
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity, replyOpacity }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2107,6 +2110,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         own
         onEdit={() => {}}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={OWN_THREAD_MENU}
       />
@@ -2120,6 +2124,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         timestamp="1h"
         bundle={mkBundle(0.1, 0.1)}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         replyCount={2}
         onOpenReplies={landed ? undefined : () => {}}
         replies={landed ? TOBIAS_REPLIES : []}
@@ -2146,6 +2151,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         ]}
         sensitive={{ reason: "A dead seabird in the second frame." }}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={CARD_MENU}
       />
@@ -2156,6 +2162,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
         own
         onEdit={removed ? undefined : () => {}}
         onReply={() => {}}
+        replyOpacity={replyOpacity}
         license={{ attribution: 0, provenance: 0 }}
         menuItems={removed ? [] : OWN_THREAD_MENU}
         redacted={removed ? { reason: "author", when: "now", note: REMOVED_COMMENT_NOTE } : undefined}

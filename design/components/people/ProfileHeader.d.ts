@@ -51,6 +51,10 @@ export interface ProfileHeaderProps {
    *  dot and never a count — the button says something is waiting, the list it
    *  opens says how many. */
   invitesWaiting?: boolean;
+  /** The locked look on Invites for an applicant (auth.md):
+   *  `var(--state-disabled)`, the button still tappable, its tap answering
+   *  `You can invite once you're in.` */
+  invitesOpacity?: string | number;
   /**
    * A deleted account (`erasure.md` §2–3). The header is unchanged — the same
    * counts, the same tabs and chronicle under it, the same actions row — and

@@ -4088,18 +4088,18 @@ and the K11 recommendations, and left these for his eye:
   opinions`, `Nothing changes until you press Done`, the joining rule
   and its readings, `Also veiled by the platform's verdict`.
 
-### 125 · Two origins the nav-noun tables have no noun for · *design* · **filed 2026-10-02**
+### 125 · Two origins the nav-noun tables have no noun for · *design* · **closed 2026-10-02**
 
 The nav-noun sweep (readme §13) named every drill-in's origins from nouns
 already ruled, and left two without one:
 
-- **Wallet, as the bell's origin.** Notifications opens from the bell on
-  every root band; `Back to feed`, `Back to Explore` and `Back to your
-  profile` are ruled, `WalletComingSoon` has no noun. By the named-surface
-  rule it would be `Back to Wallet`; unruled.
-- **The join form, as About's origin.** Its help dot opens About, and the
-  arrow returns the form as it was left; the entry funnel's boards have
-  no origin noun and `Join` draws a bare `Back`. Unruled.
+- ~~**Wallet, as the bell's origin.**~~ — closed 2026-10-02 (jakob:
+  `Back to Wallet`, Wallet still a back target outside the MVP; readme
+  §13, *The applicant residue, ruled*). Notifications opens from the bell
+  on every root band, and its table now names all four roots.
+- ~~**The join form, as About's origin.**~~ — closed 2026-10-02 (the
+  funnel exception; readme §13, *The applicant residue, ruled*). From the
+  join form About's arrow reads a plain `Back`, as `Join`'s own does.
 
 ### 126 · The comment edit mirrors the withdrawal package · *design* · **filed 2026-10-02**
 
@@ -4121,24 +4121,24 @@ counted in records.
 The fix round's entry lane (readme §13, *The no-expiry correction*)
 executed jakob's rulings and left these for his eye:
 
-- **A dead invite link opened while signed in.** N1 rules the live link
-  (the `Join` layer). A dead one lands a guest on the issuer's borrowed
-  view with the expiry snackbar, but a signed-in reader has no guest
-  view to land on. Proposal: the reader stays where they were (or on
-  their own landing, opened cold) and hears the same snackbar, `This
-  invite link has expired.`; nothing drawn until ruled.
-- **The dead-link snackbar's word.** `This invite link has expired.`
-  also answers a used-up single-use link, a revoked one and an id that
-  resolves to nothing — the ruled words, applied to every dead arrival.
+- ~~**A dead invite link opened while signed in.**~~ — closed 2026-10-02
+  (as proposed; readme §13, *The applicant residue, ruled*). The reader
+  stays where they were and hears the same snackbar; nothing drawn
+  (`Main`'s docblock, its graph entry).
+- ~~**The dead-link snackbar's word.**~~ — closed 2026-10-02 (one word
+  for every dead link; readme §13, *The applicant residue, ruled*).
+  `This invite link has expired.` answers an expired, used-up or revoked
+  link and an id that resolves to nothing alike.
 - **`VouchAskInvalid`'s exits.** The arrow is its one control: no person
   stands behind the link, and the sibling `VouchAskUnusable`'s
   waits-elsewhere case keeps back only. Its board sits at the foot of
   `VouchAskUnusable`'s column on the profile page.
-- **`Join` opened signed in** still offers `Already have an account?
-  Sign in`, as the ruling's "same as a guest" draws it.
-- **Flagged for blessing** (copy-voice, *The fix round's entry lines*):
-  the verify card's seven-day line, `JoinInvalid`'s paragraph and
-  `VouchAskInvalid`'s paragraph.
+- ~~**`Join` opened signed in**~~ — closed 2026-10-02 (readme §13, *The
+  applicant residue, ruled*). `Already have an account? Sign in` stays
+  as the account-switch door (`Join`'s docblock).
+- ~~**Flagged for blessing**~~ — closed 2026-10-02 (jakob blessed the fix
+  round's wordings): the verify card's seven-day line, `JoinInvalid`'s
+  paragraph and `VouchAskInvalid`'s paragraph.
 
 ### 128 · What the applicant fix round left for rulings · *design + contract* · **filed 2026-10-02**
 
@@ -4152,14 +4152,14 @@ the applicant pages and the vouch pair, and left these for his eye:
   Under the revised rule a member may opine on others first while the
   card still stands; whether the card leaves at the first opinion, or
   its and the pad's words change, is unruled.
-- **`Not now` on a for-good dismissal.** The label promises a later the
-  dismissal no longer has; it stays until worded.
+- ~~**`Not now` on a for-good dismissal.**~~ — closed 2026-10-02 (readme
+  §13, *The applicant residue, ruled*): the way out reads `Got it`.
 - **Where "for good" is kept.** auth.md keeps the prompt's dismissal
   device-local, reappearing on a new device; a dismissal for good needs
   account state (design ⇄ impl seam).
-- **The other locked controls.** The ruling put auth.md's locked look on
-  the comment foot; a comment's `Reply` and the profile's `Invites`
-  still stand at full ink while answering an applicant the same way.
+- ~~**The other locked controls.**~~ — closed 2026-10-02 (readme §13,
+  *The applicant residue, ruled*): a comment's `Reply` and the profile's
+  `Invites` wear the comment foot's locked look.
 - **The landing card's body with the restore door.** The key-elsewhere
   body still says the landing comes from the other device alone.
 - **The turned-down shell's other staged-act lines.** The opinion's and
@@ -4167,15 +4167,18 @@ the applicant pages and the vouch pair, and left these for his eye:
   is live for; the seal's line was the one ruled.
 - **An applicant's deletion, drawn.** `DeleteAccount`, its mail,
   `DeleteAccountConfirmed` and the grace boards speak the member's seven
-  days; the applicant's words, and whether the emailed link still gates
-  an applicant who may hold no verified address, are undrawn.
-- **The ask link's applicant snackbar** (`Vouching unlocks once your
-  application is approved.`) sits outside the applicant-foot family.
+  days; the applicant's words are undrawn. Whether the emailed link gates
+  an applicant with no verified address closed 2026-10-02: the in-app
+  confirm suffices (readme §13, *The applicant residue, ruled*).
+- ~~**The ask link's applicant snackbar**~~ — closed 2026-10-02 (readme
+  §13, *The applicant residue, ruled*): `You can vouch once you're in.`,
+  in the family's voice.
 - **`ReplyEntry`'s reader chip** changes the foot only; the thread above
   keeps the member's own comments, which an applicant cannot have.
-- **Strings flagged for blessing**: `Browsing from @mira's view — your
-  first opinion starts your own.`, `See @noor's profile`, `Your post
-  waits — it arrives when someone vouches you in.`
+- ~~**Strings flagged for blessing**~~ — closed 2026-10-02 (jakob blessed
+  the fix round's wordings): `Browsing from @mira's view — your first
+  opinion starts your own.`, `See @noor's profile`, `Your post waits — it
+  arrives when someone vouches you in.`
 
 ### 129 · What the filter-and-olive round left for rulings · *design* · **filed 2026-10-02** · **closed 2026-10-02**
 
@@ -4187,7 +4190,7 @@ and left these for his eye. All closed by the fix-fix rulings (readme
   2026-10-02 (fix-fix 10): the trigger speaks deviations from the
   reader's default, a deviation back toward the app's included; the
   summary re-keys on the reader's default (`FeedSheet`'s docblock). The
-  words no existing word covers went to item 12X-fixfix-whatsnew.
+  words no existing word covers went to item 131.
 - ~~**What the "?" says about `Reset`.**~~ — closed 2026-10-02 (fix-fix
   11): one sentence for all three sheets, jakob's own words, blessed —
   `Reset brings back your defaults, to change them go to settings.`
@@ -4219,7 +4222,7 @@ the filter residue*):
   the pictures?` over `The rest of the draft stays.`, a quiet `Discard`
   and a filled `Keep them`; the seven fork edges carry the ask, and
   `publish-words`, `cite-a-post` and `mention-someone` walk the empty
-  case. A clip's title went to item 12X-fixfix-whatsnew.
+  case. A clip's title went to item 131.
 - ~~**A rotated phone's side ground.**~~ — closed 2026-10-02 (fix-fix
   15): it is a visible backdrop, and a tap on it closes the viewer (the
   three viewer sidecars).
@@ -4230,7 +4233,7 @@ the filter residue*):
 - ~~**The comment-scale bug notice's way out.**~~ — closed 2026-10-02
   (fix-fix 17): `Discard the reply` and `Discard the edit` act at once
   (`ReplySealComment` and `CommentEdit` sidecars). The ruling's reason
-  is filed with item 12X-fixfix-whatsnew.
+  is filed with item 131.
 - ~~**A mixed unscoped search.**~~ — closed 2026-10-02 (fix-fix 18): the
   other kinds' results stand with the line under them (`ExploreUnscoped`).
 - ~~**The bell on a deep screen.**~~ — closed 2026-10-02 (fix-fix 19):
@@ -4241,7 +4244,7 @@ the filter residue*):
   The registry guards key rules append-only, so rewording it is a
   breaking change the seam agrees first.
 
-### 12X-fixfix-whatsnew · What the what's-new restore and the filter residue left for rulings · *design* · **filed 2026-10-02**
+### 131 · What the what's-new restore and the filter residue left for rulings · *design* · **filed 2026-10-02**
 
 The fix-fix lane for rulings 0 and 10–19 (readme §13, *The what's-new
 restore and the filter residue*) executed them and left these for

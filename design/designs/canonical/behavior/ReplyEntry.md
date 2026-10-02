@@ -24,6 +24,8 @@ WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is an applic
 
 ALWAYS Add a comment stands at the disabled opacity and stays tappable GIVEN the reader is an applicant
 
+ALWAYS every comment's Reply stands at the disabled opacity and stays tappable GIVEN the reader is an applicant
+
 ALWAYS the comments sheet's foot stands for every reader, signed out and applicant included
 
 WHEN a deep link opens the thread on a comment -> the comments sheet opens with that comment scrolled to the sheet's top AND the comment's branch stands expanded AND the comment wears a tonal highlight AND the highlight has faded WITHIN 1s

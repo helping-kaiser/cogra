@@ -100,6 +100,12 @@ export function ProfileHeader({
   onCounts,
   menu,
   invitesWaiting = false,
+  /* AN APPLICANT'S INVITES IS LOCKED, NOT GONE (jakob 2026-10-02; auth.md's
+     locked look, the comment foot's pattern): the button stands at the
+     disabled opacity and stays tappable, the tap answering `You can invite
+     once you're in.` The value is the opacity itself, as `CommentCard`'s
+     `replyOpacity` is. */
+  invitesOpacity,
   redacted = false,
   showHandle = true,
 }) {
@@ -187,7 +193,7 @@ export function ProfileHeader({
                 size="sm"
                 onClick={onInvites}
                 ariaLabel={invitesWaiting ? "Invites — someone is waiting" : undefined}
-                style={{ flex: 1 }}
+                style={invitesOpacity !== undefined ? { flex: 1, opacity: invitesOpacity } : { flex: 1 }}
               >
                 Invites
                 {/* THE WAITING MARK IS THE BELL'S DOT (the invites round,
