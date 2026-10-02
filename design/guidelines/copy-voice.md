@@ -324,10 +324,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   and rides the same signature as your reply. / Nothing is signed until
   Set. Swap the input in settings if you prefer sliders or numbers.
   *(An opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
-- **Your first opinion** (the vouch-back pad): Vouching back signs your
-  opinion of the person who vouched you in — your first one, and
-  your feed grows from it. / The pad is how you shape what reaches you —
-  for or against, and how much. Nothing is signed until Set.
+- **Your vouch back** (the vouch-back pad): Vouching back signs your
+  opinion of the person who vouched you in, and your feed grows from
+  it. / The pad is how you shape what reaches you — for or against, and
+  how much. Nothing is signed until Set. *(The title is blessed (jakob
+  2026-10-02); the first paragraph is new 2026-10-02, flagged for
+  blessing.)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -382,7 +384,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
 dialog's own subject, so a listener hears which explanation the tap
 brings: `Your key`, `License`, `Sensitive`, `How the filter works`,
 `What is CGT?`. The three stance pads take theirs the same way —
-`Your opinion on your post`, `Toward what you answer`, `Your first opinion`
+`Your opinion on your post`, `Toward what you answer`, `Your vouch back`
 — because one name across three surfaces says only that a dialog
 exists. `How opinions work` is the opinion control's own help, where the
 control itself is the subject.
@@ -622,6 +624,11 @@ no application is live for the post to wait with, so the seal's exit
 says what it waits for instead: `Your post waits — it arrives when
 someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
 kept from the staged-act line — *new 2026-10-02, blessed (jakob 2026-10-02)*).
+The other two kinds answer a second tap on the turned-down shell in the
+same grammar (jakob 2026-10-02, **blessed**):
+
+- `Your opinion waits — it arrives when someone vouches you in.`
+- `Your topic waits — it arrives when someone vouches you in.`
 
 **Comments are not a kind that stages** (jakob 2026-10-01: applicants do
 not comment in V1.0). A staged comment would wear `Still settling` for a
@@ -1401,6 +1408,11 @@ application's key was made on another device. Restore it here with your
 recovery code, or make a new key — until you're approved, a new one
 costs nothing.` — `Restore the key` · `Make a new key`.
 
+**The landing card with the key elsewhere** (`ApplicantLanding`, the
+`keyAt` chip) admits both doors: `Your key was made on another device —
+open CoGra there, or restore the key to land here.` — `Restore the key`
+under it (jakob 2026-10-02, **blessed**).
+
 **A reply with the key elsewhere** keeps no draft, so its two notices
 say what is left (the reply pack, 2026-09-30). At the door, before a
 word is written (`ReplyKeyAbsent`): `A reply can't wait as pending —
@@ -1529,6 +1541,18 @@ vouch card's way out reads `Got it` (jakob 2026-10-02, **blessed**): it
 puts the card away for good and says nothing — no snackbar, no reminder —
 so its word promises no later. The way back to vouching stays on @mira's
 profile, forever.
+
+**The vouch card and its pad claim no order** — a member may opine on
+others first while the card stands, so one wording is true in every
+state (jakob 2026-10-02, **blessed**). The card's body, on `VouchBack`
+and `VouchBackPad`: `Vouch back to open the way from your side — your
+opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
+`Vouching opens the opinion control, set to a gentle default.`). The
+pad's title and its "?" read `Your vouch back`, and its first coaching
+line opens on the title: `Your vouch back. The pad is how you shape what
+reaches you — for or against, and how much.` The band's line keeps
+*first opinion*: the borrowed view does end on the first opinion,
+whoever it's toward.
 
 ## Unsaving, and the actor with no name left
 
@@ -1983,6 +2007,15 @@ and `Reset`'s `Send reset link` said for the same mechanism. Not `Delete
 my account`, which would be a lie about a button that sends an email.
 Under it: `Nothing is deleted until you open that link. After that it
 runs in seven days, and you can cancel from any device until it does.`
+
+**An applicant's case is immediate** (`DeleteAccount`'s reader chip,
+jakob 2026-10-02). Nothing has landed, so nothing waits: the body reads
+`Nothing has landed yet — deleting removes your application and your
+account right away.` (**blessed**, jakob 2026-10-02), and the commitment
+`Delete my account` (*new 2026-10-02, flagged for blessing*) deletes at
+once — here the press does what the words say. What goes, what stays,
+the content sweep and the link's note speak of landed records and the
+mailed link, so the case draws none of them.
 
 **No "are you sure".** Nothing in this flow asks twice, scolds, or lists
 what the reader will miss. The friction is the emailed link, which is

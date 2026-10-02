@@ -1232,7 +1232,7 @@ class Component extends DCLogic {
       : mode === "dark";
     const remoteGeek = this.state ? this.state.remoteGeek : null;
     const geek = remoteGeek ?? this.props.geek ?? "off";
-    return { theme: dark ? "dark" : "light", geek, landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device, and it lands from there — open CoGra on that device." : "@mira approved your application. Nothing is needed from you while it lands.", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none" };
+    return { theme: dark ? "dark" : "light", geek, landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device — open CoGra there, or restore the key to land here." : "@mira approved your application. Nothing is needed from you while it lands.", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none" };
   }
 }
 </script>

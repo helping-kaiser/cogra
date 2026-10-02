@@ -119,7 +119,7 @@ export const FLOW_MARKERS = {
     ...nav(13),
   ],
   VouchBackPad: [
-    { n: 1, find: 'aria-label="Your first opinion"', tag: "button" },
+    { n: 1, find: 'aria-label="Your vouch back"', tag: "button" },
     { n: 2, find: 'aria-label="Opinion', tag: "div" },
     { n: 2, find: ">Choose your opinion on @mira</button>", tag: "button" },
     { n: 3, find: ">Cancel</button>", tag: "button" },
@@ -2124,6 +2124,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: ">Also remove what I posted</span>", tag: "label" },
     { n: 3, find: ">Send the confirmation link</button>", tag: "button" },
+    // The applicant's case (its reader chip): the commitment that deletes at
+    // once, appended so no via renumbers.
+    { n: 4, find: ">Delete my account</button>", tag: "button" },
   ],
   DeleteAccountMail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },

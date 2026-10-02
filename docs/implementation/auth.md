@@ -548,9 +548,10 @@ accepted back-edge is permanent
 and is rebuildable by re-scanning the mirror; an in-flight staged
 write answers true without latching. Clients show the prompt only
 when `invitedBy` is set and `hasReciprocated` is false. Dismissing
-the prompt is a device-local preference, never account state: the
-prompt is an offer, and it legitimately reappears on a new device
-until the pair is complete.
+the prompt is account state, never a device-local preference: the
+dismissal is for good, so the prompt stays away on every device the
+account signs in on, and vouching back stays reachable from the
+inviter's profile.
 
 **Reads may repair, never decide.** The poll's re-staging and the
 reciprocation latch are writes inside query resolvers — a

@@ -22,4 +22,4 @@ It must offer the **full** range, not a coarse subset — a degraded alternate i
 </StanceAlternates>
 ```
 
-**The "?" names its own pad** (jakob's ruling A7) — `helpLabel`, defaulting to `"How opinions work"`. A board that draws a named pad passes that pad's own title (`"Your opinion on your post"`, `"Toward what you answer"`, `"Your first opinion"`); it mirrors whatever `helpLabel` `StanceControl` was given.
+**The "?" names its own pad** (jakob's ruling A7) — `helpLabel`, defaulting to `"How opinions work"`. A board that draws a named pad passes that pad's own title (`"Your opinion on your post"`, `"Toward what you answer"`, `"Your vouch back"`); it mirrors whatever `helpLabel` `StanceControl` was given.
