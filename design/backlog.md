@@ -4118,7 +4118,7 @@ counted in records.
 Closed 2026-10-02: drawn on `CommentEdit` and `CommentEditActs`, with
 `RefPairEdit` as the master at both scales (readme §13, *The comment
 edit's withdrawals*). What the drawing left open is item
-`12X-commentedit`.
+`134`.
 
 ### 127 · What the no-expiry correction left for rulings · *design* · **filed 2026-10-02** · **closed 2026-10-02**
 
@@ -4312,7 +4312,7 @@ come back together:
 - **The beyond-this-app face.** How the reading surfaces show a target
   that lives outside CoGra.
 
-### 12X-commentedit · What the comment edit's withdrawals left for rulings · *design + contract* · **filed 2026-10-02**
+### 134 · What the comment edit's withdrawals left for rulings · *design + contract* · **filed 2026-10-02**
 
 The comment edit's round (readme §13, *The comment edit's withdrawals*)
 drew backlog 126 and left these for jakob's eye:
