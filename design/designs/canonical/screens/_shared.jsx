@@ -2336,11 +2336,17 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
    draw two patch releases later so the chronicle has a history to show.
    Both addresses are placeholders until CoGra is on a server, on `.local`,
    the repo's own genesis-account domain: real-shaped, and undeliverable, so
-   nothing sent before the swap reaches a stranger. */
+   nothing sent before the swap reaches a stranger.
+
+   THE STORE LISTING IS A PLACEHOLDER THE SAME WAY (jakob 2026-10-02, F2).
+   `Update now` opens CoGra's Play Store listing, which does not exist until
+   the app is published; until then the id is the `.local` domain's own
+   reverse name — real-shaped, and no stranger's listing can hold it. It swaps
+   for the real listing when CoGra is published (backlog item 118). */
 const RUNNING_VERSION = "0.1.2";
 const REPORT_ADDRESS = "reports@cogra.local";
 const CONTACT_ADDRESS = "hello@cogra.local";
-const RELEASES_URL = "https://github.com/helping-kaiser/cogra/releases";
+const STORE_LISTING_URL = "https://play.google.com/store/apps/details?id=local.cogra.app";
 
 /* THE RELEASE CHRONICLE, whole (`WhatsNew`'s anatomy, shared the moment its
    behind state drew it a second time). The notes are fixture, not copy. */
@@ -2348,7 +2354,7 @@ const RELEASES = [
   {
     version: RUNNING_VERSION,
     date: "30.09.2026",
-    current: true,
+    installed: true,
     notes: [
       "A reply says what it answers — a post by its title, a comment by its first words.",
       "While something signs, the button says what it's doing, and a signing that doesn't go through says so right where you were.",
@@ -2370,19 +2376,34 @@ const RELEASES = [
 ];
 
 /* A newer release than the one running here (jakob 2026-10-01, the A10
-   ruling) — the behind state's fixture, one patch on. */
-const NEWER_VERSION = "0.1.3";
+   ruling) — the behind state's fixture, one patch on, drawn atop the
+   chronicle as the newest. Its notes are fixture like the rest. */
+const NEWER_RELEASE = {
+  version: "0.1.3",
+  date: "02.10.2026",
+  newest: true,
+  notes: ["The filter's Reset brings back your own default."],
+};
 
 /* The behind state's two lines — drafts flagged for blessing (copy-voice,
    *The settings page*, About): the quiet line atop the chronicle, and the
-   once-per-release snackbar on a cold open's feed. */
+   once-per-release snackbar on a cold open's feed. Both carry `Update now`
+   (jakob 2026-10-02): the reader wants the new version, not its code, so
+   the door leads to the download — the store listing in the app, and on the
+   web a reload into the new version. One string for both. */
 const NEWER_VERSION_LINE = "A newer version exists.";
 const NEWER_VERSION_SNACKBAR = "A newer version of CoGra is out.";
+const UPDATE_NOW = "Update now";
 
-function Release({ version, date, current = false, notes }) {
+/* THE DATELINE'S WORD NAMES WHAT A VERSION IS TO THIS DEVICE (jakob
+   2026-10-02, curate 1): the one running here is `installed`, and a release
+   past it is `newest` — never `current`, which a stale running version is
+   not. The rest carry no word. */
+function Release({ version, date, installed = false, newest = false, notes }) {
+  const word = installed ? " · installed" : newest ? " · newest" : "";
   return (
     <>
-      <SectionLabel>{current ? `Version ${version} · current · ${date}` : `Version ${version} · ${date}`}</SectionLabel>
+      <SectionLabel>{`Version ${version}${word} · ${date}`}</SectionLabel>
       <div style={{ padding: "0 16px" }}>
         <Card>
           {notes.map((line) => (
@@ -2398,19 +2419,19 @@ function Release({ version, date, current = false, notes }) {
               {line}
             </p>
           ))}
-          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
-            See it on GitHub
-          </InlineAction>
         </Card>
       </div>
     </>
   );
 }
 
-/* `newer` is the version a running app is behind, or nothing. Given, one quiet
-   line stands atop the chronicle — the fact in `--text-secondary`, the door
-   onto that release's public page ending it, `ProfileMoreFailed`'s line shape
-   — and nothing else changes: no badge, no banner, no nagging. */
+/* `newer` is the release a running app is behind, or nothing. Given, one
+   quiet line stands atop the chronicle — the fact in `--text-secondary`,
+   `Update now` ending it, `ProfileMoreFailed`'s line shape — and the newer
+   release heads the list as the newest; nothing else changes: no badge, no
+   banner, no nagging. `Update now` opens the store listing
+   (`STORE_LISTING_URL`) in the app; on the web it reloads the page into the
+   new version. Its spoken name says which version it brings. */
 function WhatsNewBody({ newer }) {
   return (
     <>
@@ -2428,16 +2449,16 @@ function WhatsNewBody({ newer }) {
             }}
           >
             {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
-            <InlineAction size="sm" ariaLabel={`See version ${newer} on GitHub`} onClick={() => {}}>
-              See it on GitHub
+            <InlineAction size="sm" ariaLabel={`Update to version ${newer.version}`} onClick={() => {}}>
+              {UPDATE_NOW}
             </InlineAction>
           </p>
         )}
-        {RELEASES.map((release) => (
+        {(newer ? [newer, ...RELEASES] : RELEASES).map((release) => (
           <Release key={release.version} {...release} />
         ))}
         <div style={{ padding: "16px 24px 0" }}>
-          <QuietNote>Newest first. Every release's full notes and its code are public on GitHub.</QuietNote>
+          <QuietNote>Newest first.</QuietNote>
         </div>
       </div>
     </>
