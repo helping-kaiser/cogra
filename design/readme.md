@@ -8206,6 +8206,51 @@ the rest as recommended. Both laws stand in §4.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
 
+### The filter-and-olive round — 2026-10-02
+
+jakob's morning review: the filter's foot, the newer-version doors, the
+curate residue and the olive split.
+
+- **Every filter sheet's foot is `Reset` and `Done`** (`FilterFoot`) —
+  the feed's, search's and the settings sheet's. No read-back of the
+  staged filter (jakob: it cannot scale past a few changes), and no
+  Reset row in the body. The topic section closes the feed sheet's
+  body: it is the one that grows, so it never pushes a fixed section
+  below the fold.
+- **The default is the reader's** (pass C 10). It is the app's until
+  the reader sets their own in Settings, theirs after; a feed's `Reset`
+  stages it and the trigger speaks deviations from it. CoGra's own
+  default comes back only in Settings, whose sheet's `Reset` stages it.
+  Search's `Reset` stages search's own resting state (`Everything`).
+- **`Update now` leads to the download, never to the code.** The
+  newer-version snackbar's action and `WhatsNewBehind`'s door open
+  CoGra's Play Store listing — a placeholder id until published, like
+  the `.local` addresses — and on the web reload into the new version.
+  What's new is the notes page and sends nowhere else: no release
+  carries a door, and the footnote reads `Newest first.`
+- **The dateline names what a version is to this device** (curate 1):
+  the running one `installed`, a release past it `newest`, which
+  heads the behind state's list.
+- **The words path has its own details board** (curate 2,
+  `ComposeDetailsWords`): the picture stage minus the media row, the
+  describe row and the Description. `ComposeWords`' Next lands on it.
+- **A signing seal's locked ways out keep their face** (curate 3): inert
+  for seconds, never dimmed.
+- **The olive split** (§4, *Colour*). Every feed card that needs the
+  reader's action wears the account-notice register — `TaskCard`'s
+  `tone="notice"`, `inverse` fill, the card's inks scoped to the
+  register's on-pair for contrast: verify the email, create, restore or
+  bring the key, the security notice, a closed application's way back
+  in, and the vouch-back. Waiting, approved-and-landing and a post that
+  didn't land stay on the feed card's ground.
+- **Flagged for blessing** (copy-voice): `Update now`, `Update to version
+  0.1.3`, `installed`, `newest`, the footnote `Newest first.`, and the
+  foot's `Reset` at its new seat.
+- **The gate**: 267 → **268 screens**, 1785 → **1795 edges**, 0 gaps,
+  **flows 65**, every one resolved. The witness was re-blessed once,
+  deliberately, for the new board: `publish-words` walks
+  `ComposeDetailsWords`, and `+ Cite something` starts on 13 boards.
+
 ## 15. Index
 
 **Root**

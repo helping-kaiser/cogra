@@ -1198,6 +1198,7 @@ sheet's — is `Reset` and `Done`, nothing else: no read-back of the staged
 filter, because a reading that holds two changes cannot hold six
 (jakob 2026-10-02). `Reset` is plain (jakob, N3); what it restores is
 the reader's default, the app's until they set their own in Settings.
+*The foot's `Reset` at its new seat flagged for blessing, 2026-10-02.*
 
 **Change your password** (`ChangePassword`) opens with the row's
 footnote said where the act is, plus the half it could not say there:

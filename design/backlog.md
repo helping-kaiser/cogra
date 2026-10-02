@@ -3840,7 +3840,10 @@ stack*) drew the three rows and two boards. Still unruled:
   curate rulings*). A more obvious vehicle is item 123.
 - **The addresses' swap.** `reports@cogra.local` and
   `hello@cogra.local` (`_shared.jsx`, the support stack's fixtures)
-  swap for real addresses once CoGra is on a server.
+  swap for real addresses once CoGra is on a server, and the store
+  listing `Update now` opens (`STORE_LISTING_URL`, the placeholder id
+  `local.cogra.app`; readme §13, *The filter-and-olive round*) swaps for
+  CoGra's real Play Store listing once the app is published.
 
 ### 119 · The dateline sweep, when the histories migrate · *design* · **filed 2026-10-01** · **future**
 
@@ -3998,7 +4001,9 @@ arrival (`FeedNewerVersion`). jakob 2026-10-01: "maybe foing for something
 more obvious later.. snackbar is often missed (it just takes a couple of
 seconds looking away)". A briefed round when it matters: a vehicle that
 survives a glance away, still once per release, never forcing an update
-and never nagging.
+and never nagging. Whatever the vehicle, its action is `Update now` onto
+the download (readme §13, *The filter-and-olive round*); the snackbar
+carries it today, and this item stays open for the vehicle itself.
 ### 124 · What the navigation-and-sheets round left for rulings · *design* · **filed 2026-10-01**
 
 The navigation-and-sheets round (readme §13) executed jakob's two laws
@@ -4041,3 +4046,40 @@ and the K11 recommendations, and left these for his eye:
   History`, `Back to Notifications`, `Back to the stream`, `Back to the
   opinions`, `Nothing changes until you press Done`, the joining rule
   and its readings, `Also veiled by the platform's verdict`.
+
+### 12X-filter-olive · What the filter-and-olive round left for rulings · *design* · **filed 2026-10-02**
+
+The filter-and-olive round (readme §13) executed jakob's morning rulings
+and left these for his eye:
+
+- **The trigger's words for a reader's own default.** The pill speaks
+  deviations from the reader's default (pass C 10), but its words are
+  written against the app's: a deviation back toward it — `Ranked` under
+  a Newest default, the seen toggle off under an on one, a form or an
+  also-chip the reader's default leaves out — has no words yet, and
+  `feedFilterSummary` still measures against the app's default.
+- **What the "?" says about `Reset`.** N3 lets the filter's "?" say what
+  `Reset` restores. The dialog is shared by the feed's, search's and the
+  settings sheet, and the three restore different things (the reader's
+  default, search's resting state, CoGra's default), so no sentence was
+  added. Draft for blessing: `Reset brings back your default — in
+  settings, CoGra's own.`
+- **Search and the reader's default.** Search's `Reset` stages its own
+  resting state (`Everything`, the order at rest). Whether the reader's
+  Settings default reaches search's shared axes (order, the seen toggle)
+  is unruled.
+- **The olive split's lane calls.** A closed application's card wears
+  the olive (the way back in waits on the reader's ask link); a post that
+  didn't land (`ComposeExpired`) stays neutral (its draft is kept, nothing
+  is owed). Inside an olive card every ink is the register's own — the
+  card scopes `primary`, `outline` and the surface inks to
+  `on-tertiary-container`, because orange on the olive measures 2.8:1
+  light and about 1:1 dark — so the mark, outlined buttons and inline
+  actions read dark olive there. The brand ring stays on both tones.
+- **What's new behind.** The newer release heads the list as `newest`
+  with its notes drawn (fixture), which retires the curate round's
+  "notes left behind its door" call; the per-release GitHub doors and
+  the footnote's code clause went with the GitHub sweep.
+- **Strings flagged for blessing** (copy-voice): `Update now`, `Update
+  to version 0.1.3`, `installed`, `newest`, `Newest first.`, and the
+  foot's `Reset` at its new seat.
