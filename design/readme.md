@@ -8055,7 +8055,7 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
 - **Applicants do not comment in V1.0** (jakob's ruling). A comment
   cannot wait as pending, so it is not a kind that stages: the sheet's
   foot and `Reply` stay drawn and answer an applicant in place with
-  `Comments open when you're in.`
+  `You can comment once you're in.`
 - **Every account-needing slot asks on tap.** A guest meets `GuestGate`
   from the reader's post menu (Save, Cite, Hide), the profile menus
   (every row but Share), `Message`, the comment menu's Save and Cite,
@@ -8081,8 +8081,8 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
 - **Settings is one page for applicants too**; its docblock names each
   row's applicant state, and before any key both key rows read `Not
   made yet` and open the ceremony.
-- **Flagged for blessing**: the topic line; `Comments open when you're
-  in.`; About's `…signed by a key only you hold.`; the landing card's
+- **Flagged for blessing**: the topic line; About's `…signed by a key
+  only you hold.`; the landing card's
   title and both bodies; the waiting card's `Your ask link` and its
   caption.
 - **The gate**: 243 → **244 screens**, 1673 → **1694 edges**, 1 gap,

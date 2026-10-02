@@ -1930,12 +1930,17 @@ function EditComposeBody({ unchanged = false } = {}) {
    law does not reach this field: it is drawn at its single line and stays
    there. Whether the foot ever goes live is the chats round's question — a
    chat is an inline signed send, and this foot inherits whatever that round
-   designs. */
-function CommentComposerFoot() {
+   designs.
+
+   AN APPLICANT'S FOOT IS LOCKED, NOT GONE (jakob 2026-10-02; auth.md's locked
+   look): the door stands visibly inactive at the disabled opacity and stays
+   tappable, the tap answering `You can comment once you're in.` `fieldOpacity`
+   carries it — `ReplyEntry`'s reader chip passes the applicant's reading. */
+function CommentComposerFoot({ fieldOpacity }) {
   return (
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
       <MonogramAvatar name="Sol Ferreira" />
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, opacity: fieldOpacity }}>
         <TextField label="Add a comment" rows={1} cap={2000} value="" />
       </div>
     </div>
@@ -1962,7 +1967,7 @@ function CommentComposerFoot() {
    margin. */
 const COMMENTS_GAP = 12;
 
-function CommentsSheet({ children, scrolledBy = 0 }) {
+function CommentsSheet({ children, scrolledBy = 0, footOpacity }) {
   return (
     <BottomSheet open tallest ariaLabel="Comments">
       <SheetTitle>Comments</SheetTitle>
@@ -1970,7 +1975,7 @@ function CommentsSheet({ children, scrolledBy = 0 }) {
         {scrolledBy > 0 && <li aria-hidden="true" style={{ flex: "none", height: 0, marginTop: -(scrolledBy + COMMENTS_GAP) }} />}
         {children}
       </ul>
-      <CommentComposerFoot />
+      <CommentComposerFoot fieldOpacity={footOpacity} />
     </BottomSheet>
   );
 }
@@ -2047,7 +2052,7 @@ const REMOVED_COMMENT_SCROLL = 440;
    there is nothing left on it to edit, the same reason its ⋮ goes. */
 const OWN_THREAD_MENU = [...CARD_MENU, REMOVE_ROW];
 
-function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }) {
+function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, footOpacity }) {
   const settledReply = (
     <ul style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", margin: 0, padding: 0 }}>
       <CommentCard
@@ -2065,7 +2070,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false }
     </ul>
   );
   return (
-    <CommentsSheet scrolledBy={scrolledBy}>
+    <CommentsSheet scrolledBy={scrolledBy} footOpacity={footOpacity}>
       <CommentCard
         author={TOBIAS}
         content={TOBIAS_COMMENT}

@@ -44,7 +44,7 @@ export function Screen() {
           </p>
         </ChronicleList>
       </div>
-      <Snackbar message="Invites open when you're in." />
+      <Snackbar message="You can invite once you're in." />
       <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>
   );
