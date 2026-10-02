@@ -19,7 +19,10 @@
    flow's own grammar (readme §13), and the reason the join door can open it
    without the door losing its place. THE JOIN FORM KEEPS ITS VALUES across
    the detour: opened from Join's "?", back returns to the form with every
-   field as the reader left it, half-filled or not (jakob 2026-10-01).
+   field as the reader left it, half-filled or not (jakob 2026-10-01). From
+   the join form the arrow reads a plain `Back` — the funnel exception, whose
+   screens carry no origin nouns (jakob 2026-10-02); the board draws the
+   settings origin, `Back to settings`.
 
    THE KEY TOPIC NAMES NO PLATFORM. Read on the web or in the app, the page is
    one string, so the key is one "only you hold" rather than one on a bare
