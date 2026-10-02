@@ -285,7 +285,7 @@
     { "from": "ApplicantLanding", "via": 19, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
 
     { "from": "VouchBack", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
-    { "from": "VouchBack", "via": 2, "kind": "back", "label": "Not now", "to": [{ "terminal": "self", "case": "the vouch card is put away for good, silently — it does not come back and nothing stands in its place; vouching back stays open from @mira's profile" }] },
+    { "from": "VouchBack", "via": 2, "kind": "back", "label": "Got it", "to": [{ "terminal": "self", "case": "the vouch card is put away for good, silently — it does not come back and nothing stands in its place; vouching back stays open from @mira's profile" }] },
     { "from": "VouchBack", "via": 3, "kind": "advance", "label": "Vouch back", "to": [{ "board": "VouchBackPad" }] },
     { "from": "VouchBack", "via": 4, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "VouchBack", "via": 5, "kind": "detour", "label": "post overflow ⋮", "to": [{ "board": "ReaderPostMenu", "case": "the reader's sheet (master)" }] },

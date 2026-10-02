@@ -1474,8 +1474,10 @@ whole screen:
 `Vouch back` word rides it, because the first opinion on anyone ends the
 borrowing (jakob 2026-10-02): `Browsing from @mira's view — your first
 opinion starts your own.` — *new 2026-10-02, flagged for blessing*. The
-vouch card's `Not now` puts it away for good and says nothing: no
-snackbar, no reminder.
+vouch card's way out reads `Got it` (jakob 2026-10-02, **blessed**): it
+puts the card away for good and says nothing — no snackbar, no reminder —
+so its word promises no later. The way back to vouching stays on @mira's
+profile, forever.
 
 ## Unsaving, and the actor with no name left
 

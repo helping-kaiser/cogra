@@ -8210,7 +8210,7 @@ unless named.
   so their own feed does: the member's first signed opinion, on anyone,
   hands the feed over, and the vouch-back is not the gate. The band asks
   for nothing — `Browsing from @mira's view — your first opinion starts
-  your own.` — and the vouch card's `Not now` puts it away for good,
+  your own.` — and the vouch card's way out puts it away for good,
   silently. Vouching back stays possible forever from @mira's profile:
   any opinion on her is the vouch-back and opens `VouchedIn`.
 - **The vouch card wears the olive register** (`VouchBackCard`): the
