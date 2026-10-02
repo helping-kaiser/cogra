@@ -1,65 +1,37 @@
 /* Edit comment · the acts (comment-media round, 2026-08-31): the footer's
-   "You're signing 2 things" opened — an M3 modal bottom sheet, the
-   EditActs pattern at comment scale, rendered with ActsCard (the sheet title
-   carries the count, so the card carries rows and the all-or-nothing note).
-   The sheet is the peek-from-a-composer pattern; ceremony screens keep the
-   inline ActsCard — two patterns, one component. */
+   "You're signing 5 things" opened — an M3 modal bottom sheet, the EditActs
+   pattern at comment scale, rendered with ActsCard (the sheet title carries
+   the count, so the card carries rows and the all-or-nothing note). The sheet
+   is the peek-from-a-composer pattern; ceremony screens keep the inline
+   ActsCard — two patterns, one component.
+
+   THE EDIT BENEATH IS THE EDIT — `CommentEditBody`, the same body
+   `CommentEdit` draws. What a sheet covers is inert, not shortened.
+
+   THE KINDS ARE THE COMPLETE SET, COUNTED IN RECORDS (backlog 126, jakob
+   2026-10-02: the post edit's package "same semantics at comment scale").
+   `EditActs` names the set — `Edit`, `Tags added`, `Tags withdrawn`, `Tags
+   revised`, `Citations added`, `Citations revised`, `Citations withdrawn`,
+   `Cover changed` — a row per kind in the batch. A tag withdrawal is one
+   record; a citation's withdrawal is `ReferenceClaim.withdrawalCost`
+   records, and the one withdrawn here was revised past 1, so its row reads
+   `2`, heard as `2 things`. The title, the footer and the rows add up to the
+   same five, and Sign is the confirmation: no dialog asks again. */
 
 export function Screen() {
   return (
     <>
-      <WizardHeader title="Edit comment" help="Editing" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 14, padding: "12px 24px 16px", overflow: "hidden" }}>
-        <QuietNote>Your comment on "The long way home".</QuietNote>
-
-        <TextField label="Words" rows={3} cap={2000} value="The glovebox camera earns its keep — this is the print from 2019 that almost catches it." />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Pictures</FieldLabel>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <MediaThumb src="comment-camera.jpg" alt="A person holding a film camera" size={56} fit="contain" onRemove={() => {}} />
-            <InlineAction size="sm">+ Add pictures · 1 of 4</InlineAction>
-          </div>
-          <DescribeCounter described={1} total={1} onDescribe={() => {}} />
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>Tags</FieldLabel>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <TopicRemovable topic="glovebox" onEdit={() => {}} />
-          </div>
-          <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <FieldLabel>References</FieldLabel>
-          <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
-        </div>
-
-        <FactRow
-          label="License"
-          value="Public domain"
-          action={
-            <span style={{ color: "var(--text-secondary)", display: "inline-flex" }} aria-label="The license never changes">
-              <Icon name="lock" size={16} />
-            </span>
-          }
-          last
-        />
-
-        <div style={{ flex: 1 }} />
-
-        <ActsFooter count={2} />
-        <Button style={{ width: "100%" }}>Sign the edit</Button>
-      </div>
+      <CommentEditBody />
 
       <BottomSheet open ariaLabel="What the edit signs">
-        <SheetTitle>2 things, signed together</SheetTitle>
+        <SheetTitle>5 things, signed together</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 16px" }}>
           <ActsCard
             rows={[
               { label: "Edit", value: "The glovebox camera earns its keep — this is the print…", count: "1", countNoun: "edit" },
-              { label: "Tag added", value: "#glovebox", count: "1", countNoun: "tag" },
+              { label: "Tags added", value: "#glovebox", count: "1", countNoun: "tag" },
+              { label: "Tags withdrawn", value: "#coastroad", count: "1", countNoun: "tag" },
+              { label: "Citations withdrawn", value: "Tide tables and the third headland — @juno", count: "2", countNoun: "thing" },
             ]}
             note="They land together, or none does."
           />

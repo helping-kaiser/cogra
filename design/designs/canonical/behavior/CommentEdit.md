@@ -6,7 +6,7 @@ ALWAYS the comment edit's license row is locked
 
 ALWAYS the comment edit holds at most four pictures, uncropped
 
-ALWAYS the acts footer counts the signed actions the edit creates
+ALWAYS the footer reads the live count of the batch, You're signing N things
 
 WHEN tap the acts footer -> the acts sheet opens over the edit
 
@@ -14,7 +14,19 @@ WHEN tap a picture's remove control -> the picture leaves the batch
 
 WHEN tap + Add pictures -> the platform's own picker opens AND NEVER a pick stage opens
 
-WHEN tap a tag chip's remove control -> the tag leaves the edit
+WHEN tap the × of a tag the comment already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
+
+WHEN tap the × of a citation the comment already carries -> the withdrawal of that citation is staged in the batch AND the row leaves for the line Withdrawn: under the references AND the footer counts the withdrawal's counter-records, possibly more than one AND NEVER a dialog asks
+
+WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
+WHEN tap the × of a citation picked in this same edit -> the pick is unstaged AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
+WHEN tap Undo on a Withdrawn: line -> the withdrawal is unstaged AND the chip or the row returns as it stood AND the line goes AND the footer counts the withdrawal's records off
+
+WHEN tap a staged tag chip -> the tag's pair opens in a sheet over the edit
+
+WHEN tap a staged citation's row -> the citation's pair opens in a sheet over the edit
 
 WHEN tap Sign the edit -> Sign the edit refuses a second press until the signing answers AND NEVER Sign the edit dims
 
