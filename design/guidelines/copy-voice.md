@@ -2618,6 +2618,7 @@ scope in the query, the results region carries one quiet line where
 results would stand — the way, not an apology:
 
 - `Found through people and tags — start with @handle or #tag.`
+  **Drawn** on `ExploreUnscoped`, as the results region's empty state.
 
 ## Chats
 

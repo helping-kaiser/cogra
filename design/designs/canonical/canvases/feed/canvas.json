@@ -262,6 +262,15 @@
       "page": "feed"
     },
     {
+      "file": "ExploreUnscoped.dc.html",
+      "title": "Explore · comments, no scope",
+      "x": 1440,
+      "y": 5736,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Feed.dc.html",
       "title": "Feed · signed in",
       "x": 0,
@@ -455,7 +464,7 @@
       "x": -5350,
       "y": 0,
       "w": 4930,
-      "h": 4556,
+      "h": 4941,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },

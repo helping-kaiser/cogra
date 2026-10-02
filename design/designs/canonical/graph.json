@@ -513,7 +513,7 @@
     { "from": "Explore", "via": 9, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
     { "from": "Explore", "via": 10, "kind": "advance", "label": "Your topics (the door)", "to": [{ "board": "YourTopics" }] },
 
-    { "from": "ExploreSearch", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing refines" }, { "board": "ExploreNone", "case": "nothing carries that name" }] },
+    { "from": "ExploreSearch", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing refines" }, { "board": "ExploreNone", "case": "nothing carries that name" }, { "board": "ExploreUnscoped", "case": "Comments alone in the filter, and the query names no @handle or #tag — the quiet line where results would stand" }] },
     { "from": "ExploreSearch", "via": 2, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
     { "from": "ExploreSearch", "via": 3, "kind": "detour", "label": "? — How searching works", "to": [{ "board": "HelpDialog", "case": "the Searching text" }] },
     { "from": "ExploreSearch", "via": 4, "kind": "advance", "label": "post result rows", "to": [{ "board": "PostDetail" }] },
@@ -540,6 +540,14 @@
     { "from": "ExploreNone", "via": 6, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
     { "from": "ExploreNone", "via": 7, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "ExploreNone", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
+    { "from": "ExploreUnscoped", "via": 1, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing" }, { "board": "ExploreSearch", "case": "a query scoped by @handle or #tag — the comments it reaches" }] },
+    { "from": "ExploreUnscoped", "via": 2, "kind": "advance", "label": "Comments (filter trigger)", "to": [{ "board": "ExploreFilter" }] },
+    { "from": "ExploreUnscoped", "via": 3, "kind": "detour", "label": "? — How searching works", "to": [{ "board": "HelpDialog", "case": "the Searching text" }] },
+    { "from": "ExploreUnscoped", "via": 4, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
+    { "from": "ExploreUnscoped", "via": 5, "kind": "nav", "label": "nav · Explore", "to": [{ "terminal": "self", "case": "scrolled — back to the top; at the top, nothing" }] },
+    { "from": "ExploreUnscoped", "via": 6, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
+    { "from": "ExploreUnscoped", "via": 7, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
+    { "from": "ExploreUnscoped", "via": 8, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
     { "from": "Feed", "via": 1, "kind": "advance", "label": "Posts (filter chip)", "to": [{ "board": "FeedSheet" }] },
     { "from": "Feed", "via": 2, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
