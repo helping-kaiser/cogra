@@ -8543,6 +8543,33 @@ round's 20–23), every one as recommended, every wording blessed.
   witness did not move. The open residue is backlog item
   132.
 
+### The residue round — 2026-10-02
+
+jakob's third ruling round, on the fix-fix round's residue.
+
+- **No citation is untypeable in the MVP.** Only CoGra writes the graph,
+  so every citation's target is one this app can type. `EditCompose`
+  draws no such row, and `StagedReference` carries no `untyped` or
+  `note`. The edit's fields keep scrolling under its pinned foot. The
+  row, the withdrawal's addressing by L1 identifier and the target's
+  face beyond this app wait for L1 (backlog 12X-fixfix-residue).
+- **The comment-scale bug notice's discard asks first**, one grammar
+  with the post scale: `Discard the reply` and `Discard the edit` open
+  `DiscardConfirm`'s ask.
+- **The filter pill speaks each axis's state, never the direction.** A
+  state reads the same whichever default it departs from; the drafted
+  words for the back-deviations wait for blessing (copy-voice, *The
+  filter pill's state words*). The filter's "?" keeps only jakob's
+  Reset sentence.
+- **A clip's fork ask** reads `Discard the video?` / `Keep it`.
+- **The gated press.** A held Sign press drops when an upload fails;
+  `Retry` re-gates and the reader presses again. The slow line counts
+  from the press.
+- **`VouchAskInvalid` keeps back as its only exit.**
+- **The gate**: **270 screens**, **1805 edges**, 0 gaps, flows 66, every
+  one resolved, 133 sidecars. The witness did not move. Backlog 127 and
+  132 close; 131 holds only the flagged state words.
+
 ## 15. Index
 
 **Root**

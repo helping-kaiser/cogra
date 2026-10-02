@@ -3933,11 +3933,10 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
 - ~~**The comment edit's mirror**~~ — ruled 2026-10-02 (jakob, pads 1:
   "same semantics at comment scale"), drawn as its own bite: item
   126.
-- ~~**The untypeable citation's row.**~~ — note ruled 2026-10-02 (pads
-  2): `Comes along as it is.`, flagged (`EditCompose`'s docblock). Its
-  name slot — closed 2026-10-02 (the fix-fix round's 23): the target's
-  standard summary line, as every picker row; `EditCompose` draws the row
-  (`StagedReference`'s `untyped`; readme §13, *The kept picks drawn*).
+- ~~**The untypeable citation's row.**~~ — dissolved 2026-10-02 (the
+  residue round): in the MVP only CoGra writes the graph, so every
+  citation's target is typeable and no board draws the row. Parked
+  post-L1 as item 12X-fixfix-residue.
 - ~~**A clip at the gate.**~~ — closed 2026-10-02 (pads 3, "per content
   of course"): `…signing waits for the video.` (`UploadStatusLine`'s
   `media`).
@@ -4116,7 +4115,7 @@ Sign as the confirmation, a `Withdrawn:` line with its `Undo` per item,
 a tag withdrawal as one record, and the acts sheet's complete kind set
 counted in records.
 
-### 127 · What the no-expiry correction left for rulings · *design* · **filed 2026-10-02**
+### 127 · What the no-expiry correction left for rulings · *design* · **filed 2026-10-02** · **closed 2026-10-02**
 
 The fix round's entry lane (readme §13, *The no-expiry correction*)
 executed jakob's rulings and left these for his eye:
@@ -4129,10 +4128,9 @@ executed jakob's rulings and left these for his eye:
   for every dead link; readme §13, *The applicant residue, ruled*).
   `This invite link has expired.` answers an expired, used-up or revoked
   link and an id that resolves to nothing alike.
-- **`VouchAskInvalid`'s exits.** The arrow is its one control: no person
-  stands behind the link, and the sibling `VouchAskUnusable`'s
-  waits-elsewhere case keeps back only. Its board sits at the foot of
-  `VouchAskUnusable`'s column on the profile page.
+- ~~**`VouchAskInvalid`'s exits.**~~ — closed 2026-10-02 (the residue
+  round's Q7; readme §13, *The residue round*): the arrow stays its one
+  control, back only (`VouchAskInvalid`'s docblock).
 - ~~**`Join` opened signed in**~~ — closed 2026-10-02 (readme §13, *The
   applicant residue, ruled*). `Already have an account? Sign in` stays
   as the account-switch door (`Join`'s docblock).
@@ -4222,7 +4220,7 @@ the filter residue*):
   the pictures?` over `The rest of the draft stays.`, a quiet `Discard`
   and a filled `Keep them`; the seven fork edges carry the ask, and
   `publish-words`, `cite-a-post` and `mention-someone` walk the empty
-  case. A clip's title went to item 131.
+  case. A clip's ask reads `Discard the video?` / `Keep it` (item 131).
 - ~~**A rotated phone's side ground.**~~ — closed 2026-10-02 (fix-fix
   15): it is a visible backdrop, and a tap on it closes the viewer (the
   three viewer sidecars).
@@ -4231,9 +4229,10 @@ the filter residue*):
   autoplay-eligible stages only (`FeedCover`, `Feed` and `ReplyEntry`
   sidecars; `MediaAttachment`'s stage law).
 - ~~**The comment-scale bug notice's way out.**~~ — closed 2026-10-02
-  (fix-fix 17): `Discard the reply` and `Discard the edit` act at once
-  (`ReplySealComment` and `CommentEdit` sidecars). The ruling's reason
-  is filed with item 131.
+  (fix-fix 17, its grammar settled by the residue round's Q1): `Discard
+  the reply` and `Discard the edit` ask first, `DiscardConfirm`'s ask,
+  one grammar with the post scale (`ReplySealComment` and `CommentEdit`
+  sidecars).
 - ~~**A mixed unscoped search.**~~ — closed 2026-10-02 (fix-fix 18): the
   other kinds' results stand with the line under them (`ExploreUnscoped`).
 - ~~**The bell on a deep screen.**~~ — closed 2026-10-02 (fix-fix 19):
@@ -4250,45 +4249,58 @@ The fix-fix lane for rulings 0 and 10–19 (readme §13, *The what's-new
 restore and the filter residue*) executed them and left these for
 jakob's eye:
 
-- **The back-deviations no existing word covers.** The trigger speaks
-  deviations from the reader's default, a deviation back toward the
-  app's included (fix-fix 10). The order has its word (`ranked`, as
-  `newest` reads); these have none: the seen toggle off under an on
-  default, every form under a default that narrows the forms, and
-  `Sensitive` or `Removed` off under a default that admits it.
-- **The filter "?"'s two pointers to settings.** jakob's Reset sentence
-  was added after `Your default lives in settings.`, so the second
-  paragraph now points to settings twice. Proposed: drop the older
-  sentence, since the new one carries it.
-- **A clip's discard ask.** Ruling 14 worded the words and the pictures;
-  `Write words instead` over a clip raises the same ask. Proposed, as
-  pass C drafted: `Discard the video?`, its keep word `Keep it`.
-- **Ruling 17's reason disagrees with the post scale.** The ruling reads
-  "acts at once (exactly post scale's grammar)", but the post's `Discard
-  the post` asks first (`SealDiscardConfirm`), as a reply's key-absent
-  `Discard the reply` does (`DiscardConfirm`). The sidecars carry the
-  ruled "at once"; one grammar would mean asking first instead.
+- ~~**The back-deviations no existing word covers.**~~ — closed
+  2026-10-02 (the residue round's Q2): the pill speaks each axis's
+  state, never the direction; the per-axis words are drafted in
+  `FeedFilter`'s docblock and copy-voice, *The filter pill's state
+  words*.
+- ~~**The filter "?"'s two pointers to settings.**~~ — closed 2026-10-02
+  (the residue round's Q3): jakob's Reset sentence stands alone
+  (copy-voice, *The "?" dialogs*).
+- ~~**A clip's discard ask.**~~ — closed 2026-10-02 (the residue round's
+  Q4): `Discard the video?` / `Keep it`, blessed (`ComposeBodyDiscard`).
+- ~~**Ruling 17's reason disagrees with the post scale.**~~ — closed
+  2026-10-02 (the residue round's Q1): the comment-scale discard asks
+  first, one grammar with the post scale.
+- **Strings flagged for blessing** (copy-voice, *The filter pill's state
+  words*): `all forms`, `hiding seen`, `+ still settling`, `hiding
+  sensitive`, `hiding removed`.
 
-### 132 · What the kept picks' drawing left open · *design + contract* · **filed 2026-10-02**
+### 132 · What the kept picks' drawing left open · *design + contract* · **filed 2026-10-02** · **closed 2026-10-02**
 
 The kept picks drawn (readme §13, *The kept picks drawn*) executed the
-fix-fix round's 20–23 and left these:
+fix-fix round's 20–23 and left these. All closed (readme §13, *The
+residue round*):
 
-- **Two edge labels still say `(disabled)`.** `ComposeSealUploading`'s
-  `Sign and publish (disabled)` and `ReplySealUploading`'s `Sign comment
-  (disabled)` name a commit that now stays enabled; their cases say so.
-  Both labels sit in `flows.resolved.json`, so renaming them is a
-  deliberate re-bless whose diff is exactly those two lines.
-- **A held press when an upload fails.** A press made during the gate
-  waits for the bytes. If an upload then fails, `ReplySealUploadFailed`
-  draws the commit disabled at the fault reading: does the held press
-  drop (the label back, the ways out unlocked), and does Retry's landing
-  sign without a new press?
-- **The slow line at the gate.** Past 5s a signing seal swaps its subline
-  to `Still signing — the network is slow right now.` For a press held at
-  the gate, does the 5s count from the press or from the bytes landing?
-- **The untypeable citation's summary line has no source** (contract
-  seam). `ReferenceClaim.target` is null for a target this instance
-  cannot type, and only `targetId` is served; the row's name slot now
-  reads the target's standard summary line, which the contract does not
-  serve for such a claim.
+- ~~**Two edge labels still say `(disabled)`.**~~ — closed 2026-10-02:
+  `Sign and publish` and `Sign comment` read without it, re-blessed at
+  the kept picks' merge.
+- ~~**A held press when an upload fails.**~~ — closed 2026-10-02 (the
+  residue round's Q5): the held press drops; `Retry` re-gates and the
+  reader presses again (`ComposeSealUploading`, `ReplySealUploading`,
+  `ReplySealUploadFailed`).
+- ~~**The slow line at the gate.**~~ — closed 2026-10-02 (the residue
+  round's Q6): the 5s count from the press.
+- ~~**The untypeable citation's summary line has no source**~~ —
+  dissolved 2026-10-02 (the residue round): the MVP draws no untypeable
+  citation; the contract need moves with the row to item
+  12X-fixfix-residue.
+
+### 12X-fixfix-residue · The citation this app cannot type, after L1 · *design + contract* · **filed 2026-10-02** · **post-L1**
+
+Parked by jakob on 2026-10-02 (the residue round: "in the mvp no one can
+do such a thing… later we can tackle this"). In the MVP only CoGra
+writes the graph — Layer 1 has no standalone API — so every citation's
+target is one CoGra can type, and no board draws a citation it cannot.
+Once L1 ships and records can arrive from beyond this app, three things
+come back together:
+
+- **The row.** How an edit holds a citation whose target this app cannot
+  type — its name slot, its note, whether it has a × or opens anything,
+  and how the acts count treats it.
+- **Addressing a withdrawal by L1 identifier.** Withdrawing such a
+  citation has to name its target without a typed node; the contract
+  serves only `targetId` for it today (`ReferenceClaim.target` is null),
+  and no summary line.
+- **The beyond-this-app face.** How the reading surfaces show a target
+  that lives outside CoGra.
