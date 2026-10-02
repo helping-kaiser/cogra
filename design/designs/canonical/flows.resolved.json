@@ -393,7 +393,7 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance ends the borrowed view, the ceremony says so, and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair and, as the member's first opinion, ends the borrowed view; the ceremony says so, and the member's own feed opens.",
       "status": "resolved",
       "steps": [
         "start · VouchBack · 3 «Vouch back» → VouchBackPad",
@@ -455,11 +455,24 @@
       ]
     },
     {
+      "name": "meet-an-ask-link-that-names-nobody",
+      "description": "An ask link whose id resolves to nobody says so in JoinInvalid's idiom, and its arrow returns the reader to whatever the link opened over.",
+      "status": "resolved",
+      "steps": [
+        "start · VouchAskInvalid",
+        "end · VouchAskInvalid · 1 «back» → back — the state the link opened over — or the feed, when the link opened the app cold (the layer law)"
+      ],
+      "boards": [
+        "VouchAskInvalid"
+      ]
+    },
+    {
       "name": "restore-your-key",
       "description": "Restore the key, wherever the key-absent screens offer it, takes the recovery code and returns to whatever was waiting on it.",
       "status": "resolved",
       "startsOn": [
         "ApplicantKeyElsewhere",
+        "ApplicantLanding",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -469,12 +482,13 @@
         "YourKeyAbsent"
       ],
       "steps": [
-        "start · «Restore the key» on 8 boards → Restore",
+        "start · «Restore the key» on 9 boards → Restore",
         "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
       ],
       "boards": [
         "Restore",
         "ApplicantKeyElsewhere",
+        "ApplicantLanding",
         "ComposeKeyAbsent",
         "KeyElsewhere",
         "PadKeyAbsent",
@@ -1853,6 +1867,7 @@
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "restore-your-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
@@ -3250,6 +3265,14 @@
       ],
       "endpoint": [
         "answer-someones-ask-link"
+      ]
+    },
+    "VouchAskInvalid": {
+      "flows": [
+        "meet-an-ask-link-that-names-nobody"
+      ],
+      "endpoint": [
+        "meet-an-ask-link-that-names-nobody"
       ]
     },
     "VouchAskPad": {

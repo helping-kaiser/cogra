@@ -18,20 +18,44 @@
    geek mode and the anchor's word spoken (`stance`). One pick per target, so
    one row per target.
 
+   PLAIN OPINIONS ONLY (jakob 2026-10-02, kept picks 4). A kept vouch-back or
+   approval never joins the batch: the review lists plain opinions and
+   nothing else, and a kept vouch-back surfaces as its own card, keeping its
+   ceremony (`VouchedIn`).
+
+   NOTHING VANISHES (jakob 2026-10-02, kept picks 2 dissolved — the
+   never-delete law). A pick's target always exists, so every row stays and
+   signing stays valid. A pick whose target was removed or redacted while it
+   waited wears the standard removed-mark face on its row instead of a live
+   preview (`StagedReference`'s `removed`).
+
+   A PICK THAT WOULD SEVER ITS BUNDLE SAYS SO ON ITS ROW (jakob 2026-10-02,
+   kept picks 3): the consequence inline, in the family's landing words, the
+   way `Remove citation` says its cost (`StagedReference`'s `consequence`).
+   Sign is the confirmation — no extra dialog, the D2 ruling's consistency.
+
    THE × DROPS AT ONCE (B2): no confirm, no undo. Nothing was signed, so
    nothing is lost that the reader cannot make again — the pick is re-made
-   from its pad. Dropping the last row leaves the review, with the snackbar
+   from its pad. The drop is spoken in the pickers' status idiom
+   (`PickAnnouncement`), `Removed —
+   2 picks left.`, and focus moves to the next row (jakob 2026-10-02, kept
+   picks 6). Dropping the last row leaves the review, with the snackbar
    `Nothing left to sign.`, where the review was opened from.
 
    LEAVING UNSIGNED KEEPS THEM (B3). The back arrow — and the system's Back —
    leave every remaining pick kept on this device, and the settings page's
    Key backup group carries a quiet row, `3 kept picks waiting`, that opens
    this review again. "Never silently" stays honest without a nag: the row is
-   the one place the waiting batch is named, and nothing else reminds.
+   the one place the waiting batch is named, and nothing else reminds. The
+   row shows only while the key is here and unsigned picks wait; if the key
+   goes again, the waiting-for-key state owns the surface (jakob 2026-10-02,
+   kept picks 7). Meanwhile each kept pick's anchor reads `Waiting for your
+   review`, and its tap opens this review (kept picks 1).
 
    ARRIVAL. From `Restore`, the restore's own snackbar (`Your key is on this
-   browser now.`) rides in over this board; from the settings row, nothing
-   does. Either way the arrow returns where the review was opened from.
+   browser now.`) rides in over this board; from the settings row or a kept
+   pick's anchor, nothing does. Either way the arrow returns where the review
+   was opened from.
 
    THE FOOT IS PINNED, the wizard reading (jakob 2026-10-01, ruling A2): the
    board leads to a seal, as `ProfileEdit` does, and `Sign them` takes the

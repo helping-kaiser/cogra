@@ -83,17 +83,20 @@
      Sessions · Credentials     as for a member
      Sign out (and its switch)  as for a member — an applicant signs out
                                 exactly as a member does (auth.md)
-     Delete account             open, as account management; what it removes
-                                before any record has landed is not yet ruled
-                                (backlog)
+     Delete account             open, as account management, and IMMEDIATE
+                                (jakob 2026-10-02): nothing has landed, so no
+                                7-day grace runs — the grace protects landed
+                                records, and an applicant has none
      About · the support stack  as for a member
 
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
    113, jakob's ruling B3): `3 kept picks waiting`, last in the Key backup
    group, opening `KeptPicksReview` again. It is there only while picks kept
    with the key elsewhere wait, the key is back, and their review was left
-   unsigned — the page's one row that comes and goes. Quiet: a navigating row
-   and nothing more, no badge, no colour, no reminder anywhere else. */
+   unsigned — the page's one row that comes and goes. If the key goes again,
+   the row goes with it and the waiting-for-key state owns the surface
+   (jakob 2026-10-02, kept picks 7). Quiet: a navigating row and nothing
+   more, no badge, no colour, no reminder anywhere else. */
 
 export const FRAME = { width: 390, height: 2670 };
 

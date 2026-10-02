@@ -11,7 +11,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="@ada · Opinions" backHref="#" backLabel="Back" />
+      <PageHeader title="@ada · Opinions" backHref="#" backLabel="Back to the profile" />
       <TabBar
         ariaLabel="Which direction"
         value="on"

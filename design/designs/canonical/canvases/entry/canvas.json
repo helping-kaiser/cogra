@@ -209,24 +209,6 @@
       "page": "entry"
     },
     {
-      "file": "ApplicantExpired.dc.html",
-      "title": "Applicant · ran out of time",
-      "x": 3360,
-      "y": 4184,
-      "w": 390,
-      "h": 844,
-      "page": "entry"
-    },
-    {
-      "file": "ApplicantRearm.dc.html",
-      "title": "Applicant · a fresh invite",
-      "x": 3840,
-      "y": 3180,
-      "w": 390,
-      "h": 844,
-      "page": "entry"
-    },
-    {
       "file": "ApplicantEmail.dc.html",
       "title": "Applicant · wrong address",
       "x": 4320,
@@ -510,7 +492,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5308,
+      "h": 5455,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -670,7 +652,7 @@
       "x": -340,
       "y": 3180,
       "w": 290,
-      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (a tap opens it; press and hold signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until this first stance.",
+      "text": "ENTRY · Applicant days\n\nSame shell as a member, application riding as cards: verify + key first, then waiting on the inviter, then the landing moment. The first vouch opens the STANCE PAD (not sliders), preloaded at +0.10 / +0.10, resting 16px above the bottom bar. Onboarding is per-control and the pad is the ONLY control on these screens that gets first-time explainers: what it is for, how it opens (a tap opens it; press and hold signs +0.10 / +0.10), that nothing signs until Set, and that the input can be swapped in settings. Acting is gated but visible (compose at 38%). The borrowed view persists until the member's first own opinion, on anyone.",
       "page": "entry"
     },
     {

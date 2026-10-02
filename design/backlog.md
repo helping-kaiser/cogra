@@ -3691,7 +3691,7 @@ annotation goes, or he rewords it and the note follows through
 `check-help-notes --write`. Both are one-line rulings; fold them
 into the next copy round's brief.
 
-### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01**
+### 113 · The kept picks' review board · *design* · **filed 2026-09-30** · **drawn 2026-10-01** · **ruled 2026-10-02**
 
 The key-loss round ruled a kept pick's life (readme §13, *The
 key-loss round*; `PadKeyAbsent`'s docblock): picks kept pending with
@@ -3709,26 +3709,44 @@ closes the gap.
 picks' review*): `KeptPicksReview`, `KeptPicksSeal` and the settings
 row; the gap is closed. Left for rulings, none drawn:
 
-- **The anchor after the key is back.** A review left unsigned leaves the
-  posts' anchors wearing `Waiting for your key`, no longer true, and the
-  face's tap still opens `PadKeyAbsent`. What the anchor reads, and what
-  its tap opens, while the batch waits on the reader rather than the key.
-- **A kept pick whose target went.** A post removed or an account deleted
-  before the batch signs: the row's face, and whether the seal refuses
-  that act on its row (`SealFaultRow`'s shape) or the review drops it.
-- **A kept pick that would sever its bundle.** On a held post or topic, a
-  pick that nets the bundle to nothing goes through `SeveranceConfirm`
-  when signed alone; the batch has no such step.
-- **Kept vouches.** A kept vouch-back (`VouchBackPad` opens `VouchedIn`
-  when signed alone) or approval (`ApprovePad`, whose application may
-  expire meanwhile), signed in the batch.
-- **The write rule at kept-picks scale.** `WriteRuleFailed` draws the
-  post's seal and says the draft is kept; its clause and its way out for
-  the picks are owed, as the reply's were.
-- **Spoken drops.** Whether a dropped row is announced, as the pickers'
-  `PickAnnouncement` does, and where focus lands when a row leaves.
-- **The row's conditions.** Whether `3 kept picks waiting` shows while the
-  key has gone again, or over a sealed sign-out's picks.
+- ~~**The anchor after the key is back.**~~ — closed 2026-10-02 (jakob,
+  kept picks 1): the anchor reads `Waiting for your review` and its tap
+  opens the review (`StanceControl`'s `pendingReview`).
+- ~~**A kept pick whose target went.**~~ — dissolved 2026-10-02 (kept
+  picks 2, the never-delete law): nothing vanishes and signing stays
+  valid; a removed or redacted target's row wears the removed-mark face
+  (`StagedReference`'s `removed`).
+- ~~**A kept pick that would sever its bundle.**~~ — closed 2026-10-02
+  (kept picks 3): the row says the consequence inline, and Sign is the
+  confirmation — no dialog (`StagedReference`'s `consequence`).
+- ~~**Kept vouches.**~~ — closed 2026-10-02 (kept picks 4): kept
+  vouch-backs and approvals never join the batch; the review lists plain
+  opinions only, and a kept vouch-back surfaces as its own card keeping
+  its ceremony.
+- ~~**The write rule at kept-picks scale.**~~ — closed 2026-10-02 (kept
+  picks 5): the fact ends `your picks are still kept.`, the way out reads
+  `Not now`, back to the review (`WriteRuleFailed`'s docblock).
+- ~~**Spoken drops.**~~ — closed 2026-10-02 (kept picks 6): `Removed — 2
+  picks left.`, focus to the next row.
+- ~~**The row's conditions.**~~ — closed 2026-10-02 (kept picks 7): the
+  row shows only while the key is here and unsigned picks wait; with the
+  key gone again, the waiting-for-key state owns the surface.
+
+All seven are recorded in readme §13, *The kept picks and the pads,
+ruled*, and in `behavior/KeptPicksReview.md`. Left by that round, for
+jakob's eye:
+
+- **The two row states are undrawn.** `StagedReference` carries `removed`
+  and `consequence`, but `KeptPicksReview`'s fixture draws three plain
+  picks; whether the review board shows a removed or a severing row (and
+  how `KeptPicksSeal`'s acts card names a removed target) is a drawing
+  call. The removed row's × name, `Remove this pick: Post, Removed by its
+  author`, is flagged.
+- **A kept approval's home.** Ruling 4 says approvals never join the
+  batch and gives a kept vouch-back its own card; where a kept approval
+  surfaces once the key is back is not said.
+- **The post-restore anchor is undrawn.** No board draws a feed with a
+  pick waiting for review; `PadPending` draws the key-absent state.
 
 ### 114 · The first ID-sweep round: a clip-drawing feed board · *tooling* · **filed 2026-09-30** · **done 2026-10-01**
 
@@ -3905,25 +3923,32 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
   removal's cost is a sentence over the foot, describing the control;
   a records row is heard as `N things`; the failed gate is its own board
   (`ReplySealUploadFailed`), its line offering Retry and no Remove.
-- **The comment edit's mirror** (audit K6.12, D38). `CommentEdit` still
-  draws no standing citations, no `Withdrawn:` lines and no
-  `RefPairEdit` route; `CommentEditActs` counts the old three kinds.
-- **The untypeable citation's row.** api-spec excludes such a citation
-  from editing, and the edit's rule is a row with no ×, but its name
-  slot (the claim serves only an L1 identifier) and any quiet reason
-  have no words, so no board draws it.
-- **A clip at the gate.** `UploadStatusLine` says "signing waits for
-  the pictures" for a video at both scales (`ReplyVideo/3`,
-  `ComposeDetailsVideo/9`); the video's words are unwritten.
-- **An untouched pick on `RefPairEdit`.** What `Done` stages with the
-  pick still at the origin is the stance pad's open question (audit
-  K10.2).
-- **"Signing proceeds"** on both gated seals' commit edges reads as
-  signing without a tap (audit K12.12, unruled).
-- **The tag half of the sharpening.** jakob's ruling names tags and
-  citations together ("we even need multiple acts to remove them");
-  api-spec makes the un-tag one newest-wins record, so the drawing counts
-  one. If a tag's withdrawal can cost more, that is a contract change.
+- ~~**The comment edit's mirror**~~ — ruled 2026-10-02 (jakob, pads 1:
+  "same semantics at comment scale"), drawn as its own bite: item
+  126.
+- ~~**The untypeable citation's row.**~~ — note ruled 2026-10-02 (pads
+  2): `Comes along as it is.`, flagged (`EditCompose`'s docblock). Its
+  name slot (the claim serves only an L1 identifier) still has no words,
+  so no board draws the row yet.
+- ~~**A clip at the gate.**~~ — closed 2026-10-02 (pads 3, "per content
+  of course"): `…signing waits for the video.` (`UploadStatusLine`'s
+  `media`).
+- ~~**An untouched pick on `RefPairEdit`.**~~ — closed 2026-10-02 (pads
+  4): `Done` stages nothing, as the scrim; an untouched pad never makes
+  an act (`behavior/RefPairEdit.md`).
+- ~~**"Signing proceeds"**~~ — closed 2026-10-02 (pads 5): signing
+  proceeds when the uploads land; the reader already pressed Sign, and
+  the gate waits only for bytes (`behavior/ComposeSealUploading.md`).
+  Left for jakob's eye: the gated seal is reached by `Next` with its
+  commit drawn `disabled`, so the press the ruling assumes has no drawn
+  moment — the sidecar now holds a press made during the gate until the
+  bytes land; how the commit looks pressable, and what it reads once
+  pressed, is a drawing call.
+- ~~**The tag half of the sharpening.**~~ — closed 2026-10-02 (pads 6): a
+  tag withdrawal is one record — one fresh 0,0 layer, newest-wins; the
+  drawing counts 1 act (`EditActs`, `TagPad`).
+
+Recorded in readme §13, *The kept picks and the pads, ruled*.
 - **Contract seam** (for the relay): the edit's footer and acts card
   count real records before Sign — one per edit, tag and citation
   record, and `ReferenceClaim.withdrawalCost` per citation withdrawn,
@@ -3933,26 +3958,20 @@ withdrawals*) executed jakob's D1–D3 and left these for his eye:
   prepare), and what the seal says if it does; and the batch's
   all-or-none, which api-spec's edit docstring promises and its
   cross-record section denies (audit K5.4).
-### 122 · What the entry funnel round left for rulings · *design* · **filed 2026-10-01**
+### 122 · What the entry funnel round left for rulings · *design* · **filed 2026-10-01** · **narrowed 2026-10-02**
 
 The entry funnel round (readme §13, *The entry funnel round*) executed
 jakob's K3 rulings (Block C items C1–C7, C19–C21) and left these calls
-for his eye:
+for his eye. jakob ruled the numbered ones in the morning review of
+2026-10-02, as recommended, executed in readme §13, *The no-expiry
+correction*. Still open:
 
-- **The dead link's arrival.** The ruling kept the feed-first landing and
-  asked for the unusable-link arrival to be stated. The lane read it as
-  the same landing: a dead link still names its issuer, so it lands on
-  `Main` and the band and the gate open `JoinInvalid`; a link that
-  resolves to nothing lands on `FeedBare`. Nothing on arrival says the
-  link is dead.
-- **The wrong-address change keeps the password.** The carve-out drops the
-  old address's code and nothing else; whether a change of address
-  restarts the 24-hour reap is unruled, and auth.md keeps the clock at
-  registration.
-- **The deletion's landing.** `DeleteAccountConfirmed` takes
+- **The password on the carve-out.** `ApplicantEmail` drops the old
+  address's code and nothing else, so the password is still re-asked;
+  the call is drawn and unreviewed.
+- **The deletion landing's column.** `DeleteAccountConfirmed` takes
   `VerifyExpired`'s left column rather than `Verified`'s centred one,
-  because it carries a checkbox; what `Add it to the deletion` does with
-  the box unticked is unruled. Its signed-out line and its
+  because it carries a checkbox. Its signed-out line and its
   sweep-already-chosen heading are copy, not boards.
 - **The grace screen.** `DeleteAccountPending` drops the band (it would
   say its paragraph twice) and keeps the ruled `Cancel` as its button,
@@ -3961,20 +3980,33 @@ for his eye:
   yet made.
 - **The email change's failure landings** — the expired link and the
   taken address — are copy on `ChangeEmailLinked`, not boards.
-- **An expiry notification.** The shell's card returns when an
-  application runs out, but no tenth notification kind says so; the
-  contract has none either.
-- **Where the snackbars land.** The ask link's three non-vouching readers
-  and the invite link's three signed-in readers with nothing to re-arm
-  all land where app-open lands for them; whether the already-queued
-  member should land on `Invites` instead is open.
-- **Two neighbours of the rulings, untouched.** `JoinInvalid` still says
-  an existing account "is untouched", which the 24-hour reap makes false
-  for an unverified one (the honesty fix `VerifyExpired` got); and
-  `VerifiedApp` opened signed out has no stated way on.
-- **Strings flagged for blessing** (copy-voice, *The entry funnel's
-  round*, *Confirm the change* and *Deleting the account*): every new
-  line the round drew.
+- **`VerifiedApp` opened signed out** has no stated way on.
+
+Closed 2026-10-02 (jakob, as recommended; readme §13, *The no-expiry
+correction*):
+
+- ~~**The dead link's arrival.**~~ — one snackbar on arrival, `This
+  invite link has expired.`, over the unchanged landing (`Main`, or
+  `FeedBare` for a link that resolves to nothing).
+- ~~**Does an address change restart the reap?**~~ — no: the seven days
+  run from registration (auth.md, *Expiry*), and nothing on screen says
+  so.
+- ~~**The deletion landing's unticked commit.**~~ — committed unticked,
+  the deletion stands confirmed account-only; the checkbox is purely the
+  content opt-in.
+- ~~**An expiry notification.**~~ — dead: applications never run out.
+- ~~**Where the snackbars land.**~~ — the ask link's already-queued
+  member lands on `Invites`; the invite link's signed-in snackbars are
+  gone, since a live invite link opens `Join` for anyone signed in.
+- ~~**`JoinInvalid`'s "is untouched".**~~ — the paragraph promises
+  nothing about an earlier account; its reworded line is flagged in
+  copy-voice, *The fix round's entry lines*.
+- ~~**The ask link's unknown id**~~ (ASK_LINK_UNUSABLE) — drawn as
+  `VouchAskInvalid`, in `JoinInvalid`'s idiom; its paragraph is
+  flagged.
+- ~~**Strings flagged for blessing.**~~ — jakob blessed the round's lines
+  except those for a lapsed application and a second invite, which are
+  removed.
 - ~~**The report's placement.**~~ — closed 2026-10-01 (jakob, as
   recommended): the read-back stays between the field and `Send by
   email`, the two-placement law's stated exception (readme §4; *The
@@ -4023,15 +4055,16 @@ and the K11 recommendations, and left these for his eye:
   is an act and its own commit) and read-only sheets (references,
   opinions, Cited by, license terms, the comments thread) as keeping
   the law by their shape. Confirm the reading.
-- **Two dialogs keep their own layout.** `StanceAlternates` (a chooser
-  with its "?" and three actions) and `ReplyKeyAbsent` (the key notice,
-  a master) still pass `children` to `DialogSurface` rather than the
-  slots.
-- **The drill-ins the tables do not reach yet.** `FeedEntry`'s level one
-  draws a fixed `Back to feed` though the score is tapped on many
-  surfaces; `ProfileStances`, `Notifications`, `About` and
-  `ChatsComingSoon` read a bare `Back`; the stream's own way out is
-  `Back to feed` though a profile's posts open it too.
+- ~~**Two dialogs keep their own layout.**~~ — closed 2026-10-02
+  (jakob: the two off-slot dialogs are fine). `StanceAlternates` (a
+  chooser with its "?" and three actions) and `ReplyKeyAbsent` (the key
+  notice, a master) have different anatomies from the slotted dialog and
+  keep them (readme §13, *The nav-noun sweep*).
+- ~~**The drill-ins the tables do not reach yet.**~~ — closed 2026-10-02
+  for `FeedEntry`, `ProfileStances`, `Notifications`, `About` and the
+  stream (readme §13, *The nav-noun sweep*). Open: `ChatsComingSoon`
+  still reads a bare `Back`; Wallet's and the join form's nouns, filed
+  as 125 below.
 - **The derived details.** The deep-link highlight's rung (one up the
   surface ladder from the sheet) and its one second; the license
   joining rule's name for a non-zero pair (its two tier names, ` · `);
@@ -4041,13 +4074,103 @@ and the K11 recommendations, and left these for his eye:
   platform's verdict` is written into `ComposeSensitive`'s docblock and
   copy-voice; no board draws the edit's Sensitive row in that state.
 - **The chat's sign sheet** (post-MVP `ChatSignSheet`) still reads
-  `Public domain — your default`; the joining rule names no chat.
+  `Public domain — your default`; the joining rule names no chat. Rides
+  the chats migration (jakob 2026-10-02).
 - **Flagged for blessing** (copy-voice): `Back to Saved`, `Back to
   History`, `Back to Notifications`, `Back to the stream`, `Back to the
   opinions`, `Nothing changes until you press Done`, the joining rule
   and its readings, `Also veiled by the platform's verdict`.
 
-### 12X-filter-olive · What the filter-and-olive round left for rulings · *design* · **filed 2026-10-02**
+### 125 · Two origins the nav-noun tables have no noun for · *design* · **filed 2026-10-02**
+
+The nav-noun sweep (readme §13) named every drill-in's origins from nouns
+already ruled, and left two without one:
+
+- **Wallet, as the bell's origin.** Notifications opens from the bell on
+  every root band; `Back to feed`, `Back to Explore` and `Back to your
+  profile` are ruled, `WalletComingSoon` has no noun. By the named-surface
+  rule it would be `Back to Wallet`; unruled.
+- **The join form, as About's origin.** Its help dot opens About, and the
+  arrow returns the form as it was left; the entry funnel's boards have
+  no origin noun and `Join` draws a bare `Back`. Unruled.
+
+### 126 · The comment edit mirrors the withdrawal package · *design* · **filed 2026-10-02**
+
+Ruled by jakob on 2026-10-02 (the morning review, pads 1: "yes" to "rule
+now — same semantics at comment scale — draw as its own bite"): the
+comment edit takes the post edit's withdrawal package unchanged at
+comment scale. Item 121's bullet named the gap (audit K6.12, D38):
+`CommentEdit` draws no standing citations, no `Withdrawn:` lines and no
+`RefPairEdit` route, and `CommentEditActs` counts the old three kinds.
+A drawing round brings them level with `EditCompose` and `EditActs`
+(readme §13, *The pads and the edit's withdrawals*): standing citations
+that open `RefPairEdit`, `Remove citation` with its cost said inline and
+Sign as the confirmation, a `Withdrawn:` line with its `Undo` per item,
+a tag withdrawal as one record, and the acts sheet's complete kind set
+counted in records.
+
+### 127 · What the no-expiry correction left for rulings · *design* · **filed 2026-10-02**
+
+The fix round's entry lane (readme §13, *The no-expiry correction*)
+executed jakob's rulings and left these for his eye:
+
+- **A dead invite link opened while signed in.** N1 rules the live link
+  (the `Join` layer). A dead one lands a guest on the issuer's borrowed
+  view with the expiry snackbar, but a signed-in reader has no guest
+  view to land on. Proposal: the reader stays where they were (or on
+  their own landing, opened cold) and hears the same snackbar, `This
+  invite link has expired.`; nothing drawn until ruled.
+- **The dead-link snackbar's word.** `This invite link has expired.`
+  also answers a used-up single-use link, a revoked one and an id that
+  resolves to nothing — the ruled words, applied to every dead arrival.
+- **`VouchAskInvalid`'s exits.** The arrow is its one control: no person
+  stands behind the link, and the sibling `VouchAskUnusable`'s
+  waits-elsewhere case keeps back only. Its board sits at the foot of
+  `VouchAskUnusable`'s column on the profile page.
+- **`Join` opened signed in** still offers `Already have an account?
+  Sign in`, as the ruling's "same as a guest" draws it.
+- **Flagged for blessing** (copy-voice, *The fix round's entry lines*):
+  the verify card's seven-day line, `JoinInvalid`'s paragraph and
+  `VouchAskInvalid`'s paragraph.
+
+### 128 · What the applicant fix round left for rulings · *design + contract* · **filed 2026-10-02**
+
+The applicant fix round (readme §13) executed jakob's morning rulings on
+the applicant pages and the vouch pair, and left these for his eye:
+
+- **"Your first opinion" on the vouch card and pad.** The card's body
+  (`…your first opinion, and your feed grows from it.`), the pad's title
+  and "?" (`Your first opinion`, copy-voice *The "?" dialogs*) and its
+  first coaching line say the vouch-back is the member's first opinion.
+  Under the revised rule a member may opine on others first while the
+  card still stands; whether the card leaves at the first opinion, or
+  its and the pad's words change, is unruled.
+- **`Not now` on a for-good dismissal.** The label promises a later the
+  dismissal no longer has; it stays until worded.
+- **Where "for good" is kept.** auth.md keeps the prompt's dismissal
+  device-local, reappearing on a new device; a dismissal for good needs
+  account state (design ⇄ impl seam).
+- **The other locked controls.** The ruling put auth.md's locked look on
+  the comment foot; a comment's `Reply` and the profile's `Invites`
+  still stand at full ink while answering an applicant the same way.
+- **The landing card's body with the restore door.** The key-elsewhere
+  body still says the landing comes from the other device alone.
+- **The turned-down shell's other staged-act lines.** The opinion's and
+  topic's second-tap lines still say they wait with an application none
+  is live for; the seal's line was the one ruled.
+- **An applicant's deletion, drawn.** `DeleteAccount`, its mail,
+  `DeleteAccountConfirmed` and the grace boards speak the member's seven
+  days; the applicant's words, and whether the emailed link still gates
+  an applicant who may hold no verified address, are undrawn.
+- **The ask link's applicant snackbar** (`Vouching unlocks once your
+  application is approved.`) sits outside the applicant-foot family.
+- **`ReplyEntry`'s reader chip** changes the foot only; the thread above
+  keeps the member's own comments, which an applicant cannot have.
+- **Strings flagged for blessing**: `Browsing from @mira's view — your
+  first opinion starts your own.`, `See @noor's profile`, `Your post
+  waits — it arrives when someone vouches you in.`
+
+### 129 · What the filter-and-olive round left for rulings · *design* · **filed 2026-10-02**
 
 The filter-and-olive round (readme §13) executed jakob's morning rulings
 and left these for his eye:

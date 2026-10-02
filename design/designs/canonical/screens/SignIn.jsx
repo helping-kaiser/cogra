@@ -7,7 +7,7 @@
    audit K3.7). One rule, not a list to keep true: an account can be in
    any of the states the shells draw — a member with or without the key
    here, landed and not yet vouched back, in its deletion grace; an applicant
-   with tasks left, waiting, turned down, run out, or with the key made
+   with tasks left, waiting, turned down, or with the key made
    elsewhere — and signing in is just the app opening for it, so each state
    opens where an app-open in that state does. A pending security notice
    (`LogInPayload.reuseDetectedAt`) rides along to that landing as a card.

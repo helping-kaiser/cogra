@@ -23,12 +23,25 @@
    (readme §4, *Navigation*; the behavior sidecar's lines).
 
    The thread and the detail beneath it are `_shared.jsx` helpers, because the
-   comment's own overflow menu draws this same board with one more sheet on it. */
+   comment's own overflow menu draws this same board with one more sheet on it.
+
+   THE READER CHIP DRAWS AN APPLICANT'S FOOT (jakob 2026-10-02). Applicants do
+   not comment in V1.0, and the foot wears auth.md's locked look for them:
+   the door visibly inactive at the disabled opacity, still tappable, the tap
+   answering in place with `You can comment once you're in.` — drawn here as
+   the snackbar it raises. The chip changes the foot and nothing else; the
+   thread above it is the member's fixture. */
+export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
+export const VALS = `footOpacity: this.props.reader === "applicant" ? "var(--state-disabled)" : "1", lockedLine: this.props.reader === "applicant" ? "block" : "none"`;
+
 export function Screen() {
   return (
     <>
       <ThreadDetail />
-      <CommentsThreadSheet />
+      <CommentsThreadSheet footOpacity="{{footOpacity}}" />
+      <div style={{ display: "{{lockedLine}}" }}>
+        <Snackbar message="You can comment once you're in." offset={88} />
+      </div>
     </>
   );
 }

@@ -11,14 +11,29 @@
    fixed at the vouch-back — so the title names whoever's approval is in play,
    and the sentence that repeated it under a second verb is gone rather than
    rewritten. What is left is the fact the title cannot carry: acts staged now
-   arrive with the reader. */
+   arrive with the reader.
+
+   THE ASK LINK LIVES HERE FOR GOOD (jakob 2026-10-02). The waiting card on the
+   feed carries it until `Got it` puts that card away; this card is never put
+   away, so the profile is the link's permanent home — `ApplicantWaiting`'s
+   block, its label and caption verbatim, `bare` inside the card. Settings
+   carries no ask link. */
 export function Screen() {
   return (
     <>
       <ProfileBand />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "8px 16px 0" }}>
-          <TaskCard title="Waiting on @mira" body="What you post now arrives with you." />
+          <TaskCard title="Waiting on @mira" body="What you post now arrives with you.">
+            <PayoutAddress
+              bare
+              label="Your ask link"
+              address={ASK_LINK}
+              onCopy={() => {}}
+              copyLabel="Copy your ask link"
+              caption="It does not expire. While @mira's answer is open, it can't start a second application."
+            />
+          </TaskCard>
         </div>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
@@ -44,7 +59,7 @@ export function Screen() {
           </p>
         </ChronicleList>
       </div>
-      <Snackbar message="Invites open when you're in." />
+      <Snackbar message="You can invite once you're in." />
       <BottomNav active="profile" slots={ALL_SLOTS} inline />
     </>
   );

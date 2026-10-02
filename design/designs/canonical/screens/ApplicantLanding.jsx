@@ -15,10 +15,15 @@
    THE KEY-ABSENT VARIANT (the `keyAt` chip). The handshake needs the key, so
    with the key on another device the landing waits for that device's next
    open — indefinitely, if the reader never opens it. The card says so, once,
-   instead of promising a moment that will not come here. Whether it should
-   also offer the key's restore is filed, not drawn. */
+   instead of promising a moment that will not come here.
+
+   AND IT OFFERS THE RESTORE, QUIETLY (jakob 2026-10-02). Restoring the key
+   here genuinely lets the registration land here, so the variant carries
+   `Restore the key` in `TaskCard`'s secondary dress — outlined, left-aligned,
+   the way `Got it` sits on the waiting card — opening `Restore`. The card with
+   the key here keeps no control: there the machine needs nothing. */
 export const PROPS = { keyAt: { editor: "enum", options: ["here", "elsewhere"], default: "here" } };
-export const VALS = `landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device, and it lands from there — open CoGra on that device." : "@mira approved your application. Nothing is needed from you while it lands."`;
+export const VALS = `landingBody: this.props.keyAt === "elsewhere" ? "Your key was made on another device, and it lands from there — open CoGra on that device." : "@mira approved your application. Nothing is needed from you while it lands.", restoreDoor: this.props.keyAt === "elsewhere" ? "inline-flex" : "none"`;
 
 export function Screen() {
   return (
@@ -27,7 +32,11 @@ export function Screen() {
         <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
       </CograBand>
       <FeedList>
-        <TaskCard title="Approved — your registration is landing" body="{{landingBody}}" />
+        <TaskCard title="Approved — your registration is landing" body="{{landingBody}}">
+          <Button variant="outline" selfStart style={{ display: "{{restoreDoor}}" }}>
+            Restore the key
+          </Button>
+        </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} />
         <PostCard {...TOBIAS_POST} signedIn={false} />
       </FeedList>
