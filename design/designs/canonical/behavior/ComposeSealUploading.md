@@ -14,6 +14,10 @@ WHEN the signing has not answered 5s after the press GIVEN Sign and publish was 
 
 WHEN the last upload lands GIVEN Sign and publish was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
 
+WHEN an upload fails GIVEN Sign and publish was pressed while the uploads ran -> the held press drops AND Sign and publish reads Sign and publish again AND the header back arrow, Back and the header X answer again AND NEVER anything is signed
+
+WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign and publish is pressed again
+
 WHEN the last upload lands GIVEN Sign and publish was not pressed -> the upload line goes AND Sign and publish stays as it was
 
 ALWAYS every act the signature commits is read back in the acts card while the uploads run

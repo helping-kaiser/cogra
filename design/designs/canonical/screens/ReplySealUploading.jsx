@@ -27,7 +27,9 @@
 
    THE GATE CAN FAIL. An upload that does not land while the reader waits here
    turns the line into its fault reading (`ReplySealUploadFailed`): the fact,
-   `Signing waits for it.` and Retry.
+   `Signing waits for it.` and Retry. A press held at the gate drops there
+   (jakob 2026-10-02, the residue round's Q5): `Retry` re-gates, and the
+   reader presses again.
 
    A PATTERN EXEMPLAR (readme §13, *Canvas pages and flows*): only the gated
    commit is this board's own; the header, the acts card and the rows are

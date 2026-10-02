@@ -6,8 +6,11 @@
    A FAILED UPLOAD IS A FAULT, NOT A REFUSAL (`ReplyVideoFailed`'s reasoning):
    the file was fine and the network was not, so the way out is `Retry`, and
    the gate line says what it is waiting for — `One picture didn't upload.
-   Signing waits for it.` `Sign comment` stays disabled. `Retry` starts the
-   upload again and the line returns to its running reading. There is no
+   Signing waits for it.` `Sign comment` stays disabled. A press held at the
+   gate drops here (jakob 2026-10-02, the residue round's Q5): the label reads
+   `Sign comment` again, the ways out answer again and nothing signs. `Retry`
+   starts the upload again and the line returns to its running reading; the
+   reader presses again once it is running. There is no
    `Remove it` on the seal: the seal reads back, and what the reply carries is
    changed one stage back, where the failed tile wears its badge.
 
