@@ -8469,7 +8469,8 @@ backlog 125, 127, 128), as recommended, his wordings blessed.
   days.
 - **Blessed** (copy-voice): `Back to Wallet`, `Got it`, `You can vouch
   once you're in.`, About's line.
-- **The gate**: GATE_PLACEHOLDER
+- **The gate**: 268 screens, 1800 edges, 0 gaps, **flows 66**, every
+  one resolved; the witness did not move, no rebless.
 
 ## 15. Index
 
