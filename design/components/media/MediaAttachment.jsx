@@ -57,7 +57,11 @@ import { VideoTransport } from "./VideoControls.jsx";
      start, and a clip that leaves before painting never leaves its still face.
      A PLAY-DISC TAP MAKES ITS CLIP THE INCUMBENT (jakob 2026-10-02): it keeps
      the stage while it stays past the 70% gate, and the ordinary succession
-     follows once it falls below.
+     follows once it falls below. A CLIP THE READER STARTED BY HAND IS NEVER
+     STOLEN (jakob 2026-10-02, the fix-fix round's ruling 16): the hard top's
+     re-election moves autoplay-eligible stages only, so under suppressed
+     autoplay a settle at the hard top neither stops a tapped clip nor starts
+     another.
      THE SENSITIVE VEIL TAKES ITS CLIP OUT OF THE ROTATION (jakob 2026-09-24,
      backlog item 103): a veiled clip has no playback and no sound-disc
      presence. THE UNVEIL IS AN ELIGIBILITY CHANGE, NOT A SUSPENSION LIFT: a

@@ -256,7 +256,7 @@
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
       "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
-        { "board": "ComposePick", "via": 4 },
+        { "board": "ComposePick", "via": 4, "case": "the body empty — the words stage, no ask" },
         { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
         { "board": "ComposeDetailsWords", "via": 8, "to": "ComposeSeal" }
       ],
@@ -463,7 +463,7 @@
       "description": "The reader's overflow — on a post or on a comment, the same two rows — opens the post wizard fresh, the thing cited riding along unseen. The journey ends at the details stage, where the reference is finally on screen.",
       "start": { "control": "Cite in a new post", "to": "ComposePick" },
       "waypoints": [
-        { "board": "ComposePick", "via": 4 },
+        { "board": "ComposePick", "via": 4, "case": "the body empty — the words stage, no ask" },
         { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },
         { "board": "ComposeCited" }
       ]
@@ -473,7 +473,7 @@
       "description": "Mention in a new post on another's profile stages exactly what citing stages — a Reference edge. The word records only that the far end is a person, and the wizard it opens is the same one.",
       "start": { "control": "Mention in a new post", "to": "ComposePick" },
       "waypoints": [
-        { "board": "ComposePick", "via": 4 },
+        { "board": "ComposePick", "via": 4, "case": "the body empty — the words stage, no ask" },
         { "board": "ComposeWords", "via": 3, "to": "ComposeCited" },
         { "board": "ComposeCited" }
       ]

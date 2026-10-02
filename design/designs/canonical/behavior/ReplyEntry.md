@@ -1,8 +1,10 @@
 # ReplyEntry · `spec:design:behavior-reply-entry`
 
-WHEN scroll settles at the thread's hard top GIVEN a qualifying clip exists -> the stage re-elects to the first qualifying clip in thread order
+WHEN scroll settles at the thread's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in thread order
 
-WHEN an overscroll bounce settles back at the thread's hard top GIVEN a qualifying clip exists -> the stage re-elects to the first qualifying clip in thread order
+WHEN an overscroll bounce settles back at the thread's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in thread order
+
+ALWAYS a clip the reader started by its play disc keeps the stage GIVEN it still qualifies, at the thread's hard top included
 
 WHEN scroll settles anywhere below the thread's hard top GIVEN the incumbent still qualifies -> NEVER the stage re-elects upward
 

@@ -348,7 +348,10 @@ title, at most two short paragraphs, Close. The texts, verbatim
   newest is one choice, and what you've already seen stays out
   unless you ask for it back. Nothing changes until you press Done,
   and nothing here is signed or shared. / It lasts until you change it,
-  on this device only. Your default lives in settings.
+  on this device only. Your default lives in settings. Reset brings
+  back your defaults, to change them go to settings. *(The Reset
+  sentence is jakob's own, blessed 2026-10-02: one sentence for the
+  feed's, search's and the settings sheet.)*
 
 **A "?" is named by the dialog it opens.** Its accessible name is that
 dialog's own subject, so a listener hears which explanation the tap
@@ -941,7 +944,8 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. At comment
     scale the way out names what is lost (jakob 2026-10-02): `Discard
     the reply` on a reply's seal, `Discard the edit` on a comment edit —
-    never `Discard the post`. *`Discard the edit` new 2026-10-02, flagged
+    never `Discard the post` — and it acts at once, with no ask (jakob
+    2026-10-02, the fix-fix round's ruling 17). *`Discard the edit` new 2026-10-02, flagged
     for blessing.*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
@@ -1139,9 +1143,12 @@ and before `Privacy` and `Terms`, each one string for app and web:
   the release chronicle, titled by the row: each release's dateline
   reads `Version 0.1.2 · installed · 30.09.2026` for the running one and
   `Version 0.1.1 · 28.09.2026` for the rest, and the page's footnote
-  reads `Newest first.` The notes are read on the page; no release sends
-  the reader anywhere else. A release's notes are written when it ships,
-  never here. *`installed` and the footnote flagged for blessing,
+  reads `Newest first.` Each release's card ends in `See it on GitHub`,
+  named `See version 0.1.2 on GitHub` for a listener — the patch notes'
+  only door to the deeper level, that release's public page (jakob
+  2026-10-02, blessed); the newest release's card in the behind state
+  carries its own. A release's notes are written when it ships, never
+  here. *`installed` and the footnote flagged for blessing,
   2026-10-02.*
 - **A running version behind the newest** (jakob 2026-10-01). Atop the
   chronicle, one quiet line: `A newer version exists.` ending in `Update
@@ -1153,7 +1160,8 @@ and before `Privacy` and `Terms`, each one string for app and web:
   of CoGra is out.` with `Update now` as its action; a device-local seen
   flag per release means each release says it exactly once, and letting
   it pass costs nothing (`FeedNewerVersion`). **`Update now` leads to the
-  download, never to the code** (jakob 2026-10-02): in the app it opens
+  download, never to the code** (jakob 2026-10-02) — the code is the
+  release cards' door: in the app it opens
   CoGra's Play Store listing, on the web it reloads the page into the new
   version — one string, no platform noun. *`Update now`, `Update to
   version 0.1.3`, `installed` and `newest` flagged for blessing,
@@ -2539,6 +2547,17 @@ tap on it used to reach nothing, and now it raises this:
 edit asks only when it changed since it opened, and its title says what
 goes: `Discard the changes?`, over the shared dialog's `Nothing is
 kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
+
+**The body fork's ask** (`ComposeBodyDiscard`, jakob 2026-10-02, the
+fix-fix round's ruling 14). Switching halves with something in the body
+asks first, and the title names the half that goes: `Discard the
+words?` from the words stage's `Add pictures instead`, `Discard the
+pictures?` from a pick stage's `Write words instead`. The body is `The
+rest of the draft stays.` — the reader loses only the half they leave.
+`Discard` (quiet) and `Keep them` (filled), `DiscardConfirm`'s
+weighting; nothing behind the scrim reads `Discard`, so the bare word
+cannot be misread. *Blessed, jakob 2026-10-02.* A clip's title and keep
+word are unruled (backlog 12X-fixfix-whatsnew).
 
 ## The already-published marker
 

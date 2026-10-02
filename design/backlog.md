@@ -4180,78 +4180,91 @@ the applicant pages and the vouch pair, and left these for his eye:
   opinion starts your own.`, `See @noor's profile`, `Your post waits — it
   arrives when someone vouches you in.`
 
-### 129 · What the filter-and-olive round left for rulings · *design* · **filed 2026-10-02**
+### 129 · What the filter-and-olive round left for rulings · *design* · **filed 2026-10-02** · **closed 2026-10-02**
 
 The filter-and-olive round (readme §13) executed jakob's morning rulings
-and left these for his eye:
+and left these for his eye. All closed by the fix-fix rulings (readme
+§13, *The what's-new restore and the filter residue*):
 
-- **The trigger's words for a reader's own default.** The pill speaks
-  deviations from the reader's default (pass C 10), but its words are
-  written against the app's: a deviation back toward it — `Ranked` under
-  a Newest default, the seen toggle off under an on one, a form or an
-  also-chip the reader's default leaves out — has no words yet, and
-  `feedFilterSummary` still measures against the app's default.
-- **What the "?" says about `Reset`.** N3 lets the filter's "?" say what
-  `Reset` restores. The dialog is shared by the feed's, search's and the
-  settings sheet, and the three restore different things (the reader's
-  default, search's resting state, CoGra's default), so no sentence was
-  added. Draft for blessing: `Reset brings back your default — in
-  settings, CoGra's own.`
-- **Search and the reader's default.** Search's `Reset` stages its own
-  resting state (`Everything`, the order at rest). Whether the reader's
-  Settings default reaches search's shared axes (order, the seen toggle)
-  is unruled.
-- **The olive split's lane calls.** A closed application's card wears
-  the olive (the way back in waits on the reader's ask link); a post that
-  didn't land (`ComposeExpired`) stays neutral (its draft is kept, nothing
-  is owed). Inside an olive card every ink is the register's own — the
-  card scopes `primary`, `outline` and the surface inks to
-  `on-tertiary-container`, because orange on the olive measures 2.8:1
-  light and about 1:1 dark — so the mark, outlined buttons and inline
-  actions read dark olive there. The brand ring stays on both tones.
-- **What's new behind.** The newer release heads the list as `newest`
-  with its notes drawn (fixture), which retires the curate round's
-  "notes left behind its door" call; the per-release GitHub doors and
-  the footnote's code clause went with the GitHub sweep.
-- **Strings flagged for blessing** (copy-voice): `Update now`, `Update
-  to version 0.1.3`, `installed`, `newest`, `Newest first.`, and the
-  foot's `Reset` at its new seat.
+- ~~**The trigger's words for a reader's own default.**~~ — closed
+  2026-10-02 (fix-fix 10): the trigger speaks deviations from the
+  reader's default, a deviation back toward the app's included; the
+  summary re-keys on the reader's default (`FeedSheet`'s docblock). The
+  words no existing word covers went to item 131.
+- ~~**What the "?" says about `Reset`.**~~ — closed 2026-10-02 (fix-fix
+  11): one sentence for all three sheets, jakob's own words, blessed —
+  `Reset brings back your defaults, to change them go to settings.`
+  (copy-voice, *The "?" dialogs*).
+- ~~**Search and the reader's default.**~~ — closed 2026-10-02 (fix-fix
+  12): one default object everywhere; the reader's Settings default
+  reaches search's order and seen toggle, the kinds stay search's own
+  (`ExploreFilter`'s docblock and sidecar).
+- ~~**The olive split's lane calls.**~~ — closed 2026-10-02 (fix-fix 13):
+  all stand as drawn — a closed application's card on the olive,
+  `ComposeExpired` neutral, the in-card ink scoping, the brand ring on
+  both tones.
+- ~~**What's new behind.**~~ — closed 2026-10-02 (fix-fix 0): the newer
+  release heads the list as drawn, and every release card, the newest
+  included, carries its own `See it on GitHub` door again; `Update now`
+  stays on the download and the footnote stays `Newest first.`
+- ~~**Strings flagged for blessing**~~ — closed 2026-10-02 (fix-fix 26):
+  blessed with the round's other flagged strings.
 
-### 130 · What pass C's rulings left open · *design* · **filed 2026-10-02**
+### 130 · What pass C's rulings left open · *design* · **filed 2026-10-02** · **ruled 2026-10-02**
 
 The pass-C round (readme §13, *Pass C's rulings*) wrote every ruled
-behavior; these are what the rulings did not reach.
+behavior; these are what the rulings did not reach. The fix-fix rulings
+closed all but the frame key (readme §13, *The what's-new restore and
+the filter residue*):
 
-- **The body fork's ask is undrawn.** Switching words⇄pictures with a
-  body asks first (the discard idiom), and the sidecars say so in plain
-  words — but no board draws the ask, and its words are unruled.
-  Proposed, for blessing: `Discard the pictures?` (`the video?`, `the
-  words?`) over `The rest of the draft stays.`, a quiet `Discard` and a
-  filled `Keep them`; Discard switches the body, Keep closes onto the
-  stage as it was. Drawing it puts a second outcome on the `Write words
-  instead` edge, which `publish-words` walks without a case, so the
-  board lands with a flow case and a deliberate re-bless.
-- **A rotated phone's side ground.** The backdrop tap closes the viewer
-  where a backdrop is visible, on a wide screen. `ViewerLandscape`
-  leaves black ground beside a clip whose shape is not the screen's: is
-  that ground a backdrop the tap closes on?
-- **The play disc at the hard top.** A play-disc tap makes its clip the
-  incumbent, and a settle at the feed's hard top re-elects the first
-  qualifying clip even from a qualifying incumbent. Under suppressed
-  autoplay nothing starts on its own — does the hard top's re-election
-  stop a tapped clip lower down, and start nothing?
-- **The comment-scale bug notice's way out.** `Discard the reply` and
-  `Discard the edit` stand where the post's notice offers `Discard the
-  post`, which asks first (`SealDiscardConfirm`). Does the comment's ask
-  first too — `DiscardConfirm`, in its reply and edit words — or
-  discard at once?
-- **A mixed unscoped search.** Comments alone with no scope draws the
-  line (`ExploreUnscoped`). Posts and Comments together with no scope:
-  the posts' results with the line under them, or the results alone?
-- **The bell on a deep screen.** The dot lights on a root's next load.
-  Does a return to a root by back or by the bar count as a load, or
-  only an arrival and a refresh?
+- ~~**The body fork's ask is undrawn.**~~ — closed 2026-10-02 (fix-fix
+  14): drawn as `ComposeBodyDiscard` — `Discard the words?` / `Discard
+  the pictures?` over `The rest of the draft stays.`, a quiet `Discard`
+  and a filled `Keep them`; the seven fork edges carry the ask, and
+  `publish-words`, `cite-a-post` and `mention-someone` walk the empty
+  case. A clip's title went to item 131.
+- ~~**A rotated phone's side ground.**~~ — closed 2026-10-02 (fix-fix
+  15): it is a visible backdrop, and a tap on it closes the viewer (the
+  three viewer sidecars).
+- ~~**The play disc at the hard top.**~~ — closed 2026-10-02 (fix-fix
+  16): a clip started by hand is never stolen; the hard top re-elects
+  autoplay-eligible stages only (`FeedCover`, `Feed` and `ReplyEntry`
+  sidecars; `MediaAttachment`'s stage law).
+- ~~**The comment-scale bug notice's way out.**~~ — closed 2026-10-02
+  (fix-fix 17): `Discard the reply` and `Discard the edit` act at once
+  (`ReplySealComment` and `CommentEdit` sidecars). The ruling's reason
+  is filed with item 131.
+- ~~**A mixed unscoped search.**~~ — closed 2026-10-02 (fix-fix 18): the
+  other kinds' results stand with the line under them (`ExploreUnscoped`).
+- ~~**The bell on a deep screen.**~~ — closed 2026-10-02 (fix-fix 19):
+  only a fresh root load lights the dot; a return by back or by the bar
+  never does (`FeedUnread`).
 - **The frame key's wording.** `KEY_RULES.frame` reads "the picture's
   position in the post's media" and now also keys a comment's frames.
   The registry guards key rules append-only, so rewording it is a
   breaking change the seam agrees first.
+
+### 131 · What the what's-new restore and the filter residue left for rulings · *design* · **filed 2026-10-02**
+
+The fix-fix lane for rulings 0 and 10–19 (readme §13, *The what's-new
+restore and the filter residue*) executed them and left these for
+jakob's eye:
+
+- **The back-deviations no existing word covers.** The trigger speaks
+  deviations from the reader's default, a deviation back toward the
+  app's included (fix-fix 10). The order has its word (`ranked`, as
+  `newest` reads); these have none: the seen toggle off under an on
+  default, every form under a default that narrows the forms, and
+  `Sensitive` or `Removed` off under a default that admits it.
+- **The filter "?"'s two pointers to settings.** jakob's Reset sentence
+  was added after `Your default lives in settings.`, so the second
+  paragraph now points to settings twice. Proposed: drop the older
+  sentence, since the new one carries it.
+- **A clip's discard ask.** Ruling 14 worded the words and the pictures;
+  `Write words instead` over a clip raises the same ask. Proposed, as
+  pass C drafted: `Discard the video?`, its keep word `Keep it`.
+- **Ruling 17's reason disagrees with the post scale.** The ruling reads
+  "acts at once (exactly post scale's grammar)", but the post's `Discard
+  the post` asks first (`SealDiscardConfirm`), as a reply's key-absent
+  `Discard the reply` does (`DiscardConfirm`). The sidecars carry the
+  ruled "at once"; one grammar would mean asking first instead.
