@@ -2163,7 +2163,6 @@ Object.assign(FLOW_MARKERS, {
     secondComments(9),
     ...nav(10),
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
-    { n: 19, find: ">Use a fresh invite</button>", tag: "button" },
     { n: 20, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchAsk: [

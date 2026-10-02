@@ -44,24 +44,24 @@ Where each sidecar's words come from:
   the two refusals of one staged act, the citation that never
   landed and the bug (copy-voice, *Faults by code*); and the ways out
   locked while it signs, the slow line past 5s and the outcome after a
-  kill (readme §13, *The curate rulings*).
-  and the two refusals of one staged act, the citation that never
-  landed and the bug (copy-voice, *Faults by code*); and an applicant's
-  exit, onto their own feed with the staged-act line (readme §13, *The
-  applicant's life round*; copy-voice, *The staged-act snackbar*).
+  kill (readme §13, *The curate rulings*); and an applicant's exit,
+  onto their own feed with the staged-act line, or with the turned-down
+  shell's own line when no application is live (readme §13, *The
+  applicant's life round* and *The applicant fix round*; copy-voice,
+  *The staged-act snackbar*).
 - `ReplyEntry.md` — the comments thread (*Comments · the thread*): the
   stage law's hard top, at the thread's own hard top and in thread
   order, in the same words; thread order itself (readme §13,
   *Comments live in a sheet*); the removed comment's mark in its own
   place, its replies kept under it (comment.md §5; readme §13, *The
-  comment-removal round*); and the signed reply's landing, scrolled to
-  its new card (readme §13, *The curate rulings*).
-  comment-removal round*); and the foot's gates — the join prompt for a
-  guest, and for an applicant the snackbar, since applicants do not
-  comment in V1.0 (readme §13, *The applicant's life round*).
-  comment-removal round*); and the landing on a deep-linked comment and
-  the sheet's return from a forward navigation, the X of a cite
-  included (readme §4, *Navigation*).
+  comment-removal round*); the signed reply's landing, scrolled to its
+  new card (readme §13, *The curate rulings*); the foot's gates — the
+  join prompt for a guest, and for an applicant the locked foot and its
+  line, since applicants do not comment in V1.0 (readme §13, *The
+  applicant's life round* and *The applicant fix round*); and the
+  landing on a deep-linked comment and the sheet's return from a
+  forward navigation, the X of a cite included (readme §4,
+  *Navigation*).
 - `FeedKinds.md` — the feed cards (readme §13, *The feed cards,
   ruled*): the unified row's order, the law that a comment's replies live
   in its thread and never in the feed, where the comment card's door and

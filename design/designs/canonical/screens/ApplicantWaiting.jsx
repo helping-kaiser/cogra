@@ -27,10 +27,11 @@
 
    A PUT-AWAY CARD COMES BACK WHEN THE STATE CHANGES (jakob 2026-10-01, audit
    K3.4). The dismissal belongs to the wait, not to the application: once the
-   application is approved, closed or runs out, the shell shows that state's
-   card whether or not this one was put away — `ApplicantRejected`,
-   `ApplicantExpired` — because a reader who dismissed a wait has not
-   dismissed what ended it. */
+   application is approved or closed, the shell shows that state's card
+   whether or not this one was put away — `ApplicantLanding`,
+   `ApplicantRejected` — because a reader who dismissed a wait has not
+   dismissed what ended it. The wait itself has no clock: a verified
+   application waits on its vouch for as long as it takes. */
 export function Screen() {
   return (
     <>
