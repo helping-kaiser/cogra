@@ -46,8 +46,12 @@ function Ring({ progress = 0.55, size = 18 }) {
    quiet voice, and `Retry` — a fault, so the way out is to ask again, the way
    every transport fault in the product does. No `Remove it` here: the seal reads
    back, and what the reply carries is changed one stage back. The sign button
-   stays disabled while either reading shows. */
-export function UploadStatusLine({ done, total, progress, failed = false, message = "One picture didn't upload.", onRetry }) {
+   stays disabled while either reading shows.
+
+   THE GATE NAMES WHAT IT WAITS FOR, PER KIND (jakob 2026-10-02, pads 3: "per
+   content of course"). `media` is the body's kind: pictures by default, and a
+   clip reads `…signing waits for the video.` */
+export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, message = "One picture didn't upload.", onRetry }) {
   if (failed) {
     return (
       <p style={{ margin: 0, textAlign: "center", fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>
@@ -69,7 +73,7 @@ export function UploadStatusLine({ done, total, progress, failed = false, messag
           color: "var(--text-secondary)",
         }}
       >
-        Uploading {done} of {total} — signing waits for the pictures.
+        Uploading {done} of {total} — signing waits for the {media === "video" ? "video" : "pictures"}.
       </span>
     </div>
   );

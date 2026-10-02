@@ -1692,7 +1692,8 @@ media and comment editing.
   pictures never crop, so they upload at pick. Progress rides the
   thumbnails as rings; a failed picture is marked on its tile with
   `Retry · Remove it` beside the row; **the seal gates** — "Uploading
-  n of m — signing waits for the pictures", the sign button held
+  n of m — signing waits for the pictures" (`…for the video.` on a
+  clip), the sign button held
   until the content it signs exists.
 - **Descriptions (alt text) are authored, optional, never
   invented** — the component rule made enterable: per picture from

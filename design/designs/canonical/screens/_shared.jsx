@@ -1539,9 +1539,11 @@ const replyCitedRow = () => ({
 
    `uploading` is the seal gated on the reply's media (jakob's ruling, the night
    batch 2026-10-01 — audit K6.2): `{ done, total }` while they go up, `{ failed:
-   true }` once one has not. Every row is unchanged; `UploadStatusLine` stands
-   over the foot, and `Sign comment` is disabled while it shows
-   (`ReplySealUploading`, `ReplySealUploadFailed`). */
+   true }` once one has not, with `media: "video"` for a clip so the line
+   reads `…signing waits for the video.` (jakob 2026-10-02, pads 3). Every
+   row is unchanged; `UploadStatusLine` stands over the foot, and `Sign
+   comment` is disabled while it shows (`ReplySealUploading`,
+   `ReplySealUploadFailed`). */
 function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploading = null }) {
   const named = REPLY_TARGETS[target];
   return (
@@ -1596,7 +1598,7 @@ function ReplySealBody({ cited = 0, target = "post", keyAbsent = false, uploadin
               (uploading.failed ? (
                 <UploadStatusLine failed onRetry={() => {}} />
               ) : (
-                <UploadStatusLine done={uploading.done} total={uploading.total} />
+                <UploadStatusLine done={uploading.done} total={uploading.total} media={uploading.media} />
               ))}
             <SealFooter signLabel="Sign comment" disabled={uploading !== null} />
           </>
