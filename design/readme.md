@@ -451,7 +451,9 @@ Explore.
 read drill-in the arrow returns to where the reader came from, and its
 label names that place by an origin-noun table built from the screen's
 actual arriving edges — the tag page's (*The tag-page smalls*), the post
-detail's and the profile's (*The navigation-and-sheets round*). A cold
+detail's and the profile's (*The navigation-and-sheets round*), the
+score's trace, the stream, the opinions page, Notifications and About's
+(*The nav-noun sweep*). A cold
 entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
 page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
@@ -8195,6 +8197,36 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+
+### The nav-noun sweep — 2026-10-02
+
+The drill-ins the navigation-and-sheets round's tables did not reach
+(backlog 124; jakob: "Nav rest: yes") name their origin the same way,
+every noun already ruled. Each board draws the state its table marks
+as the board's own; the back edge in `graph.json` carries the table.
+
+- **The score's trace** (`FeedEntry`, `FeedEntryMoved`): `Back to feed` from the feed in any of its states (drawn),
+  `Back to the post` from a post's detail, clip detail, veiled twin or
+  `Removed`, `Back to #<thattag>` from a tag's page, `Back to the
+  profile` from a profile's posts.
+- **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
+  it narrowed (drawn), `Back to the post` from a post's pinned clip,
+  `Back to the profile` from a profile's posts.
+- **The opinions page** (`ProfileStances`): `Back to the profile`
+  (drawn; another's profile) or `Back to your profile` (the reader's
+  own). It drew a bare `Back`.
+- **Notifications** (both boards): `Back to feed` (drawn), `Back to
+  Explore` or `Back to your profile`, by the root the bell was tapped
+  on. It drew a bare `Back`.
+- **About**: `Back to settings` (drawn; settings opens it). It drew a
+  bare `Back`.
+- **Filed** (backlog 12X-nav-nouns): Wallet's noun for the bell's
+  origin, and the join form's for About's. The two off-slot dialogs
+  (`StanceAlternates`, `ReplyKeyAbsent`) are fine as they stand,
+  different anatomies.
+- **The gate**: 268 canonical screens, 1785 edges, 0 gaps, **flows 65**,
+  every one resolved; the witness did not move, no rebless. No new
+  string: every label is already blessed.
 
 ## 15. Index
 

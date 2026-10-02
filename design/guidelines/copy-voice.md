@@ -487,8 +487,10 @@ DO, the way the sound toggle already does:
 
 **The stream and the viewer**:
 
-- `Back to feed` — the stream's way out. Not "Close": the reader is
-  going back to the feed the stream narrowed, not shutting a layer. The
+- `Back to feed` — the stream's way out when it was opened from the
+  feed (a post's pinned clip or a profile's posts name that origin
+  instead; readme §13, *The nav-noun sweep*). Not "Close": the reader
+  is going back to the feed the stream narrowed, not shutting a layer. The
   feed takes no article anywhere in this vocabulary (jakob 2026-09-15):
   it is a named surface, like Explore and settings, rather than a common
   noun like the post or the wallet — and it is the destination a reader
@@ -505,8 +507,11 @@ round*). A named surface keeps its name, the feed's many states are one
 noun, and a sheet is named by what it is a sheet of. Already blessed:
 `Back to feed`, `Back to Explore`, `Back to the search`, `Back to Your
 topics`, `Back to the post`, `Back to the comments`, `Back to the
-profile`, `Back to #<thattag>`, `Back to your profile`. Added by the
-post detail's and the profile's tables, each flagged for blessing:
+profile`, `Back to #<thattag>`, `Back to your profile`, `Back to
+settings`; the score's trace, the stream, the opinions page,
+Notifications and About take their nouns from these and add none.
+Added by the post detail's and the profile's tables, each flagged for
+blessing:
 
 - `Back to Saved` · `Back to History` · `Back to Notifications` — the
   three named surfaces, by their titles.
@@ -1982,7 +1987,8 @@ on the path is named; a path through two or more takes the generic form,
 `You, then several steps, then what reached you` — blessed (jakob
 2026-10-01: "for longer paths we need generic wording"). A chain of handles read aloud would bury the reached
 thing at its end, and the row's `Through @kel and @wren` already says who.
-The back arrow on level one reads `Back to feed`, for every kind.
+The back arrow on level one names the surface the score was tapped on
+(readme §13, *The nav-noun sweep*) and draws `Back to feed`, for every kind.
 
 **The rule under the cover**, on level one: `Every path here starts with
 an opinion you gave.` This is the inbound-inert invariant
