@@ -1,4 +1,6 @@
-/* Bare arrival — no invite link, so the genesis moderator's borrowed view. */
+/* Bare arrival — no invite link, so the genesis moderator's borrowed view.
+   An invite link that resolves to nothing carries no issuer and lands here
+   too, with `Main`'s dead-link snackbar (jakob 2026-10-02). */
 export function Screen() {
   return (
     <>

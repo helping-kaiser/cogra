@@ -2,8 +2,9 @@
    works (readme §13, entry). The board is the entry step with the failure
    said out loud in the heading and the paragraph: the field, Continue, and
    the two ways out are unchanged, because the way forward is another link in
-   the same box. It says the account survives, so a returning applicant does
-   not start over. */
+   the same box. It promises nothing about an account made earlier: one left
+   unverified for seven days is gone, and a returning reader has `Already have
+   an account? Sign in` right below (jakob 2026-10-02). */
 export function Screen() {
   return (
     <>
@@ -28,8 +29,7 @@ export function Screen() {
             color: "var(--text-secondary)",
           }}
         >
-          It may have expired or already been used. Ask the person who invited you for a fresh link — if you already made an
-          account, it is untouched, and a fresh link picks your application back up.
+          It may have expired or already been used. Ask the person who invited you for a new link.
         </p>
 
         <div style={{ marginTop: 32 }}>

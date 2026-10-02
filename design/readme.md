@@ -7930,18 +7930,9 @@ C19–C21, every one "as recommended"), executed in one lane.
   *Email change*, the unverified carve-out): the old address has proved
   nothing, and a mistyped one never receives a code.
 - **The reap is said once, as a consequence.** The verify card carries
-  one line saying an account left unverified for a day is removed; no
-  figure ticks, no other surface repeats it, and `VerifyExpired`
+  one line saying an account left unverified for seven days is removed;
+  no figure ticks, no other surface repeats it, and `VerifyExpired`
   promises the fresh link only to an account still waiting on it.
-- **A run-out application has its card.** `ApplicantExpired`,
-  `ApplicantRejected`'s shape with no verdict: what happened, what it
-  does not mean, the ask link in the rejected card's words. A waiting
-  card the reader put away comes back as whatever state ends the wait.
-- **A closed application re-arms from the shell.** Both closed cards
-  carry `Use a fresh invite`, opening `ApplicantRearm`; an invite link
-  opened by a signed-in applicant with a closed application opens the
-  same page holding the link. Signed-in readers with nothing to re-arm
-  land where app-open lands, with a snackbar.
 - **A held link is never pasted twice.** The landing stays feed-first;
   for a visitor holding a live invite link the band's `Sign in or join`,
   every guest gate's affirmative and SignIn's `New here?` open `Join`
@@ -7954,9 +7945,9 @@ C19–C21, every one "as recommended"), executed in one lane.
 - **Every reader of an ask link is answered.** `VouchAskUnusable` in
   `JoinInvalid`'s idiom for an applicant already in or waiting on
   someone else; a guest meets the ask and its affordance raises the
-  guest gate, sign-in coming back to it; an applicant, the asker and a
-  member who already has them queued land on their own landing with a
-  snackbar.
+  guest gate, sign-in coming back to it; an applicant and the asker land
+  on their own landing, and a member who already has them queued on
+  `Invites`, each with a snackbar.
 - **The verify landings work signed out.** `VerifyExpired` serves the
   app and the browser; signed out its way on reads `Sign in` and
   `Resend the link` asks for the address in place; `Verified`'s way on
@@ -8198,6 +8189,7 @@ the rest as recommended. Both laws stand in §4.
   `Done`s, four dialog scrims), 1 gap, **flows 64**, every one resolved.
   The witness was re-blessed twice, deliberately: the filter flows end on
   `Done`, and the search's comment row lands on the comment.
+
 ### The kept picks and the pads, ruled — 2026-10-02
 
 jakob's morning review ruled the kept picks' seven questions (backlog item
@@ -8273,6 +8265,42 @@ as the board's own; the back edge in `graph.json` carries the table.
 - **The gate**: 268 canonical screens, 1785 edges, 0 gaps, **flows 65**,
   every one resolved; the witness did not move, no rebless. No new
   string: every label is already blessed.
+
+### The no-expiry correction — 2026-10-02
+
+jakob's morning review (the fix round's entry lane): an application has
+no timer, and an invite link does not care who is signed in.
+
+- **The one expiry is the verification reap, at seven days** (jakob: a
+  day is short enough for a mail outage on our side to cost accounts).
+  The window runs from registration and an address change does not
+  restart it; the verify card says the consequence once, in the seven
+  days' words. A verified applicant waits on a vouch with no timer, and
+  an invite link's expiry bounds only the registration made through it
+  (auth.md, *Expiry*).
+- **A waiting or turned-down applicant's way in is a vouch** — the member
+  whose approval is in play, or anyone through the ask link. No board
+  draws a lapsed application or a second invite for an account that
+  exists.
+- **Invite links ignore sign-in.** One person may hold several accounts,
+  so a live link opened while signed in opens `Join` as a layer holding
+  the link; `Create account` switches this device to the new account,
+  the other's sessions staying valid, and back closes the layer onto the
+  signed-in state (§4, the layer law).
+- **The entry funnel's residue, ruled** (backlog item 122): a dead
+  invite link's arrival says `This invite link has expired.` once, over
+  the unchanged landing; `DeleteAccountConfirmed` committed unticked
+  stands confirmed account-only; the member who already has the asker
+  queued lands on `Invites`; `JoinInvalid` promises nothing about an
+  earlier account; an ask link that resolves to nobody opens
+  `VouchAskInvalid`, in `JoinInvalid`'s idiom, its arrow its one exit.
+- **Flagged for blessing** (copy-voice, *The fix round's entry lines*):
+  the verify card's seven-day line, `JoinInvalid`'s paragraph and
+  `VouchAskInvalid`'s paragraph. The lane's calls are backlog item
+  127.
+- **The gate**: 267 → **266 screens**, 1785 → **1781 edges**, **flows
+  66**, every one resolved. The witness was re-blessed once,
+  deliberately, for the new board's flow.
 
 ## 15. Index
 

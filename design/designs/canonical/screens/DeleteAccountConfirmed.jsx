@@ -18,7 +18,9 @@
    Added, the heading takes the band's longer sentence and the block goes,
    with a snackbar. When the sweep was chosen at the request the block is not
    drawn and the heading is the longer sentence from the start. It is never
-   offered the other way: the election is opt-in only.
+   offered the other way: the election is opt-in only. The checkbox is purely
+   that opt-in: committed with the box unticked, the deletion stands
+   confirmed account-only, exactly as the link left it (jakob 2026-10-02).
 
    A MAIL-LINK LANDING. No back arrow — a mail link has no previous screen of
    ours — and `VerifyExpired`'s left column rather than `Verified`'s centred

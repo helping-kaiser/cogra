@@ -10,6 +10,15 @@
       "page": "profile"
     },
     {
+      "file": "VouchAskInvalid.dc.html",
+      "title": "Invites · an ask link that doesn't work",
+      "x": 4800,
+      "y": 7855,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 3360,
@@ -59,7 +68,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 5945,
+      "h": 6142,
       "page": "profile",
       "title": "Profile · flow map"
     },

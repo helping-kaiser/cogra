@@ -48,10 +48,11 @@
    This page is a member's with a usable link. A guest meets it too — the
    reading is public — and the stance affordance raises the guest gate over
    it; signing in brings them back to this ask. A link that cannot stage
-   anyone right now opens `VouchAskUnusable`. The three readers who cannot
-   vouch through it — an applicant, the asker themselves, a member who
-   already has the applicant in their queue — land where app-open lands for
-   them, and a snackbar says why. */
+   anyone right now opens `VouchAskUnusable`, and one that resolves to nobody
+   opens `VouchAskInvalid`. Of the three readers who cannot vouch through it,
+   an applicant and the asker themselves land where app-open lands for them,
+   and a member who already has the applicant in their queue lands on
+   `Invites`, where that row is (jakob 2026-10-02); a snackbar says why. */
 export function Screen() {
   return (
     <>

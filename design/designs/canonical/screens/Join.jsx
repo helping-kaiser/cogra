@@ -6,6 +6,14 @@
    the borrowed view for a link the arrival already held — the band and the
    guest gate open this form with it in hand (jakob 2026-10-01, audit K3.6).
 
+   INVITE LINKS IGNORE SIGN-IN (jakob 2026-10-02). One person may hold
+   several accounts, member or applicant alike, so a live invite link opened
+   while signed in opens this same form, holding the link, as a layer over
+   the signed-in state. Create account makes the new account and switches
+   this device to it; the other account's sessions stay valid wherever they
+   are. Back closes the layer onto the signed-in state, untouched (readme §4,
+   the layer law).
+
    THE DOOR'S ONE EXPLANATION IS A "?", NOT A FIFTH LINE (jakob's ruling, the
    batch-rulings round: "that sounds great maybe behind a '?'. i already dislike
    it that we have four clickable texts on this screen"). `HelpDot` is the

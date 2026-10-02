@@ -16,6 +16,11 @@
    address it went to, and a reader holding that mail should not wonder which
    of two links counts.
 
+   THE CHANGE DOES NOT RESTART THE SEVEN DAYS (jakob 2026-10-02). The reap's
+   window runs from registration (auth.md, *Expiry*), so changing the address
+   cannot extend an unverified account forever; nothing on screen says so,
+   since the verify card already states the consequence once.
+
    A TASK PAGE OF THE ENTRY FUNNEL, its fixed link back to the shell the door
    was on; the commit follows its fields in content flow (readme §4, the two
    placements). It returns to `ApplicantFeed`, whose card then prints the new

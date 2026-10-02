@@ -209,24 +209,6 @@
       "page": "entry"
     },
     {
-      "file": "ApplicantExpired.dc.html",
-      "title": "Applicant · ran out of time",
-      "x": 3360,
-      "y": 4184,
-      "w": 390,
-      "h": 844,
-      "page": "entry"
-    },
-    {
-      "file": "ApplicantRearm.dc.html",
-      "title": "Applicant · a fresh invite",
-      "x": 3840,
-      "y": 3180,
-      "w": 390,
-      "h": 844,
-      "page": "entry"
-    },
-    {
       "file": "ApplicantEmail.dc.html",
       "title": "Applicant · wrong address",
       "x": 4320,
@@ -510,7 +492,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5360,
+      "h": 5490,
       "page": "entry",
       "title": "Entry · flow map"
     },
