@@ -214,6 +214,29 @@ one, but the words would win anyway — an arrow alone reaches a listener
 as "button" and a reader as a guess, for a control that exists to be
 obvious.
 
+## The filter pill's state words
+
+The trigger over a feed or search speaks how the view departs from the
+reader's default, and it speaks each axis's **state**, never the
+direction (jakob 2026-10-02, the residue round's Q2): a state reads the
+same whether it departs from the app's default or back toward it. The
+head names the kinds always; every other axis speaks only when it
+departs, in lowercase after a `·`:
+
+- **Kinds** (the head): one kind's name, `2 kinds`, `Nothing`.
+- **Forms**: the forms held, `text + photos`; every form, `all forms`.
+- **Order**: `newest`, `ranked`.
+- **Seen**: `showing seen`; off, `hiding seen`.
+- **Also show**: a chip on joins the `+` list, `+ sensitive` or
+  `+ still settling`; `Sensitive` or `Removed` off, `hiding sensitive`
+  or `hiding removed`; `Still settling` off, `settled only`.
+- **Topic**: the tag's own name (*Topics*). A default never holds one,
+  so it has no word for its absence.
+
+*New 2026-10-02, flagged for blessing:* `all forms`, `hiding seen`,
+`+ still settling`, `hiding sensitive`, `hiding removed`. The rest are
+the trigger's words as already drawn.
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
@@ -348,8 +371,8 @@ title, at most two short paragraphs, Close. The texts, verbatim
   newest is one choice, and what you've already seen stays out
   unless you ask for it back. Nothing changes until you press Done,
   and nothing here is signed or shared. / It lasts until you change it,
-  on this device only. Your default lives in settings. Reset brings
-  back your defaults, to change them go to settings. *(The Reset
+  on this device only. Reset brings back your defaults, to change
+  them go to settings. *(The Reset
   sentence is jakob's own, blessed 2026-10-02: one sentence for the
   feed's, search's and the settings sheet.)*
 
@@ -946,8 +969,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     **Drawn** on `SealFaultBug` and `SealDiscardConfirm`. At comment
     scale the way out names what is lost (jakob 2026-10-02): `Discard
     the reply` on a reply's seal, `Discard the edit` on a comment edit —
-    never `Discard the post` — and it acts at once, with no ask (jakob
-    2026-10-02, the fix-fix round's ruling 17). *`Discard the edit` new 2026-10-02, blessed (jakob 2026-10-02).*
+    never `Discard the post` — and it asks first, one grammar with the
+    post scale: `DiscardConfirm`'s own ask, `Discard this reply?` or
+    `Discard the changes?` over `Nothing is kept.`, with `Keep writing`
+    and `Discard` (jakob 2026-10-02, the residue round's Q1). *`Discard the edit` new 2026-10-02, blessed (jakob 2026-10-02).*
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide;
 not a code): it reverts, and the target's row says `That didn't go
@@ -1741,11 +1766,6 @@ quiet voice. The running line stays `Uploading 1 of 2 — signing waits
 for the pictures.`, and names the body's own content: on a clip it
 reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
 content of course"; *new, blessed (jakob 2026-10-02)*).
-
-**The citation this app cannot type** stands on an edit as a row with
-no ×. Its name slot reads the target's standard summary line, as every
-picker row does, and its note reads `Comes along as it is.` (jakob
-2026-10-02, pads 2 and the fix-fix round's 23; *blessed 2026-10-02*).
 
 ## Saved, History and hiding
 
@@ -2557,12 +2577,13 @@ kept.`, `Discard` and `Keep writing`. *Blessed, jakob 2026-10-02.*
 fix-fix round's ruling 14). Switching halves with something in the body
 asks first, and the title names the half that goes: `Discard the
 words?` from the words stage's `Add pictures instead`, `Discard the
-pictures?` from a pick stage's `Write words instead`. The body is `The
-rest of the draft stays.` — the reader loses only the half they leave.
-`Discard` (quiet) and `Keep them` (filled), `DiscardConfirm`'s
-weighting; nothing behind the scrim reads `Discard`, so the bare word
-cannot be misread. *Blessed, jakob 2026-10-02.* A clip's title and keep
-word are unruled (backlog 12X-fixfix-whatsnew).
+pictures?` from a pick stage's `Write words instead`, `Discard the
+video?` from a clip's (jakob 2026-10-02, the residue round's Q4). The
+body is `The rest of the draft stays.` — the reader loses only the half
+they leave. `Discard` (quiet) and `Keep them` (filled) — `Keep it` over
+the one clip — `DiscardConfirm`'s weighting; nothing behind the scrim
+reads `Discard`, so the bare word cannot be misread. *Blessed, jakob
+2026-10-02.*
 
 ## The already-published marker
 

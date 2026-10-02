@@ -67,16 +67,8 @@ import { formatStancePair, formatStanceWords, nearestAnchor, SR_ONLY } from "../
    row over a removed post reads. `consequence` is a pick that would net its
    bundle to nothing: the row says so inline, in the family's own landing
    words, the way `Remove citation` says its cost where the control is — Sign
-   is the confirmation, and no dialog follows.
-
-   A CITATION THIS APP CANNOT TYPE STANDS AS IT IS (`untyped`; jakob
-   2026-10-02, pads 2 and the fix-fix round's 23). On an edit it is held, not
-   staged: api-spec excludes it from editing, so the row has no × and opens
-   nothing. Its name slot reads the target's standard summary line, as every
-   picker row does, and its `note`, `Comes along as it is.`, takes the second
-   line in the quiet voice — no kind beside it and no pair after it, since
-   nothing about it is chosen here. */
-function Body({ kind, name, sub, src, pair, stance, removed, consequence, note, node }) {
+   is the confirmation, and no dialog follows. */
+function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? nearestAnchor(pair) : null;
   const spoken = pair && stance ? `${anchor.label}, ${formatStanceWords(pair)}` : exact;
@@ -111,11 +103,6 @@ function Body({ kind, name, sub, src, pair, stance, removed, consequence, note, 
             {consequence}
           </span>
         )}
-        {note && (
-          <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "note"}>
-            {note}
-          </span>
-        )}
       </span>
       {exact && (
         <>
@@ -138,8 +125,8 @@ function Body({ kind, name, sub, src, pair, stance, removed, consequence, note, 
   );
 }
 
-export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, removed, consequence, untyped = false, note, onRemove, onEdit, node, nodeKey }) {
-  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} removed={removed} consequence={consequence} note={note} node={node} />;
+export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, removed, consequence, onRemove, onEdit, node, nodeKey }) {
+  const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} removed={removed} consequence={consequence} node={node} />;
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}
@@ -150,7 +137,7 @@ export function StagedReference({ kind = "post", name, sub, src, pair, stance = 
           padding, ink inherited — so the row is the row it always was, and the
           state layer, the focus ring and the 48px target arrive with
           `BUTTON_CLASS`. */}
-      {onEdit && !untyped ? (
+      {onEdit ? (
         <button
           type="button"
           aria-label={`${name} — set how it relates`}
@@ -163,18 +150,16 @@ export function StagedReference({ kind = "post", name, sub, src, pair, stance = 
       ) : (
         body
       )}
-      {!untyped && (
-        <button
-          type="button"
-          aria-label={removed ? `Remove this pick: ${sub ? `${sub}, ` : ""}${removed}` : `Remove ${name}`}
-          onClick={onRemove}
-          className="cg-state cg-focus"
-          style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
-          data-node={node && "remove"}
-        >
-          <Icon name="close" size={18} />
-        </button>
-      )}
+      <button
+        type="button"
+        aria-label={removed ? `Remove this pick: ${sub ? `${sub}, ` : ""}${removed}` : `Remove ${name}`}
+        onClick={onRemove}
+        className="cg-state cg-focus"
+        style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
+        data-node={node && "remove"}
+      >
+        <Icon name="close" size={18} />
+      </button>
     </div>
   );
 }

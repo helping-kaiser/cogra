@@ -20,11 +20,16 @@
    round's 20), drawn as it is at rest. Pressed, its label swaps in place to
    `Signing comment…` — the failure pack's label-swap idiom (`SealFooter`'s
    `busy`), the ways out locked with it — and signing proceeds the moment the
-   bytes land; no second press is asked.
+   bytes land; no second press is asked. The slow line counts from the press
+   (jakob 2026-10-02, the residue round's Q6): 5s after it the subline under
+   the total swaps to `Still signing — the network is slow right now.`,
+   whether the bytes have landed yet or not.
 
    THE GATE CAN FAIL. An upload that does not land while the reader waits here
    turns the line into its fault reading (`ReplySealUploadFailed`): the fact,
-   `Signing waits for it.` and Retry.
+   `Signing waits for it.` and Retry. A press held at the gate drops there
+   (jakob 2026-10-02, the residue round's Q5): `Retry` re-gates, and the
+   reader presses again.
 
    A PATTERN EXEMPLAR (readme §13, *Canvas pages and flows*): only the gated
    commit is this board's own; the header, the acts card and the rows are

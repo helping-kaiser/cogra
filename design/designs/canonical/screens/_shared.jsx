@@ -1893,10 +1893,6 @@ function WithdrawnLine({ name }) {
    and this one was revised upward past 1, so it stages two. */
 const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
 
-/* The citation the post edit holds as it is — one this app cannot type, read
-   by its target's standard summary line. */
-const EDIT_UNTYPED_CITATION = "Salt flats at first light — @juno";
-
 function EditComposeBody({ unchanged = false } = {}) {
   return (
     <>
@@ -1951,12 +1947,6 @@ function EditComposeBody({ unchanged = false } = {}) {
               pair={{ pDirected: 0.1, pInterest: 0.1 }}
               onEdit={() => {}}
             />
-            {/* A citation this app cannot type (jakob 2026-10-02, pads 2 and the
-                fix-fix round's 23): held as it is — no ×, opens nothing — its
-                name slot the target's standard summary line, as every picker
-                row reads, and its note in the second line's place. It signs
-                nothing, so the foot's count does not move. */}
-            <StagedReference kind="post" name={EDIT_UNTYPED_CITATION} untyped note="Comes along as it is." />
             <InlineAction size="sm" selfStart>+ Cite something</InlineAction>
             {!unchanged && <WithdrawnLine name={EDIT_WITHDRAWN_CITATION} />}
           </div>

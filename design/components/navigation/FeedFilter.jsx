@@ -171,14 +171,23 @@ export function measureTriggerText(text) {
    is for.
 
    THE PILL SPEAKS DEVIATIONS FROM THE READER'S DEFAULT (jakob 2026-10-02, the
-   fix-fix round's ruling 10), a deviation back toward the app's included —
-   `ranked` under a Newest default, the way `newest` reads under the app's.
-   The summary keys on the reader's default object; the function below is
-   drawn against the app's, the one every drawn reader holds. The words for
-   the back-deviations no existing word covers — the seen toggle off under
-   an on default, every form under a default that narrows them, `Sensitive`
-   or `Removed` off under a default that admits it — are filed (backlog
-   12X-fixfix-whatsnew). */
+   fix-fix round's ruling 10), a deviation back toward the app's included,
+   and it speaks the axis's STATE, never the direction (jakob 2026-10-02, the
+   residue round's Q2): a state reads the same whichever default it departs
+   from. The summary keys on the reader's default object; the function below
+   is drawn against the app's, the one every drawn reader holds. The words,
+   per axis (the back-deviations' new ones flagged for blessing, copy-voice
+   *The filter pill's state words*):
+   - kinds: the head, spoken always — one kind's name, `2 kinds`, `Nothing`;
+   - forms: the forms it holds, `text + photos`; every form, `all forms`;
+   - order: `newest`, `ranked`;
+   - seen: `showing seen`; off, `hiding seen`;
+   - also: a chip on past the default joins the `+` list (`+ sensitive`,
+     `+ still settling`); `Sensitive` or `Removed` off under a default that
+     admits it, `hiding sensitive`, `hiding removed`; `Still settling` off,
+     `settled only`;
+   - topic: the tag's own name. A default never holds one — the settings
+     sheet draws no topic section — so it has no back word. */
 export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_PX) {
   const kinds = value.kinds || [];
   const forms = value.forms || [];

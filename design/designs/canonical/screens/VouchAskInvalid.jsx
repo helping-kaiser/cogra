@@ -12,7 +12,8 @@
    loud in the heading and the way forward in the paragraph. There is no
    field — nobody pastes an ask link into the product — and no way on beyond
    the arrow: no person stands behind the link to show, so the one exit is
-   the way back. It is not the reader's failure, so it carries no error
+   the way back (jakob 2026-10-02, the residue round's Q7). It is not the
+   reader's failure, so it carries no error
    colour.
 
    THE WAY BACK IS THE LAYER LAW: a link opens over whatever the reader was

@@ -4,9 +4,15 @@ WHEN tap Add pictures instead GIVEN the body holds words -> the dialog Discard t
 
 WHEN tap Write words instead GIVEN the body holds pictures -> the dialog Discard the pictures? opens over the pick stage with The rest of the draft stays.
 
-ALWAYS Keep them is the filled answer and Discard the quiet one
+WHEN tap Write words instead GIVEN the body holds a clip -> the dialog Discard the video? opens over the clip's stage with The rest of the draft stays.
+
+ALWAYS Keep them is the filled answer and Discard the quiet one GIVEN the body holds words or pictures
+
+ALWAYS Keep it is the filled answer and Discard the quiet one GIVEN the body holds a clip
 
 WHEN tap Keep them -> the dialog closes onto the stage as it was AND NEVER the body changes
+
+WHEN tap Keep it -> the dialog closes onto the stage as it was AND NEVER the body changes
 
 WHEN tap Discard GIVEN the dialog was raised by Add pictures instead -> the words are discarded AND the pick step opens AND the rest of the draft stays
 

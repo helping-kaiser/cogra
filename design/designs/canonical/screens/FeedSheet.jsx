@@ -19,8 +19,10 @@
    THE TRIGGER MEASURES AGAINST THE READER'S DEFAULT (jakob 2026-10-02, the
    fix-fix round's ruling 10), a deviation back toward the app's included:
    under a Newest default, `Ranked` is a deviation the pill speaks, as
-   `newest` is under the app's. The summary keys on the reader's default
-   object, never the app's constant. The "?" says what `Reset` does: `Reset
+   `newest` is under the app's. Each axis speaks its state, never the
+   direction (the residue round's Q2; the words are `FeedFilter`'s). The
+   summary keys on the reader's default object, never the app's constant.
+   The "?" says what `Reset` does: `Reset
    brings back your defaults, to change them go to settings.` (ruling 11).
 
    THE FOUR ARE THE KINDS V1.0 SERVES (readme §13, the V1.0 scope cut,
