@@ -8199,10 +8199,9 @@ no timer, and an invite link does not care who is signed in.
   an invite link's expiry bounds only the registration made through it
   (auth.md, *Expiry*).
 - **A waiting or turned-down applicant's way in is a vouch** — the member
-  whose approval is in play, or anyone through the ask link. Nothing
-  re-arms an application from the applicant's side, so the boards
-  `ApplicantExpired` and `ApplicantRearm` are gone, with their edges,
-  slots and lines.
+  whose approval is in play, or anyone through the ask link. No board
+  draws a lapsed application or a second invite for an account that
+  exists.
 - **Invite links ignore sign-in.** One person may hold several accounts,
   so a live link opened while signed in opens `Join` as a layer holding
   the link; `Create account` switches this device to the new account,
