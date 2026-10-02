@@ -8580,6 +8580,35 @@ at the full set reads **`All kinds`**, never the count —
 edge label follows (`filter chip (All kinds)`), re-blessed
 deliberately, that one line the whole diff.
 
+### The comment edit's withdrawals — 2026-10-02
+
+jakob's ruling (backlog 126, closed): the comment edit takes the post
+edit's withdrawal package unchanged at comment scale, drawn as its own
+bite.
+
+- **`CommentEdit` draws the package.** Its body is `CommentEditBody`, the
+  comment's anatomy carrying `EditComposeBody`'s blocks. A standing
+  citation is a row that opens `RefPairEdit`, with the × that withdraws
+  it. `#coastroad` and `Tide tables and the third headland — @juno` stand
+  withdrawn, each on its `Withdrawn:` line with its `Undo`, and the
+  fields scroll under the pinned foot.
+- **`RefPairEdit` is the master at both scales**, as `TagPad` already
+  was: the comment's rows open the same sheet, `Remove citation` and its
+  inline cost included, and Sign is the confirmation.
+- **`CommentEditActs` counts the complete kind set in records.** It
+  stands on `CommentEditBody` and reads `5 things, signed together`:
+  `Edit`, `Tags added`, `Tags withdrawn` at one record, and `Citations
+  withdrawn` at the citation's two counter-records.
+- **The sidecars say the same at both scales.** A citation's withdrawal
+  counts its counter-records, the `Undo` line unstages it, and each acts
+  row counts the records its kind signs, on `EditCompose` and `EditActs`
+  as on the comment's. The acts-footer edges read the footer's own
+  `You're signing N things`.
+- **No new string.** Every word is the post package's blessed wording.
+  What the drawing leaves open is backlog `134`.
+- **The gate**: **270 screens**, 1805 → **1809 edges**, 0 gaps, flows
+  66, every one resolved, 133 sidecars. The witness did not move.
+
 ## 15. Index
 
 **Root**
