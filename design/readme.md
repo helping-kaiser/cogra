@@ -8580,6 +8580,38 @@ at the full set reads **`All kinds`**, never the count —
 edge label follows (`filter chip (All kinds)`), re-blessed
 deliberately, that one line the whole diff.
 
+### The applicant remainder, ruled — 2026-10-02
+
+jakob's evening answer to backlog item 128's six open bullets ("1-6 all
+as recommended, the wordings are blessed").
+
+- **The vouch card and pad claim no order** — a member may opine on
+  others first while the card stands. The body reads `Vouch back to open
+  the way from your side — your opinion toward @mira, and your feed grows
+  from it.`; the pad, its "?" and its first coaching line open on `Your
+  vouch back`. The band's line keeps *first opinion*: the borrowed view
+  ends on the first opinion, whoever it's toward.
+- **A for-good dismissal is account state** (auth.md); the contract half
+  rides the seam.
+- **The landing card's key-elsewhere body admits both doors**: `Your key
+  was made on another device — open CoGra there, or restore the key to
+  land here.`
+- **The turned-down shell's opinion and topic** wait for a vouch, in the
+  seal exit's grammar: `Your opinion waits — it arrives when someone
+  vouches you in.` and `Your topic waits — it arrives when someone
+  vouches you in.`
+- **An applicant's deletion is `DeleteAccount`'s applicant case**: `Nothing
+  has landed yet — deleting removes your application and your account
+  right away.`, one commitment that deletes at once and lands the reader
+  signed out on the bare view; the mail, the grace boards and
+  `DeleteAccountConfirmed` stay the member's (`DeleteAccount`'s sidecar).
+- **`ReplyEntry`'s applicant reading holds only others' comments**: the
+  foot's face is @juno's, and @sol's comment carries no `Edit`.
+- **Flagged for blessing**: the vouch pad's "?" first paragraph and
+  `Delete my account`. The lane's calls are backlog item 12X-applicant128.
+- **The gate**: 270 screens, 1805 → **1806 edges**, 0 gaps, flows 66,
+  every one resolved, 133 → **134 sidecars**. The witness did not move.
+
 ## 15. Index
 
 **Root**

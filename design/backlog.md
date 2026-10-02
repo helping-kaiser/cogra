@@ -4138,41 +4138,41 @@ executed jakob's rulings and left these for his eye:
   round's wordings): the verify card's seven-day line, `JoinInvalid`'s
   paragraph and `VouchAskInvalid`'s paragraph.
 
-### 128 · What the applicant fix round left for rulings · *design + contract* · **filed 2026-10-02**
+### 128 · What the applicant fix round left for rulings · *design + contract* · **filed 2026-10-02** · **ruled 2026-10-02**
 
 The applicant fix round (readme §13) executed jakob's morning rulings on
-the applicant pages and the vouch pair, and left these for his eye:
+the applicant pages and the vouch pair, and left these for his eye. His
+evening ruling closed all but the seam's half of the for-good dismissal
+(readme §13, *The applicant remainder, ruled*); that half, like item
+130's frame key, stays with the design ⇄ impl seam.
 
-- **"Your first opinion" on the vouch card and pad.** The card's body
-  (`…your first opinion, and your feed grows from it.`), the pad's title
-  and "?" (`Your first opinion`, copy-voice *The "?" dialogs*) and its
-  first coaching line say the vouch-back is the member's first opinion.
-  Under the revised rule a member may opine on others first while the
-  card still stands; whether the card leaves at the first opinion, or
-  its and the pad's words change, is unruled.
+- ~~**The vouch card's and pad's first-opinion claim.**~~ — closed
+  2026-10-02 (readme §13, *The applicant remainder, ruled*): the card and
+  the pad claim no order; the pad and its "?" read `Your vouch back`.
 - ~~**`Not now` on a for-good dismissal.**~~ — closed 2026-10-02 (readme
   §13, *The applicant residue, ruled*): the way out reads `Got it`.
-- **Where "for good" is kept.** auth.md keeps the prompt's dismissal
-  device-local, reappearing on a new device; a dismissal for good needs
-  account state (design ⇄ impl seam).
+- **Where "for good" is kept.** Design side closed 2026-10-02 (readme
+  §13, *The applicant remainder, ruled*): auth.md keeps the dismissal as
+  account state. The contract half rides the seam (048) and stays open
+  there.
 - ~~**The other locked controls.**~~ — closed 2026-10-02 (readme §13,
   *The applicant residue, ruled*): a comment's `Reply` and the profile's
   `Invites` wear the comment foot's locked look.
-- **The landing card's body with the restore door.** The key-elsewhere
-  body still says the landing comes from the other device alone.
-- **The turned-down shell's other staged-act lines.** The opinion's and
-  topic's second-tap lines still say they wait with an application none
-  is live for; the seal's line was the one ruled.
-- **An applicant's deletion, drawn.** `DeleteAccount`, its mail,
-  `DeleteAccountConfirmed` and the grace boards speak the member's seven
-  days; the applicant's words are undrawn. Whether the emailed link gates
-  an applicant with no verified address closed 2026-10-02: the in-app
-  confirm suffices (readme §13, *The applicant residue, ruled*).
+- ~~**The landing card's body with the restore door.**~~ — closed
+  2026-10-02 (readme §13, *The applicant remainder, ruled*): the body
+  admits both doors.
+- ~~**The turned-down shell's other staged-act lines.**~~ — closed
+  2026-10-02 (readme §13, *The applicant remainder, ruled*): the opinion
+  and the topic wait for a vouch, in the seal exit's grammar.
+- ~~**An applicant's deletion, drawn.**~~ — closed 2026-10-02 (readme §13,
+  *The applicant remainder, ruled*): `DeleteAccount`'s applicant case,
+  immediate, landing signed out on the bare view.
 - ~~**The ask link's applicant snackbar**~~ — closed 2026-10-02 (readme
   §13, *The applicant residue, ruled*): `You can vouch once you're in.`,
   in the family's voice.
-- **`ReplyEntry`'s reader chip** changes the foot only; the thread above
-  keeps the member's own comments, which an applicant cannot have.
+- ~~**`ReplyEntry`'s reader chip**~~ — closed 2026-10-02 (readme §13,
+  *The applicant remainder, ruled*): in the applicant's reading the
+  thread holds only others' comments.
 - ~~**Strings flagged for blessing**~~ — closed 2026-10-02 (jakob blessed
   the fix round's wordings): `Browsing from @mira's view — your first
   opinion starts your own.`, `See @noor's profile`, `Your post waits — it
@@ -4306,3 +4306,36 @@ come back together:
   and no summary line.
 - **The beyond-this-app face.** How the reading surfaces show a target
   that lives outside CoGra.
+
+### 12X-applicant128 · What the applicant remainder left for rulings · *design + contract* · **filed 2026-10-02**
+
+The applicant remainder (readme §13) executed jakob's six rulings and
+left these for his eye:
+
+- **Strings flagged for blessing.** The vouch pad's "?" first paragraph,
+  `Vouching back signs your opinion of the person who vouched you in,
+  and your feed grows from it.` (the ruling's no-order claim carried
+  into the dialog), and the applicant deletion's commitment, `Delete my
+  account`.
+- **The post's second tap on the turned-down shell.** The menus' `Cite
+  in a new post` and `Mention in a new post` cases name only the waiting
+  shell's `Your post waits with your application — it arrives with you.`,
+  and `ApplicantRejected`'s own `New post` edge says only that the
+  snackbar answers; the seal exit's `Your post waits — it arrives when
+  someone vouches you in.` is the line the turned-down shell would answer
+  with. That edge's first-post case also says "a fresh application finds
+  it", where the no-expiry correction's way in is a vouch.
+- **The settings footnote for an applicant.** `Nothing is deleted here.
+  The next screen says what goes and what stays, and the deletion is
+  confirmed by a link we email you.` is the member's; an applicant's
+  deletion is confirmed in the app and nothing is mailed.
+- **Where an applicant's deletion lands.** Drawn on the bare view
+  (`FeedBare`, app open signed out with no link), read as the entry
+  board, and silent there; whether it says the account is gone is
+  unruled. The settings row's edge carries no applicant case (a second
+  `DeleteAccount` outcome makes the deletion flow's start ambiguous), so
+  the case lives on `DeleteAccount`'s board, edge and sidecar.
+- **The dismissal memory in the roadmap.** roadmap.md's slice-1 line
+  keeps a device-local answered-bit as the dismissal memory; the
+  dismissal is account state (auth.md), so the line follows when the seam
+  (048) lands it.
