@@ -32,7 +32,13 @@
    THE COMMITMENT SAYS WHAT THE PRESS DOES. `Send the confirmation link` — the
    register's own rule, and `Reset`'s `Send reset link` is the same sentence for
    the same mechanism. `Delete my account` would be a lie about a button that
-   sends an email. */
+   sends an email.
+
+   AN APPLICANT'S DELETION IS IMMEDIATE (jakob 2026-10-02). The seven days
+   protect landed records, and before approval nothing has landed: an
+   applicant's confirmed deletion runs at once, with no grace and no pending
+   state. This board draws the member's request; the applicant's words are
+   not drawn yet (backlog). */
 
 const INSET = {
   marginTop: 24,
