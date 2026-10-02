@@ -55,6 +55,9 @@ import { VideoTransport } from "./VideoControls.jsx";
      clip takes it in the same moment. Empty stage, several qualifying: topmost
      wins. A fling needs no clause: incumbents succeed faster than playback can
      start, and a clip that leaves before painting never leaves its still face.
+     A PLAY-DISC TAP MAKES ITS CLIP THE INCUMBENT (jakob 2026-10-02): it keeps
+     the stage while it stays past the 70% gate, and the ordinary succession
+     follows once it falls below.
      THE SENSITIVE VEIL TAKES ITS CLIP OUT OF THE ROTATION (jakob 2026-09-24,
      backlog item 103): a veiled clip has no playback and no sound-disc
      presence. THE UNVEIL IS AN ELIGIBILITY CHANGE, NOT A SUSPENSION LIFT: a

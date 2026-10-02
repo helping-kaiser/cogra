@@ -219,9 +219,10 @@ export function CommentCard({
       {/* A comment is words first and its pictures join them (readme §13) —
           below the words, INSET at the card's medium rung rather than
           full-bleed, and capped at a comment-scale height: the media joins the
-          words, it must not turn the comment into a post. Comment pictures
-          never crop (jakob 2026-08-31), so multiples share a fixed square frame
-          and each whole frame fits inside it; at most four ride one comment. */}
+          words, it must not turn the comment into a post. Square is the
+          comment scale's shape (readme §13, the reel round): a comment's
+          pictures and clips fill it, display-cropped and centred, while the
+          bytes travel uncropped; at most four ride one comment. */}
       {Array.isArray(media) && media.length > 0 && (onOpen ? (
         <div onClick={open}>
           <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" />

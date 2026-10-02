@@ -10,6 +10,8 @@ ALWAYS a topic held against stands in Your topics like any other held topic, wit
 
 ALWAYS a row carries the topic's mark, its name and the Affinity pair the reader signed
 
+ALWAYS the rows stand strongest first, by association, down past nothing into the topics held against
+
 ALWAYS a row offers no removal of its own
 
 ALWAYS Your topics carries no bottom bar
