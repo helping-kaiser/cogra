@@ -170,11 +170,15 @@ export function measureTriggerText(text) {
    default" is the useful fact at that point; which four ways is what the sheet
    is for.
 
-   THE WORDS ARE WRITTEN AGAINST THE APP'S DEFAULT, the one every drawn reader
-   holds. A reader whose own default differs hears deviations from theirs, and
-   the words for a deviation back toward the app's — `Ranked` under a Newest
-   default, the seen toggle off under an on one — are not written yet (backlog
-   12X-filter-olive). */
+   THE PILL SPEAKS DEVIATIONS FROM THE READER'S DEFAULT (jakob 2026-10-02, the
+   fix-fix round's ruling 10), a deviation back toward the app's included —
+   `ranked` under a Newest default, the way `newest` reads under the app's.
+   The summary keys on the reader's default object; the function below is
+   drawn against the app's, the one every drawn reader holds. The words for
+   the back-deviations no existing word covers — the seen toggle off under
+   an on default, every form under a default that narrows them, `Sensitive`
+   or `Removed` off under a default that admits it — are filed (backlog
+   12X-fixfix-whatsnew). */
 export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_PX) {
   const kinds = value.kinds || [];
   const forms = value.forms || [];

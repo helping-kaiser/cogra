@@ -18,10 +18,19 @@
    its content sizes it, so the foot ends the content rather than being pinned
    under a scroll.
 
-   `Reset` STAGES THE SEARCH'S DEFAULT: nothing narrowed, the Order section at
-   rest — what the trigger reads as `Everything`. The reader sets no default
-   of their own for search in Settings, so the reader's default here is the
-   app's (pass C 10). */
+   `Reset` STAGES THE SEARCH'S DEFAULT: no kind narrowed, and the shared axes
+   — the order and the seen toggle — at the reader's default, what the
+   trigger reads as `Everything`. ONE DEFAULT OBJECT EVERYWHERE (jakob
+   2026-10-02, the fix-fix round's ruling 12): the default the reader sets in
+   Settings reaches search's order and seen toggle, the axes the two sheets
+   share; the kinds stay search's own, since search's kind semantics are
+   not the feed's. This reader never set one, so the sheet is drawn at the
+   app's.
+
+   THE TRIGGER SPEAKS DEVIATIONS FROM THAT DEFAULT (ruling 10), a deviation
+   back toward the app's included, and the "?" — the feed's own dialog —
+   says what `Reset` does: `Reset brings back your defaults, to change them
+   go to settings.` (ruling 11). */
 export function Screen() {
   return (
     <>
