@@ -2120,6 +2120,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: ">Also remove what I posted</span>", tag: "label" },
     { n: 3, find: ">Send the confirmation link</button>", tag: "button" },
+    // The applicant's case (its reader chip): the commitment that deletes at
+    // once, appended so no via renumbers.
+    { n: 4, find: ">Delete my account</button>", tag: "button" },
   ],
   DeleteAccountMail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },

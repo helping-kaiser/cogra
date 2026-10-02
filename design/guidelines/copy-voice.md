@@ -2008,6 +2008,15 @@ my account`, which would be a lie about a button that sends an email.
 Under it: `Nothing is deleted until you open that link. After that it
 runs in seven days, and you can cancel from any device until it does.`
 
+**An applicant's case is immediate** (`DeleteAccount`'s reader chip,
+jakob 2026-10-02). Nothing has landed, so nothing waits: the body reads
+`Nothing has landed yet — deleting removes your application and your
+account right away.` (**blessed**, jakob 2026-10-02), and the commitment
+`Delete my account` (*new 2026-10-02, flagged for blessing*) deletes at
+once — here the press does what the words say. What goes, what stays,
+the content sweep and the link's note speak of landed records and the
+mailed link, so the case draws none of them.
+
 **No "are you sure".** Nothing in this flow asks twice, scolds, or lists
 what the reader will miss. The friction is the emailed link, which is
 also the check against a session that is not theirs; a typed handle or a

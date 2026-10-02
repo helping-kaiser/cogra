@@ -37,10 +37,19 @@
    AN APPLICANT'S DELETION IS IMMEDIATE (jakob 2026-10-02). The seven days
    protect landed records, and before approval nothing has landed: an
    applicant's confirmed deletion runs at once, with no grace and no pending
-   state. An applicant whose address is not verified confirms in the app,
-   and that confirm suffices (jakob 2026-10-02): nothing has landed, so no
-   emailed link gates it. This board draws the member's request; the
-   applicant's words are not drawn yet (backlog). */
+   state, and the in-app confirm suffices — no emailed link gates it.
+
+   THE READER CHIP DRAWS IT AS THIS BOARD'S CASE (jakob 2026-10-02), not a
+   board of its own. The body says what happens and why — `Nothing has landed
+   yet — deleting removes your application and your account right away.` — and
+   the one commitment deletes at once, landing the reader, signed out, on the
+   bare borrowed view. What goes and what stays, the content sweep and the
+   link's note all speak of landed records and the mailed link, so the
+   applicant's case draws none of them; the mail, the grace boards and
+   `DeleteAccountConfirmed` stay the member's. Here `Delete my account` is the
+   true sentence for the press. */
+export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
+export const VALS = `deleteBody: this.props.reader === "applicant" ? "Nothing has landed yet — deleting removes your application and your account right away." : "This takes your name off CoGra. What you signed stays on the graph, because it is other people's record as much as yours — what goes is everything that says it was you.", memberShown: this.props.reader === "applicant" ? "none" : "block", applicantShown: this.props.reader === "applicant" ? "block" : "none"`;
 
 const INSET = {
   marginTop: 24,
@@ -91,42 +100,47 @@ export function Screen() {
             color: "var(--text-secondary)",
           }}
         >
-          This takes your name off CoGra. What you signed stays on the graph, because it is other
-          people's record as much as yours — what goes is everything that says it was you.
+          {"{{deleteBody}}"}
         </p>
 
-        <div style={INSET}>
-          <span style={CAPTION}>What goes</span>
-          <p style={LINE}>Your profile — display name, bio and picture.</p>
-          <p style={LINE}>The link between you and this account. Nothing left here points back to you.</p>
-          <p style={LINE}>Your sessions, and what this account kept for you alone: saved items, hidden accounts, what you have read.</p>
+        <div style={{ display: "{{memberShown}}" }}>
+          <div style={INSET}>
+            <span style={CAPTION}>What goes</span>
+            <p style={LINE}>Your profile — display name, bio and picture.</p>
+            <p style={LINE}>The link between you and this account. Nothing left here points back to you.</p>
+            <p style={LINE}>Your sessions, and what this account kept for you alone: saved items, hidden accounts, what you have read.</p>
+          </div>
+
+          <div style={INSET}>
+            <span style={CAPTION}>What stays</span>
+            <p style={LINE}>
+              Everything you signed, and everything others signed about you. Your posts still route and
+              still credit their author; what is removed leaves a mark saying so.
+            </p>
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <Checkbox id="delete-content" label="Also remove what I posted" />
+            <p style={{ ...LINE, marginTop: "var(--space-1)", paddingLeft: 30, color: "var(--text-secondary)" }}>
+              The words and pictures go out of your posts and comments, each leaving its mark.
+              Leave this off and they stay as you wrote them.
+            </p>
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <Button style={{ width: "100%" }}>Send the confirmation link</Button>
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <QuietNote>
+              Nothing is deleted until you open that link. After that it runs in seven days, and you can
+              cancel from any device until it does.
+            </QuietNote>
+          </div>
         </div>
 
-        <div style={INSET}>
-          <span style={CAPTION}>What stays</span>
-          <p style={LINE}>
-            Everything you signed, and everything others signed about you. Your posts still route and
-            still credit their author; what is removed leaves a mark saying so.
-          </p>
-        </div>
-
-        <div style={{ marginTop: 24 }}>
-          <Checkbox id="delete-content" label="Also remove what I posted" />
-          <p style={{ ...LINE, marginTop: "var(--space-1)", paddingLeft: 30, color: "var(--text-secondary)" }}>
-            The words and pictures go out of your posts and comments, each leaving its mark.
-            Leave this off and they stay as you wrote them.
-          </p>
-        </div>
-
-        <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Send the confirmation link</Button>
-        </div>
-
-        <div style={{ marginTop: 24 }}>
-          <QuietNote>
-            Nothing is deleted until you open that link. After that it runs in seven days, and you can
-            cancel from any device until it does.
-          </QuietNote>
+        <div style={{ marginTop: 24, display: "{{applicantShown}}" }}>
+          <Button style={{ width: "100%" }}>Delete my account</Button>
         </div>
       </div>
     </>
