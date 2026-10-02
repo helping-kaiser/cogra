@@ -192,7 +192,7 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_C
   const kinds = value.kinds || [];
   const forms = value.forms || [];
   const also = value.also ?? FEED_FILTER_DEFAULT.also;
-  const head = kinds.length === 0 ? "Nothing" : kinds.length === 1 ? labelOf(FEED_KINDS, kinds[0]) : kinds.length + " kinds";
+  const head = kinds.length === 0 ? "Nothing" : kinds.length === 1 ? labelOf(FEED_KINDS, kinds[0]) : kinds.length === FEED_KINDS.length ? "All kinds" : kinds.length + " kinds";
   const extras = [];
   /* THE TOPIC LEADS THE EXTRAS, AND IT IS AN EXTRA (the topic round,
      2026-09-14). It leads because it is the loudest narrowing on the list — a

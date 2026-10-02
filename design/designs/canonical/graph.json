@@ -742,7 +742,7 @@
     { "from": "FeedFar", "via": 16, "kind": "nav", "label": "chats", "to": [{ "board": "ChatsComingSoon" }] },
     { "from": "FeedFar", "via": 17, "kind": "advance", "label": "share", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "FeedFar", "via": 18, "kind": "advance", "label": "notifications", "to": [{ "board": "Notifications" }, { "board": "NotificationsEmpty", "case": "nothing has arrived yet" }] },
-    { "from": "FeedKinds", "via": 1, "kind": "advance", "label": "filter chip (4 kinds)", "to": [{ "board": "FeedSheet" }] },
+    { "from": "FeedKinds", "via": 1, "kind": "advance", "label": "filter chip (All kinds)", "to": [{ "board": "FeedSheet" }] },
     { "from": "FeedKinds", "via": 2, "kind": "advance", "label": "the comment card's head row — the post it answers", "to": [{ "board": "PostDetail", "case": "the post the comment answers — its detail" }] },
     { "from": "FeedKinds", "via": 3, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
     { "from": "FeedKinds", "via": 4, "kind": "detour", "label": "comment overflow ⋮", "to": [{ "board": "CommentMenu", "case": "someone else's comment — the comment's sheet (master)" }, { "board": "CommentMenuOwn", "case": "your own comment — the same sheet with Remove among the acts" }] },

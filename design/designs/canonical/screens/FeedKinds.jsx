@@ -8,8 +8,9 @@
    the filter's default, which is `Posts` alone, and a comment on it would be
    a card its own trigger says is not there. So the kinds arrive the way the
    post-MVP chat and message cards arrived (`ChatFeedCards`): one board with
-   the kinds turned on, the trigger reading them back as it always does — `4
-   kinds`, the filter's own summary, nothing added.
+   the kinds turned on, the trigger reading them back as it always does — `All
+   kinds`, the filter's own summary at the full set (jakob 2026-10-02:
+   the state, never the count, when every kind is on), nothing added.
 
    THE THREE NEW CARDS LEAD, the post below them, for the same board's
    reason: they are what this board records, and a card cut off at the fold
