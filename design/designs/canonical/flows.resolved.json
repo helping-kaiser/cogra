@@ -13,6 +13,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -58,7 +59,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 51 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -76,6 +77,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -717,6 +719,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -762,7 +765,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 51 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords",
         "ComposeWords · 3 «Next» → ComposeDetails — the words path skips crop and cover",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -780,6 +783,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -837,6 +841,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -882,7 +887,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 51 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -900,6 +905,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -957,6 +963,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -1002,7 +1009,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 50 boards → ComposePick",
+        "start · «nav · New post» on 51 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1018,6 +1025,7 @@
         "Explore",
         "ExploreNone",
         "ExploreSearch",
+        "ExploreUnscoped",
         "Feed",
         "FeedCover",
         "FeedDeleting",
@@ -2249,6 +2257,15 @@
       "endpoint": [
         "narrow-a-search"
       ]
+    },
+    "ExploreUnscoped": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words"
+      ],
+      "endpoint": []
     },
     "Feed": {
       "flows": [
