@@ -20,10 +20,14 @@ WHEN the link is read and refused as unusable -> JoinInvalid opens
 
 WHEN press Continue GIVEN the text still reads as no link -> the line stands in place AND NEVER the screen changes
 
-WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Continue AND Continue stays, the retry
 
 WHEN tap Already have an account? Sign in -> SignIn opens
 
 WHEN tap Just looking? Browse the feed -> FeedBare opens
+
+WHEN no answer has come 5s after the press of Continue -> Continue still reads Continuing… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Continue waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

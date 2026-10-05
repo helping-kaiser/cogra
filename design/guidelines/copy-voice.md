@@ -922,7 +922,10 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
 **No answer at all** (offline; not a code):
 
 - Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
-  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it.
+  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it. A form
+  says the same line in SignInError's slot above its submit, the fields
+  keeping what was typed and the submit being the retry (jakob
+  2026-10-05).
 - A hold's row: `That didn't sign.` with `Retry`. **Drawn** on
   `RowSigning`.
 - A read with nothing loaded: `Can't reach the server. Check your
@@ -949,8 +952,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
   is in your inbox.` The client gates acting on verification, so this
   is the rare case that slips past the gate. *Copy-only.*
-- `RATE_LIMITED` — in place, in SignInError's slot: `Too many tries.
-  Wait a little, then try again.` The submit stays. *Copy-only.*
+- `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
+  backoff says the drawn line, `Too many tries in a row. Wait a moment,
+  then try again.` (`SignInLimited`); every other visible one — the
+  registration, the reset, the token confirms — says `Too many tries.
+  Wait a little, then try again.` (jakob 2026-10-05). The submit stays.
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
@@ -969,14 +975,18 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `WEAK_PASSWORD` — on the field. The length half is `A password is at
   least 12 characters.` The breach half is `That password has turned up
   in a data breach — pick another one.` *The breach half is copy-only.*
+  Past auth.md's cap the line reads `A password is at most 128
+  characters.`, on the field, re-checked live like the length half
+  (*blessed (jakob 2026-10-05)*; copy-only).
 - `INVITE_UNUSABLE` — the surface: `This invite can't be used anymore`
   (`JoinInvalid`).
 - `ASK_LINK_UNUSABLE` — the surface, in `JoinInvalid`'s construction.
   Its words are owed.
 - `VERIFICATION_TOKEN_INVALID` — the surface: `This link doesn't work
   anymore` (`VerifyExpired`).
-- `RESET_TOKEN_INVALID` — the surface, in `VerifyExpired`'s words. That
-  is its own audit entry and is not ruled here.
+- `RESET_TOKEN_INVALID` — the surface, in `VerifyExpired`'s
+  construction: `This link doesn't work anymore` (`ResetExpired`; *The
+  collected rulings' entry lines*).
 - `ACTOR_KEY_IN_USE` — in place: `A signing key can only ever back one
   account, so this account needs its own.`
 - `CHALLENGE_EXPIRED` — in place, on the backup's upload, as a
@@ -1072,7 +1082,8 @@ Blessed with the audit-states round:
 - Signed out (audit K3.20), the dead link's way on reads `Sign in`, and
   `Resend the link` opens an `Email` field in place above the pair — the
   two existing words, so nothing new to bless; `Verified`'s `Back to
-  CoGra` keeps its words and opens `SignIn`.
+  CoGra` keeps its words and opens `SignIn`. `VerifiedApp`'s way on reads
+  `Sign in` the same way (jakob 2026-10-05).
 
 ## The entry funnel's round
 
@@ -1153,6 +1164,65 @@ round*; every one blessed (jakob 2026-10-02).
 - `Check that the whole link came through, or ask the person who sent it
   for it again.` — its paragraph: what the reader can check, and who can
   help, with no guess at why the link resolves to nobody. *Blessed (jakob 2026-10-02).*
+
+### The collected rulings' entry lines — 2026-10-05
+
+- `Mira invited you` — `Join`'s heading (and `JoinErrors`'): the first
+  screen says *invited*, never *vouched*, because no vouch exists until
+  the inviter approves. *Blessed (jakob 2026-10-05).*
+- The applicant's own profile once the application is closed
+  (`ProfileApplicant`, the `application` chip at `closed`) takes the
+  turned-down card's blessed words, the handle the approver's:
+  `@mira closed your application` over its body, and the ask link
+  labelled `Ask someone you know to vouch for you` with that card's
+  caption. The chronicle's closing line reads `These wait — they arrive
+  when someone vouches you in.` *Blessed (jakob 2026-10-05).*
+- `Key made and backed up.` — the snackbar the ceremony's typed-back
+  confirm answers with where the ceremony began (`RecoveryCode`), for
+  the reason `KeyDecline`'s line exists: the task card leaves, and a
+  silent close reads as nothing happened. *Blessed (jakob 2026-10-05).*
+- The key boards' platform noun is the `wording` chip `KeyElsewhere`
+  and `Restore` already carry (`KeyCeremony`, `KeyConfirm`,
+  `KeyDecline`, `YourKey`, `YourKeyAbsent`). The app renderings: the
+  pledge `Everything you publish is signed with a key that is created in
+  this app and stays in your hands — CoGra never holds it and can never
+  reissue it.`; `YourKey`'s `This key signs everything you publish, and
+  it lives only in this app.` and `Nothing here is sent anywhere — the
+  key is read from this app and shown.`; `YourKeyAbsent`'s `There is no
+  key in this app to show.` under `KeyElsewhere`'s blessed `Your key
+  isn't in this app`. *New 2026-10-05, flagged for blessing.*
+- `VerifyExpired`'s resend answers in `Reset`'s construction, never saying
+  whether the account was still waiting: signed in, `If your account is
+  still waiting on its email, a fresh link is on its way to
+  noor@fieldmail.org.`; signed out, to the typed address, `If that address
+  has an account still waiting on its email, a fresh link is on its way.`
+  *New 2026-10-05, flagged for blessing.*
+- A spent or expired reset link (`ResetExpired`, `RESET_TOKEN_INVALID`)
+  takes `VerifyExpired`'s blessed heading, `This link doesn't work
+  anymore`, over `It may have expired or already been used. A reset link
+  works once and expires after 15 minutes — ask for a fresh one.`, with
+  `Reset your password` (`Reset`'s own heading, naming where it goes)
+  and `Sign in` (`VerifyExpired`'s signed-out way on). *The paragraph is
+  new 2026-10-05, flagged for blessing.*
+- The applicant key card's app wording, behind the `wording` chip
+  (`ApplicantFeed`): `Your application needs a key in this app before
+  @mira can approve it.` *Blessed (jakob 2026-10-05).*
+- `Resend the link` on the verify card answers in `Wrong address?`'s
+  blessed sent shape, naming the address the card prints: `Sent — the
+  link is on its way to noor@fieldmail.org.` (jakob 2026-10-05).
+- An applicant's first staged opinion, by `Set` or by a press-and-hold,
+  answers with the opinion's staged-act line (*The staged-act snackbar*),
+  the turned-down shell's on that shell, and the face takes the staged
+  pick (jakob 2026-10-05).
+- `ApplicantKeyElsewhere` with no backup (the `backup` chip at `none`)
+  drops `Restore the key` and reads `Your application's key was made on
+  another device and has no backup, so it can't be brought here yet. Make
+  a recovery code on that device and restore it here, or make a new key —
+  until you're approved, a new one costs nothing.` *New 2026-10-05,
+  flagged for blessing.*
+- `A password is at most 128 characters.` — `Join`'s and `ResetNew`'s
+  password field past auth.md's cap (*Faults by code*,
+  `WEAK_PASSWORD`). *Blessed (jakob 2026-10-05).*
 
 ## The settings page
 
@@ -1297,7 +1367,9 @@ the field `Current recovery code`, the commitment `Create a new recovery
 code`, and last: `The new code is shown once and never stored. Have
 somewhere to write it down before you go on — the old code keeps working
 until the new one is confirmed.` A refused current code wears Restore's
-line, `That code doesn't check out.`, and under the field a browser that
+line, `That code doesn't check out.`, a code of the wrong length
+`RestoreLength`'s, `A recovery code is 26 characters.` (jakob
+2026-10-05), and under the field a browser that
 lost its code is told where to go instead of retrying forever: `Lost it?
 This browser can't make a new code without the current one. If the
 Android app holds your key, make the new code there.`
@@ -1572,7 +1644,8 @@ the device it was made on.`
 sealed): `On this browser your key is sealed inside its backup. Enter
 your recovery code to open it and see the key.` — the field `Current
 recovery code`, the commitment `Show my key`, a refused code in
-Restore's line. Either copy on `YourKey` answers with the snackbar
+Restore's line and a code of the wrong length in `RestoreLength`'s, `A
+recovery code is 26 characters.` (jakob 2026-10-05). Either copy on `YourKey` answers with the snackbar
 `Copied`.
 
 **Signing out without a backup** (`SignOutConfirm`, the don't-remember
@@ -1601,6 +1674,10 @@ feedback the surface draws:
 - `Signed — your profile shows it now, still settling.` — what a saved
   profile answers with. It says both halves: the change is visible
   already, and the act is still finding its place in the order.
+- The profile and picture seals keep no draft, so the write rule's
+  notice there takes the pad's reading (jakob 2026-10-05): `Nothing was
+  signed or spent.`, with `Not now` back to the seal — never `your draft
+  is kept` or `Keep the draft, sign later`.
 
 ## The vouch-back ceremony
 
@@ -1920,8 +1997,8 @@ relates` (spoken only; *new 2026-10-05, blessed (jakob 2026-10-05)*).
 ## Saved, History and hiding
 
 Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
-`HistoryEmpty`, `SettingsHidden`, the three content menus and the
-settings page.
+`HistoryEmpty`, `HistoryFilter`, `SettingsHidden`, the three content
+menus and the settings page.
 
 **The reader's word is save** (jakob's ruling). The surface it fills is
 `Saved`, and the row in your own profile's ⋮ is that same word, so the
@@ -1937,21 +2014,32 @@ they will look for again in settings. The pair on the other side is
 `@ada is hidden — their posts stay out of your feed.` with `Undo`
 beside it. It says what changed and how far it reaches, which is what
 stops a reader wondering whether they have done something to someone.
+A deleted account has no handle to spell, so hiding one answers `This
+account is hidden — its posts stay out of your feed.`, with the same
+`Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
 
 **Saving is confirmed like every other completed act.** `Saved.` The
 sheet closes on the tap, so without the snackbar nothing would answer
 it — §3's rule, applied.
 
-**The second list is `History`.** Posts you have read, newest reading
-first. *View history* is the contract's word and stays there.
+**The second list is `History`.** Everything you have seen, every kind,
+as a feed, newest-seen first. *View history* is the contract's word and
+stays there. Its field reads and is named `Search your history`, its
+trigger `Everything` at rest — search's word for nothing narrowed — and
+the trigger's purpose and the sheet's title are `What your history
+shows`, the feed's and search's construction. The sheet's kind hint is
+search's own, `Combine as many as you like. All, until you narrow it.`
+(*new 2026-10-05, flagged for blessing*: `Search your history`, `What
+your history shows`.)
 
 **Two empty states, and each says why the list is empty.**
 `Nothing saved yet. A post, a comment or a person can be saved from its
 own menu, and it waits here.` names the gesture, because no card shows
 a saving affordance at rest and a reader who has never opened a ⋮ has
-no other way to find it. `Nothing here yet. Posts you read show up here
-on their own, newest first.` says the opposite thing — that this one
-fills without being asked.
+no other way to find it. `Nothing here yet. Everything you read shows
+up here on its own, newest first.` (*new 2026-10-05, flagged for
+blessing*) says the opposite thing — that this one fills without being
+asked — and names no kind, because the list holds every kind.
 
 **The settings group is `People`,** its row `Hidden accounts` with a
 bare count, and its footnote `Hiding someone clears your own feed of

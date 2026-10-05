@@ -1238,8 +1238,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "First light over the flats", tag: "button" },
     ...nav(10),
     // The ask link's permanent home (jakob 2026-10-02): the next free number
-    // after the bell's 15.
-    { n: 16, find: 'aria-label="Copy your ask link"', tag: "button" },
+    // after the bell's 15. The `application` chip draws the card twice, open
+    // and closed (jakob 2026-10-05, D9); both copy controls carry the number.
+    { n: 16, find: 'aria-label="Copy your ask link"', tag: "button", all: true },
   ],
   ProfileOther: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1451,16 +1452,53 @@ Object.assign(FLOW_MARKERS, {
     ...nav(3),
   ],
   SavedEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
+  /* History as a feed (the History redesign, 2026-10-05): the header's arrow,
+     the search field and the trigger, then the cards in reading order down
+     the column, FeedKinds' grammar — each card's own door its own number, and
+     what the cards repeat (author chip, tag chips, faces, share, score) one
+     number each (`all`). The bar closes the list; the header has no band, so
+     there is no chats or bell. */
   History: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
-    { n: 2, find: ">Sunday at the tide market<", tag: "button" },
-    { n: 2, find: ">The long way home<", tag: "button" },
-    { n: 2, find: ">Low tide at six tomorrow", tag: "button" },
-    { n: 2, find: ">Crossing at the narrows before the wind got up<", tag: "button" },
-    { n: 2, find: ">The lake, doing nothing, for forty seconds<", tag: "button" },
-    ...nav(3),
+    { n: 2, find: ">Search your history<", tag: "div" },
+    { n: 3, find: 'what your history shows"', tag: "button" },
+    { n: 4, find: 'aria-label="On “', tag: "button" },
+    { n: 5, find: '<a href="/u/', tag: "a", all: true },
+    { n: 6, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 7, find: ">That stretch after the second bend", tag: "a" },
+    { n: 8, find: '<a href="/t/', tag: "a", all: true },
+    { n: 9, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 9, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 9, find: 'aria-label="Give your opinion on @mira"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on @mira</button>", tag: "button" },
+    { n: 10, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 11, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 12, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 13, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 14, find: ">More</button>", tag: "button" },
+    { n: 15, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 16, find: ">· 1 reference<", tag: "span" },
+    { n: 17, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 17, find: 'aria-label="1 comment"', tag: "button" },
+    { n: 18, find: 'aria-label="More about @mira"', tag: "button" },
+    { n: 19, find: ">Runs the stand by the sea wall", tag: "a" },
+    { n: 20, find: ">Low tide at six tomorrow", tag: "a" },
+    { n: 21, find: 'aria-label="Give your opinion on #saltmaps"', tag: "button" },
+    { n: 21, find: ">Choose your opinion on #saltmaps</button>", tag: "button" },
+    { n: 22, find: 'aria-label="Tag a new post with it"', tag: "button" },
+    ...nav(23),
   ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
+  // The history's filter sheet. scanExempt like the feed's and search's, so
+  // only the sheet's own controls and its scrim carry numbers.
+  HistoryFilter: [
+    { n: 1, find: 'role="switch"', tag: "button", all: true },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: ">Done</button>", tag: "button" },
+    { n: 4, find: ">Reset</button>", tag: "button" },
+  ],
   SettingsBackup: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: 'data-field="Current recovery code"', tag: "div" },
@@ -1708,6 +1746,11 @@ Object.assign(FLOW_MARKERS, {
   VerifyExpired: [
     { n: 1, find: ">Resend the link</button>", tag: "button" },
     { n: 2, find: ">Go to the feed</button>", tag: "button" },
+  ],
+  // The spent reset link (jakob 2026-10-05, B4), VerifyExpired's pair.
+  ResetExpired: [
+    { n: 1, find: ">Reset your password</button>", tag: "button" },
+    { n: 2, find: ">Sign in</button>", tag: "button" },
   ],
   // The ask over the borrowed view, also scanExempt. TWO "Sign in or join"
   // buttons stand on this board — the band's and the ask's — and both take
@@ -2233,7 +2276,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 20, find: 'what your feed shows"', tag: "button" },
   ],
   VouchAsk: [
-    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Not now</button>", tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on @noor"', tag: "button" },
     { n: 3, find: ">Choose your opinion on @noor</button>", tag: "button" },

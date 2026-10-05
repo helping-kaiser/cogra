@@ -18,12 +18,16 @@ WHEN the link is read and refused as unusable -> JoinInvalid opens
 
 WHEN press Continue GIVEN nothing in the field reads as a link -> the field's line reads That doesn't look like an invite link. AND the field takes the error state AND NEVER the heading or the intro changes
 
-WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was pasted AND the fault is said in place on the form
+WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was pasted AND the line That didn't send. Try again. stands above Continue AND Continue stays, the retry
 
 WHEN tap Already have an account? Sign in -> SignIn opens
 
 WHEN tap Just looking? Browse the feed GIVEN an inviter's link was seen -> the feed opens in that inviter's borrowed view
 
 WHEN tap Just looking? Browse the feed GIVEN no usable link was seen -> FeedBare opens
+
+WHEN no answer has come 5s after the press of Continue -> Continue still reads Continuing… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Continue waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

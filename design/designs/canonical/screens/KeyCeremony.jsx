@@ -16,7 +16,14 @@
 
    A BROWSER THAT CANNOT HOLD A KEY IS TOLD SO HERE (web.md, the browser
    floor): the ceremony probes WebCrypto Ed25519 before minting, and a browser
-   without it opens `KeyCeremonyUnsupported` instead of this board. */
+   without it opens `KeyCeremonyUnsupported` instead of this board.
+
+   THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
+   `KeyElsewhere` and `Restore`: the pledge says `on this browser` or `in this app`. The app renderings are flagged
+   for blessing (copy-voice, *The collected rulings' entry lines*). */
+export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
+export const VALS = KEY_PLEDGE_VALS;
+
 export function Screen() {
   return (
     <>
@@ -40,8 +47,7 @@ export function Screen() {
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
         >
-          Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never
-          holds it and can never reissue it.
+          {"{{pledgeBody}}"}
         </p>
         <p
           style={{

@@ -29,3 +29,7 @@ WHEN someone vouches the reader in -> the waiting post and opinion arrive with t
 WHEN tap the closed application's notification -> this shell opens at the card where the ask link stands
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
+
+WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits — it arrives when someone vouches you in.
+
+WHEN a member takes the application up through the ask link -> the card flips to the landing card AND the band's line reads Browsing from @kel's view while your application lands. AND the band still names @kel

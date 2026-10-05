@@ -362,6 +362,15 @@
       "page": "entry"
     },
     {
+      "file": "ResetExpired.dc.html",
+      "title": "Reset link · already used or expired",
+      "x": 1920,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "OnboardingSteps.dc.html",
       "title": "Intro · your own steps",
       "x": 0,
@@ -492,7 +501,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5555,
+      "h": 5897,
       "page": "entry",
       "title": "Entry · flow map"
     },

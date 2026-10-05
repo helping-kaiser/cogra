@@ -10,6 +10,10 @@ ALWAYS the card offers Restore the key and Make a new key GIVEN the account has 
 
 ALWAYS the card offers Make a new key alone GIVEN the account has no backup
 
+ALWAYS the card's body reads Your application's key was made on another device and has no backup, so it can't be brought here yet. Make a recovery code on that device and restore it here, or make a new key — until you're approved, a new one costs nothing. GIVEN the account has no backup
+
+ALWAYS the card's body never asks for a recovery code GIVEN the account has no backup
+
 WHEN tap Restore the key -> the restore opens
 
 WHEN the restore brings the key here -> the key card leaves

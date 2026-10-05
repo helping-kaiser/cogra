@@ -4395,7 +4395,12 @@ closed (jakob 2026-10-05, "1-5 all as recommended"; the rulings digest
   citation's `ReferenceClaim` has to say its target was removed and
   carry the removal mark, as a kept pick's target does.
 
-### 13X-passc-entry-b · What the applicant and vouch sidecars left for rulings · *design + docs* · **filed 2026-10-05**
+### 13X-passc-entry-b · What the applicant and vouch sidecars left for rulings · *design + docs* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled every item (the collected rulings digest,
+`2026-10-05-collected-rulings.md`), executed in readme §13, *The entry
+and vouch rulings executed* — the approval pad's note and its "?" with the settings and pads round; what stays open moves to
+`13X-exec-entry-vouch`.
 
 Pass C's applicant and vouch lane (readme §13) transcribed nineteen
 sidecars and filed what the boards and docs do not determine:
@@ -4425,7 +4430,12 @@ sidecars and filed what the boards and docs do not determine:
   `VouchBackPad`'s "?" edge label.
 - **The behavior README's** stray fragment under *Where each sidecar's
   words come from*.
-### 13X-passc-entry-a · What the entry behavior pass filed · *design + contract* · **filed 2026-10-05**
+### 13X-passc-entry-a · What the entry behavior pass filed · *design + contract* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled every item (the collected rulings digest,
+`2026-10-05-collected-rulings.md`), executed in readme §13, *The entry
+and vouch rulings executed* — the labels and the empty presses with the settings and pads round; what stays open moves to
+`13X-exec-entry-vouch`.
 
 The entry lane of pass C's remainder (readme §13, *The entry behavior
 pass*) wrote the 31 sidecars and left these for jakob's eye, each with
@@ -4514,7 +4524,12 @@ recommendation in the round's report:
 - **The not-found pages' warm arrow label.**
 - **The approval's confirmation** — whether a signed approval wears the
   signed-opinion snackbar.
-### 13X-passc-profile · What the profile behavior pass left for rulings · *design* · **filed 2026-10-05**
+### 13X-passc-profile · What the profile behavior pass left for rulings · *design* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled every item (the collected rulings digest,
+`2026-10-05-collected-rulings.md`), executed in readme §13, *The entry
+and vouch rulings executed* — History's disc and trailing age die with the History redesign, its own lane; what stays open moves to
+`13X-exec-entry-vouch`.
 
 The profile behavior pass (readme §13) wrote what the boards and rulings
 determine and left these for jakob's eye. The audit's parked items on the
@@ -4619,3 +4634,58 @@ report:
   sign in nor set one, so they carry no hidden username.
 - **Two stacked count lines' 48px targets overlap** on the post detail;
   the later line takes the overlap.
+
+### 13X-history · What the History redesign left for rulings · *design + contract* · **filed 2026-10-05**
+
+The History redesign (readme §13) drew the seen-list as a feed and left
+these for jakob's eye, each with the lane's recommendation in its report:
+
+- **The composition** — search bar, trigger in search's kind semantics,
+  a Kinds-only sheet with no "?", and an empty board with neither
+  control — is the lane's call, flagged for the canvas pass, with its
+  three new strings.
+- **Clearing.** Clear the whole history, and remove one thing from it.
+  Either one puts the thing back into the reader's feed, since the list
+  is the feed's seen filter.
+- **The search.** What a query matches (Explore's names-and-titles rule,
+  or more: an untitled words post has no title), and the no-match
+  state, owed on the field's and `Done`'s edges as gaps.
+- **When History itself sees.** Every card scrolling through History is
+  fully in the viewport; whether that counts as a seeing, and whether a
+  re-seeing reorders the list mid-scroll or on the next load.
+- **The feed's furniture here** — the pull-down, `Back to top`, a frozen
+  order per open — and day markers for "the post I saw three days ago".
+- **What else stays or leaves**: a seen thing later removed, hidden
+  accounts' content, sensitive content's veil.
+- **The origin nouns.** The profile, the tag page, the thread and the
+  score's trace carry no `Back to History` row.
+- **The seen definition's other spellings.** feed-ranking.md §9.4,
+  `OrderSection`'s docblock and `ExploreFilter.md` say the viewport was
+  entered or passed through, not that the content was fully in it; the
+  last two also call the list device-only. `CommentFeedCard`'s docblock
+  still says `History` lists an untitled post by its words.
+
+
+### 13X-exec-entry-vouch · What the entry and vouch execution left open · *design + contract* · **filed 2026-10-05**
+
+The entry and vouch rulings executed (readme §13) left these for
+jakob's eye:
+
+- **The intro's swipe, post-MVP.** V1.0 moves the five cards by their
+  buttons alone (jakob, "fine for v1"); whether they swipe is revisited
+  after the MVP, never dropped.
+- **System Back in the funnel** (the entry lane's F-9) is in no ruling:
+  Back on a screen whose arrow is a link, on the arrowless mail
+  landings, and the browser's back on the web's recovery code.
+- **`ApplicantEmail`'s field errors** (wrong current password, an
+  address in use, a malformed one) are undrawn, as `ChangeEmail`'s are.
+- **The kept approval's card on Invites.** A vouch kept for the key waits
+  on Invites as its own card; neither its place on the page nor its words
+  are drawn.
+- **The profile and picture seals' key-absent notice** still offers
+  `Keep the draft, restore later`, though neither seal keeps a draft;
+  the ruling reached the write rule's notice only.
+- **The canvas title `Join · @mira vouches`** still claims the vouch the
+  heading no longer does.
+- **`Back to the search` on a profile** waits for Explore's person row
+  (audit K14.11) to be drawn.

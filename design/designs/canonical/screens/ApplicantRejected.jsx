@@ -57,6 +57,9 @@
    carried. Re-ranking somebody's whole feed as a side effect of being turned
    down would be a punishment the ruling is at pains not to impose. The band's
    LINE changes, because the old one promised an approval that is not coming.
+   Once a member takes the reader up through the ask link, the card flips to
+   the landing card and the band takes the landing line, still naming @kel
+   (jakob 2026-10-05).
 
    THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
    applicants included (readme §13, the feed's filter on screen). */

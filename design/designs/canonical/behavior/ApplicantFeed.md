@@ -10,6 +10,8 @@ ALWAYS the verify card stands GIVEN the email is not verified yet
 
 ALWAYS the key card stands GIVEN no key is attached to the application yet
 
+ALWAYS the key card's body reads Your application needs a key on this browser before @mira can approve it. on the web and Your application needs a key in this app before @mira can approve it. in the app
+
 ALWAYS either owed step can be done first, and the other's card stands until it is
 
 ALWAYS the verify card and the key card carry no way to put them away
@@ -26,7 +28,7 @@ WHEN the key is attached -> the key card leaves AND the cards still owed stay
 
 WHEN the last owed step is done -> the waiting card takes the task cards' place
 
-WHEN tap Resend the link -> the verification mail goes out again AND the verify card stays
+WHEN tap Resend the link -> the verification mail goes out again AND the verify card stays AND the snackbar reads Sent — the link is on its way to noor@fieldmail.org. with the address the card prints
 
 WHEN tap Resend the link GIVEN the reader is offline -> the network error answers
 
@@ -37,6 +39,8 @@ WHEN tap Create my key -> the key ceremony opens
 WHEN tap Create my key GIVEN a browser that cannot hold a key -> the ceremony says so before anything is minted
 
 WHEN tap a stance face for the first time as an applicant -> the pad blooms AND the opinion stages with the application once Set
+
+WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits with your application — it arrives with you.
 
 WHEN press-and-hold a stance face GIVEN no opinion is staged yet -> a positive opinion stages with the application
 

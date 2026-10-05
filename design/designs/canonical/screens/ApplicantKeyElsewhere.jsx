@@ -21,9 +21,17 @@
    IT WEARS THE OLIVE (jakob 2026-10-02, the olive split): the application
    cannot move until the reader brings a key, so the card asks for their
    action and stands on the account-notice register (`tone="notice"`), its
-   filled `Restore the key` in `inverse`. */
-export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
-export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser"`;
+   filled `Restore the key` in `inverse`.
+
+   WITHOUT A BACKUP THE BODY SAYS SO (jakob 2026-10-05; the `backup` chip):
+   `Restore the key` is not drawn, and the body takes `KeyElsewhereNoBackup`'s
+   reason with the new-key clause kept, so it never asks for a code that
+   cannot open anything. The body is new and flagged for blessing. */
+export const PROPS = {
+  wording: { editor: "enum", options: ["browser", "app"], default: "browser" },
+  backup: { editor: "enum", options: ["made", "none"], default: "made" },
+};
+export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser", keyBody: this.props.backup === "none" ? "Your application's key was made on another device and has no backup, so it can't be brought here yet. Make a recovery code on that device and restore it here, or make a new key — until you're approved, a new one costs nothing." : "Your application's key was made on another device. Restore it here with your recovery code, or make a new key — until you're approved, a new one costs nothing.", restoreDoor: this.props.backup === "none" ? "none" : "inline-flex"`;
 
 export function Screen() {
   return (
@@ -35,10 +43,10 @@ export function Screen() {
         <TaskCard
           tone="notice"
           title="{{keyTitle}}"
-          body="Your application's key was made on another device. Restore it here with your recovery code, or make a new key — until you're approved, a new one costs nothing."
+          body="{{keyBody}}"
         >
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <Button variant="inverse">Restore the key</Button>
+            <Button variant="inverse" style={{ display: "{{restoreDoor}}" }}>Restore the key</Button>
             <Button variant="outline">Make a new key</Button>
           </div>
         </TaskCard>

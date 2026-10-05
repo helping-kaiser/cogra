@@ -25,3 +25,5 @@ ALWAYS the back arrow reads Back to the profile GIVEN the page was opened from a
 ALWAYS the back arrow reads Back to your profile GIVEN the page was opened from the reader's own profile
 
 ALWAYS the bottom bar rides with no slot lit
+
+WHEN pull down GIVEN the page stands all the way at its top -> the page refreshes AND the platform's own refresh indicator shows

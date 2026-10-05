@@ -26,7 +26,9 @@ WHEN the signing is taken -> the new picture shows everywhere the reader appears
 
 WHEN the signing does not go through GIVEN no answer reached the seal -> the fault line and Retry take the place of Sign the change AND everything above the foot stays as it was
 
-WHEN the signing is refused by the write rule -> the notice You can't sign right now takes the place of Sign the change AND NEVER Retry appears AND NEVER the notice takes the error colour
+WHEN the signing is refused by the write rule -> the notice You can't sign right now takes the place of Sign the change, over Each signing is paid for, and there's only so much to go around at a time. Nothing was signed or spent. AND Not now stands under the notice AND NEVER Retry appears AND NEVER the notice takes the error colour AND NEVER the notice promises a kept draft
+
+WHEN tap the write-rule notice's Not now -> the seal comes back as it stood before the press AND nothing is signed or spent
 
 WHEN Sign the change is pressed GIVEN the signing key is not on this device -> the key-absent notice and Restore the key take the place of Sign the change AND nothing is signed AND NEVER the notice takes the error colour
 

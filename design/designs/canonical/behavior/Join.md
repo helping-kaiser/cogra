@@ -22,6 +22,12 @@ WHEN tap the header's "?" -> About opens with a plain Back on its arrow
 
 WHEN About's back arrow is pressed GIVEN About was opened from the form -> the form comes back with every field as it was left
 
+WHEN Join opens again in the same session GIVEN the reader left it by Already have an account? Sign in or the back arrow -> the Handle and Email fields hold what was typed AND the Password field is empty
+
+WHEN the app is launched cold -> NEVER a field of the form holds what was typed before
+
+WHEN press the header's back arrow on SignIn GIVEN SignIn opened from this form over the signed-in state -> the form comes back as a layer over the signed-in state
+
 ALWAYS the Handle field's hint reads 3–30 characters: a–z, 0–9, _ GIVEN the field carries no error line
 
 ALWAYS the Password field's hint reads At least 12 characters. GIVEN the field carries no error line
@@ -35,6 +41,10 @@ WHEN typing in a field that carries no error line -> NEVER the field turns to it
 WHEN press Create account -> Create account refuses a second press until the registration answers AND NEVER Create account dims
 
 WHEN the registration has not answered 200ms after the press -> Create account reads Creating account… AND NEVER a spinner appears
+
+WHEN the registration has not answered 5s after the press -> Create account still reads Creating account… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the header's arrow, the "?" and Already have an account? Sign in refuse a press, never dimmed, while Create account waits on its answer
 
 WHEN the account is created -> the applicant days begin on ApplicantFeed
 
@@ -50,14 +60,18 @@ WHEN press Create account GIVEN the email does not read as an address -> the Ema
 
 WHEN press Create account GIVEN the password is shorter than 12 characters -> the Password field's line reads A password is at least 12 characters. in place of its hint AND the field takes the error state
 
+WHEN press Create account GIVEN the password is longer than 128 characters -> the Password field's line reads A password is at most 128 characters. in place of its hint AND the field takes the error state
+
 WHEN the registration is refused because the password turned up in a data breach -> the Password field's line reads That password has turned up in a data breach — pick another one. in place of its hint AND the field takes the error state
 
 ALWAYS an errored field's line replaces its hint, and an unerrored field keeps its own
 
-WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
+WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Create account AND Create account stays, the retry
 
 WHEN tap Already have an account? Sign in -> SignIn opens
 
 ALWAYS Already have an account? Sign in stands GIVEN the form opened over the signed-in state
+
+ALWAYS a line the server answered stands until the next press of Create account, and only a field's local format line re-checks as the text changes
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

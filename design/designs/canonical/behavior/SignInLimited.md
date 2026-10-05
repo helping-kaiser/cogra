@@ -8,7 +8,11 @@ ALWAYS the line reads the same whether or not the email has an account
 
 ALWAYS Sign in stays enabled while the line stands
 
-ALWAYS the header's arrow reads Back and is a link to the bare view, never history
+WHEN typing in either field GIVEN the line stands -> the line stands AND NEVER it goes before the next press of Sign in
+
+ALWAYS the header's arrow reads Back and is a link to the bare view, never history GIVEN the sign-in did not open from the join layer over the signed-in state
+
+WHEN press the header's back arrow GIVEN the sign-in opened from the join layer over the signed-in state -> the join layer comes back AND NEVER FeedBare opens
 
 WHEN press the header's back arrow -> FeedBare opens
 
@@ -40,6 +44,12 @@ WHEN the sign-in is taken GIVEN the backoff has passed -> the line goes AND the 
 
 WHEN the sign-in is refused for its email and password GIVEN the backoff has passed -> the line reads That email and password don't match. in the same place
 
-WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
+WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Sign in AND Sign in stays, the retry
+
+ALWAYS a line the server answered stands until the next press of Sign in, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Signing in… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Sign in waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

@@ -30,11 +30,11 @@ WHEN the typed text, read that way, stops being a beginning of the code -> the f
 
 WHEN press I've written it down -> I've written it down refuses a second press until the answer comes AND NEVER I've written it down dims
 
-WHEN press I've written it down GIVEN the code was made by the ceremony -> the key is attached, kept and its sealed backup uploaded, all at this moment AND the reader returns where the ceremony began
+WHEN press I've written it down GIVEN the code was made by the ceremony -> the key is attached, kept and its sealed backup uploaded, all at this moment AND the reader returns where the ceremony began AND the snackbar reads Key made and backed up.
 
 WHEN press I've written it down GIVEN the code was made or replaced from settings -> the new backup uploads AND Settings opens AND the snackbar reads Your key is backed up with the new code.
 
-WHEN press I've written it down GIVEN no answer reaches the device -> the code stays on screen until the backup uploads AND the fault is said in place
+WHEN press I've written it down GIVEN no answer reaches the device -> the code stays on screen until the backup uploads AND the line That didn't send. Try again. stands above I've written it down AND I've written it down stays, the retry
 
 WHEN the tab is closed or the app is killed before the code confirms -> nothing this screen would make exists AND the next open shows what stood before the ceremony exactly as it was
 

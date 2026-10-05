@@ -25,14 +25,21 @@
    how to see it.
 
    NO ESCAPE HATCH: nothing is staged, so the back arrow is the whole way
-   out. */
+   out.
+
+   THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
+   `KeyElsewhere` and `Restore`: the title takes `KeyElsewhere`'s blessed app title, and the line under it says `in this app`. The app renderings are flagged
+   for blessing (copy-voice, *The collected rulings' entry lines*). */
+export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
+export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser", noKey: this.props.wording === "app" ? "There is no key in this app to show." : "There is no key on this browser to show."`;
+
 export function Screen() {
   return (
     <>
       <PageHeader title="Your key" backHref="/settings" backLabel="Back to settings" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16, padding: "8px 24px 32px", overflow: "hidden" }}>
-        <NoticePanel title="Your key isn't on this browser" helpLabel="Your key" corner="large">
-          <NoticeLine>There is no key on this browser to show.</NoticeLine>
+        <NoticePanel title="{{keyTitle}}" helpLabel="Your key" corner="large">
+          <NoticeLine>{"{{noKey}}"}</NoticeLine>
           <Button variant="inverse" style={{ width: "100%" }}>Restore the key</Button>
         </NoticePanel>
 

@@ -30,7 +30,11 @@
    where jakob ruled screenshots stay possible.
 
    THE GATE IN FRONT OF IT on a browser whose seed is sealed is
-   `YourKeyGate`. */
+   `YourKeyGate`.
+
+   THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
+   `KeyElsewhere` and `Restore`: the key lives `only in this browser` or `only in this app`, and is read from either. The app renderings are flagged
+   for blessing (copy-voice, *The collected rulings' entry lines*). */
 
 function SecretBlock({ label, value, copyLabel }) {
   return (
@@ -71,6 +75,9 @@ function SecretBlock({ label, value, copyLabel }) {
   );
 }
 
+export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
+export const VALS = `keyLives: this.props.wording === "app" ? "This key signs everything you publish, and it lives only in this app. Store a copy somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you." : "This key signs everything you publish, and it lives only in this browser. Store a copy somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act as you.", keyRead: this.props.wording === "app" ? "Nothing here is sent anywhere — the key is read from this app and shown." : "Nothing here is sent anywhere — the key is read from this browser and shown."`;
+
 export function Screen() {
   return (
     <>
@@ -85,9 +92,7 @@ export function Screen() {
             color: "var(--text-secondary)",
           }}
         >
-          This key signs everything you publish, and it lives only in this browser. Store a copy
-          somewhere safe and you keep it whatever happens to CoGra. Anyone who has a copy can act
-          as you.
+          {"{{keyLives}}"}
         </p>
 
         <Card ariaLabel="Your actor key">
@@ -113,7 +118,7 @@ export function Screen() {
           />
         </Card>
 
-        <QuietNote>Nothing here is sent anywhere — the key is read from this browser and shown.</QuietNote>
+        <QuietNote>{"{{keyRead}}"}</QuietNote>
       </div>
     </>
   );

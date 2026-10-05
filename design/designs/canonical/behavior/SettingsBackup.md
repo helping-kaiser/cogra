@@ -14,6 +14,10 @@ WHEN press Create a new recovery code in a browser GIVEN the current code checks
 
 WHEN press Create a new recovery code in a browser GIVEN the current code doesn't check out -> the field reads That code doesn't check out. AND NEVER a new code is made AND NEVER the old backup changes
 
+WHEN press Create a new recovery code in a browser GIVEN the current code, read the way every code input reads it, is not 26 characters -> the field reads A recovery code is 26 characters. AND NEVER a new code is made AND NEVER the old backup changes
+
+WHEN typing in Current recovery code GIVEN it carries A recovery code is 26 characters. -> the field re-checks the length as the text changes AND the line goes once the code reads 26 characters
+
 WHEN press Create a new recovery code on Android GIVEN the phone has a screen lock -> the phone's own unlock is asked AND NEVER a new code is made before it answers
 
 WHEN the phone's unlock prompt is cancelled GIVEN Create a new recovery code raised it -> the replace screen stays as it was AND NEVER a new code is made

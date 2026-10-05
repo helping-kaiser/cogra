@@ -269,7 +269,7 @@ const REASONS = {
      Both texts are the decided marks of guidelines/copy-voice.md. */
   author: {
     line: "Removed by its author",
-    detail: "The post's place in the thread, and every response, remain.",
+    detail: "The words and pictures are gone. The post's place in the thread, and every response, remain.",
   },
   /* A WHOLE ACCOUNT, deleted by the person who had it (erasure §2, the
      account-deletion round). The third mark, and it is the same mechanism at a

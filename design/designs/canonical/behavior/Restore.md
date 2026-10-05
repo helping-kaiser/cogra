@@ -30,12 +30,18 @@ WHEN the code, read that way, is 26 characters and does not open the backup -> t
 
 ALWAYS a mistyped character and a wrong backup read the same line, That code doesn't check out.
 
-WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Restore the key AND Restore the key stays, the retry
 
 WHEN the key is restored -> the reader returns where restore began AND the snackbar reads Your key is on this browser now. on the web and Your key is in this app now. in the app
 
 WHEN the key is restored -> the key-absent state that sent the reader is gone AND the settings row that opened restore shows its key-present board AND the feed's key card leaves AND a draft that waited on the key goes on to be signed
 
 WHEN the key is restored GIVEN picks kept pending wait -> KeptPicksReview opens under the same snackbar AND NEVER a kept pick signs on its own
+
+ALWAYS a line the server answered stands until the next press of Restore the key, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Restore the key -> Restore the key still reads Restoring the key… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the header's arrow refuses a press, never dimmed, while Restore the key waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

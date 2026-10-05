@@ -21,7 +21,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 16px 0", overflow: "hidden" }}>
         <Card style={{ flex: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

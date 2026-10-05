@@ -16,7 +16,7 @@ WHEN tap Save GIVEN the save does not go through -> the save reverts AND the tar
 
 WHEN tap Share this profile -> the platform's own share sheet opens
 
-WHEN tap Hide this account -> the sheet closes AND the reader stays on the page AND the account's posts leave the reader's feed AND a snackbar offers Undo AND NEVER a confirm step appears
+WHEN tap Hide this account -> the sheet closes AND the reader stays on the page AND the account's posts leave the reader's feed AND the snackbar reads This account is hidden — its posts stay out of your feed. with Undo AND NEVER a confirm step appears
 
 WHEN tap Hide this account GIVEN the hide does not go through -> the hide reverts AND the target's row says That didn't go through. with Retry
 

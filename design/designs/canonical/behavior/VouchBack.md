@@ -14,6 +14,8 @@ ALWAYS the band carries no Vouch back and asks for nothing
 
 WHEN the member's first opinion is signed, toward anyone -> the borrowed view ends AND the feed hands over to the member's own view
 
+WHEN the member's first opinion, toward anyone, expires instead of landing GIVEN no other opinion of theirs has landed -> the borrowed view returns AND the ordinary did-not-land notice answers alongside it
+
 WHEN tap Vouch back -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
 
 WHEN tap Got it -> the vouch card is put away for good AND NEVER a snackbar appears AND NEVER a reminder appears AND NEVER anything stands in its place

@@ -25,3 +25,5 @@ WHEN tap New post on the bar GIVEN a post is already staged -> the snackbar read
 WHEN tap a stance face GIVEN an opinion is already staged -> the snackbar reads Your opinion waits with your application — it arrives with you. AND NEVER the pad opens
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
+
+WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits with your application — it arrives with you.

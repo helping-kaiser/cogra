@@ -22,13 +22,17 @@ WHEN release a drag on the field -> NEVER the pick is signed
 
 WHEN tap Set GIVEN the signing has not answered 200ms after the press -> Set reads Setting… AND the pad stays open AND NEVER a spinner appears
 
-WHEN tap Set GIVEN the signing is taken -> the vouch lands AND Invites opens with the person now this member's to have vouched in
+WHEN tap Set GIVEN the signing is taken -> the vouch lands AND Invites opens with the person now this member's to have vouched in AND the snackbar reads Signed, still settling. Current opinion with the pick's face
+
+WHEN tap Set GIVEN the link turned unusable since the ask opened -> VouchAskUnusable opens with the case for the link's new state AND NEVER anything is signed
+
+WHEN tap Set GIVEN the key is on another device -> the notice stands as PadKeyAbsent draws it AND the vouch is kept as a kept approval AND it waits on Invites as its own card AND NEVER it joins the kept picks
+
+WHEN the key is back GIVEN a vouch was kept as a kept approval -> it signs only through the approval pad opened from its card on Invites AND NEVER with the kept picks' Sign them
 
 WHEN tap Set GIVEN the signing does not go through -> the pad stays open at the pick, the fault above the commit row and Retry in Set's place, as PadFailed draws it
 
 WHEN tap Set GIVEN the write rule refuses -> nothing is staged or spent AND the notice stands where the landing line and Set were, with Not now, as PadWriteRule draws it
-
-WHEN tap Set GIVEN the key is on another device -> the vouch waits as pending, as PadKeyAbsent draws it
 
 WHEN tap Cancel -> the pad closes onto the ask AND nothing is signed AND the ask is still there to answer
 
