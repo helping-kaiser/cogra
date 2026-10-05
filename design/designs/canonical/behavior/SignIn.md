@@ -1,8 +1,14 @@
 # SignIn · `spec:design:behavior-sign-in`
 
-ALWAYS the header's arrow reads Back and is a link to the bare view, never history
+ALWAYS the header's arrow reads Back and is a link to the bare view, never history GIVEN SignIn did not open from the join layer over the signed-in state
 
 WHEN press the header's back arrow -> FeedBare opens
+
+WHEN tap Already have an account? Sign in on Join GIVEN Join opened over the signed-in state -> SignIn opens over the join layer
+
+WHEN press the header's back arrow GIVEN SignIn opened from the join layer over the signed-in state -> the join layer comes back AND NEVER FeedBare opens
+
+WHEN the sign-in is taken GIVEN SignIn opened from the join layer over the signed-in state -> this device switches to the account signed in, exactly as Create account switches it AND the other account's sessions stay valid wherever they are AND the app opens where app-open lands for the account signed in
 
 WHEN press the password's reveal control GIVEN the password is hidden -> the password shows AND the control is named Hide password
 
@@ -63,3 +69,7 @@ WHEN the sign-in is refused by the login backoff -> the line Too many tries in a
 WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Sign in AND Sign in stays, the retry
 
 ALWAYS a line the server answered stands until the next press of Sign in, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Signing in… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Sign in waits on its answer

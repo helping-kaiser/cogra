@@ -13,3 +13,7 @@ WHEN press Back to CoGra GIVEN the application is still running -> ApplicantFeed
 WHEN press Back to CoGra GIVEN the account is already a member -> Feed opens
 
 WHEN press Back to CoGra GIVEN this browser holds no CoGra session -> SignIn opens AND NEVER the button's words change
+
+WHEN the link is opened GIVEN this browser is signed in to a different account -> the link verifies the account it belongs to AND NEVER the browser switches accounts
+
+WHEN press Back to CoGra GIVEN this browser is signed in to a different account -> CoGra opens where app-open lands for the signed-in account

@@ -41,3 +41,7 @@ WHEN press Create account GIVEN no answer reaches the device -> the fields keep 
 WHEN tap Already have an account? Sign in -> SignIn opens
 
 ALWAYS a line the server answered stands until the next press of Create account, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Create account -> Create account still reads Creating account… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the header's arrow and Already have an account? Sign in refuse a press, never dimmed, while Create account waits on its answer

@@ -41,3 +41,7 @@ WHEN the sign-in is refused by the login backoff -> the line reads Too many trie
 WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Sign in AND Sign in stays, the retry
 
 ALWAYS a line the server answered stands until the next press of Sign in, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Signing in… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Sign in waits on its answer

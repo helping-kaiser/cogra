@@ -25,3 +25,7 @@ WHEN tap Already have an account? Sign in -> SignIn opens
 WHEN tap Just looking? Browse the feed GIVEN an inviter's link was seen -> the feed opens in that inviter's borrowed view
 
 WHEN tap Just looking? Browse the feed GIVEN no usable link was seen -> FeedBare opens
+
+WHEN no answer has come 5s after the press of Continue -> Continue still reads Continuing… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Continue waits on its answer

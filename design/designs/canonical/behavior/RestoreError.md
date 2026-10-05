@@ -31,3 +31,7 @@ WHEN the key is restored -> the key-absent state that sent the reader is gone AN
 WHEN the key is restored GIVEN picks kept pending wait -> KeptPicksReview opens under the same snackbar AND NEVER a kept pick signs on its own
 
 ALWAYS a line the server answered stands until the next press of Restore the key, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Restore the key -> Restore the key still reads Restoring the key… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the header's arrow refuses a press, never dimmed, while Restore the key waits on its answer

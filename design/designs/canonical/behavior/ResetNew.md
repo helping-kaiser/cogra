@@ -27,3 +27,5 @@ WHEN the new password is refused as one that turned up in a data breach -> the f
 WHEN press Set the new password GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Set the new password AND Set the new password stays, the retry
 
 ALWAYS a line the server answered stands until the next press of Set the new password, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Set the new password -> Set the new password still reads Setting the new password… AND NEVER a slow line or a progress indicator appears

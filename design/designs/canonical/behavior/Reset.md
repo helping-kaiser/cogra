@@ -17,3 +17,7 @@ ALWAYS the quiet note under the status line says the reset restores the sign-in 
 WHEN the reset mail's link is opened -> ResetNew opens
 
 WHEN press Send reset link GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Send reset link AND Send reset link stays, the retry
+
+WHEN no answer has come 5s after the press of Send reset link -> Send reset link still reads Sending reset link… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Send reset link waits on its answer

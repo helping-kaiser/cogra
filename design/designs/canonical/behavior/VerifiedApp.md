@@ -11,3 +11,11 @@ ALWAYS the mark, the heading and the line stand centred, and Go to the feed is a
 WHEN press Go to the feed GIVEN the application is still running -> ApplicantFeed opens with the task cards still left
 
 WHEN press Go to the feed GIVEN the account is already a member -> Feed opens
+
+ALWAYS the way on reads Sign in GIVEN the app holds no session
+
+WHEN press Sign in GIVEN the app holds no session -> SignIn opens AND the verification has landed anyway
+
+WHEN the link is opened GIVEN the app is signed in to a different account -> the link verifies the account it belongs to AND NEVER the app switches accounts
+
+WHEN press Go to the feed GIVEN the app is signed in to a different account -> the app opens where app-open lands for the signed-in account

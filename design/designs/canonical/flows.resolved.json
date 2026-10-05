@@ -369,7 +369,7 @@
         "start · ApplicantFeed · 3 «Create my key» → KeyCeremony",
         "KeyCeremony · 2 «Create my recovery code» → KeyConfirm",
         "KeyConfirm · 2 «Show my code» → RecoveryCode",
-        "end · RecoveryCode · 3 «I've written it down» → back — code confirmed — returns where the ceremony began"
+        "end · RecoveryCode · 3 «I've written it down» → back — code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so"
       ],
       "boards": [
         "ApplicantFeed",
@@ -448,7 +448,7 @@
       "steps": [
         "start · VouchAsk",
         "VouchAsk · 3 «the stance affordance» → VouchAskPad — the pad blooms over the ask — it opens at the standing low default, never at a value the link carried",
-        "end · VouchAskPad · 4 «Set» → Invites — signed — the vouch lands and the person is now this member's to have vouched in"
+        "end · VouchAskPad · 4 «Set» → Invites — signed — the vouch lands and the person is now this member's to have vouched in; the standard signed-opinion snackbar answers"
       ],
       "boards": [
         "VouchAsk",
@@ -1342,11 +1342,10 @@
         "ProfileComments",
         "ProfileDeleted",
         "ProfileOther",
-        "ProfileOtherHeld",
         "ProfilePosts"
       ],
       "steps": [
-        "start · «the stance anchor» — to VouchBackPad on 5 boards → VouchBackPad",
+        "start · «the stance anchor» — to VouchBackPad on 4 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -1354,7 +1353,6 @@
         "ProfileComments",
         "ProfileDeleted",
         "ProfileOther",
-        "ProfileOtherHeld",
         "ProfilePosts"
       ]
     },
@@ -2849,8 +2847,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "see-who-stands-with-someone",
-        "take-a-stance-on-a-person"
+        "see-who-stands-with-someone"
       ],
       "endpoint": []
     },

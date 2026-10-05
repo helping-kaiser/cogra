@@ -29,3 +29,7 @@ ALWAYS the header's arrow reads Back to settings
 WHEN press the header's back arrow -> Settings opens AND nothing is shown
 
 ALWAYS a line the server answered stands until the next press of Show my key, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Show my key -> Show my key still reads Showing my key… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Show my key waits on its answer
