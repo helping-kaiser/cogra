@@ -28,8 +28,8 @@
    out.
 
    THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
-   `KeyElsewhere` and `Restore`: the title takes `KeyElsewhere`'s blessed app title, and the line under it says `in this app`. The app renderings are flagged
-   for blessing (copy-voice, *The collected rulings' entry lines*). */
+   `KeyElsewhere` and `Restore`: the title takes `KeyElsewhere`'s blessed app title, and the line under it says `in this app`. The app renderings are blessed
+   (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*). */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `keyTitle: this.props.wording === "app" ? "Your key isn't in this app" : "Your key isn't on this browser", noKey: this.props.wording === "app" ? "There is no key in this app to show." : "There is no key on this browser to show."`;
 

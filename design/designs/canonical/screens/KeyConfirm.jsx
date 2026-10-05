@@ -10,8 +10,8 @@
    Back, is Cancel — the ceremony again, nothing made.
 
    THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
-   `KeyElsewhere` and `Restore`: the pledge says `on this browser` or `in this app`. The app renderings are flagged
-   for blessing (copy-voice, *The collected rulings' entry lines*). */
+   `KeyElsewhere` and `Restore`: the pledge says `on this browser` or `in this app`. The app renderings are blessed
+   (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*). */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = KEY_PLEDGE_VALS;
 

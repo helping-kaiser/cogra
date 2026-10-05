@@ -10,7 +10,7 @@
    The send never says whether the address has an account, as `Reset`'s
    never does: a status line under the pair answers every press in
    `Reset`'s construction, the same for an account already verified (jakob
-   2026-10-05; its words flagged in copy-voice).
+   2026-10-05; its words blessed (jakob 2026-10-05) in copy-voice).
 
    THE REASSURANCE IS LIMITED TO WHAT IS TRUE (jakob 2026-10-01, audit
    K3.3). An account left unverified for seven days is reaped, so the paragraph

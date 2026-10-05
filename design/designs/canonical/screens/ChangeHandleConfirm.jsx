@@ -17,7 +17,7 @@
    button on the left. No `error` colour: renaming yourself is not a fault
    (§11). The scrim, Escape and Back take `Keep it`.
 
-   WORDING FLAGGED for blessing (copy-voice, *The settings subpages*).
+   WORDING BLESSED (jakob 2026-10-05; copy-voice, *The settings subpages*).
 
    THE PAGE BENEATH is `ChangeHandleBody` with the new handle typed, inert
    under the scrim and wired on `ChangeHandle`. */

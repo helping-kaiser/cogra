@@ -102,8 +102,10 @@ import {
 export const LONG_PRESS_MS = 500;
 
 /* THE HOLD'S RING: M3's determinate circular indicator — a 40px circle, a 4px
-   active stroke in `primary`, no track — drawn around the face. `progress` is
-   0–1; `live` lets it fill itself over the hold. */
+   active stroke in `primary`, no track — drawn around the face, from twelve
+   o'clock at the press; under reduced motion it still fills, because it is a
+   reading of the time left (blessed as drawn, jakob 2026-10-05). `progress`
+   is 0–1; `live` lets it fill itself over the hold. */
 const HOLD_RING_PX = 40;
 const HOLD_RING_STROKE_PX = 4;
 function HoldRing({ progress = 0, live = false }) {
@@ -286,7 +288,8 @@ export function StanceControl({
      exactly as before, and the live ring is the press's own. */
   holdProgress,
   /* THE KNOB UNDER THE FINGER, for a board: the pad's pressed layer drawn
-     around the knob (`StancePad`'s `held`). Additive — absent, the pad renders
+     around the knob (`StancePad`'s `held`) — a 40px disc in the knob's
+     orange at 10 % (blessed as drawn, jakob 2026-10-05). Additive — absent, the pad renders
      exactly as before, and the live layer is the drag's own. */
   knobHeld = false,
   node,

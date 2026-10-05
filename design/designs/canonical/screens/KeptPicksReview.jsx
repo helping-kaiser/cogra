@@ -70,10 +70,11 @@
 
    A KEPT APPROVAL IS NAMED HERE, NEVER SIGNED HERE (jakob 2026-10-05, the B
    round's 7, amended). When an approval was kept with the picks, one quiet
-   line under the intro says it waits on Invites and signs on its own there,
-   with the door to Invites (`KeptApprovalLine`) — so a reader signing the
-   picks never takes the approval for done. The `approval` chip draws it.
-   Wording flagged for blessing. */
+   line under the intro sends the reader to it — `An approval waits in your
+   invites — go there to sign it.` — with the door to Invites
+   (`KeptApprovalLine`), so a reader signing the picks never takes the
+   approval for done. The `approval` chip draws it. The wording is jakob's
+   own, blessed (jakob 2026-10-05). */
 export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
 export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
 

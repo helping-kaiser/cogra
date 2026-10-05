@@ -34,7 +34,7 @@ WHEN the signing is refused for one staged act GIVEN the act's target landed -> 
 
 WHEN press Not now on the bug notice -> the kept picks' review stands again with every pick still in it AND NEVER a dialog asks
 
-ALWAYS one quiet line under the acts card reads An approval waits on Invites — it signs on its own there. with Open Invites at its end GIVEN an approval was kept with the picks
+ALWAYS one quiet line under the acts card reads An approval waits in your invites — go there to sign it. with Open Invites at its end GIVEN an approval was kept with the picks
 
 ALWAYS no line about an approval stands GIVEN no approval was kept
 

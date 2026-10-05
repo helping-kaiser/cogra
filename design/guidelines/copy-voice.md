@@ -341,7 +341,7 @@ noun):
 - **How vouching works** (the approval pad and the ask link's pad, in
   place): A link lets someone make an account. Your vouch — the opinion
   you sign when you approve them — is what brings them in. / Nothing is
-  signed until Set. *(New 2026-10-05, flagged for blessing — jakob's D4:
+  signed until Set. *(New 2026-10-05, blessed (jakob 2026-10-05) — jakob's D4:
   the Invites empty state's two blessed sentences on the mechanic, then
   the pads' own `Nothing is signed until Set.`)*
 
@@ -624,7 +624,7 @@ their examples, so blessed: a count keeps its number (`8 opinions on
 this post`, `Cited by 4`), an unsave names its thing (`Unsave The long
 way home`), a "?" is named by its dialog (`Tagging`, `Citing`), and a
 search field by its use (`Search`, `Name a tag`, `Cite something`).
-Spelled by the round and **flagged for blessing**:
+Spelled by the round and **blessed (jakob 2026-10-05)**:
 
 - `Posts · newest, what your feed shows` — the filter pill's name: its
   reading, then its purpose lowercased after a comma, the reading
@@ -1190,20 +1190,20 @@ round*; every one blessed (jakob 2026-10-02).
   it lives only in this app.` and `Nothing here is sent anywhere — the
   key is read from this app and shown.`; `YourKeyAbsent`'s `There is no
   key in this app to show.` under `KeyElsewhere`'s blessed `Your key
-  isn't in this app`. *New 2026-10-05, flagged for blessing.*
+  isn't in this app`. *New 2026-10-05, blessed (jakob 2026-10-05).*
 - `VerifyExpired`'s resend answers in `Reset`'s construction, never saying
   whether the account was still waiting: signed in, `If your account is
   still waiting on its email, a fresh link is on its way to
   noor@fieldmail.org.`; signed out, to the typed address, `If that address
   has an account still waiting on its email, a fresh link is on its way.`
-  *New 2026-10-05, flagged for blessing.*
+  *New 2026-10-05, blessed (jakob 2026-10-05).*
 - A spent or expired reset link (`ResetExpired`, `RESET_TOKEN_INVALID`)
   takes `VerifyExpired`'s blessed heading, `This link doesn't work
   anymore`, over `It may have expired or already been used. A reset link
   works once and expires after 15 minutes — ask for a fresh one.`, with
   `Reset your password` (`Reset`'s own heading, naming where it goes)
   and `Sign in` (`VerifyExpired`'s signed-out way on). *The paragraph is
-  new 2026-10-05, flagged for blessing.*
+  new 2026-10-05, blessed (jakob 2026-10-05).*
 - The applicant key card's app wording, behind the `wording` chip
   (`ApplicantFeed`): `Your application needs a key in this app before
   @mira can approve it.` *Blessed (jakob 2026-10-05).*
@@ -1219,7 +1219,7 @@ round*; every one blessed (jakob 2026-10-02).
   another device and has no backup, so it can't be brought here yet. Make
   a recovery code on that device and restore it here, or make a new key —
   until you're approved, a new one costs nothing.` *New 2026-10-05,
-  flagged for blessing.*
+  blessed (jakob 2026-10-05).*
 - `A password is at most 128 characters.` — `Join`'s and `ResetNew`'s
   password field past auth.md's cap (*Faults by code*,
   `WEAK_PASSWORD`). *Blessed (jakob 2026-10-05).*
@@ -1444,8 +1444,8 @@ The press asks first (jakob 2026-10-05, §11's think-twice list;
 `ChangeHandleConfirm`): `Change your handle to @solferreira?` over
 `Links to @sol stop working the moment it changes, and anyone can claim
 @sol afterwards.`, with `Keep it` filled and `Change it` the quiet answer
-(*new 2026-10-05, flagged for blessing* — the title, the body and `Change
-it`; `Keep it` is the think-twice dialogs' own). A change that lands
+(*new 2026-10-05, blessed (jakob 2026-10-05)* — the title, the body and
+`Change it`; `Keep it` is the think-twice dialogs' own). A change that lands
 answers `Your handle is now @solferreira.` (*new 2026-10-05, blessed
 (jakob 2026-10-05)*).
 
@@ -1517,7 +1517,7 @@ once you're signed in.` · `Sign in`. Opened under a different account,
 the link's side does not apply and the landing says so: `This link isn't
 for this account` · `It confirms a new address for another account, so
 nothing changed here. Open it signed in as that account to finish the
-change.` · `Back to settings` (*new 2026-10-05, flagged for blessing*).
+change.` · `Back to settings` (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 
 ## The key's lifecycle
 
@@ -1622,9 +1622,10 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
   spent — your picks are still kept.`, and the way out reads `Not now`.
 - A kept approval beside the picks (jakob 2026-10-05, the B round's 7,
   amended): the review and its seal each carry one quiet line, `An
-  approval waits on Invites — it signs on its own there.`, ending in the
-  door `Open Invites` (*new 2026-10-05, flagged for blessing*), so
-  signing the picks never reads as the approval done too.
+  approval waits in your invites — go there to sign it.`, ending in the
+  door `Open Invites` (*jakob's own words, blessed (jakob 2026-10-05)*),
+  so signing the picks never reads as the approval done too — the line
+  is a call to act, because nothing signs the approval but the reader.
 
 The kept picks drawn (jakob 2026-10-02, the fix-fix round; *blessed
 2026-10-02*) reuse those words and add none: the seal's acts card reads a
@@ -2029,16 +2030,16 @@ trigger `Everything` at rest — search's word for nothing narrowed — and
 the trigger's purpose and the sheet's title are `What your history
 shows`, the feed's and search's construction. The sheet's kind hint is
 search's own, `Combine as many as you like. All, until you narrow it.`
-(*new 2026-10-05, flagged for blessing*: `Search your history`, `What
-your history shows`.)
+(*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search your history`,
+`What your history shows`.)
 
 **Two empty states, and each says why the list is empty.**
 `Nothing saved yet. A post, a comment or a person can be saved from its
 own menu, and it waits here.` names the gesture, because no card shows
 a saving affordance at rest and a reader who has never opened a ⋮ has
 no other way to find it. `Nothing here yet. Everything you read shows
-up here on its own, newest first.` (*new 2026-10-05, flagged for
-blessing*) says the opposite thing — that this one fills without being
+up here on its own, newest first.` (*new 2026-10-05, blessed (jakob
+2026-10-05)*) says the opposite thing — that this one fills without being
 asked — and names no kind, because the list holds every kind.
 
 **The settings group is `People`,** its row `Hidden accounts` with a
@@ -2672,7 +2673,7 @@ on screen it is a link.
 **The approval pad's two lines state what `Set` does, every time.**
 `Vouching is the act. Set signs your opinion on @rafa and brings them
 in.` — the drawn line, which copy-voice follows (jakob 2026-10-05, the
-collected brief's D3; *flagged for blessing*) — and `It is one signed,
+collected brief's D3; *blessed (jakob 2026-10-05)*) — and `It is one signed,
 priced act — and it is theirs to answer: their opinion back completes
 the pair.` They are not `VouchBackPad`'s one-time coaching: approving is
 rare and priced, and §3's honesty rule wants anything priced to say so

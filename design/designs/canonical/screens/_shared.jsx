@@ -1338,8 +1338,10 @@ const KEPT_PICKS = [
    on Invites — so when one also waits, the review and its seal each carry one
    quiet line saying so, with the door to Invites at its end, the
    newer-version line's construction (`WhatsNewBody`). Signing the picks
-   never implies the approval happened.
-   `shown` is the boards' `approval` chip. Wording flagged for blessing. */
+   never implies the approval happened, and the line is a call to act — the
+   approval waits for the reader, nothing signs it for them.
+   `shown` is the boards' `approval` chip. The wording is jakob's own,
+   blessed (jakob 2026-10-05). */
 function KeptApprovalLine({ shown }) {
   return (
     <p
@@ -1352,7 +1354,7 @@ function KeptApprovalLine({ shown }) {
         color: "var(--text-secondary)",
       }}
     >
-      An approval waits on Invites — it signs on its own there.{" "}
+      An approval waits in your invites — go there to sign it.{" "}
       <InlineAction size="sm" onClick={() => {}}>
         Open Invites
       </InlineAction>
@@ -4361,7 +4363,8 @@ function ApprovePadNote({ handle }) {
    D4): the vouching pads' "?" replaces the pad's body with this, never a
    dialog. Its first paragraph is the Invites empty state's two blessed
    sentences on the mechanic, its second the pads' own `Nothing is signed
-   until Set.` (copy-voice, *The "?" dialogs*; flagged as a text). */
+   until Set.` (copy-voice, *The "?" dialogs*; blessed as a text, jakob
+   2026-10-05). */
 const HOW_VOUCHING_WORKS_HELP = [
   "A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.",
   "Nothing is signed until Set.",
