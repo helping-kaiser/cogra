@@ -67,7 +67,15 @@ import { formatStancePair, formatStanceWords, nearestAnchor, SR_ONLY } from "../
    row over a removed post reads. `consequence` is a pick that would net its
    bundle to nothing: the row says so inline, in the family's own landing
    words, the way `Remove citation` says its cost where the control is — Sign
-   is the confirmation, and no dialog follows. */
+   is the confirmation, and no dialog follows.
+
+   A STANDING CITATION WEARS THE SAME FACE (jakob 2026-10-05, the 134
+   residue's 3a): on an edit, a citation whose target was removed keeps its
+   row, its pair and both its controls, with the removal mark in the name's
+   place. The controls name the row by its mark too, never by the removed
+   name: the × `Remove this citation: Post, Removed by its author` (a kept
+   pick's says `pick`), and the row `Post, Removed by its author — set how it
+   relates` (both new, flagged for blessing). */
 function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? nearestAnchor(pair) : null;
@@ -127,6 +135,8 @@ function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }
 
 export function StagedReference({ kind = "post", name, sub, src, pair, stance = false, removed, consequence, onRemove, onEdit, node, nodeKey }) {
   const body = <Body kind={kind} name={name} sub={sub} src={src} pair={pair} stance={stance} removed={removed} consequence={consequence} node={node} />;
+  // A removed target is named by its mark, never by the name it no longer shows.
+  const markName = removed ? `${sub ? `${sub}, ` : ""}${removed}` : name;
   return (
     <div
       style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 48, padding: "8px 12px", borderRadius: "var(--radius-small)", background: "var(--surface-container-highest)", boxSizing: "border-box" }}
@@ -140,7 +150,7 @@ export function StagedReference({ kind = "post", name, sub, src, pair, stance = 
       {onEdit ? (
         <button
           type="button"
-          aria-label={`${name} — set how it relates`}
+          aria-label={`${markName} — set how it relates`}
           onClick={onEdit}
           className={BUTTON_CLASS}
           style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8, border: 0, background: "none", padding: 0, borderRadius: "var(--radius-small)", color: "inherit", font: "inherit", letterSpacing: "inherit", textAlign: "left", cursor: "pointer" }}
@@ -152,7 +162,7 @@ export function StagedReference({ kind = "post", name, sub, src, pair, stance = 
       )}
       <button
         type="button"
-        aria-label={removed ? `Remove this pick: ${sub ? `${sub}, ` : ""}${removed}` : `Remove ${name}`}
+        aria-label={removed ? `Remove this ${stance ? "pick" : "citation"}: ${markName}` : `Remove ${name}`}
         onClick={onRemove}
         className="cg-state cg-focus"
         style={{ flex: "none", display: "grid", placeItems: "center", height: 32, width: 32, border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}

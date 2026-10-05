@@ -440,6 +440,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"Sunday at the tide market — @mira — set how it relates\"", tag: "button" },
     { n: 16, find: 'aria-label="Remove Sunday at the tide market — @mira"', tag: "button" },
+    // The `target` chip's removed-target row: the same row, named by its mark.
+    { n: 15, find: 'aria-label="Post, Removed by its author — set how it relates"', tag: "button" },
+    { n: 16, find: 'aria-label="Remove this citation: Post, Removed by its author"', tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },
   ],
@@ -961,6 +964,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
     { n: 11, find: "signing 2 things", tag: "button" },
+    // The `upload` chip's footer, counting the new cover's record.
+    { n: 11, find: "signing 3 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
@@ -972,11 +977,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'aria-label="Remove this video"', tag: "button" },
     { n: 5, find: ">Describe the video</button>", tag: "button" },
     { n: 6, find: ">Add a cover</button>", tag: "button" },
+    // The `upload` chip's chosen-cover half: the same picker, through the same crop.
+    { n: 6, find: ">Change the cover</button>", tag: "button" },
     { n: 7, find: 'data-field="Title"', tag: "div" },
     { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 10, find: "+ Add a tag", tag: "button" },
     { n: 11, find: "signing 3 things", tag: "button" },
+    // The `upload` chip's footer, counting the new cover's record.
+    { n: 11, find: "signing 4 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
   ],
@@ -1860,6 +1869,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
+    // The `target` chip's removed-target row: the same row, named by its mark.
+    { n: 15, find: 'aria-label="Post, Removed by its author — set how it relates"', tag: "button" },
+    { n: 9, find: 'aria-label="Remove this citation: Post, Removed by its author"', tag: "button" },
     { n: 16, find: "+ Add pictures · 2 of 10", tag: "button" },
     { n: 17, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
     { n: 18, find: 'aria-label="Undo withdrawing Tide tables and the third headland — @juno"', tag: "button" },

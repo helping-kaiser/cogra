@@ -4312,62 +4312,91 @@ come back together:
 - **The beyond-this-app face.** How the reading surfaces show a target
   that lives outside CoGra.
 
-### 134 · What the comment edit's withdrawals left for rulings · *design + contract* · **filed 2026-10-02**
+### 134 · What the comment edit's withdrawals left for rulings · *design + contract* · **filed 2026-10-02** · **ruled 2026-10-05**
 
 The comment edit's round (readme §13, *The comment edit's withdrawals*)
 drew backlog 126 and left these for jakob's eye:
 
-- **The post's noun on the comment's sheets.** `TagPad` and
-  `RefPairEdit` are masters at both scales, and both say `Signed with
-  the post, as its own action.` Opened from `CommentEdit`, the line
-  names the wrong thing. Whether it reads `Signed with the comment, as
-  its own action.` there, or one wording serves both scales, is
-  unruled.
-- **The comment's standing citation.** The drawing needed a second
-  citation beside the withdrawn one. It cites `Sunday at the tide market
-  — @mira`, a post the corpus already holds (`Saved`, `History`). That
-  is a drawing-level choice, open to a different target.
-- **What neither edit draws.** The removed-mark row and the severing
-  line live on `KeptPicksReview`, and the gated Sign lives on the seals.
-  Neither edit draws them, so the mirror carried none. Two questions are
-  open at both scales: does a standing citation whose target was removed
-  wear the removed-mark face, and does an edit that took new pictures
-  gate its Sign on their upload?
+- ~~**The post's noun on the comment's sheets.**~~ — closed 2026-10-05
+  (jakob, as recommended; readme §13, *The 134 and 135 residue*): the
+  noun follows the opener — opened from the comment edit, `TagPad` and
+  `RefPairEdit` read `Signed with the comment, as its own action.`
+  (their `opener` chip).
+- ~~**The comment's standing citation.**~~ — closed 2026-10-05 (jakob:
+  "fine"): it stays `Sunday at the tide market — @mira`, no change.
+- ~~**What neither edit draws.**~~ — closed 2026-10-05 (jakob, both as
+  recommended; readme §13, *The 134 and 135 residue*): a standing
+  citation whose target was removed wears `KeptPicksReview`'s
+  removed-mark face at both scales, and an edit that took new pictures
+  gates `Sign the edit` on their upload in the seal's grammar (the edit
+  boards' `target` and `upload` chips).
 - **Contract seam** (for the relay): the comment edit stages tag and
   citation withdrawals in its batch, a tag's at one record and a
   citation's at `ReferenceClaim.withdrawalCost`. Its standing citations
   take the one additive record `RefPairEdit` stages. api-spec has to
   serve both for a comment's citations as it does for a post's.
 
-### 135 · What the applicant remainder left for rulings · *design + contract* · **filed 2026-10-02**
+### 135 · What the applicant remainder left for rulings · *design + contract* · **filed 2026-10-02** · **ruled 2026-10-05**
 
 The applicant remainder (readme §13) executed jakob's six rulings and
 left these for his eye:
 
-- **Strings flagged for blessing.** The vouch pad's "?" first paragraph,
-  `Vouching back signs your opinion of the person who vouched you in,
-  and your feed grows from it.` (the ruling's no-order claim carried
-  into the dialog), and the applicant deletion's commitment, `Delete my
-  account`.
-- **The post's second tap on the turned-down shell.** The menus' `Cite
-  in a new post` and `Mention in a new post` cases name only the waiting
-  shell's `Your post waits with your application — it arrives with you.`,
-  and `ApplicantRejected`'s own `New post` edge says only that the
-  snackbar answers; the seal exit's `Your post waits — it arrives when
-  someone vouches you in.` is the line the turned-down shell would answer
-  with. That edge's first-post case also says "a fresh application finds
-  it", where the no-expiry correction's way in is a vouch.
-- **The settings footnote for an applicant.** `Nothing is deleted here.
-  The next screen says what goes and what stays, and the deletion is
-  confirmed by a link we email you.` is the member's; an applicant's
-  deletion is confirmed in the app and nothing is mailed.
-- **Where an applicant's deletion lands.** Drawn on the bare view
-  (`FeedBare`, app open signed out with no link), read as the entry
-  board, and silent there; whether it says the account is gone is
-  unruled. The settings row's edge carries no applicant case (a second
-  `DeleteAccount` outcome makes the deletion flow's start ambiguous), so
-  the case lives on `DeleteAccount`'s board, edge and sidecar.
+- ~~**Strings flagged for blessing.**~~ — closed 2026-10-05 (jakob:
+  "correct"): the vouch pad's "?" first paragraph and `Delete my
+  account` are blessed.
+- ~~**The post's second tap on the turned-down shell.**~~ — closed
+  2026-10-05 (jakob, as recommended; readme §13, *The 134 and 135
+  residue*): the menus' `Cite in a new post` and `Mention in a new post`
+  cases and `ApplicantRejected`'s `New post` edge answer `Your post waits
+  — it arrives when someone vouches you in.`, and the first post waits
+  until someone vouches the reader in.
+- ~~**The settings footnote for an applicant.**~~ — closed 2026-10-05
+  (jakob: "yep"): `Nothing is deleted here. The next screen says what
+  goes and what stays.` (`Settings`' reader chip).
+- ~~**Where an applicant's deletion lands.**~~ — closed 2026-10-05
+  (jakob: "yes"): the bare view answers on arrival with the snackbar
+  `Your account is deleted.` (`DeleteAccount`'s via-4 case and sidecar).
 - **The dismissal memory in the roadmap.** roadmap.md's slice-1 line
   keeps a device-local answered-bit as the dismissal memory; the
   dismissal is account state (auth.md), so the line follows when the seam
   (048) lands it.
+
+### 136 · What the 134 and 135 residue left for rulings · *design + contract* · **filed 2026-10-05**
+
+The residue round (readme §13, *The 134 and 135 residue*) executed
+jakob's seven rulings and left these for his eye:
+
+- **Strings flagged for blessing.** The gate's cover noun, `Uploading 0
+  of 1 — signing waits for the cover.` (an edit's new cover is one
+  picture, and the gate names its content); and the removed-target
+  citation's two spoken names, `Remove this citation: Post, Removed by
+  its author` and `Post, Removed by its author — set how it relates` (a
+  kept pick's × says `pick`, and the removed name is never spoken).
+- **Where an edit's slow line stands.** The seals put `Still signing —
+  the network is slow right now.` under the acts card's total; an edit
+  has only `ActsFooter`, which has no subline. The sidecars say the line
+  counts from the press but not where it stands, and an ordinary edit's
+  signing past 5s carries no slow line at all.
+- **A failed upload on the edit's own media row.** The drawing mirrors
+  the seals: the gate line takes its fault reading with `Retry` and
+  `Sign the edit` is disabled. An edit is also the stage the media sits
+  on, so whether the failed tile wears its badge with `UploadErrorLine`
+  (`Retry · Remove it`) there too is unruled.
+- **The removed-target citation's sheet.** The row keeps its controls
+  (the lane's reading of "wears the face": nothing else changes), so it
+  still opens `RefPairEdit`, whose title and `Set exact values for …`
+  would name the target. What they read for a removed target is
+  unruled.
+- **The comment opening of the pads.** The `opener` chip swaps the noun
+  only; the surface beneath `TagPad` and `RefPairEdit` and their titles
+  stay the post edit's. Whether the comment opening is drawn over
+  `CommentEditBody` is open.
+- **The chips' fixtures.** `EditCompose`'s upload chip reads both its
+  pictures as new (`Uploading 1 of 2`); `CommentEdit`'s reads its one
+  picture as new, where the template says `the pictures` at a count of
+  one; `EditComposeVideo`'s chosen cover is `post-photo.jpg`, and its
+  foot counts the cover's record (4; `CommentEditVideo` 3).
+- **Contract seam** (for the relay): an edit's Sign waits for its
+  uploads, holding the press client-side; a standing citation's
+  `ReferenceClaim` has to say its target was removed and carry the
+  removal mark, as a kept pick's target does.

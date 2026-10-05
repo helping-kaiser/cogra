@@ -43,7 +43,8 @@
    board of its own. The body says what happens and why — `Nothing has landed
    yet — deleting removes your application and your account right away.` — and
    the one commitment deletes at once, landing the reader, signed out, on the
-   bare borrowed view. What goes and what stays, the content sweep and the
+   bare borrowed view, where one snackbar answers: `Your account is deleted.`
+   (jakob 2026-10-05). What goes and what stays, the content sweep and the
    link's note all speak of landed records and the mailed link, so the
    applicant's case draws none of them; the mail, the grace boards and
    `DeleteAccountConfirmed` stay the member's. Here `Delete my account` is the

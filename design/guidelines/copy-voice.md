@@ -328,8 +328,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
   opinion of the person who vouched you in, and your feed grows from
   it. / The pad is how you shape what reaches you — for or against, and
   how much. Nothing is signed until Set. *(The title is blessed (jakob
-  2026-10-02); the first paragraph is new 2026-10-02, flagged for
-  blessing.)*
+  2026-10-02); the first paragraph is blessed (jakob 2026-10-05).)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -624,6 +623,9 @@ no application is live for the post to wait with, so the seal's exit
 says what it waits for instead: `Your post waits — it arrives when
 someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
 kept from the staged-act line — *new 2026-10-02, blessed (jakob 2026-10-02)*).
+The same line answers the post's second tap there, wherever it is made —
+`New post` on the bar, and the menus' `Cite in a new post` and `Mention in
+a new post` (jakob 2026-10-05).
 The other two kinds answer a second tap on the turned-down shell in the
 same grammar (jakob 2026-10-02, **blessed**):
 
@@ -676,7 +678,9 @@ A seal gated on its uploads keeps its commit enabled, and a press there
 swaps to the same word while it waits for the bytes — `Signing and
 publishing…` on `ComposeSealUploading`, `Signing comment…` on
 `ReplySealUploading` — then signs with no second press (jakob
-2026-10-02, the fix-fix round's 20; no new words).
+2026-10-02, the fix-fix round's 20; no new words). An edit that took new
+pictures gates `Sign the edit` the same way, swapping to `Signing the
+edit…` (jakob 2026-10-05; the construction's own word).
 
 ## Field errors
 
@@ -1752,8 +1756,10 @@ the edit body's `Withdrawn: #coastroad`, and the acts card's
 
 Drawn on `TagPad`, `TagPadCompose`, `RefPair`, `RefPairEdit`,
 `EditCompose`, `EditActs`, `CommentEdit`, `CommentEditActs`,
-`ReplySealUploading` and `ReplySealUploadFailed` (readme §13, *The pads
-and the edit's withdrawals* and *The comment edit's withdrawals*). Every line here is the lane's wording, **blessed (jakob 2026-10-02)** — with the three carried-over strings above (`Un-tag`,
+`EditComposeVideo`, `CommentEditVideo`, `ReplySealUploading` and
+`ReplySealUploadFailed` (readme §13, *The pads and the edit's
+withdrawals*, *The comment edit's withdrawals* and *The 134 and 135
+residue*). Every line here is the lane's wording, **blessed (jakob 2026-10-02)**, unless marked otherwise — with the three carried-over strings above (`Un-tag`,
 `Withdrawn:`, `Tags withdrawn`), which this round puts to work again.
 
 **The non-drag route names its target.** `Set exact values for
@@ -1769,9 +1775,15 @@ pad's own `Your pick` between them — the stance pad's three, without
 the word *opinion*, because a citation is not one. Spoken, they carry
 the two axes and their values and never the anchor's word.
 
+**The foot's line names what opened the sheet.** `TagPad` and
+`RefPairEdit` are masters at both scales, so the noun is the opener's:
+`Signed with the post, as its own action.` from the post edit, `Signed
+with the comment, as its own action.` from the comment edit (*new,
+blessed (jakob 2026-10-05)*).
+
 **Removing a citation says its cost where the control is.** `Remove
 citation` — the walk-away's slot, a text button. Over the foot, after
-`Signed with the post, as its own action.`:
+the signed line:
 
 - `Removing it signs 1 thing, paid on its own.`
 - `Removing it signs 3 things, each paid separately.` — the walk-back's
@@ -1792,6 +1804,22 @@ quiet voice. The running line stays `Uploading 1 of 2 — signing waits
 for the pictures.`, and names the body's own content: on a clip it
 reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
 content of course"; *new, blessed (jakob 2026-10-02)*).
+
+**The edit's gate is the seal's** (jakob 2026-10-05). An edit that took
+new pictures waits on them in the seal's words: `Uploading 1 of 2 —
+signing waits for the pictures.` over the foot, the fault reading `One
+picture didn't upload. Signing waits for it.` with `Retry`, and the slow
+line `Still signing — the network is slow right now.` A cover the edit
+set is named by its own noun, `Uploading 0 of 1 — signing waits for the
+cover.` (`EditComposeVideo`, `CommentEditVideo`; *new 2026-10-05,
+flagged for blessing*).
+
+**A standing citation whose target was removed** wears the kept picks'
+face (jakob 2026-10-05): `Removed by its author` where the name stood,
+on `EditCompose` and `CommentEdit`. Its controls name it by the mark,
+never by the removed name: the × `Remove this citation: Post, Removed by
+its author` and the row `Post, Removed by its author — set how it
+relates` (spoken only; *new 2026-10-05, flagged for blessing*).
 
 ## Saved, History and hiding
 
@@ -1977,7 +2005,10 @@ navigating row, and under the group: `Nothing is deleted here. The next
 screen says what goes and what stays, and the deletion is confirmed by a
 link we email you.` The row is quiet by ruling; the footnote is what lets
 it be, because the fact a reader needs before tapping is that the tap
-deletes nothing.
+deletes nothing. An applicant's deletion is confirmed in the app and
+nothing is mailed, so their footnote stops at `Nothing is deleted here.
+The next screen says what goes and what stays.` (`Settings`' reader chip;
+**blessed**, jakob 2026-10-05).
 
 **The request screen says what goes before what stays, and says both.**
 Heading `Delete account`; then `This takes your name off CoGra. What you
@@ -2012,10 +2043,12 @@ runs in seven days, and you can cancel from any device until it does.`
 jakob 2026-10-02). Nothing has landed, so nothing waits: the body reads
 `Nothing has landed yet — deleting removes your application and your
 account right away.` (**blessed**, jakob 2026-10-02), and the commitment
-`Delete my account` (*new 2026-10-02, flagged for blessing*) deletes at
+`Delete my account` (**blessed**, jakob 2026-10-05) deletes at
 once — here the press does what the words say. What goes, what stays,
 the content sweep and the link's note speak of landed records and the
-mailed link, so the case draws none of them.
+mailed link, so the case draws none of them. The reader lands signed out
+on the bare view, and one snackbar answers there: `Your account is
+deleted.` (**blessed**, jakob 2026-10-05).
 
 **No "are you sure".** Nothing in this flow asks twice, scolds, or lists
 what the reader will miss. The friction is the emailed link, which is

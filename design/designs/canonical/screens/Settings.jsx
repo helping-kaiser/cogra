@@ -88,7 +88,9 @@
                                 7-day grace runs — the grace protects landed
                                 records, and an applicant has none; with the
                                 address unverified, the in-app confirm
-                                suffices and no emailed link gates it
+                                suffices and no emailed link gates it; the
+                                footnote drops the mailed link (jakob
+                                2026-10-05), drawn by the reader chip
      About · the support stack  as for a member
 
    THE KEPT PICKS' ROW IS DRAWN PRESENT, to show where it stands (backlog item
@@ -101,7 +103,9 @@
    more, no badge, no colour, no reminder anywhere else. */
 
 export const FRAME = { width: 390, height: 2670 };
+export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
+export const VALS = `deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;
 
 export function Screen() {
-  return <SettingsBody keptPicks={3} />;
+  return <SettingsBody keptPicks={3} deleteFootnote="{{deleteFootnote}}" />;
 }

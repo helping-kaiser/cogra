@@ -13,9 +13,10 @@ export interface UploadStatusLineProps {
   progress?: number;
   /**
    * The body's kind, so the gate names what it waits for: "…signing waits for
-   * the pictures." by default, "…signing waits for the video." for a clip.
+   * the pictures." by default, "…signing waits for the video." for a clip,
+   * "…signing waits for the cover." for an edit that changed a clip's cover.
    */
-  media?: "pictures" | "video";
+  media?: "pictures" | "video" | "cover";
   /**
    * The gate's fault reading: an upload failed while the seal waits. The
    * failure's fact (`message`), "Signing waits for it." and Retry; the sign

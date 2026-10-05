@@ -42,7 +42,11 @@
    New post still opens the wizard, and the seal stages the post on the
    device; with no application live, the exit's snackbar says what it waits
    for — `Your post waits — it arrives when someone vouches you in.` — never
-   that it waits with an application. The other kinds' second taps answer
+   that it waits with an application. The post's second tap answers with the
+   same line wherever it is made (jakob 2026-10-05): `New post` on this bar,
+   and the menus' `Cite in a new post` and `Mention in a new post`. A first
+   post waits on the device, never sent, until someone vouches the reader
+   in. The other kinds' second taps answer
    in the same grammar: `Your opinion waits — it arrives when someone
    vouches you in.` and `Your topic waits — it arrives when someone vouches
    you in.`

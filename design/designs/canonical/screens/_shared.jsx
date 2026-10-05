@@ -1893,7 +1893,41 @@ function WithdrawnLine({ name }) {
    and this one was revised upward past 1, so it stages two. */
 const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
 
-function EditComposeBody({ unchanged = false } = {}) {
+/* THE EDIT'S TWO CHIP-DRAWN CASES (jakob 2026-10-05, the 134 residue's 3a and
+   3b), passed as `holes` by the edit boards themselves and by nothing drawn
+   over them:
+   - `{{liveShown}}` / `{{removedShown}}` — the standing citation as it
+     stands, or with its target removed, wearing `KeptPicksReview`'s
+     removed-mark face (`StagedReference`'s `removed`): the tile empty,
+     `Removed by its author` in the name's place, the pair and both controls
+     kept. It still stands, so the count does not move.
+   - `{{gateShown}}` — the edit took new pictures and they are still going up:
+     the seal's gate over the foot (`UploadStatusLine`), `Sign the edit`
+     drawn at rest and enabled. */
+function EditCitationRow({ holes, removedProps, ...props }) {
+  if (!holes) return <StagedReference {...props} />;
+  return (
+    <>
+      <div style={{ display: "{{liveShown}}" }}>
+        <StagedReference {...props} />
+      </div>
+      <div style={{ display: "{{removedShown}}" }}>
+        <StagedReference {...props} {...removedProps} removed="Removed by its author" />
+      </div>
+    </>
+  );
+}
+
+function EditGate({ holes, done, total }) {
+  if (!holes) return null;
+  return (
+    <div style={{ display: "{{gateShown}}" }}>
+      <UploadStatusLine done={done} total={total} />
+    </div>
+  );
+}
+
+function EditComposeBody({ unchanged = false, holes = false } = {}) {
   return (
     <>
       <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
@@ -1939,7 +1973,9 @@ function EditComposeBody({ unchanged = false } = {}) {
                 stages the same citation a first draft does, so it shows back the
                 same facts. The row opens `RefPairEdit` — the citation already
                 stands, so its pick adds a record — and its × withdraws it. */}
-            <StagedReference
+            <EditCitationRow
+              holes={holes}
+              removedProps={{ src: undefined }}
               kind="post"
               name="The long way home — @ada"
               sub="Post"
@@ -1967,6 +2003,7 @@ function EditComposeBody({ unchanged = false } = {}) {
 
         {/* Five things: the edit, #saltmaps added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`EditActs`). */}
+        <EditGate holes={holes} done={1} total={2} />
         <ActsFooter count={unchanged ? 0 : 5} />
         <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>
       </div>
@@ -1990,7 +2027,7 @@ function EditComposeBody({ unchanged = false } = {}) {
 
    THE FIELDS SCROLL UNDER THE PINNED FOOT, the post edit's reading: a comment
    with its citations drawn runs taller than the phone. */
-function CommentEditBody() {
+function CommentEditBody({ holes = false } = {}) {
   return (
     <>
       <WizardHeader title="Edit comment" leaveLabel="Leave — the edit is discarded" help="Editing" />
@@ -2020,7 +2057,9 @@ function CommentEditBody() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <FieldLabel>References</FieldLabel>
-            <StagedReference
+            <EditCitationRow
+              holes={holes}
+              removedProps={{ src: undefined }}
               kind="post"
               name="Sunday at the tide market — @mira"
               sub="Post"
@@ -2048,6 +2087,7 @@ function CommentEditBody() {
 
         {/* Five things: the edit, #glovebox added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`CommentEditActs`). */}
+        <EditGate holes={holes} done={0} total={1} />
         <ActsFooter count={5} />
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
@@ -2758,8 +2798,14 @@ function ReportProblemBody({ words }) {
    reads back (jakob 2026-10-01, audit K3.21 and K3.22): an email change with
    a side still owed, and a confirmed deletion in its grace. Each changes one
    row's status, and the deletion also brings its band, which rides every
-   logged-in surface and sits under an inner page's header. */
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false } = {}) {
+   logged-in surface and sits under an inner page's header.
+
+   `deleteFootnote` is the deletion group's footnote — the member's by
+   default; `Settings` passes its reader chip's hole. */
+const SETTINGS_DELETE_FOOTNOTE =
+  "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
+
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
@@ -2970,15 +3016,13 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             THE FOOTNOTE IS THE GROUP'S ONE DEBT — that nothing happens from the
             tap. It is the fact a reader needs exactly once, which is what a
             footnote is for, and saying it here is what lets the row stay one
-            quiet line. */}
-        <SettingsGroup
-          ariaLabel="Delete account"
-          footnote={
-            deleting
-              ? undefined
-              : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
-          }
-        >
+            quiet line.
+
+            AN APPLICANT'S FOOTNOTE DROPS THE MAILED LINK (jakob 2026-10-05):
+            their deletion is confirmed in the app and nothing is mailed, so it
+            reads `Nothing is deleted here. The next screen says what goes and
+            what stays.` `Settings`' reader chip passes it as a hole. */}
+        <SettingsGroup ariaLabel="Delete account" footnote={deleting ? undefined : deleteFootnote}>
           <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} />
         </SettingsGroup>
       </div>

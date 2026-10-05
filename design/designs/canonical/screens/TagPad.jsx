@@ -112,9 +112,18 @@
      reader meets the non-drag route before the field. It paints only under
      `:focus-visible`, so a tap that opened the sheet shows nothing new.
 
+   THE LINE NAMES WHAT OPENED IT (jakob 2026-10-05, the 134 residue's 1). The
+   sheet is the master at both scales, so the noun is the opener's, passed the
+   way `helpLabel` passes a pad's own title: opened from the post edit it reads
+   `Signed with the post, as its own action.`, from `CommentEdit` and
+   `CommentEditVideo` `Signed with the comment, as its own action.` The board's
+   `opener` chip draws both; the surface beneath stays the post edit's.
+
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule from
    2026-09-08: a sheet covers the surface the reader came from, and that surface
    is the real one, not a shortened stand-in of it. */
+export const PROPS = { opener: { editor: "enum", options: ["post", "comment"], default: "post" } };
+export const VALS = `signedWith: this.props.opener === "comment" ? "Signed with the comment, as its own action." : "Signed with the post, as its own action."`;
 
 /* The four poles, named for the record family that fills the slots — and the
    two questions, which only the non-drag route's tracks say aloud. */
@@ -172,7 +181,7 @@ export function Screen() {
               the walk-away the opinion pad's action row puts there. */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
             <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
-              Signed with the post, as its own action.
+              {"{{signedWith}}"}
             </span>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>
               <Button variant="text" style={{ marginRight: "auto" }}>Un-tag</Button>

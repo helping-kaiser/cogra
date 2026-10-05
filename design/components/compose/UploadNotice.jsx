@@ -52,7 +52,10 @@ function Ring({ progress = 0.55, size = 18 }) {
 
    THE GATE NAMES WHAT IT WAITS FOR, PER KIND (jakob 2026-10-02, pads 3: "per
    content of course"). `media` is the body's kind: pictures by default, and a
-   clip reads `…signing waits for the video.` */
+   clip reads `…signing waits for the video.` An edit that changed a clip's
+   cover waits for that one picture by its name, `…signing waits for the
+   cover.` (`media="cover"` — the edit's gate is jakob's, 2026-10-05; the
+   noun is new, flagged for blessing). */
 export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, message = "One picture didn't upload.", onRetry }) {
   if (failed) {
     return (
@@ -75,7 +78,7 @@ export function UploadStatusLine({ done, total, progress, media = "pictures", fa
           color: "var(--text-secondary)",
         }}
       >
-        Uploading {done} of {total} — signing waits for the {media === "video" ? "video" : "pictures"}.
+        Uploading {done} of {total} — signing waits for the {media === "video" || media === "cover" ? media : "pictures"}.
       </span>
     </div>
   );
