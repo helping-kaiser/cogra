@@ -263,8 +263,12 @@ Compose keeps captions to one short line; the full explanation lives
 behind a small "?" (at most one per screen, save the stopper exception:
 a notice that stops the surface's one act carries its own beside the
 header's — readme §13, *The compose flow*) opening a plain dialog:
-title, at most two short paragraphs, Close. The texts, verbatim
-(browser wording shown; the app variant swaps the platform noun):
+title, at most two short paragraphs, Close. On the stance pad the "?"
+opens nothing: its text replaces the pad's body in place, with `Back to
+the pad` (readme §11; jakob 2026-10-05, the collected brief's D4) — the
+pad's four help lines, or a named pad's own text below. The texts,
+verbatim (browser wording shown; the app variant swaps the platform
+noun):
 
 - **How signing works** (the seal, post and reply): Each piece of a
   post — the post itself, every tag, every citation — is signed on
@@ -309,7 +313,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   paragraph reads `Nothing was signed or spent. Try again in a little
   while.`; from a reply's seal, which keeps none either, `Nothing was
   signed or spent, and your reply is still here. Try again in a little
-  while.` Payer-neutral by the V1.0 scope cut.)*
+  while.`; from the kept picks' seal, `Nothing was signed or spent, and
+  your picks are still kept. Try again in a little while.` (blessed,
+  jakob 2026-10-05); from a comment edit, `Nothing was signed or spent,
+  and your edit is still here. Try again in a little while.` (the edit's
+  blessed ending in the reply's sentence, jakob 2026-10-05).
+  Payer-neutral by the V1.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -329,6 +338,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   it. / The pad is how you shape what reaches you — for or against, and
   how much. Nothing is signed until Set. *(The title is blessed (jakob
   2026-10-02); the first paragraph is blessed (jakob 2026-10-05).)*
+- **How vouching works** (the approval pad and the ask link's pad, in
+  place): A link lets someone make an account. Your vouch — the opinion
+  you sign when you approve them — is what brings them in. / Nothing is
+  signed until Set. *(New 2026-10-05, flagged for blessing — jakob's D4:
+  the Invites empty state's two blessed sentences on the mechanic, then
+  the pads' own `Nothing is signed until Set.`)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -983,7 +998,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   seal with the words still there (jakob 2026-10-01). Reached from the
   kept picks' seal, the same mirror: `Nothing was signed or spent — your
   picks are still kept.` and `Not now`, back to the review (jakob
-  2026-10-02; *blessed (jakob 2026-10-02)*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
+  2026-10-02; *blessed (jakob 2026-10-02)*). Reached from a comment edit,
+  which keeps no draft either, the reply's mirror: `Nothing was signed or
+  spent — your edit is still here.` and `Not now`, back to the edit with
+  the changes as they were (jakob 2026-10-05; the ending *blessed (jakob
+  2026-10-05)*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -1016,6 +1035,13 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     post scale: `DiscardConfirm`'s own ask, `Discard this reply?` or
     `Discard the changes?` over `Nothing is kept.`, with `Keep writing`
     and `Discard` (jakob 2026-10-02, the residue round's Q1). *`Discard the edit` new 2026-10-02, blessed (jakob 2026-10-02).*
+    The post edit takes the comment edit's words, `Discard the edit`
+    asking `Discard the changes?` (*flagged for blessing* — the placement).
+    A seal with no draft to lose takes `Not now` instead, one stage back
+    with everything as it was (jakob 2026-10-05, the collected brief's
+    D8): the kept picks' seal, back to the review with every pick still
+    kept, and — *flagged for blessing* — the profile's seal, back to the
+    edit, and the picture's seal, back to the crop.
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide,
 the default license; not a code): it reverts, and the target's row says `That didn't go
@@ -1522,6 +1548,11 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
   topic).
 - The write rule at this scale: the fact ends `Nothing was signed or
   spent — your picks are still kept.`, and the way out reads `Not now`.
+- A kept approval beside the picks (jakob 2026-10-05, the B round's 7,
+  amended): the review and its seal each carry one quiet line, `An
+  approval waits on Invites — it signs on its own there.`, ending in the
+  door `Open Invites` (*new 2026-10-05, flagged for blessing*), so
+  signing the picks never reads as the approval done too.
 
 The kept picks drawn (jakob 2026-10-02, the fix-fix round; *blessed
 2026-10-02*) reuse those words and add none: the seal's acts card reads a
@@ -2549,12 +2580,15 @@ record calls this a link capability and the API calls the field an id;
 on screen it is a link.
 
 **The approval pad's two lines state what `Set` does, every time.**
-`Approving is vouching. Set signs your opinion on @rafa and brings them
-in.` and `It is one signed, priced act — and it is theirs to answer:
-their opinion back completes the pair.` They are not `VouchBackPad`'s
-one-time coaching: approving is rare and priced, and §3's honesty rule
-wants anything priced to say so before it is signed. The pad's "?" is
-named `How vouching works`.
+`Vouching is the act. Set signs your opinion on @rafa and brings them
+in.` — the drawn line, which copy-voice follows (jakob 2026-10-05, the
+collected brief's D3; *flagged for blessing*) — and `It is one signed,
+priced act — and it is theirs to answer: their opinion back completes
+the pair.` They are not `VouchBackPad`'s one-time coaching: approving is
+rare and priced, and §3's honesty rule wants anything priced to say so
+before it is signed. The ask link's pad carries the same two lines. The
+pad's "?" is named `How vouching works`, and its text stands in place in
+the pad (*The "?" dialogs*).
 
 **The eighth notification reads `@rafa is ready for your approval`** —
 a state rather than an act, and the one row in that list that is. What

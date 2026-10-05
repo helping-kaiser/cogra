@@ -34,7 +34,17 @@ WHEN press Discard the reply GIVEN the notice stands on a reply's seal -> the di
 
 WHEN press Discard the edit GIVEN the notice stands on a comment edit -> the dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
 
-ALWAYS the notice's discard names what is lost: Discard the post on the post's seal, Discard the reply on a reply's seal, Discard the edit on a comment edit
+ALWAYS the notice's discard names what is lost: Discard the post on the post's seal, Discard the reply on a reply's seal, Discard the edit on a comment edit and on a post edit
+
+WHEN press Discard the edit GIVEN the notice stands on a post edit's seal -> the dialog Discard the changes? opens over the seal AND NEVER the changes are discarded unasked
+
+ALWAYS the notice's third way out reads Not now GIVEN the seal keeps no draft to lose: the kept picks' seal, the profile's seal and the picture's seal
+
+WHEN press Not now GIVEN the notice stands on the kept picks' seal -> the review returns with every pick still kept AND NEVER anything is signed AND NEVER a dialog asks
+
+WHEN press Not now GIVEN the notice stands on the profile's seal -> the profile edit returns as it was left AND NEVER anything is signed
+
+WHEN press Not now GIVEN the notice stands on the picture's seal -> the crop returns with the picture as it was AND NEVER anything is signed
 
 ALWAYS the notice's discard asks first, at the post's scale and the comment's alike
 

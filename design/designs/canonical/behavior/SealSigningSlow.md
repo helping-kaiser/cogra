@@ -6,6 +6,8 @@ ALWAYS the 5s count starts at the press of the commit, a wait for uploads includ
 
 WHEN the signing answers within 5s of the press -> NEVER the slow line appears
 
+ALWAYS the slow line stands until the signing answers, with no timeout of the design's own, and the seal never retries by itself
+
 ALWAYS the slow line takes the subline's place GIVEN the seal signs one act and carries no all-or-nothing line
 
 ALWAYS no progress bar, no percentage, no named steps and no spinner appear GIVEN the slow line stands

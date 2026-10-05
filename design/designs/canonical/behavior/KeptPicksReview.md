@@ -33,3 +33,9 @@ WHEN tap a kept pick's anchor GIVEN the key is on this device -> the kept picks'
 ALWAYS the settings row that reopens the review shows only GIVEN the key is on this device and unsigned kept picks wait
 
 WHEN the key leaves this device again GIVEN kept picks wait unsigned -> the settings row that reopens the review goes AND each kept pick's anchor reads Waiting for your key
+
+ALWAYS one quiet line under the intro reads An approval waits on Invites — it signs on its own there. with Open Invites at its end GIVEN an approval was kept with the picks
+
+ALWAYS no line about an approval stands GIVEN no approval was kept
+
+WHEN tap Open Invites -> Invites opens, where the kept approval waits as its own card and signs through the approval pad AND every pick stays kept AND NEVER the approval joins the batch

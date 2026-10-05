@@ -66,7 +66,17 @@
 
    THE FOOT IS PINNED, the wizard reading (jakob 2026-10-01, ruling A2): the
    board leads to a seal, as `ProfileEdit` does, and `Sign them` takes the
-   foot the way `Save` does there. */
+   foot the way `Save` does there.
+
+   A KEPT APPROVAL IS NAMED HERE, NEVER SIGNED HERE (jakob 2026-10-05, the B
+   round's 7, amended). When an approval was kept with the picks, one quiet
+   line under the intro says it waits on Invites and signs on its own there,
+   with the door to Invites (`KeptApprovalLine`) — so a reader signing the
+   picks never takes the approval for done. The `approval` chip draws it.
+   Wording flagged for blessing. */
+export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
+export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
+
 export function Screen() {
   return (
     <>
@@ -84,6 +94,7 @@ export function Screen() {
           These waited on this device for your key, and nothing is signed yet. Remove any you no longer mean — the rest
           sign together.
         </p>
+        <KeptApprovalLine shown="{{approvalShown}}" />
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {KEPT_PICKS.map((pick) => (
             <StagedReference key={pick.name} {...pick} stance onRemove={() => {}} />

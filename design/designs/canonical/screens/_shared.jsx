@@ -1328,6 +1328,36 @@ const KEPT_PICKS = [
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
 ];
 
+/* A KEPT APPROVAL, NAMED BESIDE THE KEPT PICKS (jakob 2026-10-05, the B
+   round's 7, amended: "maybe we should add a link/indicator from the held
+   picks to the pending approval? else someone re-enabling their key and
+   signing their held pick might expect that his approval also happened").
+   A kept approval never joins this batch — it signs through the approval pad
+   on Invites — so when one also waits, the review and its seal each carry one
+   quiet line saying so, with the door to Invites at its end, the
+   newer-version line's construction (`WhatsNewBody`). Signing the picks
+   never implies the approval happened.
+   `shown` is the boards' `approval` chip. Wording flagged for blessing. */
+function KeptApprovalLine({ shown }) {
+  return (
+    <p
+      style={{
+        display: shown,
+        margin: 0,
+        fontSize: "var(--text-body-medium)",
+        lineHeight: "var(--text-body-medium--line-height)",
+        letterSpacing: "var(--text-body-medium--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      An approval waits on Invites — it signs on its own there.{" "}
+      <InlineAction size="sm" onClick={() => {}}>
+        Open Invites
+      </InlineAction>
+    </p>
+  );
+}
+
 /* The one citation the reply's seal was drawn holding. It is a constant rather
    than a board's literal because two states of that seal name it — the one
    that reads it back and the × that drops it. */

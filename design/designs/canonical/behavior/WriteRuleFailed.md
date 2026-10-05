@@ -26,6 +26,14 @@ WHEN tap the notice's ? GIVEN the seal is a reply's -> the dialog's second parag
 
 WHEN press Not now GIVEN the seal is a reply's -> the notice goes AND the reply's seal stands again with the words still in its composer
 
+WHEN the write rule refuses GIVEN the surface is a comment edit -> the fact ends Nothing was signed or spent — your edit is still here. AND the way out under the notice reads Not now AND NEVER the notice says a draft is kept
+
+WHEN tap the notice's ? GIVEN the surface is a comment edit -> the dialog's second paragraph reads Nothing was signed or spent, and your edit is still here. Try again in a little while.
+
+WHEN press Not now GIVEN the surface is a comment edit -> the notice goes AND the comment edit stands again with the changes as they were
+
+WHEN tap the notice's ? GIVEN the seal is the kept picks' -> the dialog's second paragraph reads Nothing was signed or spent, and your picks are still kept. Try again in a little while.
+
 WHEN the write rule refuses GIVEN the seal is the kept picks' -> the fact ends Nothing was signed or spent — your picks are still kept. AND the way out under the notice reads Not now
 
 WHEN press Not now GIVEN the seal is the kept picks' -> the notice goes AND the kept picks' review stands again with every pick still in it AND NEVER a pick is dropped

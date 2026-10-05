@@ -14,4 +14,6 @@ WHEN press Change password -> the credential screen opens AND nothing about the 
 
 WHEN press Got it -> the card goes AND NEVER the card returns
 
+ALWAYS the card stands until Got it is pressed: after Change password, after leaving the feed and coming back, and across an app restart
+
 ALWAYS the band, the posts and the bottom bar beneath the card answer as they do on the feed

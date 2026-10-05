@@ -2588,6 +2588,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Remove ', tag: "button", all: true },
     { n: 3, find: ">Sign them</button>", tag: "button" },
+    // The kept approval's door (the `approval` chip, jakob 2026-10-05, B7).
+    { n: 4, find: ">Open Invites</button>", tag: "button" },
   ],
   // Its seal: `ProfileEditSeal`'s five controls, in the same order.
   KeptPicksSeal: [
@@ -2596,6 +2598,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Sign the opinions</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 6, find: ">Open Invites</button>", tag: "button" },
   ],
   YourKeyGate: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },

@@ -20,7 +20,9 @@ WHEN the server answers EMAIL_NOT_VERIFIED -> the line Verify your email first â
 
 WHEN the server answers UNAUTHENTICATED or REFRESH_TOKEN_INVALID mid-session -> the sign-in screen opens with You've been signed out. Sign in again to carry on. where its welcome line stood AND the draft and any kept picks stay on this device
 
-WHEN press Retry -> the same signing is asked again
+WHEN press Retry -> the same signing is asked again AND past 200ms the commit's slot reads the original commit's in-flight label AND the header back arrow, Back and the header X refuse a press again
+
+ALWAYS Retry is the only re-send: the seal never asks again by itself, and the design sets no timeout of its own
 
 WHEN press Retry GIVEN the signing goes through this time -> the post's own detail view opens wearing Still settling
 

@@ -68,7 +68,9 @@ WHEN the signing is taken -> the thread reopens AND the edit settles on its card
 
 WHEN the signing does not go through GIVEN no answer reached the edit -> the network error answers AND everything the reader chose stays as it was
 
-WHEN the write rule refuses the edit -> nothing is staged or spent AND the draft is kept AND NEVER Retry appears
+WHEN the write rule refuses the edit -> nothing is staged or spent AND the notice's fact ends Nothing was signed or spent — your edit is still here. AND the way out under the notice reads Not now AND NEVER the notice says a draft is kept AND NEVER Retry appears
+
+WHEN press Not now on the write rule's notice -> the notice goes AND the comment edit stands again with the changes as they were
 
 WHEN the signing is refused for one staged citation GIVEN the cited post never landed -> that citation's row reads This post didn't land, so it can't be cited. followed by Remove it AND NEVER Retry appears
 
