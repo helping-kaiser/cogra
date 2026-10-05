@@ -8684,6 +8684,114 @@ yep · 6. yes"). Every quoted wording is blessed unless marked.
   resolved, 134 sidecars. The witness did not move. What the round left
   open is backlog `136`.
 
+### Pass C's applicant and vouch sidecars — 2026-10-05
+
+jakob's pass C remainder plan (ruled as recommended), the applicant, vouch,
+intro and arrival lane: prose only, no board touched.
+
+- **Nineteen sidecars**: the six applicant boards (`ApplicantFeed`,
+  `ApplicantEmail`, `ApplicantKeyElsewhere`, `ApplicantWaiting`,
+  `ApplicantLanding`, `ApplicantRejected`), `FeedBare`, the five intro
+  cards, the ask link's four boards (`VouchAsk`, `VouchAskPad`,
+  `VouchAskUnusable`, `VouchAskInvalid`), `VouchBack`, `VouchBackPad` and
+  `VouchedIn`.
+- **Their words** are each board's docblock and its graph edges, the
+  applicant and vouch records above (*The applicant's life round* through
+  *The 134 and 135 residue*, *The vouch-back ceremony*, *The invites
+  round*, *The entry funnel round*), copy-voice's staged-act, entry-funnel,
+  ceremony and Invites sections, and auth.md's application and landing.
+- **`VouchBackPad` is the master pad**, so its sidecar carries the
+  vouch-back and the plain opening apart; both vouch pads name
+  `PadFailed`, `PadWriteRule` and `PadKeyAbsent` for the states they share.
+- **No new string.** `Changing email…` is the in-flight construction.
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved, 134 → **153 sidecars**; the boards came back byte-clean. The
+  witness did not move. The filed questions are backlog
+  `13X-passc-entry-b`.
+### The settings behavior pass — 2026-10-05
+
+Pass C's remainder (jakob 2026-10-05, the plan as recommended), the
+settings domain: transcription only, and behavior no source settles is
+filed for jakob's review rather than written.
+
+- **Twenty-seven sidecars**: `Settings` with its three sheets and its two
+  in-flight states, the key backup's four screens, the six credential
+  boards, the deletion tail's three, the sign-out ask, About, What's new
+  and its behind state, the report and its empty state, the wallet door
+  and the "?" dialog. Each line comes from its board's docblock, its
+  graph edges' cases, the records here and copy-voice, in their words;
+  the in-flight labels are copy-voice's construction (*In-flight labels*)
+  and add no string.
+- **No board moved and nothing was ruled.** The open questions — among
+  them the handle change's think-twice ask, the words of the settings
+  snackbars, an unverified applicant's Email row and About's opening
+  state — wait in the lane's filed list for jakob's one ruling brief.
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved, 134 → **161 sidecars**. The witness did not move.
+### The entry behavior pass — 2026-10-05
+
+Pass C's remainder (jakob 2026-10-05, the plan as recommended), the
+entry lane: the invite door and the join form, sign-in, the reset, the
+verification landings, the key ceremony, restore and the key export.
+
+- **All 31 boards have their sidecars**, transcribed from each board's
+  docblock, its graph edges' cases, the records above (*The entry flow*,
+  *The input-error round*, *The audit states*, *The key-loss round*,
+  *The entry funnel round*, *The applicant's life round*, *The
+  no-expiry correction*), copy-voice and auth.md. Nothing was ruled in
+  the pass, and no board moved.
+- **The commits' in-flight labels follow the failure pack's
+  construction** (copy-voice, *In-flight labels*); back from About keeps
+  the join form as it was left.
+- **What no source settles waits for jakob** as the lane's filed
+  questions (backlog `13X-passc-entry-a`): a form's offline words and
+  slot, the wait past 5s off a seal, the two commits the construction
+  cannot form, the funnel's system Back, the dead reset link, and the
+  contradictions found on the way.
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved; 31 sidecars added. The witness did not move.
+### The pads, seals and system behavior pass — 2026-10-05
+
+Pass C's remainder, its pads, seals and system lane (jakob 2026-10-05, the
+plan as recommended: transcription only, unruled behavior filed, never
+invented).
+
+- **Twenty-six boards carry their sidecars**: the pad standing, failed,
+  refused by the write rule and without its key, and the approval pad; the
+  kept pick's two anchor plates; the walk-back and the invites' two close
+  dialogs; the hold's two row plates; the seal signing, slow, faulted on a
+  row or by a bug, its discard ask, its write rule, the kept picks' seal and
+  the reply's failed gate; `NetworkError`, the guest landing, the two
+  not-found pages, the newer-version snackbar and the security notice.
+- **The seal grammar is stated once**, in `SealSigning.md` and
+  `SealSigningSlow.md`: nothing under 200ms, the label swap from 200ms, the
+  slow line past 5s, each counted from the press; the ways out locked
+  without dimming; the gated commit enabled, its held press dropped by a
+  failed upload. The two honest faults, the fault readings by code and the
+  discard that asks first at both scales stand in `SealFaultRow.md`,
+  `SealFaultBug.md`, `NetworkError.md` and `SealDiscardConfirm.md`.
+- **What no ruling answers stays out of the sidecars** and waits for jakob
+  as filed questions (backlog `13X-passc-pads-system`).
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved; 26 new sidecars. No board moved.
+### The profile behavior pass — 2026-10-05
+
+Pass C's remainder, the profile domain (jakob 2026-10-05, the plan as
+recommended): every board on the profile page, and the four post-ladder
+reference boards, carries a sidecar in `designs/canonical/behavior/`,
+transcribed from its docblock, its graph edges, the records above and
+copy-voice. Nothing was ruled in the pass.
+
+- **33 sidecars**: the own, applicant, other, held and deleted profiles
+  with their tabs, menus and fault states; the opinions page; the edit,
+  the picture's crop and both seals; Saved, History and Notifications
+  with their empty and undo states; the invites pages; and the ladders,
+  whose lines are shape invariants in `FeedShapes`' manner.
+- **What no ruling answers stays out of the sidecars** and waits for
+  jakob as filed questions (backlog `13X-passc-profile`). The audit's
+  parked items on these surfaces stay parked where they are.
+- **The gate**: screens, edges, flows and boards unchanged; 33 new
+  sidecars, every one green.
 ### The 136 round — 2026-10-05
 
 jakob's answer to backlog item 136 ("1-5 all as recommended"). Every
