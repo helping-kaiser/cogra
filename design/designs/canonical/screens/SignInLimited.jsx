@@ -41,8 +41,8 @@ export function Screen() {
         </p>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" />
-          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" />
+          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="sol@solferreira.art" />
+          <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="saltmarsh-tide" />
           <Checkbox label="Don't remember this account on this device" />
           <p role="alert" style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)", color: "var(--error)" }}>
             Too many tries in a row. Wait a moment, then try again.

@@ -3349,8 +3349,9 @@ function RestoreBody({ value = "", error }) {
    `app` draws Android's layout: the phone's own unlock is the proof, so there
    is no field, and no lost-code line either — the line exists because a
    browser whose code is gone cannot re-key. `error` is the field's M3 error
-   line, `RestoreError`'s words for the same secret refused. */
-function SettingsBackupBody({ app = false, error }) {
+   line, `RestoreError`'s words for the same secret refused; `value` seeds the
+   field with the code that was pressed. */
+function SettingsBackupBody({ app = false, value = "", error }) {
   return (
     <>
       <PageHeader backHref="/settings" backLabel="Back to settings" />
@@ -3387,7 +3388,7 @@ function SettingsBackupBody({ app = false, error }) {
                 mono
                 enterKeyHint="go"
                 placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
-                value=""
+                value={value}
                 error={error}
               />
             </div>
@@ -3405,7 +3406,7 @@ function SettingsBackupBody({ app = false, error }) {
             id="settings-rekey"
             label="Create a new recovery code"
             reason="Waiting for your current recovery code"
-            waiting={!app && !error}
+            waiting={!app && !value && !error}
           />
         </div>
 
