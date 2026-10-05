@@ -8750,6 +8750,30 @@ verification landings, the key ceremony, restore and the key export.
   contradictions found on the way.
 - **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
   resolved; 31 sidecars added. The witness did not move.
+### The pads, seals and system behavior pass — 2026-10-05
+
+Pass C's remainder, its pads, seals and system lane (jakob 2026-10-05, the
+plan as recommended: transcription only, unruled behavior filed, never
+invented).
+
+- **Twenty-six boards carry their sidecars**: the pad standing, failed,
+  refused by the write rule and without its key, and the approval pad; the
+  kept pick's two anchor plates; the walk-back and the invites' two close
+  dialogs; the hold's two row plates; the seal signing, slow, faulted on a
+  row or by a bug, its discard ask, its write rule, the kept picks' seal and
+  the reply's failed gate; `NetworkError`, the guest landing, the two
+  not-found pages, the newer-version snackbar and the security notice.
+- **The seal grammar is stated once**, in `SealSigning.md` and
+  `SealSigningSlow.md`: nothing under 200ms, the label swap from 200ms, the
+  slow line past 5s, each counted from the press; the ways out locked
+  without dimming; the gated commit enabled, its held press dropped by a
+  failed upload. The two honest faults, the fault readings by code and the
+  discard that asks first at both scales stand in `SealFaultRow.md`,
+  `SealFaultBug.md`, `NetworkError.md` and `SealDiscardConfirm.md`.
+- **What no ruling answers stays out of the sidecars** and waits for jakob
+  as filed questions (backlog `13X-passc-pads-system`).
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved; 26 new sidecars. No board moved.
 
 ## 15. Index
 

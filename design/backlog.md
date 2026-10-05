@@ -4465,3 +4465,58 @@ the lane's recommendation in the collected ruling brief:
   rest; what `VerifyExpired` says after a resend; `VerifiedApp` signed
   out; a verify link opened under another account; where
   `SignInExpired`'s "carry on" lands.
+### 13X-passc-pads-system · What the pads, seals and system pass left for rulings · *design* · **filed 2026-10-05**
+
+The pads, seals and system behavior pass (readme §13) transcribed
+twenty-six sidecars and left these for jakob's eye, each with the lane's
+recommendation in the round's report:
+
+- **The pad's "?".** §11 and `StanceControl` replace the pad's body with
+  its help in place and disable Set; the graph's pad edges open
+  `HelpDialog`; `ApprovePad`'s `How vouching works` names a text
+  copy-voice does not carry (audit K10.16).
+- **A tap on the pad field.** The graph says drag or tap sets the pick;
+  the master moves by travel only (audit K10.8). The sidecars say drag.
+- **Set on an untouched pad.** The ordinary pad opens at the origin, and
+  Set there signs (0, 0) (audit K10.2).
+- **The walk-back's `Keep it` and its cost.** The board keeps the pad
+  parked behind the dialog, the master closes it (K10.4); the cost prints
+  the record count, not `severanceCost` (K10.3).
+- **The stance pad's readout announcement**, which the tag and citation
+  sheets make live (K10.1) and the parked pad does not say.
+- **The approval pad's first line.** The board draws `Vouching is the
+  act.`; copy-voice records `Approving is vouching.`
+- **Retry and Try again in flight** — their label while the re-sign
+  waits, and whether the ways out lock again.
+- **What else a signing seal locks** — the fact rows' actions, the
+  header's "?", Android's system Back.
+- **When no answer becomes the fault**, and whether a seal ever retries by
+  itself.
+- **A form's offline fault.** `NetworkError`'s docblock puts it in the
+  submit's place; copy-voice puts it in `SignInError`'s slot, the submit
+  kept.
+- **The unlanded citation at `N cited`** — where its line stands when the
+  References row reads a count.
+- **How long a refusal reading stands** on the seal once the reader goes a
+  stage back or changes a fact.
+- **The bug notice's way out on the other seals** — the post edit, the
+  profile and picture seals, and `KeptPicksSeal`, whose Sign edge has no
+  bug outcome.
+- **`Why signing waits` at kept-picks scale** — its second paragraph is
+  unwritten.
+- **The write rule where no draft is kept** — the comment edit (whose
+  sidecar says the draft is kept) and the profile seal.
+- **The reply composer's failed picture** — its tile mark and line are
+  undrawn (only the clip's, `ReplyVideoFailed`).
+- **The failed gate on a clip** — `UploadStatusLine`'s fault reading has
+  no video noun.
+- **`UploadStatusLine`'s docblock** still says the sign button stays
+  disabled while either reading shows.
+- **How long a hold's row line stands** — `That didn't sign.`, `That
+  didn't go through.`, `You can't sign right now.`
+- **A hold on a kept pick's face once the key is back.**
+- **An undismissed security notice** — after `Change password`, after
+  leaving the feed, across a restart.
+- **The not-found pages' warm arrow label.**
+- **The approval's confirmation** — whether a signed approval wears the
+  signed-opinion snackbar.
