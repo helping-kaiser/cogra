@@ -18,6 +18,8 @@ ALWAYS the pad carries its two lines every time it opens, saying what Set does a
 
 ALWAYS the pad's ? is named How vouching works
 
+WHEN tap the pad's ? -> the pad's help opens AND NEVER anything is staged
+
 WHEN drag on the pad field -> the pick moves AND its face and pair follow AND the landing line reads what it would come to AND NEVER anything is staged
 
 WHEN tap Cancel -> the pad closes onto Invites AND nothing is signed AND the application is still waiting
