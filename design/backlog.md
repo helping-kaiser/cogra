@@ -4395,7 +4395,12 @@ closed (jakob 2026-10-05, "1-5 all as recommended"; the rulings digest
   citation's `ReferenceClaim` has to say its target was removed and
   carry the removal mark, as a kept pick's target does.
 
-### 13X-passc-entry-b · What the applicant and vouch sidecars left for rulings · *design + docs* · **filed 2026-10-05**
+### 13X-passc-entry-b · What the applicant and vouch sidecars left for rulings · *design + docs* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled every item (the collected rulings digest,
+`2026-10-05-collected-rulings.md`), executed in readme §13, *The entry
+and vouch rulings executed* — the approval pad's note and its "?" with the settings and pads round; what stays open moves to
+`13X-exec-entry-vouch`.
 
 Pass C's applicant and vouch lane (readme §13) transcribed nineteen
 sidecars and filed what the boards and docs do not determine:
@@ -4425,7 +4430,12 @@ sidecars and filed what the boards and docs do not determine:
   `VouchBackPad`'s "?" edge label.
 - **The behavior README's** stray fragment under *Where each sidecar's
   words come from*.
-### 13X-passc-entry-a · What the entry behavior pass filed · *design + contract* · **filed 2026-10-05**
+### 13X-passc-entry-a · What the entry behavior pass filed · *design + contract* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled every item (the collected rulings digest,
+`2026-10-05-collected-rulings.md`), executed in readme §13, *The entry
+and vouch rulings executed* — the labels and the empty presses with the settings and pads round; what stays open moves to
+`13X-exec-entry-vouch`.
 
 The entry lane of pass C's remainder (readme §13, *The entry behavior
 pass*) wrote the 31 sidecars and left these for jakob's eye, each with
@@ -4514,7 +4524,12 @@ recommendation in the round's report:
 - **The not-found pages' warm arrow label.**
 - **The approval's confirmation** — whether a signed approval wears the
   signed-opinion snackbar.
-### 13X-passc-profile · What the profile behavior pass left for rulings · *design* · **filed 2026-10-05**
+### 13X-passc-profile · What the profile behavior pass left for rulings · *design* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled every item (the collected rulings digest,
+`2026-10-05-collected-rulings.md`), executed in readme §13, *The entry
+and vouch rulings executed* — History's disc and trailing age die with the History redesign, its own lane; what stays open moves to
+`13X-exec-entry-vouch`.
 
 The profile behavior pass (readme §13) wrote what the boards and rulings
 determine and left these for jakob's eye. The audit's parked items on the
@@ -4578,3 +4593,27 @@ left these for his eye:
   says it for every press, and the slow line now stands for every press.
 - **Two stale notes.** `EditComposeVideo`'s and `CommentEditVideo`'s
   docblocks still call the cover noun flagged; it is blessed.
+
+### 13X-exec-entry-vouch · What the entry and vouch execution left open · *design + contract* · **filed 2026-10-05**
+
+The entry and vouch rulings executed (readme §13) left these for
+jakob's eye:
+
+- **The intro's swipe, post-MVP.** V1.0 moves the five cards by their
+  buttons alone (jakob, "fine for v1"); whether they swipe is revisited
+  after the MVP, never dropped.
+- **System Back in the funnel** (the entry lane's F-9) is in no ruling:
+  Back on a screen whose arrow is a link, on the arrowless mail
+  landings, and the browser's back on the web's recovery code.
+- **`ApplicantEmail`'s field errors** (wrong current password, an
+  address in use, a malformed one) are undrawn, as `ChangeEmail`'s are.
+- **The kept approval's card on Invites.** A vouch kept for the key waits
+  on Invites as its own card; neither its place on the page nor its words
+  are drawn.
+- **The profile and picture seals' key-absent notice** still offers
+  `Keep the draft, restore later`, though neither seal keeps a draft;
+  the ruling reached the write rule's notice only.
+- **The canvas title `Join · @mira vouches`** still claims the vouch the
+  heading no longer does.
+- **`Back to the search` on a profile** waits for Explore's person row
+  (audit K14.11) to be drawn.

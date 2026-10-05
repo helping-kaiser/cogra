@@ -8833,6 +8833,72 @@ quoted wording is blessed unless marked.
   `Retry` and `Remove it`), 0 gaps, flows 66, every one resolved, 134
   sidecars. The witness did not move.
 
+### The entry and vouch rulings executed — 2026-10-05
+
+jakob's collected rulings (the digest `2026-10-05-collected-rulings.md`)
+on the entry funnel, the applicant shells, the ask link, the vouch-back
+and the profile. Every quoted wording is blessed unless marked flagged.
+
+- **`Join` says `Mira invited you`** — no vouch exists before the
+  approval. The form keeps handle and email for the session after a
+  sign-in detour or the arrow, never the password, never past a cold
+  launch.
+- **The ask link follows the layer law.** `VouchAsk`'s arrow and `Not
+  now` return to what the link opened over, or to Feed when it opened the
+  app cold, as its two siblings' do (§4); the arrow reads `Back`. `Set`
+  answers with the signed-opinion snackbar, with `VouchAskUnusable` when
+  the link died meanwhile, and with a kept approval — its own card on
+  Invites, signed through the approval pad, never in the kept picks — when
+  the key is elsewhere. An applicant's or the asker's own case outranks the
+  link's state.
+- **A new board, `ResetExpired`**: a spent or expired reset link, in
+  `VerifyExpired`'s construction, its way back `Reset your password` and
+  its way on `Sign in` (paragraph flagged).
+- **Sessions.** `SignIn` opened from the signed-in join layer closes back
+  to it and switches this device like `Create account`; a verify link
+  under another account verifies its own and switches nothing;
+  `VerifiedApp` signed out reads `Sign in`; `SignInExpired` lands at
+  app-open.
+- **Forms.** A line the server answered stands until the next press, a
+  local format line re-checks live; offline, `That didn't send. Try
+  again.` stands above the submit, which is the retry (`NetworkError`'s
+  docblock says so); sign-in keeps its drawn backoff line and every other
+  `RATE_LIMITED` the generic one; the 26-characters line reaches the key
+  gate and the backup sheet; `A password is at most 128 characters.`; a
+  slow non-signing commit adds nothing, and only `Create account` and
+  `Restore the key` lock the ways out; `Reset`'s status line stands only
+  after the press, and `VerifyExpired`'s resend answers in its
+  construction (flagged).
+- **Platform nouns.** The ceremony, its two dialogs, `YourKey` and
+  `YourKeyAbsent` take the `wording` chip (app renderings flagged), and
+  so does `ApplicantFeed`'s key card; the ceremony's confirm answers `Key
+  made and backed up.`; the ceremony is reached from settings both ways.
+- **Applicant days.** The intro moves by its buttons alone (swipe
+  revisited post-MVP), Back walks the cards, the seen flag sets on the
+  first show, and re-opened from Settings it lands back there; its last
+  card's applicant line shows only with a live application.
+  `ProfileApplicant`'s `application` chip draws the closed application
+  in the turned-down card's words and olive, with `These wait — they
+  arrive when someone vouches you in.`; `ApplicantKeyElsewhere`'s
+  `backup` chip draws the no-backup card (body flagged). The resend, the
+  first staging and an ask-link take-up each answer; auth.md's waiting
+  post waits until a member vouches the account in.
+- **The vouch-back.** Its line rides every vouch-back open, the two
+  coaching lines only the account's first-ever pad; the borrowed view
+  returns with the did-not-land notice; the "?" edge reads `Your vouch
+  back`.
+- **Profile.** `Back to your profile` from the reader's own posts tab's
+  trace and stream; the profile and picture seals' write rule keeps no
+  draft; the author's removal mark carries both blessed sentences
+  (`RedactedContent`); the opinions page and Invites take the pull-down;
+  a held opinion's tap opens `PadStanding`; `By them`; `This account is
+  hidden — its posts stay out of your feed.`; `Back to the search` waits
+  for the person row (K14.11).
+- **The gate**: 271 screens, 1812 → **1814 edges**, 0 gaps, flows 66,
+  every one resolved, 271 sidecars. The witness re-blessed for the
+  ceremony's and the ask's new snackbars and the held tap's new pad. What
+  stays open is backlog item `13X-exec-entry-vouch`.
+
 ## 15. Index
 
 **Root**
