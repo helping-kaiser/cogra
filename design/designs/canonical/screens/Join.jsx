@@ -59,8 +59,8 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField id="handle" label="Handle" value="" hint="3–30 characters: a–z, 0–9, _" />
-          <TextField id="email" label="Email" type="email" autoComplete="email" value="" />
+          <TextField id="handle" label="Handle" kind="handle" value="" hint="3–30 characters: a–z, 0–9, _" />
+          <TextField id="email" label="Email" type="email" autoComplete="username" value="" />
           <PasswordField id="password" label="Password" autoComplete="new-password" value="" hint="At least 12 characters." />
         </div>
 

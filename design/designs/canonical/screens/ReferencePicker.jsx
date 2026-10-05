@@ -26,13 +26,18 @@
    picker was opened from, every staged reference kept — back is navigation,
    never an undo; `Done` is the affirmative twin, because a back arrow reads as
    an abort to a reader who has finished citing. It is the full-width foot
-   every wizard stage wears (`ReplyDraft`'s `Next`). */
+   every wizard stage wears (`ReplyDraft`'s `Next`).
+
+   THE ARROW NAMES THE COMPOSER, THE "?" ITS DIALOG (the K13 round; the
+   shared anatomy, `TagPicker`): `Back to the post` from a post's composer or
+   its edit — drawn — and `Back to the comment` from a reply's composer or a
+   comment's edit; the "?" is `Citing`. */
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Cite something" action={<HelpDot />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Cite something" action={<HelpDot ariaLabel="Citing" />} />
       <div style={{ flex: "none" }}>
-        <SearchBar query="salt" />
+        <SearchBar query="salt" ariaLabel="Cite something" />
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
           <FilterTrigger reading="Everything" ariaLabel="What the search shows" />
         </div>

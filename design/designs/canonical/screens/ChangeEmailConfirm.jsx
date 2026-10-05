@@ -136,6 +136,7 @@ export function Screen() {
             id="email-change-code"
             label="Confirmation code"
             mono
+            enterKeyHint="go"
             value=""
             hint="From the message to sol@solferreira.art."
           />

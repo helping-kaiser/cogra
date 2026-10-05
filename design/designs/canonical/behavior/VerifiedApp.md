@@ -11,3 +11,5 @@ ALWAYS the mark, the heading and the line stand centred, and Go to the feed is a
 WHEN press Go to the feed GIVEN the application is still running -> ApplicantFeed opens with the task cards still left
 
 WHEN press Go to the feed GIVEN the account is already a member -> Feed opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

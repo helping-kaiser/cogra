@@ -25,3 +25,5 @@ WHEN press Set the new password GIVEN the password is shorter than 12 characters
 WHEN the new password is refused as one that turned up in a data breach -> the field's line reads That password has turned up in a data breach — pick another one. in place of the hint AND the field takes the error state
 
 WHEN press Set the new password GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

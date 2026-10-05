@@ -27,3 +27,5 @@ WHEN tap the backdrop GIVEN a backdrop is visible beside the frame on a wide scr
 WHEN tap the ground beside the frame GIVEN the phone is rotated and the frame leaves ground at its sides -> the viewer closes
 
 WHEN tap the clip -> NEVER the viewer closes
+
+ALWAYS on Android the viewer is the one screen that turns with the device, and every other screen stays upright

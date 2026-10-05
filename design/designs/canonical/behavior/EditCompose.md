@@ -75,3 +75,5 @@ WHEN press Sign the edit GIVEN the signing is refused by the write rule -> the n
 WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
+
+WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped

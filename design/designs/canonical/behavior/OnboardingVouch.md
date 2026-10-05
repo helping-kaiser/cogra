@@ -19,3 +19,5 @@ WHEN tap Start reading GIVEN the reader is a member -> the intro leaves for the 
 WHEN tap Skip GIVEN the reader is an applicant -> the intro leaves for the applicant's feed it opened over
 
 WHEN tap Skip GIVEN the reader is a member -> the intro leaves for the feed it opened over
+
+ALWAYS the illustration scales to the column, and the card scrolls between Skip and its button when its words outgrow the screen at any width or text size

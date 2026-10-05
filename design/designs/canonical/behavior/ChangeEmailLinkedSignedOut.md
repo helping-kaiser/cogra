@@ -7,3 +7,5 @@ ALWAYS the signed-out landing carries no mark, no back arrow and one way on, Sig
 WHEN tap Sign in -> the sign-in screen opens holding the link
 
 WHEN sign-in succeeds GIVEN the sign-in began from this landing -> the link's side applies AND the change's signed-in landing follows, first side or last
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

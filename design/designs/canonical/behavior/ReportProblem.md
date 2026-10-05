@@ -23,3 +23,5 @@ WHEN press Send by email in the app -> the system's own send opens with the word
 ALWAYS nothing of the report leaves until the reader sends it from their own mail
 
 WHEN press the header back arrow -> the surface that opened the report returns AND nothing is sent AND the words are kept for the next time the report opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

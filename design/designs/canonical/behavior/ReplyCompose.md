@@ -15,3 +15,5 @@ WHEN picked pictures come back from the picker -> they land in the composer's tr
 WHEN a picked video comes back from the picker -> the composer takes its video state
 
 WHEN a pick is over its cap or in a format nothing here reads -> the composer says why
+
+WHEN the reply composer opens -> the body takes focus AND the keyboard rises

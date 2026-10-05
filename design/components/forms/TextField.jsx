@@ -98,6 +98,38 @@ import React from "react";
    to fit it (`ComposeDetailsCaps`, `WordsBody`'s tail). Growth is behaviour, and
    behaviour that cannot be drawn is stated where the drawing is. */
 
+/* WHAT EACH KIND OF FIELD ASKS OF THE KEYBOARD (the K13 round, ruled — the
+   field-semantics table; `TextField.prompt.md` carries it with the Android
+   names). A field's kind decides its keyboard, its capitalization, whether
+   the platform corrects it, and what the platform may fill into it; the
+   return key follows the field's place in its form instead (below). A board
+   names the kind; `type="email"` and `mono` name theirs, and a field with
+   neither is prose.
+
+   `code` IS THE MONO KIND, and every code field inherits it: a string read
+   and typed character by character takes no guessing — no capitals guessed,
+   nothing corrected — and the platform may fill it as a one-time code.
+
+   A URL FIELD TAKES THE URL KEYBOARD, NOT THE URL TYPE: `type="url"` would
+   add the browser's own validation, which refuses a website without a scheme
+   and says so in the browser's words instead of the field's. */
+export const FIELD_KINDS = {
+  prose: { type: "text", inputMode: "text", autoCapitalize: "sentences", autoCorrect: true, autoComplete: "off" },
+  name: { type: "text", inputMode: "text", autoCapitalize: "words", autoCorrect: false, autoComplete: "off" },
+  email: { type: "email", inputMode: "email", autoCapitalize: "none", autoCorrect: false, autoComplete: "email" },
+  handle: { type: "text", inputMode: "text", autoCapitalize: "none", autoCorrect: false, autoComplete: "nickname" },
+  url: { type: "text", inputMode: "url", autoCapitalize: "none", autoCorrect: false, autoComplete: "off" },
+  code: { type: "text", inputMode: "text", autoCapitalize: "characters", autoCorrect: false, autoComplete: "one-time-code" },
+};
+
+/* THE RETURN KEY FOLLOWS THE FORM. A single-line field reads `next` while
+   another field follows it, and the form's last one passes `go`: it submits
+   as the form's commit does — HTML's implicit submission, and Android's
+   `ImeAction.Go` wired to the same commit — never while the commit is
+   disabled. A multi-line field's Enter is a new line, on a soft keyboard and
+   a hardware one alike; it never submits. */
+const RETURN_KEY = { single: "next", multi: "enter" };
+
 const COUNT_WINDOW_MINIMUM = 20;
 
 function countReading(value, cap, used) {
@@ -215,8 +247,10 @@ export function TextField({
   corner,
   value,
   onChange,
-  type = "text",
+  type,
+  kind,
   autoComplete,
+  enterKeyHint,
   mono = false,
   placeholder,
   rows,
@@ -229,6 +263,15 @@ export function TextField({
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
+  const semantics = FIELD_KINDS[kind ?? (mono ? "code" : type === "email" ? "email" : "prose")] ?? FIELD_KINDS.prose;
+  const keyboard = {
+    inputMode: semantics.inputMode,
+    autoCapitalize: semantics.autoCapitalize,
+    autoCorrect: semantics.autoCorrect ? "on" : "off",
+    spellCheck: semantics.autoCorrect,
+    autoComplete: autoComplete ?? semantics.autoComplete,
+    enterKeyHint: enterKeyHint ?? (rows ? RETURN_KEY.multi : RETURN_KEY.single),
+  };
   const supportId = `${fieldId}-support`;
   const countId = `${fieldId}-count`;
   const reading = countReading(value, cap, used);
@@ -263,6 +306,7 @@ export function TextField({
           rows={rows}
           value={value}
           placeholder={placeholder}
+          {...keyboard}
           aria-describedby={described}
           aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}
@@ -272,10 +316,10 @@ export function TextField({
       ) : (
         <input
           id={fieldId}
-          type={type}
+          type={type ?? semantics.type}
           value={value}
           placeholder={placeholder}
-          autoComplete={autoComplete}
+          {...keyboard}
           aria-describedby={described}
           aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}

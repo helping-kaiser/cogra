@@ -56,6 +56,13 @@ export interface FieldSupportProps {
 
 export declare function FieldSupport(props: FieldSupportProps): JSX.Element | null;
 
+/** The kinds of field the product draws, each with what it asks of the keyboard. */
+export type FieldKind = "prose" | "name" | "email" | "handle" | "url" | "code";
+export declare const FIELD_KINDS: Record<
+  FieldKind,
+  { type: string; inputMode: string; autoCapitalize: string; autoCorrect: boolean; autoComplete: string }
+>;
+
 /** The house labeled text input — and, with `rows`, the house textarea. */
 export interface TextFieldProps {
   label: string;
@@ -63,9 +70,15 @@ export interface TextFieldProps {
   corner?: string;
   value: string;
   onChange?: (value: string) => void;
+  /** Overrides the kind's own input type. `type="email"` alone also names the `email` kind. */
   type?: "text" | "email" | "password";
+  /** What the field asks of the keyboard — its row of `FIELD_KINDS` (keyboard, capitalization, autocorrect, autofill). Defaults: `code` when `mono`, `email` when `type="email"`, else `prose`. */
+  kind?: FieldKind;
+  /** Overrides the kind's autofill token — `username` on a credential form's email field, `url` on the website. */
   autoComplete?: string;
-  /** The platform monospace: recovery codes, key ids, seed entry. Nothing else. */
+  /** The return key. Defaults to `next` on a single-line field and `enter` (a new line) on a multi-line one; the form's last single-line field passes `go`, which submits as the form's commit does. */
+  enterKeyHint?: "next" | "go" | "done" | "search" | "enter";
+  /** The platform monospace: recovery codes, key ids, seed entry. Nothing else. It makes the field the `code` kind — the one-time-code shape every code field inherits. */
   mono?: boolean;
   placeholder?: string;
   /** Renders a textarea instead of an input, at `rows` lines — a MINIMUM, not a

@@ -98,6 +98,8 @@ export function PostCard({
   stancePendingPick,
   stancePendingReview,
   stanceSigning,
+  stanceHoldProgress,
+  stanceKnobHeld,
   score,
   onOpenScore,
   comments,
@@ -164,6 +166,18 @@ export function PostCard({
   // opens the post instead: a reader scrolling is choosing between posts, not
   // looking at one picture.
   const [viewing, setViewing] = React.useState(null);
+  // THE VIEWER HANDS FOCUS BACK TO THE FRAME THAT OPENED IT (readme §10; the
+  // K13 round): the opener is remembered at the tap and focused on close.
+  const viewerOpener = React.useRef(null);
+  const openViewer = (index) => {
+    viewerOpener.current = typeof document !== "undefined" ? document.activeElement : null;
+    if (onOpenMedia) onOpenMedia(index);
+    else setViewing(index);
+  };
+  const closeViewer = () => {
+    setViewing(null);
+    if (viewerOpener.current && viewerOpener.current.focus) viewerOpener.current.focus();
+  };
 
   // The license is a term over downstream reuse, checked once in a hundred
   // readings — so it is not on the card at all. The menu's row opens it in a
@@ -239,7 +253,7 @@ export function PostCard({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((shown) => !shown)}
-        className="cg-state cg-focus"
+        className="cg-state cg-focus cg-hit"
         style={{
           alignSelf: "flex-start",
           border: 0,
@@ -266,6 +280,12 @@ export function PostCard({
   );
 
   const bodyBlock = main ?? textBlock;
+  /* THE CARD'S DOORS LIGHT THE WHOLE CARD (readme §4, *Interaction states*;
+     the K13 round). The words and the media open the post, so they carry
+     `cg-door`, and the card that holds them takes the pressed layer across
+     its whole surface — the product's most common tap shows where it went.
+     The stance face, the ⋮, the counts and the share keep their own layers. */
+  const door = !detail && Boolean(onOpen);
   const linkedText =
     detail || !onOpen ? (
       bodyBlock
@@ -276,7 +296,7 @@ export function PostCard({
           event.preventDefault();
           onOpen();
         }}
-        className="cg-focus"
+        className="cg-focus cg-door"
         style={{ display: "block", color: "inherit", textDecoration: "none" }}
       >
         {bodyBlock}
@@ -302,30 +322,33 @@ export function PostCard({
         // the card's edges, and drops its side radii — it meets the card's straight
         // sides, never its corners, so nothing needs clipping. It is the largest
         // thing in the card by a wide margin, which is the point.
+        // In the feed the region is the card's door (`cg-door`); on the detail
+        // surface each picture is its own door into the viewer (`MediaGallery`'s
+        // `onOpen`), and a clip enters it through its transport.
         <div
           style={{ margin: "0 calc(-1 * var(--card-padding))" }}
+          className={door ? "cg-door" : undefined}
           onClick={(event) => {
-            if (!detail && onOpen) {
+            if (door) {
               event.preventDefault();
               onOpen();
-            } else if (detail) {
+            } else if (detail && media[0].kind === "video") {
               event.preventDefault();
-              if (onOpenMedia) onOpenMedia(0);
-              else setViewing(0);
+              openViewer(0);
             }
           }}
           data-node={node && "media"}
         >
           {veil ? (
             <SensitiveVeil kind="media" reason={veil.reason} source={veil.source} radius="0px">
-              <MediaGallery items={media} radius="0px" node={node && "media"} />
+              <MediaGallery items={media} radius="0px" onOpen={detail ? openViewer : undefined} node={node && "media"} />
             </SensitiveVeil>
           ) : (
-            <MediaGallery items={media} radius="0px" node={node && "media"} />
+            <MediaGallery items={media} radius="0px" onOpen={detail ? openViewer : undefined} node={node && "media"} />
           )}
         </div>
       )}
-      {viewing !== null && <MediaViewer items={media} index={viewing} onClose={() => setViewing(null)} />}
+      {viewing !== null && <MediaViewer items={media} index={viewing} onClose={closeViewer} />}
       {redacted ? <RedactedContent {...(redacted === true ? {} : redacted)} /> : linkedText}
       {!redacted && opener}
       {/* ONE LINE on both variants — the sheet is the full set's home. On
@@ -363,12 +386,17 @@ export function PostCard({
           empty list is a tap spent on nothing. A post nobody has answered says so
           by having nothing to open. The comment's door is its ⋮ menu, where the
           row stands whatever the count is, and the empty sheet lives there. */}
+      {/* THE COUNT RIDES INSIDE THE NAME (copy-voice, *The opinions list*; the
+          K13 round). The line's own words are its accessible name — `8
+          opinions on this post`, `Cited by 4` — because a door's name replaces
+          everything in it and the number is why the line exists. Both lines
+          answer to 48px through `cg-hit`, their ink unchanged: the floor is
+          ruled. */}
       {!redacted && detail && opinions > 0 && (
         <button
           type="button"
           onClick={onOpenOpinions ?? (() => {})}
-          aria-label="Opinions on this post"
-          className="cg-state cg-focus"
+          className="cg-state cg-focus cg-hit"
           style={{
             display: "flex",
             alignItems: "center",
@@ -385,9 +413,7 @@ export function PostCard({
           }}
           data-node={node && "opinions"}
         >
-          <span aria-hidden="true">
-            {opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`}
-          </span>
+          <span>{opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`}</span>
         </button>
       )}
       {/* WHAT CITES THIS, on the detail surface only (the topic round,
@@ -415,8 +441,7 @@ export function PostCard({
         <button
           type="button"
           onClick={onOpenCitedBy ?? (() => {})}
-          aria-label="Cited by"
-          className="cg-state cg-focus"
+          className="cg-state cg-focus cg-hit"
           style={{
             display: "flex",
             alignItems: "center",
@@ -433,7 +458,7 @@ export function PostCard({
           }}
           data-node={node && "citedBy"}
         >
-          <span aria-hidden="true">Cited by {citedBy}</span>
+          <span>Cited by {citedBy}</span>
         </button>
       )}
       {/* THE MARKER IS A DOOR ONCE THERE IS SOMEWHERE TO GO (the change-histories
@@ -493,6 +518,8 @@ export function PostCard({
               pendingPick={stancePendingPick}
               pendingReview={stancePendingReview}
               signing={stanceSigning}
+              holdProgress={stanceHoldProgress}
+              knobHeld={stanceKnobHeld}
               {...(stanceAxes ? { axes: stanceAxes } : null)}
               node={node && "stance"}
             />
@@ -552,7 +579,7 @@ export function PostCard({
      the card instead of floating beside its curve (jakob's review, the tag
      round). */
   return (
-    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} node={node} nodeKey={node && author?.handle}>
+    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={door} node={node} nodeKey={node && author?.handle}>
       {veil ? <SensitiveScope>{body}</SensitiveScope> : body}
     </Card>
   );

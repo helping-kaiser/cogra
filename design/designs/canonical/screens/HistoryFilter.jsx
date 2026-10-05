@@ -32,7 +32,7 @@ export function Screen() {
     <>
       <PageHeader title="History" backHref="#" backLabel="Back to your profile" />
       <div style={{ flex: "none" }}>
-        <SearchBar placeholder="Search your history" />
+        <SearchBar placeholder="Search your history" ariaLabel="Search your history" />
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
           <FilterTrigger reading="Everything" ariaLabel="What your history shows" expanded />
         </div>

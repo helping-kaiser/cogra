@@ -8,6 +8,30 @@ Use `TextField` for every labeled input and, with `rows`, for every composer tex
 
 **`rows` is a minimum, and a multi-line field grows.** A field given `rows` opens at that many lines and takes another whenever the writing needs one — `rows={1}` is a field that starts as one line and grows, which is what the comment composer and the sensitive sheet's reason are. A sheet holding such a field is content-sized and grows with it up to the **tallest-sheet ceiling** (`BottomSheet`), and from there the field scrolls inside itself while the Done row stays in reach. Never state a maximum in lines: the bound is viewport minus chrome, so the same rule holds on both platforms and neither caps the growth at a line count. A sheet already pinned at the ceiling gives the field its room out of the list above it (the comments thread). Boards draw the minimum — growth is behaviour, and a drawing is one state.
 
+**What each field asks of the keyboard** (the K13 round, ruled). A field's `kind` decides its keyboard, capitalization, correction and autofill — `FIELD_KINDS` is the table both clients read; `type="email"` and `mono` name their kinds, and a field with neither is prose. The Android names are `KeyboardOptions` and Compose's autofill `ContentType`.
+
+| Kind | Fields | Keyboard (web · Android) | Caps | Autocorrect | Autofill (web · Android) |
+|---|---|---|---|---|---|
+| `prose` | Title, Description, Words, Bio, Why?, What happened | `text` · `Text` | sentences | on | off · none |
+| `name` | Display name | `text` · `Text` | words | off | off · none |
+| `email` | Email, New email | `email` · `Email` | none | off | `email` · `EmailAddress` — `username` · `Username` on a credential form |
+| `handle` | Handle, New handle | `text` · `Ascii` | none | off | `nickname` · none — never `username` |
+| `url` | Invite link, Website | `url` keyboard (type stays `text`) · `Uri` | none | off | off, `url` on Website · none |
+| `code` (= `mono`) | Recovery code, Current recovery code, Confirmation code | `text` · `Ascii` | characters | off | `one-time-code` · `SmsOtpCode` |
+| password (`PasswordField`) | Password, Current password, New password | password · `Password` | none | off | `current-password` / `new-password` · `Password` / `NewPassword` |
+
+**The return key follows the form, not the kind.** A single-line field reads `next` (`ImeAction.Next`) while another field follows it; the form's last one passes `enterKeyHint="go"` (`ImeAction.Go`) and submits as the form's commit does — HTML's implicit submission — never while the commit is disabled. A multi-line field's Enter is a new line, on a soft keyboard and a hardware one alike, and never submits.
+
+**Arrival focus, one line per composer** (the K13 round). A stage that is one field opens with it focused and the keyboard up; a stage of several fields lands focus on its title (readme §10) and the keyboard waits for the reader's tap.
+
+| Composer | On arrival |
+|---|---|
+| `ComposeWords`, `EditWords` — the words stage | the body, caret at its end, keyboard up |
+| `ReplyCompose` — the reply | the body, keyboard up |
+| `TagPicker` — Add a tag | the name field, keyboard up |
+| `ReferencePicker` — Cite something | the search field, keyboard up |
+| `ComposeDetails`, `EditCompose`, `CommentEdit`, `ProfileEdit` | the title; no keyboard until a field is tapped |
+
 The label is always visible and always `label-large` — there is no floating-label or placeholder-as-label pattern in this product. The field sits on the **extra-small (4px)** rung with a 1px `outline` border and no fill. `mono` is only for content read character by character.
 
 ```jsx

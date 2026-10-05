@@ -25,3 +25,5 @@ WHEN tap Already have an account? Sign in -> SignIn opens
 WHEN tap Just looking? Browse the feed GIVEN an inviter's link was seen -> the feed opens in that inviter's borrowed view
 
 WHEN tap Just looking? Browse the feed GIVEN no usable link was seen -> FeedBare opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

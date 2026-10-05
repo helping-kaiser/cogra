@@ -24,7 +24,11 @@ export function PendingMarker({ label = "Still settling", inline = false }) {
     every version whole, newest first, never a diff. Friendly, not forensic.
     V1.0 PASSES NO HISTORY DOOR (readme §13, the scope cut's F-1): no canonical
     screen hands `onInspect`, so the marker renders as plain text and no door
-    exists in V1.0. The change-histories round wires it. */
+    exists in V1.0. The change-histories round wires it.
+
+    AS A DOOR IT IS A PRESSABLE LIKE ANY OTHER (readme §4, the K13 round):
+    `cg-state cg-focus cg-hit`, so the label-small ink answers to a 48px target
+    with the pressed layer and the focus ring every control carries. */
 export function EditedMarker({ label = "Edited", onInspect }) {
   if (!onInspect) {
     return <p style={{ margin: 0, fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>{label}</p>;
@@ -33,6 +37,7 @@ export function EditedMarker({ label = "Edited", onInspect }) {
     <button
       type="button"
       onClick={onInspect}
+      className="cg-state cg-focus cg-hit"
       style={{
         alignSelf: "flex-start",
         background: "none",

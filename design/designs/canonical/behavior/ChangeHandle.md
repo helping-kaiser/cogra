@@ -21,3 +21,5 @@ WHEN the change has not answered 200ms after the press -> Change handle reads Ch
 WHEN press Change handle GIVEN the reader is offline -> the network error answers AND NEVER the handle changes
 
 WHEN press the header back arrow -> settings returns AND NEVER the handle changes
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

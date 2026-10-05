@@ -45,7 +45,7 @@ export function Screen() {
         </p>
 
         <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 16 }}>
-          <TextField id="signin-email" label="Email" type="email" autoComplete="email" value="" />
+          <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" />
           <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" />
           <Checkbox label="Don't remember this account on this device" />
           <Button style={{ width: "100%" }}>Sign in</Button>

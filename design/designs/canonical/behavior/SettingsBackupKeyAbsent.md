@@ -17,3 +17,5 @@ WHEN tap Restore the key -> the restore screen opens
 ALWAYS the back arrow is the screen's one way out besides Restore the key
 
 WHEN press the header back arrow -> settings returns AND nothing has changed
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

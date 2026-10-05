@@ -135,7 +135,11 @@ export function clipFrame(ratio) {
    surface behind the glyph, at the tile's lower-right corner — the thumb's
    side while scrolling (jakob, 2026-09-15). Every disc a media surface draws
    is this one — sound, play, and the stream's way back — so they sit at one
-   size and one weight wherever the reader meets them. */
+   size and one weight wherever the reader meets them.
+
+   36px OF INK, 48px OF TARGET (readme §4, the K13 round). There is no real
+   option: the floor is ruled. `cg-hit` grows the target around the disc, so
+   the disc keeps its size on the photograph and the thumb keeps its 48. */
 export function MediaDisc({ label, glyph, onClick, pressed, corner = "bottom-right", node }) {
   const [vertical, horizontal] = corner.split("-");
   return (
@@ -148,7 +152,7 @@ export function MediaDisc({ label, glyph, onClick, pressed, corner = "bottom-rig
         event.stopPropagation();
         if (onClick) onClick(event);
       }}
-      className="cg-state cg-focus"
+      className="cg-state cg-focus cg-hit"
       style={{
         position: "absolute",
         [vertical]: "8px",
@@ -368,9 +372,11 @@ export function MediaAttachment({
    dot, so shrinking one moves nothing beside it — a row that reflowed as the
    reader swiped would be its own kind of noise.
 
-   THE COUNT IS NOT DRAWN. The plain "Picture n of m" stays in the accessible
-   name, where it has always been: the frame carries the dots, a listener
-   carries the number.
+   THE COUNT IS NOT DRAWN, AND THE DOTS ARE NOT SPOKEN (the K13 round). The
+   row is a visual readout and nothing else — `aria-hidden`, never a target.
+   The plain "Picture n of m" is the accessible name of the strip it reads
+   (`MediaGallery`), which is what a listener focuses and pages: the frame
+   carries the dots, a listener carries the number.
 
    TWO TONES, ONE ROW. On a card the dots are the page's own ink — `primary`
    for here, the hairline for the rest. Over the viewer's scrim there is no
@@ -396,7 +402,7 @@ export function PagerDots({ count, current, tone = "card", node }) {
 
   return (
     <div
-      aria-label={`Picture ${current + 1} of ${count}`}
+      aria-hidden="true"
       style={{
         display: "flex",
         alignItems: "center",
@@ -448,13 +454,39 @@ export function PagerDots({ count, current, tone = "card", node }) {
    Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
    the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
    (square) and each display-crops to it — a pager whose height changed per
-   swipe would bounce the card under the reader's thumb. */
-export function MediaGallery({ items = [], ratio, radius, maxHeight, node }) {
+   swipe would bounce the card under the reader's thumb.
+
+   THE SWIPE HAS A NON-DRAG TWIN (the K13 round; readme §10, every drag gesture
+   has one). The strip is focusable, named by where the reader is — `Picture 2
+   of 4` — and pages with ← and →, one frame per press, stopping at either end:
+   the card's pager never wraps, and neither does the viewer's. On Android the
+   pager exposes the platform's scroll actions (TalkBack's scroll forward and
+   back), which are the same two moves. The dots stay a visual readout.
+
+   `onOpen(index)` makes the frames a door — the detail surface's way into the
+   viewer. A tap on a frame opens it at that frame; on the focused strip, or the
+   one frame of a single, Enter and Space do. The opener is the element focus
+   returns to when the viewer closes (`MediaViewer`). In a feed card no
+   `onOpen` is passed: the card's words are its keyboard door, and the media is
+   only the pointer's larger version of it. A clip is never wrapped: its
+   transport is its own set of controls, and its way into the viewer is the
+   transport's fullscreen — a door around a transport would nest one control
+   inside another. */
+const PICTURE_NAME = "Picture";
+
+const openKeys = (open) => (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    open();
+  }
+};
+
+export function MediaGallery({ items = [], ratio, radius, maxHeight, onOpen, node }) {
   const [page, setPage] = React.useState(0);
   const stripRef = React.useRef(null);
   if (items.length === 0) return null;
   if (items.length === 1) {
-    return (
+    const single = (
       <MediaAttachment
         {...items[0]}
         ratio={items[0].ratio ?? ratio ?? "wide"}
@@ -464,6 +496,20 @@ export function MediaGallery({ items = [], ratio, radius, maxHeight, node }) {
         nodeKey={node && "1"}
       />
     );
+    if (!onOpen || items[0].kind === "video") return single;
+    return (
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={items[0].alt ? undefined : PICTURE_NAME}
+        onClick={() => onOpen(0)}
+        onKeyDown={openKeys(() => onOpen(0))}
+        className="cg-state cg-focus"
+        style={{ cursor: "pointer" }}
+      >
+        {single}
+      </div>
+    );
   }
   const frameRatio = ratio ?? items[0].ratio ?? "wide";
   const onScroll = () => {
@@ -472,11 +518,34 @@ export function MediaGallery({ items = [], ratio, radius, maxHeight, node }) {
     const next = Math.round(strip.scrollLeft / strip.clientWidth);
     if (next !== page) setPage(next);
   };
+  const pageTo = (next) => {
+    const strip = stripRef.current;
+    const bounded = Math.max(0, Math.min(items.length - 1, next));
+    if (bounded === page) return;
+    setPage(bounded);
+    if (strip) strip.scrollTo({ left: bounded * strip.clientWidth, behavior: "smooth" });
+  };
+  const onKeyDown = (event) => {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      pageTo(page + 1);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      pageTo(page - 1);
+    } else if (onOpen) {
+      openKeys(() => onOpen(page))(event);
+    }
+  };
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
       <div
         ref={stripRef}
         onScroll={onScroll}
+        onKeyDown={onKeyDown}
+        tabIndex={0}
+        role="group"
+        aria-label={`Picture ${page + 1} of ${items.length}`}
+        className="cg-focus"
         style={{
           display: "flex",
           overflowX: "auto",
@@ -485,7 +554,11 @@ export function MediaGallery({ items = [], ratio, radius, maxHeight, node }) {
         }}
       >
         {items.map((item, index) => (
-          <div key={item.src ?? index} style={{ flex: "none", width: "100%", scrollSnapAlign: "start" }}>
+          <div
+            key={item.src ?? index}
+            onClick={onOpen ? () => onOpen(index) : undefined}
+            style={{ flex: "none", width: "100%", scrollSnapAlign: "start", cursor: onOpen ? "pointer" : undefined }}
+          >
             <MediaAttachment
               {...item}
               ratio={frameRatio}
@@ -497,7 +570,8 @@ export function MediaGallery({ items = [], ratio, radius, maxHeight, node }) {
           </div>
         ))}
       </div>
-      {/* The dots are a readout, not ten targets — the gesture is the swipe. */}
+      {/* The dots are a readout, not ten targets — the gesture is the swipe,
+          and its non-drag twin is the focused strip's arrows. */}
       <div style={{ padding: "8px 0 0" }}>
         <PagerDots count={items.length} current={page} node={node && "dots"} />
       </div>

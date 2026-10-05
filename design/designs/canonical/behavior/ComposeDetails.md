@@ -55,3 +55,5 @@ ALWAYS a tag staged here starts at relevance +0.1 and confidence 1
 WHEN press composeDetails.header.back -> the crop comes back, one stage behind
 
 WHEN press composeDetails.header.leave -> the whole flow is left AND the draft is kept AND NEVER a dialog asks
+
+WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped

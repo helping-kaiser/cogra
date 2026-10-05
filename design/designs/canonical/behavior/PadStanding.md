@@ -16,7 +16,7 @@ ALWAYS the pad carries no Walk it back GIVEN nothing was ever signed toward the 
 
 WHEN drag on the pad field -> the knob and the pick's face and pair follow the drag AND the landing line reads what the pick would come to AND NEVER anything is staged
 
-WHEN release a drag on the pad field -> the pick is parked AND NEVER anything is signed
+WHEN release a drag on the pad field -> the pick is parked AND the knob's pressed layer lifts AND NEVER anything is signed
 
 ALWAYS the knob never leaves the field, whose corners are the bounds of both axes
 
@@ -45,3 +45,11 @@ WHEN the signing does not go through -> the pad stays open at the pick AND the l
 WHEN the write rule refuses the signing -> the pad stays open at the pick AND the notice You can't sign right now stands where the landing line and the commit row were, with Not now AND nothing is staged or spent
 
 ALWAYS the non-drag route Choose your opinion on this post stands beside the face, hidden until focused, and leads to the same pick by sliders or typed values
+
+WHEN a pointer goes down on the pad field -> the knob wears a 40px pressed layer in its own colour at 10% for as long as the pointer stays down AND NEVER the knob scales
+
+WHEN the knob crosses a zero line or meets the field's edge where the pick clamps GIVEN the device is Android -> the platform's one tick is given AND NEVER anything else in the drag vibrates
+
+WHEN the pick changes -> the readouts redraw at once AND NEVER the spoken readouts change before the pick has rested 500ms
+
+WHEN the pick has rested 500ms -> the spoken readouts say the pick and the landing once

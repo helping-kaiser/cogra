@@ -21,6 +21,21 @@ import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
    the shadow does the work a plate would otherwise do, because a column of five
    plates is a wall of chrome down the frame.
 
+   THE LOOK IS RULED, AND ITS CONTRAST WAS MEASURED ONCE (the K13 round; jakob
+   accepted white-with-shadow over a token pair). Against the lightest fixture
+   photograph — `04-square-1x1.jpg`, the honey jars (`gallery-honey.jpg`),
+   mean relative luminance 0.555 — bare white reads 1.73:1 on the photo's
+   mean and 1.04:1 on its near-white right-hand strip, where the rail stands.
+   Under the shadow's 55–60 % black core the glyph's edge reaches about
+   3.9:1 on the mean and about 2.4:1 on that strip. So on the brightest frame
+   the fixtures hold, the rail sits below WCAG's 3:1 for controls; the clip
+   fixture the stream draws (`clip-lakeside.jpg`) gives 3.3:1 bare and well
+   over it shadowed. Recorded, not changed: the look stands as ruled, and the
+   finding is filed (backlog 13X-k13). Method: relative luminance per WCAG
+   2.x over every fixture photo, the rail's strip being the right fifth of the
+   lower two-thirds; the shadow modelled as its core alpha over that
+   luminance.
+
    THE STANCE IS THE SYSTEM'S OWN CONTROL, in its media dress (`overMedia`): the
    unset state is a line face at the rail's weight rather than the card's muted
    emoji, and the pad it blooms is the same pad, over the paused clip, seal and

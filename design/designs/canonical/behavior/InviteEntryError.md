@@ -25,3 +25,5 @@ WHEN press Continue GIVEN no answer reaches the device -> the field keeps what w
 WHEN tap Already have an account? Sign in -> SignIn opens
 
 WHEN tap Just looking? Browse the feed -> FeedBare opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

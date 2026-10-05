@@ -604,6 +604,27 @@ the eye gets:
 
 Both blessed (jakob 2026-10-01).
 
+**Names that carry what the eye reads** (the K13 round). Ruled with
+their examples, so blessed: a count keeps its number (`8 opinions on
+this post`, `Cited by 4`), an unsave names its thing (`Unsave The long
+way home`), a "?" is named by its dialog (`Tagging`, `Citing`), and a
+search field by its use (`Search`, `Name a tag`, `Cite something`).
+Spelled by the round and **flagged for blessing**:
+
+- `Posts · newest, what your feed shows` — the filter pill's name: its
+  reading, then its purpose lowercased after a comma, the reading
+  leading because a speech-input reader says what they see; search's
+  pill ends `what the search shows`. The same words are the one polite
+  announcement `Done` leaves when it applies the filter.
+- `Back to the comment` — the pickers' arrow when a reply's composer or
+  a comment's edit opened them; `Back to the post` stays the arrow from
+  a post's composer or edit.
+- `Picture` and `Video` — the viewer's name for a single picture or
+  clip, and a single picture's door into it on a detail; a set keeps
+  `Picture 2 of 4`.
+- `Move the picture` and `Zoom` — the crop's focusable viewport and
+  its slider.
+
 ## The staged-act snackbar
 
 An applicant's second tap of a kind already staged answers here instead
@@ -737,11 +758,15 @@ spelling — one `License terms` everywhere, never the British spelling:
   will do (§3), which is why the kept state is a verb and never the
   word *Saved* sitting there as a status — and nothing outside the menu
   shows it, so this row is the only place a reader learns whether a
-  thing is kept. `Unsave` is also the accessible name of the Saved
-  list's own icon-only control, where the filled bookmark carries the
-  act and no word is drawn at all: the glyph is a glyph, and the
-  reader's word stays *save* — never *bookmark*, which is a filing word
-  for a thing readers think of as keeping.
+  thing is kept. On the Saved list's own icon-only control, where the
+  filled bookmark carries the act and no word is drawn at all, the
+  accessible name is `Unsave` and the row's title — `Unsave The long
+  way home`, `Unsave Mira Voss` (the K13 round): a list of bare
+  `Unsave`s gives a listener the verb every time and the object never,
+  the defect the tag chip's × and the skip link were already ruled out
+  of. The glyph is a glyph, and the reader's word stays *save* — never
+  *bookmark*, which is a filing word for a thing readers think of as
+  keeping.
 
 ## The license block
 
@@ -1149,8 +1174,9 @@ the current default in the words the license block already uses —
 one line the settings route still owes a reading.
 
 **Reading**: `What your feed shows` — the filter sheet's own accessible
-name, so the row and the trigger cannot say different things — with the
-default read back through the trigger's own words (`Posts`). Under it:
+name and the purpose the trigger's name ends on, so the row and the
+trigger cannot say different things — with the default read back
+through the trigger's own words (`Posts`). Under it:
 `Every feed starts from this. A change made inside a feed lasts until
 you change it back, on that device only.`
 
@@ -1623,9 +1649,11 @@ the round's most load-bearing line: it has to make a missing "Create
 feature. *Nobody owns a tag* is the commons said plainly; *the moment
 you sign* puts the act where it really is.
 
-**The field asks for a name, not a search.** Placeholder `Name a tag`.
-A picker that said *Search tags* would promise that a name it cannot
-show you is a name you cannot have.
+**The field asks for a name, not a search.** Placeholder `Name a tag`,
+and the same words are the field's accessible name, which stays when
+the placeholder leaves (the K13 round). A picker that said *Search
+tags* would promise that a name it cannot show you is a name you cannot
+have.
 
 **Canonicalization is previewed, never silent.** While `#SaltMaps` is
 typed, the list's first row is always the typed name canonicalized —
@@ -1651,7 +1679,9 @@ about their own post.
 action.` The sheet stages; the seal signs. A slider that moved a number
 with no word about it would read as free.
 
-**The "?" · Tagging** (the picker's one dialog): `A tag is a name
+**The "?" · Tagging** (the picker's one dialog, and the "?"'s
+accessible name — a "?" is named by the dialog it opens, the citation
+picker's `Citing` likewise; the K13 round): `A tag is a name
 anyone can use — nobody owns one, and using a name nobody has used
 before takes no extra step. Tagging is its own signed action, and it
 carries how much the post is about that tag. / Names are lowercased,
@@ -1852,9 +1882,9 @@ it — §3's rule, applied.
 
 **The second list is `History`.** Everything you have seen, every kind,
 as a feed, newest-seen first. *View history* is the contract's word and
-stays there. Its field reads `Search your history`, its trigger
-`Everything` at rest — search's word for nothing narrowed — and the
-trigger's accessible name and the sheet's title are `What your history
+stays there. Its field reads and is named `Search your history`, its
+trigger `Everything` at rest — search's word for nothing narrowed — and
+the trigger's purpose and the sheet's title are `What your history
 shows`, the feed's and search's construction. The sheet's kind hint is
 search's own, `Combine as many as you like. All, until you narrow it.`
 (*new 2026-10-05, flagged for blessing*: `Search your history`, `What
@@ -2230,8 +2260,10 @@ nothing is broken. It is deliberately not an empty-list line: something
 *was* here.
 
 **The opinions list.** The post's door reads `8 opinions on this post`
-(`1 opinion on this post` in the singular) with `Opinions on this post`
-as its accessible name; the comment's menu row reads `Opinions on this`.
+(`1 opinion on this post` in the singular), and those words are its
+accessible name — the count rides inside the name (*Manage the N
+citations*, above; the K13 round); the comment's menu row reads
+`Opinions on this`.
 The sheets are titled `Opinions on this post` and `Opinions on this
 comment`. *Opinion* throughout, never *stance* — the reader's word
 (*Naming*, above) — and the count is bare beside it, the row's own words
@@ -2373,8 +2405,9 @@ two reasons that agree: the head spells kinds and a topic is not one,
 and the head is the half the collapse cannot take away — a name the pill
 cannot hold has to be able to leave it.
 
-**`Cited by N`** — the inbound count line on a post's detail, and
-`Cited by` as the sheet's title and the comment menu's row. *Cited* is
+**`Cited by N`** — the inbound count line on a post's detail, whose
+accessible name is its own words, `Cited by 4`; and `Cited by` as the
+sheet's title and the comment menu's row. *Cited* is
 already the product's verb for a Reference (*"@ada cited your post"*),
 and the line reads from the artifact's side: what points at this. The
 count is bare beside it, the row's own words having said what was

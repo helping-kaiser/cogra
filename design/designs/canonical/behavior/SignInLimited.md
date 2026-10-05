@@ -41,3 +41,5 @@ WHEN the sign-in is taken GIVEN the backoff has passed -> the line goes AND the 
 WHEN the sign-in is refused for its email and password GIVEN the backoff has passed -> the line reads That email and password don't match. in the same place
 
 WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

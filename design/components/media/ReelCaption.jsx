@@ -20,7 +20,11 @@ import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
    law, `PostCard`'s idiom): the description blurs in place behind the
    `text` veil, the handle and the title stay readable so choosing to look is
    informed, and the reveal belongs to the post's one `SensitiveScope` — the
-   same tap that unveils the clip unveils these words. */
+   same tap that unveils the clip unveils these words.
+
+   `More` ANSWERS TO 48px (readme §4, the K13 round): `cg-hit` grows its target
+   around the word, which keeps its ink. There is no real option; the floor is
+   ruled. */
 
 export function ReelCaption({ handle, title, description, bottom = 86, onMore, sensitive = false }) {
   // The veil wraps the clamped line, never the text inside it — the clamp clips
@@ -72,7 +76,7 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
         <button
           type="button"
           onClick={onMore ?? (() => {})}
-          className="cg-state cg-focus"
+          className="cg-state cg-focus cg-hit"
           style={{
             alignSelf: "flex-start",
             border: 0,

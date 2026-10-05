@@ -23,3 +23,5 @@ WHEN press Show my key GIVEN no answer reaches the device -> the field keeps wha
 ALWAYS the header's arrow reads Back to settings
 
 WHEN press the header's back arrow -> Settings opens AND nothing is shown
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
