@@ -75,7 +75,7 @@ import { formatStancePair, formatStanceWords, nearestAnchor, SR_ONLY } from "../
    place. The controls name the row by its mark too, never by the removed
    name: the × `Remove this citation: Post, Removed by its author` (a kept
    pick's says `pick`), and the row `Post, Removed by its author — set how it
-   relates` (both new, flagged for blessing). */
+   relates` (both blessed, jakob 2026-10-05). */
 function Body({ kind, name, sub, src, pair, stance, removed, consequence, node }) {
   const exact = pair ? formatStancePair(pair) : null;
   const anchor = pair ? nearestAnchor(pair) : null;

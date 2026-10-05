@@ -15,6 +15,8 @@ export interface UploadStatusLineProps {
    * The body's kind, so the gate names what it waits for: "…signing waits for
    * the pictures." by default, "…signing waits for the video." for a clip,
    * "…signing waits for the cover." for an edit that changed a clip's cover.
+   * The pictures' noun counts: at a `total` of one it reads "…signing waits
+   * for the picture.".
    */
   media?: "pictures" | "video" | "cover";
   /**

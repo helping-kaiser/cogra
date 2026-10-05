@@ -8792,6 +8792,40 @@ copy-voice. Nothing was ruled in the pass.
   parked items on these surfaces stay parked where they are.
 - **The gate**: screens, edges, flows and boards unchanged; 33 new
   sidecars, every one green.
+### The 136 round — 2026-10-05
+
+jakob's answer to backlog item 136 ("1-5 all as recommended"). Every
+quoted wording is blessed unless marked.
+
+- **The residue round's three flagged strings are blessed**: the gate's
+  cover noun and the removed-target citation's two spoken names.
+- **An edit's slow line stands under its acts footer.** `ActsFooter`
+  takes an optional subline, the seals' `Still signing — the network is
+  slow right now.`, once an edit's signing runs past 5s from the press,
+  in the slow olive and spoken once as a status, outside the footer's
+  button; it goes when the signing answers. It holds for all five edit
+  boards, gated or not; `EditCompose`'s `signing` chip draws it once,
+  with `Sign the edit` reading `Signing the edit…`.
+- **A failed upload on an edit marks its tile too.** The edit's media
+  row fails the compose way — the tile badged, `One picture didn't
+  upload.` under the row with `Retry · Remove it` — and the gate line
+  takes its fault reading with `Sign the edit` disabled. `Remove it` on
+  the failed new picture un-gates Sign. The video twins fail on the
+  cover. `EditCompose`'s `upload` chip draws it as `failed`.
+- **A removed target is marked on its pair sheet, never named.**
+  `RefPairEdit`'s title reads `Post, Removed by its author`, and its
+  non-drag route `Set exact values for Post, Removed by its author`; a
+  `target` chip draws it over the row's own removed face.
+- **The pads' comment opening is the chip and the sidecars.** No sheet
+  is drawn over the comment edit; opened there, `TagPad` and
+  `RefPairEdit` differ only in the foot line's noun.
+- **The fixtures stand as drawn.** `EditCompose`'s two pictures were both
+  added in the edit, so `Uploading 1 of 2` is true; `CommentEdit`'s gate
+  noun counts, `Uploading 0 of 1 — signing waits for the picture.`
+  (flagged); `EditComposeVideo` keeps its cover and its counts.
+- **The gate**: 270 screens, 1810 → **1812 edges** (`EditCompose`'s
+  `Retry` and `Remove it`), 0 gaps, flows 66, every one resolved, 134
+  sidecars. The witness did not move.
 
 ## 15. Index
 

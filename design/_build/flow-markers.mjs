@@ -1857,7 +1857,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: 'aria-label="Editing"', tag: "button" },
-    { n: 4, find: 'aria-label="Manage the pictures"', tag: "button" },
+    // The `upload` chip's `failed` draws the row a second time, its second
+    // tile marked; the `signing` chip's `slow` draws the footer a second time
+    // with its subline, and the commit in flight; `failed` the commit disabled.
+    { n: 4, find: 'aria-label="Manage the pictures"', tag: "button", all: true },
     { n: 5, find: 'data-field="Title"', tag: "div" },
     { n: 6, find: 'data-field="Description"', tag: "div" },
     { n: 7, find: 'aria-label="Remove #fieldnotes"', tag: "button" },
@@ -1865,8 +1868,12 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: "+ Add a tag", tag: "button" },
     { n: 9, find: 'aria-label="Remove The long way home', tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "signing 5 things", tag: "button" },
-    { n: 12, find: ">Sign the edit</button>", tag: "button" },
+    { n: 11, find: "signing 5 things", tag: "button", all: true },
+    { n: 12, find: ">Sign the edit</button>", tag: "button", all: true },
+    { n: 12, find: ">Signing the edit…</button>", tag: "button" },
+    // A failed upload's two Retries — the row's and the gate's — are one act.
+    { n: 19, find: ">Retry</button>", tag: "button", all: true },
+    { n: 20, find: ">Remove it</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
     { n: 15, find: "aria-label=\"The long way home — @ada — set how it relates\"", tag: "button" },
     // The `target` chip's removed-target row: the same row, named by its mark.
@@ -2408,7 +2415,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Remove citation</button>", tag: "button" },
     { n: 3, find: ">Done</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
-    { n: 5, find: ">Set exact values for The long way home — @ada</button>", tag: "button" },
+    { n: 5, find: ">Set exact values for {{refName}}</button>", tag: "button" },
   ],
 });
 
