@@ -16,7 +16,18 @@
    and revocable: a link is a thing the reader made and can un-make with one
    quiet word, and its card is the long-opaque-string card the wallet's payout
    address already is. Vouching is signed and priced: it happens on the pad, in
-   the pad's own grammar, and nothing on this page can do it by accident. */
+   the pad's own grammar, and nothing on this page can do it by accident.
+
+   THE `kept` CHIP DRAWS A KEPT APPROVAL (jakob 2026-10-05, the final brief):
+   `waiting` puts the vouch the reader set on @noor's ask link, kept while the
+   key was elsewhere, at the head of Applications as its own row reading
+   `Waiting for your key` (`KeptApprovalRow`). Once the key is back it reads
+   `Ready for your approval`, and it is the row the kept picks' line `An
+   approval waits in your invites — go there to sign it.` sends the reader
+   to. */
+export const PROPS = { kept: { editor: "enum", options: ["none", "waiting"], default: "none" } };
+export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none"`;
+
 export function Screen() {
-  return <InvitesBody />;
+  return <InvitesBody kept="{{keptShown}}" />;
 }

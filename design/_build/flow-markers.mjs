@@ -2543,6 +2543,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Copy the link"', tag: "button", all: true },
     { n: 7, find: ">Revoke</button>", tag: "button", all: true },
     { n: 8, find: ">Close all</button>", tag: "button" },
+    // The kept approval's row (the `kept` chip), head of Applications.
+    { n: 9, find: ">@noor<", tag: "button" },
+    { n: 5, find: 'aria-label="Close @noor&#x27;s application"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

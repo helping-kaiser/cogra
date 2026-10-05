@@ -4462,7 +4462,36 @@ const YOUR_VOUCH_BACK_HELP = [
    own card on the feed and signs through `VouchBackPad` into `VouchedIn`.
    Neither twin is drawn as a state of its own: the ready row here, and the
    vouch-back card there, are the cards they surface as. */
-function InvitesBody({ approving = false }) {
+/* A KEPT APPROVAL ON INVITES (jakob 2026-10-05, the final brief: "rest sounds
+   good" — the entry lane's F-eev-4). A vouch the reader set on an ask link
+   while the key was elsewhere is a kept approval: never in the kept picks'
+   batch, signed through the approval pad here. It stands as ONE row at the
+   head of Applications, before every group — it is the reader's own act
+   waiting, not a stranger's request in the queue — in the application row's
+   anatomy: the monogram, the handle, the second line, the age and the row's
+   own close. While the key is elsewhere the second line is the kept pick's
+   blessed `Waiting for your key`, and the row's tap meets the key notice, as
+   a kept pick's face does; once the key is back it reads `Ready for your
+   approval` and the tap opens the approval pad. `shown` is `Invites`'
+   `kept` chip. */
+function KeptApprovalRow({ shown }) {
+  return (
+    <div style={{ display: shown, padding: "0 16px 8px" }}>
+      <ContentRow
+        variant="chronicle"
+        chevron={false}
+        name="noor"
+        title="@noor"
+        second="Waiting for your key"
+        trailing="2d"
+        action={<CloseApplication handle="@noor" />}
+        onOpen={() => {}}
+      />
+    </div>
+  );
+}
+
+function InvitesBody({ approving = false, kept = "none" }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
@@ -4485,6 +4514,7 @@ function InvitesBody({ approving = false }) {
         </div>
 
         <SectionLabel>Applications</SectionLabel>
+        {kept !== "none" && <KeptApprovalRow shown={kept} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           <ApplicationGroup label="Many uses" count={4} />
           <ContentRow
