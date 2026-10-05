@@ -63,11 +63,28 @@
    comment, as its own action.`; the cost after it is unchanged. The board's
    `opener` chip draws both; the surface beneath stays the post edit's.
 
+   A REMOVED TARGET IS MARKED, NEVER NAMED (jakob 2026-10-05, the 136 round's
+   3). A standing citation whose target was removed still opens this sheet —
+   its row keeps its controls — and the sheet calls it what the row does: the
+   kind, then the mark, `Post, Removed by its author`. The title, the dialog's
+   name and the non-drag route compose the blessed face verbatim, `Set exact
+   values for Post, Removed by its author`; the removed name is never said.
+   Everything else is the sheet as it stands. The `target` chip draws it, the
+   row beneath wearing the same face (`EditCompose`'s `target` chip).
+
+   THE COMMENT OPENING IS THE CHIP AND THE PROSE (jakob 2026-10-05, the 136
+   round's 4): no sheet is drawn over `CommentEditBody`. Opened from the
+   comment edit the sheet stands over the comment edit, and only the line's
+   noun differs.
+
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule from
    2026-09-08; the sheet takes the raised height class, because three readouts,
    the field and the foot need the room. */
-export const PROPS = { opener: { editor: "enum", options: ["post", "comment"], default: "post" } };
-export const VALS = `signedWith: this.props.opener === "comment" ? "Signed with the comment, as its own action." : "Signed with the post, as its own action."`;
+export const PROPS = {
+  opener: { editor: "enum", options: ["post", "comment"], default: "post" },
+  target: { editor: "enum", options: ["live", "removed"], default: "live" },
+};
+export const VALS = `signedWith: this.props.opener === "comment" ? "Signed with the comment, as its own action." : "Signed with the post, as its own action.", refName: this.props.target === "removed" ? "Post, Removed by its author" : "The long way home — @ada", liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none"`;
 
 /* The citation's family: the four poles and two questions `RefPair` names, and
    the two bundle labels a record that is not an opinion reads under. */
@@ -92,19 +109,19 @@ const RESULTING = { pDirected: 0.3, pInterest: 0.2 };
 export function Screen() {
   return (
     <>
-      <EditComposeBody />
+      <EditComposeBody targetHoles />
 
-      <BottomSheet open ariaLabel="The long way home — @ada" maxHeight="88%">
-        <SheetTitle>The long way home — @ada</SheetTitle>
+      <BottomSheet open ariaLabel="{{refName}}" maxHeight="88%">
+        <SheetTitle>{"{{refName}}"}</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 12, padding: "0 24px 4px" }}>
           <button type="button" className="cg-sr-focusable cg-state cg-focus cg-hit" style={{ fontFamily: "var(--font-sans)" }}>
-            Set exact values for The long way home — @ada
+            Set exact values for {"{{refName}}"}
           </button>
 
           <StanceStanding
             pick={PICK}
             bundle={{ current: CURRENT, rawSum: CURRENT, records: 1, severed: false }}
-            targetLabel="The long way home — @ada"
+            targetLabel="{{refName}}"
             names={CITATION_FAMILY}
           />
 
