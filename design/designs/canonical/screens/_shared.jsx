@@ -121,6 +121,8 @@ const {
   TabBar,
   ContentRow,
   CropViewport,
+  CropZoom,
+  CROP_PAN_NAME,
 } = components;
 
 /* Visually hidden, still read aloud — `StanceReadout`'s own constant, spelled

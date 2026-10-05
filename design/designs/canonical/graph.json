@@ -986,8 +986,9 @@
     { "from": "ComposeCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
     { "from": "ComposeCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails", "case": "pictures — details next" }] },
     { "from": "ComposeCrop", "via": 4, "kind": "advance", "label": "shape chips", "to": [{ "terminal": "self", "case": "one shape for the whole post" }] },
-    { "from": "ComposeCrop", "via": 5, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom" }] },
+    { "from": "ComposeCrop", "via": 5, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it" }] },
     { "from": "ComposeCrop", "via": 6, "kind": "advance", "label": "picture strip", "to": [{ "terminal": "self", "case": "frames each picture in turn" }] },
+    { "from": "ComposeCrop", "via": 7, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to about 4× — the pinch, on screen" }] },
 
     { "from": "ComposeCover", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePickVideo", "case": "one stage back, no cover chosen — the pick with the clip staged; the video path never crosses the crop" }, { "board": "ComposePickVideoCover", "case": "a cover was chosen — the pick shows the clip wearing it" }, { "board": "ComposeDetailsVideo", "case": "the step was opened by the details door — back is the stage that asked" }] },
     { "from": "ComposeCover", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
@@ -1037,7 +1038,8 @@
     { "from": "CoverCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — the cover row that asked, the picture unused" }] },
     { "from": "CoverCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
     { "from": "CoverCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "terminal": "back", "case": "the cover is set — back to the cover row that asked for it" }] },
-    { "from": "CoverCrop", "via": 4, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom — the shape is the video's, and locked" }] },
+    { "from": "CoverCrop", "via": 4, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it — the shape is the video's, and locked" }] },
+    { "from": "CoverCrop", "via": 5, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to about 4× — the pinch, on screen" }] },
 
     { "from": "ComposeDetails", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeCrop", "case": "one stage back" }] },
     { "from": "ComposeDetails", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
@@ -1698,7 +1700,8 @@
     { "from": "AvatarCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the picture was chosen" }] },
     { "from": "AvatarCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },
     { "from": "AvatarCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "AvatarSeal", "case": "the standalone change off the profile badge — its own seal" }, { "board": "ProfileEdit", "case": "come from the edit screen — the edit's one seal signs it" }] },
-    { "from": "AvatarCrop", "via": 4, "kind": "advance", "label": "the crop stage", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom" }] },
+    { "from": "AvatarCrop", "via": 4, "kind": "advance", "label": "the crop stage", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it" }] },
+    { "from": "AvatarCrop", "via": 5, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to about 4× — the pinch, on screen" }] },
 
     { "from": "AvatarSeal", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "AvatarCrop", "case": "one stage back" }] },
     { "from": "AvatarSeal", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow" }] },

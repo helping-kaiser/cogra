@@ -713,6 +713,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Wide 1.91:1</button>", tag: "button" },
     { n: 5, find: "transform:scale(1.15)", tag: "div" },
     { n: 6, find: "position:relative;width:48px", tag: "div", all: true },
+    { n: 7, find: 'data-field="Zoom"', tag: "div" },
   ],
   ComposeCover: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -919,6 +920,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave — your draft is kept"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.15)", tag: "div" },
+    { n: 5, find: 'data-field="Zoom"', tag: "div" },
   ],
   // The video-cover round's two wizard boards. The cover step with no frames
   // keeps ComposeCover's numbering minus the strip and the preview's disc,
@@ -1058,6 +1060,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: 'aria-label="Leave"', tag: "button" },
     { n: 3, find: ">Next</button>", tag: "button" },
     { n: 4, find: "transform:scale(1.2)", tag: "div" },
+    { n: 5, find: 'data-field="Zoom"', tag: "div" },
   ],
   AvatarSeal: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
