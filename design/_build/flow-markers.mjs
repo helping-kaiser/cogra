@@ -1232,8 +1232,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "First light over the flats", tag: "button" },
     ...nav(10),
     // The ask link's permanent home (jakob 2026-10-02): the next free number
-    // after the bell's 15.
-    { n: 16, find: 'aria-label="Copy your ask link"', tag: "button" },
+    // after the bell's 15. The `application` chip draws the card twice, open
+    // and closed (jakob 2026-10-05, D9); both copy controls carry the number.
+    { n: 16, find: 'aria-label="Copy your ask link"', tag: "button", all: true },
   ],
   ProfileOther: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
