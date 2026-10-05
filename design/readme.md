@@ -475,8 +475,8 @@ rule covers all three button variants:
   reader sees the commitment exists and reads what it is waiting for.
   The reason is one quiet line right above the commit, in the voice for
   what something waits on — `Waiting for both passwords` — and the
-  commit's description (`WaitingCommit`; drawn on the credential and
-  entry forms, jakob 2026-10-05).
+  commit's description (`WaitingCommit`; drawn on every credential and
+  entry form, jakob 2026-10-05; the reasons flagged for blessing).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -9184,6 +9184,60 @@ quoted wording is blessed unless marked flagged.
   resolved, 273 sidecars. The witness re-blessed for `New post`'s start
   narrowed to the wizard. What stays open is backlog
   `13X-exec-settings-pads`.
+
+### The final brief executed — 2026-10-05
+
+jakob's ruling on the day's last brief (the audit README, *The final
+brief's ruling · 2026-10-05 (night)*): five eye items, two corrections,
+the rest as recommended, every listed string blessed.
+
+- **History counts the first seeing only.** It orders by first seeing,
+  newest first; a re-seen thing never moves, and seeing never reaches the
+  graph — only the reader's own gestures become records. feed-ranking.md
+  §9.4, `OrderSection` and `ExploreFilter` say the same: fully in the
+  viewport, the first time. No clear and no per-item remove — decided.
+  Quiet day dividers name the day (`HistoryDayDivider`; `History`'s slot
+  1620 → **1720**); the pull-down, `Back to top` and a frozen order per
+  open are History's too; a removed thing keeps its place with its mark,
+  a hidden account stays out, a veil stays. `Back to History` joins the
+  profile's, the tag page's, the trace's and the stream's tables.
+- **One search rule** (§4, *Search*): names and titles, an untitled post
+  by its first words, `@handle` and `#tag` scopes — Explore's and
+  History's. **`HistoryNone`** (new) draws a narrowing that finds
+  nothing, its `cause` chip `search` or `kinds`, with `Show everything`.
+- **The kept approval's line** is jakob's own: `An approval waits in your
+  invites — go there to sign it.` **Invites draws the row it sends to**:
+  `Invites`' `kept` chip (`waiting`) puts `KeptApprovalRow` at the head of
+  Applications, `Waiting for your key`, `Ready for your approval` once
+  the key is back.
+- **Commits that wait** (§4, *Interaction states*): every credential and
+  entry form draws its commit disabled with one reason line above it
+  (`WaitingCommit`). `ChangeEmail`'s `fault` chip draws the field-error
+  idiom once — `password`, `malformed` — and `ApplicantEmail` inherits it;
+  an address in use stays unanswered at the request (auth.md). Both carry
+  a hidden username. The email change's code is 6 digits, single-use
+  (auth.md; the `digits` field kind). A malformed handle is answered by
+  its field and never reaches `ChangeHandleConfirm`, whose `Change it`
+  carries the wait.
+- **The reorder's three moves** stand on `PickedSheet`'s rows, each row
+  only the moves it can make; the handle takes the arrow keys.
+- **Smaller laws**: system Back follows a funnel arrow's link, leaves an
+  arrowless mail landing to the OS, and the web's recovery code holds a
+  history entry (§4, *Navigation*); the compose and reply pads keep their
+  help dialogs beside the stance pad's in-place help (copy-voice); the
+  count lines' overlap is accepted (`PostCard`); the tags line keeps its
+  count whole at any size (`TopicsLine`); the rail's shadow is 75 % at
+  6px, re-measured (`ReelRail`); `Sending the confirmation link…` is the
+  construction's; the entry canvas reads `Join · @mira invited you`.
+- **A canvas fix**: a disabled control's flow badge shows again (the
+  state layer's disabled rule had hidden it).
+- **Flagged for blessing**: the day dividers, `HistoryNone`'s words, the
+  waiting commits' reasons, the reorder handle's names. Everything else
+  the brief listed is blessed (jakob 2026-10-05).
+- **The gate**: 273 → **274 screens** (`HistoryNone`), 1848 → **1864
+  edges**, 2 → **0 gaps**, flows 66, every one resolved, 274 sidecars.
+  The witness re-blessed for `New post`'s start on `HistoryNone`. What
+  stays open is backlog `13X-final`.
 
 ## 15. Index
 
