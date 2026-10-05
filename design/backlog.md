@@ -4469,7 +4469,12 @@ the lane's recommendation in the collected ruling brief:
   rest; what `VerifyExpired` says after a resend; `VerifiedApp` signed
   out; a verify link opened under another account; where
   `SignInExpired`'s "carry on" lands.
-### 13X-passc-pads-system · What the pads, seals and system pass left for rulings · *design* · **filed 2026-10-05**
+### 13X-passc-pads-system · What the pads, seals and system pass left for rulings · *design* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled every item (the collected rulings digest,
+`2026-10-05-collected-rulings.md`), executed in readme §13, *The settings
+and pads rulings executed*; what stays open moves to
+`13X-exec-settings-pads`.
 
 The pads, seals and system behavior pass (readme §13) transcribed
 twenty-six sidecars and left these for jakob's eye, each with the lane's
@@ -4572,7 +4577,11 @@ same surfaces are not repeated here.
 - **History's trailing age** is unstated: Saved's is when the reader
   saved the thing, History's could be the latest seeing or the writing.
 
-### 13X-residue136 · What the 136 round left for rulings · *design* · **filed 2026-10-05**
+### 13X-residue136 · What the 136 round left for rulings · *design* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob ruled all five (the collected rulings digest,
+`2026-10-05-collected-rulings.md`, R1-R5), executed in readme §13, *The
+settings and pads rulings executed*.
 
 The 136 round (readme §13, *The 136 round*) drew jakob's five rulings and
 left these for his eye:
@@ -4689,3 +4698,27 @@ jakob's eye:
   heading no longer does.
 - **`Back to the search` on a profile** waits for Explore's person row
   (audit K14.11) to be drawn.
+
+### 13X-exec-settings-pads · What the settings and pads execution left open · *design + contract* · **filed 2026-10-05**
+
+The settings and pads rulings executed (readme §13) left these for
+jakob's eye:
+
+- **The handle dialog's in-flight word.** `Changing handle…` was
+  `Change handle`'s; with the dialog in front, the change is sent from
+  `Change it`, and no ruling says which control carries the wait.
+- **A malformed handle and the dialog.** Whether a handle that breaks the
+  field's rules asks first at all, and the line it reads (the settings
+  pass proposed `Join`'s); the collected digest does not carry it.
+- **The seal pads' "?".** `ComposePad`'s and `ReplyPad`'s "?" still open
+  their named dialogs (`ReplyPadHelp` is a drawn board); the in-place
+  ruling reached the stance pad's master only.
+- **`Sending the confirmation link…`** — the deletion request's in-flight
+  word follows the construction but is not in the confirmed set.
+- **The undrawn readings.** The bug notice's `Not now` at the kept picks',
+  profile and picture scales, and the wrong-account landing of the email
+  change's link, stand in the graph, the sidecars and copy-voice only.
+- **Contract seam** (for the relay): the explicit walk-back's cost is
+  `severanceCost`, the pick route's one record; a second deletion request
+  supersedes the first; the handle's taken answer now arrives after the
+  dialog's `Change it`.

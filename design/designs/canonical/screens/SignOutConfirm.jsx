@@ -54,8 +54,8 @@ export function Screen() {
         actions={
           <>
             <Button>Make a recovery code</Button>
-            <Button variant="text">Sign out, keep it locked</Button>
-            <Button variant="text">Erase it and sign out</Button>
+            <Button variant="text">Sign out, keep them locked</Button>
+            <Button variant="text">Erase them and sign out</Button>
           </>
         }
       />

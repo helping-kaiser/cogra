@@ -40,8 +40,20 @@ const fontTokens = `:root { --font-figtree: "Figtree"; --font-sans: var(--font-f
 // drawing half of one — the state jakob saw as "the corner of a number in an
 // orange circle". A badge nobody can see annotates nothing, and check-flows
 // cannot catch it because it verifies the attribute, not the paint.
-export const flowBadgeCss = `[data-flow] { position: relative; }
-[data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
+//
+// A VISUALLY HIDDEN CONTROL KEEPS ITS OWN POSITION (jakob 2026-10-05, the dot
+// under `RefPairEdit`'s title). `[data-flow]` ties `.cg-sr-focusable` on
+// specificity and comes later, so it turned the hidden control relative;
+// `clip` only applies to an absolutely positioned box, and the 1px button
+// painted the browser's own button fill — a dot, lost on the light surface and
+// plain on the dark one. The hidden control's badge was never visible either.
+//
+// THE BADGE KEEPS ITS CORNER ON A PRESSABLE CONTROL. `.cg-state::after` — the
+// state layer — is the same pseudo-element, and its `inset: 0` left the badge
+// pinned on all four sides, stretched across the control as an orange bar.
+// `left` and `bottom` are released so the badge is the corner number it says.
+export const flowBadgeCss = `[data-flow]:not(.cg-sr-focusable) { position: relative; }
+[data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; left: auto; bottom: auto; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
 
 // GEEK MODE, the second chip (readme §13, backlog item 53): the exact values of
 // the signal numbers — stance, tag and citation pairs, the Feed score, the

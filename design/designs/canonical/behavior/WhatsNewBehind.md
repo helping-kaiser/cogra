@@ -2,6 +2,8 @@
 
 WHEN What's new opens GIVEN the version running here is behind the newest release -> one quiet line reads A newer version exists. ending in Update now, atop the list AND the newer release heads the list with newest in its dateline AND the running version keeps installed in its dateline
 
+WHEN What's new opens GIVEN the version running here is more than one release behind -> every newer release stands above the running one, newest first AND only the newest release's dateline reads newest AND Update now names the newest release
+
 ALWAYS no dateline reads current
 
 ALWAYS Update now is named Update to version and the newer version for a listener

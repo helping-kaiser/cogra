@@ -14,6 +14,24 @@ WHEN the signing has not answered 200ms after the press -> the header back arrow
 
 ALWAYS the fact rows stay readable GIVEN the commit reads its in-flight label
 
+WHEN the signing has not answered 200ms after the press -> every fact row's Change, Adjust and Mark refuse a press AND NEVER they dim
+
+WHEN press Android's system Back GIVEN the commit reads its in-flight label -> NEVER the seal is left AND NEVER the signing is abandoned
+
+ALWAYS the header's ? stays live and opens the signing text GIVEN the commit reads its in-flight label
+
+WHEN press the browser's back on the web GIVEN the commit reads its in-flight label -> the browser's own history decides AND NEVER the seal intercepts it
+
+ALWAYS the design sets no timeout of its own: the seal waits on the signing's own answer, the slow line standing past 5s for as long as it takes
+
+ALWAYS a seal never sends a signing again by itself: Retry is the only re-send
+
+WHEN press Retry -> the same signing is asked again AND past 200ms the commit's slot reads the original commit's in-flight label, Signing and publishing… on the post's seal AND the header back arrow, Back and the header X refuse a press again AND NEVER the slot reads a Retry of its own in flight
+
+WHEN the reader goes a stage back and returns, or changes a fact, GIVEN a refusal reading stood on the seal -> the seal shows its plain commit AND NEVER the refusal reading stands again before the next press
+
+WHEN the commit is pressed again GIVEN a refusal reading stood and the reader went a stage back or changed a fact -> the signing answers anew
+
 ALWAYS the acts card reads back exactly what it read before the press GIVEN the commit reads its in-flight label
 
 WHEN the signing has not answered 5s after the press -> the subline under the acts card's total reads Still signing — the network is slow right now. AND the commit keeps its in-flight label AND NEVER a progress indicator appears

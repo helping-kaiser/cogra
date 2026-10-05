@@ -38,7 +38,20 @@
    round's 21). The review's removed row wears the removal mark where the name
    stood, and the seal reads it back the same way — `Removed by its author` in
    the system's voice, `text-secondary` at the body's weight — over the pair it
-   still signs. */
+   still signs.
+
+   THE BUG NOTICE'S WAY OUT IS `Not now` (jakob 2026-10-05, the collected
+   brief's D8): `SealFaultBug` at this scale keeps `Try again` and `Report a
+   problem`, and its third way out returns to the review with every pick still
+   kept — nothing here is a draft to discard.
+
+   A KEPT APPROVAL IS NAMED HERE TOO (jakob 2026-10-05, the B round's 7,
+   amended): the review's line, `KeptApprovalLine`, under the acts card, with
+   the door to Invites — the seal signs the picks and nothing else. The
+   `approval` chip draws it. Wording flagged for blessing. */
+export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
+export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
+
 export function Screen() {
   return (
     <>
@@ -68,6 +81,8 @@ export function Screen() {
           total={`${KEPT_PICKS.length} things, signed together`}
           note="They land together, or none does."
         />
+
+        <KeptApprovalLine shown="{{approvalShown}}" />
 
         <div style={{ flex: 1 }} />
 

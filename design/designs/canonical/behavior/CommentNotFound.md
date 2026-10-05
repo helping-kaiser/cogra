@@ -14,6 +14,8 @@ WHEN press the header back arrow or the system's Back GIVEN the link opened the 
 
 ALWAYS the back arrow reads Back to feed GIVEN the link opened the app cold
 
+ALWAYS the back arrow names the surface it returns to, by the post detail's origin-noun table — Back to feed, Back to Explore, Back to the search, Back to Notifications and the rest — GIVEN the link opened over the app's state
+
 WHEN tap the bottom bar's Feed -> the feed opens
 
 WHEN tap the bottom bar's Explore -> Explore opens

@@ -20,57 +20,14 @@
    THE RULES SIT ON THE FIELD, not in a paragraph. Length and charset are what
    the reader needs while typing, which is what a hint is for; the fold to
    lowercase is said because a reader who types capitals will otherwise think
-   the field ate them. */
+   the field ate them.
+
+   THE PRESS ASKS FIRST (jakob 2026-10-05, the collected brief's D5: "a
+   confirmation (pop up?) for sure"). Changing the handle is on §11's
+   think-twice list, so `Change handle` raises `ChangeHandleConfirm`, whose
+   body names the cost again at the moment of the act; the change lands only
+   on its answer. The page is `ChangeHandleBody`, shared with the dialog's
+   board. */
 export function Screen() {
-  return (
-    <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
-        <h1
-          style={{
-            margin: 0,
-            fontSize: "var(--text-headline-small)",
-            lineHeight: "var(--text-headline-small--line-height)",
-            fontWeight: "var(--text-headline-small--font-weight)",
-          }}
-        >
-          Change your handle
-        </h1>
-        <p
-          style={{
-            margin: "8px 0 0",
-            fontSize: "var(--text-body-medium)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
-          @sol is how people mention and find you. Everything you have published stays yours — the
-          handle is a name, not the account.
-        </p>
-
-        <div style={{ marginTop: 32 }}>
-          <TextField
-            id="new-handle"
-            label="New handle"
-            kind="handle"
-            enterKeyHint="go"
-            value=""
-            hint="3 to 30 characters: letters, numbers and underscore. Handles are always lowercase."
-          />
-        </div>
-
-        <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Change handle</Button>
-        </div>
-
-        <div style={{ marginTop: 24 }}>
-          <QuietNote>
-            Links to your old handle stop working the moment you change it, and anyone can claim it
-            afterwards.
-          </QuietNote>
-        </div>
-      </div>
-    </>
-  );
+  return <ChangeHandleBody />;
 }

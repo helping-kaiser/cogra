@@ -30,6 +30,16 @@ WHEN the write rule refuses the batch -> nothing is staged or spent AND the noti
 
 WHEN press Not now on the write rule's notice -> the kept picks' review stands again with every pick still in it
 
+WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the commit's place AND Try again stands in the notice AND Report a problem and Not now stand under it AND NEVER a pick is dropped
+
+WHEN press Not now on the bug notice -> the kept picks' review stands again with every pick still in it AND NEVER a dialog asks
+
+ALWAYS one quiet line under the acts card reads An approval waits on Invites — it signs on its own there. with Open Invites at its end GIVEN an approval was kept with the picks
+
+ALWAYS no line about an approval stands GIVEN no approval was kept
+
+WHEN tap Open Invites -> Invites opens, where the kept approval waits as its own card AND NEVER the approval is signed with the picks AND every pick stays kept
+
 WHEN press the header back arrow -> the kept picks' review comes back, one stage behind, every pick still in it
 
 WHEN press Back -> the kept picks' review comes back, one stage behind, every pick still in it

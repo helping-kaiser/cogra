@@ -32,7 +32,11 @@ ALWAYS Sign the edit is enabled GIVEN an upload is running
 
 WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a second press AND NEVER anything is signed before the last upload lands AND NEVER Sign the edit dims
 
-WHEN the signing has not answered 200ms after the press GIVEN Sign the edit was pressed while the uploads ran -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
+WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
+
+ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail GIVEN it is still uploading
+
+ALWAYS a failed cover's line reads One picture didn't upload., the cover being one picture
 
 WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
 
@@ -50,7 +54,7 @@ WHEN the cover the edit set fails to upload -> the cover's thumbnail is marked A
 
 WHEN press Retry under the cover row -> the cover's upload tries again AND the gate runs again
 
-WHEN press Remove it under the cover row -> the new cover leaves the batch AND the gate line goes AND Sign the edit is enabled
+WHEN press Remove it under the cover row -> the new cover leaves the batch AND the cover field reads as it stood before the edit, the chosen cover or Add a cover AND the gate line goes AND Sign the edit is enabled
 
 WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was
 

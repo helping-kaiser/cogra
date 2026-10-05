@@ -12,7 +12,11 @@ ALWAYS the pad's two lines stand on every open, Vouching is the act. Set signs y
 
 ALWAYS the pad's ? is named How vouching works
 
-WHEN drag or tap the pad field -> the pick is set AND NEVER anything is signed
+WHEN drag on the pad field -> the pick is set AND NEVER anything is signed
+
+WHEN tap the pad field without dragging -> NEVER the pick moves
+
+WHEN tap the pad's ? -> How vouching works replaces the pad's body in place AND Set is disabled while it shows AND NEVER a dialog opens AND NEVER anything is staged
 
 WHEN release a drag on the field -> NEVER the pick is signed
 
@@ -29,7 +33,6 @@ WHEN the key is back GIVEN a vouch was kept as a kept approval -> it signs only 
 WHEN tap Set GIVEN the signing does not go through -> the pad stays open at the pick, the fault above the commit row and Retry in Set's place, as PadFailed draws it
 
 WHEN tap Set GIVEN the write rule refuses -> nothing is staged or spent AND the notice stands where the landing line and Set were, with Not now, as PadWriteRule draws it
-
 
 WHEN tap Cancel -> the pad closes onto the ask AND nothing is signed AND the ask is still there to answer
 

@@ -75,6 +75,19 @@ import {
    open; an explicit SET commits; CANCEL or a press outside stages nothing. An
    accidental lift must never sign a priced act.
 
+   THE PAD OPENS AT THE DEFAULT, +0.10 / +0.10 (jakob 2026-10-05, the
+   collected brief's D7) — the hold's own modest positive, so `Set` on a pick
+   never moved signs exactly what the hold would, and never a (0, 0) that
+   reads as `Nice` and asks to walk back nothing.
+
+   THE WALK-BACK ASKS OVER THE PAD (jakob 2026-10-05, B10). Both routes to
+   (0, 0) — `Walk it back`, and a pick that nets the bundle there — raise
+   `SeveranceConfirm` with the pad still parked beneath it, so `Keep it`
+   returns to the pick as it was; only the confirmed walk-back closes the
+   pad. ITS COST IS COUNTED THE WAY IT SIGNS (jakob 2026-10-05, P5): the explicit route
+   stages `severanceCost` counter-records, ⌈max(|Σd|, |Σi|)⌉ of the raw sums,
+   and the pick route signs exactly one record, `1 thing`.
+
    THE CONTROL OWNS ITS TOUCHES. Nothing it receives reaches the card behind it:
    opening the pad must never also open the post.
 
@@ -159,6 +172,16 @@ const OVER_MEDIA_ANCHOR = {
 
 const EMPTY_BUNDLE = { current: ORIGIN, rawSum: ORIGIN, records: 0, severed: false, severance: { records: 0 } };
 
+/* `severanceCost` (api-spec.md): how many counter-records the explicit
+   walk-back stages — each one clipped to ±1, so the larger raw sum, rounded
+   up. Served on the bundle as `severance.records`; derived here where a board
+   hands only the sums. */
+function severanceCost(bundle) {
+  if (bundle.severance?.records) return bundle.severance.records;
+  const reach = Math.max(Math.abs(bundle.rawSum.pDirected), Math.abs(bundle.rawSum.pInterest));
+  return Math.max(1, Math.ceil(Math.round(reach * 100) / 100));
+}
+
 function parkedPadStyle(inset = 16) {
   return {
     position: "fixed",
@@ -211,6 +234,12 @@ export function StanceControl({
   wide = false,
   overMedia = false,
   helpLabel = "How opinions work",
+  /* A NAMED PAD'S HELP, IN PLACE (jakob 2026-10-05, the collected brief's
+     D4). The "?" replaces the pad's body with its help wherever the pad is
+     opened (readme §11) — never a dialog over it. A pad named for its own
+     topic (`helpLabel`) hands that topic's paragraphs here, copy-voice's
+     text for the name; absent, the pad's four lines stand. Additive. */
+  help,
   axes = STANCE_AXES,
   /* The standing's own door (the change-histories round): handed one, the
      "Current opinion" line above the field opens the timeline the sum was
@@ -278,7 +307,7 @@ export function StanceControl({
   const [alternates, setAlternates] = React.useState(false);
   const [coach, setCoach] = React.useState(false);
   const [explaining, setExplaining] = React.useState(false);
-  const [pick, setPick] = React.useState(defaultPick ?? ORIGIN);
+  const [pick, setPick] = React.useState(defaultPick ?? TAP_DEFAULT);
   const [confirming, setConfirming] = React.useState(null);
   const [signed, setSigned] = React.useState(null);
   const [joinPrompt, setJoinPrompt] = React.useState(false);
@@ -307,12 +336,16 @@ export function StanceControl({
 
   React.useEffect(() => {
     if (!open) return undefined;
+    /* Over the walk-back's dialog, Escape is the dialog's `Keep it`: the pad
+       beneath stays parked. */
     const onKey = (event) => {
-      if (event.key === "Escape") closeAll();
+      if (event.key !== "Escape") return;
+      if (confirming !== null) setConfirming(null);
+      else closeAll();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, confirming]);
 
   const apply = (chosen, landed, records = 1) => {
     const rawSum = { pDirected: bundle.rawSum.pDirected + chosen.pDirected, pInterest: bundle.rawSum.pInterest + chosen.pInterest };
@@ -321,29 +354,32 @@ export function StanceControl({
       rawSum: landed.severed ? ORIGIN : rawSum,
       records: landed.severed ? 0 : bundle.records + 1,
       severed: landed.severed,
-      severance: { records: landed.severed ? 0 : bundle.records + 1 },
+      severance: { records: landed.severed ? 0 : severanceCost({ rawSum }) },
     };
     setBundle(next);
     setSigned(signedLine(landed.landing, records, landed.severed, targetLabel, axes));
     if (onCommit) onCommit(clampPair(chosen), next);
   };
 
+  /* A pick that nets the bundle to (0, 0) asks first with the pad still
+     parked beneath, and signs one record; `Keep it` returns to the pick. */
   const commitChecked = (chosen) => {
     const landed = localLanding(bundle.rawSum, chosen);
-    closeAll();
     if (landed.severed) {
-      setConfirming({ pick: chosen, records: Math.max(1, bundle.records), landed });
+      setConfirming({ pick: chosen, records: 1, landed });
       return;
     }
+    closeAll();
     apply(chosen, landed);
   };
 
+  /* The explicit walk-back asks over the parked pad too, and costs what it
+     stages: `severanceCost`. */
   const openSeverance = () => {
-    closeAll();
     setSigned(null);
     setConfirming({
       pick: null,
-      records: bundle.records,
+      records: bundle.records === 0 ? 0 : severanceCost(bundle),
       alreadySevered: bundle.records === 0,
       landed: { landing: ORIGIN, inert: true, severed: true },
     });
@@ -361,7 +397,7 @@ export function StanceControl({
       setJoinPrompt(true);
       return;
     }
-    setPick(ORIGIN);
+    setPick(TAP_DEFAULT);
     setSigned(null);
     setOpen(true);
     if (taught) {
@@ -527,7 +563,7 @@ export function StanceControl({
           <button
             type="button"
             onClick={() => {
-              setPick(ORIGIN);
+              setPick(TAP_DEFAULT);
               setSigned(null);
               setTaught(true);
               setAlternates(true);
@@ -662,7 +698,7 @@ export function StanceControl({
                 and Cancel away from the thumb defeats the parking. */}
             {explaining ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
-                {padHelp(axes).map((line) => (
+                {(help ?? padHelp(axes)).map((line) => (
                   <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
                     <HelpLine line={line} />
                   </p>
@@ -775,6 +811,7 @@ export function StanceControl({
           onConfirm={() => {
             apply(confirming.pick ?? ORIGIN, confirming.landed, Math.max(1, confirming.records));
             setConfirming(null);
+            closeAll();
           }}
         />
       )}

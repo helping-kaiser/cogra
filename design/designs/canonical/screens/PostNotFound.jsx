@@ -12,7 +12,8 @@
    a post exist; the back arrow is the way out — to the state the link
    opened over, or, opened cold, to the feed, the owning tab's root (the
    layer law, jakob 2026-10-01). It is drawn cold: `Back to feed`, the
-   detail's own label.
+   detail's own label. Opened over the app's state, the arrow names that
+   state by the post detail's origin-noun table (jakob 2026-10-05).
 
    IT IS `EmptyState`, NOT `TransportError`: the answer arrived and the answer
    was no. The header carries no title — a dead id names nothing a reader

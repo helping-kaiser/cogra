@@ -14,11 +14,13 @@ WHEN tap reveal password -> the current password shows
 
 WHEN press Change email -> the confirmation opens AND a code is mailed to the current address AND a link is mailed to the new address AND the account's email stays unchanged AND the Email row reads Change pending
 
+WHEN press Change email GIVEN the current password is wrong -> the Current password field reads That password isn't right. AND NEVER a message is sent
+
 WHEN press Change email GIVEN the new address already belongs to another account -> NEVER the request says so
 
 WHEN the request has not answered 200ms after the press -> Change email reads Changing email… in its own place AND NEVER a spinner appears
 
-WHEN press Change email GIVEN the reader is offline -> the network error answers AND NEVER a message is sent
+WHEN press Change email GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change email AND Change email stays, the retry AND NEVER a message is sent
 
 WHEN press the header back arrow -> settings returns AND NEVER a message is sent
 

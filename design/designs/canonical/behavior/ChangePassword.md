@@ -12,9 +12,13 @@ WHEN typing in a field GIVEN the field carries an error -> the field re-checks a
 
 WHEN tap reveal password on a field -> that field's password shows
 
-WHEN press Change password GIVEN the current password is right and the new one is accepted -> settings returns AND the snackbar answers AND every other session ends AND this device stays signed in AND the Password row reads Changed with the new age
+WHEN press Change password GIVEN the current password is right and the new one is accepted -> settings returns AND the snackbar reads Password changed — other devices are signed out. AND every other session ends AND this device stays signed in AND the Password row reads Changed with the new age
 
 WHEN every other session ends GIVEN another device is set to forget the account and holds an unbacked key -> that key stays on that device, sealed AND NEVER it is erased
+
+WHEN press Change password GIVEN the current password is wrong -> the Current password field reads That password isn't right. AND NEVER the password changes
+
+WHEN press Change password GIVEN the new password is longer than 128 characters -> the New password field reads A password is at most 128 characters. AND NEVER the password changes
 
 WHEN press Change password GIVEN the new password is shorter than 12 characters -> the New password field reads A password is at least 12 characters. AND NEVER the password changes
 
@@ -22,7 +26,7 @@ WHEN press Change password GIVEN the new password has turned up in a data breach
 
 WHEN the change has not answered 200ms after the press -> Change password reads Changing password… in its own place AND NEVER a spinner appears
 
-WHEN press Change password GIVEN the reader is offline -> the network error answers AND NEVER the password changes
+WHEN press Change password GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change password AND Change password stays, the retry AND NEVER the password changes
 
 WHEN press the header back arrow -> settings returns AND NEVER the password changes
 

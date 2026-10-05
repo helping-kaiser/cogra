@@ -48,7 +48,8 @@
    the line takes its fault reading — `One picture didn't upload. Signing waits
    for it.` with `Retry` — `Sign the edit` reads itself again, disabled until
    `Retry` re-gates, and the reader presses again. The `upload` chip's
-   `uploading` draws the running gate.
+   `uploading` draws the running gate, and the second tile wears the compose
+   row's upload ring (jakob 2026-10-05: the edit's row is the compose row).
 
    THE FIXTURE'S STORY (jakob 2026-10-05, the 136 round's 5a): both pictures
    in the row were added in this edit. A picture the post already carried
@@ -81,7 +82,7 @@ export const PROPS = {
   upload: { editor: "enum", options: ["none", "uploading", "failed"], default: "none" },
   signing: { editor: "enum", options: ["none", "slow"], default: "none" },
 };
-export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", rowShown: this.props.upload === "failed" ? "none" : "block", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", gateFailedShown: this.props.upload === "failed" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "block" : "none", signFailedShown: this.props.upload === "failed" ? "block" : "none"`;
+export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none", rowShown: this.props.upload === "none" ? "block" : "none", rowUploadingShown: this.props.upload === "uploading" ? "block" : "none", rowFailedShown: this.props.upload === "failed" ? "block" : "none", errorShown: this.props.upload === "failed" ? "block" : "none", gateFailedShown: this.props.upload === "failed" ? "block" : "none", footQuietShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "none" : "flex", footSlowShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "flex" : "none", signRestShown: this.props.signing !== "slow" && this.props.upload !== "failed" ? "block" : "none", signBusyShown: this.props.signing === "slow" && this.props.upload !== "failed" ? "block" : "none", signFailedShown: this.props.upload === "failed" ? "block" : "none"`;
 
 export function Screen() {
   return <EditComposeBody holes />;

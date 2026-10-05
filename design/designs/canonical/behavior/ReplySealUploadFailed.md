@@ -2,6 +2,8 @@
 
 WHEN one of the reply's picture uploads fails while the seal waits on it -> the gate line reads One picture didn't upload. Signing waits for it. followed by Retry AND Sign comment is disabled
 
+WHEN the reply's clip upload fails while the seal waits on it -> the gate line reads The video didn't upload. Signing waits for it. followed by Retry AND Sign comment is disabled
+
 ALWAYS the gate line's fact One picture didn't upload. wears the error ink and Signing waits for it. the quiet voice
 
 ALWAYS Sign comment is disabled and the gate line says why GIVEN the failed reading stands

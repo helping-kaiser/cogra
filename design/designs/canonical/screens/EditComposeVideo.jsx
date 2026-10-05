@@ -35,8 +35,8 @@
    residue's 3b) — the seal's grammar unchanged (`ComposeSealUploading`; said
    in full in `EditCompose`'s docblock). While the cover the edit set is still
    going up, `UploadStatusLine` stands over the foot naming it — `Uploading 0
-   of 1 — signing waits for the cover.` (`media="cover"`, the noun new and
-   flagged for blessing) — and `Sign the edit` stays enabled; pressed, it reads
+   of 1 — signing waits for the cover.` (`media="cover"`, the noun blessed
+   2026-10-05) — and `Sign the edit` stays enabled; pressed, it reads
    `Signing the edit…` until the bytes land, a failed upload drops the held
    press, and the slow line counts from the press. The `upload` chip draws it:
    the cover row then holds the chosen face and `Change the cover`, the field's

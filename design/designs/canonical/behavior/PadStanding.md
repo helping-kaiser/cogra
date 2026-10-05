@@ -2,6 +2,10 @@
 
 WHEN tap a stance face GIVEN the reader already has an opinion standing on the target -> the pad blooms at the lower centre of the viewport AND NEVER anything is staged
 
+ALWAYS the pad opens with the pick at the default +0.10 / +0.10, the hold's own pick, wherever it blooms
+
+WHEN tap Set GIVEN the pick was never moved -> the default +0.10 / +0.10 is signed, as the hold signs it
+
 ALWAYS the pad parks at the same spot every time, 16px above the bottom bar where the surface has one and 16px off the bottom edge where it does not, never anchored to the target
 
 ALWAYS the surface beneath the pad's wash stays inert while the pad is up
@@ -16,17 +20,21 @@ ALWAYS the pad carries no Walk it back GIVEN nothing was ever signed toward the 
 
 WHEN drag on the pad field -> the knob and the pick's face and pair follow the drag AND the landing line reads what the pick would come to AND NEVER anything is staged
 
+WHEN tap the pad field without dragging -> NEVER the pick moves
+
 WHEN release a drag on the pad field -> the pick is parked AND the knob's pressed layer lifts AND NEVER anything is signed
 
 ALWAYS the knob never leaves the field, whose corners are the bounds of both axes
 
-WHEN tap Walk it back -> the dialog Walk it all back? opens AND NEVER the dialog carries a pick line
+WHEN tap Walk it back -> the dialog Walk it all back? opens over the pad, which stays parked beneath it AND NEVER the dialog carries a pick line
 
 WHEN tap Cancel -> the pad closes AND nothing is staged AND the standing opinion is what it was
 
 WHEN press outside the pad, press the system's Back or press Escape -> the pad closes AND nothing is staged AND the standing opinion is what it was
 
-WHEN tap the pad's ? -> the opinions help opens AND NEVER anything is staged
+WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
+
+WHEN tap Back to the pad -> the field, the readouts and the pick return as they were
 
 WHEN tap Set -> Set refuses a second press until the signing answers AND the pad stays open AND NEVER Set dims
 
@@ -36,7 +44,7 @@ WHEN the signing answers within 200ms of Set -> NEVER Set reads Setting…
 
 WHEN the signing is taken -> the pad closes back where it bloomed AND the face on the target moves to the new opinion AND the snackbar reads Signed, still settling. with the current opinion's face and pair
 
-WHEN tap Set GIVEN the pick nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens with its cost and the pick line AND NEVER the pick is refused
+WHEN tap Set GIVEN the pick nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens over the pad, which stays parked beneath it, with the pick line and its cost of 1 thing AND NEVER the pick is refused
 
 WHEN tap Set GIVEN the signing key is not on this device -> the pad's notice Your key isn't on this browser stands where the landing line and the actions were AND NEVER anything is signed
 
@@ -52,4 +60,4 @@ WHEN the knob crosses a zero line or meets the field's edge where the pick clamp
 
 WHEN the pick changes -> the readouts redraw at once AND NEVER the spoken readouts change before the pick has rested 500ms
 
-WHEN the pick has rested 500ms -> the spoken readouts say the pick and the landing once
+WHEN the pick has rested 500ms -> the spoken readouts say the pick and the landing once, politely, after whatever is being said AND NEVER they interrupt

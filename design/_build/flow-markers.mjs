@@ -453,11 +453,14 @@ Object.assign(FLOW_MARKERS, {
   ReplyPictures: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
-    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button", all: true },
     { n: 4, find: "almost catches it.", tag: "p" },
-    { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 5, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
     { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
+    // The failed picture's line (the `upload` chip, jakob 2026-10-05, P17).
+    { n: 8, find: ">Retry</button>", tag: "button" },
+    { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
   ReplyVideo: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1410,7 +1413,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Send by email</button>", tag: "button" },
   ],
   // The same page before a word (jakob 2026-10-01): the same three controls,
-  // the commit disabled with its reason above it — so the same numbers.
+  // the commit live from an empty field (jakob 2026-10-05, D6) — so the same
+  // numbers.
   ReportProblemEmpty: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'data-field="What happened"', tag: "div" },
@@ -1561,6 +1565,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
     { n: 2, find: 'data-field="New handle"', tag: "div" },
     { n: 3, find: ">Change handle</button>", tag: "button" },
+  ],
+  // The think-twice dialog over the handle change (jakob 2026-10-05, D5).
+  // scanExempt like every dialog board: the page beneath is wired on
+  // `ChangeHandle`.
+  ChangeHandleConfirm: [
+    { n: 1, find: ">Change it</button>", tag: "button" },
+    { n: 2, find: ">Keep it</button>", tag: "button" },
+    { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   ChangeEmail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
@@ -2622,6 +2634,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: 'aria-label="Remove ', tag: "button", all: true },
     { n: 3, find: ">Sign them</button>", tag: "button" },
+    // The kept approval's door (the `approval` chip, jakob 2026-10-05, B7).
+    { n: 4, find: ">Open Invites</button>", tag: "button" },
   ],
   // Its seal: `ProfileEditSeal`'s five controls, in the same order.
   KeptPicksSeal: [
@@ -2630,6 +2644,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: 'aria-label="How signing works"', tag: "button" },
     { n: 4, find: ">Sign the opinions</button>", tag: "button" },
     { n: 5, find: ">Back</button>", tag: "button" },
+    { n: 6, find: ">Open Invites</button>", tag: "button" },
   ],
   YourKeyGate: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
@@ -2649,8 +2664,8 @@ Object.assign(FLOW_MARKERS, {
   // answers and its scrim carry this board's numbers.
   SignOutConfirm: [
     { n: 1, find: ">Make a recovery code</button>", tag: "button" },
-    { n: 2, find: ">Sign out, keep it locked</button>", tag: "button" },
-    { n: 3, find: ">Erase it and sign out</button>", tag: "button" },
+    { n: 2, find: ">Sign out, keep them locked</button>", tag: "button" },
+    { n: 3, find: ">Erase them and sign out</button>", tag: "button" },
     { n: 4, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
   // scanExempt like every dialog board: the backup screen beneath is wired on

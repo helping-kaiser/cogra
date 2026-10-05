@@ -9,8 +9,8 @@
    steps. What changes is one line: the acts card's subline under the total
    swaps to `Still signing — the network is slow right now.`, in the olive
    `--tertiary` ink of the notice family (`ActsCard`'s `noteTone="slow"`), and
-   is spoken once as a status. The words are a draft flagged for blessing
-   (copy-voice, *Faults by code*).
+   is spoken once as a status. The words are blessed (jakob 2026-10-02;
+   copy-voice, *Faults by code*).
 
    THE REST IS `SealSigning` UNCHANGED. The commit still reads `Signing and
    publishing…` and refuses a second press; the ways out stay locked for the

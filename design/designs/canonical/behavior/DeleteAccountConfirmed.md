@@ -2,6 +2,10 @@
 
 WHEN the deletion mail's link is opened -> the deletion is confirmed AND the seven-day grace starts AND the landing opens AND NEVER the confirmation waits on a sign-in
 
+WHEN the deletion mail's link is opened again GIVEN the deletion is in its grace -> the same landing opens AND its heading counts the days left AND NEVER the grace restarts
+
+WHEN the deletion mail's link is opened GIVEN the deletion was canceled -> the spent link's landing opens, This link doesn't work anymore AND NEVER the deletion is confirmed again
+
 ALWAYS the landing carries no back arrow
 
 ALWAYS the landing's heading is the band's sentence on its first day, with the deadline's date spelled out under it, and says nothing changes until then and any device can cancel
@@ -24,7 +28,7 @@ WHEN press Add it to the deletion GIVEN the box is unticked -> the deletion stan
 
 WHEN the add has not answered 200ms after the press -> Add it to the deletion reads Adding it to the deletion… in its own place AND NEVER a spinner appears
 
-WHEN press Add it to the deletion GIVEN the reader is offline -> the network error answers AND the deletion stands as the link left it
+WHEN press Add it to the deletion GIVEN no answer reaches the device -> the box keeps its tick AND the line That didn't send. Try again. stands above Add it to the deletion AND Add it to the deletion stays, the retry AND NEVER the sweep joins the deletion
 
 ALWAYS the way on reads Go to the feed GIVEN a session is on this device
 

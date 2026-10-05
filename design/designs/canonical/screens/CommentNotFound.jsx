@@ -11,7 +11,9 @@
    IT IS TERMINAL, AND THE WHOLE SCREEN. Nothing retries; the back arrow is
    the way out — to the state the link opened over, or, opened cold, to the
    feed, the owning tab's root (the layer law, jakob 2026-10-01). It is drawn
-   cold: `Back to feed`, the post detail's label. No title and no menu: a
+   cold: `Back to feed`, the post detail's label; opened over the app's
+   state, the arrow names that state by the post detail's origin-noun table
+   (jakob 2026-10-05). No title and no menu: a
    dead id names nothing, and there is nothing to act on. */
 export function Screen() {
   return (

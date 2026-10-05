@@ -31,7 +31,9 @@
    applicant is an applicant here — a created account that still needs to be
    vouched in (jakob 2026-09-25). What the reader state still decides is where
    the bar and the band go next, which is the graph's `case` work, not a
-   second drawing. The line `Your earnings will be here.` is blessed
+   second drawing: a guest's band and bar are the bare view's, its gated
+   slots — chats, New post, Profile — open the guest gate, and its band
+   carries no bell (jakob 2026-10-05). The line `Your earnings will be here.` is blessed
    (copy-voice, the coming-soon surfaces; jakob 2026-09-25).
 
    NO ACTION, so no "keep browsing" (the audit's F38 finding). A door has

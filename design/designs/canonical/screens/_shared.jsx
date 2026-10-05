@@ -1330,6 +1330,36 @@ const KEPT_PICKS = [
   { kind: "post", name: "Tide tables and the third headland — @juno", sub: "Post", pair: { pDirected: -0.15, pInterest: 0.15 }, removed: "Removed by its author" },
 ];
 
+/* A KEPT APPROVAL, NAMED BESIDE THE KEPT PICKS (jakob 2026-10-05, the B
+   round's 7, amended: "maybe we should add a link/indicator from the held
+   picks to the pending approval? else someone re-enabling their key and
+   signing their held pick might expect that his approval also happened").
+   A kept approval never joins this batch — it signs through the approval pad
+   on Invites — so when one also waits, the review and its seal each carry one
+   quiet line saying so, with the door to Invites at its end, the
+   newer-version line's construction (`WhatsNewBody`). Signing the picks
+   never implies the approval happened.
+   `shown` is the boards' `approval` chip. Wording flagged for blessing. */
+function KeptApprovalLine({ shown }) {
+  return (
+    <p
+      style={{
+        display: shown,
+        margin: 0,
+        fontSize: "var(--text-body-medium)",
+        lineHeight: "var(--text-body-medium--line-height)",
+        letterSpacing: "var(--text-body-medium--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      An approval waits on Invites — it signs on its own there.{" "}
+      <InlineAction size="sm" onClick={() => {}}>
+        Open Invites
+      </InlineAction>
+    </p>
+  );
+}
+
 /* The one citation the reply's seal was drawn holding. It is a constant rather
    than a board's literal because two states of that seal name it — the one
    that reads it back and the × that drops it. */
@@ -1917,6 +1947,7 @@ const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
    `EditCompose` alone adds the 136 round's two (jakob 2026-10-05) —
    `EditComposeBody` turns the helpers' `faultHoles` on with its `holes`, and
    `CommentEditBody` never does:
+   - an upload running (`{{rowUploadingShown}}`): the second tile's ring;
    - an upload failed (`{{rowShown}}` / `{{rowFailedShown}}`,
      `{{errorShown}}`, `{{gateFailedShown}}`, `{{signFailedShown}}`): the
      compose media row's failure — the tile marked, `UploadErrorLine` under
@@ -1957,9 +1988,11 @@ function EditGate({ holes, faultHoles, done, total }) {
   );
 }
 
-/* The post edit's picked row, and with `faultHoles` its failed reading: the
-   second picture — the one still going up at the `uploading` reading — marked
-   on its tile, and the compose rule's line under the row. */
+/* The post edit's picked row, and with `faultHoles` its two upload readings:
+   at `uploading` the second picture — the one still going up — wears the
+   compose row's ring on its tile (jakob 2026-10-05, the residue's 1: the
+   edit's row is the compose row), and at `failed` it is marked on its tile,
+   the compose rule's line under the row. */
 const EDIT_PICTURES = [{ src: "post-photo.jpg" }, { src: "inviter.jpg" }];
 
 function EditPickedRow({ faultHoles }) {
@@ -1968,6 +2001,7 @@ function EditPickedRow({ faultHoles }) {
   return (
     <>
       <div style={{ display: "{{rowShown}}" }}>{row(EDIT_PICTURES)}</div>
+      <div style={{ display: "{{rowUploadingShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], progress: 0.55 }])}</div>
       <div style={{ display: "{{rowFailedShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
       <div style={{ display: "{{errorShown}}" }}>
         <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
@@ -2736,8 +2770,8 @@ const NEWER_RELEASE = {
   notes: ["The filter's Reset brings back your own default."],
 };
 
-/* The behind state's two lines — drafts flagged for blessing (copy-voice,
-   *The settings page*, About): the quiet line atop the chronicle, and the
+/* The behind state's two lines — blessed (copy-voice, *The settings page*,
+   About; jakob 2026-10-01): the quiet line atop the chronicle, and the
    once-per-release snackbar on a cold open's feed. Both carry `Update now`
    (jakob 2026-10-02): the reader wants the new version, not its code, so
    the door leads to the download — the store listing in the app, and on the
@@ -2826,15 +2860,69 @@ function WhatsNewBody({ newer }) {
   );
 }
 
+/* THE HANDLE CHANGE, whole (`ChangeHandle`'s anatomy, shared the moment its
+   confirm dialog drew it a second time). `value` is what the field holds. */
+function ChangeHandleBody({ value = "" } = {}) {
+  return (
+    <>
+      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          Change your handle
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          @sol is how people mention and find you. Everything you have published stays yours — the
+          handle is a name, not the account.
+        </p>
+
+        <div style={{ marginTop: 32 }}>
+          <TextField
+            id="new-handle"
+            label="New handle"
+            kind="handle"
+            enterKeyHint="go"
+            value={value}
+            hint="3 to 30 characters: letters, numbers and underscore. Handles are always lowercase."
+          />
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <Button style={{ width: "100%" }}>Change handle</Button>
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <QuietNote>
+            Links to your old handle stop working the moment you change it, and anyone can claim it
+            afterwards.
+          </QuietNote>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* THE REPORT PAGE, whole (`ReportProblem`'s anatomy, shared the moment its
-   empty state drew it a second time). `words` is what the field holds. Empty,
-   `Send by email` stays where it is, visible and disabled, with the reason in
-   the foot's line right above it — the disabled-submit law (readme §4,
-   *Interaction states*; jakob 2026-10-01): never hidden, never live only to
-   refuse. `Nothing to send yet` is the edit foot's zero (`Nothing to sign
-   yet`) with the report's verb, in `ActsFooter`'s ink. */
+   empty state drew it a second time). `words` is what the field holds.
+   `Send by email` is live whatever the field holds — the carve-out from the
+   disabled-until-filled law (readme §4, *Interaction states*; jakob
+   2026-10-05): the law gates commits, and a handoff that only prefills
+   another app's draft is not one. */
 function ReportProblemBody({ words }) {
-  const empty = !words;
   return (
     <>
       <PageHeader backHref="#" backLabel="Back" />
@@ -2881,22 +2969,7 @@ function ReportProblemBody({ words }) {
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-          {empty && (
-            <span
-              style={{
-                textAlign: "center",
-                fontSize: "var(--text-label-small)",
-                lineHeight: "var(--text-label-small--line-height)",
-                letterSpacing: "var(--text-label-small--letter-spacing)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Nothing to send yet
-            </span>
-          )}
-          <Button style={{ width: "100%" }} disabled={empty}>
-            Send by email
-          </Button>
+          <Button style={{ width: "100%" }}>Send by email</Button>
         </div>
       </div>
     </>
@@ -3100,7 +3173,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           <SettingsRow
             checked={forget}
             label="Don't remember this account on this device"
-            status="Your key and your draft are cleared from this browser when you sign out."
+            status="Your key, your draft and any kept picks are cleared from this browser when you sign out."
             onOpen={() => {}}
           />
           <SettingsRow action label="Sign out" onOpen={() => {}} />
@@ -4284,6 +4357,22 @@ function ApprovePadNote({ handle }) {
   );
 }
 
+/* `How vouching works`, IN PLACE (jakob 2026-10-05, the collected brief's
+   D4): the vouching pads' "?" replaces the pad's body with this, never a
+   dialog. Its first paragraph is the Invites empty state's two blessed
+   sentences on the mechanic, its second the pads' own `Nothing is signed
+   until Set.` (copy-voice, *The "?" dialogs*; flagged as a text). */
+const HOW_VOUCHING_WORKS_HELP = [
+  "A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.",
+  "Nothing is signed until Set.",
+];
+
+/* `Your vouch back`, in place: copy-voice's text for the vouch-back pad's "?". */
+const YOUR_VOUCH_BACK_HELP = [
+  "Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.",
+  "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
+];
+
 /* THE PAGE ITSELF.
 
    APPLICATIONS LEAD, LIVE LINKS FOLLOW. The queue is the only half that can
@@ -4421,6 +4510,7 @@ function InvitesBody({ approving = false }) {
                 <StanceControl
                   targetLabel="@rafa"
                   helpLabel="How vouching works"
+                  help={HOW_VOUCHING_WORKS_HELP}
                   defaultOpen
                   defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
                   padNote={<ApprovePadNote handle="@rafa" />}

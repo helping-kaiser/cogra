@@ -8,4 +8,6 @@ ALWAYS the row line stands under the face, in the slot Signing… and the pendin
 
 ALWAYS the row line ends without a word to press, never with a disabled one
 
+ALWAYS the row line stands until another act is made on the same anchor or the surface's next fresh load, and never fades on a timer
+
 WHEN tap the face GIVEN the write rule's row line stands -> the pad opens as it does from any face

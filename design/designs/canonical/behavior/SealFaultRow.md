@@ -4,7 +4,13 @@ WHEN the signing is refused for one staged citation GIVEN the cited post never l
 
 WHEN the signing is refused for one staged citation GIVEN the cited comment never landed -> under the citation's value the line This comment didn't land, so it can't be cited. stands in the failure voice followed by Remove it AND the commit stays
 
+WHEN the signing is refused for one staged citation GIVEN the References row reads a count of citations and the cited post never landed -> the line This post didn't land, so it can't be cited. stands under the References row followed by Remove it AND the refused citation is named only in Remove it's accessible name
+
+ALWAYS the refused citation's line stands under the citation's own value, one reading, GIVEN the References row reads the one citation by name
+
 ALWAYS nothing is staged, signed or spent GIVEN the refused citation's line stands
+
+WHEN the reader goes a stage back and returns, or changes a fact, GIVEN the refused citation's line stood -> the seal shows its plain commit AND NEVER the line stands again before the next press
 
 ALWAYS no fault stands at the foot and no Retry appears anywhere GIVEN the refused citation's line stands
 

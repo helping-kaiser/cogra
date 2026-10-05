@@ -1527,7 +1527,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5828,
+      "h": 5897,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1536,7 +1536,7 @@
       "x": -3610,
       "y": 0,
       "w": 3190,
-      "h": 4473,
+      "h": 4486,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1545,7 +1545,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 3199,
+      "h": 3264,
       "page": "comments",
       "title": "Comments · flow map"
     },
@@ -1563,7 +1563,7 @@
       "x": -980,
       "y": 0,
       "w": 560,
-      "h": 632,
+      "h": 762,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -1572,7 +1572,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4378,
+      "h": 4391,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1581,7 +1581,7 @@
       "x": -2740,
       "y": 0,
       "w": 2320,
-      "h": 2014,
+      "h": 2287,
       "page": "patterns",
       "title": "Patterns & reference · flow map"
     },
@@ -1617,7 +1617,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 7336,
+      "h": 7437,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1788,6 +1788,15 @@
       "title": "Settings · change your handle",
       "x": 2880,
       "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeHandleConfirm.dc.html",
+      "title": "Settings · changing your handle, asked first",
+      "x": 6240,
+      "y": 2988,
       "w": 390,
       "h": 844,
       "page": "profile"
@@ -2642,7 +2651,7 @@
       "x": -340,
       "y": 0,
       "w": 640,
-      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal, the stance pad, and the two settings screens): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nWRITE RULE · 'Why signing waits' (the seal and the stance pad — the pad's dialog drops the draft clause, and a reply's seal ends it with your reply is still here): There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now. / Nothing was signed or spent, and your draft is kept. Try again in a little while.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your vouch back': Vouching back signs your opinion of the person who vouched you in, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared. / It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
+      "text": "THE ? CONTENTS — each ? opens a plain dialog (see 'The ? dialog' board): title, at most two short paragraphs, Close; a stance pad's ? shows its text in place, in the pad. The copy, verbatim:\n\nSEAL (post + reply) · 'How signing works': Each piece of a post — the post itself, every tag, every citation — is signed on its own, in your name. They sign together: all of them land, or none does. / Each signing is paid for — the cost is real, so each one still counts.\n\nLICENSE SHEET · 'The license': Terms for anyone who reuses what you publish — credit, and a public record of use. They are not a statement about how you made it. / The license is set when the post is first signed and can never change, not even by an edit. Your default lives in settings — Public domain until you change it.\n\nSENSITIVE SHEET · 'Marking as sensitive': The mark veils the pictures and the words until a reader chooses to look. The title stays readable, so choosing is informed. / Your reason, if you give one, is shown on the veil. The mark is public and travels with the post.\n\nKEY ABSENT · 'Your key' (the seal, the stance pad, and the two settings screens): Signing needs your key, and it isn't on this browser — nothing is signed without it. / A recovery code brings the key to any device. Until it's here, anything waiting on it stays on this device.\n\nWRITE RULE · 'Why signing waits' (the seal and the stance pad — the pad's dialog drops the draft clause, and a reply's seal ends it with your reply is still here): There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now. / Nothing was signed or spent, and your draft is kept. Try again in a little while.\n\nPOST PAD · 'Your opinion on your post': Publishing also signs your opinion on your own post — for or against, from a gentle 🙂 (+0.10) by default. / Your own post always reaches you in full, so only for-or-against is yours to set. The face is the reading: six of them run from 😠 at one end to 😍 at the other, and the one you see is wherever your number lands. Nothing is signed until Set. Prefer sliders or exact numbers? Swap the input in settings.\n\nREPLY PAD · 'Toward what you answer': Replying also signs an opinion on what you answer — for or against, and how much of it reaches you. It starts at a gentle 🙂 (+0.10 / +0.10) and rides the same signature as your reply. / Nothing is signed until Set. Swap the input in settings if you prefer sliders or numbers.\n\nVOUCH-BACK PAD · 'Your vouch back': Vouching back signs your opinion of the person who vouched you in, and your feed grows from it. / The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.\n\nVOUCHING PADS · 'How vouching works' (the approval pad and the ask link's pad, in place): A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in. / Nothing is signed until Set.\n\nEDIT · 'Editing': An edit signs a full new version on top; earlier versions stay public under 'Edited'. An edit never bumps it as new. / Tag and citation changes ride the same signing, each as its own signed action. The license never changes.\n\nCITE · 'Citing': A citation is its own signed action and carries an opinion of what you cite. You can cite a post, a comment or a person. / A comment can also be cited from itself — open its menu and choose 'Cite in a new post'.\n\nSEARCH · 'Searching' (the Explore tab and the citing picker): Search reads names and titles, never bodies. Start with @handle to search one person's work — including their comments, found through what they point at. Start with #tag to search inside a tag. / Results put what's closest to you first — the numbers are your view, no one else's. Below the line, what's still beyond your reach, newest first. Your searches stay on this device.\n\nFILTER SHEET · 'The filter' (the feed's and search's sheets): What you let in, and in what order — the kinds combine freely, ranked or newest is one choice, and what you've already seen stays out unless you ask for it back. Nothing changes until you press Done, and nothing here is signed or shared. / It lasts until you change it, on this device only. Reset brings back your defaults, to change them go to settings.\n\nDESCRIBE SHEET · 'Describing pictures': A description is read aloud by screen readers and shown when a picture can't load — plain words about what's there. It travels with the picture, public like the rest of the post. A video takes one description for the whole clip; its cover takes none of its own. / Nothing is described for you: a picture without a description is skipped by screen readers, never guessed at.\n\nPROFILE-PICTURE SEAL · 'Changing your picture': Your profile is a public record, and changes to it are signed actions in your name — the picture changes the moment yours lands. / The signing is paid for, like your posts. The record that you changed it stays, like every signed action.",
       "page": "patterns"
     },
     {

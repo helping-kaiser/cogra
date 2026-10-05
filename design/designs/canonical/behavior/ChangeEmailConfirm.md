@@ -14,7 +14,7 @@ WHEN the reader comes back to the confirmation GIVEN the change is still in its 
 
 WHEN press Confirm the code GIVEN the code is right and the link has not been opened -> the code's side reads confirmed AND the confirmation stays open, waiting on the link AND the Email row reads Change pending AND NEVER the address moves
 
-WHEN press Confirm the code GIVEN the code is right and the link was opened -> the address moves to the new one AND settings returns with the snackbar answering AND the Email row reads the new address
+WHEN press Confirm the code GIVEN the code is right and the link was opened -> the address moves to the new one AND settings returns AND the snackbar reads Email changed to, then the new address, as Email changed to sol@ferreira.studio. AND the Email row reads the new address
 
 WHEN press Confirm the code GIVEN the code is wrong -> the field reads That code doesn't check out. AND NEVER the change moves
 
@@ -26,7 +26,7 @@ WHEN press Confirm the code again GIVEN the new address belonged to another acco
 
 WHEN the confirm has not answered 200ms after the press -> Confirm the code reads Confirming the code… in its own place AND NEVER a spinner appears
 
-WHEN press Confirm the code GIVEN the reader is offline -> the network error answers AND NEVER the change moves
+WHEN press Confirm the code GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Confirm the code AND Confirm the code stays, the retry AND NEVER the change moves
 
 WHEN tap Resend -> both messages go out again AND the snackbar reads Sent again — check both inboxes. AND NEVER a dialog asks
 

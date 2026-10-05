@@ -59,7 +59,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 51 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 51 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -781,7 +781,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 51 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 51 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -903,7 +903,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 51 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 51 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -1025,7 +1025,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» on 51 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 51 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"

@@ -20,7 +20,13 @@
    cannot change. `Report a problem` opens `ReportProblem`, the same sheet
    Settings opens. `Discard the post` asks first (`SealDiscardConfirm`), the
    undo-vs-confirm rule's instance for losing a draft. A reply's or an edit's
-   seal takes the same construction with its own noun.
+   seal takes the same construction with its own noun: `Discard the reply`,
+   `Discard the edit` — the post edit's included, asking first in the comment
+   edit's words, `Discard the changes?` (flagged). A seal with no draft to
+   lose takes `Not now` instead, one stage back with everything as it was
+   (jakob 2026-10-05, the collected brief's D8): the kept picks' seal, back to
+   the review with every pick still kept, and — drafted, flagged — the
+   profile's seal, back to the edit, and the picture's, back to the crop.
 
    NO ROW IS MARKED. The contract names the refused entry, but a line on that
    row would say the reader's pick is the problem and invite them to fix it —

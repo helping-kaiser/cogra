@@ -8,7 +8,9 @@ ALWAYS the reply's pad starts at its default pick, whatever is answered
 
 ALWAYS the seal beneath the reply's pad stands whole and inert under the wash
 
-WHEN drag or tap the pad field -> the pick is set
+WHEN drag on the pad field -> the pick is set
+
+WHEN tap the pad field without dragging -> NEVER the pick moves
 
 WHEN tap Set -> the pad closes AND the adjusted opinion stands on the seal AND NEVER anything is signed
 

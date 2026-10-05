@@ -263,8 +263,12 @@ Compose keeps captions to one short line; the full explanation lives
 behind a small "?" (at most one per screen, save the stopper exception:
 a notice that stops the surface's one act carries its own beside the
 header's — readme §13, *The compose flow*) opening a plain dialog:
-title, at most two short paragraphs, Close. The texts, verbatim
-(browser wording shown; the app variant swaps the platform noun):
+title, at most two short paragraphs, Close. On the stance pad the "?"
+opens nothing: its text replaces the pad's body in place, with `Back to
+the pad` (readme §11; jakob 2026-10-05, the collected brief's D4) — the
+pad's four help lines, or a named pad's own text below. The texts,
+verbatim (browser wording shown; the app variant swaps the platform
+noun):
 
 - **How signing works** (the seal, post and reply): Each piece of a
   post — the post itself, every tag, every citation — is signed on
@@ -309,7 +313,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   paragraph reads `Nothing was signed or spent. Try again in a little
   while.`; from a reply's seal, which keeps none either, `Nothing was
   signed or spent, and your reply is still here. Try again in a little
-  while.` Payer-neutral by the V1.0 scope cut.)*
+  while.`; from the kept picks' seal, `Nothing was signed or spent, and
+  your picks are still kept. Try again in a little while.` (blessed,
+  jakob 2026-10-05); from a comment edit, `Nothing was signed or spent,
+  and your edit is still here. Try again in a little while.` (the edit's
+  blessed ending in the reply's sentence, jakob 2026-10-05).
+  Payer-neutral by the V1.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -329,6 +338,12 @@ title, at most two short paragraphs, Close. The texts, verbatim
   it. / The pad is how you shape what reaches you — for or against, and
   how much. Nothing is signed until Set. *(The title is blessed (jakob
   2026-10-02); the first paragraph is blessed (jakob 2026-10-05).)*
+- **How vouching works** (the approval pad and the ask link's pad, in
+  place): A link lets someone make an account. Your vouch — the opinion
+  you sign when you approve them — is what brings them in. / Nothing is
+  signed until Set. *(New 2026-10-05, flagged for blessing — jakob's D4:
+  the Invites empty state's two blessed sentences on the mechanic, then
+  the pads' own `Nothing is signed until Set.`)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -693,7 +708,12 @@ a quick answer never flashes a word.
 Every other commit follows the same construction and needs no separate
 entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
 `Signing in…`, and `Create account` becomes `Creating account…`. *(All
-of these arrived with the failure pack; blessed, jakob 2026-10-01.)*
+of these arrived with the failure pack; blessed, jakob 2026-10-01.)* The
+settings commits' labels are the construction's, confirmed as a set
+(jakob 2026-10-05, blessed): `Revoking…`, `Signing out…`, `Changing
+password…`, `Changing handle…`, `Changing email…`, `Confirming the
+code…`, `Creating a new recovery code…`, `Resending the link…`, `Adding
+it to the deletion…`, `Canceling…`.
 
 A seal gated on its uploads keeps its commit enabled, and a press there
 swaps to the same word while it waits for the bytes — `Signing and
@@ -988,7 +1008,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   seal with the words still there (jakob 2026-10-01). Reached from the
   kept picks' seal, the same mirror: `Nothing was signed or spent — your
   picks are still kept.` and `Not now`, back to the review (jakob
-  2026-10-02; *blessed (jakob 2026-10-02)*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
+  2026-10-02; *blessed (jakob 2026-10-02)*). Reached from a comment edit,
+  which keeps no draft either, the reply's mirror: `Nothing was signed or
+  spent — your edit is still here.` and `Not now`, back to the edit with
+  the changes as they were (jakob 2026-10-05; the ending *blessed (jakob
+  2026-10-05)*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -1021,9 +1045,16 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     post scale: `DiscardConfirm`'s own ask, `Discard this reply?` or
     `Discard the changes?` over `Nothing is kept.`, with `Keep writing`
     and `Discard` (jakob 2026-10-02, the residue round's Q1). *`Discard the edit` new 2026-10-02, blessed (jakob 2026-10-02).*
+    The post edit takes the comment edit's words, `Discard the edit`
+    asking `Discard the changes?` (*flagged for blessing* — the placement).
+    A seal with no draft to lose takes `Not now` instead, one stage back
+    with everything as it was (jakob 2026-10-05, the collected brief's
+    D8): the kept picks' seal, back to the review with every pick still
+    kept, and — *flagged for blessing* — the profile's seal, back to the
+    edit, and the picture's seal, back to the crop.
 
-**A read-side comfort that fails** (save, unsave, hide, undo, unhide;
-not a code): it reverts, and the target's row says `That didn't go
+**A read-side comfort that fails** (save, unsave, hide, undo, unhide,
+the default license; not a code): it reverts, and the target's row says `That didn't go
 through.` with `Retry`, in the hold's vehicle. **Drawn** on `RowSigning`'s
 third card.
 
@@ -1246,9 +1277,10 @@ one line the settings route still owes a reading.
 **Reading**: `What your feed shows` — the filter sheet's own accessible
 name and the purpose the trigger's name ends on, so the row and the
 trigger cannot say different things — with the default read back
-through the trigger's own words (`Posts`). Under it:
-`Every feed starts from this. A change made inside a feed lasts until
-you change it back, on that device only.`
+through the trigger's own words (`Posts`). Under the group: `Every feed
+starts from what it shows, and a change made inside a feed lasts until
+you change it back. Both choices stay on this device.` *(The drawn
+sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
 
 **Key backup**: `Recovery code` and `Your key` are rows, not verbs — and,
 only while kept picks wait unsigned with the key here, `3 kept picks
@@ -1263,6 +1295,9 @@ delay before it happens rather than only after:
 `A device you sign out can stay signed in for up to 15 minutes.` The
 current session's status is the platform noun — `This browser` on web,
 `This phone` in the app — replacing Android's shipped *(this device)*.
+`Revoke` answers `Signed out of Pixel 8.`, naming the session's device,
+and `Sign out everywhere else` answers `Signed out everywhere else.`
+(*new 2026-10-05, blessed (jakob 2026-10-05)*).
 
 **Credentials**: `Password`, `Handle`, `Email`, each showing where it
 stands, with `Changing your password signs out every other device.`
@@ -1309,10 +1344,11 @@ and before `Privacy` and `Terms`, each one string for app and web:
   no account, no key, nothing you've posted. It's sent from your own
   email, so we can write back.` The commitment is `Send by email`,
   because the press opens the reader's mail and sends nothing itself.
-  With the field empty it stays visible and disabled, `Nothing to send
-  yet` right above it — the edit foot's zero, `Nothing to sign yet`,
-  with the report's verb (`ReportProblemEmpty`). Leaving with Back keeps
-  the words.
+  It is live from an empty field (`ReportProblemEmpty`; jakob
+  2026-10-05): the press only prefills a draft in the reader's own mail,
+  which is no commit for the disabled-until-filled law to gate. `Time`
+  reads the moment of the press. Leaving with Back keeps the words, and so
+  does the handoff, until the reader clears them.
 - `Contact`, its value the address it writes to — a plain mail door,
   kept apart from the report so reports stay structured.
 
@@ -1321,8 +1357,8 @@ placeholders until CoGra is on a server, and swap then.
 
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
-underneath: `Your key and your draft are cleared from this browser when
-you sign out.`
+underneath: `Your key, your draft and any kept picks are cleared from
+this browser when you sign out.` (*blessed (jakob 2026-10-05)*).
 
 **A new recovery code** (`SettingsBackup`): the heading, then
 `A new code re-encrypts your key and replaces the old backup — recovery
@@ -1363,10 +1399,10 @@ go unlogged.`, the two tier hints joined, so the word and what it means
 arrive together.
 
 **What your feed shows** (`SettingsReading`) is titled with the row and
-the filter's accessible name, and carries the group footnote's first
-sentence where a covering sheet hides the footnote: `Every feed starts
-from this.` The second sentence stays under the row, where the reader
-meets it first. The sections and hints are the feed's own, and so is the
+the filter's accessible name, and carries the group footnote's opening
+where a covering sheet hides the footnote: `Every feed starts from
+this.` The rest stays under the group, where the reader meets it first.
+The sections and hints are the feed's own, and so is the
 foot: `Reset` in its corner and `Done`, the word both of the page's
 sheets use, at its end. Here `Reset` brings back CoGra's own default —
 the one place a reader gets back to it; on a feed's sheet the same word
@@ -1390,6 +1426,10 @@ exist to keep that difference visible. Fields `Current password` and
 password`, and last, the reason the first field is there at all:
 `Your current password is asked for even though you are signed in: a
 live session is not proof enough to change the credential behind it.`
+A wrong current password reads `That password isn't right.` under its
+field — on `ChangeEmail` too, which asks for it the same way — and a
+change that lands answers `Password changed — other devices are signed
+out.` over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 
 **Change your handle** (`ChangeHandle`) says the calm part before the
 costly one. `@sol is how people mention and find you. Everything you
@@ -1400,6 +1440,14 @@ lowercase.` — the fold is said because a reader who types capitals will
 otherwise think the field ate them. The commitment is `Change handle`,
 and the cost is last and unsoftened: `Links to your old handle stop
 working the moment you change it, and anyone can claim it afterwards.`
+The press asks first (jakob 2026-10-05, §11's think-twice list;
+`ChangeHandleConfirm`): `Change your handle to @solferreira?` over
+`Links to @sol stop working the moment it changes, and anyone can claim
+@sol afterwards.`, with `Keep it` filled and `Change it` the quiet answer
+(*new 2026-10-05, flagged for blessing* — the title, the body and `Change
+it`; `Keep it` is the think-twice dialogs' own). A change that lands
+answers `Your handle is now @solferreira.` (*new 2026-10-05, blessed
+(jakob 2026-10-05)*).
 
 **Change your email** (`ChangeEmail`) names why it is guarded: `Your
 email signs you in, and it is the only way back if you lose your
@@ -1440,6 +1488,8 @@ your account keeps the address it has, and a reset still goes there.`
   settings.
 - A wrong code takes `Restore`'s field line, `That code doesn't check
   out.` (blessed).
+- The change that lands answers `Email changed to sol@ferreira.studio.`
+  over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 - The change past its window, as the fault line above the commitment:
   `This change ran out before both sides landed. Your email stays as it
   is — start again from settings.`
@@ -1463,7 +1513,11 @@ sol@solferreira.art.` and `Back to settings`; with the address taken,
 `That address is taken now` over the `EMAIL_IN_USE` line above. Signed
 out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
 `This link confirms sol@ferreira.studio as your new address. It counts
-once you're signed in.` · `Sign in`.
+once you're signed in.` · `Sign in`. Opened under a different account,
+the link's side does not apply and the landing says so: `This link isn't
+for this account` · `It confirms a new address for another account, so
+nothing changed here. Open it signed in as that account to finish the
+change.` · `Back to settings` (*new 2026-10-05, flagged for blessing*).
 
 ## The key's lifecycle
 
@@ -1566,6 +1620,11 @@ The kept-picks rulings (jakob 2026-10-02) add these, each *new
   topic).
 - The write rule at this scale: the fact ends `Nothing was signed or
   spent — your picks are still kept.`, and the way out reads `Not now`.
+- A kept approval beside the picks (jakob 2026-10-05, the B round's 7,
+  amended): the review and its seal each carry one quiet line, `An
+  approval waits on Invites — it signs on its own there.`, ending in the
+  door `Open Invites` (*new 2026-10-05, flagged for blessing*), so
+  signing the picks never reads as the approval done too.
 
 The kept picks drawn (jakob 2026-10-02, the fix-fix round; *blessed
 2026-10-02*) reuse those words and add none: the seal's acts card reads a
@@ -1595,9 +1654,10 @@ browser holds the only copy of your key. Signing out leaves your key,
 your draft and any opinions you kept pending here, locked until you sign
 in on this browser again. Erase them instead, and no one — including
 CoGra — can bring them back.` — `Make a recovery code` ·
-`Sign out, keep it locked` · `Erase it and sign out`. The body names
-all three things the opt-in would clear — the key, the draft, the picks
-kept pending (jakob's ruling). The app renders the platform noun as
+`Sign out, keep them locked` · `Erase them and sign out` (the plurals
+blessed, jakob 2026-10-05). The body names all three things the opt-in
+would clear — the key, the draft, the picks kept pending (jakob's
+ruling) — and the answers name them as one plural. The app renders the platform noun as
 `This app` and `in this app`.
 
 **No screen lock** (Android, in front of every reveal or replace):
@@ -1907,7 +1967,9 @@ records it signs, heard as `2 things` where a withdrawal takes two.
 
 **The reply's gate, failed.** `One picture didn't upload. Signing waits
 for it.` with `Retry` — the fact in error ink, the consequence in the
-quiet voice. The running line stays `Uploading 1 of 2 — signing waits
+quiet voice. A clip's reads `The video didn't upload. Signing waits for
+it.` (*new 2026-10-05, blessed (jakob 2026-10-05)*); a failed cover keeps
+the one-picture line, the cover being one picture. The running line stays `Uploading 1 of 2 — signing waits
 for the pictures.`, and names the body's own content: on a clip it
 reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
 content of course"; *new, blessed (jakob 2026-10-02)*).
@@ -1921,7 +1983,7 @@ set is named by its own noun, `Uploading 0 of 1 — signing waits for the
 cover.` (`EditComposeVideo`, `CommentEditVideo`; *new 2026-10-05,
 blessed (jakob 2026-10-05)*). The pictures' noun counts: a gate waiting
 on one picture reads `Uploading 0 of 1 — signing waits for the
-picture.` (`CommentEdit`; *new 2026-10-05, flagged for blessing*), and
+picture.` (`CommentEdit`; *new 2026-10-05, blessed (jakob 2026-10-05)*), and
 `the pictures` from two up; `the video` and `the cover` are one thing
 already and never change.
 
@@ -1984,6 +2046,9 @@ bare count, and its footnote `Hiding someone clears your own feed of
 them. Nothing changes for them, and their profile still opens if you go
 looking.` The footnote carries the whole of what hiding means, which is
 the group anatomy's own rule. With nobody hidden the row reads `None`.
+`Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
+their posts can reach your feed again.` with `Undo` beside it (*new
+2026-10-05, blessed (jakob 2026-10-05)*).
 
 **The sheet is titled by the row that opened it** — `Hidden accounts` —
 and each row carries `Unhide` and the moment of the hiding in the ages
@@ -2605,12 +2670,15 @@ record calls this a link capability and the API calls the field an id;
 on screen it is a link.
 
 **The approval pad's two lines state what `Set` does, every time.**
-`Approving is vouching. Set signs your opinion on @rafa and brings them
-in.` and `It is one signed, priced act — and it is theirs to answer:
-their opinion back completes the pair.` They are not `VouchBackPad`'s
-one-time coaching: approving is rare and priced, and §3's honesty rule
-wants anything priced to say so before it is signed. The pad's "?" is
-named `How vouching works`.
+`Vouching is the act. Set signs your opinion on @rafa and brings them
+in.` — the drawn line, which copy-voice follows (jakob 2026-10-05, the
+collected brief's D3; *flagged for blessing*) — and `It is one signed,
+priced act — and it is theirs to answer: their opinion back completes
+the pair.` They are not `VouchBackPad`'s one-time coaching: approving is
+rare and priced, and §3's honesty rule wants anything priced to say so
+before it is signed. The ask link's pad carries the same two lines. The
+pad's "?" is named `How vouching works`, and its text stands in place in
+the pad (*The "?" dialogs*).
 
 **The eighth notification reads `@rafa is ready for your approval`** —
 a state rather than an act, and the one row in that list that is. What

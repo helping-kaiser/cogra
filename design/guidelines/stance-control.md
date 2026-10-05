@@ -69,8 +69,10 @@ chooses; the shortcut that signs without opening anything takes a held
 finger. The price is accepted deliberately: nobody holds a control for
 half a second by mistake.
 
-The pad opens **at the origin**, untilted — the low default belongs to
-the shortcut, not to the considered gesture.
+The pad opens **at the default, +0.10 / +0.10** (jakob 2026-10-05) — the
+shortcut's own modest positive, so `Set` on a pick never moved signs
+exactly what the hold would, and never a `(0, 0)` that asks to walk back
+nothing.
 
 **The control owns its touches.** No interaction with it — tap, hold,
 drag, release, or the open pad itself — may also trigger the surface
@@ -111,6 +113,11 @@ instead is explain, and confirm when it matters:
 
 The cost is legible: each counter-record is its own priced act, so the
 dialog states the count — `It signs 3 things, each paid separately.`
+The count is what the route signs (jakob 2026-10-05): `Walk it back`
+stages `severanceCost`, ⌈max(|Σd|, |Σi|)⌉ of the raw sums, and a pick
+that nets to `(0, 0)` signs one record, `It signs 1 thing, paid on its
+own.` The dialog asks over the parked pad, so `Keep it` returns to the
+pick as it was.
 
 ## The emoji readout
 
