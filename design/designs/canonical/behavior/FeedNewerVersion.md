@@ -20,6 +20,6 @@ ALWAYS Update now is one string for the app and the web, with no platform noun
 
 ALWAYS no update is ever forced
 
-ALWAYS the newer-version snackbar is the one snackbar that confirms no act of the reader's
+ALWAYS the newer-version snackbar is a quiet message, one per release, never a confirmation of an act
 
 ALWAYS a release's notes are reached from Settings' What's new, never from the snackbar
