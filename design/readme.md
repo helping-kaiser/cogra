@@ -9093,6 +9093,68 @@ and the profile. Every quoted wording is blessed unless marked flagged.
   the ask's new snackbars and the held tap's new pad. What stays open is
   backlog item `13X-exec-entry-vouch`.
 
+### The settings and pads rulings executed — 2026-10-05
+
+jakob's collected rulings (the digest `2026-10-05-collected-rulings.md`)
+on settings, the pads and seals, the edits and the 136 residue. Every
+quoted wording is blessed unless marked flagged.
+
+- **The handle change asks first** — a new board, `ChangeHandleConfirm`:
+  `Change your handle to @solferreira?` over the cost, links to `@sol`
+  dying and the handle free for anyone, with `Keep it` filled and `Change
+  it` quiet (flagged). The page beneath is `ChangeHandleBody`.
+- **The disabled-until-filled law gates commits**, and a handoff that only
+  prefills another app's draft is not one (§4, *Interaction states*):
+  `Report a problem`'s `Send by email` is live from an empty field, `Time`
+  is the press, and the words outlast the handoff.
+- **Settings answers in words.** `Signed out of Pixel 8.`, `Signed out
+  everywhere else.`, `Password changed — other devices are signed out.`,
+  `Your handle is now @<new>.`, `@juno is unhidden — their posts can
+  reach your feed again.` with `Undo`, `Email changed to <new>.`; a wrong
+  current password reads `That password isn't right.`; the sign-out line
+  names kept picks and its dialog's answers are plural; About opens with
+  every topic closed. An unverified applicant's Email row opens
+  `ApplicantEmail`; a change that ran out reopens the request; the last
+  unhidden account closes the sheet onto a `None` row; the wallet door's
+  guest takes the bare band and bar; the settings forms answer offline in
+  their own slot. The wrong-account email link's landing is flagged.
+- **The pad opens at +0.10 / +0.10**, its "?" replaces its body in place
+  (the vouching pads with `How vouching works`, flagged, the vouch-back
+  with its own text), only a drag moves the pick, and the walk-back asks
+  over the parked pad: `Walk it back` costs `severanceCost`, a pick that
+  nets to nothing costs one thing (`StanceControl`, `stance-control.md`).
+  The approval pad's drawn `Vouching is the act.` stands, copy-voice
+  following (flagged).
+- **The kept picks.** The review and its seal carry `An approval waits on
+  Invites — it signs on its own there.` with `Open Invites` when a kept
+  approval also waits (the `approval` chip, flagged); the seal's bug
+  notice leaves by `Not now`, back to the review. The post edit's bug way
+  out is `Discard the edit`, the profile and picture seals' `Not now`
+  (both flagged); the comment edit's write rule ends `…your edit is still
+  here.` with `Not now`.
+- **The seal grammar.** While a seal signs, its fact rows and system Back
+  refuse and its "?" stays live; no timeout and no retry of its own;
+  `Retry` re-runs under the commit's own word; a refusal reading goes when
+  the reader steps back; an unlanded citation at a count stands under the
+  References row; the security notice stands until `Got it`; row lines
+  stand until Retry, another act or a fresh load; a hold on a kept pick
+  opens the review; the not-found pages name their origin.
+- **The edits and replies.** `ReplyPictures`' `upload` chip draws a
+  picture that didn't upload; `EditCompose`'s second tile wears the ring
+  at `uploading`; a clip's gate fault reads `The video didn't upload.
+  Signing waits for it.`; a removed failed cover restores the cover row;
+  the edits' in-flight word fires for every press; `Uploading 0 of 1 —
+  signing waits for the picture.` is blessed.
+- **The canvas.** A hidden non-drag route no longer paints a dot under
+  `RefPairEdit`'s title in dark (the flow badge's positioning beat its
+  `cg-sr-focusable`), and the badges keep their corner on pressable
+  controls.
+- **The gate**: 272 → **273 screens** (`ChangeHandleConfirm`), 1841 →
+  **1848 edges**, the History round's 2 gaps, flows 66, every one
+  resolved, 273 sidecars. The witness re-blessed for `New post`'s start
+  narrowed to the wizard. What stays open is backlog
+  `13X-exec-settings-pads`.
+
 ## 15. Index
 
 **Root**
