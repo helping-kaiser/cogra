@@ -4562,3 +4562,43 @@ same surfaces are not repeated here.
   table; the post detail's has `Back to the search`.
 - **History's trailing age** is unstated: Saved's is when the reader
   saved the thing, History's could be the latest seeing or the writing.
+### 13X-k13 · What the K13 round left for rulings · *design + docs* · **filed 2026-10-05**
+
+The K13 round (readme §13) executed the nineteen rulings and left these
+for jakob's eye, each with the lane's recommendation in the round's
+report:
+
+- **The email-change code's shape.** Neither auth.md nor
+  `ChangeEmailConfirm`'s fixture pins its digits or length, so auth.md
+  states none; the field takes the code kind meanwhile.
+- **The arrival-focus lines overlap K14.33.** The words stage and the
+  reply composer open focused with the keyboard up (`TextField`'s
+  contract); K14.33's ruling should say the same.
+- **"Scroll with the CTA pinned" against the placement law.** K13.4's
+  words pin the entry and settings pages' action; §4's placement law
+  (2026-10-01) keeps a task page's action after its last field. The round
+  wrote: pinned footers stay pinned while the page scrolls, a task page's
+  action scrolls with it.
+- **The hold's ring, as drawn** — M3's determinate circular indicator,
+  40px, a 4px `primary` stroke, no track, from twelve o'clock; it starts
+  at the press, so a tap shows its first fifth before the pad opens; under
+  reduced motion it still fills.
+- **The knob's pressed layer, as drawn** — a 40px disc in the knob's
+  orange at 10 %.
+- **Where the reorder's three actions stand on a `PickedSheet` row**,
+  what the cover and the last row offer, the handle's keyboard role and
+  the footnote's `drag to reorder`.
+- **The crop's arrow-key step**, and the web's `Drag to move, pinch to
+  zoom.` on a device with no pinch.
+- **The rail's contrast**: on the brightest fixture region the
+  white-with-shadow glyphs measure about 2.4:1 (`ReelRail`'s docblock) —
+  under WCAG's 3:1 for controls. The look is ruled; whether to deepen the
+  shadow is open.
+- **The topics line at 1.5×** clips its count mid-word (`· 1 re`) on
+  `Feed`.
+- **The handle's autofill** is `nickname` (the ruling read "off/nickname")
+  and a display name's is off.
+- **`ChangeEmail` and `ApplicantEmail` re-prove a password** but neither
+  sign in nor set one, so they carry no hidden username.
+- **Two stacked count lines' 48px targets overlap** on the post detail;
+  the later line takes the overlap.

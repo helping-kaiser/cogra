@@ -8892,6 +8892,62 @@ copy-voice. Nothing was ruled in the pass.
 - **The gate**: screens, edges, flows and boards unchanged; 33 new
   sidecars, every one green.
 
+### The K13 round — 2026-10-05
+
+jakob's rulings on the audit's nineteen accessibility and rubric
+systemics (K13.1–K13.19), as recommended — haptics corrected the same
+day: the tick is kept, and there are no UI sounds.
+
+- **Motion is one table** (§4): forward, back, tab fade-through, sheet,
+  dialog, the pad's bloom as the dialog's entrance, the scrim, the media
+  handover and the reel's squish as shared elements and arrival
+  exceptions, the collapsing top, in-place changes, `Back to top` and the
+  hold's ring; predictive back follows the finger. `motion.css` and the
+  Motion card lose the stale long-press row.
+- **Haptics only where the platform documents one, Android only** — the
+  hold's commit, the reorder's lift, the knob's tick at the zero lines
+  and the clamp — **and no UI sounds** (§4). jakob's phone has no
+  vibration, so the hand test cannot cover them; review and any device
+  at hand do.
+- **Fields know their keyboard** (`TextField`'s kind table: keyboard,
+  caps, correction, autofill, return key; `mono` is the one-time-code
+  kind), each composer states its arrival focus, and **credential forms
+  name their account by the login email** (`PasswordField`; hidden
+  usernames on `ChangePassword` and `ResetNew`; a handle is `nickname`).
+- **Targets and states conform** (§4): `cg-hit` and the state layer on
+  every master named; a door card lights whole (`cg-door-card`);
+  `Button`'s disabled is 0.38. **The hold shows its ring** filling over
+  500ms — `RowSigning`'s `hold` chip (`holding`) — and **the knob its
+  pressed layer** — `PadStanding`'s `knob` chip (`held`).
+- **Text scale**: budgets measure at rendered size; intro stages scale
+  to the column; entry, settings and intro pages scroll (their sidecars
+  say so). **The profile's figures move under the avatar** below their
+  fit, measured: another's 243px row overflowed 232px at 360 and 192px
+  at 320, so it moves there; at 390 every profile board is pixel-identical.
+  `Feed` was rendered at 1.5× as the proof (a verification artifact, not
+  a board).
+- **The drags' twins**: the crops' visible zoom slider (`CropZoom`, 1× to
+  about 4×, three new edges) and arrow-key pan; the pager's focusable
+  strip and arrows; the reorder's three per-row actions, ruled, their
+  placement filed.
+- **Orientation**: portrait everywhere but the viewer, reason written;
+  turning a landscape clip's detail opens the viewer (§4).
+- **Names and announcements** (§10, copy-voice): the filter pill's name
+  leads with its reading, counts keep their number, an unsave names its
+  thing, a "?" its dialog, a search field its use; the comment foot is a
+  button in the field's shape; the viewer is named by content, holds
+  focus and stops at its ends; the pad's readouts speak after 500ms of
+  rest; the filter's `Done` is said once. The over-media look stands,
+  measured against the lightest fixture (`ReelRail`).
+- **Flagged for blessing** (copy-voice, *Names that carry what the eye
+  reads*): the filter pill's name and announcement, `Back to the
+  comment`, `Picture` and `Video`, `Move the picture` and `Zoom`.
+- **A harness fix**: `check-flows` no longer loops on a field with no
+  tagged ancestor.
+- **The gate**: 270 screens, 1810 → **1813 edges**, 0 gaps, flows 66,
+  every one resolved. The witness did not move. What the round left open
+  is backlog `13X-k13`.
+
 ## 15. Index
 
 **Root**
