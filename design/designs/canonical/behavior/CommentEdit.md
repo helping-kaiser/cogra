@@ -28,6 +28,30 @@ WHEN tap a staged tag chip -> the tag's pair opens in a sheet over the edit
 
 WHEN tap a staged citation's row -> the citation's pair opens in a sheet over the edit
 
+ALWAYS a standing citation whose target was removed keeps its row, wearing the removed-mark face in place of a live preview, with Removed by its author where the name stood
+
+ALWAYS a standing citation whose target was removed keeps its pair, its sheet and its ×, and adds nothing to the batch by standing
+
+ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took are uploading
+
+ALWAYS Sign the edit is enabled GIVEN an upload is running
+
+WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a second press AND NEVER anything is signed before the last upload lands AND NEVER Sign the edit dims
+
+WHEN the signing has not answered 200ms after the press GIVEN Sign the edit was pressed while the uploads ran -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
+
+WHEN the signing has not answered 5s after the press GIVEN Sign the edit was pressed while the uploads ran -> the slow line reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
+
+WHEN the last upload lands GIVEN Sign the edit was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
+
+WHEN an upload fails GIVEN Sign the edit was pressed while the uploads ran -> the held press drops AND the gate line takes its fault reading AND Sign the edit reads Sign the edit again AND the header back arrow and the header X answer again AND NEVER anything is signed
+
+ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
+
+WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign the edit is pressed again
+
+WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was
+
 WHEN tap Sign the edit -> Sign the edit refuses a second press until the signing answers AND NEVER Sign the edit dims
 
 WHEN the signing has not answered 200ms after the press -> Sign the edit reads Signing the edit… AND NEVER a spinner appears

@@ -32,8 +32,33 @@
    which is why the foot reads five. Sign is the confirmation (jakob): the
    count is said on the foot and in the acts sheet, and no dialog asks again.
 
+   A STANDING CITATION WHOSE TARGET WAS REMOVED WEARS THE REMOVED-MARK FACE
+   (jakob 2026-10-05, the 134 residue's 3a), `KeptPicksReview`'s face and words
+   unchanged: the tile empty, `Removed by its author` in the name's place in
+   the system's voice. Nothing leaves the graph, so the citation still stands —
+   its pair, its row's sheet and its × stay, and the count does not move. The
+   `target` chip draws it.
+
+   AN EDIT THAT TOOK NEW PICTURES GATES ITS SIGN ON THEIR UPLOAD (jakob
+   2026-10-05, the 134 residue's 3b) — the seal's grammar unchanged
+   (`ComposeSealUploading`). `UploadStatusLine` stands over the foot and `Sign
+   the edit` stays enabled. Pressed, its label swaps in place to `Signing the
+   edit…`, the ways out locked with it, and signing proceeds the moment the
+   bytes land, with no second press. An upload that fails drops the held press:
+   the line takes its fault reading — `One picture didn't upload. Signing waits
+   for it.` with `Retry` — `Sign the edit` reads itself again, disabled until
+   `Retry` re-gates, and the reader presses again. The slow line counts from
+   the press. The `upload` chip draws the running gate: both pictures in the
+   row came in this edit.
+
    THE BODY IS `_shared.jsx`'s `EditComposeBody`, because the acts sheet stands
    on this edit and draws it whole. */
+export const PROPS = {
+  target: { editor: "enum", options: ["live", "removed"], default: "live" },
+  upload: { editor: "enum", options: ["none", "uploading"], default: "none" },
+};
+export const VALS = `liveShown: this.props.target === "removed" ? "none" : "block", removedShown: this.props.target === "removed" ? "block" : "none", gateShown: this.props.upload === "uploading" ? "block" : "none"`;
+
 export function Screen() {
-  return <EditComposeBody />;
+  return <EditComposeBody holes />;
 }

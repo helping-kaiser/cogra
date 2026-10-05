@@ -26,10 +26,12 @@ export interface StagedReferenceProps {
   stance?: boolean;
   /**
    * The target's removal mark — `Removed by its author`, `Deleted account` —
-   * for a kept pick whose target was removed or redacted while it waited. The
-   * row stays and still signs, wearing the removed-mark face: the mark's tile
-   * empty, the mark's line in the name's place in the system's voice. The ×
-   * is then named "Remove this pick: <sub>, <mark>".
+   * for a kept pick whose target was removed or redacted while it waited, or
+   * a standing citation on an edit whose target was removed. The row stays,
+   * wearing the removed-mark face: the mark's tile empty, the mark's line in
+   * the name's place in the system's voice. Its controls name it by the mark:
+   * the × "Remove this pick: <sub>, <mark>" (a `stance` row) or "Remove this
+   * citation: <sub>, <mark>", and the row "<sub>, <mark> — set how it relates".
    */
   removed?: string;
   /**

@@ -27,7 +27,20 @@
    and Video sitting above Cover says the shape of the body without a sentence.
 
    The words, tags, citations and the license row are unchanged from
-   CommentEdit: one screen, one batch, the license locked. */
+   CommentEdit: one screen, one batch, the license locked.
+
+   A NEW COVER GATES THE SIGN ON ITS UPLOAD (jakob 2026-10-05, the 134
+   residue's 3b) — the seal's grammar unchanged (`ReplySealUploading`; said in
+   full in `EditCompose`'s docblock). While the cover the edit set is still
+   going up, `UploadStatusLine` stands over the foot naming it — `Uploading 0
+   of 1 — signing waits for the cover.` (`media="cover"`, the noun new and
+   flagged for blessing) — and `Sign the edit` stays enabled; pressed, it reads
+   `Signing the edit…` until the bytes land, a failed upload drops the held
+   press, and the slow line counts from the press. The `upload` chip draws it:
+   the face in the cover row is the new one, and the foot counts its one
+   record (`Cover changed`, `CommentEditActs`). */
+export const PROPS = { upload: { editor: "enum", options: ["none", "uploading"], default: "none" } };
+export const VALS = `gateShown: this.props.upload === "uploading" ? "flex" : "none", restShown: this.props.upload === "uploading" ? "none" : "flex"`;
 
 export function Screen() {
   return (
@@ -82,7 +95,15 @@ export function Screen() {
 
         <div style={{ flex: 1 }} />
 
-        <ActsFooter count={2} />
+        <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
+          <UploadStatusLine done={0} total={1} media="cover" />
+        </div>
+        <div style={{ display: "{{restShown}}", flexDirection: "column" }}>
+          <ActsFooter count={2} />
+        </div>
+        <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
+          <ActsFooter count={3} />
+        </div>
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
     </>

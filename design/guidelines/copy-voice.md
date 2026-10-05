@@ -678,7 +678,9 @@ A seal gated on its uploads keeps its commit enabled, and a press there
 swaps to the same word while it waits for the bytes — `Signing and
 publishing…` on `ComposeSealUploading`, `Signing comment…` on
 `ReplySealUploading` — then signs with no second press (jakob
-2026-10-02, the fix-fix round's 20; no new words).
+2026-10-02, the fix-fix round's 20; no new words). An edit that took new
+pictures gates `Sign the edit` the same way, swapping to `Signing the
+edit…` (jakob 2026-10-05; the construction's own word).
 
 ## Field errors
 
@@ -1754,8 +1756,10 @@ the edit body's `Withdrawn: #coastroad`, and the acts card's
 
 Drawn on `TagPad`, `TagPadCompose`, `RefPair`, `RefPairEdit`,
 `EditCompose`, `EditActs`, `CommentEdit`, `CommentEditActs`,
-`ReplySealUploading` and `ReplySealUploadFailed` (readme §13, *The pads
-and the edit's withdrawals* and *The comment edit's withdrawals*). Every line here is the lane's wording, **blessed (jakob 2026-10-02)** — with the three carried-over strings above (`Un-tag`,
+`EditComposeVideo`, `CommentEditVideo`, `ReplySealUploading` and
+`ReplySealUploadFailed` (readme §13, *The pads and the edit's
+withdrawals*, *The comment edit's withdrawals* and *The 134 and 135
+residue*). Every line here is the lane's wording, **blessed (jakob 2026-10-02)**, unless marked otherwise — with the three carried-over strings above (`Un-tag`,
 `Withdrawn:`, `Tags withdrawn`), which this round puts to work again.
 
 **The non-drag route names its target.** `Set exact values for
@@ -1800,6 +1804,22 @@ quiet voice. The running line stays `Uploading 1 of 2 — signing waits
 for the pictures.`, and names the body's own content: on a clip it
 reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
 content of course"; *new, blessed (jakob 2026-10-02)*).
+
+**The edit's gate is the seal's** (jakob 2026-10-05). An edit that took
+new pictures waits on them in the seal's words: `Uploading 1 of 2 —
+signing waits for the pictures.` over the foot, the fault reading `One
+picture didn't upload. Signing waits for it.` with `Retry`, and the slow
+line `Still signing — the network is slow right now.` A cover the edit
+set is named by its own noun, `Uploading 0 of 1 — signing waits for the
+cover.` (`EditComposeVideo`, `CommentEditVideo`; *new 2026-10-05,
+flagged for blessing*).
+
+**A standing citation whose target was removed** wears the kept picks'
+face (jakob 2026-10-05): `Removed by its author` where the name stood,
+on `EditCompose` and `CommentEdit`. Its controls name it by the mark,
+never by the removed name: the × `Remove this citation: Post, Removed by
+its author` and the row `Post, Removed by its author — set how it
+relates` (spoken only; *new 2026-10-05, flagged for blessing*).
 
 ## Saved, History and hiding
 
