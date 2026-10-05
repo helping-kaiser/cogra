@@ -1370,7 +1370,8 @@ const WRITE_RULE_FACT =
    dialogs*). The pad's notice carries the same one. */
 const WRITE_RULE_HELP = "Why signing waits";
 /* The slow line (jakob 2026-10-01: past 5s, an honest line and no fake
-   progress) — a draft flagged for blessing (copy-voice, *Faults by code*). */
+   progress), blessed (copy-voice, *Faults by code*). The edits carry it too,
+   under `ActsFooter` (jakob 2026-10-05). */
 const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
