@@ -1858,8 +1858,8 @@ relates` (spoken only; *new 2026-10-05, blessed (jakob 2026-10-05)*).
 ## Saved, History and hiding
 
 Drawn on `ProfileOwnMenu`, `Saved`, `SavedEmpty`, `History`,
-`HistoryEmpty`, `SettingsHidden`, the three content menus and the
-settings page.
+`HistoryEmpty`, `HistoryFilter`, `SettingsHidden`, the three content
+menus and the settings page.
 
 **The reader's word is save** (jakob's ruling). The surface it fills is
 `Saved`, and the row in your own profile's ⋮ is that same word, so the
@@ -1880,16 +1880,24 @@ stops a reader wondering whether they have done something to someone.
 sheet closes on the tap, so without the snackbar nothing would answer
 it — §3's rule, applied.
 
-**The second list is `History`.** Posts you have read, newest reading
-first. *View history* is the contract's word and stays there.
+**The second list is `History`.** Everything you have seen, every kind,
+as a feed, newest-seen first. *View history* is the contract's word and
+stays there. Its field reads and is named `Search your history`, its
+trigger `Everything` at rest — search's word for nothing narrowed — and
+the trigger's purpose and the sheet's title are `What your history
+shows`, the feed's and search's construction. The sheet's kind hint is
+search's own, `Combine as many as you like. All, until you narrow it.`
+(*new 2026-10-05, flagged for blessing*: `Search your history`, `What
+your history shows`.)
 
 **Two empty states, and each says why the list is empty.**
 `Nothing saved yet. A post, a comment or a person can be saved from its
 own menu, and it waits here.` names the gesture, because no card shows
 a saving affordance at rest and a reader who has never opened a ⋮ has
-no other way to find it. `Nothing here yet. Posts you read show up here
-on their own, newest first.` says the opposite thing — that this one
-fills without being asked.
+no other way to find it. `Nothing here yet. Everything you read shows
+up here on its own, newest first.` (*new 2026-10-05, flagged for
+blessing*) says the opposite thing — that this one fills without being
+asked — and names no kind, because the list holds every kind.
 
 **The settings group is `People`,** its row `Hidden accounts` with a
 bare count, and its footnote `Hiding someone clears your own feed of

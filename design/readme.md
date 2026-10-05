@@ -8982,6 +8982,39 @@ day: the tick is kept, and there are no UI sounds.
   sliders), 0 gaps, flows 66, every one resolved, 270 sidecars. The
   witness did not move. What the round left open is backlog `13X-k13`.
 
+### The History redesign — 2026-10-05
+
+jakob's direction on the collected brief's D10 and its clarification:
+History is "a fully normal feed" of everything the reader has seen,
+searchable and filterable, in V1.0.
+
+- **History is the seen-list.** The list slice-3 ranking filters the
+  feed by, so that seeing a thing twice is a deliberate choice; a
+  content is seen when it was fully in the viewport. The page surfaces
+  exactly that list and defines nothing of its own.
+- **Every served kind, as its own feed card**, unchanged and fully live
+  — posts, comments, profiles and tags, and every kind the feed serves
+  later. Newest-seen first, one card per thing, at its latest seeing;
+  the scores do not order it. The row form, its disc and its trailing
+  age are gone.
+- **Search and a kinds filter ride the top** (a lane call, flagged for
+  the canvas pass): the search bar, `Search your history`, and under it
+  the feed's worded trigger in search's kind semantics — nothing
+  narrowed reads `Everything`. Its sheet, `HistoryFilter`, holds Kinds
+  alone and the shared foot. `HistoryEmpty` draws neither control, and
+  its words name no kind (flagged).
+- **The cards' doors are the feed's.** History's edges follow
+  `FeedKinds`' grammar; the post detail's arrow reads `Back to
+  History`, as its table already says.
+- **What no ruling answers stays undrawn** (backlog `13X-history`):
+  clearing the list or one thing in it, what the search matches, the
+  no-match state, and the other destinations' origin nouns.
+- **The gate**: 270 → **271 screens** (`HistoryFilter`), 1815 →
+  **1839 edges**, 0 → **2 gaps** (the no-match state, owed), flows 66,
+  every one resolved, 271 sidecars; the witness re-blessed for
+  History's feed-card starts. `History`'s slot grows 844 → **1620**; `HistoryFilter` takes
+  the row's next slot.
+
 ## 15. Index
 
 **Root**
