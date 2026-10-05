@@ -1554,7 +1554,7 @@
       "x": -980,
       "y": 0,
       "w": 560,
-      "h": 632,
+      "h": 762,
       "page": "money",
       "title": "Money & Wallet · flow map"
     },
@@ -1608,7 +1608,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 6198,
+      "h": 6276,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -1779,6 +1779,15 @@
       "title": "Settings · change your handle",
       "x": 2880,
       "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ChangeHandleConfirm.dc.html",
+      "title": "Settings · changing your handle, asked first",
+      "x": 6240,
+      "y": 2988,
       "w": 390,
       "h": 844,
       "page": "profile"

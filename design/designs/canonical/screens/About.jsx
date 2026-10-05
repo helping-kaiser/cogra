@@ -41,10 +41,12 @@
 
    EACH TOPIC ANSWERS ON ITS OWN. Opening one does not close another: a reader
    comparing two answers should not have to choose between them, and the
-   convention a reader arrives with is independent toggles. (DERIVED, not
-   ruled — jakob confirms it on canvas.)
+   convention a reader arrives with is independent toggles (jakob 2026-10-05,
+   confirmed).
 
-   DRAWN WITH THE FIRST TOPIC OPEN, the rest closed. Nine closed rows would
+   IT OPENS WITH EVERY TOPIC CLOSED (jakob 2026-10-05): the reader opens the
+   one they came with. THE BOARD DRAWS THE FIRST TOPIC OPEN, the rest closed,
+   to show both states. Nine closed rows would
    show the anatomy and none of the words; nine open ones would be the flowing
    page this iteration just left behind. One open row draws both states at
    once, which is what a state board is for.

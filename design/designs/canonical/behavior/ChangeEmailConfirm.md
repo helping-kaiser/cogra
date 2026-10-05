@@ -14,7 +14,7 @@ WHEN the reader comes back to the confirmation GIVEN the change is still in its 
 
 WHEN press Confirm the code GIVEN the code is right and the link has not been opened -> the code's side reads confirmed AND the confirmation stays open, waiting on the link AND the Email row reads Change pending AND NEVER the address moves
 
-WHEN press Confirm the code GIVEN the code is right and the link was opened -> the address moves to the new one AND settings returns with the snackbar answering AND the Email row reads the new address
+WHEN press Confirm the code GIVEN the code is right and the link was opened -> the address moves to the new one AND settings returns AND the snackbar reads Email changed to, then the new address, as Email changed to sol@ferreira.studio. AND the Email row reads the new address
 
 WHEN press Confirm the code GIVEN the code is wrong -> the field reads That code doesn't check out. AND NEVER the change moves
 

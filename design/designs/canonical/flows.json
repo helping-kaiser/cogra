@@ -4,7 +4,7 @@
     {
       "name": "publish-a-post",
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "pictures — the crop" },
         { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
@@ -254,7 +254,7 @@
     {
       "name": "publish-words",
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4, "case": "the body empty — the words stage, no ask" },
         { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
@@ -265,7 +265,7 @@
     {
       "name": "publish-a-video",
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a horizontal or square video — its face" },
         { "board": "ComposeCover", "via": 6 },
@@ -276,7 +276,7 @@
     {
       "name": "publish-a-vertical-video",
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
-      "start": { "control": "nav · New post", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a vertical video — no cover step, the door waits on details" },
         { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }

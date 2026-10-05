@@ -4,6 +4,8 @@ ALWAYS About CoGra is a page of nine topics as rows, each row naming its topic
 
 ALWAYS the whole of a topic's row is its control, its title and its chevron together
 
+WHEN About CoGra opens -> every topic stands closed
+
 ALWAYS a topic's row says whether it is open
 
 WHEN tap a closed topic's row -> the topic unfolds its answer under the row AND every other topic stays as it was

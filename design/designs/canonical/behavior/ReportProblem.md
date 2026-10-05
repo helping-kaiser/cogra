@@ -14,13 +14,19 @@ ALWAYS the report carries no bottom bar and keeps its back arrow
 
 WHEN typing in What happened -> the field grows a line at a time AND Send by email stays enabled
 
-WHEN the last character in What happened is deleted -> Send by email stays visible and goes disabled AND Nothing to send yet stands right above it
+WHEN the last character in What happened is deleted -> Send by email stays enabled
+
+ALWAYS Send by email is enabled whatever What happened holds, because the press only hands a prefilled draft to the reader's own mail
+
+ALWAYS Time reads the moment Send by email is pressed
 
 WHEN press Send by email on the web -> the reader's own mail opens through a mailto link with the words, the four facts and the report address filled in AND NEVER the report is sent from CoGra
 
 WHEN press Send by email in the app -> the system's own send opens with the words, the four facts and the report address filled in AND NEVER the report is sent from CoGra
 
 ALWAYS nothing of the report leaves until the reader sends it from their own mail
+
+WHEN the report opens again GIVEN Send by email handed its words to the reader's mail -> the words stand in What happened as they were AND NEVER they are cleared by the handoff
 
 WHEN press the header back arrow -> the surface that opened the report returns AND nothing is sent AND the words are kept for the next time the report opens
 

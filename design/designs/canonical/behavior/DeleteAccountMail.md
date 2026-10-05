@@ -10,7 +10,13 @@ ALWAYS the mail screen claims no expiry for the link
 
 ALWAYS no deletion band stands GIVEN the deletion is requested and not yet confirmed
 
-WHEN tap Resend the link -> a fresh message goes to the same address AND NEVER anything is scheduled
+WHEN tap Resend the link -> a fresh message goes to the same address, carrying the request's recorded content-sweep choice AND NEVER anything is scheduled
+
+ALWAYS the settings Delete account row carries no status GIVEN a deletion is requested and not yet confirmed
+
+WHEN tap Delete account in settings GIVEN a deletion is requested and not yet confirmed -> the request screen opens again
+
+WHEN press Send the confirmation link GIVEN an earlier request is not yet confirmed -> the new request, with its own content-sweep choice, supersedes the earlier one AND NEVER two requests stand
 
 WHEN the resend has not answered 200ms after the press -> Resend the link reads Resending the link… in its own place AND NEVER a spinner appears
 

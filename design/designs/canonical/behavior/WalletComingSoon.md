@@ -10,6 +10,12 @@ ALWAYS the wallet's coming-soon page wears the bottom bar with all five slots an
 
 ALWAYS the band above the wallet's coming-soon page carries the chats icon and the bell GIVEN the reader is signed in
 
+ALWAYS the band and the bottom bar are the bare view's, the band carrying no bell, GIVEN the reader is a guest
+
+WHEN tap the chats icon, New post or Profile GIVEN the reader is a guest -> the guest gate opens AND NEVER the surface behind it opens
+
+WHEN tap Feed GIVEN the reader is a guest -> the bare view opens
+
 WHEN tap the wallet slot GIVEN the page is scrolled -> the page returns to its top
 
 WHEN tap the wallet slot GIVEN the page is at its top -> NEVER anything changes

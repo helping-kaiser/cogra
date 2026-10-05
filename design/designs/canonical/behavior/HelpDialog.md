@@ -8,6 +8,8 @@ ALWAYS the dialog holds a title naming the thing asked about, at most two short 
 
 ALWAYS the dialog offers no link and no second action
 
+ALWAYS the dialog's body scrolls while its title and Close stay fixed GIVEN its text is taller than the screen
+
 ALWAYS the dialog's paragraphs are the copy-voice text for its subject, in the platform noun of the client it opens on
 
 WHEN the dialog opens -> focus moves to its title AND focus stays inside the dialog until it closes

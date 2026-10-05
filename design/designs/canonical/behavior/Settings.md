@@ -74,13 +74,13 @@ ALWAYS every other session's row reads its device and Last used with the session
 
 ALWAYS a session's row is inert apart from its Revoke
 
-WHEN tap Revoke -> that session's row goes AND the snackbar answers AND focus moves to the next row, else the previous AND NEVER a dialog asks
+WHEN tap Revoke -> that session's row goes AND the snackbar reads Signed out of, then the session's device, as Signed out of Pixel 8. AND focus moves to the next row, else the previous AND NEVER a dialog asks
 
 WHEN the revoke has not answered 200ms after the press -> Revoke reads Revoking… in its own place AND NEVER a spinner appears
 
 WHEN tap Revoke GIVEN the reader is offline -> the network error answers AND the session's row stays
 
-WHEN tap Sign out everywhere else -> every session row but this one goes AND the snackbar answers AND this device stays signed in AND NEVER a dialog asks
+WHEN tap Sign out everywhere else -> every session row but this one goes AND the snackbar reads Signed out everywhere else. AND this device stays signed in AND NEVER a dialog asks
 
 WHEN tap Sign out everywhere else GIVEN the reader is offline -> the network error answers AND every session row stays
 
@@ -93,6 +93,12 @@ ALWAYS the Email row reads the address the account has
 ALWAYS the Email row reads Change pending under the address the account still has GIVEN an email change has a side still owed
 
 WHEN tap Email GIVEN no email change is in flight -> the change request opens
+
+WHEN tap Email GIVEN the reader is an applicant whose address is not verified yet -> the applicant's own address change opens AND NEVER the member's two-sided change request opens
+
+ALWAYS the Email row reads the address alone, with no Change pending, GIVEN an email change ran out before both sides landed
+
+WHEN tap Email GIVEN an email change ran out before both sides landed -> the change request opens again
 
 WHEN tap Email GIVEN an email change has a side still owed -> the change's confirmation opens on the side still owed AND NEVER a second request opens
 
@@ -107,6 +113,8 @@ WHEN tap Report a problem GIVEN no words were kept -> the report opens with its 
 WHEN tap Contact -> the reader's own mail opens addressed to the contact address AND NEVER the report opens
 
 WHEN tap Privacy or Terms -> the written document opens
+
+ALWAYS the don't-remember switch's line reads Your key, your draft and any kept picks are cleared from this browser when you sign out. on the web
 
 WHEN tap Don't remember this account on this device -> the switch flips AND NEVER a dialog asks AND NEVER the reader is signed out
 

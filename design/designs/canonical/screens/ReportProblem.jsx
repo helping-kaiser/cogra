@@ -32,12 +32,15 @@
    read-back of what travels stands between them, so the reader sees
    everything that goes before the press.
 
-   THE FIELD'S TWO EDGES (jakob 2026-10-01, closing backlog item 118's first
-   question). Empty, `Send by email` is visible and disabled with the reason
-   right above it (`ReportProblemEmpty`) — the disabled-submit law. And
-   leaving with Back keeps the words: a report the reader walked away from is
-   there again the next time the page opens, as a post's draft is kept, so
-   nothing written is lost to a stray tap.
+   THE FIELD'S EDGES (jakob 2026-10-01, closing backlog item 118's first
+   question; 2026-10-05, the collected brief's D6). `Send by email` is live
+   whatever the field holds, empty or only spaces (`ReportProblemEmpty`): the
+   press hands off a prefilled draft and commits nothing, so the
+   disabled-until-filled law does not reach it. Leaving with Back keeps the
+   words, and so does the handoff: a report the reader walked away from, or
+   sent on to their mail, is there again the next time the page opens, as a
+   post's draft is kept, until the reader clears it. `Time` is the moment of
+   the press.
 
    THE FIXTURE is a report written from the bug register, so the two boards
    read as one moment; the platform value is the settings page's own session

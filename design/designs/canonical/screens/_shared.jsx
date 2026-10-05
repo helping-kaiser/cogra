@@ -2824,15 +2824,69 @@ function WhatsNewBody({ newer }) {
   );
 }
 
+/* THE HANDLE CHANGE, whole (`ChangeHandle`'s anatomy, shared the moment its
+   confirm dialog drew it a second time). `value` is what the field holds. */
+function ChangeHandleBody({ value = "" } = {}) {
+  return (
+    <>
+      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
+        <h1
+          style={{
+            margin: 0,
+            fontSize: "var(--text-headline-small)",
+            lineHeight: "var(--text-headline-small--line-height)",
+            fontWeight: "var(--text-headline-small--font-weight)",
+          }}
+        >
+          Change your handle
+        </h1>
+        <p
+          style={{
+            margin: "8px 0 0",
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          @sol is how people mention and find you. Everything you have published stays yours — the
+          handle is a name, not the account.
+        </p>
+
+        <div style={{ marginTop: 32 }}>
+          <TextField
+            id="new-handle"
+            label="New handle"
+            kind="handle"
+            enterKeyHint="go"
+            value={value}
+            hint="3 to 30 characters: letters, numbers and underscore. Handles are always lowercase."
+          />
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <Button style={{ width: "100%" }}>Change handle</Button>
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          <QuietNote>
+            Links to your old handle stop working the moment you change it, and anyone can claim it
+            afterwards.
+          </QuietNote>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* THE REPORT PAGE, whole (`ReportProblem`'s anatomy, shared the moment its
-   empty state drew it a second time). `words` is what the field holds. Empty,
-   `Send by email` stays where it is, visible and disabled, with the reason in
-   the foot's line right above it — the disabled-submit law (readme §4,
-   *Interaction states*; jakob 2026-10-01): never hidden, never live only to
-   refuse. `Nothing to send yet` is the edit foot's zero (`Nothing to sign
-   yet`) with the report's verb, in `ActsFooter`'s ink. */
+   empty state drew it a second time). `words` is what the field holds.
+   `Send by email` is live whatever the field holds — the carve-out from the
+   disabled-until-filled law (readme §4, *Interaction states*; jakob
+   2026-10-05): the law gates commits, and a handoff that only prefills
+   another app's draft is not one. */
 function ReportProblemBody({ words }) {
-  const empty = !words;
   return (
     <>
       <PageHeader backHref="#" backLabel="Back" />
@@ -2879,22 +2933,7 @@ function ReportProblemBody({ words }) {
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-          {empty && (
-            <span
-              style={{
-                textAlign: "center",
-                fontSize: "var(--text-label-small)",
-                lineHeight: "var(--text-label-small--line-height)",
-                letterSpacing: "var(--text-label-small--letter-spacing)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              Nothing to send yet
-            </span>
-          )}
-          <Button style={{ width: "100%" }} disabled={empty}>
-            Send by email
-          </Button>
+          <Button style={{ width: "100%" }}>Send by email</Button>
         </div>
       </div>
     </>
@@ -3098,7 +3137,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           <SettingsRow
             checked={forget}
             label="Don't remember this account on this device"
-            status="Your key and your draft are cleared from this browser when you sign out."
+            status="Your key, your draft and any kept picks are cleared from this browser when you sign out."
             onOpen={() => {}}
           />
           <SettingsRow action label="Sign out" onOpen={() => {}} />
