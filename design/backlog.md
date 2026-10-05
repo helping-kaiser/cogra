@@ -4400,3 +4400,34 @@ jakob's seven rulings and left these for his eye:
   uploads, holding the press client-side; a standing citation's
   `ReferenceClaim` has to say its target was removed and carry the
   removal mark, as a kept pick's target does.
+
+### 13X-passc-entry-b · What the applicant and vouch sidecars left for rulings · *design + docs* · **filed 2026-10-05**
+
+Pass C's applicant and vouch lane (readme §13) transcribed nineteen
+sidecars and filed what the boards and docs do not determine:
+
+- **The intro.** Where Android's Back goes on a card; whether the cards
+  swipe; when the server-side seen flag is set; where Skip and `Start
+  reading` land when Settings re-opened the intro; and who sees the last
+  card's applicant line and face (a member re-watching, a turned-down
+  applicant, one taken up through an ask link).
+- **The applicant shells.** What answers `Resend the link`; the key
+  card's app wording; the email change's field errors (shared with
+  `ChangeEmail`); `ApplicantKeyElsewhere`'s body when there is no backup;
+  what confirms a first staged opinion; and the band once a member takes a
+  turned-down applicant up through the ask link.
+- **The waiting post.** auth.md keeps a turned-down applicant's staged
+  act as a draft "never sent"; the blessed line says it arrives when
+  someone vouches them in.
+- **The ask link.** `VouchAsk`'s way back is the feed (§4) while its
+  graph edges and its two sibling boards follow the layer law; the pad's
+  drawn `Vouching is the act.` against copy-voice's `Approving is
+  vouching.`; the `How vouching works` "?" has no text; a vouch kept for
+  the key; a link that turns unusable before `Set`; what `Invites` says
+  after `Set`; and which answer wins when an applicant or the asker opens
+  an unusable link.
+- **The vouch-back.** Whether the pad's coaching rides every open; whether
+  the borrowed view returns when a first opinion expires; and
+  `VouchBackPad`'s "?" edge label.
+- **The behavior README's** stray fragment under *Where each sidecar's
+  words come from*.
