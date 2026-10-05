@@ -19,7 +19,10 @@
    master's `CropZoom` under the cut, its thumb at this crop's 1.15× between
    the fill (1×) and about 4×, on both platforms; the cut takes focus under
    `CropViewport`'s name and its arrow keys pan the picture, stopping where an
-   edge of the picture meets the cut's. */
+   edge of the picture meets the cut's — 1 % a press, 10 % with Shift (jakob
+   2026-10-05). On a device with no touch to pinch the note's second sentence
+   reads `Drag or use the arrow keys to move, the slider to zoom.` (new,
+   flagged for blessing; copy-voice, *The crops' how-to line*). */
 export function Screen() {
   return (
     <>

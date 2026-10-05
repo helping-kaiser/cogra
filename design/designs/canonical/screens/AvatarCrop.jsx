@@ -7,7 +7,11 @@
 
    THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the circle, its
    thumb at this crop's 1.2× between the fill (1×) and about 4×, on both
-   platforms; the focused circle pans with the arrow keys (`CropViewport`). */
+   platforms; the focused circle pans with the arrow keys (`CropViewport`),
+   1 % a press, 10 % with Shift (jakob 2026-10-05). On a device with no touch
+   to pinch the first line reads `Drag or use the arrow keys to move, the
+   slider to zoom.` (new, flagged for blessing; copy-voice, *The crops' how-to
+   line*). */
 export function Screen() {
   return (
     <>

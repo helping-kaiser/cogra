@@ -507,6 +507,16 @@ and the way back to it from an edit:
   "thumbnail": the cover is the video's own face, and naming it twice
   would make it a second picture.
 
+## The crops' how-to line
+
+The three crops (`ComposeCrop`, `AvatarCrop`, `CoverCrop`) say how the
+picture moves in one quiet line under the zoom: `Drag to move, pinch to
+zoom.` A device with no touch to pinch — a desktop browser — reads
+`Drag or use the arrow keys to move, the slider to zoom.` in its place,
+naming the two ways the crop offers there (jakob 2026-10-05; *new
+2026-10-05, flagged for blessing*). The arrow keys move the picture 1 %
+a press, 10 % with Shift.
+
 ## Editing a media post
 
 The edit surface shows the gallery the post already has where the words
