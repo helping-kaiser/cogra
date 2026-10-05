@@ -162,7 +162,7 @@ export function InlineAction({
    present participle the caller passes as `busyLabel` — the verb takes -ing,
    the rest of the label stays, and `…` closes it ("Sign and publish" →
    "Signing and publishing…") — and the control goes INERT, not dimmed. It is
-   still the one committing action on the surface, and 40% opacity would say
+   still the one committing action on the surface, and the disabled 38% would say
    it could not be pressed for a reason the reader has to go and find. No
    spinner: the word is the indicator, the way `LoadingState` is text.
 
