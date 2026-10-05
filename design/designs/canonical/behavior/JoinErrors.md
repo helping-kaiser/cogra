@@ -34,6 +34,6 @@ WHEN the account is created GIVEN the form opened over the signed-in state -> th
 
 WHEN press Create account GIVEN a field still fails -> its line updates in place AND NEVER the screen changes
 
-WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
+WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Create account AND Create account stays, the retry
 
 WHEN tap Already have an account? Sign in -> SignIn opens

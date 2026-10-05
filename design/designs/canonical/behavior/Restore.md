@@ -30,7 +30,7 @@ WHEN the code, read that way, is 26 characters and does not open the backup -> t
 
 ALWAYS a mistyped character and a wrong backup read the same line, That code doesn't check out.
 
-WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Restore the key AND Restore the key stays, the retry
 
 WHEN the key is restored -> the reader returns where restore began AND the snackbar reads Your key is on this browser now. on the web and Your key is in this app now. in the app
 

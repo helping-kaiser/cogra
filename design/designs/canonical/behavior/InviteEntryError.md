@@ -20,7 +20,7 @@ WHEN the link is read and refused as unusable -> JoinInvalid opens
 
 WHEN press Continue GIVEN the text still reads as no link -> the line stands in place AND NEVER the screen changes
 
-WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Continue AND Continue stays, the retry
 
 WHEN tap Already have an account? Sign in -> SignIn opens
 

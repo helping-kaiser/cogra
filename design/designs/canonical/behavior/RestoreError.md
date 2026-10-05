@@ -20,7 +20,7 @@ WHEN the restore has not answered 200ms after the press -> Restore the key reads
 
 WHEN the code still does not open the backup -> the line stands in place AND NEVER the screen changes
 
-WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Restore the key AND Restore the key stays, the retry
 
 WHEN the key is restored -> the line goes AND the reader returns where restore began AND the snackbar reads Your key is on this browser now. on the web and Your key is in this app now. in the app
 

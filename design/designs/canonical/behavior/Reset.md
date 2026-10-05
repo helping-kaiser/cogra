@@ -16,4 +16,4 @@ ALWAYS the quiet note under the status line says the reset restores the sign-in 
 
 WHEN the reset mail's link is opened -> ResetNew opens
 
-WHEN press Send reset link GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Send reset link GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Send reset link AND Send reset link stays, the retry

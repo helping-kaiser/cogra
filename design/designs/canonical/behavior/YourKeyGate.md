@@ -18,7 +18,7 @@ WHEN the code opens the backup -> YourKey opens with the key shown AND nothing i
 
 WHEN the code does not open the backup -> the field's line reads That code doesn't check out. AND the field takes the error state AND the field keeps what was typed AND NEVER the key is shown
 
-WHEN press Show my key GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Show my key GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Show my key AND Show my key stays, the retry
 
 ALWAYS the header's arrow reads Back to settings
 

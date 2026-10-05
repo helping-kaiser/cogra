@@ -877,7 +877,10 @@ the review fixes' lines, jakob 2026-10-01), all of them (the last flags cleared 
 **No answer at all** (offline; not a code):
 
 - Seal, pad or dialog: `That didn't send. Try again.` **Drawn** on
-  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it.
+  `NetworkError` and `PadFailed`; `SeveranceConfirm` carries it. A form
+  says the same line in SignInError's slot above its submit, the fields
+  keeping what was typed and the submit being the retry (jakob
+  2026-10-05).
 - A hold's row: `That didn't sign.` with `Retry`. **Drawn** on
   `RowSigning`.
 - A read with nothing loaded: `Can't reach the server. Check your
@@ -904,8 +907,11 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `EMAIL_NOT_VERIFIED` — in place: `Verify your email first — the link
   is in your inbox.` The client gates acting on verification, so this
   is the rare case that slips past the gate. *Copy-only.*
-- `RATE_LIMITED` — in place, in SignInError's slot: `Too many tries.
-  Wait a little, then try again.` The submit stays. *Copy-only.*
+- `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
+  backoff says the drawn line, `Too many tries in a row. Wait a moment,
+  then try again.` (`SignInLimited`); every other visible one — the
+  registration, the reset, the token confirms — says `Too many tries.
+  Wait a little, then try again.` (jakob 2026-10-05). The submit stays.
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
@@ -924,14 +930,18 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `WEAK_PASSWORD` — on the field. The length half is `A password is at
   least 12 characters.` The breach half is `That password has turned up
   in a data breach — pick another one.` *The breach half is copy-only.*
+  Past auth.md's cap the line reads `A password is at most 128
+  characters.`, on the field, re-checked live like the length half
+  (*blessed (jakob 2026-10-05)*; copy-only).
 - `INVITE_UNUSABLE` — the surface: `This invite can't be used anymore`
   (`JoinInvalid`).
 - `ASK_LINK_UNUSABLE` — the surface, in `JoinInvalid`'s construction.
   Its words are owed.
 - `VERIFICATION_TOKEN_INVALID` — the surface: `This link doesn't work
   anymore` (`VerifyExpired`).
-- `RESET_TOKEN_INVALID` — the surface, in `VerifyExpired`'s words. That
-  is its own audit entry and is not ruled here.
+- `RESET_TOKEN_INVALID` — the surface, in `VerifyExpired`'s
+  construction: `This link doesn't work anymore` (`ResetExpired`; *The
+  collected rulings' entry lines*).
 - `ACTOR_KEY_IN_USE` — in place: `A signing key can only ever back one
   account, so this account needs its own.`
 - `CHALLENGE_EXPIRED` — in place, on the backup's upload, as a
@@ -1103,6 +1113,13 @@ round*; every one blessed (jakob 2026-10-02).
 - `Mira invited you` — `Join`'s heading (and `JoinErrors`'): the first
   screen says *invited*, never *vouched*, because no vouch exists until
   the inviter approves. *Blessed (jakob 2026-10-05).*
+- The applicant's own profile once the application is closed
+  (`ProfileApplicant`, the `application` chip at `closed`) takes the
+  turned-down card's blessed words, the handle the approver's:
+  `@mira closed your application` over its body, and the ask link
+  labelled `Ask someone you know to vouch for you` with that card's
+  caption. The chronicle's closing line reads `These wait — they arrive
+  when someone vouches you in.` *Blessed (jakob 2026-10-05).*
 
 ## The settings page
 

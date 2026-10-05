@@ -24,7 +24,7 @@ WHEN a different link pasted here checks out -> Join opens holding that link, wi
 
 WHEN the link pasted here is still unusable -> JoinInvalid stands AND NEVER the screen moves
 
-WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was pasted AND the fault is said in place on the form
+WHEN press Continue GIVEN no answer reaches the device -> the field keeps what was pasted AND the line That didn't send. Try again. stands above Continue AND Continue stays, the retry
 
 WHEN tap Already have an account? Sign in -> SignIn opens
 

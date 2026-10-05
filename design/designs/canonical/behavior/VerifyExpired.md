@@ -24,7 +24,7 @@ WHEN press Resend the link GIVEN no session and no Email field stands -> an Emai
 
 WHEN press Resend the link GIVEN no session and the Email field stands -> the request goes to the address typed AND NEVER the screen says whether that address has an account
 
-WHEN press Resend the link GIVEN no answer reaches the device -> the screen stays AND the fault is said in place
+WHEN press Resend the link GIVEN no answer reaches the device -> the screen stays AND the line That didn't send. Try again. stands above Resend the link AND Resend the link stays, the retry
 
 WHEN press Go to the feed GIVEN the application is still running -> ApplicantFeed opens, its verify card still there
 

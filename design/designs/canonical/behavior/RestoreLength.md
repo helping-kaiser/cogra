@@ -24,7 +24,7 @@ WHEN press Restore the key GIVEN the code is still the wrong length -> the line 
 
 WHEN the code is 26 characters and does not open the backup -> the line reads That code doesn't check out. in the same place
 
-WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Restore the key GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Restore the key AND Restore the key stays, the retry
 
 WHEN the key is restored -> the line goes AND the reader returns where restore began AND the snackbar reads Your key is on this browser now. on the web and Your key is in this app now. in the app
 
