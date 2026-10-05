@@ -3,7 +3,9 @@
    that email has an account, so the screen never enumerates accounts. The
    quiet note under it draws the line the whole entry round rests on — this
    restores the SIGN-IN, never the key; the key comes back with its recovery
-   code, on its own screen. */
+   code, on its own screen. The board draws the status line as it reads
+   after a press; at rest, before the first press, it is absent (jakob
+   2026-10-05). A spent or expired link opens `ResetExpired`. */
 export function Screen() {
   return (
     <>

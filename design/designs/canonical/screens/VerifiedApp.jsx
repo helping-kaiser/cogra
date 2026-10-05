@@ -15,7 +15,11 @@
 
    THE WAY ON NAMES ITS DESTINATION. `Verified`'s way out is `Back to CoGra`
    because it leads out of a browser; in the app the reader is already here,
-   and what is left of the application rides the feed as task cards. */
+   and what is left of the application rides the feed as task cards.
+   Signed out, the way on reads `Sign in` and opens `SignIn`, as
+   `VerifyExpired`'s does; signed in to a different account, the link
+   verifies its own and the app switches nothing — the way on lands where
+   app-open lands for the signed-in account (jakob 2026-10-05). */
 export function Screen() {
   return (
     <div

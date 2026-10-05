@@ -60,6 +60,8 @@ WHEN press Create account GIVEN the email does not read as an address -> the Ema
 
 WHEN press Create account GIVEN the password is shorter than 12 characters -> the Password field's line reads A password is at least 12 characters. in place of its hint AND the field takes the error state
 
+WHEN press Create account GIVEN the password is longer than 128 characters -> the Password field's line reads A password is at most 128 characters. in place of its hint AND the field takes the error state
+
 WHEN the registration is refused because the password turned up in a data breach -> the Password field's line reads That password has turned up in a data breach — pick another one. in place of its hint AND the field takes the error state
 
 ALWAYS an errored field's line replaces its hint, and an unerrored field keeps its own

@@ -18,4 +18,4 @@ ALWAYS the key-absent pad keeps Keep it pending, restore later GIVEN the account
 
 ALWAYS a pick kept pending here can still be signed the day the key arrives
 
-WHEN a recovery code is made on the device that holds the key -> this card becomes KeyElsewhere's card AND its restore works
+WHEN the feed loads next GIVEN a recovery code was made on the device that holds the key -> this card has become KeyElsewhere's card AND its restore works AND NEVER the card changes while the feed stands loaded

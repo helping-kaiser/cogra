@@ -10,7 +10,9 @@ ALWAYS Sign in stays enabled while the line stands
 
 WHEN typing in either field GIVEN the line stands -> the line stands AND NEVER it goes before the next press of Sign in
 
-ALWAYS the header's arrow reads Back and is a link to the bare view, never history
+ALWAYS the header's arrow reads Back and is a link to the bare view, never history GIVEN the sign-in did not open from the join layer over the signed-in state
+
+WHEN press the header's back arrow GIVEN the sign-in opened from the join layer over the signed-in state -> the join layer comes back AND NEVER FeedBare opens
 
 WHEN press the header's back arrow -> FeedBare opens
 

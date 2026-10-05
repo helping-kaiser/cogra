@@ -1026,7 +1026,8 @@ Blessed with the audit-states round:
 - Signed out (audit K3.20), the dead link's way on reads `Sign in`, and
   `Resend the link` opens an `Email` field in place above the pair — the
   two existing words, so nothing new to bless; `Verified`'s `Back to
-  CoGra` keeps its words and opens `SignIn`.
+  CoGra` keeps its words and opens `SignIn`. `VerifiedApp`'s way on reads
+  `Sign in` the same way (jakob 2026-10-05).
 
 ## The entry funnel's round
 
@@ -1134,6 +1135,22 @@ round*; every one blessed (jakob 2026-10-02).
   key is read from this app and shown.`; `YourKeyAbsent`'s `There is no
   key in this app to show.` under `KeyElsewhere`'s blessed `Your key
   isn't in this app`. *New 2026-10-05, flagged for blessing.*
+- `VerifyExpired`'s resend answers in `Reset`'s construction, never saying
+  whether the account was still waiting: signed in, `If your account is
+  still waiting on its email, a fresh link is on its way to
+  noor@fieldmail.org.`; signed out, to the typed address, `If that address
+  has an account still waiting on its email, a fresh link is on its way.`
+  *New 2026-10-05, flagged for blessing.*
+- A spent or expired reset link (`ResetExpired`, `RESET_TOKEN_INVALID`)
+  takes `VerifyExpired`'s blessed heading, `This link doesn't work
+  anymore`, over `It may have expired or already been used. A reset link
+  works once and expires after 15 minutes — ask for a fresh one.`, with
+  `Reset your password` (`Reset`'s own heading, naming where it goes)
+  and `Sign in` (`VerifyExpired`'s signed-out way on). *The paragraph is
+  new 2026-10-05, flagged for blessing.*
+- `A password is at most 128 characters.` — `Join`'s and `ResetNew`'s
+  password field past auth.md's cap (*Faults by code*,
+  `WEAK_PASSWORD`). *Blessed (jakob 2026-10-05).*
 
 ## The settings page
 
