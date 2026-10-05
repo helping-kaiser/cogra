@@ -16,9 +16,9 @@ export function Screen() {
           <MonogramAvatar name="Sol Ferreira" size={64} />
           <Button variant="outline" size="sm">Change picture</Button>
         </div>
-        <TextField label="Display name" corner="Optional" cap={50} value="Sol Ferreira" />
+        <TextField label="Display name" corner="Optional" kind="name" cap={50} value="Sol Ferreira" />
         <TextField label="Bio" corner="Optional" rows={3} cap={500} value="Field notes from the flats — salt, paper, and whatever the wind allows." />
-        <TextField label="Website" corner="Optional" cap={2048} value="solferreira.art" />
+        <TextField label="Website" corner="Optional" kind="url" autoComplete="url" enterKeyHint="go" cap={2048} value="solferreira.art" />
         <QuietNote>Your handle changes in Settings.</QuietNote>
         <div style={{ flex: 1 }} />
         <Button style={{ width: "100%" }}>Save</Button>

@@ -14,6 +14,11 @@ import { Icon } from "../navigation/Icon.jsx";
    picker, `Cite something` in the citation picker. The static board carries
    the same name on the pill's text, the bound input in the product.
 
+   ITS KEYBOARD IS THE SEARCH KEYBOARD (`TextField`'s field-semantics table,
+   the K13 round): the `search` return key (`ImeAction.Search`), no capitals
+   guessed and nothing corrected — a query carries handles and tag names, which
+   correction would break. What the action key does is each surface's own.
+
    This is a STATIC-RENDER-FRIENDLY control: `query` is the shown text and a
    caret bar stands in for focus on prototype boards; the product binds a real
    input in its place.
@@ -60,6 +65,11 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
             value={query}
             placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
+            inputMode="search"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             aria-label={ariaLabel}
             aria-invalid={error ? "true" : undefined}
             aria-describedby={describedBy}

@@ -3099,7 +3099,7 @@ function RestoreBody({ value = "", error }) {
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <TextField id="recovery-code" label="Recovery code" mono placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX" value={value} error={error} />
+          <TextField id="recovery-code" label="Recovery code" mono enterKeyHint="go" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX" value={value} error={error} />
         </div>
 
         <div style={{ marginTop: 16 }}>
@@ -3171,6 +3171,7 @@ function SettingsBackupBody({ app = false, error }) {
                 id="settings-rekey-code"
                 label="Current recovery code"
                 mono
+                enterKeyHint="go"
                 placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
                 value=""
                 error={error}
