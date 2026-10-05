@@ -623,6 +623,9 @@ no application is live for the post to wait with, so the seal's exit
 says what it waits for instead: `Your post waits — it arrives when
 someone vouches you in.` (jakob 2026-10-02, the tail his; the opening
 kept from the staged-act line — *new 2026-10-02, blessed (jakob 2026-10-02)*).
+The same line answers the post's second tap there, wherever it is made —
+`New post` on the bar, and the menus' `Cite in a new post` and `Mention in
+a new post` (jakob 2026-10-05).
 The other two kinds answer a second tap on the turned-down shell in the
 same grammar (jakob 2026-10-02, **blessed**):
 
