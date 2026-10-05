@@ -4431,3 +4431,37 @@ sidecars and filed what the boards and docs do not determine:
   `VouchBackPad`'s "?" edge label.
 - **The behavior README's** stray fragment under *Where each sidecar's
   words come from*.
+### 13X-passc-entry-a · What the entry behavior pass filed · *design + contract* · **filed 2026-10-05**
+
+The entry lane of pass C's remainder (readme §13, *The entry behavior
+pass*) wrote the 31 sidecars and left these for jakob's eye, each with
+the lane's recommendation in the collected ruling brief:
+
+- **Forms.** A form's offline words and slot (copy-voice puts the line
+  in SignInError's slot; `NetworkError`'s docblock puts the fault in
+  the submit's place). A non-signing commit past 5s, and whether the
+  arrow and fields lock while it runs. An empty press on `SignIn`,
+  `InviteEntry`, `Reset` and `YourKeyGate`. Whether a line a server
+  answered (`That handle is taken.`, `That code doesn't check out.`)
+  and a form-level line clear on typing or stand until the next press.
+- **Labels.** The construction's six (`Continuing…`, `Sending reset
+  link…`, `Setting the new password…`, `Restoring the key…`, `Showing
+  my key…`, `Resending the link…`), and the two commits it cannot form
+  (`I've written it down`, `I accept the risk`).
+- **Contradictions.** `RestoreLength`'s line standing until the next
+  press against the input-error round's live re-check; copy-voice's
+  `RATE_LIMITED` line against `SignInLimited`'s drawn one; `Join`'s
+  `Mira is vouching for you` against *invited, never vouched*;
+  `RecoveryCodeMismatch`'s edge pressing a button that never enables;
+  `YourKeyGate`'s wrong length against auth.md's one shape problem.
+- **Undrawn or unruled.** The dead reset link (`RESET_TOKEN_INVALID`)
+  and `ResetNew`'s refused password on its edge; a password over 128
+  characters; the funnel's system Back and the web's back on the code
+  screen; `SignIn` opened from the signed-in `Join` layer; the half-filled
+  `Join` beyond the About detour; the platform nouns on the ceremony,
+  the export and its absent twin; the ceremony's confirm with no
+  snackbar; an unsupported browser reached from settings; when the
+  no-backup card turns into `KeyElsewhere`'s; `Reset`'s status line at
+  rest; what `VerifyExpired` says after a resend; `VerifiedApp` signed
+  out; a verify link opened under another account; where
+  `SignInExpired`'s "carry on" lands.

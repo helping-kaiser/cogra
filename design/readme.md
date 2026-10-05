@@ -8728,6 +8728,28 @@ filed for jakob's review rather than written.
   state — wait in the lane's filed list for jakob's one ruling brief.
 - **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
   resolved, 134 → **161 sidecars**. The witness did not move.
+### The entry behavior pass — 2026-10-05
+
+Pass C's remainder (jakob 2026-10-05, the plan as recommended), the
+entry lane: the invite door and the join form, sign-in, the reset, the
+verification landings, the key ceremony, restore and the key export.
+
+- **All 31 boards have their sidecars**, transcribed from each board's
+  docblock, its graph edges' cases, the records above (*The entry flow*,
+  *The input-error round*, *The audit states*, *The key-loss round*,
+  *The entry funnel round*, *The applicant's life round*, *The
+  no-expiry correction*), copy-voice and auth.md. Nothing was ruled in
+  the pass, and no board moved.
+- **The commits' in-flight labels follow the failure pack's
+  construction** (copy-voice, *In-flight labels*); back from About keeps
+  the join form as it was left.
+- **What no source settles waits for jakob** as the lane's filed
+  questions (backlog `13X-passc-entry-a`): a form's offline words and
+  slot, the wait past 5s off a seal, the two commits the construction
+  cannot form, the funnel's system Back, the dead reset link, and the
+  contradictions found on the way.
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved; 31 sidecars added. The witness did not move.
 
 ## 15. Index
 
