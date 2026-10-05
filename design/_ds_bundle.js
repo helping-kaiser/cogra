@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"3721b6ab9975","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"26ff80215033","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"508605628bd7","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"be39381d89d2","components/content/PostCard.jsx":"d40e04e1abbf","components/content/ReferenceRow.jsx":"2f5bd90998a5","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"33c43184037b","components/core/Button.jsx":"ac7a527a22df","components/core/Card.jsx":"2809bdee6885","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"d2acc138c1cd","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"4aec1e664e57","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"a1802efa3d23","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"3db02bf35181","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"2b32453555c5","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/MediaAttachment.jsx":"e4caae25904e","components/media/MediaViewer.jsx":"effe0227584f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"9800c146a9fb","components/media/ReelRail.jsx":"4d6bc4f35b39","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"913660857446","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"bb27e6864d03","components/navigation/Icon.jsx":"9b3765a45d42","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"5295e2204971","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"eb0266bed8e4","components/stance/SeveranceConfirm.jsx":"b73b0163db81","components/stance/StanceAlternates.jsx":"4e0d2d99eaea","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"746a5a489b52","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"1e3b65ad7d82","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"54be68db2571","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"3721b6ab9975","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"26ff80215033","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"08753a5f7524","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"be39381d89d2","components/content/PostCard.jsx":"c435553dfe4a","components/content/ReferenceRow.jsx":"2f5bd90998a5","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"33c43184037b","components/core/Button.jsx":"c36c49ea873f","components/core/Card.jsx":"5362918c235f","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"0f57f53086fe","components/core/JoinPrompt.jsx":"d2acc138c1cd","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"4aec1e664e57","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"a1802efa3d23","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"3db02bf35181","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"a78c42f5a664","components/honesty/SensitiveVeil.jsx":"2b32453555c5","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/MediaAttachment.jsx":"8bf4aad953aa","components/media/MediaViewer.jsx":"d204aa72f6e9","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"4b169c6624b5","components/media/ReelRail.jsx":"4d6bc4f35b39","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"913660857446","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"bb27e6864d03","components/navigation/Icon.jsx":"9b3765a45d42","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"7595ef9d7674","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"eb0266bed8e4","components/stance/SeveranceConfirm.jsx":"b73b0163db81","components/stance/StanceAlternates.jsx":"4e0d2d99eaea","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"746a5a489b52","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"40a6e0f10bd1","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"}]} */
 
 (() => {
 
@@ -192,7 +192,7 @@ function InlineAction({
    present participle the caller passes as `busyLabel` — the verb takes -ing,
    the rest of the label stays, and `…` closes it ("Sign and publish" →
    "Signing and publishing…") — and the control goes INERT, not dimmed. It is
-   still the one committing action on the surface, and 40% opacity would say
+   still the one committing action on the surface, and the disabled 38% would say
    it could not be pressed for a reason the reader has to go and find. No
    spinner: the word is the indicator, the way `LoadingState` is text.
 
@@ -1110,11 +1110,12 @@ function ReadoutBlock({
      the line takes the `EditedMarker`'s tappable form — the same underline,
      the same quiet ink — and the tail says where it goes. It sits ABOVE the
      readout and well clear of the field below, so no drag of the knob can
-     end on it. */
+     end on it. It answers to 48px with the pressed layer, as every
+     pressable does (readme §4, the K13 round). */
   React.createElement("button", {
     type: "button",
     onClick: onOpenHistory,
-    className: "cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       ...labelInk,
       alignSelf: "flex-start",
@@ -2509,7 +2510,11 @@ function PendingMarker({
     every version whole, newest first, never a diff. Friendly, not forensic.
     V1.0 PASSES NO HISTORY DOOR (readme §13, the scope cut's F-1): no canonical
     screen hands `onInspect`, so the marker renders as plain text and no door
-    exists in V1.0. The change-histories round wires it. */
+    exists in V1.0. The change-histories round wires it.
+
+    AS A DOOR IT IS A PRESSABLE LIKE ANY OTHER (readme §4, the K13 round):
+    `cg-state cg-focus cg-hit`, so the label-small ink answers to a 48px target
+    with the pressed layer and the focus ring every control carries. */
 function EditedMarker({
   label = "Edited",
   onInspect
@@ -2526,6 +2531,7 @@ function EditedMarker({
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onInspect,
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       background: "none",
@@ -3350,7 +3356,13 @@ try { (() => {
    "?", at most one per screen, top-right of the header or of the sheet/card it
    explains). A 32px ring inside the 48px target. It began as a screen helper
    on the search boards and moved into the system when the filter sheet — a
-   master — needed to carry one. */
+   master — needed to carry one.
+
+   IT CARRIES THE STATE LAYER as every pressable does (readme §4, the K13
+   round): `cg-state cg-focus` on the 48px button, so the pressed layer fills
+   the target's circle around the ring. The button is already 48px, so it needs
+   no `cg-hit`. Its accessible name is the dialog it opens — the tag picker's
+   `Tagging`, the citation picker's `Citing` (the K13 round). */
 
 /* `inverse` is `Button`'s word for the same situation: the component standing on
    a TONAL PANEL instead of the page's ground. On the page the ring is
@@ -3378,7 +3390,7 @@ function HelpDot({
     type: "button",
     "aria-label": ariaLabel,
     onClick: onOpen,
-    className: "cg-focus",
+    className: "cg-state cg-focus",
     style: {
       display: "grid",
       placeItems: "center",
@@ -5097,7 +5109,14 @@ try { (() => {
    page's `surface`, the medium shape rung, 16px padding, 12px inner gap — no
    border and no shadow. The step up off the page ground is what makes a card read
    as a card; an outline on top of it would be Material's *outlined* card, a
-   different component. */
+   different component.
+
+   `door` makes the whole card the pressed layer (the K13 round, readme §4,
+   *Interaction states*): the card carries `cg-door-card`, and a region inside
+   it carrying `cg-door` — the words and the media that open the post — lights
+   the card's whole surface while it is hovered or pressed. A control inside the
+   card (the stance face, the ⋮, a count) keeps its own layer and never lights
+   the card. */
 
 function Card({
   children,
@@ -5105,11 +5124,13 @@ function Card({
   ariaLabel,
   style,
   node,
-  nodeKey
+  nodeKey,
+  door = false
 }) {
   const Tag = as;
   return /*#__PURE__*/React.createElement(Tag, {
     "aria-label": ariaLabel,
+    className: door ? "cg-door-card" : undefined,
     style: {
       display: "flex",
       flexDirection: "column",
@@ -8606,7 +8627,11 @@ function clipFrame(ratio) {
    surface behind the glyph, at the tile's lower-right corner — the thumb's
    side while scrolling (jakob, 2026-09-15). Every disc a media surface draws
    is this one — sound, play, and the stream's way back — so they sit at one
-   size and one weight wherever the reader meets them. */
+   size and one weight wherever the reader meets them.
+
+   36px OF INK, 48px OF TARGET (readme §4, the K13 round). There is no real
+   option: the floor is ruled. `cg-hit` grows the target around the disc, so
+   the disc keeps its size on the photograph and the thumb keeps its 48. */
 function MediaDisc({
   label,
   glyph,
@@ -8625,7 +8650,7 @@ function MediaDisc({
       event.stopPropagation();
       if (onClick) onClick(event);
     },
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       position: "absolute",
       [vertical]: "8px",
@@ -8819,9 +8844,11 @@ function MediaAttachment({
    dot, so shrinking one moves nothing beside it — a row that reflowed as the
    reader swiped would be its own kind of noise.
 
-   THE COUNT IS NOT DRAWN. The plain "Picture n of m" stays in the accessible
-   name, where it has always been: the frame carries the dots, a listener
-   carries the number.
+   THE COUNT IS NOT DRAWN, AND THE DOTS ARE NOT SPOKEN (the K13 round). The
+   row is a visual readout and nothing else — `aria-hidden`, never a target.
+   The plain "Picture n of m" is the accessible name of the strip it reads
+   (`MediaGallery`), which is what a listener focuses and pages: the frame
+   carries the dots, a listener carries the number.
 
    TWO TONES, ONE ROW. On a card the dots are the page's own ink — `primary`
    for here, the hairline for the rest. Over the viewer's scrim there is no
@@ -8858,7 +8885,7 @@ function PagerDots({
   const moreBefore = start > 0;
   const moreAfter = start + window < count;
   return /*#__PURE__*/React.createElement("div", {
-    "aria-label": `Picture ${current + 1} of ${count}`,
+    "aria-hidden": "true",
     style: {
       display: "flex",
       alignItems: "center",
@@ -8902,25 +8929,62 @@ function PagerDots({
    Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
    the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
    (square) and each display-crops to it — a pager whose height changed per
-   swipe would bounce the card under the reader's thumb. */
+   swipe would bounce the card under the reader's thumb.
+
+   THE SWIPE HAS A NON-DRAG TWIN (the K13 round; readme §10, every drag gesture
+   has one). The strip is focusable, named by where the reader is — `Picture 2
+   of 4` — and pages with ← and →, one frame per press, stopping at either end:
+   the card's pager never wraps, and neither does the viewer's. On Android the
+   pager exposes the platform's scroll actions (TalkBack's scroll forward and
+   back), which are the same two moves. The dots stay a visual readout.
+
+   `onOpen(index)` makes the frames a door — the detail surface's way into the
+   viewer. A tap on a frame opens it at that frame; on the focused strip, or the
+   one frame of a single, Enter and Space do. The opener is the element focus
+   returns to when the viewer closes (`MediaViewer`). In a feed card no
+   `onOpen` is passed: the card's words are its keyboard door, and the media is
+   only the pointer's larger version of it. A clip is never wrapped: its
+   transport is its own set of controls, and its way into the viewer is the
+   transport's fullscreen — a door around a transport would nest one control
+   inside another. */
+const PICTURE_NAME = "Picture";
+const openKeys = open => event => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    open();
+  }
+};
 function MediaGallery({
   items = [],
   ratio,
   radius,
   maxHeight,
+  onOpen,
   node
 }) {
   const [page, setPage] = React.useState(0);
   const stripRef = React.useRef(null);
   if (items.length === 0) return null;
   if (items.length === 1) {
-    return /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, items[0], {
+    const single = /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, items[0], {
       ratio: items[0].ratio ?? ratio ?? "wide",
       radius: radius ?? items[0].radius,
       maxHeight: maxHeight ?? items[0].maxHeight,
       node: node && "frame",
       nodeKey: node && "1"
     }));
+    if (!onOpen || items[0].kind === "video") return single;
+    return /*#__PURE__*/React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      "aria-label": items[0].alt ? undefined : PICTURE_NAME,
+      onClick: () => onOpen(0),
+      onKeyDown: openKeys(() => onOpen(0)),
+      className: "cg-state cg-focus",
+      style: {
+        cursor: "pointer"
+      }
+    }, single);
   }
   const frameRatio = ratio ?? items[0].ratio ?? "wide";
   const onScroll = () => {
@@ -8928,6 +8992,27 @@ function MediaGallery({
     if (!strip || strip.clientWidth === 0) return;
     const next = Math.round(strip.scrollLeft / strip.clientWidth);
     if (next !== page) setPage(next);
+  };
+  const pageTo = next => {
+    const strip = stripRef.current;
+    const bounded = Math.max(0, Math.min(items.length - 1, next));
+    if (bounded === page) return;
+    setPage(bounded);
+    if (strip) strip.scrollTo({
+      left: bounded * strip.clientWidth,
+      behavior: "smooth"
+    });
+  };
+  const onKeyDown = event => {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      pageTo(page + 1);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      pageTo(page - 1);
+    } else if (onOpen) {
+      openKeys(() => onOpen(page))(event);
+    }
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -8937,6 +9022,11 @@ function MediaGallery({
   }, /*#__PURE__*/React.createElement("div", {
     ref: stripRef,
     onScroll: onScroll,
+    onKeyDown: onKeyDown,
+    tabIndex: 0,
+    role: "group",
+    "aria-label": `Picture ${page + 1} of ${items.length}`,
+    className: "cg-focus",
     style: {
       display: "flex",
       overflowX: "auto",
@@ -8945,10 +9035,12 @@ function MediaGallery({
     }
   }, items.map((item, index) => /*#__PURE__*/React.createElement("div", {
     key: item.src ?? index,
+    onClick: onOpen ? () => onOpen(index) : undefined,
     style: {
       flex: "none",
       width: "100%",
-      scrollSnapAlign: "start"
+      scrollSnapAlign: "start",
+      cursor: onOpen ? "pointer" : undefined
     }
   }, /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, item, {
     ratio: frameRatio,
@@ -9629,7 +9721,7 @@ function CommentCard({
     type: "button",
     "aria-expanded": unfolded,
     onClick: () => setUnfolded(shown => !shown),
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       border: 0,
@@ -9645,7 +9737,9 @@ function CommentCard({
   }, unfolded ? "Less" : "More") : null;
   /* With a door (`onOpen`) the words are a link and the pictures take the
      same tap, `PostCard`'s rule for its media in the feed — one door, no
-     control nested in another. */
+     control nested in another. Both carry `cg-door`, and the card takes the
+     pressed layer across its whole surface while either is pressed
+     (`PostCard`'s rule; readme §4, *Interaction states*). */
   const open = event => {
     event.preventDefault();
     onOpen();
@@ -9653,7 +9747,7 @@ function CommentCard({
   const body = /*#__PURE__*/React.createElement(React.Fragment, null, onOpen ? /*#__PURE__*/React.createElement("a", {
     href: "#",
     onClick: open,
-    className: "cg-focus",
+    className: "cg-focus cg-door",
     style: {
       display: "block",
       color: "inherit",
@@ -9661,6 +9755,7 @@ function CommentCard({
     }
   }, words) : words, opener, Array.isArray(media) && media.length > 0 && (onOpen ? /*#__PURE__*/React.createElement("div", {
     onClick: open,
+    className: "cg-door",
     "data-node": node && "media"
   }, /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
@@ -9728,12 +9823,13 @@ function CommentCard({
     style: attach ? {
       borderTopLeftRadius: 0
     } : undefined,
+    door: Boolean(onOpen),
     node: node,
     nodeKey: node && author?.handle
   }, target && onOpenTarget && shape === "line" && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenTarget,
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       display: "flex",
       alignItems: "center",
@@ -9959,9 +10055,24 @@ const { Icon, VideoTransport, GESTURE_ZONE, useGlobalMute, PagerDots } = __ds_sc
      see the frame, and printing it under the picture turns a description into a
      caption the author never wrote.
 
+   · IT IS NAMED BY WHAT IT SHOWS, AND IT HOLDS FOCUS (the K13 round; readme
+     §10's four rules). The dialog's accessible name is its content — `Picture
+     2 of 4` in a set, `Picture` alone, `Video` for a clip — and it follows the
+     paging. Opening it moves focus to the X; closing it hands focus back to
+     the frame that was tapped (the host remembers it — `PostCard`'s
+     `openViewer`).
+   · PAGING STOPS AT THE ENDS. The card's pager does not wrap, so neither does
+     this one: → on the last picture and ← on the first do nothing, and so
+     does a swipe past either end.
+
    The scrim is the dialog scrim, so the viewer belongs to the same family as
    every other thing that covers the screen in this system. */
 
+/* The viewer's name, by content: a set counts, a single names its kind. */
+function viewerName(item, current, count) {
+  if (count > 1) return `Picture ${current + 1} of ${count}`;
+  return item && item.kind === "video" ? "Video" : "Picture";
+}
 function MediaViewer({
   items = [],
   index = 0,
@@ -9974,14 +10085,20 @@ function MediaViewer({
 }) {
   const [current, setCurrent] = React.useState(index);
   const [muted, setMuted] = useGlobalMute();
+  const closeRef = React.useRef(null);
   const count = items.length;
   const item = items[Math.min(current, Math.max(count - 1, 0))];
   const move = React.useCallback(next => {
-    const wrapped = (next + count) % count;
-    setCurrent(wrapped);
-    if (onIndexChange) onIndexChange(wrapped);
+    if (next < 0 || next > count - 1) return;
+    setCurrent(next);
+    if (onIndexChange) onIndexChange(next);
   }, [count, onIndexChange]);
   React.useEffect(() => setCurrent(index), [index]);
+
+  // Focus lands on the way out the moment the layer opens.
+  React.useEffect(() => {
+    if (closeRef.current) closeRef.current.focus();
+  }, []);
   React.useEffect(() => {
     const onKey = event => {
       if (event.key === "Escape") onClose && onClose();
@@ -10041,7 +10158,7 @@ function MediaViewer({
   return /*#__PURE__*/React.createElement("div", {
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "Media",
+    "aria-label": viewerName(item, current, count),
     style: {
       position: "absolute",
       inset: 0,
@@ -10075,6 +10192,7 @@ function MediaViewer({
       zIndex: 3
     }
   }, /*#__PURE__*/React.createElement("button", {
+    ref: closeRef,
     type: "button",
     "aria-label": "Close",
     onClick: onClose,
@@ -10256,6 +10374,17 @@ function PostCard({
   // opens the post instead: a reader scrolling is choosing between posts, not
   // looking at one picture.
   const [viewing, setViewing] = React.useState(null);
+  // THE VIEWER HANDS FOCUS BACK TO THE FRAME THAT OPENED IT (readme §10; the
+  // K13 round): the opener is remembered at the tap and focused on close.
+  const viewerOpener = React.useRef(null);
+  const openViewer = index => {
+    viewerOpener.current = typeof document !== "undefined" ? document.activeElement : null;
+    if (onOpenMedia) onOpenMedia(index);else setViewing(index);
+  };
+  const closeViewer = () => {
+    setViewing(null);
+    if (viewerOpener.current && viewerOpener.current.focus) viewerOpener.current.focus();
+  };
 
   // The license is a term over downstream reuse, checked once in a hundred
   // readings — so it is not on the card at all. The menu's row opens it in a
@@ -10330,7 +10459,7 @@ function PostCard({
     type: "button",
     "aria-expanded": open,
     onClick: () => setOpen(shown => !shown),
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       border: 0,
@@ -10353,13 +10482,19 @@ function PostCard({
     }
   }, !hasMedia && heading, caption);
   const bodyBlock = main ?? textBlock;
+  /* THE CARD'S DOORS LIGHT THE WHOLE CARD (readme §4, *Interaction states*;
+     the K13 round). The words and the media open the post, so they carry
+     `cg-door`, and the card that holds them takes the pressed layer across
+     its whole surface — the product's most common tap shows where it went.
+     The stance face, the ⋮, the counts and the share keep their own layers. */
+  const door = !detail && Boolean(onOpen);
   const linkedText = detail || !onOpen ? bodyBlock : /*#__PURE__*/React.createElement("a", {
     href: href ?? "#",
     onClick: event => {
       event.preventDefault();
       onOpen();
     },
-    className: "cg-focus",
+    className: "cg-focus cg-door",
     style: {
       display: "block",
       color: "inherit",
@@ -10400,17 +10535,21 @@ function PostCard({
   // the card's edges, and drops its side radii — it meets the card's straight
   // sides, never its corners, so nothing needs clipping. It is the largest
   // thing in the card by a wide margin, which is the point.
+  // In the feed the region is the card's door (`cg-door`); on the detail
+  // surface each picture is its own door into the viewer (`MediaGallery`'s
+  // `onOpen`), and a clip enters it through its transport.
   React.createElement("div", {
     style: {
       margin: "0 calc(-1 * var(--card-padding))"
     },
+    className: door ? "cg-door" : undefined,
     onClick: event => {
-      if (!detail && onOpen) {
+      if (door) {
         event.preventDefault();
         onOpen();
-      } else if (detail) {
+      } else if (detail && media[0].kind === "video") {
         event.preventDefault();
-        if (onOpenMedia) onOpenMedia(0);else setViewing(0);
+        openViewer(0);
       }
     },
     "data-node": node && "media"
@@ -10422,15 +10561,17 @@ function PostCard({
   }, /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
     radius: "0px",
+    onOpen: detail ? openViewer : undefined,
     node: node && "media"
   })) : /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
     radius: "0px",
+    onOpen: detail ? openViewer : undefined,
     node: node && "media"
   })), viewing !== null && /*#__PURE__*/React.createElement(MediaViewer, {
     items: media,
     index: viewing,
-    onClose: () => setViewing(null)
+    onClose: closeViewer
   }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : linkedText, !redacted && opener, !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
     topics: topics,
     references: references,
@@ -10440,8 +10581,7 @@ function PostCard({
   }), !redacted && detail && opinions > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenOpinions ?? (() => {}),
-    "aria-label": "Opinions on this post",
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       display: "flex",
       alignItems: "center",
@@ -10457,13 +10597,10 @@ function PostCard({
       textAlign: "left"
     },
     "data-node": node && "opinions"
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
-  }, opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`)), !redacted && detail && citedBy > 0 && /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", null, opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`)), !redacted && detail && citedBy > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenCitedBy ?? (() => {}),
-    "aria-label": "Cited by",
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       display: "flex",
       alignItems: "center",
@@ -10479,9 +10616,7 @@ function PostCard({
       textAlign: "left"
     },
     "data-node": node && "citedBy"
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
-  }, "Cited by ", citedBy)), edited && /*#__PURE__*/React.createElement(EditedMarker, {
+  }, /*#__PURE__*/React.createElement("span", null, "Cited by ", citedBy)), edited && /*#__PURE__*/React.createElement(EditedMarker, {
     onInspect: onInspectEdit
   }), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || comments !== undefined || act || actions) && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10556,6 +10691,7 @@ function PostCard({
     style: attach ? {
       borderTopLeftRadius: 0
     } : undefined,
+    door: door,
     node: node,
     nodeKey: node && author?.handle
   }, veil ? /*#__PURE__*/React.createElement(SensitiveScope, null, body) : body);
@@ -12186,7 +12322,11 @@ const { SensitiveVeil } = __ds_scope;
    law, `PostCard`'s idiom): the description blurs in place behind the
    `text` veil, the handle and the title stay readable so choosing to look is
    informed, and the reveal belongs to the post's one `SensitiveScope` — the
-   same tap that unveils the clip unveils these words. */
+   same tap that unveils the clip unveils these words.
+
+   `More` ANSWERS TO 48px (readme §4, the K13 round): `cg-hit` grows its target
+   around the word, which keeps its ink. There is no real option; the floor is
+   ruled. */
 
 function ReelCaption({
   handle,
@@ -12236,7 +12376,7 @@ function ReelCaption({
   }, description)), description && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onMore ?? (() => {}),
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       border: 0,
@@ -13863,7 +14003,13 @@ const { MonogramAvatar, REDACTED_ACTOR_NAME, Button, Icon, StanceControl } = __d
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
    picture is frequent and mostly standalone, so one's own avatar wears a change
    badge right here — the same signed act, the same crop-and-seal flow the edit
-   screen reaches; the edit screen keeps its row too.
+   screen reaches; the edit screen keeps its row too. THE AVATAR ITSELF IS NOT
+   TAPPABLE (the K13 round): the badge is the door, and the picture is a
+   picture.
+
+   BOTH DOORS ANSWER TO 48px (readme §4, the K13 round): the 28px badge and the
+   figures row (about 40px of ink) carry `cg-hit`, which grows each target
+   without moving a pixel of the drawing. The floor is ruled.
 
    No cover image, no banner: the system has no imagery slot that size, and a
    decorative band would be the largest thing on a screen whose subject is a
@@ -13979,7 +14125,7 @@ function ProfileHeader({
     type: "button",
     "aria-label": "Change your picture",
     onClick: onAvatarChange,
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       position: "absolute",
       right: -2,
@@ -14025,7 +14171,7 @@ function ProfileHeader({
     type: "button",
     "aria-label": own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle,
     onClick: onCounts,
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       display: "flex",
       gap: "var(--space-5)",

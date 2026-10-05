@@ -49,7 +49,13 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
    picture is frequent and mostly standalone, so one's own avatar wears a change
    badge right here — the same signed act, the same crop-and-seal flow the edit
-   screen reaches; the edit screen keeps its row too.
+   screen reaches; the edit screen keeps its row too. THE AVATAR ITSELF IS NOT
+   TAPPABLE (the K13 round): the badge is the door, and the picture is a
+   picture.
+
+   BOTH DOORS ANSWER TO 48px (readme §4, the K13 round): the 28px badge and the
+   figures row (about 40px of ink) carry `cg-hit`, which grows each target
+   without moving a pixel of the drawing. The floor is ruled.
 
    No cover image, no banner: the system has no imagery slot that size, and a
    decorative band would be the largest thing on a screen whose subject is a
@@ -128,7 +134,7 @@ export function ProfileHeader({
               type="button"
               aria-label="Change your picture"
               onClick={onAvatarChange}
-              className="cg-state cg-focus"
+              className="cg-state cg-focus cg-hit"
               style={{
                 position: "absolute",
                 right: -2,
@@ -161,7 +167,7 @@ export function ProfileHeader({
                 type="button"
                 aria-label={own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle}
                 onClick={onCounts}
-                className="cg-state cg-focus"
+                className="cg-state cg-focus cg-hit"
                 style={{ display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 4, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
               >
                 {figures}

@@ -46,6 +46,24 @@
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
+/* A door card lights whole while a `cg-door` inside it is hovered or pressed
+   (readme §4). Not `cg-state`: `:active` matches every ancestor, so the stance
+   face or ⋮ would light it too. No `isolation`: the parked pad inside must
+   keep stacking above the shell's wash. */
+.cg-door-card { position: relative }
+.cg-door-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+.cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
+
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
    disappears against a filled primary button, and this one reads on the page
    ground and on the loud surface alike, in both themes. Nothing removes it. */
@@ -106,5 +124,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cg-state::after { transition: none }
+  .cg-state::after, .cg-door-card::after { transition: none }
 }

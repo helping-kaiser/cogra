@@ -131,6 +131,8 @@ export interface MediaGalleryProps {
   radius?: string;
   /** Passed through to each frame; falls back to the item's own `maxHeight`. */
   maxHeight?: string;
+  /** Makes the pictures a door — the detail surface's way into the viewer. A tap on a frame calls it with that frame's index; Enter or Space on the focused strip (or the single picture) calls it with the current one. A clip is never wrapped: its transport's fullscreen is its way in. Without it the frames take no tap of their own. */
+  onOpen?: (index: number) => void;
   /** The data-node name of the placement holding this gallery (design ⇄ impl seam 002; renders as attributes only). The gallery draws no box of its own to carry it; given one, it names its parts: `frame` per picture, keyed by its position from 1, and `dots`. */
   node?: string;
 }

@@ -624,11 +624,12 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
            the line takes the `EditedMarker`'s tappable form — the same underline,
            the same quiet ink — and the tail says where it goes. It sits ABOVE the
            readout and well clear of the field below, so no drag of the knob can
-           end on it. */
+           end on it. It answers to 48px with the pressed layer, as every
+           pressable does (readme §4, the K13 round). */
         <button
           type="button"
           onClick={onOpenHistory}
-          className="cg-focus"
+          className="cg-state cg-focus cg-hit"
           style={{ ...labelInk, alignSelf: "flex-start", background: "none", border: 0, padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", textAlign: "left", textDecoration: "underline" }}
         >
           {label}

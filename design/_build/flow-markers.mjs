@@ -1130,8 +1130,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="2 comments"', tag: "button" },
     { n: 9, find: 'aria-label="Share this post"', tag: "button" },
     ...nav(10),
-    { n: 15, find: 'aria-label="Opinions on this post"', tag: "button" },
-    { n: 16, find: 'aria-label="Cited by"', tag: "button" },
+    { n: 15, find: 'opinions on this post</span>', tag: "button" },
+    { n: 16, find: '<span>Cited by ', tag: "button" },
   ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1151,7 +1151,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 18, find: 'aria-label="Back ten seconds"', tag: "button" },
     { n: 18, find: 'aria-label="Forward ten seconds"', tag: "button" },
     { n: 19, find: 'aria-label="Full screen"', tag: "button" },
-    { n: 20, find: 'aria-label="Opinions on this post"', tag: "button" },
+    { n: 20, find: 'opinions on this post</span>', tag: "button" },
   ],
   PostDetailVideoSensitive: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1160,7 +1160,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: '<a href="/u/', tag: "a" },
     { n: 5, find: ">Show</button>", tag: "button" },
     { n: 6, find: 'aria-label="Tags and references"', tag: "button" },
-    { n: 7, find: 'aria-label="Opinions on this post"', tag: "button" },
+    { n: 7, find: 'opinions on this post</span>', tag: "button" },
     { n: 8, find: 'aria-label="Give your opinion on this post"', tag: "button" },
     { n: 8, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 9, find: ">Feed score</span>", tag: "button" },

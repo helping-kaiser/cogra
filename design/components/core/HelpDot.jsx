@@ -5,7 +5,13 @@ import React from "react";
    "?", at most one per screen, top-right of the header or of the sheet/card it
    explains). A 32px ring inside the 48px target. It began as a screen helper
    on the search boards and moved into the system when the filter sheet — a
-   master — needed to carry one. */
+   master — needed to carry one.
+
+   IT CARRIES THE STATE LAYER as every pressable does (readme §4, the K13
+   round): `cg-state cg-focus` on the 48px button, so the pressed layer fills
+   the target's circle around the ring. The button is already 48px, so it needs
+   no `cg-hit`. Its accessible name is the dialog it opens — the tag picker's
+   `Tagging`, the citation picker's `Citing` (the K13 round). */
 
 /* `inverse` is `Button`'s word for the same situation: the component standing on
    a TONAL PANEL instead of the page's ground. On the page the ring is
@@ -26,7 +32,7 @@ export function HelpDot({ ariaLabel = "What is this?", onOpen, variant = "page" 
       type="button"
       aria-label={ariaLabel}
       onClick={onOpen}
-      className="cg-focus"
+      className="cg-state cg-focus"
       style={{
         display: "grid",
         placeItems: "center",
