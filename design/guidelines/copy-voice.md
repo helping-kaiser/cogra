@@ -1120,6 +1120,20 @@ round*; every one blessed (jakob 2026-10-02).
   labelled `Ask someone you know to vouch for you` with that card's
   caption. The chronicle's closing line reads `These wait — they arrive
   when someone vouches you in.` *Blessed (jakob 2026-10-05).*
+- `Key made and backed up.` — the snackbar the ceremony's typed-back
+  confirm answers with where the ceremony began (`RecoveryCode`), for
+  the reason `KeyDecline`'s line exists: the task card leaves, and a
+  silent close reads as nothing happened. *Blessed (jakob 2026-10-05).*
+- The key boards' platform noun is the `wording` chip `KeyElsewhere`
+  and `Restore` already carry (`KeyCeremony`, `KeyConfirm`,
+  `KeyDecline`, `YourKey`, `YourKeyAbsent`). The app renderings: the
+  pledge `Everything you publish is signed with a key that is created in
+  this app and stays in your hands — CoGra never holds it and can never
+  reissue it.`; `YourKey`'s `This key signs everything you publish, and
+  it lives only in this app.` and `Nothing here is sent anywhere — the
+  key is read from this app and shown.`; `YourKeyAbsent`'s `There is no
+  key in this app to show.` under `KeyElsewhere`'s blessed `Your key
+  isn't in this app`. *New 2026-10-05, flagged for blessing.*
 
 ## The settings page
 

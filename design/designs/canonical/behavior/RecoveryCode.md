@@ -30,7 +30,7 @@ WHEN the typed text, read that way, stops being a beginning of the code -> the f
 
 WHEN press I've written it down -> I've written it down refuses a second press until the answer comes AND NEVER I've written it down dims
 
-WHEN press I've written it down GIVEN the code was made by the ceremony -> the key is attached, kept and its sealed backup uploaded, all at this moment AND the reader returns where the ceremony began
+WHEN press I've written it down GIVEN the code was made by the ceremony -> the key is attached, kept and its sealed backup uploaded, all at this moment AND the reader returns where the ceremony began AND the snackbar reads Key made and backed up.
 
 WHEN press I've written it down GIVEN the code was made or replaced from settings -> the new backup uploads AND Settings opens AND the snackbar reads Your key is backed up with the new code.
 

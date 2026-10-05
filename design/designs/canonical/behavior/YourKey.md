@@ -29,3 +29,7 @@ ALWAYS the warning is the body, said once, and no error colour stands near it
 ALWAYS the header's arrow reads Back to settings
 
 WHEN press the header's back arrow -> Settings opens
+
+ALWAYS the paragraph says the key lives only in this browser on the web and only in this app in the app
+
+ALWAYS the quiet note says the key is read from this browser on the web and from this app in the app

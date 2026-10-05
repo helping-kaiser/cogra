@@ -401,7 +401,10 @@ function TaskCard({ title, body, tone, children }) {
    ThreadDetail rule: a body on a second board stops being board-local. The
    ceremony's own second paragraph and its two buttons belong to KeyCeremony,
    where they are still reachable; under a modal they are not, and drawing
-   controls the dialog has taken away would be drawing a lie. */
+   controls the dialog has taken away would be drawing a lie. The pledge's
+   platform noun is the board's `wording` chip, `pledgeBody` in its VALS
+   (jakob 2026-10-05, E13; `KEY_PLEDGE_VALS`). */
+const KEY_PLEDGE_VALS = `pledgeBody: this.props.wording === "app" ? "Everything you publish is signed with a key that is created in this app and stays in your hands — CoGra never holds it and can never reissue it." : "Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never holds it and can never reissue it."`;
 function KeyPledge() {
   return (
     <>
@@ -425,8 +428,7 @@ function KeyPledge() {
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
         >
-          Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never
-          holds it and can never reissue it.
+          {"{{pledgeBody}}"}
         </p>
       </div>
     </>
