@@ -20,7 +20,14 @@
    grammar — enabled at rest, `Signing the edit…` once pressed, the held press
    dropped by a failed upload, the slow line counted from the press (the
    `upload` chip draws the running gate: the comment's one picture came in
-   this edit).
+   this edit, and the gate's noun counts, `Uploading 0 of 1 — signing waits
+   for the picture.` — jakob 2026-10-05, the 136 round's 5b).
+
+   THE 136 ROUND'S TWO, AT COMMENT SCALE (jakob 2026-10-05; `EditCompose`
+   draws both). Past 5s of signing, `ActsFooter`'s slow subline stands under
+   the count. A failed upload marks its tile and puts `One picture didn't
+   upload.` with `Retry · Remove it` under the pictures, beside the gate's
+   fault reading and the disabled Sign; `Remove it` un-gates Sign.
 
    THE BODY IS `_shared.jsx`'s `CommentEditBody`, because the acts sheet stands
    on this edit and draws it whole. */

@@ -1377,7 +1377,8 @@ const WRITE_RULE_FACT =
    dialogs*). The pad's notice carries the same one. */
 const WRITE_RULE_HELP = "Why signing waits";
 /* The slow line (jakob 2026-10-01: past 5s, an honest line and no fake
-   progress) — a draft flagged for blessing (copy-voice, *Faults by code*). */
+   progress), blessed (copy-voice, *Faults by code*). The edits carry it too,
+   under `ActsFooter` (jakob 2026-10-05). */
 const SEAL_SLOW_LINE = "Still signing — the network is slow right now.";
 
 function ComposeSealBody({ cited = 1, tags = SEAL_TAGS, state }) {
@@ -1910,7 +1911,20 @@ const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
      kept. It still stands, so the count does not move.
    - `{{gateShown}}` — the edit took new pictures and they are still going up:
      the seal's gate over the foot (`UploadStatusLine`), `Sign the edit`
-     drawn at rest and enabled. */
+     drawn at rest and enabled.
+   `EditCompose` alone adds the 136 round's two (jakob 2026-10-05) —
+   `EditComposeBody` turns the helpers' `faultHoles` on with its `holes`, and
+   `CommentEditBody` never does:
+   - an upload failed (`{{rowShown}}` / `{{rowFailedShown}}`,
+     `{{errorShown}}`, `{{gateFailedShown}}`, `{{signFailedShown}}`): the
+     compose media row's failure — the tile marked, `UploadErrorLine` under
+     the row with `Retry · Remove it` — with the gate's fault reading over the
+     foot and `Sign the edit` disabled;
+   - the signing past 5s (`{{footQuietShown}}` / `{{footSlowShown}}`,
+     `{{signRestShown}}`, `{{signBusyShown}}`): `ActsFooter`'s slow subline
+     under the count, and `Sign the edit` reading `Signing the edit…`.
+   `RefPairEdit` passes `targetHoles` alone: the standing citation's two
+   faces, the sheet over it naming the same one. */
 function EditCitationRow({ holes, removedProps, ...props }) {
   if (!holes) return <StagedReference {...props} />;
   return (
@@ -1925,16 +1939,78 @@ function EditCitationRow({ holes, removedProps, ...props }) {
   );
 }
 
-function EditGate({ holes, done, total }) {
+function EditGate({ holes, faultHoles, done, total }) {
   if (!holes) return null;
   return (
-    <div style={{ display: "{{gateShown}}" }}>
-      <UploadStatusLine done={done} total={total} />
-    </div>
+    <>
+      <div style={{ display: "{{gateShown}}" }}>
+        <UploadStatusLine done={done} total={total} />
+      </div>
+      {faultHoles && (
+        <div style={{ display: "{{gateFailedShown}}" }}>
+          <UploadStatusLine failed onRetry={() => {}} />
+        </div>
+      )}
+    </>
   );
 }
 
-function EditComposeBody({ unchanged = false, holes = false } = {}) {
+/* The post edit's picked row, and with `faultHoles` its failed reading: the
+   second picture — the one still going up at the `uploading` reading — marked
+   on its tile, and the compose rule's line under the row. */
+const EDIT_PICTURES = [{ src: "post-photo.jpg" }, { src: "inviter.jpg" }];
+
+function EditPickedRow({ faultHoles }) {
+  const row = (items) => <PickedRow items={items} caption="2 pictures — the body" onManage={() => {}} />;
+  if (!faultHoles) return row(EDIT_PICTURES);
+  return (
+    <>
+      <div style={{ display: "{{rowShown}}" }}>{row(EDIT_PICTURES)}</div>
+      <div style={{ display: "{{rowFailedShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
+      <div style={{ display: "{{errorShown}}" }}>
+        <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
+      </div>
+    </>
+  );
+}
+
+/* The post edit's foot, its two slots kept as two children so the boards that
+   draw no chip render exactly as before: the count, and `Sign the edit`. With
+   `faultHoles` the count also draws the slow subline under it, and the commit
+   its in-flight and failed readings. The footer's wrappers are flex columns,
+   so the line's button stretches as it does standing alone. */
+function editFootCount({ unchanged, faultHoles }) {
+  if (!faultHoles) return <ActsFooter count={unchanged ? 0 : 5} />;
+  return (
+    <>
+      <div style={{ display: "{{footQuietShown}}", flexDirection: "column" }}>
+        <ActsFooter count={5} />
+      </div>
+      <div style={{ display: "{{footSlowShown}}", flexDirection: "column" }}>
+        <ActsFooter count={5} subline={SEAL_SLOW_LINE} />
+      </div>
+    </>
+  );
+}
+
+function editFootSign({ unchanged, faultHoles }) {
+  if (!faultHoles) return <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>;
+  return (
+    <>
+      <div style={{ display: "{{signRestShown}}" }}>
+        <Button style={{ width: "100%" }}>Sign the edit</Button>
+      </div>
+      <div style={{ display: "{{signBusyShown}}" }}>
+        <Button style={{ width: "100%" }} busy busyLabel="Signing the edit…">Sign the edit</Button>
+      </div>
+      <div style={{ display: "{{signFailedShown}}" }}>
+        <Button style={{ width: "100%" }} disabled>Sign the edit</Button>
+      </div>
+    </>
+  );
+}
+
+function EditComposeBody({ unchanged = false, holes = false, targetHoles = holes } = {}) {
   return (
     <>
       <WizardHeader title="Edit post" leaveLabel="Leave — your draft is kept" help="Editing" />
@@ -1944,11 +2020,7 @@ function EditComposeBody({ unchanged = false, holes = false } = {}) {
             whole. */}
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14, overflow: "hidden" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <PickedRow
-              items={[{ src: "post-photo.jpg" }, { src: "inviter.jpg" }]}
-              caption="2 pictures — the body"
-              onManage={() => {}}
-            />
+            <EditPickedRow faultHoles={holes} />
             <InlineAction size="sm" selfStart>+ Add pictures · 2 of 10</InlineAction>
             <QuietNote>A post&apos;s body is words or media, never both.</QuietNote>
           </div>
@@ -1981,7 +2053,7 @@ function EditComposeBody({ unchanged = false, holes = false } = {}) {
                 same facts. The row opens `RefPairEdit` — the citation already
                 stands, so its pick adds a record — and its × withdraws it. */}
             <EditCitationRow
-              holes={holes}
+              holes={targetHoles}
               removedProps={{ src: undefined }}
               kind="post"
               name="The long way home — @ada"
@@ -2010,9 +2082,9 @@ function EditComposeBody({ unchanged = false, holes = false } = {}) {
 
         {/* Five things: the edit, #saltmaps added, #coastroad withdrawn, and the
             citation's withdrawal at its two counter-records (`EditActs`). */}
-        <EditGate holes={holes} done={1} total={2} />
-        <ActsFooter count={unchanged ? 0 : 5} />
-        <Button style={{ width: "100%" }} disabled={unchanged}>Sign the edit</Button>
+        <EditGate holes={holes} faultHoles={holes} done={1} total={2} />
+        {editFootCount({ unchanged, faultHoles: holes })}
+        {editFootSign({ unchanged, faultHoles: holes })}
       </div>
     </>
   );

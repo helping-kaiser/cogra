@@ -41,9 +41,18 @@ import { BUTTON_CLASS } from "../core/Button.jsx";
    menus round already ruled what to do about a tap that can only open an empty
    list: it is a tap spent on nothing, so it is not offered. The line still
    speaks, because a foot gone silent would read as a fault rather than as a
-   state; what it stops doing is promising a detail that isn't there. */
+   state; what it stops doing is promising a detail that isn't there.
 
-export function ActsFooter({ count, onOpen }) {
+   PAST 5s OF SIGNING THE SLOW LINE STANDS UNDER IT (jakob 2026-10-05, the 136
+   round's 1). An edit has no acts card to carry the seals' subline, so the
+   footer carries it: `subline` is `Still signing — the network is slow right
+   now.`, counted from the press, in `ActsCard`'s slow ink — the olive
+   `--tertiary` of the notice family — and spoken once as a status. It stands
+   OUTSIDE the button, under it: the line is the wait's news, not part of the
+   name of what the button opens. Without a `subline` the footer is the line
+   alone, exactly as drawn before. */
+
+export function ActsFooter({ count, onOpen, subline }) {
   const line =
     count === 0 ? "Nothing to sign yet" : count === 1 ? "You're signing 1 thing" : `You're signing ${count} things`;
   const style = {
@@ -61,14 +70,35 @@ export function ActsFooter({ count, onOpen }) {
     color: "var(--text-secondary)",
   };
 
-  if (count === 0) return <span style={style}>{line}</span>;
+  const foot =
+    count === 0 ? (
+      <span style={style}>{line}</span>
+    ) : (
+      <button type="button" onClick={onOpen} className={BUTTON_CLASS} style={{ ...style, cursor: "pointer" }}>
+        {line}
+        <span style={{ display: "inline-flex" }}>
+          <Icon name="expand_more" size={16} />
+        </span>
+      </button>
+    );
+
+  if (!subline) return foot;
 
   return (
-    <button type="button" onClick={onOpen} className={BUTTON_CLASS} style={{ ...style, cursor: "pointer" }}>
-      {line}
-      <span style={{ display: "inline-flex" }}>
-        <Icon name="expand_more" size={16} />
+    <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+      {foot}
+      <span
+        role="status"
+        style={{
+          textAlign: "center",
+          fontSize: "var(--text-label-small)",
+          lineHeight: "var(--text-label-small--line-height)",
+          letterSpacing: "var(--text-label-small--letter-spacing)",
+          color: "var(--tertiary)",
+        }}
+      >
+        {subline}
       </span>
-    </button>
+    </div>
   );
 }

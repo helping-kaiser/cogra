@@ -10,4 +10,6 @@ The one line that says how much a signature commits, where a full acts card woul
 
 **It belongs to the button, not to the column.** The spacer above pushes the pair to the bottom; the footer then sits directly on the sign button with no gap, so the count is read on the way to the button rather than after it.
 
+**Past 5s of signing, the slow line stands under it** — `subline="Still signing — the network is slow right now."`, counted from the press, in the olive `--tertiary` and spoken once as a status. An edit has no acts card, so the seals' subline rides here; it stands outside the button, never in its name.
+
 **The whole line is the button**, not the chevron — a 16px glyph is not a target, and the sentence is what the author is reading when they decide they want the detail. It carries no label of its own: the sentence is the name. The button adds no box, so the line draws exactly as before and brings the state layer, the focus ring and the 48px target with it.

@@ -28,6 +28,10 @@ WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND th
 
 WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the edit settling AND its body is words
 
+WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
+
+WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
+
 WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks

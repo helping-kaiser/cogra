@@ -54,8 +54,12 @@ function Ring({ progress = 0.55, size = 18 }) {
    content of course"). `media` is the body's kind: pictures by default, and a
    clip reads `…signing waits for the video.` An edit that changed a clip's
    cover waits for that one picture by its name, `…signing waits for the
-   cover.` (`media="cover"` — the edit's gate is jakob's, 2026-10-05; the
-   noun is new, flagged for blessing). */
+   cover.` (`media="cover"` — the edit's gate is jakob's, 2026-10-05).
+
+   THE PICTURES' NOUN COUNTS (jakob 2026-10-05, the 136 round's 5b). A gate
+   waiting on one picture says so: at a `total` of one the line reads
+   `…signing waits for the picture.`, and `the pictures` from two up. The
+   video and the cover are one thing already, so their nouns never change. */
 export function UploadStatusLine({ done, total, progress, media = "pictures", failed = false, message = "One picture didn't upload.", onRetry }) {
   if (failed) {
     return (
@@ -78,7 +82,7 @@ export function UploadStatusLine({ done, total, progress, media = "pictures", fa
           color: "var(--text-secondary)",
         }}
       >
-        Uploading {done} of {total} — signing waits for the {media === "video" || media === "cover" ? media : "pictures"}.
+        Uploading {done} of {total} — signing waits for the {media === "video" || media === "cover" ? media : total === 1 ? "picture" : "pictures"}.
       </span>
     </div>
   );

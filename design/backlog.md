@@ -4361,45 +4361,39 @@ left these for his eye:
   dismissal is account state (auth.md), so the line follows when the seam
   (048) lands it.
 
-### 136 · What the 134 and 135 residue left for rulings · *design + contract* · **filed 2026-10-05**
+### 136 · What the 134 and 135 residue left for rulings · *design + contract* · **filed 2026-10-05** · **ruled 2026-10-05**
 
 The residue round (readme §13, *The 134 and 135 residue*) executed
-jakob's seven rulings and left these for his eye:
+jakob's seven rulings and left these for his eye. The design bullets are
+closed (jakob 2026-10-05, "1-5 all as recommended"; the rulings digest
+`2026-10-05-136-passc-rulings.md`, readme §13, *The 136 round*):
 
-- **Strings flagged for blessing.** The gate's cover noun, `Uploading 0
-  of 1 — signing waits for the cover.` (an edit's new cover is one
-  picture, and the gate names its content); and the removed-target
-  citation's two spoken names, `Remove this citation: Post, Removed by
-  its author` and `Post, Removed by its author — set how it relates` (a
-  kept pick's × says `pick`, and the removed name is never spoken).
-- **Where an edit's slow line stands.** The seals put `Still signing —
-  the network is slow right now.` under the acts card's total; an edit
-  has only `ActsFooter`, which has no subline. The sidecars say the line
-  counts from the press but not where it stands, and an ordinary edit's
-  signing past 5s carries no slow line at all.
-- **A failed upload on the edit's own media row.** The drawing mirrors
-  the seals: the gate line takes its fault reading with `Retry` and
-  `Sign the edit` is disabled. An edit is also the stage the media sits
-  on, so whether the failed tile wears its badge with `UploadErrorLine`
-  (`Retry · Remove it`) there too is unruled.
-- **The removed-target citation's sheet.** The row keeps its controls
-  (the lane's reading of "wears the face": nothing else changes), so it
-  still opens `RefPairEdit`, whose title and `Set exact values for …`
-  would name the target. What they read for a removed target is
-  unruled.
-- **The comment opening of the pads.** The `opener` chip swaps the noun
-  only; the surface beneath `TagPad` and `RefPairEdit` and their titles
-  stay the post edit's. Whether the comment opening is drawn over
-  `CommentEditBody` is open.
-- **The chips' fixtures.** `EditCompose`'s upload chip reads both its
-  pictures as new (`Uploading 1 of 2`); `CommentEdit`'s reads its one
-  picture as new, where the template says `the pictures` at a count of
-  one; `EditComposeVideo`'s chosen cover is `post-photo.jpg`, and its
-  foot counts the cover's record (4; `CommentEditVideo` 3).
-- **Contract seam** (for the relay): an edit's Sign waits for its
-  uploads, holding the press client-side; a standing citation's
-  `ReferenceClaim` has to say its target was removed and carry the
-  removal mark, as a kept pick's target does.
+- ~~**Strings flagged for blessing.**~~ — closed 2026-10-05: the gate's
+  cover noun and the removed-target citation's two spoken names are
+  blessed (copy-voice, *The edit's gate is the seal's* and *A standing
+  citation whose target was removed*).
+- ~~**Where an edit's slow line stands.**~~ — closed 2026-10-05 (ruling
+  1): under the acts footer, as `ActsFooter`'s subline, past 5s from the
+  press on all five edit boards; `EditCompose`'s `signing` chip draws it.
+- ~~**A failed upload on the edit's own media row.**~~ — closed
+  2026-10-05 (ruling 2): the tile wears its badge with `UploadErrorLine`
+  (`Retry · Remove it`) as on compose, beside the gate's fault reading
+  and the disabled Sign; `Remove it` un-gates Sign. `EditCompose`'s
+  `upload` chip draws it as `failed`.
+- ~~**The removed-target citation's sheet.**~~ — closed 2026-10-05
+  (ruling 3): `Post, Removed by its author` and `Set exact values for
+  Post, Removed by its author` (`RefPairEdit`'s `target` chip).
+- ~~**The comment opening of the pads.**~~ — closed 2026-10-05 (ruling
+  4): no boards over `CommentEditBody`; the `opener` chip and the
+  sidecars carry it.
+- ~~**The chips' fixtures.**~~ — closed 2026-10-05 (ruling 5): both of
+  `EditCompose`'s pictures were added in the edit (its docblock);
+  `CommentEdit`'s gate reads `the picture` at a count of one (flagged);
+  `EditComposeVideo`'s cover and counts stay.
+- **Contract seam** (for the relay; rides seam 052): an edit's Sign
+  waits for its uploads, holding the press client-side; a standing
+  citation's `ReferenceClaim` has to say its target was removed and
+  carry the removal mark, as a kept pick's target does.
 
 ### 13X-passc-entry-b · What the applicant and vouch sidecars left for rulings · *design + docs* · **filed 2026-10-05**
 
@@ -4562,6 +4556,29 @@ same surfaces are not repeated here.
   table; the post detail's has `Back to the search`.
 - **History's trailing age** is unstated: Saved's is when the reader
   saved the thing, History's could be the latest seeing or the writing.
+
+### 13X-residue136 · What the 136 round left for rulings · *design* · **filed 2026-10-05**
+
+The 136 round (readme §13, *The 136 round*) drew jakob's five rulings and
+left these for his eye:
+
+- **The uploading tile's ring on an edit.** The compose media row rings
+  each picture still going up; `EditCompose`'s `uploading` reading draws
+  the gate line but no ring on its second tile, though the edit's row is
+  the compose row (ruling 2).
+- **A failed cover's words.** The video twins' row line reads `One
+  picture didn't upload.`, the gate's own fault reading; whether a cover
+  says itself instead is open.
+- **The cover row after `Remove it`.** Unstaging a failed new cover
+  leaves the cover field as it stood before the edit — the chosen cover,
+  or the `Add a cover` door — but no board draws it.
+- **An ungated edit's in-flight label.** The sidecars of `EditCompose`
+  and `EditComposeVideo` say `Signing the edit…` past 200ms only for a
+  press held at the gate, and `EditWords`' not at all; `CommentEdit`'s
+  says it for every press, and the slow line now stands for every press.
+- **Two stale notes.** `EditComposeVideo`'s and `CommentEditVideo`'s
+  docblocks still call the cover noun flagged; it is blessed.
+
 ### 13X-k13 · What the K13 round left for rulings · *design + docs* · **filed 2026-10-05**
 
 The K13 round (readme §13) executed the nineteen rulings and left these
