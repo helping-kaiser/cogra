@@ -4578,3 +4578,33 @@ left these for his eye:
   says it for every press, and the slow line now stands for every press.
 - **Two stale notes.** `EditComposeVideo`'s and `CommentEditVideo`'s
   docblocks still call the cover noun flagged; it is blessed.
+
+### 13X-history · What the History redesign left for rulings · *design + contract* · **filed 2026-10-05**
+
+The History redesign (readme §13) drew the seen-list as a feed and left
+these for jakob's eye, each with the lane's recommendation in its report:
+
+- **The composition** — search bar, trigger in search's kind semantics,
+  a Kinds-only sheet with no "?", and an empty board with neither
+  control — is the lane's call, flagged for the canvas pass, with its
+  three new strings.
+- **Clearing.** Clear the whole history, and remove one thing from it.
+  Either one puts the thing back into the reader's feed, since the list
+  is the feed's seen filter.
+- **The search.** What a query matches (Explore's names-and-titles rule,
+  or more: an untitled words post has no title), and the no-match
+  state, owed on the field's and `Done`'s edges as gaps.
+- **When History itself sees.** Every card scrolling through History is
+  fully in the viewport; whether that counts as a seeing, and whether a
+  re-seeing reorders the list mid-scroll or on the next load.
+- **The feed's furniture here** — the pull-down, `Back to top`, a frozen
+  order per open — and day markers for "the post I saw three days ago".
+- **What else stays or leaves**: a seen thing later removed, hidden
+  accounts' content, sensitive content's veil.
+- **The origin nouns.** The profile, the tag page, the thread and the
+  score's trace carry no `Back to History` row.
+- **The seen definition's other spellings.** feed-ranking.md §9.4,
+  `OrderSection`'s docblock and `ExploreFilter.md` say the viewport was
+  entered or passed through, not that the content was fully in it; the
+  last two also call the list device-only. `CommentFeedCard`'s docblock
+  still says `History` lists an untitled post by its words.
