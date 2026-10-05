@@ -320,7 +320,8 @@
   --duration-collapsing-top: 200ms; /* @kind other */
   /* Material's short snackbar duration; the confirmation clears itself. */
   --duration-snackbar: 4000ms; /* @kind other */
-  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  /* Android's platform long-press timeout — the press-and-hold that signs the
+     default opinion, its ring filling over it. A tap blooms the pad at once. */
   --duration-long-press: 500ms; /* @kind other */
 }
 
@@ -502,6 +503,24 @@
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
+/* A door card lights whole while a `cg-door` inside it is hovered or pressed
+   (readme §4). Not `cg-state`: `:active` matches every ancestor, so the stance
+   face or ⋮ would light it too. No `isolation`: the parked pad inside must
+   keep stacking above the shell's wash. */
+.cg-door-card { position: relative }
+.cg-door-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+.cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
+
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
    disappears against a filled primary button, and this one reads on the page
    ground and on the loud surface alike, in both themes. Nothing removes it. */
@@ -562,7 +581,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cg-state::after { transition: none }
+  .cg-state::after, .cg-door-card::after { transition: none }
 }
 
 /* The page ground and the default type role. `body-large` is Material's role for
@@ -895,7 +914,8 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --duration-collapsing-top: 200ms; /* @kind other */
   /* Material's short snackbar duration; the confirmation clears itself. */
   --duration-snackbar: 4000ms; /* @kind other */
-  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  /* Android's platform long-press timeout — the press-and-hold that signs the
+     default opinion, its ring filling over it. A tap blooms the pad at once. */
   --duration-long-press: 500ms; /* @kind other */
 }
 
@@ -1077,6 +1097,24 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
+/* A door card lights whole while a `cg-door` inside it is hovered or pressed
+   (readme §4). Not `cg-state`: `:active` matches every ancestor, so the stance
+   face or ⋮ would light it too. No `isolation`: the parked pad inside must
+   keep stacking above the shell's wash. */
+.cg-door-card { position: relative }
+.cg-door-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+.cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
+
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
    disappears against a filled primary button, and this one reads on the page
    ground and on the loud surface alike, in both themes. Nothing removes it. */
@@ -1137,7 +1175,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cg-state::after { transition: none }
+  .cg-state::after, .cg-door-card::after { transition: none }
 }
 
 /* The page ground and the default type role. `body-large` is Material's role for
@@ -1246,7 +1284,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 <div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">1</span> back arrow → ◦ back (the first stage — leaves toward where compose began, draft kept)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">2</span> X — leave → ◦ back (leaves the flow — draft kept, no confirmation)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">3</span> Next → Compose · the video's face ⤴ Compose (back to the face the author already chose — the cover step holds the choice, it does not re-ask it)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">4</span> Write words instead → Compose · words body ⤴ Compose (the body empty — the words stage, no ask)<span style="opacity:0.5;"> | </span>Compose · discard the words? ⤴ Compose (the body holds a clip — the ask first, titled Discard the video? with Keep it)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">5</span> remove video × → Compose · pick the body ⤴ Compose (the clip leaves and its cover goes with it — a cover belongs to the clip, never to the post)</div></div>
 <div style="position:absolute;left:310px;top:894px;width:250px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:8px;background:var(--surface-container,var(--surface));padding:8px;">
 <div style="display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:14px;font-weight:700;">Cover · a picture of your own<span style="flex:none;font-weight:400;color:var(--on-surface-variant);">◂ 6</span></div>
-<div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">1</span> back arrow → ◦ back (one stage back — the cover row that asked, the picture unused)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">2</span> X — leave → ◦ back (leaves the flow — draft kept)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">3</span> Next → ◦ back (the cover is set — back to the cover row that asked for it)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">4</span> the crop viewport → ◦ self (drag to move, pinch to zoom — the shape is the video's, and locked)</div></div>
+<div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">1</span> back arrow → ◦ back (one stage back — the cover row that asked, the picture unused)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">2</span> X — leave → ◦ back (leaves the flow — draft kept)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">3</span> Next → ◦ back (the cover is set — back to the cover row that asked for it)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">4</span> the crop viewport → ◦ self (drag to move, pinch to zoom; focused, the arrow keys move it — the shape is the video's, and locked)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">5</span> zoom slider → ◦ self (the zoom, from the fill (1×) to about 4× — the pinch, on screen)</div></div>
 <div style="position:absolute;left:600px;top:894px;width:250px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:8px;background:var(--surface-container,var(--surface));padding:8px;">
 <div style="display:flex;justify-content:space-between;gap:6px;font-size:11px;line-height:14px;font-weight:700;">Describe the video<span style="flex:none;font-weight:400;color:var(--on-surface-variant);">◂ 5</span></div>
 <div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">1</span> ? — Describing pictures → The ? dialog ⤴ Patterns &amp; reference (the Describing-pictures text, whose video sentence covers the clip)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">2</span> What's in the video → ◦ self (typing — one description for the whole clip, none for its cover)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">3</span> Done → ◦ back (the sheet closes)</div><div style="margin-top:4px;font-size:10px;line-height:13px;color:var(--on-surface-variant);"><span style="color:var(--primary);font-weight:700;">4</span> scrim — tap outside → ◦ back (the sheet closes)</div></div>

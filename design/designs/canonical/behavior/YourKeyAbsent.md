@@ -19,3 +19,5 @@ WHEN tap the notice's "?" -> HelpDialog opens with the Your key text
 ALWAYS the header's arrow reads Back to settings and is the page's whole way out
 
 WHEN press the header's back arrow -> Settings opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

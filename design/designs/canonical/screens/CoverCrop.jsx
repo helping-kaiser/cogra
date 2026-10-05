@@ -11,13 +11,18 @@
    construction this is): the crop viewport wears the video's display shape at
    the scale it will be seen — the clip's own ratio in a post, the comment
    pager's square in a comment. There are no shape chips: choosing a shape
-   here would let the cover disagree with the thing it is the face of. */
+   here would let the cover disagree with the thing it is the face of.
+
+   THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the window, its
+   thumb at this crop's 1.15× between the fill (1×) and about 4×, on both
+   platforms; the focused window pans with the arrow keys (`CropViewport`). */
 export function Screen() {
   return (
     <>
       <WizardHeader title="The cover" leaveLabel="Leave — your draft is kept" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <CropViewport src="gallery-market.jpg" shape="rect" height={192} scale={1.15} origin="50% 45%" />
+        <CropZoom scale={1.15} />
         <QuietNote>Drag to move, pinch to zoom.</QuietNote>
         <QuietNote>The cover takes the video's shape.</QuietNote>
         <div style={{ flex: 1 }} />

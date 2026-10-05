@@ -101,6 +101,11 @@ export interface StanceLandingLineProps {
 
 export declare function StanceLandingLine(props: StanceLandingLineProps): JSX.Element;
 
+/** How long a pad readout must rest before it is spoken: 500ms. The visible readouts follow the knob live; the spoken reading waits for the pick to settle (release, or a pause mid-drag). */
+export declare const SETTLE_MS: number;
+/** The value once it has stopped changing for `ms` (default `SETTLE_MS`); the first render returns it as it stands. */
+export declare function useSettled<T>(value: T, ms?: number): T;
+
 /** The twenty-anchor contract of design.md §8.4. Both clients read these values. */
 export declare const STANCE_ANCHORS: readonly (StancePair & { emoji: string; label: string })[];
 /**

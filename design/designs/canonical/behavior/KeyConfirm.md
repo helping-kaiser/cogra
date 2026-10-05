@@ -11,3 +11,5 @@ WHEN press Cancel -> the dialog closes onto the key ceremony AND nothing is made
 WHEN tap the scrim or press system Back or Escape -> the dialog closes onto the key ceremony AND nothing is made
 
 WHEN press Show my code -> the recovery code screen opens with the code shown AND the seed and the code are made and held in memory AND NEVER the key is attached, kept or backed up before the typed-back code confirms
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

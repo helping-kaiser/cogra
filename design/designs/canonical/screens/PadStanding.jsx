@@ -48,13 +48,28 @@
    why the walk-away is a gesture of its own rather than a corner of the field,
    and the board says it in three readouts instead of a sentence. A positive
    pick would have said nothing at all: at +1.00 the fold is already at the cap,
-   so the landing would have read back unchanged and the pad would look inert. */
+   so the landing would have read back unchanged and the pad would look inert.
+
+   THE `knob` CHIP DRAWS THE FINGER STILL DOWN (the K13 round). `held` is the
+   same pick a moment before release: the knob wears M3's pressed state layer,
+   a 40px disc in its own orange at 10 %, and nothing scales. Release lifts the
+   layer and parks the pick — the `parked` state this board draws by default.
+   On Android the drag ticks once where the knob crosses a zero line or meets
+   the field's edge (readme §4, *Haptics*); the drawing has no tick to show. */
+export const PROPS = { knob: { editor: "enum", options: ["parked", "held"], default: "parked" } };
+export const VALS = `parkedShown: this.props.knob === "held" ? "none" : "block", heldShown: this.props.knob === "held" ? "block" : "none"`;
+
 export function Screen() {
   return (
     <>
       <CograBand trailing={<FeedFilter />} />
       <FeedList>
-        <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} />
+        <div style={{ display: "{{parkedShown}}" }}>
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} />
+        </div>
+        <div style={{ display: "{{heldShown}}" }}>
+          <PostCard {...ADA_POST} bundle={mkBundle(1, 1)} stanceOpen stancePadInset={80} stanceDefaultPick={{ pDirected: -0.55, pInterest: -0.15 }} stanceKnobHeld />
+        </div>
       </FeedList>
       <BottomNav active="feed" slots={ALL_SLOTS} inline />
 

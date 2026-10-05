@@ -320,7 +320,8 @@
   --duration-collapsing-top: 200ms; /* @kind other */
   /* Material's short snackbar duration; the confirmation clears itself. */
   --duration-snackbar: 4000ms; /* @kind other */
-  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  /* Android's platform long-press timeout — the press-and-hold that signs the
+     default opinion, its ring filling over it. A tap blooms the pad at once. */
   --duration-long-press: 500ms; /* @kind other */
 }
 
@@ -502,6 +503,24 @@
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
+/* A door card lights whole while a `cg-door` inside it is hovered or pressed
+   (readme §4). Not `cg-state`: `:active` matches every ancestor, so the stance
+   face or ⋮ would light it too. No `isolation`: the parked pad inside must
+   keep stacking above the shell's wash. */
+.cg-door-card { position: relative }
+.cg-door-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+.cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
+
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
    disappears against a filled primary button, and this one reads on the page
    ground and on the loud surface alike, in both themes. Nothing removes it. */
@@ -562,7 +581,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cg-state::after { transition: none }
+  .cg-state::after, .cg-door-card::after { transition: none }
 }
 
 /* The page ground and the default type role. `body-large` is Material's role for
@@ -895,7 +914,8 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --duration-collapsing-top: 200ms; /* @kind other */
   /* Material's short snackbar duration; the confirmation clears itself. */
   --duration-snackbar: 4000ms; /* @kind other */
-  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  /* Android's platform long-press timeout — the press-and-hold that signs the
+     default opinion, its ring filling over it. A tap blooms the pad at once. */
   --duration-long-press: 500ms; /* @kind other */
 }
 
@@ -1077,6 +1097,24 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
+/* A door card lights whole while a `cg-door` inside it is hovered or pressed
+   (readme §4). Not `cg-state`: `:active` matches every ancestor, so the stance
+   face or ⋮ would light it too. No `isolation`: the parked pad inside must
+   keep stacking above the shell's wash. */
+.cg-door-card { position: relative }
+.cg-door-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+.cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
+
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
    disappears against a filled primary button, and this one reads on the page
    ground and on the loud surface alike, in both themes. Nothing removes it. */
@@ -1137,7 +1175,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cg-state::after { transition: none }
+  .cg-state::after, .cg-door-card::after { transition: none }
 }
 
 /* The page ground and the default type role. `body-large` is Material's role for
@@ -1167,7 +1205,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   </style>
 </helmet>
 <div class="screen" data-theme="{{theme}}" data-geek="{{geek}}" style="width: 390px; height: 844px; background: var(--surface); color: var(--on-surface); font-family: var(--font-sans); box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;">
-<header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="/settings" aria-label="Back to settings" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a></div></header><div style="flex:1;display:flex;flex-direction:column;padding:8px 24px 32px;overflow:hidden"><h1 style="margin:0;font-size:var(--text-headline-small);line-height:var(--text-headline-small--line-height);font-weight:var(--text-headline-small--font-weight)">Confirm the change</h1><p style="margin:8px 0 0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);letter-spacing:var(--text-body-medium--letter-spacing);color:var(--text-secondary)">Two messages, two different errands — a code to type here, and a link to open at the new address. Your email moves when both have been answered, in either order.</p><div style="margin-top:24px;display:flex;flex-direction:column;gap:var(--space-2);border:1px solid var(--border-hairline);border-radius:var(--radius-medium);padding:var(--space-3)"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:var(--text-label-small--letter-spacing, 0.5px);color:var(--text-secondary)">Both have to land</span><button data-flow="4" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:var(--text-label-small--letter-spacing);color:var(--primary)">Resend</button></div><div style="display:grid;grid-template-columns:64px 1fr;column-gap:var(--space-2);row-gap:var(--space-1)"><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);color:var(--text-secondary)">Code</span><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height)">sol@solferreira.art — still waiting</span><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);color:var(--text-secondary)">Link</span><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height)">sol@ferreira.studio — still waiting</span></div></div><div style="margin-top:24px"><div data-flow="2" data-field="Confirmation code" style="display:flex;flex-direction:column;gap:var(--space-1)"><div style="display:flex;align-items:baseline;gap:var(--space-2)"><label for="email-change-code" style="flex:1;font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight)">Confirmation code</label></div><input id="email-change-code" type="text" aria-describedby="email-change-code-support" style="border-radius:var(--radius-extra-small);border:1px solid var(--border-field);background:transparent;color:var(--on-surface);padding:8px 12px;font-family:var(--font-mono);font-size:var(--text-body-large);line-height:var(--text-body-large--line-height);min-width:0;width:100%;box-sizing:border-box" value=""/><div style="display:flex;align-items:baseline;gap:var(--space-2);flex:none"><span id="email-change-code-support" style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);letter-spacing:var(--text-body-small--letter-spacing);color:var(--text-secondary)">From the message to sol@solferreira.art.</span></div></div></div><div style="margin-top:24px"><button data-flow="3" type="button" class="cg-state cg-focus cg-hit" style="background:var(--primary);color:var(--on-primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Confirm the code</button></div><div style="margin-top:24px"><p style="margin:0;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:var(--text-label-small--letter-spacing);color:var(--text-secondary)">Until both sides land your account keeps the address it has, and a reset still goes there.</p></div><div style="margin-top:16px"><button data-flow="5" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:var(--text-label-small--letter-spacing);color:var(--primary)">Cancel the change</button></div></div>
+<header style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);min-height:48px;padding:0 var(--space-3)"><div style="display:flex;align-items:center;gap:var(--space-2)"><a data-flow="1" href="/settings" aria-label="Back to settings" class="cg-state cg-focus" style="height:48px;width:48px;display:grid;place-items:center;border-radius:var(--radius-full);color:var(--text-secondary);text-decoration:none;flex:none"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true" style="flex:none"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path></svg></a></div></header><div style="flex:1;display:flex;flex-direction:column;padding:8px 24px 32px;overflow:hidden"><h1 style="margin:0;font-size:var(--text-headline-small);line-height:var(--text-headline-small--line-height);font-weight:var(--text-headline-small--font-weight)">Confirm the change</h1><p style="margin:8px 0 0;font-size:var(--text-body-medium);line-height:var(--text-body-medium--line-height);letter-spacing:var(--text-body-medium--letter-spacing);color:var(--text-secondary)">Two messages, two different errands — a code to type here, and a link to open at the new address. Your email moves when both have been answered, in either order.</p><div style="margin-top:24px;display:flex;flex-direction:column;gap:var(--space-2);border:1px solid var(--border-hairline);border-radius:var(--radius-medium);padding:var(--space-3)"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:var(--text-label-small--letter-spacing, 0.5px);color:var(--text-secondary)">Both have to land</span><button data-flow="4" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:var(--text-label-small--letter-spacing);color:var(--primary)">Resend</button></div><div style="display:grid;grid-template-columns:64px 1fr;column-gap:var(--space-2);row-gap:var(--space-1)"><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);color:var(--text-secondary)">Code</span><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height)">sol@solferreira.art — still waiting</span><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);color:var(--text-secondary)">Link</span><span style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height)">sol@ferreira.studio — still waiting</span></div></div><div style="margin-top:24px"><div data-flow="2" data-field="Confirmation code" style="display:flex;flex-direction:column;gap:var(--space-1)"><div style="display:flex;align-items:baseline;gap:var(--space-2)"><label for="email-change-code" style="flex:1;font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight)">Confirmation code</label></div><input id="email-change-code" type="text" inputMode="text" autoCapitalize="characters" autoCorrect="off" spellcheck="false" autoComplete="one-time-code" enterKeyHint="go" aria-describedby="email-change-code-support" style="border-radius:var(--radius-extra-small);border:1px solid var(--border-field);background:transparent;color:var(--on-surface);padding:8px 12px;font-family:var(--font-mono);font-size:var(--text-body-large);line-height:var(--text-body-large--line-height);min-width:0;width:100%;box-sizing:border-box" value=""/><div style="display:flex;align-items:baseline;gap:var(--space-2);flex:none"><span id="email-change-code-support" style="font-size:var(--text-body-small);line-height:var(--text-body-small--line-height);letter-spacing:var(--text-body-small--letter-spacing);color:var(--text-secondary)">From the message to sol@solferreira.art.</span></div></div></div><div style="margin-top:24px"><button data-flow="3" type="button" class="cg-state cg-focus cg-hit" style="background:var(--primary);color:var(--on-primary);border:1px solid transparent;padding:10px 24px;border-radius:var(--radius-full);font-family:var(--font-sans);font-size:var(--text-label-large);line-height:var(--text-label-large--line-height);letter-spacing:var(--text-label-large--letter-spacing);font-weight:var(--text-label-large--font-weight);opacity:1;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:40px;min-width:64px;box-sizing:border-box;width:100%">Confirm the code</button></div><div style="margin-top:24px"><p style="margin:0;font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);letter-spacing:var(--text-label-small--letter-spacing);color:var(--text-secondary)">Until both sides land your account keeps the address it has, and a reset still goes there.</p></div><div style="margin-top:16px"><button data-flow="5" type="button" class="cg-state cg-focus cg-hit" style="border:0;background:none;padding:0;cursor:pointer;font-family:var(--font-sans);font-size:var(--text-label-small);line-height:var(--text-label-small--line-height);font-weight:var(--text-label-small--font-weight);letter-spacing:var(--text-label-small--letter-spacing);color:var(--primary)">Cancel the change</button></div></div>
 </div>
 </x-dc>
 <script data-dc-script data-props='{"theme":{"editor":"enum","options":["auto","light","dark"],"default":"auto"},"geek":{"editor":"enum","options":["off","on"],"default":"off"}}'>

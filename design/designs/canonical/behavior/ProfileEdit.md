@@ -39,3 +39,5 @@ ALWAYS Save stands visible and disabled, the field's refusal on screen as the re
 ALWAYS a cap counts characters as Unicode scalar values
 
 WHEN tap the back arrow -> the profile comes back
+
+WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped

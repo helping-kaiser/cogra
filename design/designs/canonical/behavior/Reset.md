@@ -17,3 +17,5 @@ ALWAYS the quiet note under the status line says the reset restores the sign-in 
 WHEN the reset mail's link is opened -> ResetNew opens
 
 WHEN press Send reset link GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

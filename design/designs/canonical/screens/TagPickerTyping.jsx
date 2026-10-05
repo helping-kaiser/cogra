@@ -50,9 +50,9 @@
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
       <div style={{ flex: "none" }}>
-        <SearchBar query="#SaltMaps" placeholder="Name a tag" />
+        <SearchBar query="#SaltMaps" placeholder="Name a tag" ariaLabel="Name a tag" />
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
           <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
             Letters, digits, dot, dash and underscore. Capitals become lowercase.

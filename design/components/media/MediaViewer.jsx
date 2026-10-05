@@ -55,9 +55,24 @@ import { useGlobalMute, PagerDots } from "./MediaAttachment.jsx";
      see the frame, and printing it under the picture turns a description into a
      caption the author never wrote.
 
+   · IT IS NAMED BY WHAT IT SHOWS, AND IT HOLDS FOCUS (the K13 round; readme
+     §10's four rules). The dialog's accessible name is its content — `Picture
+     2 of 4` in a set, `Picture` alone, `Video` for a clip — and it follows the
+     paging. Opening it moves focus to the X; closing it hands focus back to
+     the frame that was tapped (the host remembers it — `PostCard`'s
+     `openViewer`).
+   · PAGING STOPS AT THE ENDS. The card's pager does not wrap, so neither does
+     this one: → on the last picture and ← on the first do nothing, and so
+     does a swipe past either end.
+
    The scrim is the dialog scrim, so the viewer belongs to the same family as
    every other thing that covers the screen in this system. */
 
+/* The viewer's name, by content: a set counts, a single names its kind. */
+function viewerName(item, current, count) {
+  if (count > 1) return `Picture ${current + 1} of ${count}`;
+  return item && item.kind === "video" ? "Video" : "Picture";
+}
 
 export function MediaViewer({
   items = [],
@@ -71,19 +86,25 @@ export function MediaViewer({
 }) {
   const [current, setCurrent] = React.useState(index);
   const [muted, setMuted] = useGlobalMute();
+  const closeRef = React.useRef(null);
   const count = items.length;
   const item = items[Math.min(current, Math.max(count - 1, 0))];
 
   const move = React.useCallback(
     (next) => {
-      const wrapped = (next + count) % count;
-      setCurrent(wrapped);
-      if (onIndexChange) onIndexChange(wrapped);
+      if (next < 0 || next > count - 1) return;
+      setCurrent(next);
+      if (onIndexChange) onIndexChange(next);
     },
     [count, onIndexChange],
   );
 
   React.useEffect(() => setCurrent(index), [index]);
+
+  // Focus lands on the way out the moment the layer opens.
+  React.useEffect(() => {
+    if (closeRef.current) closeRef.current.focus();
+  }, []);
 
   React.useEffect(() => {
     const onKey = (event) => {
@@ -141,7 +162,7 @@ export function MediaViewer({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Media"
+      aria-label={viewerName(item, current, count)}
       style={{
         position: "absolute",
         inset: 0,
@@ -187,6 +208,7 @@ export function MediaViewer({
         }}
       >
         <button
+          ref={closeRef}
           type="button"
           aria-label="Close"
           onClick={onClose}

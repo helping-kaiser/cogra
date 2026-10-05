@@ -19,3 +19,5 @@ WHEN the first code is typed back on the code screen -> the backup uploads AND s
 WHEN the code screen is left before the code is typed back -> NEVER a backup is uploaded AND the Recovery code row still reads Not made yet
 
 WHEN press the header back arrow -> settings returns AND NEVER a code is made
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

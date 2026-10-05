@@ -101,6 +101,10 @@ export interface StanceControlProps {
    * Off by default.
    */
   signing?: "busy" | "failed" | "writeRule" | "comfortFailed";
+  /** The hold mid-way, for a board: the ring that fills around the face over the 500ms hold, drawn standing at this 0–1 fill. Absent, the ring is the press's own and fills live. */
+  holdProgress?: number;
+  /** The pad's knob under the finger, for a board: `StancePad`'s pressed layer (a 40px disc at 10 %) drawn around the knob. Absent, the layer is the drag's own. */
+  knobHeld?: boolean;
   /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`. */
   node?: string;
 }

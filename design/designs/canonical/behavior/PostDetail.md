@@ -31,3 +31,9 @@ WHEN the hold's signing is taken -> postDetail.card.actionRow.stance.anchor.face
 WHEN the hold's signing does not go through -> postDetail.card.actionRow.stance.anchor.face stays where it was AND the line under it reads That didn't sign. followed by Retry AND NEVER the snackbar carries the failure
 
 WHEN the hold's signing is refused by the write rule -> postDetail.card.actionRow.stance.anchor.face stays where it was AND the line under it reads You can't sign right now. AND NEVER Retry appears AND NEVER the line takes the failure voice
+
+WHEN press Enter or Space on postDetail.card.media.frame GIVEN it has focus -> the fullscreen viewer opens on that frame
+
+WHEN the fullscreen viewer closes -> focus returns to postDetail.card.media.frame that opened it
+
+ALWAYS postDetail.card.opinions and postDetail.card.citedBy are named by their own words, the count inside them
