@@ -1098,6 +1098,12 @@ round*; every one blessed (jakob 2026-10-02).
   for it again.` — its paragraph: what the reader can check, and who can
   help, with no guess at why the link resolves to nobody. *Blessed (jakob 2026-10-02).*
 
+### The collected rulings' entry lines — 2026-10-05
+
+- `Mira invited you` — `Join`'s heading (and `JoinErrors`'): the first
+  screen says *invited*, never *vouched*, because no vouch exists until
+  the inviter approves. *Blessed (jakob 2026-10-05).*
+
 ## The settings page
 
 Drawn on `Settings`, `SettingsBackup` and `YourKey`, blessed with the

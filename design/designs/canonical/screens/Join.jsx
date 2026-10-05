@@ -16,6 +16,11 @@
    the account-switch door, the way onto another account the person already
    holds (jakob 2026-10-02).
 
+   THE HEADING SAYS INVITED (jakob 2026-10-05, D1). No vouch exists yet when
+   the form opens — the inviter's approval comes after the account does — so
+   the heading reads `Mira invited you`, the entry flow's *invited, never
+   vouched*.
+
    THE ARROW READS A BARE `Back` — the funnel exception (readme §4,
    *Navigation*): the entry funnel's screens carry no origin nouns, and the
    About page this form's "?" opens keeps the same plain `Back` on its way
@@ -43,7 +48,7 @@ export function Screen() {
               fontWeight: "var(--text-headline-small--font-weight)",
             }}
           >
-            Mira is vouching for you
+            Mira invited you
           </h1>
           <p
             style={{

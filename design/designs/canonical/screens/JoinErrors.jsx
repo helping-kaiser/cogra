@@ -17,7 +17,7 @@ export function Screen() {
               fontWeight: "var(--text-headline-small--font-weight)",
             }}
           >
-            Mira is vouching for you
+            Mira invited you
           </h1>
           <p
             style={{
