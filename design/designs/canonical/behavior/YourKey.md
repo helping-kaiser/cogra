@@ -29,3 +29,5 @@ ALWAYS the warning is the body, said once, and no error colour stands near it
 ALWAYS the header's arrow reads Back to settings
 
 WHEN press the header's back arrow -> Settings opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

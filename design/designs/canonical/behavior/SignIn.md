@@ -61,3 +61,5 @@ WHEN the sign-in is refused for its email and password -> the line That email an
 WHEN the sign-in is refused by the login backoff -> the line Too many tries in a row. Wait a moment, then try again. stands above Sign in AND the fields keep what was typed
 
 WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

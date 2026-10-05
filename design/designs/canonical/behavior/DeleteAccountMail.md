@@ -21,3 +21,5 @@ WHEN press the header back arrow -> settings returns AND nothing changes AND NEV
 WHEN the mail screen is closed -> nothing changes AND the link stays the whole of the confirmation
 
 WHEN the mailed link is opened -> the deletion is confirmed AND its seven days start from that moment
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

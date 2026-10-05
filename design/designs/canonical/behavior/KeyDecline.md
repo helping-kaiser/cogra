@@ -15,3 +15,5 @@ WHEN press I accept the risk -> I accept the risk refuses a second press until t
 WHEN the attach is taken -> the key is attached and kept with no backup AND the reader returns where the ceremony began AND the task card the ceremony came from completes and leaves the feed AND the snackbar reads Key made — no backup yet. You can make a code in settings. AND NEVER the dialog closes silently
 
 WHEN press I accept the risk GIVEN no answer reaches the device -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND I accept the risk reads Retry AND NEVER the snackbar Key made — no backup yet. You can make a code in settings. appears
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

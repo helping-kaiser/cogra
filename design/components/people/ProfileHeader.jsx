@@ -76,6 +76,14 @@ import { StanceControl } from "../stance/StanceControl.jsx";
    product pretending less was there than there was, which is the one thing the
    erasure ethic forbids. */
 
+/* The header's one stylesheet: the figures' second arrangement, under the
+   avatar-and-name block, below each profile's measured fit (the header's
+   width under 96px of avatar and gap plus 15.5rem of another's labels, or
+   14.5rem of one's own). The name centres on the avatar there, and the
+   figures keep the header's own 12px gap. */
+const UNDER = `{ .cg-profile-grid { grid-template-areas: "avatar name" "figures figures" !important } .cg-profile-name { align-self: center !important } .cg-profile-figures { margin-top: var(--space-3) !important } }`;
+const PROFILE_TOP_CSS = `@container cg-profile-other (width < calc(96px + 15.5rem)) ${UNDER} @container cg-profile-own (width < calc(96px + 14.5rem)) ${UNDER}`;
+
 function Figure({ value, label }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
@@ -124,10 +132,39 @@ export function ProfileHeader({
       {stancesTaken !== undefined && <Figure value={stancesTaken} label={own ? "Opinions by you" : "Opinions by them"} />}
     </>
   );
+  /* THE FIGURES MOVE UNDER WHEN THEY DO NOT FIT (the K13 round; readme §4,
+     *Type*). Three labels that never wrap need about 243px for another's
+     profile and 228px for one's own at 1× — and the column beside the avatar
+     is 262px at 390, 232 at 360, 192 at 320, measured. So while the figures fit
+     that column at their rendered size they stand under the name, and where
+     they do not they move under the avatar-and-name block, the header's full
+     width. One grid, two arrangements: the avatar spans the name's row and
+     the figures' row while they fit, and the figures take the second row's
+     full width when they do not. The switch is a container query on the
+     header's own width — 96px of avatar and gap plus the labels' measured
+     width in `rem`, so it moves with the reader's text size. */
+  const container = own ? "cg-profile-own" : "cg-profile-other";
+  const figuresCell = hasFigures
+    ? onCounts
+      ? (
+        <button
+          type="button"
+          aria-label={own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle}
+          onClick={onCounts}
+          className="cg-state cg-focus cg-hit cg-profile-figures"
+          style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 6, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
+        >
+          {figures}
+        </button>
+      )
+      : <div className="cg-profile-figures" style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", marginTop: 6 }}>{figures}</div>
+    : null;
   return (
     <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", padding: "var(--space-3) 0 var(--space-1)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-4)" }}>
-        <div style={{ position: "relative", flex: "none" }}>
+      <style dangerouslySetInnerHTML={{ __html: PROFILE_TOP_CSS }} />
+      <div style={{ containerType: "inline-size", containerName: container }}>
+      <div className="cg-profile-grid" style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", gridTemplateAreas: '"avatar name" "avatar figures"', columnGap: "var(--space-4)", alignItems: "center" }}>
+        <div style={{ gridArea: "avatar", position: "relative", flex: "none" }}>
           <MonogramAvatar name={name} size={80} src={avatarSrc} redacted={redacted} />
           {own && onAvatarChange && (
             <button
@@ -155,27 +192,15 @@ export function ProfileHeader({
             </button>
           )}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, flex: 1 }}>
+        <div className="cg-profile-name" style={{ gridArea: "name", alignSelf: "end", display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
           <h1 style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}>{name}</h1>
           {/* The handle repeats only where the screen's top bar does not already
               carry it — a drill-in is titled @handle, so it passes showHandle
               false (jakob 2026-09-01). A redacted actor has none to repeat. */}
           {showHandle && !redacted && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>}
-          {hasFigures &&
-            (onCounts ? (
-              <button
-                type="button"
-                aria-label={own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle}
-                onClick={onCounts}
-                className="cg-state cg-focus cg-hit"
-                style={{ display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 4, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
-              >
-                {figures}
-              </button>
-            ) : (
-              <div style={{ display: "flex", gap: "var(--space-5)", marginTop: 4 }}>{figures}</div>
-            ))}
         </div>
+        {figuresCell}
+      </div>
       </div>
       {/* The bio slot takes a node as readily as a string: where the words were
           removed, the redaction mark stands in their place rather than the slot

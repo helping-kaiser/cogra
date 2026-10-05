@@ -37,3 +37,5 @@ WHEN the key is restored -> the reader returns where restore began AND the snack
 WHEN the key is restored -> the key-absent state that sent the reader is gone AND the settings row that opened restore shows its key-present board AND the feed's key card leaves AND a draft that waited on the key goes on to be signed
 
 WHEN the key is restored GIVEN picks kept pending wait -> KeptPicksReview opens under the same snackbar AND NEVER a kept pick signs on its own
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

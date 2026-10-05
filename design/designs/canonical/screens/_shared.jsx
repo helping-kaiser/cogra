@@ -4440,7 +4440,15 @@ function NewInviteSheet() {
    card, top-right, and leaves for the feed; the last card's button reads
    `Start reading` instead of `Next`. The dots are an indicator and not a
    control — a pager a reader can drive would make five boards into twenty-five
-   edges and teach nothing the buttons do not. */
+   edges and teach nothing the buttons do not.
+
+   AT ANY WIDTH AND ANY TEXT SIZE (the K13 round; readme §4, *Type*). The
+   stage scales to the column — drawn here at 342 wide, it takes the column's
+   width and keeps its proportions, so a 320px phone gets the same drawing
+   smaller — and the card scrolls when its words outgrow the screen, Skip and
+   the button pinned at their edges while the stage and the words scroll
+   between them. The frame's `overflow: hidden` is the board's convenience,
+   never the spec. */
 const INTRO_STEPS = 5;
 
 function IntroDots({ step }) {

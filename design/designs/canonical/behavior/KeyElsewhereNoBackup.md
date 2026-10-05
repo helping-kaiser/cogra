@@ -19,3 +19,5 @@ ALWAYS the key-absent pad keeps Keep it pending, restore later GIVEN the account
 ALWAYS a pick kept pending here can still be signed the day the key arrives
 
 WHEN a recovery code is made on the device that holds the key -> this card becomes KeyElsewhere's card AND its restore works
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

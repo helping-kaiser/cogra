@@ -13,3 +13,5 @@ WHEN press Create a new recovery code GIVEN the code still doesn't check out -> 
 WHEN press Create a new recovery code GIVEN the reader is offline -> the network error answers AND NEVER the old backup changes
 
 WHEN press the header back arrow -> settings returns AND NEVER a code is made AND NEVER the old backup changes
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

@@ -13,3 +13,5 @@ WHEN press Back to CoGra GIVEN the application is still running -> ApplicantFeed
 WHEN press Back to CoGra GIVEN the account is already a member -> Feed opens
 
 WHEN press Back to CoGra GIVEN this browser holds no CoGra session -> SignIn opens AND NEVER the button's words change
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

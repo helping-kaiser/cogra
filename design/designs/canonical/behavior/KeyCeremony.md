@@ -27,3 +27,5 @@ WHEN press the header's back arrow GIVEN the ceremony opened from the key-elsewh
 WHEN press the header's back arrow GIVEN the ceremony opened from a key row in settings -> Settings opens AND nothing is made
 
 WHEN the tab is closed or the app is killed before the ceremony ends -> nothing is made AND the next open shows the task card exactly as it was
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
