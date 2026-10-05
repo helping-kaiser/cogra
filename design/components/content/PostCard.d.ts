@@ -104,6 +104,10 @@ export interface PostCardProps {
    * revert said on the row. Pass-through to `StanceControl`'s `signing`.
    */
   stanceSigning?: "busy" | "failed" | "writeRule" | "comfortFailed";
+  /** Forwarded to `StanceControl`'s `holdProgress`: the hold's ring drawn standing at this 0–1 fill, for a board. */
+  stanceHoldProgress?: number;
+  /** Forwarded to `StanceControl`'s `knobHeld`: the pad's knob drawn under the finger, its pressed layer around it, for a board. */
+  stanceKnobHeld?: boolean;
   /**
    * The Feed score, already formatted. Uncapped and possibly negative: render a
    * minus sign, never a colour. Renders `ExplainableNumber`; its four-screen

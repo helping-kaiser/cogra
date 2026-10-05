@@ -27,6 +27,12 @@ import React from "react";
    Nothing sits under the knob: a thumb on the control covers exactly the spot
    where feedback would otherwise appear. Both lines are `aria-live`.
 
+   THEY SPEAK WHEN THE PICK SETTLES, NOT AT EVERY STEP (the K13 round). The
+   visible readouts follow the knob live; what is spoken follows it only once
+   the pick has rested about 500ms — on release, or a pause mid-drag — so a
+   listener hears where the pick landed, never every 0.01 it passed on the
+   way. The slider's own value is the platform's to speak.
+
    The anchor table IS THE CONTRACT — both clients read these twenty values, and a
    change here changes both apps. They are deliberately dense in the
    for-it-and-want-it quadrant, where most real stances land and small differences
@@ -604,10 +610,31 @@ export function landingParts(landing, names = STANCE_AXIS_NAMES) {
    the line below it. Three of these stack in the pad — current opinion, the pick,
    the resulting opinion — and they are formatted identically so the eye can compare
    them without reading. */
+export const SETTLE_MS = 500;
+
+/* What the readouts say aloud: the value once it has stopped changing for
+   `SETTLE_MS`. A static render — and the first paint — say the value as it
+   stands, so nothing is withheld; only a run of changes is held back until it
+   rests. */
+export function useSettled(value, ms = SETTLE_MS) {
+  const [settled, setSettled] = React.useState(value);
+  React.useEffect(() => {
+    if (value === settled) return undefined;
+    const timer = setTimeout(() => setSettled(value), ms);
+    return () => clearTimeout(timer);
+  }, [value, settled, ms]);
+  return settled;
+}
+
 function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style, onOpenHistory }) {
+  // Spoken once the readout rests (the K13 round); drawn at once.
+  const said = useSettled(sentence !== undefined ? sentence : spoken);
   if (sentence !== undefined) {
     return (
-      <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)", ...style }}>{sentence}</p>
+      <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)", ...style }}>
+        <span aria-hidden="true">{sentence}</span>
+        <span style={SR_ONLY}>{said}</span>
+      </p>
     );
   }
   const labelInk = {
@@ -644,7 +671,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
         <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }}>{emoji}</span>
         <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>{pair}</span>
       </span>
-      <span style={SR_ONLY}>{spoken}</span>
+      <span style={SR_ONLY}>{said}</span>
     </div>
   );
 }

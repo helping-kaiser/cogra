@@ -98,6 +98,8 @@ export function PostCard({
   stancePendingPick,
   stancePendingReview,
   stanceSigning,
+  stanceHoldProgress,
+  stanceKnobHeld,
   score,
   onOpenScore,
   comments,
@@ -516,6 +518,8 @@ export function PostCard({
               pendingPick={stancePendingPick}
               pendingReview={stancePendingReview}
               signing={stanceSigning}
+              holdProgress={stanceHoldProgress}
+              knobHeld={stanceKnobHeld}
               {...(stanceAxes ? { axes: stanceAxes } : null)}
               node={node && "stance"}
             />
