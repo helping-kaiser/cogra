@@ -8,7 +8,7 @@ ALWAYS the screen offers no commitment and no "?"
 
 ALWAYS reading and the rest of the app stay as they were, and only custody is refused
 
-WHEN tap On Android? Download the app (APK) -> the browser downloads the app AND the reader leaves the page for the download
+WHEN tap On Android? Download the app (APK) -> the browser downloads the app, the login landing's own download
 
 WHEN press the header's back arrow GIVEN the screen opened from the applicant's task card -> ApplicantFeed opens AND the task card stays until a browser or the app that can hold a key makes the key
 

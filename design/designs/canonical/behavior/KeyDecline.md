@@ -10,6 +10,8 @@ WHEN press Go back -> the dialog closes onto the key ceremony AND nothing is mad
 
 WHEN tap the scrim or press system Back or Escape -> the dialog closes onto the key ceremony AND nothing is made
 
-WHEN press I accept the risk -> the key is attached and kept with no backup AND the reader returns where the ceremony began AND the task card the ceremony came from completes and leaves the feed AND the snackbar reads Key made — no backup yet. You can make a code in settings. AND NEVER the dialog closes silently
+WHEN press I accept the risk -> I accept the risk refuses a second press until the attach answers AND NEVER I accept the risk dims
+
+WHEN the attach is taken -> the key is attached and kept with no backup AND the reader returns where the ceremony began AND the task card the ceremony came from completes and leaves the feed AND the snackbar reads Key made — no backup yet. You can make a code in settings. AND NEVER the dialog closes silently
 
 WHEN press I accept the risk GIVEN no answer reaches the device -> the dialog stays up with its pair AND the line That didn't send. Try again. stands in it AND I accept the risk reads Retry AND NEVER the snackbar Key made — no backup yet. You can make a code in settings. appears
