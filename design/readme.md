@@ -8641,6 +8641,49 @@ as recommended, the wordings are blessed").
 - **The gate**: 270 screens, 1805 → **1806 edges**, 0 gaps, flows 66,
   every one resolved, 133 → **134 sidecars**. The witness did not move.
 
+### The 134 and 135 residue — 2026-10-05
+
+jakob's answer to backlog items 134 and 135 ("0. correct · 1. as
+recommended · 2. fine · 3. both as recommended · 4. as recommended · 5.
+yep · 6. yes"). Every quoted wording is blessed unless marked.
+
+- **The 128 round's two flagged strings are blessed**: the vouch pad's
+  "?" first paragraph and `Delete my account`.
+- **The pads name their opener.** `TagPad` and `RefPairEdit` read
+  `Signed with the comment, as its own action.` when the comment edit
+  opens them and keep the post's line otherwise; an `opener` chip draws
+  both.
+- **The comment's standing citation stays** `Sunday at the tide market —
+  @mira`.
+- **A standing citation whose target was removed wears the removed-mark
+  face** at both scales, `KeptPicksReview`'s face and words: the tile
+  empty, `Removed by its author` where the name stood, the pair and both
+  controls kept. A `target` chip draws it on `EditCompose` and
+  `CommentEdit`, and its controls are named by the mark (flagged).
+- **An edit that took new pictures gates its Sign on the upload**, in
+  the seal's grammar: `UploadStatusLine` over the foot, `Sign the edit`
+  enabled, `Signing the edit…` once pressed, the held press dropped by a
+  failed upload, the slow line counted from the press. Recomputed from
+  the graph, the edit's Sign meets fresh media on four boards — the two
+  video twins (a new cover) and `EditCompose` and `CommentEdit` (new
+  pictures); `EditWords` turns into a picture or video edit when media
+  arrives, and `EditComposeUnchanged`'s Sign is the empty batch's. An
+  `upload` chip draws the gate on all four; a cover reads `…signing waits
+  for the cover.` (flagged).
+- **The turned-down shell's post answers with the vouch line** — the
+  menus' `Cite in a new post` and `Mention in a new post`, and
+  `ApplicantRejected`'s `New post`: `Your post waits — it arrives when
+  someone vouches you in.` A first post there waits until someone
+  vouches the reader in.
+- **Settings' deletion footnote has an applicant case**, `Nothing is
+  deleted here. The next screen says what goes and what stays.`, drawn
+  by a reader chip.
+- **The bare view answers an applicant's deletion** with one snackbar on
+  arrival, `Your account is deleted.`
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved, 134 sidecars. The witness did not move. What the round left
+  open is backlog `12X-residue135`.
+
 ## 15. Index
 
 **Root**
