@@ -12,6 +12,10 @@ ALWAYS the raw total leads and the cap line follows it, and the cap line stands 
 
 ALWAYS the cost is counted in things: It signs 1 thing, paid on its own. or It signs N things, each paid separately.
 
+ALWAYS the cost reads It signs 1 thing, paid on its own. GIVEN a pick raised the dialog, since the pick is one record
+
+ALWAYS the cost counts the counter-records the walk-back stages, the larger of the two raw sums rounded up, GIVEN Walk it back raised the dialog
+
 ALWAYS Keep it is the filled answer in the right-hand slot and Walk it back the quiet one on the left
 
 ALWAYS the dialog carries no error colour, the fault line aside
@@ -24,10 +28,10 @@ WHEN press Walk it back in the dialog -> the dialog stays up until the signing a
 
 WHEN the signing has not answered 200ms after Walk it back -> Walk it back reads Walking it back… AND NEVER a spinner appears
 
-WHEN the signing is taken -> the dialog closes AND the bundle goes to nothing AND the snackbar says the signing is still settling and ends You've walked this post back to nothing.
+WHEN the signing is taken -> the dialog closes AND the pad beneath it closes AND the bundle goes to nothing AND the snackbar says the signing is still settling and ends You've walked this post back to nothing.
 
 WHEN the signing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands above the pair AND Walk it back reads Retry AND nothing is walked back
 
 WHEN press Keep it -> the dialog closes AND nothing is signed AND the pick is still parked on the pad beneath
 
-WHEN tap the scrim, press the system's Back or press Escape -> the dialog closes AND nothing is signed
+WHEN tap the scrim, press the system's Back or press Escape -> the dialog closes as Keep it closes it AND nothing is signed AND the pick is still parked on the pad beneath

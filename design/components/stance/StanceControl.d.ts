@@ -50,6 +50,12 @@ export interface StanceControlProps {
    */
   helpLabel?: string;
   /**
+   * A named pad's help paragraphs, shown in place of the pad's body when its
+   * "?" is pressed (readme §11) — copy-voice's text for `helpLabel`. Absent,
+   * the pad's own four lines stand.
+   */
+  help?: string[];
+  /**
    * The record family's words, for a family that is not the stance's — an
    * Affinity toward a Type fills the same two signed slots with association and
    * attraction. Defaults to `STANCE_AXES`; passed through unchanged to the

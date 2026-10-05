@@ -4321,6 +4321,22 @@ function ApprovePadNote({ handle }) {
   );
 }
 
+/* `How vouching works`, IN PLACE (jakob 2026-10-05, the collected brief's
+   D4): the vouching pads' "?" replaces the pad's body with this, never a
+   dialog. Its first paragraph is the Invites empty state's two blessed
+   sentences on the mechanic, its second the pads' own `Nothing is signed
+   until Set.` (copy-voice, *The "?" dialogs*; flagged as a text). */
+const HOW_VOUCHING_WORKS_HELP = [
+  "A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.",
+  "Nothing is signed until Set.",
+];
+
+/* `Your vouch back`, in place: copy-voice's text for the vouch-back pad's "?". */
+const YOUR_VOUCH_BACK_HELP = [
+  "Vouching back signs your opinion of the person who vouched you in, and your feed grows from it.",
+  "The pad is how you shape what reaches you — for or against, and how much. Nothing is signed until Set.",
+];
+
 /* THE PAGE ITSELF.
 
    APPLICATIONS LEAD, LIVE LINKS FOLLOW. The queue is the only half that can
@@ -4458,6 +4474,7 @@ function InvitesBody({ approving = false }) {
                 <StanceControl
                   targetLabel="@rafa"
                   helpLabel="How vouching works"
+                  help={HOW_VOUCHING_WORKS_HELP}
                   defaultOpen
                   defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
                   padNote={<ApprovePadNote handle="@rafa" />}

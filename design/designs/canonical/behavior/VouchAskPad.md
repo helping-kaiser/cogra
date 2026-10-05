@@ -12,7 +12,11 @@ ALWAYS the pad's two lines stand on every open, Vouching is the act. Set signs y
 
 ALWAYS the pad's ? is named How vouching works
 
-WHEN drag or tap the pad field -> the pick is set AND NEVER anything is signed
+WHEN drag on the pad field -> the pick is set AND NEVER anything is signed
+
+WHEN tap the pad field without dragging -> NEVER the pick moves
+
+WHEN tap the pad's ? -> How vouching works replaces the pad's body in place AND Set is disabled while it shows AND NEVER a dialog opens AND NEVER anything is staged
 
 WHEN release a drag on the field -> NEVER the pick is signed
 

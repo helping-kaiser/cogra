@@ -20,7 +20,7 @@ WHEN press Retry GIVEN the signing still does not go through -> the fault stays 
 
 WHEN press Retry GIVEN the write rule refuses -> the notice You can't sign right now stands where the landing line and the commit row were, with Not now AND nothing is staged or spent
 
-WHEN press Retry GIVEN the pick now nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens with its cost and the pick line AND NEVER the pick is refused
+WHEN press Retry GIVEN the pick now nets the standing bundle to (0, 0) -> the dialog Walk it all back? opens over the pad, which stays parked beneath it, with the pick line and its cost of 1 thing AND NEVER the pick is refused
 
 WHEN tap Walk it back GIVEN the fault stands -> the dialog Walk it all back? opens as its own act, untouched by the failed one
 
@@ -28,4 +28,4 @@ WHEN tap Cancel GIVEN the fault stands -> the pad closes AND nothing is signed A
 
 WHEN press outside the pad, press the system's Back or press Escape GIVEN the fault stands -> the pad closes AND nothing is signed AND the standing opinion is what it was
 
-WHEN tap the pad's ? -> the opinions help opens AND NEVER anything is staged
+WHEN tap the pad's ? -> the pad's four help lines replace its body in place AND Retry is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged

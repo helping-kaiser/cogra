@@ -16,7 +16,8 @@ import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, S
    than hidden, so the model reads as legible rather than mysterious.
 
    The pick is ACCUMULATED TRAVEL from where the pointer went down, never its
-   absolute position: the pad opens at the origin wherever the press landed. */
+   absolute position: the pad opens at its host's opening pick wherever the
+   press landed — the stance pad's +0.10 / +0.10, a pair sheet's origin. */
 
 /* THE FIELD'S FOUR WORDS ARE THE SLOTS' WORDS, NOT THE STANCE'S. The pad's
    geometry is bound to `(pDirected, pInterest)` — horizontal is the directed

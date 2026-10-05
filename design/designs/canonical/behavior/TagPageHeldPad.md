@@ -10,7 +10,9 @@ ALWAYS the topic's pad carries Disconnect GIVEN the topic is held
 
 ALWAYS the topic's pad carries no Disconnect GIVEN the topic is not held
 
-WHEN drag or tap the pad field -> the pick is set AND the landing line reads what it would come to
+WHEN drag on the pad field -> the pick is set AND the landing line reads what it would come to
+
+WHEN tap the pad field without dragging -> NEVER the pick moves
 
 WHEN tap Disconnect -> the dialog opens titled Disconnect from #saltmaps? AND NEVER the dialog carries a pick line
 

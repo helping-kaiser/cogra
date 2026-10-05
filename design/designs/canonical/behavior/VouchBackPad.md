@@ -14,9 +14,13 @@ ALWAYS the pad's coaching lines stand above the field, opening on Your vouch bac
 
 ALWAYS the coaching's exact pair shows only when the reader has asked for exact values, and its spoken twin says the face and the pair either way
 
-WHEN tap the pad's ? GIVEN the pad opened as the vouch-back -> the help titled Your vouch back opens over the pad
+WHEN tap the pad's ? GIVEN the pad opened as the vouch-back -> the help Your vouch back replaces the pad's body in place AND Set is disabled while it shows AND NEVER a dialog opens
 
-WHEN drag or tap the pad field -> the pick is set AND NEVER anything is signed
+WHEN tap the pad's ? GIVEN the pad opened plainly -> the pad's four help lines replace its body in place AND Set is disabled while they show AND NEVER a dialog opens
+
+WHEN drag on the pad field -> the pick is set AND NEVER anything is signed
+
+WHEN tap the pad field without dragging -> NEVER the pick moves
 
 WHEN release a drag on the field -> NEVER the pick is signed
 

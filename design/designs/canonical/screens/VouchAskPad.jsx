@@ -38,6 +38,7 @@ export function Screen() {
             <StanceControl
               targetLabel="@noor"
               helpLabel="How vouching works"
+              help={HOW_VOUCHING_WORKS_HELP}
               defaultOpen
               defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
               padNote={<ApprovePadNote handle="@noor" />}

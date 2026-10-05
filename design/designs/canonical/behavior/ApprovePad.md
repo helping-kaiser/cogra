@@ -18,7 +18,11 @@ ALWAYS the pad carries its two lines every time it opens, saying what Set does a
 
 ALWAYS the pad's ? is named How vouching works
 
-WHEN tap the pad's ? -> the pad's help opens AND NEVER anything is staged
+WHEN tap the pad's ? -> How vouching works replaces the pad's body in place, A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in. and Nothing is signed until Set. AND Set is disabled while it shows AND NEVER a dialog opens AND NEVER anything is staged
+
+WHEN tap Back to the pad -> the field, the two lines and the pick return as they were
+
+WHEN tap the pad field without dragging -> NEVER the pick moves
 
 WHEN drag on the pad field -> the pick moves AND its face and pair follow AND the landing line reads what it would come to AND NEVER anything is staged
 

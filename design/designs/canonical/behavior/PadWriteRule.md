@@ -14,7 +14,7 @@ ALWAYS the notice carries its own ? beside the pad's own ?
 
 WHEN tap the notice's ? -> the dialog Why signing waits opens with There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now. and Nothing was signed or spent. Try again in a little while.
 
-WHEN tap the pad's ? -> the opinions help opens AND NEVER the write rule's dialog opens
+WHEN tap the pad's ? -> the pad's four help lines replace its field in place AND NEVER a dialog opens AND NEVER the write rule's dialog opens
 
 WHEN drag on the pad field GIVEN the notice stands -> the pick moves AND the notice stays AND NEVER anything is signed
 

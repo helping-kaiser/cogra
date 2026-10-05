@@ -22,6 +22,7 @@ export function Screen() {
               <StanceControl
                 targetLabel="@mira"
                 helpLabel="Your vouch back"
+                help={YOUR_VOUCH_BACK_HELP}
                 defaultOpen
                 defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
                 padInset={80}
