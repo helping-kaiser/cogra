@@ -18,7 +18,7 @@ ALWAYS a removed post's card keeps its skeleton: the author, the timestamp, the 
 
 ALWAYS every authored field of a removed post goes at once, and the mark stands in their place
 
-ALWAYS the author's mark reads Removed by its author GIVEN the author removed the post
+ALWAYS the author's mark reads Removed by its author over The words and pictures are gone. The post's place in the thread, and every response, remain. GIVEN the author removed the post
 
 ALWAYS the platform's mark reads Removed under the platform's rules over A passed proposal removed it. The decision is public. GIVEN a passed proposal removed the post
 

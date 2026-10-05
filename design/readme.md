@@ -3738,7 +3738,8 @@ four-rung ladder.
   own**, so the system draws none.
 - **The pull-down lives on every full-screen scrolling root** (ruled
   2026-09-10): the feed in all its views, the profile pages and the
-  chronicle, search results, the wallet's history, the tag page — and
+  chronicle, the opinions page, Invites (jakob 2026-10-05), search
+  results, the wallet's history, the tag page — and
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
@@ -4871,9 +4872,7 @@ needs.
 - **The copy is blessed** (jakob, the close-out round): *"You're part
   of the sky now."* over *"Your opinion on @mira is signed, and the
   way is open both ways. The feed you see from here is your own."*
-  **jakob's own phrase "part of the graph" cannot be used**: §3 bans
-  *graph* in user-facing copy. *Sky* is legal, already
-  product-facing, and glossed by the picture the board draws behind
+  *Sky* is already product-facing, and glossed by the picture the board draws behind
   the words — the one place a metaphor leads, which it can afford to
   because the subline under it carries the content.
 - **Wiring.** `VouchBackPad/4`'s vouch-back outcome lands on
@@ -8299,10 +8298,12 @@ as the board's own; the back edge in `graph.json` carries the table.
 - **The score's trace** (`FeedEntry`, `FeedEntryMoved`): `Back to feed` from the feed in any of its states (drawn),
   `Back to the post` from a post's detail, clip detail, veiled twin or
   `Removed`, `Back to #<thattag>` from a tag's page, `Back to the
-  profile` from a profile's posts.
+  profile` from another's posts, `Back to your profile` from the
+  reader's own (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
   it narrowed (drawn), `Back to the post` from a post's pinned clip,
-  `Back to the profile` from a profile's posts.
+  `Back to the profile` from another's posts, `Back to your profile`
+  from the reader's own (jakob 2026-10-05).
 - **The opinions page** (`ProfileStances`): `Back to the profile`
   (drawn; another's profile) or `Back to your profile` (the reader's
   own). It drew a bare `Back`.

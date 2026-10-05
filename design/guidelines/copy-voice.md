@@ -1521,6 +1521,10 @@ feedback the surface draws:
 - `Signed — your profile shows it now, still settling.` — what a saved
   profile answers with. It says both halves: the change is visible
   already, and the act is still finding its place in the order.
+- The profile and picture seals keep no draft, so the write rule's
+  notice there takes the pad's reading (jakob 2026-10-05): `Nothing was
+  signed or spent.`, with `Not now` back to the seal — never `your draft
+  is kept` or `Keep the draft, sign later`.
 
 ## The vouch-back ceremony
 
@@ -1851,6 +1855,9 @@ they will look for again in settings. The pair on the other side is
 `@ada is hidden — their posts stay out of your feed.` with `Undo`
 beside it. It says what changed and how far it reaches, which is what
 stops a reader wondering whether they have done something to someone.
+A deleted account has no handle to spell, so hiding one answers `This
+account is hidden — its posts stay out of your feed.`, with the same
+`Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
 
 **Saving is confirmed like every other completed act.** `Saved.` The
 sheet closes on the tap, so without the snackbar nothing would answer
