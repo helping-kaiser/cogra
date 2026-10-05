@@ -650,6 +650,9 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
   `Picture 2 of 4`.
 - `Move the picture` and `Zoom` — the crop's focusable viewport and
   its slider.
+- `Reorder the cover` · `Reorder picture 2` — `PickedSheet`'s focusable
+  handle, named for its picture: the first row is the cover, every other
+  row its place (*blessed (jakob 2026-10-05)*).
 
 ## The staged-act snackbar
 

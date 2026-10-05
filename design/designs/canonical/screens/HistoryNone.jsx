@@ -22,8 +22,8 @@
    once, and History stands whole again at `Everything`, newest-seen first.
    Typing on, or narrowing again from the trigger, are the other ways on.
 
-   Its words are new and flagged for blessing (copy-voice, *Saved, History
-   and hiding*). */
+   Its words are new and blessed (jakob 2026-10-05; copy-voice, *Saved,
+   History and hiding*). */
 export const PROPS = { cause: { editor: "enum", options: ["search", "kinds"], default: "search" } };
 export const VALS = `searchShown: this.props.cause === "kinds" ? "none" : "block", kindsShown: this.props.cause === "kinds" ? "block" : "none"`;
 

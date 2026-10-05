@@ -476,7 +476,7 @@ rule covers all three button variants:
   The reason is one quiet line right above the commit, in the voice for
   what something waits on — `Waiting for both passwords` — and the
   commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons flagged for blessing).
+  entry form, jakob 2026-10-05; the reasons blessed the same day).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is

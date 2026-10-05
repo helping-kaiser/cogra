@@ -312,8 +312,8 @@ function FeedList({ children }) {
    the year only when it is not the current one). It is the chat thread's
    divider construction, the one day divider the system draws: label-small,
    secondary, centred, no rule and no fill. It belongs to the list, never to
-   a card — no card anatomy changes for it. Strings flagged for blessing
-   (copy-voice, *Ages*). */
+   a card — no card anatomy changes for it. Strings blessed (jakob 2026-10-05;
+   copy-voice, *Ages*). */
 function HistoryDayDivider({ children }) {
   return (
     <div
@@ -2900,7 +2900,8 @@ function WhatsNewBody({ newer }) {
    voice for what something waits on (`Waiting for your key`). The line is the
    button's description, so a listener hears the reason with the control. The
    first character in the last empty field wakes the commit and the line goes.
-   Every reason is flagged for blessing (copy-voice, *Commits that wait*).
+   Every reason is blessed (jakob 2026-10-05; copy-voice, *Commits that
+   wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
    filled. */

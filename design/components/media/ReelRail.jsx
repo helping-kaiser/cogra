@@ -36,8 +36,8 @@ import { ExplainableNumber } from "../proposed/ExplainableNumber.jsx";
      2.2:1), and 31 % of those pixels reach 3:1 (was 20 %). On the stream's
      own clip (`clip-lakeside.jpg`) the same edge reads a median 6.0:1.
    So at the shadow's core the rail clears WCAG's 3:1 for controls on the
-   brightest fixture, and at the glyph's rendered edge it does not; that
-   finding is filed (backlog `13X-final`). Method: relative luminance per
+   brightest fixture, and at the glyph's rendered edge it does not — accepted
+   with these numbers (jakob 2026-10-05). Method: relative luminance per
    WCAG 2.x; the strip is the right fifth of the lower two-thirds.
 
    THE STANCE IS THE SYSTEM'S OWN CONTROL, in its media dress (`overMedia`): the
