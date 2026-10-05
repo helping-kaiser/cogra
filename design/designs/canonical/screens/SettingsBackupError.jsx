@@ -5,5 +5,5 @@
    state a reader who lost the code actually reaches, so it is where the way
    on matters most. */
 export function Screen() {
-  return <SettingsBackupBody error="That code doesn't check out." />;
+  return <SettingsBackupBody value="7Q3ZD-XK9P2-M4TUE-0RH8N-1WYB6C" error="That code doesn't check out." />;
 }

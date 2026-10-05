@@ -29,7 +29,7 @@
    thing seen on a day, a divider names that day in the age wording —
    `Today`, `Yesterday`, then the date (`HistoryDayDivider`) — so "the post I
    saw three days ago" has a place to scroll to. They belong to the list, not
-   to the cards. Strings flagged for blessing.
+   to the cards. Strings blessed (jakob 2026-10-05).
 
    SEARCH AND FILTER ON TOP. The search field is the system's one search bar,
    its placeholder naming the list it searches, and it matches by the one

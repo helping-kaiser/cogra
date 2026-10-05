@@ -24,4 +24,8 @@ ALWAYS the zoom slider stands under the crop on both platforms, its thumb at the
 
 WHEN move the zoom slider -> the picture zooms in place AND NEVER below the fill or past about 4×
 
-WHEN press an arrow key GIVEN the crop has focus -> the picture moves one step that way AND NEVER past where its edge meets the crop's
+WHEN press an arrow key GIVEN the crop has focus -> the picture moves 1 % that way AND NEVER past where its edge meets the crop's
+
+WHEN press an arrow key with Shift held GIVEN the crop has focus -> the picture moves 10 % that way AND NEVER past where its edge meets the crop's
+
+ALWAYS the line Drag to move, pinch to zoom. reads Drag or use the arrow keys to move, the slider to zoom. GIVEN a device with no touch to pinch

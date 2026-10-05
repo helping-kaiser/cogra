@@ -312,8 +312,8 @@ function FeedList({ children }) {
    the year only when it is not the current one). It is the chat thread's
    divider construction, the one day divider the system draws: label-small,
    secondary, centred, no rule and no fill. It belongs to the list, never to
-   a card — no card anatomy changes for it. Strings flagged for blessing
-   (copy-voice, *Ages*). */
+   a card — no card anatomy changes for it. Strings blessed (jakob 2026-10-05;
+   copy-voice, *Ages*). */
 function HistoryDayDivider({ children }) {
   return (
     <div
@@ -2900,7 +2900,8 @@ function WhatsNewBody({ newer }) {
    voice for what something waits on (`Waiting for your key`). The line is the
    button's description, so a listener hears the reason with the control. The
    first character in the last empty field wakes the commit and the line goes.
-   Every reason is flagged for blessing (copy-voice, *Commits that wait*).
+   Every reason is blessed (jakob 2026-10-05; copy-voice, *Commits that
+   wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
    filled. */
@@ -3348,8 +3349,9 @@ function RestoreBody({ value = "", error }) {
    `app` draws Android's layout: the phone's own unlock is the proof, so there
    is no field, and no lost-code line either — the line exists because a
    browser whose code is gone cannot re-key. `error` is the field's M3 error
-   line, `RestoreError`'s words for the same secret refused. */
-function SettingsBackupBody({ app = false, error }) {
+   line, `RestoreError`'s words for the same secret refused; `value` seeds the
+   field with the code that was pressed. */
+function SettingsBackupBody({ app = false, value = "", error }) {
   return (
     <>
       <PageHeader backHref="/settings" backLabel="Back to settings" />
@@ -3386,7 +3388,7 @@ function SettingsBackupBody({ app = false, error }) {
                 mono
                 enterKeyHint="go"
                 placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
-                value=""
+                value={value}
                 error={error}
               />
             </div>
@@ -3404,7 +3406,7 @@ function SettingsBackupBody({ app = false, error }) {
             id="settings-rekey"
             label="Create a new recovery code"
             reason="Waiting for your current recovery code"
-            waiting={!app && !error}
+            waiting={!app && !value && !error}
           />
         </div>
 

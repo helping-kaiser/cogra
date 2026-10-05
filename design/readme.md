@@ -476,7 +476,7 @@ rule covers all three button variants:
   The reason is one quiet line right above the commit, in the voice for
   what something waits on — `Waiting for both passwords` — and the
   commit's description (`WaitingCommit`; drawn on every credential and
-  entry form, jakob 2026-10-05; the reasons flagged for blessing).
+  entry form, jakob 2026-10-05; the reasons blessed the same day).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -9088,8 +9088,9 @@ and the profile. Every quoted wording is blessed unless marked flagged.
   docblock says so); sign-in keeps its drawn backoff line and every other
   `RATE_LIMITED` the generic one; the 26-characters line reaches the key
   gate and the backup sheet; `A password is at most 128 characters.`; a
-  slow non-signing commit adds nothing, and only `Create account` and
-  `Restore the key` lock the ways out; `Reset`'s status line stands only
+  slow non-signing commit adds nothing, and only `Create account`,
+  `Restore the key` and the handle dialog's `Change it` lock the ways out
+  (the third jakob 2026-10-05); `Reset`'s status line stands only
   after the press, and `VerifyExpired`'s resend answers in its
   construction (flagged).
 - **Platform nouns.** The ceremony, its two dialogs, `YourKey` and
@@ -9238,6 +9239,44 @@ the rest as recommended, every listed string blessed.
   edges**, 2 → **0 gaps**, flows 66, every one resolved, 274 sidecars.
   The witness re-blessed for `New post`'s start on `HistoryNone`. What
   stays open is backlog `13X-final`.
+
+### The close bite — 2026-10-05
+
+jakob's last ruling of the fabric (the audit README, *The fabric's last
+ruling · 2026-10-05 (night)*): every string the closing round flagged is
+blessed, every `13X-final` recommendation adopted.
+
+- **Blessed**: History's day dividers — the second named *Ages*
+  exception — `HistoryNone`'s two sentences and `Show everything`, the
+  eleven waiting commits' reasons, `Reorder the cover` and `Reorder
+  picture 2` (now in copy-voice, *Accessible names*), `Discard the edit`
+  as the post edit's bug way out, and `Not now` on the profile and
+  picture seals. The docblocks, graph cases and §4's line drop their
+  flags.
+- **The error boards hold what was pressed**: `SignInError`,
+  `SignInLimited`, `JoinErrors`, `RestoreError` and `SettingsBackupError`
+  fill their fields (`SettingsBackupBody` takes `value`), so no pressed
+  form stands empty under a live commit. `RecoveryCodeMismatch` already
+  held its typed-back prefix.
+- **The handle dialog's `Change it` is B2's third lock** on the ways out.
+- **The profile and picture seals' key notice** goes `Not now`, back to
+  the seal with nothing kept; `Keep the draft, restore later` stays the
+  composer's.
+- **The crops' keys**: an arrow moves the picture 1 %, 10 % with Shift;
+  a device with no touch to pinch reads the how-to line's pointer
+  variant (copy-voice, *The crops' how-to line*).
+- **Recorded as drawn**: the kept approval's row opens the key notice
+  while the key is away, and its close rides `RejectConfirm`, dropping
+  the kept vouch with nothing signed; an applicant's fresh link answers a
+  taken address in `ChangeEmailLinked`'s construction; the handle stays
+  `nickname` and a display name `off`; the composers' arrival focus is
+  K14.33's answer. The rail's edge contrast stands with its numbers.
+- **Flagged for blessing**: the crops' pointer variant, `Drag or use the
+  arrow keys to move, the slider to zoom.` — the one flag copy-voice
+  holds.
+- **The gate**: 274 screens, 1864 edges, 0 gaps, flows 66, every one
+  resolved, 274 sidecars; five boards re-render. What stays open is
+  backlog `13X-close-bite`.
 
 ## 15. Index
 
