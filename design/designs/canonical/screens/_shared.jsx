@@ -829,11 +829,16 @@ function ChronicleList({ children }) {
 
    It lives here because the list is drawn on more than one board — at rest and
    in the moment after a row goes — and a control spelled twice is a control
-   that drifts. */
-const Unsave = () => (
+   that drifts.
+
+   ITS NAME CARRIES THE THING (the K13 round): `Unsave The long way home`,
+   `Unsave Mira Voss` — the row's own title after the verb, the rule the tag
+   chip's × and the skip link already keep. A list of identical `Unsave`s tells
+   a listener the verb four times and the object never. */
+const Unsave = ({ name }) => (
   <button
     type="button"
-    aria-label="Unsave"
+    aria-label={`Unsave ${name}`}
     className="cg-state cg-focus cg-hit"
     style={{
       display: "grid",
@@ -2116,7 +2121,28 @@ function CommentEditBody({ holes = false } = {}) {
 
    THE FACE IS THE READER'S: @sol, the member, and — where a reader chip passes
    the `shown` holes — @juno, the canvas's applicant, in the applicant's
-   reading. */
+   reading.
+
+   IT IS A BUTTON IN THE FIELD'S SHAPE (the K13 round). Since nothing is typed
+   here, a real text area would announce "edit text" and flash the keyboard
+   on its way to the composer. So the door is a `button` named by its words,
+   `Add a comment`, drawn exactly as `TextField` draws a one-line field — the
+   label above, the empty 1px box under it — with the state layer and focus
+   ring every pressable carries, and no cap: there is nothing here to count. */
+const FOOT_LABEL = {
+  fontSize: "var(--text-label-large)",
+  lineHeight: "var(--text-label-large--line-height)",
+  letterSpacing: "var(--text-label-large--letter-spacing)",
+  fontWeight: "var(--text-label-large--font-weight)",
+};
+const FOOT_BOX = {
+  display: "block",
+  boxSizing: "border-box",
+  width: "100%",
+  height: "calc(var(--text-body-large--line-height) + 18px)",
+  borderRadius: "var(--radius-extra-small)",
+  border: "1px solid var(--border-field)",
+};
 function CommentComposerFoot({ fieldOpacity, shown }) {
   return (
     <div style={{ flex: "none", display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 0", borderTop: "1px solid var(--border-hairline)" }}>
@@ -2133,7 +2159,14 @@ function CommentComposerFoot({ fieldOpacity, shown }) {
         <MonogramAvatar name="Sol Ferreira" />
       )}
       <div style={{ flex: 1, opacity: fieldOpacity }}>
-        <TextField label="Add a comment" rows={1} cap={2000} value="" />
+        <button
+          type="button"
+          className="cg-state cg-focus"
+          style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", width: "100%", border: 0, background: "none", padding: 0, margin: 0, borderRadius: "var(--radius-extra-small)", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", cursor: "pointer" }}
+        >
+          <span style={FOOT_LABEL}>Add a comment</span>
+          <span aria-hidden="true" style={FOOT_BOX} />
+        </button>
       </div>
     </div>
   );

@@ -223,13 +223,25 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_C
 }
 
 /* The worded trigger alone — for surfaces that own their sheet (search draws
-   its own, with its own kind semantics) but must wear the same pill. */
+   its own, with its own kind semantics) but must wear the same pill.
+
+   ITS NAME IS THE READING, THEN THE PURPOSE (the K13 round; WCAG 2.5.3). The
+   pill's own words lead the accessible name and `ariaLabel` — what the sheet
+   is for — follows them: `Posts, what your feed shows`, `Posts · 3 changes,
+   what your feed shows`. A name that replaced the reading would hide the
+   filter's state from exactly the reader who cannot see the pill, and a
+   speech-input reader says what they see. */
+export function triggerName(reading, purpose) {
+  if (!purpose) return reading;
+  return `${reading}, ${purpose.charAt(0).toLowerCase()}${purpose.slice(1)}`;
+}
+
 export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "What this shows", node }) {
   return (
     <button
       type="button"
       aria-expanded={expanded}
-      aria-label={ariaLabel}
+      aria-label={triggerName(reading, ariaLabel)}
       onClick={onOpen}
       className="cg-state cg-focus cg-hit"
       style={{

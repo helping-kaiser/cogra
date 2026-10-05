@@ -32,7 +32,7 @@ const post = (at) => [
   { n: at.comments, find: 'aria-label="3 comments"', tag: "button" },
 ];
 
-const filter = { n: 1, find: 'aria-label="What your feed shows"', tag: "button" };
+const filter = { n: 1, find: 'what your feed shows"', tag: "button" };
 const guestBand = [
   { n: 2, find: ">Sign in or join</button>", tag: "button" },
   { n: 3, find: ">On Android? Download the app (APK)</span>", tag: "span" },
@@ -98,7 +98,7 @@ export const FLOW_MARKERS = {
     { n: 17, find: ">Got it</button>", tag: "button" },
     // The band's filter came after the sweeps had numbered the shell, so it
     // takes the next free number rather than ApplicantFeed's 1.
-    { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 19, find: 'what your feed shows"', tag: "button" },
     { n: 20, find: 'aria-label="Copy your ask link"', tag: "button" },
   ],
   // ApplicantWaiting's shell with the card flipped, numbered to the number;
@@ -109,7 +109,7 @@ export const FLOW_MARKERS = {
     secondComments(9),
     ...nav(10),
     { n: 17, find: ">Restore the key</button>", tag: "button" },
-    { n: 19, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 19, find: 'what your feed shows"', tag: "button" },
   ],
   VouchBack: [
     filter,
@@ -175,7 +175,7 @@ const signedPost = (at) => [
 ];
 const searchShell = (fieldText, nRow) => [
   { n: 1, find: fieldText, tag: "div" },
-  { n: 2, find: 'aria-label="What the search shows"', tag: "button" },
+  { n: 2, find: 'what the search shows"', tag: "button" },
   { n: 3, find: 'aria-label="How searching works"', tag: "button" },
   ...nav(nRow),
 ];
@@ -227,7 +227,7 @@ Object.assign(FLOW_MARKERS, {
   ExploreNone: [...searchShell("brackish cartography", 4)],
   ExploreUnscoped: [...searchShell("salt flats", 4)],
   Feed: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 7, find: ">· 1 reference<", tag: "span" },
@@ -253,7 +253,7 @@ Object.assign(FLOW_MARKERS, {
   /* The feed narrowed to one topic. Neither card carries a reference, so the
      numbering closes over the slot `FeedNarrowed` keeps for one. */
   FeedTopic: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 7, score: 8 }),
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 9, find: 'aria-label="2 comments"', tag: "button" },
@@ -261,7 +261,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
   ],
   FeedNarrowed: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
@@ -274,7 +274,7 @@ Object.assign(FLOW_MARKERS, {
   // The same pair `FeedNarrowed` draws, so the same numbering — the pill takes
   // the next free number after the band's own.
   FeedScrolled: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
@@ -288,7 +288,7 @@ Object.assign(FLOW_MARKERS, {
   // moved up, and the act's own line over them. Neither card carries a
   // reference, so the numbering closes over the slot `Feed` keeps for one.
   FeedHidden: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 7, score: 8 }),
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
     { n: 9, find: 'aria-label="1 comment"', tag: "button" },
@@ -297,12 +297,12 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
   ],
   FeedNothing: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     { n: 2, find: ">Show posts again</button>", tag: "button" },
     ...nav(3),
   ],
   FeedFar: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
@@ -324,7 +324,7 @@ Object.assign(FLOW_MARKERS, {
      no older numbering for a sweep to extend; the tag's compose glyph, the
      last to arrive, takes the next free number, 26. */
   FeedKinds: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     { n: 2, find: 'aria-label="On “', tag: "button" },
     { n: 3, find: '<a href="/u/', tag: "a", all: true },
     { n: 4, find: 'aria-label="More on this comment"', tag: "button" },
@@ -368,7 +368,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: "View 2 replies", tag: "button" },
-    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
     // @sol's comment is the reader's own (jakob 2026-10-01), so its Edit
     // stands beside Reply — appended so no via renumbers.
@@ -386,7 +386,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this comment</button>", tag: "button", all: true },
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
-    { n: 6, find: "Add a comment</label>", tag: "label" },
+    { n: 6, find: ">Add a comment</span>", tag: "span" },
     { n: 7, find: 'class="cg-scrim-in"', tag: "div" },
     // The landed reply and the 3h comment are the reader's own: one Edit,
     // drawn twice, one number.
@@ -406,7 +406,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: "View 2 replies", tag: "button" },
-    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   ReplyMedia: [
@@ -419,7 +419,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button" },
     { n: 5, find: ">Reply</button>", tag: "button", all: true },
     { n: 6, find: ">Edit</button>", tag: "button" },
-    { n: 7, find: "Add a comment</label>", tag: "label" },
+    { n: 7, find: ">Add a comment</span>", tag: "span" },
     { n: 8, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 9, find: 'aria-label="Turn sound on"', tag: "button" },
   ],
@@ -496,9 +496,9 @@ Object.assign(FLOW_MARKERS, {
 Object.assign(FLOW_MARKERS, {
   ReferencePicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
-    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Citing"', tag: "button" },
     { n: 3, find: ">salt<", tag: "div" },
-    { n: 4, find: 'aria-label="What the search shows"', tag: "button" },
+    { n: 4, find: 'what the search shows"', tag: "button" },
     { n: 5, find: ">Sal Torres<", tag: "button" },
     { n: 6, find: ">Done</button>", tag: "button" },
     // The staged section's × (the closing batch, 2026-10-01), appended so no
@@ -665,7 +665,7 @@ Object.assign(FLOW_MARKERS, {
     ...nav(9),
   ],
   ComposeExpired: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     { n: 2, find: ">Dismiss</button>", tag: "button" },
     { n: 3, find: ">Open the draft</button>", tag: "button" },
     { n: 4, find: '<a href="/u/', tag: "a", all: true },
@@ -858,7 +858,7 @@ Object.assign(FLOW_MARKERS, {
 // The Media page.
 Object.assign(FLOW_MARKERS, {
   FeedGallery: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     { n: 2, find: '<a href="/u/', tag: "a", all: true },
     { n: 3, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
@@ -1075,7 +1075,7 @@ Object.assign(FLOW_MARKERS, {
 // same badge, dimmed beneath the wash.
 Object.assign(FLOW_MARKERS, {
   FeedCover: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     { n: 2, find: '<a href="/u/', tag: "a", all: true },
     { n: 3, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 4, find: "aspect-ratio:4 / 5", tag: "div" },
@@ -1428,7 +1428,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Mira Voss<", tag: "button" },
     { n: 2, find: ">Sunday at the tide market<", tag: "button" },
     // The row's own unsave, drawn once per row — one edge covers all four.
-    { n: 8, find: 'aria-label="Unsave"', tag: "button", all: true },
+    { n: 8, find: 'aria-label="Unsave ', tag: "button", all: true },
     ...nav(3),
   ],
   // The same list a moment after one row was unsaved. It borrows `Saved`'s
@@ -1439,7 +1439,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">The third headland light is real<", tag: "button" },
     { n: 2, find: ">Mira Voss<", tag: "button" },
     { n: 2, find: ">Sunday at the tide market<", tag: "button" },
-    { n: 8, find: 'aria-label="Unsave"', tag: "button", all: true },
+    { n: 8, find: 'aria-label="Unsave ', tag: "button", all: true },
     { n: 9, find: ">Undo</button>", tag: "button" },
     ...nav(3),
   ],
@@ -2114,7 +2114,7 @@ Object.assign(FLOW_MARKERS, {
      nothing in it. */
   ChatsComingSoon: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
   FeedUnread: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 7, find: ">· 1 reference<", tag: "span" },
@@ -2145,7 +2145,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Resend the link</button>", tag: "button" },
   ],
   FeedDeleting: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 7, find: ">· 1 reference<", tag: "span" },
@@ -2155,7 +2155,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 19, find: ">Cancel</button>", tag: "button" },
   ],
   DeleteAccountCanceled: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 7, find: ">· 1 reference<", tag: "span" },
@@ -2208,7 +2208,7 @@ Object.assign(FLOW_MARKERS, {
     secondComments(9),
     ...nav(10),
     { n: 17, find: 'aria-label="Copy your ask link"', tag: "button" },
-    { n: 20, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 20, find: 'what your feed shows"', tag: "button" },
   ],
   VouchAsk: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -2353,7 +2353,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   TagPicker: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
-    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Tagging"', tag: "button" },
     { n: 3, find: ">salt<", tag: "div" },
     { n: 4, find: ">Signs as #salt<", tag: "button" },
     { n: 4, find: ">saltmaps<", tag: "button" },
@@ -2366,14 +2366,14 @@ Object.assign(FLOW_MARKERS, {
   ],
   TagPickerTyping: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
-    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Tagging"', tag: "button" },
     { n: 3, find: ">#SaltMaps<", tag: "div" },
     { n: 4, find: ">saltmaps<", tag: "button" },
     { n: 5, find: ">Done</button>", tag: "button" },
   ],
   TagPickerRefused: [
     { n: 1, find: 'aria-label="Back to the post"', tag: "a" },
-    { n: 2, find: 'aria-label="How searching works"', tag: "button" },
+    { n: 2, find: 'aria-label="Tagging"', tag: "button" },
     { n: 3, find: ">#salt maps<", tag: "div" },
     { n: 4, find: ">Done</button>", tag: "button" },
   ],
@@ -3198,7 +3198,7 @@ Object.assign(FLOW_MARKERS, {
   // repeats — the face, the score, the comments, the share, the ⋮ — are one
   // number each across all three (`all`), the per-post convention.
   ChatFeedCards: [
-    { n: 1, find: 'aria-label="What your feed shows"', tag: "button" },
+    { n: 1, find: 'what your feed shows"', tag: "button" },
     { n: 2, find: ">Honey is back on the stand from Saturday.<", tag: "a" },
     { n: 3, find: ">Six it is. Meet at the harbour office.", tag: "a" },
     { n: 4, find: '<a href="/u/', tag: "a", all: true },
@@ -3215,7 +3215,7 @@ Object.assign(FLOW_MARKERS, {
   ],
   ChatSearchResults: [
     { n: 1, find: "harbour", tag: "div" },
-    { n: 2, find: 'aria-label="What the search shows"', tag: "button" },
+    { n: 2, find: 'what the search shows"', tag: "button" },
     { n: 3, find: 'aria-label="How searching works"', tag: "button" },
     { n: 4, find: ">Harbour office<", tag: "button" },
     { n: 4, find: ">Harbour seal watch<", tag: "button" },
@@ -3225,7 +3225,7 @@ Object.assign(FLOW_MARKERS, {
   ChatSaved: [
     { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
     { n: 2, find: ">Six it is. Meet at the harbour office.<", tag: "button" },
-    { n: 3, find: 'aria-label="Unsave"', tag: "button", all: true },
+    { n: 3, find: 'aria-label="Unsave ', tag: "button", all: true },
     { n: 4, find: ">Salt maps of the coast road<", tag: "button" },
     { n: 4, find: ">The third headland light is real<", tag: "button" },
   ],
