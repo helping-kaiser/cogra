@@ -56,6 +56,10 @@ WHEN a row or a card removes itself -> focus moves to the next row, else the pre
 
 WHEN the key comes back GIVEN an approval was set while the key was elsewhere -> it surfaces on Invites as that application's ready row AND it signs through the approval pad AND NEVER it joins the kept picks' review
 
+WHEN the key comes back GIVEN a vouch on an ask link was kept for the key -> it surfaces on Invites as a kept approval of its own AND it signs through the approval pad AND NEVER it joins the kept picks' review
+
+WHEN pull down GIVEN the page stands all the way at its top -> the page refreshes AND the platform's own refresh indicator shows
+
 WHEN a member opens an ask link GIVEN the asker already waits in their invites -> Invites opens AND the snackbar reads @noor is already waiting in your invites.
 
 WHEN tap the back arrow -> the reader's own profile comes back, in the state it was left

@@ -10,6 +10,8 @@ ALWAYS the fields keep what was typed through the refusal
 
 WHEN typing in the Password field GIVEN it carries its error line -> the field re-checks the length as the text changes AND the line goes once the password reaches 12 characters AND the hint At least 12 characters. returns
 
+WHEN typing in the Handle field GIVEN it carries That handle is taken. -> the line stands AND NEVER it goes before the next press of Create account
+
 WHEN typing in a field that carries no error line -> NEVER the field turns to its error state before the next press of Create account
 
 ALWAYS the header's arrow reads a plain Back, with no origin noun
@@ -34,8 +36,14 @@ WHEN the account is created GIVEN the form opened over the signed-in state -> th
 
 WHEN press Create account GIVEN a field still fails -> its line updates in place AND NEVER the screen changes
 
-WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
+WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Create account AND Create account stays, the retry
 
 WHEN tap Already have an account? Sign in -> SignIn opens
+
+ALWAYS a line the server answered stands until the next press of Create account, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Create account -> Create account still reads Creating account… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the header's arrow and Already have an account? Sign in refuse a press, never dimmed, while Create account waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

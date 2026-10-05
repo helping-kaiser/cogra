@@ -14,4 +14,8 @@ WHEN press Back to CoGra GIVEN the account is already a member -> Feed opens
 
 WHEN press Back to CoGra GIVEN this browser holds no CoGra session -> SignIn opens AND NEVER the button's words change
 
+WHEN the link is opened GIVEN this browser is signed in to a different account -> the link verifies the account it belongs to AND NEVER the browser switches accounts
+
+WHEN press Back to CoGra GIVEN this browser is signed in to a different account -> CoGra opens where app-open lands for the signed-in account
+
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

@@ -108,7 +108,7 @@
         { "board": "KeyCeremony", "via": 2 },
         { "board": "KeyConfirm", "via": 2 }
       ],
-      "end": { "board": "RecoveryCode", "via": 3, "case": "code confirmed — returns where the ceremony began" }
+      "end": { "board": "RecoveryCode", "via": 3, "case": "code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so" }
     },
     {
       "name": "make-a-recovery-code-later",
@@ -154,7 +154,7 @@
       "waypoints": [
         { "board": "VouchAsk", "via": 3, "to": "VouchAskPad" }
       ],
-      "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in" }
+      "end": { "board": "VouchAskPad", "via": 4, "case": "signed — the vouch lands and the person is now this member's to have vouched in; the standard signed-opinion snackbar answers" }
     },
     {
       "name": "meet-an-ask-link-that-names-nobody",

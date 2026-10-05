@@ -403,7 +403,10 @@ function TaskCard({ title, body, tone, children }) {
    ThreadDetail rule: a body on a second board stops being board-local. The
    ceremony's own second paragraph and its two buttons belong to KeyCeremony,
    where they are still reachable; under a modal they are not, and drawing
-   controls the dialog has taken away would be drawing a lie. */
+   controls the dialog has taken away would be drawing a lie. The pledge's
+   platform noun is the board's `wording` chip, `pledgeBody` in its VALS
+   (jakob 2026-10-05, E13; `KEY_PLEDGE_VALS`). */
+const KEY_PLEDGE_VALS = `pledgeBody: this.props.wording === "app" ? "Everything you publish is signed with a key that is created in this app and stays in your hands — CoGra never holds it and can never reissue it." : "Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never holds it and can never reissue it."`;
 function KeyPledge() {
   return (
     <>
@@ -427,8 +430,7 @@ function KeyPledge() {
             letterSpacing: "var(--text-body-large--letter-spacing)",
           }}
         >
-          Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never
-          holds it and can never reissue it.
+          {"{{pledgeBody}}"}
         </p>
       </div>
     </>
@@ -4520,7 +4522,14 @@ function NewInviteSheet() {
    smaller — and the card scrolls when its words outgrow the screen, Skip and
    the button pinned at their edges while the stage and the words scroll
    between them. The frame's `overflow: hidden` is the board's convenience,
-   never the spec. */
+   never the spec.
+
+   THE BUTTONS ARE THE MOVEMENT (jakob 2026-10-05, B5 and V1): the cards do
+   not swipe in V1.0 — a post-MVP revisit sits in the backlog — and Android's
+   Back walks the cards back, card 1 leaving the way Skip does. The seen flag
+   sets on the first show (B6), so an interrupted intro never returns by
+   itself; Settings' `Watch the intro again` re-opens it, and from there Skip
+   and `Start reading` land back on Settings (V4). */
 const INTRO_STEPS = 5;
 
 function IntroDots({ step }) {

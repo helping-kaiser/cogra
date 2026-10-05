@@ -7,7 +7,10 @@
    `SignIn`, its label saying so (`Sign in`), and `Resend the link` asks for
    the address in place: an `Email` field opens above the pair and the next
    press sends to it, because a signed-out page has no address to send to.
-   The send stays silent whatever was typed, as `Reset`'s does.
+   The send never says whether the address has an account, as `Reset`'s
+   never does: a status line under the pair answers every press in
+   `Reset`'s construction, the same for an account already verified (jakob
+   2026-10-05; its words flagged in copy-voice).
 
    THE REASSURANCE IS LIMITED TO WHAT IS TRUE (jakob 2026-10-01, audit
    K3.3). An account left unverified for seven days is reaped, so the paragraph

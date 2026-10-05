@@ -14,4 +14,10 @@ WHEN tap Skip GIVEN the reader is an applicant -> the intro leaves for the appli
 
 WHEN tap Skip GIVEN the reader is a member -> the intro leaves for the feed it opened over AND NEVER a later card shows
 
+ALWAYS the cards move only by their buttons, and a swipe moves nothing
+
+WHEN press Android Back -> the third card opens
+
+WHEN tap Skip GIVEN Settings re-opened the intro -> Settings comes back AND NEVER a later card shows
+
 ALWAYS the illustration scales to the column, and the card scrolls between Skip and its button when its words outgrow the screen at any width or text size

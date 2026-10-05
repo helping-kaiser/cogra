@@ -474,8 +474,9 @@ answers in place that it waits with the application. A staged
 act is visible only to its author, in their own chronicle —
 nothing is public before it is signed. It **signs at approval,
 automatically**, in the batch the vouch-in lands with; on
-rejection it stays on the device as the account's own
-draft, never sent. Every other acting surface stays visible but
+rejection it waits on the device, never sent, until a member
+vouches the account in, then signs with the landing batch.
+Every other acting surface stays visible but
 locked: styled as disabled yet still tappable, with the tap
 explaining that approval unlocks it. Account management —
 settings, sign-out, password change — is never gated; the

@@ -35,10 +35,12 @@
    a vouch lands, which is the same rule the invites queue keeps and the same
    reason.
 
-   THE WAY BACK NAMES FEED. The landing is an entry-funnel screen — reached
-   from outside the app, often as the first screen it opens — so its arrow and
-   `Not now` are links to the member's root rather than history (readme §4,
-   *Navigation*): with nothing beneath the screen, history has nowhere to go.
+   THE WAY BACK IS THE LAYER LAW (jakob 2026-10-05, D2), as on its two
+   siblings `VouchAskUnusable` and `VouchAskInvalid`: the link opens over
+   whatever the reader was doing — a chat, the feed — and the arrow and `Not
+   now` return exactly there, or to the feed when the link opened the app
+   cold (readme §4, *Navigation*). The arrow reads a plain `Back`, because
+   the place it returns to may be another app's.
 
    `Not now` LEAVES IT STANDING. An ask link does not expire and does not get
    used up, so declining to answer costs the asker nothing — the reader can
@@ -56,7 +58,7 @@
 export function Screen() {
   return (
     <>
-      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 16px 0", overflow: "hidden" }}>
         <Card style={{ flex: "none" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>

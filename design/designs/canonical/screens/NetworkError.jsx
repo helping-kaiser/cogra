@@ -34,8 +34,10 @@
    - the WRITE RULE's refusal is not a fault at all: nothing was staged or
      spent, so the commit's place takes the notice panel and the way out keeps
      the draft (`WriteRuleFailed`).
-   Off the seal the grammar holds unchanged: a form keeps its fields and the
-   fault takes the submit's place, a pad keeps its pick with the fault above
+   Off the seal the grammar holds unchanged: a form keeps its fields and its
+   submit, and the fault stands in `SignInError`'s slot above the submit —
+   `That didn't send. Try again.` — the submit itself being the retry (jakob
+   2026-10-05), a pad keeps its pick with the fault above
    its commit row (`PadFailed`), and a hold, which has no surface to re-raise,
    says it on the target's row (`RowSigning`). */
 export function Screen() {

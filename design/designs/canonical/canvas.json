@@ -380,6 +380,15 @@
       "page": "entry"
     },
     {
+      "file": "ResetExpired.dc.html",
+      "title": "Reset link · already used or expired",
+      "x": 1920,
+      "y": 6168,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
       "file": "OnboardingSteps.dc.html",
       "title": "Intro · your own steps",
       "x": 0,
@@ -1518,7 +1527,7 @@
       "x": -3320,
       "y": 0,
       "w": 2900,
-      "h": 5486,
+      "h": 5828,
       "page": "entry",
       "title": "Entry · flow map"
     },
@@ -1545,7 +1554,7 @@
       "x": -5350,
       "y": 0,
       "w": 4930,
-      "h": 5071,
+      "h": 5084,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1608,7 +1617,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 7232,
+      "h": 7336,
       "page": "profile",
       "title": "Profile · flow map"
     },

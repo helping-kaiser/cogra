@@ -6,6 +6,8 @@ WHEN press Make a new key on the applicant's key-elsewhere card GIVEN this brows
 
 WHEN tap the Recovery code row or the Your key row in settings GIVEN an applicant before any key -> KeyCeremony opens
 
+WHEN tap the Recovery code row or the Your key row in settings GIVEN an applicant before any key, in a browser that can't hold a key -> KeyCeremonyUnsupported opens AND NEVER anything is minted
+
 WHEN press Create my key or Make a new key -> the ceremony probes this browser for WebCrypto Ed25519 before anything is minted
 
 WHEN the probe finds no Ed25519 -> KeyCeremonyUnsupported opens in the ceremony's place AND nothing is minted
@@ -27,5 +29,7 @@ WHEN press the header's back arrow GIVEN the ceremony opened from the key-elsewh
 WHEN press the header's back arrow GIVEN the ceremony opened from a key row in settings -> Settings opens AND nothing is made
 
 WHEN the tab is closed or the app is killed before the ceremony ends -> nothing is made AND the next open shows the task card exactly as it was
+
+ALWAYS the pledge reads Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never holds it and can never reissue it. on the web, and says in this app in the app
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

@@ -24,6 +24,16 @@ WHEN press Set the new password GIVEN the password is shorter than 12 characters
 
 WHEN the new password is refused as one that turned up in a data breach -> the field's line reads That password has turned up in a data breach — pick another one. in place of the hint AND the field takes the error state
 
-WHEN press Set the new password GIVEN no answer reaches the device -> the field keeps what was typed AND the fault is said in place on the form
+WHEN press Set the new password GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Set the new password AND Set the new password stays, the retry
+
+ALWAYS a line the server answered stands until the next press of Set the new password, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Set the new password -> Set the new password still reads Setting the new password… AND NEVER a slow line or a progress indicator appears
+
+WHEN press Set the new password GIVEN the password is longer than 128 characters -> the field's line reads A password is at most 128 characters. in place of the hint AND the field takes the error state
+
+WHEN press Set the new password GIVEN the link was spent or went past its time while the form stood open -> ResetExpired opens AND NEVER the password changes
+
+WHEN a reset link already used or past its time is opened -> ResetExpired opens AND NEVER ResetNew opens
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

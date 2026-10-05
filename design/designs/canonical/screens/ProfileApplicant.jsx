@@ -20,13 +20,25 @@
    feed carries it until `Got it` puts that card away; this card is never put
    away, so the profile is the link's permanent home — `ApplicantWaiting`'s
    block, its label and caption verbatim, `bare` inside the card. Settings
-   carries no ask link. */
+   carries no ask link.
+
+   TURNED DOWN, THE CARD SAYS SO (jakob 2026-10-05, D9; the `application`
+   chip). Once @mira closes the application, `Waiting on @mira`, the
+   caption's open answer and the chronicle's `with your application` are all
+   false, and the profile is still the ask link's home. So the card takes
+   `ApplicantRejected`'s blessed words and its olive (the card now asks for
+   the reader's action), the ask link takes that card's label and caption,
+   and the chronicle's line says what the staged acts wait for: `These wait
+   — they arrive when someone vouches you in.` */
+export const PROPS = { application: { editor: "enum", options: ["waiting", "closed"], default: "waiting" } };
+export const VALS = `waitingShown: this.props.application === "closed" ? "none" : "block", closedShown: this.props.application === "closed" ? "block" : "none", stagedLine: this.props.application === "closed" ? "These wait — they arrive when someone vouches you in." : "These wait with your application and arrive with you."`;
+
 export function Screen() {
   return (
     <>
       <ProfileBand />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ padding: "8px 16px 0" }}>
+        <div style={{ padding: "8px 16px 0", display: "{{waitingShown}}" }}>
           <TaskCard title="Waiting on @mira" body="What you post now arrives with you.">
             <PayoutAddress
               bare
@@ -35,6 +47,22 @@ export function Screen() {
               onCopy={() => {}}
               copyLabel="Copy your ask link"
               caption="It does not expire. While @mira's answer is open, it can't start a second application."
+            />
+          </TaskCard>
+        </div>
+        <div style={{ padding: "8px 16px 0", display: "{{closedShown}}" }}>
+          <TaskCard
+            tone="notice"
+            title="@mira closed your application"
+            body="That was @mira's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead."
+          >
+            <PayoutAddress
+              bare
+              label="Ask someone you know to vouch for you"
+              address={ASK_LINK}
+              onCopy={() => {}}
+              copyLabel="Copy your ask link"
+              caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
             />
           </TaskCard>
         </div>
@@ -59,7 +87,7 @@ export function Screen() {
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1h" second="First light over the flats — brought the wrong lens, kept the picture anyway." pending onOpen={() => {}} />
           <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.1, pInterest: 0.1 }} title="Gave an opinion" titleAside="on @mira" trailing="2h" pending inert />
           <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
-            These wait with your application and arrive with you.
+            {"{{stagedLine}}"}
           </p>
         </ChronicleList>
       </div>

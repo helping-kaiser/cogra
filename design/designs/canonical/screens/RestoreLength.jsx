@@ -3,7 +3,8 @@
    length is reported as a shape problem). The field holds what was typed,
    because the line answers it: 21 characters once the fold has taken the
    dashes out, five short of the 26 a code always has. Checked on the
-   press, like every field line but the recovery gate's. */
+   press, like every field line but the recovery gate's, and once marked
+   re-checked as the reader types, the line going at 26 (jakob 2026-10-05). */
 export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
 export const VALS = `restoreBody: this.props.wording === "app" ? "Enter your recovery code to bring your signing key into this app." : "Enter your recovery code to bring your signing key onto this browser."`;
 

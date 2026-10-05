@@ -523,7 +523,9 @@ entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
 page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
 beneath them, so their arrows are links that name a board (*The shell
-round's stops*) — `VouchAsk`'s arrow and its `Not now` land on Feed.
+round's stops*). The ask link is not the funnel: `VouchAsk` and its two
+siblings follow the layer law, so an ask opened from a chat returns there
+and a cold open lands on Feed, and their arrows read a plain `Back`.
 A funnel arrow carries no origin noun: `Join` reads a plain `Back`, and
 About opened from the join form keeps that plain `Back`.
 
@@ -1437,9 +1439,12 @@ marks stands **one skippable intro** (ruled 2026-09-14): five
 full-screen cards — the feed is your own steps, opinions have a
 shape, everything is public, nothing is lost, someone brings you in
 — fired on the first authenticated feed entry, from applicant on,
-shown once against a server-side seen flag, and re-opened from
-Settings' About group. Skip stands on every card and leaves for the
-feed the intro opened over. It teaches what the product IS rather
+shown once against a server-side seen flag set on the first show, and
+re-opened from Settings' About group. Skip stands on every card and
+leaves for the feed the intro opened over — or for Settings, when
+Settings re-opened it. The buttons are the only movement: no swipe in
+V1.0, and Android's Back walks the cards back, card 1 leaving as Skip
+does (jakob 2026-10-05). It teaches what the product IS rather
 than what a control does, so it neither replaces a coach mark nor
 adds one; the per-control marks are unchanged by it. The last card
 carries the applicant's one task — the friend who sent the invite
@@ -3835,7 +3840,8 @@ four-rung ladder.
   own**, so the system draws none.
 - **The pull-down lives on every full-screen scrolling root** (ruled
   2026-09-10): the feed in all its views, the profile pages and the
-  chronicle, search results, the wallet's history, the tag page — and
+  chronicle, the opinions page, Invites (jakob 2026-10-05), search
+  results, the wallet's history, the tag page — and
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
@@ -4968,9 +4974,7 @@ needs.
 - **The copy is blessed** (jakob, the close-out round): *"You're part
   of the sky now."* over *"Your opinion on @mira is signed, and the
   way is open both ways. The feed you see from here is your own."*
-  **jakob's own phrase "part of the graph" cannot be used**: §3 bans
-  *graph* in user-facing copy. *Sky* is legal, already
-  product-facing, and glossed by the picture the board draws behind
+  *Sky* is already product-facing, and glossed by the picture the board draws behind
   the words — the one place a metaphor leads, which it can afford to
   because the subline under it carries the content.
 - **Wiring.** `VouchBackPad/4`'s vouch-back outcome lands on
@@ -8211,7 +8215,7 @@ the rest as recommended. Both laws stand in §4.
   that shared content does send you back to your before state of the
   app"). With no prior state, back lands on the owning tab's root: a
   post, a comment or a profile on Feed, a tag on Explore. The entry
-  funnel keeps its links: `VouchAsk`'s arrow and `Not now` land on Feed.
+  funnel keeps its links.
   `PageHeader` scopes "a link, never history" to the funnel.
 - **THE SHEET LAW** (§4, *Sheets*). Every sheet carries a commit; the
   commit applies; the scrim, a swipe down and Back discard — no
@@ -8396,10 +8400,12 @@ as the board's own; the back edge in `graph.json` carries the table.
 - **The score's trace** (`FeedEntry`, `FeedEntryMoved`): `Back to feed` from the feed in any of its states (drawn),
   `Back to the post` from a post's detail, clip detail, veiled twin or
   `Removed`, `Back to #<thattag>` from a tag's page, `Back to the
-  profile` from a profile's posts.
+  profile` from another's posts, `Back to your profile` from the
+  reader's own (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
   it narrowed (drawn), `Back to the post` from a post's pinned clip,
-  `Back to the profile` from a profile's posts.
+  `Back to the profile` from another's posts, `Back to your profile`
+  from the reader's own (jakob 2026-10-05).
 - **The opinions page** (`ProfileStances`): `Back to the profile`
   (drawn; another's profile) or `Back to your profile` (the reader's
   own). It drew a bare `Back`.
@@ -9014,6 +9020,73 @@ searchable and filterable, in V1.0.
   every one resolved, 271 sidecars; the witness re-blessed for
   History's feed-card starts. `History`'s slot grows 844 → **1620**; `HistoryFilter` takes
   the row's next slot.
+
+### The entry and vouch rulings executed — 2026-10-05
+
+jakob's collected rulings (the digest `2026-10-05-collected-rulings.md`)
+on the entry funnel, the applicant shells, the ask link, the vouch-back
+and the profile. Every quoted wording is blessed unless marked flagged.
+
+- **`Join` says `Mira invited you`** — no vouch exists before the
+  approval. The form keeps handle and email for the session after a
+  sign-in detour or the arrow, never the password, never past a cold
+  launch.
+- **The ask link follows the layer law.** `VouchAsk`'s arrow and `Not
+  now` return to what the link opened over, or to Feed when it opened the
+  app cold, as its two siblings' do (§4); the arrow reads `Back`. `Set`
+  answers with the signed-opinion snackbar, with `VouchAskUnusable` when
+  the link died meanwhile, and with a kept approval — its own card on
+  Invites, signed through the approval pad, never in the kept picks — when
+  the key is elsewhere. An applicant's or the asker's own case outranks the
+  link's state.
+- **A new board, `ResetExpired`**: a spent or expired reset link, in
+  `VerifyExpired`'s construction, its way back `Reset your password` and
+  its way on `Sign in` (paragraph flagged).
+- **Sessions.** `SignIn` opened from the signed-in join layer closes back
+  to it and switches this device like `Create account`; a verify link
+  under another account verifies its own and switches nothing;
+  `VerifiedApp` signed out reads `Sign in`; `SignInExpired` lands at
+  app-open.
+- **Forms.** A line the server answered stands until the next press, a
+  local format line re-checks live; offline, `That didn't send. Try
+  again.` stands above the submit, which is the retry (`NetworkError`'s
+  docblock says so); sign-in keeps its drawn backoff line and every other
+  `RATE_LIMITED` the generic one; the 26-characters line reaches the key
+  gate and the backup sheet; `A password is at most 128 characters.`; a
+  slow non-signing commit adds nothing, and only `Create account` and
+  `Restore the key` lock the ways out; `Reset`'s status line stands only
+  after the press, and `VerifyExpired`'s resend answers in its
+  construction (flagged).
+- **Platform nouns.** The ceremony, its two dialogs, `YourKey` and
+  `YourKeyAbsent` take the `wording` chip (app renderings flagged), and
+  so does `ApplicantFeed`'s key card; the ceremony's confirm answers `Key
+  made and backed up.`; the ceremony is reached from settings both ways.
+- **Applicant days.** The intro moves by its buttons alone (swipe
+  revisited post-MVP), Back walks the cards, the seen flag sets on the
+  first show, and re-opened from Settings it lands back there; its last
+  card's applicant line shows only with a live application.
+  `ProfileApplicant`'s `application` chip draws the closed application
+  in the turned-down card's words and olive, with `These wait — they
+  arrive when someone vouches you in.`; `ApplicantKeyElsewhere`'s
+  `backup` chip draws the no-backup card (body flagged). The resend, the
+  first staging and an ask-link take-up each answer; auth.md's waiting
+  post waits until a member vouches the account in.
+- **The vouch-back.** Its line rides every vouch-back open, the two
+  coaching lines only the account's first-ever pad; the borrowed view
+  returns with the did-not-land notice; the "?" edge reads `Your vouch
+  back`.
+- **Profile.** `Back to your profile` from the reader's own posts tab's
+  trace and stream; the profile and picture seals' write rule keeps no
+  draft; the author's removal mark carries both blessed sentences
+  (`RedactedContent`); the opinions page and Invites take the pull-down;
+  a held opinion's tap opens `PadStanding`; `By them`; `This account is
+  hidden — its posts stay out of your feed.`; `Back to the search` waits
+  for the person row (K14.11).
+- **The gate**: 271 → **272 screens** (`ResetExpired`), 1839 → **1841
+  edges** (its two), the History round's 2 gaps, flows 66, every one
+  resolved, 272 sidecars. The witness re-blessed for the ceremony's and
+  the ask's new snackbars and the held tap's new pad. What stays open is
+  backlog item `13X-exec-entry-vouch`.
 
 ## 15. Index
 

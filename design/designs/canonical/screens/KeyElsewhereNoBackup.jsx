@@ -7,6 +7,7 @@
    THE CARD SAYS SO, AND DROPS THE RESTORE. What it offers instead is the way
    the key CAN come here: a recovery code made on the device that holds it
    (`SettingsBackupNone` there), after which this card becomes `KeyElsewhere`'s
+   on the feed's next load, never live under the reader (jakob 2026-10-05) —
    and its restore works. Until then the feed reads as it always does, and
    anything signed waits as pending — a pick kept here can still be signed the
    day the key arrives.

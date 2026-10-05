@@ -18,7 +18,15 @@
    BOTH CARDS WEAR THE OLIVE (jakob 2026-10-02, the olive split): each is a
    step the applicant still owes, so each stands on the account-notice
    register (`TaskCard`'s `tone="notice"`), and the key's filled action is
-   `inverse`. */
+   `inverse`.
+
+   THE KEY CARD NAMES ITS PLATFORM (jakob 2026-10-05; the `wording` chip):
+   `…needs a key on this browser…` on the web, `…needs a key in this app…`
+   in the app. `Resend the link` answers with the sent-shape snackbar
+   naming the address, the line `Wrong address?` already speaks. */
+export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
+export const VALS = `keyCardBody: this.props.wording === "app" ? "Your application needs a key in this app before @mira can approve it." : "Your application needs a key on this browser before @mira can approve it."`;
+
 export function Screen() {
   return (
     <>
@@ -58,7 +66,7 @@ export function Screen() {
             Resend the link
           </Button>
         </TaskCard>
-        <TaskCard tone="notice" title="Create your key" body="Your application needs a key on this browser before @mira can approve it.">
+        <TaskCard tone="notice" title="Create your key" body="{{keyCardBody}}">
           <Button variant="inverse" selfStart>Create my key</Button>
         </TaskCard>
         <PostCard {...ADA_POST} signedIn={false} />

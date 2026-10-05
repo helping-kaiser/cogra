@@ -2,6 +2,12 @@
 
 ALWAYS the page opens before the reader commits to anything GIVEN the ask link can stage nobody right now
 
+ALWAYS the page opens only for a member or a guest GIVEN the reader is neither the person asking nor an applicant
+
+WHEN the ask link opens GIVEN the reader is an applicant or the person asking -> the reader's own case answers where app-open lands for them, with its snackbar AND NEVER this page opens
+
+WHEN press Set on the ask's pad GIVEN the link turned unusable since the ask opened -> this page opens with the case for the link's new state AND NEVER anything is signed
+
 ALWAYS the page names nobody but the person asking
 
 ALWAYS the page wears no error colour

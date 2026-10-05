@@ -42,6 +42,14 @@ WHEN the sign-in is taken GIVEN an applicant -> ApplicantFeed opens
 
 WHEN the sign-in is refused for its email and password -> the line That email and password don't match. stands above Sign in AND the fields keep what was typed
 
-WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
+WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Sign in AND Sign in stays, the retry
+
+ALWAYS a line the server answered stands until the next press of Sign in, and only a field's local format line re-checks as the text changes
+
+WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Signing in… AND NEVER a slow line or a progress indicator appears
+
+ALWAYS the screen's ways out stay live while Sign in waits on its answer
+
+ALWAYS the sign-in lands wherever app-open lands for the account, never back on the surface where the session ended
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

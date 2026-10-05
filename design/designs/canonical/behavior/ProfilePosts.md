@@ -26,9 +26,13 @@ WHEN a guest taps Message -> the guest gate opens
 
 WHEN a guest taps the profile's stance anchor -> the guest gate opens
 
-WHEN tap a card's Feed score -> the score's trace opens AND its back arrow reads Back to the profile
+WHEN tap a card's Feed score GIVEN the profile is another's -> the score's trace opens AND its back arrow reads Back to the profile
 
-WHEN tap a portrait clip on a card -> the stream opens AND its back arrow reads Back to the profile
+WHEN tap a card's Feed score GIVEN the profile is the reader's own -> the score's trace opens AND its back arrow reads Back to your profile
+
+WHEN tap a portrait clip on a card GIVEN the profile is another's -> the stream opens AND its back arrow reads Back to the profile
+
+WHEN tap a portrait clip on a card GIVEN the profile is the reader's own -> the stream opens AND its back arrow reads Back to your profile
 
 WHEN tap a card's media GIVEN it is not a portrait clip and the profile is another's -> the post's detail opens AND its back arrow reads Back to the profile
 

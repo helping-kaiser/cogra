@@ -11,7 +11,14 @@
    ACCEPTING SAYS SO. The task card the reader came from completes and leaves
    the feed, so a silent close would read as nothing having happened; the
    snackbar names what did — `Key made — no backup yet. You can make a code in
-   settings.` — which is also where `SettingsBackupNone` waits. */
+   settings.` — which is also where `SettingsBackupNone` waits.
+
+   THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
+   `KeyElsewhere` and `Restore`: the pledge says `on this browser` or `in this app`. The app renderings are flagged
+   for blessing (copy-voice, *The collected rulings' entry lines*). */
+export const PROPS = { wording: { editor: "enum", options: ["browser", "app"], default: "browser" } };
+export const VALS = KEY_PLEDGE_VALS;
+
 export function Screen() {
   return (
     <>
