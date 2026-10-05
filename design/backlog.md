@@ -4400,3 +4400,46 @@ jakob's seven rulings and left these for his eye:
   uploads, holding the press client-side; a standing citation's
   `ReferenceClaim` has to say its target was removed and carry the
   removal mark, as a kept pick's target does.
+
+### 13X-passc-profile · What the profile behavior pass left for rulings · *design* · **filed 2026-10-05**
+
+The profile behavior pass (readme §13) wrote what the boards and rulings
+determine and left these for jakob's eye. The audit's parked items on the
+same surfaces are not repeated here.
+
+- **History's disc** (the audit's K8.14, still open). The reel round's
+  record, item 33's line and the canvas annotation say history rows wear
+  the cover; `History`'s docblock and the private-viewer-state round say
+  the disc is the kind, never the cover. `History.md` carries no disc
+  line until one reading is ruled.
+- **The turned-down applicant's own profile** is undrawn. The card's
+  `Waiting on @mira`, its body and the ask link's caption are false once
+  the application is closed, as is the chronicle's `These wait with your
+  application and arrive with you.`
+- **`ProfileOtherHeld/4` reaches `VouchBackPad`**, which no held opinion
+  can: any opinion on the member who vouched the reader in is the
+  vouch-back.
+- **`ProfileStances/3`'s label reads `They've taken`**; the board draws
+  `By them`.
+- **The reader's own posts tab** has no origin noun on the score's trace
+  and the stream: the sweep names only `Back to the profile`, where the
+  post detail's table says `Back to your profile`.
+- **The profile and picture seals keep no draft**, yet the write rule's
+  and the key notice's seal words promise one (`your draft is kept`,
+  `Keep the draft, sign later`, `Keep the draft, restore later`).
+- **Hiding a deleted account** has no snackbar: the blessed line spells
+  the handle, and there is none.
+- **The author's removal mark is drawn short.** Copy-voice blesses its
+  second line as `The words and pictures are gone. The post's place in
+  the thread, and every response, remain.`, and `Removed.md` says so;
+  `RedactedContent`'s author detail renders the second sentence alone, on
+  `Removed` and `LadderStates`.
+- **A stale clause**: the vouch-back ceremony's record says §3 bans
+  *graph* in copy; copy-voice's register ruling welcomes it, and the
+  account mark says `stays on the graph`.
+- **The pull-down's reach**: the opinions page and Invites are full-screen
+  lists the ruled list does not name.
+- **A profile reached from search** has no row in the profile's noun
+  table; the post detail's has `Back to the search`.
+- **History's trailing age** is unstated: Saved's is when the reader
+  saved the thing, History's could be the latest seeing or the writing.

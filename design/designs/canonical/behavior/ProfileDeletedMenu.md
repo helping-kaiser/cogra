@@ -2,7 +2,7 @@
 
 ALWAYS a deleted account's profile menu reads Save or Unsave, then Share this profile, then Hide this account
 
-ALWAYS the menu carries no Mention row, neither shown nor disabled
+WHEN the deleted account's menu opens -> it reads Save or Unsave, Share this profile and Hide this account AND NEVER a Mention row stands AND NEVER a disabled row stands in its place AND NEVER a row names a handle
 
 ALWAYS the hide row reads Hide this account, the same words every card the account authored shows, and never names a handle
 

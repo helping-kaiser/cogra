@@ -26,7 +26,7 @@ ALWAYS the bottom bar rides with no slot lit
 
 ALWAYS the page is reached by structure that still points at the account, an author chip or a name in a chronicle, and never by a shared handle link
 
-ALWAYS the page is never stripped to a notice
+WHEN a deleted account's profile opens -> the removal mark stands in the bio's place AND the header, the real counts, the tabs and the chronicle stand around it AND NEVER the page is stripped to a notice AND NEVER the page stands without the mark AND NEVER a handle is printed or invented
 
 WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport AND nothing is staged
 

@@ -8684,6 +8684,25 @@ yep · 6. yes"). Every quoted wording is blessed unless marked.
   resolved, 134 sidecars. The witness did not move. What the round left
   open is backlog `136`.
 
+### The profile behavior pass — 2026-10-05
+
+Pass C's remainder, the profile domain (jakob 2026-10-05, the plan as
+recommended): every board on the profile page, and the four post-ladder
+reference boards, carries a sidecar in `designs/canonical/behavior/`,
+transcribed from its docblock, its graph edges, the records above and
+copy-voice. Nothing was ruled in the pass.
+
+- **33 sidecars**: the own, applicant, other, held and deleted profiles
+  with their tabs, menus and fault states; the opinions page; the edit,
+  the picture's crop and both seals; Saved, History and Notifications
+  with their empty and undo states; the invites pages; and the ladders,
+  whose lines are shape invariants in `FeedShapes`' manner.
+- **What no ruling answers stays out of the sidecars** and waits for
+  jakob as filed questions (backlog `13X-passc-profile`). The audit's
+  parked items on these surfaces stay parked where they are.
+- **The gate**: screens, edges, flows and boards unchanged; 33 new
+  sidecars, every one green.
+
 ## 15. Index
 
 **Root**
