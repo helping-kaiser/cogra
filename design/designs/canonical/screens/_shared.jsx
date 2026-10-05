@@ -306,6 +306,33 @@ function FeedList({ children }) {
   );
 }
 
+/* HISTORY'S DAY DIVIDER (jakob 2026-10-05, the final brief's 4: "the post I
+   saw three days ago"). A quiet line naming the day the things under it were
+   first seen — `Today`, `Yesterday`, then the dateline's date (`2 October`,
+   the year only when it is not the current one). It is the chat thread's
+   divider construction, the one day divider the system draws: label-small,
+   secondary, centred, no rule and no fill. It belongs to the list, never to
+   a card — no card anatomy changes for it. Strings flagged for blessing
+   (copy-voice, *Ages*). */
+function HistoryDayDivider({ children }) {
+  return (
+    <div
+      role="heading"
+      aria-level={2}
+      style={{
+        alignSelf: "center",
+        padding: "4px 0",
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* An application step riding the feed as a card (readme §13, entry).
 
    IT IS THE PRODUCT SPEAKING, AND IT HAS TO LOOK LIKE IT (jakob 2026-09-15, on
@@ -3922,8 +3949,8 @@ const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
    · AN UNTITLED POST — a text post's title is optional — is named by its
-     first words in the title's place, the way `History` lists one and the
-     quote names a comment: the words are the post.
+     first words in the title's place, the way the quote names a comment:
+     the words are the post.
    · A REMOVED POST keeps its row, as it keeps its place in every thread:
      the title's place reads `Removed by its author`, the removal mark's own
      line, over the author, who stays; its mark keeps its space empty.

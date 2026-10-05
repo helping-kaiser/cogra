@@ -16,7 +16,7 @@ ALWAYS the search filter trigger reads Everything GIVEN the search filter is at 
 
 ALWAYS a result the reader has already seen stays out GIVEN Show what you've already seen is off
 
-ALWAYS search matches names and titles and never a body
+ALWAYS search matches names and titles, an untitled post by its first words, and never a body, a description or a bio
 
 ALWAYS a comment result appears only for a query scoped by @handle or #tag
 

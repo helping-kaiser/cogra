@@ -1491,6 +1491,17 @@ Object.assign(FLOW_MARKERS, {
     ...nav(23),
   ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
+  /* History narrowed to nothing (the final brief, 2026-10-05). The `cause`
+     chip draws the field, the trigger and the empty state twice, one shown
+     at a time — the same control in each, so one number each. */
+  HistoryNone: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">brackish cartography<", tag: "div" },
+    { n: 2, find: ">Search your history<", tag: "div" },
+    { n: 3, find: 'what your history shows"', tag: "button", all: true },
+    { n: 4, find: ">Show everything</button>", tag: "button", all: true },
+    ...nav(5),
+  ],
   // The history's filter sheet. scanExempt like the feed's and search's, so
   // only the sheet's own controls and its scrim carry numbers.
   HistoryFilter: [

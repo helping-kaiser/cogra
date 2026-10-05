@@ -61,7 +61,13 @@ weeks, no months. Recency is a feeling and gets the ladder; history is
 a date. One exception, ruled by jakob for the post-MVP chats round
 (2026-09-23): a chat's thread prints exact clock times on its bubbles,
 with a day divider in the dateline's words wherever it crosses a day —
-a thread is where people agree on when. The chats list keeps the ladder. The removal mark's `when` speaks this vocabulary like any
+a thread is where people agree on when. The chats list keeps the ladder.
+A second exception, ruled by jakob for History (2026-10-05, the final
+brief's 4): its day dividers name the day things were first seen as
+`Today`, `Yesterday`, then the dateline's date (`2 October`) — the words
+a reader uses for "the post I saw three days ago". They are the list's,
+never a card's, whose ages keep the ladder (*new 2026-10-05, flagged for
+blessing*). The removal mark's `when` speaks this vocabulary like any
 other timestamp — it is the redaction's own moment, not the content's
 age.
 
@@ -2031,7 +2037,17 @@ the trigger's purpose and the sheet's title are `What your history
 shows`, the feed's and search's construction. The sheet's kind hint is
 search's own, `Combine as many as you like. All, until you narrow it.`
 (*new 2026-10-05, blessed (jakob 2026-10-05)*: `Search your history`,
-`What your history shows`.)
+`What your history shows`.) The field matches by Explore's one rule
+(readme §4, *Search*).
+
+**A history narrowed to nothing says what the narrowing found**
+(`HistoryNone`): a query nothing seen carries reads `Nothing you've seen
+carries that name.` before `ExploreNone`'s blessed `Search reads names
+and titles, never bodies — fewer words reach further.`; kinds that hold
+nothing seen read `Nothing you've seen is of that kind.`; and both offer
+`Show everything`, which clears the query and the kinds at once (*new
+2026-10-05, flagged for blessing*: the two first sentences and `Show
+everything`).
 
 **Two empty states, and each says why the list is empty.**
 `Nothing saved yet. A post, a comment or a person can be saved from its

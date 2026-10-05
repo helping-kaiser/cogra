@@ -483,7 +483,7 @@
       "x": 960,
       "y": 4661,
       "w": 390,
-      "h": 1620,
+      "h": 1720,
       "page": "profile"
     },
     {
@@ -499,6 +499,15 @@
       "file": "HistoryFilter.dc.html",
       "title": "History · what it shows",
       "x": 2880,
+      "y": 4661,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryNone.dc.html",
+      "title": "History · nothing matches",
+      "x": 3360,
       "y": 4661,
       "w": 390,
       "h": 844,

@@ -22,4 +22,4 @@ ALWAYS the search filter's foot carries no reading of the staged filter
 
 WHEN tap Reset -> the sheet stages the search filter's default AND NEVER the search re-queries
 
-ALWAYS a result counts as seen once its impression entered the viewport, kept on the device and never as a record
+ALWAYS a result counts as seen once it was fully in the viewport, the first time only, and the seeing joins the reader's History and never becomes a graph record

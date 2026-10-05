@@ -8,9 +8,10 @@ export interface OrderSectionProps {
   order?: string;
   onOrder?: (order: string) => void;
   /** The seen toggle, default false — what you've seen stays out until you ask
-   *  for it back. Seen = the card's impression entered the viewport;
-   *  device-local, never a record, shared transiently with the viewer's
-   *  chosen ranker. */
+   *  for it back. Seen = the content was fully in the viewport, the first
+   *  time only; the seen-list is the reader's History — application state,
+   *  never a graph record, shared transiently with the viewer's chosen
+   *  ranker. */
   seen?: boolean;
   onSeen?: (seen: boolean) => void;
 }

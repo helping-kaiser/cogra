@@ -600,6 +600,20 @@ fling, and otherwise snaps back; under reduced motion the close is
 plain. Two thresholds, stated apart: 25 % for a sheet, 20 % for the
 viewer.
 
+### Search
+
+**One match rule for every search field** (jakob 2026-10-05, the final
+brief): Explore's and History's. A query matches names and titles — a
+person's handle and display name, a tag's name, a post's title — and an
+untitled post by its first words, the name it wears wherever a title
+would stand; never a body, a description or a bio. `@handle <text>`
+scopes the query to one person's work, their comments found through the
+titles of what they answer; `#tag <text>` scopes it inside a tag.
+Explore searches the graph, in its ranked tiers (§13, *The search
+rulings*); History searches the reader's seen-list, newest-seen first. A
+query that finds nothing says so in the list's place and offers the way
+back (`ExploreNone`, `HistoryNone`).
+
 ### Orientation
 
 **Portrait everywhere but the viewer** (the K13 round). The product is
@@ -3827,9 +3841,9 @@ four-rung ladder.
   `Back to top` pill rides in with the returning collapsing band,
   centred under it, and does exactly what the re-tap does. The two are
   one outcome reached two ways — a rung a reader has to be told about,
-  and a control that tells them. The pill is the feed's alone, because
-  the feed is the only root with a top the reader is trying to get back
-  to; it needs 3 viewport-heights of depth (jakob 2026-10-02), since shallower the
+  and a control that tells them. The pill is the feed's, because the
+  feed is the root with a top the reader is trying to get back to —
+  and History's, which is a feed (jakob 2026-10-05); it needs 3 viewport-heights of depth (jakob 2026-10-02), since shallower the
   returning band has already brought the top within a flick; and it is
   drawn OUTSIDE the collapsing block, because height added to that block
   moves the band's own threshold and re-clamps the list (item 45.3).
@@ -3845,8 +3859,9 @@ four-rung ladder.
   own**, so the system draws none.
 - **The pull-down lives on every full-screen scrolling root** (ruled
   2026-09-10): the feed in all its views, the profile pages and the
-  chronicle, the opinions page, Invites (jakob 2026-10-05), search
-  results, the wallet's history, the tag page — and
+  chronicle, the opinions page, Invites (jakob 2026-10-05), History
+  (jakob 2026-10-05), search results, the wallet's history, the tag
+  page — and
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
@@ -5557,6 +5572,7 @@ none of them needing a board. Ruled by jakob the same day.
   | a post, through its tags-and-references sheet | `Back to the post` |
   | a comment's chips, in the thread | `Back to the comments` |
   | a profile's posts | `Back to the profile` |
+  | History (jakob 2026-10-05) | `Back to History` |
   | another tag's page | `Back to #<thattag>` |
   | nowhere — a shared URL | `Back to Explore` |
 
@@ -8260,6 +8276,7 @@ the rest as recommended. Both laws stand in §4.
   | the stream | `Back to the stream` |
   | Notifications | `Back to Notifications` |
   | Saved | `Back to Saved` |
+  | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
@@ -8406,11 +8423,12 @@ as the board's own; the back edge in `graph.json` carries the table.
   `Back to the post` from a post's detail, clip detail, veiled twin or
   `Removed`, `Back to #<thattag>` from a tag's page, `Back to the
   profile` from another's posts, `Back to your profile` from the
-  reader's own (jakob 2026-10-05).
+  reader's own, `Back to History` from History (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
   it narrowed (drawn), `Back to the post` from a post's pinned clip,
   `Back to the profile` from another's posts, `Back to your profile`
-  from the reader's own (jakob 2026-10-05).
+  from the reader's own, `Back to History` from History (jakob
+  2026-10-05).
 - **The opinions page** (`ProfileStances`): `Back to the profile`
   (drawn; another's profile) or `Back to your profile` (the reader's
   own). It drew a bare `Back`.

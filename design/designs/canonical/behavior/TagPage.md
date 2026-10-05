@@ -24,7 +24,7 @@ ALWAYS the word follow appears nowhere on the tag page
 
 WHEN tap the back arrow -> the reader returns to where they came from AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the search from Explore mid-query, Back to Your topics from Your topics, Back to feed from the feed in any of its states, Back to the post from a post's tags-and-references sheet, Back to the comments from a comment's chips in the thread, Back to the profile from a profile's posts and Back to with the other tag's name from another tag's page
+ALWAYS the back arrow reads Back to Explore from Explore at rest, Back to the search from Explore mid-query, Back to Your topics from Your topics, Back to feed from the feed in any of its states, Back to the post from a post's tags-and-references sheet, Back to the comments from a comment's chips in the thread, Back to the profile from a profile's posts, Back to History from History and Back to with the other tag's name from another tag's page
 
 ALWAYS the back arrow reads Back to Explore and leads to Explore GIVEN the page was entered with no history behind it
 
