@@ -8682,7 +8682,7 @@ yep · 6. yes"). Every quoted wording is blessed unless marked.
   arrival, `Your account is deleted.`
 - **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
   resolved, 134 sidecars. The witness did not move. What the round left
-  open is backlog `12X-residue135`.
+  open is backlog `136`.
 
 ## 15. Index
 

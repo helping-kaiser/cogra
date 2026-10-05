@@ -4361,7 +4361,7 @@ left these for his eye:
   dismissal is account state (auth.md), so the line follows when the seam
   (048) lands it.
 
-### 12X-residue135 · What the 134 and 135 residue left for rulings · *design + contract* · **filed 2026-10-05**
+### 136 · What the 134 and 135 residue left for rulings · *design + contract* · **filed 2026-10-05**
 
 The residue round (readme §13, *The 134 and 135 residue*) executed
 jakob's seven rulings and left these for his eye:
