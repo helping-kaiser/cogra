@@ -8708,6 +8708,26 @@ intro and arrival lane: prose only, no board touched.
   resolved, 134 → **153 sidecars**; the boards came back byte-clean. The
   witness did not move. The filed questions are backlog
   `13X-passc-entry-b`.
+### The settings behavior pass — 2026-10-05
+
+Pass C's remainder (jakob 2026-10-05, the plan as recommended), the
+settings domain: transcription only, and behavior no source settles is
+filed for jakob's review rather than written.
+
+- **Twenty-seven sidecars**: `Settings` with its three sheets and its two
+  in-flight states, the key backup's four screens, the six credential
+  boards, the deletion tail's three, the sign-out ask, About, What's new
+  and its behind state, the report and its empty state, the wallet door
+  and the "?" dialog. Each line comes from its board's docblock, its
+  graph edges' cases, the records here and copy-voice, in their words;
+  the in-flight labels are copy-voice's construction (*In-flight labels*)
+  and add no string.
+- **No board moved and nothing was ruled.** The open questions — among
+  them the handle change's think-twice ask, the words of the settings
+  snackbars, an unverified applicant's Email row and About's opening
+  state — wait in the lane's filed list for jakob's one ruling brief.
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved, 134 → **161 sidecars**. The witness did not move.
 
 ## 15. Index
 
