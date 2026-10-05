@@ -58,7 +58,7 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
       >
         {label}
       </label>
-      {account && <input type="email" autoComplete="username" value={account} readOnly hidden />}
+      {account && <input type="email" autoComplete="username" value={account} readOnly hidden style={{ display: "none" }} />}
       <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
         <input
           id={fieldId}
