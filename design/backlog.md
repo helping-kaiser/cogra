@@ -4431,3 +4431,134 @@ sidecars and filed what the boards and docs do not determine:
   `VouchBackPad`'s "?" edge label.
 - **The behavior README's** stray fragment under *Where each sidecar's
   words come from*.
+### 13X-passc-entry-a · What the entry behavior pass filed · *design + contract* · **filed 2026-10-05**
+
+The entry lane of pass C's remainder (readme §13, *The entry behavior
+pass*) wrote the 31 sidecars and left these for jakob's eye, each with
+the lane's recommendation in the collected ruling brief:
+
+- **Forms.** A form's offline words and slot (copy-voice puts the line
+  in SignInError's slot; `NetworkError`'s docblock puts the fault in
+  the submit's place). A non-signing commit past 5s, and whether the
+  arrow and fields lock while it runs. An empty press on `SignIn`,
+  `InviteEntry`, `Reset` and `YourKeyGate`. Whether a line a server
+  answered (`That handle is taken.`, `That code doesn't check out.`)
+  and a form-level line clear on typing or stand until the next press.
+- **Labels.** The construction's six (`Continuing…`, `Sending reset
+  link…`, `Setting the new password…`, `Restoring the key…`, `Showing
+  my key…`, `Resending the link…`), and the two commits it cannot form
+  (`I've written it down`, `I accept the risk`).
+- **Contradictions.** `RestoreLength`'s line standing until the next
+  press against the input-error round's live re-check; copy-voice's
+  `RATE_LIMITED` line against `SignInLimited`'s drawn one; `Join`'s
+  `Mira is vouching for you` against *invited, never vouched*;
+  `RecoveryCodeMismatch`'s edge pressing a button that never enables;
+  `YourKeyGate`'s wrong length against auth.md's one shape problem.
+- **Undrawn or unruled.** The dead reset link (`RESET_TOKEN_INVALID`)
+  and `ResetNew`'s refused password on its edge; a password over 128
+  characters; the funnel's system Back and the web's back on the code
+  screen; `SignIn` opened from the signed-in `Join` layer; the half-filled
+  `Join` beyond the About detour; the platform nouns on the ceremony,
+  the export and its absent twin; the ceremony's confirm with no
+  snackbar; an unsupported browser reached from settings; when the
+  no-backup card turns into `KeyElsewhere`'s; `Reset`'s status line at
+  rest; what `VerifyExpired` says after a resend; `VerifiedApp` signed
+  out; a verify link opened under another account; where
+  `SignInExpired`'s "carry on" lands.
+### 13X-passc-pads-system · What the pads, seals and system pass left for rulings · *design* · **filed 2026-10-05**
+
+The pads, seals and system behavior pass (readme §13) transcribed
+twenty-six sidecars and left these for jakob's eye, each with the lane's
+recommendation in the round's report:
+
+- **The pad's "?".** §11 and `StanceControl` replace the pad's body with
+  its help in place and disable Set; the graph's pad edges open
+  `HelpDialog`; `ApprovePad`'s `How vouching works` names a text
+  copy-voice does not carry (audit K10.16).
+- **A tap on the pad field.** The graph says drag or tap sets the pick;
+  the master moves by travel only (audit K10.8). The sidecars say drag.
+- **Set on an untouched pad.** The ordinary pad opens at the origin, and
+  Set there signs (0, 0) (audit K10.2).
+- **The walk-back's `Keep it` and its cost.** The board keeps the pad
+  parked behind the dialog, the master closes it (K10.4); the cost prints
+  the record count, not `severanceCost` (K10.3).
+- **The stance pad's readout announcement**, which the tag and citation
+  sheets make live (K10.1) and the parked pad does not say.
+- **The approval pad's first line.** The board draws `Vouching is the
+  act.`; copy-voice records `Approving is vouching.`
+- **Retry and Try again in flight** — their label while the re-sign
+  waits, and whether the ways out lock again.
+- **What else a signing seal locks** — the fact rows' actions, the
+  header's "?", Android's system Back.
+- **When no answer becomes the fault**, and whether a seal ever retries by
+  itself.
+- **A form's offline fault.** `NetworkError`'s docblock puts it in the
+  submit's place; copy-voice puts it in `SignInError`'s slot, the submit
+  kept.
+- **The unlanded citation at `N cited`** — where its line stands when the
+  References row reads a count.
+- **How long a refusal reading stands** on the seal once the reader goes a
+  stage back or changes a fact.
+- **The bug notice's way out on the other seals** — the post edit, the
+  profile and picture seals, and `KeptPicksSeal`, whose Sign edge has no
+  bug outcome.
+- **`Why signing waits` at kept-picks scale** — its second paragraph is
+  unwritten.
+- **The write rule where no draft is kept** — the comment edit (whose
+  sidecar says the draft is kept) and the profile seal.
+- **The reply composer's failed picture** — its tile mark and line are
+  undrawn (only the clip's, `ReplyVideoFailed`).
+- **The failed gate on a clip** — `UploadStatusLine`'s fault reading has
+  no video noun.
+- **`UploadStatusLine`'s docblock** still says the sign button stays
+  disabled while either reading shows.
+- **How long a hold's row line stands** — `That didn't sign.`, `That
+  didn't go through.`, `You can't sign right now.`
+- **A hold on a kept pick's face once the key is back.**
+- **An undismissed security notice** — after `Change password`, after
+  leaving the feed, across a restart.
+- **The not-found pages' warm arrow label.**
+- **The approval's confirmation** — whether a signed approval wears the
+  signed-opinion snackbar.
+### 13X-passc-profile · What the profile behavior pass left for rulings · *design* · **filed 2026-10-05**
+
+The profile behavior pass (readme §13) wrote what the boards and rulings
+determine and left these for jakob's eye. The audit's parked items on the
+same surfaces are not repeated here.
+
+- **History's disc** (the audit's K8.14, still open). The reel round's
+  record, item 33's line and the canvas annotation say history rows wear
+  the cover; `History`'s docblock and the private-viewer-state round say
+  the disc is the kind, never the cover. `History.md` carries no disc
+  line until one reading is ruled.
+- **The turned-down applicant's own profile** is undrawn. The card's
+  `Waiting on @mira`, its body and the ask link's caption are false once
+  the application is closed, as is the chronicle's `These wait with your
+  application and arrive with you.`
+- **`ProfileOtherHeld/4` reaches `VouchBackPad`**, which no held opinion
+  can: any opinion on the member who vouched the reader in is the
+  vouch-back.
+- **`ProfileStances/3`'s label reads `They've taken`**; the board draws
+  `By them`.
+- **The reader's own posts tab** has no origin noun on the score's trace
+  and the stream: the sweep names only `Back to the profile`, where the
+  post detail's table says `Back to your profile`.
+- **The profile and picture seals keep no draft**, yet the write rule's
+  and the key notice's seal words promise one (`your draft is kept`,
+  `Keep the draft, sign later`, `Keep the draft, restore later`).
+- **Hiding a deleted account** has no snackbar: the blessed line spells
+  the handle, and there is none.
+- **The author's removal mark is drawn short.** Copy-voice blesses its
+  second line as `The words and pictures are gone. The post's place in
+  the thread, and every response, remain.`, and `Removed.md` says so;
+  `RedactedContent`'s author detail renders the second sentence alone, on
+  `Removed` and `LadderStates`.
+- **A stale clause**: the vouch-back ceremony's record says §3 bans
+  *graph* in copy; copy-voice's register ruling welcomes it, and the
+  account mark says `stays on the graph`.
+- **The pull-down's reach**: the opinions page and Invites are full-screen
+  lists the ruled list does not name.
+- **A profile reached from search** has no row in the profile's noun
+  table; the post detail's has `Back to the search`.
+- **History's trailing age** is unstated: Saved's is when the reader
+  saved the thing, History's could be the latest seeing or the writing.

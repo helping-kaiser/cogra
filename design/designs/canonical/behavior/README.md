@@ -105,8 +105,12 @@ Where each sidecar's words come from:
   records it names, its flow edges' outcomes and its copy-voice
   strings, in their words. `FeedCover.md` and `PostDetail.md` name
   their elements by node path.
-  citation picker: the shared anatomy's law, in the same words; and the
-  same re-pick, for a citation the edit has withdrawn.
+- The entry, profile, settings, pad and system boards (readme §13, the
+  five pass C remainder records of 2026-10-05) — each board's own
+  docblock and fixture, readme §4's laws, its graph edges' cases,
+  auth.md where the board touches the funnel, and its copy-voice
+  strings, in their words. What the sources do not determine is filed
+  in the round's backlog items, never written as behavior.
 
 ## The grammar
 
