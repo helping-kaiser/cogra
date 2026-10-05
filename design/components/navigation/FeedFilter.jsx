@@ -429,21 +429,45 @@ export function FilterFoot({ onReset, onDone }) {
    The sheet works on a staged copy taken when it opens; `onChange` fires once,
    on Done, with the staged filter, and every other way out drops the copy.
    `readerDefault` is what the foot's `Reset` stages: the reader's own default,
-   the app's until they set one in Settings. */
+   the app's until they set one in Settings.
+
+   THE APPLY IS SAID ONCE (the K13 round; WCAG 4.1.3). The feed changing
+   under a filter is a change an eye sees and an ear does not, so `Done`
+   leaves one polite status message — the new reading in the trigger's own
+   name, `Posts · newest, what your feed shows` — in a region mounted from
+   the start, because assistive technology announces only changes to a
+   region it was already watching. It draws nothing. */
+const SPOKEN_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+};
+
 export function FeedFilter({ value = FEED_FILTER_DEFAULT, readerDefault = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics, node }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const [staged, setStaged] = React.useState(value);
+  const [said, setSaid] = React.useState("");
   const openSheet = () => {
     setStaged(value);
     setOpen(true);
   };
   const commit = () => {
     setOpen(false);
+    setSaid(triggerName(feedFilterSummary(staged), ariaLabel));
     if (onChange) onChange(staged);
   };
 
   return (
     <>
+      <span role="status" aria-live="polite" style={SPOKEN_ONLY}>
+        {said}
+      </span>
       <FilterTrigger reading={feedFilterSummary(value)} onOpen={openSheet} expanded={open} ariaLabel={ariaLabel} node={node} />
       <FeedFilterSheet
         value={staged}
