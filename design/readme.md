@@ -1340,9 +1340,12 @@ marks stands **one skippable intro** (ruled 2026-09-14): five
 full-screen cards — the feed is your own steps, opinions have a
 shape, everything is public, nothing is lost, someone brings you in
 — fired on the first authenticated feed entry, from applicant on,
-shown once against a server-side seen flag, and re-opened from
-Settings' About group. Skip stands on every card and leaves for the
-feed the intro opened over. It teaches what the product IS rather
+shown once against a server-side seen flag set on the first show, and
+re-opened from Settings' About group. Skip stands on every card and
+leaves for the feed the intro opened over — or for Settings, when
+Settings re-opened it. The buttons are the only movement: no swipe in
+V1.0, and Android's Back walks the cards back, card 1 leaving as Skip
+does (jakob 2026-10-05). It teaches what the product IS rather
 than what a control does, so it neither replaces a coach mark nor
 adds one; the per-control marks are unchanged by it. The last card
 carries the applicant's one task — the friend who sent the invite

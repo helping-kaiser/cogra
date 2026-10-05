@@ -27,3 +27,5 @@ WHEN tap a stance face GIVEN an opinion is already staged -> the snackbar reads 
 WHEN press-and-hold a stance face GIVEN no opinion is staged yet -> a positive opinion stages with the application
 
 WHEN tap Profile on the bar -> the applicant's own profile opens
+
+WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits with your application — it arrives with you.

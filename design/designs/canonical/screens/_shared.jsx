@@ -4478,7 +4478,14 @@ function NewInviteSheet() {
    card, top-right, and leaves for the feed; the last card's button reads
    `Start reading` instead of `Next`. The dots are an indicator and not a
    control — a pager a reader can drive would make five boards into twenty-five
-   edges and teach nothing the buttons do not. */
+   edges and teach nothing the buttons do not.
+
+   THE BUTTONS ARE THE MOVEMENT (jakob 2026-10-05, B5 and V1): the cards do
+   not swipe in V1.0 — a post-MVP revisit sits in the backlog — and Android's
+   Back walks the cards back, card 1 leaving the way Skip does. The seen flag
+   sets on the first show (B6), so an interrupted intro never returns by
+   itself; Settings' `Watch the intro again` re-opens it, and from there Skip
+   and `Start reading` land back on Settings (V4). */
 const INTRO_STEPS = 5;
 
 function IntroDots({ step }) {

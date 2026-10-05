@@ -1148,6 +1148,22 @@ round*; every one blessed (jakob 2026-10-02).
   `Reset your password` (`Reset`'s own heading, naming where it goes)
   and `Sign in` (`VerifyExpired`'s signed-out way on). *The paragraph is
   new 2026-10-05, flagged for blessing.*
+- The applicant key card's app wording, behind the `wording` chip
+  (`ApplicantFeed`): `Your application needs a key in this app before
+  @mira can approve it.` *Blessed (jakob 2026-10-05).*
+- `Resend the link` on the verify card answers in `Wrong address?`'s
+  blessed sent shape, naming the address the card prints: `Sent — the
+  link is on its way to noor@fieldmail.org.` (jakob 2026-10-05).
+- An applicant's first staged opinion, by `Set` or by a press-and-hold,
+  answers with the opinion's staged-act line (*The staged-act snackbar*),
+  the turned-down shell's on that shell, and the face takes the staged
+  pick (jakob 2026-10-05).
+- `ApplicantKeyElsewhere` with no backup (the `backup` chip at `none`)
+  drops `Restore the key` and reads `Your application's key was made on
+  another device and has no backup, so it can't be brought here yet. Make
+  a recovery code on that device and restore it here, or make a new key —
+  until you're approved, a new one costs nothing.` *New 2026-10-05,
+  flagged for blessing.*
 - `A password is at most 128 characters.` — `Join`'s and `ResetNew`'s
   password field past auth.md's cap (*Faults by code*,
   `WEAK_PASSWORD`). *Blessed (jakob 2026-10-05).*

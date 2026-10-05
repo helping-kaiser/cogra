@@ -19,3 +19,11 @@ WHEN tap Next -> the second card opens
 WHEN tap Skip GIVEN the reader is an applicant -> the intro leaves for the applicant's feed it opened over AND NEVER a later card shows
 
 WHEN tap Skip GIVEN the reader is a member -> the intro leaves for the feed it opened over AND NEVER a later card shows
+
+ALWAYS the cards move only by their buttons, and a swipe moves nothing
+
+WHEN press Android Back -> the intro leaves the way Skip leaves
+
+WHEN tap Skip GIVEN Settings re-opened the intro -> Settings comes back AND NEVER a later card shows
+
+WHEN the intro shows for the first time -> the account's seen flag is set at once AND NEVER the flag waits for Skip or Start reading
