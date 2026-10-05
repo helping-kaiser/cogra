@@ -56,9 +56,18 @@
    where focus lands on open, swaps the field for the two tracks in place;
    both readout groups are `aria-live`.
 
+   THE LINE NAMES WHAT OPENED IT (jakob 2026-10-05, the 134 residue's 1),
+   `TagPad`'s rule: the noun is the opener's, passed the way `helpLabel`
+   passes a pad's own title. From the post edit the foot's line opens `Signed
+   with the post, as its own action.`, from `CommentEdit` `Signed with the
+   comment, as its own action.`; the cost after it is unchanged. The board's
+   `opener` chip draws both; the surface beneath stays the post edit's.
+
    THE SURFACE BENEATH IS DRAWN WHOLE (`EditComposeBody`), the overlay rule from
    2026-09-08; the sheet takes the raised height class, because three readouts,
    the field and the foot need the room. */
+export const PROPS = { opener: { editor: "enum", options: ["post", "comment"], default: "post" } };
+export const VALS = `signedWith: this.props.opener === "comment" ? "Signed with the comment, as its own action." : "Signed with the post, as its own action."`;
 
 /* The citation's family: the four poles and two questions `RefPair` names, and
    the two bundle labels a record that is not an opinion reads under. */
@@ -107,7 +116,7 @@ export function Screen() {
 
           <div style={{ display: "flex", flexDirection: "column", gap: 10, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
             <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
-              Signed with the post, as its own action.{" "}
+              {"{{signedWith}}"}{" "}
               <span id="refpair-edit-removal-cost">Removing it signs 1 thing, paid on its own.</span>
             </span>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "var(--space-2)" }}>

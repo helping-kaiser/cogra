@@ -1768,9 +1768,15 @@ pad's own `Your pick` between them — the stance pad's three, without
 the word *opinion*, because a citation is not one. Spoken, they carry
 the two axes and their values and never the anchor's word.
 
+**The foot's line names what opened the sheet.** `TagPad` and
+`RefPairEdit` are masters at both scales, so the noun is the opener's:
+`Signed with the post, as its own action.` from the post edit, `Signed
+with the comment, as its own action.` from the comment edit (*new,
+blessed (jakob 2026-10-05)*).
+
 **Removing a citation says its cost where the control is.** `Remove
 citation` — the walk-away's slot, a text button. Over the foot, after
-`Signed with the post, as its own action.`:
+the signed line:
 
 - `Removing it signs 1 thing, paid on its own.`
 - `Removing it signs 3 things, each paid separately.` — the walk-back's
