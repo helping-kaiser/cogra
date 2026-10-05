@@ -176,8 +176,8 @@ export function measureTriggerText(text) {
    residue round's Q2): a state reads the same whichever default it departs
    from. The summary keys on the reader's default object; the function below
    is drawn against the app's, the one every drawn reader holds. The words,
-   per axis (the back-deviations' new ones flagged for blessing, copy-voice
-   *The filter pill's state words*):
+   per axis (the back-deviations' new ones blessed, jakob 2026-10-02;
+   copy-voice *The filter pill's state words*):
    - kinds: the head, spoken always — one kind's name, `2 kinds`, `Nothing`;
    - forms: the forms it holds, `text + photos`; every form, `all forms`;
    - order: `newest`, `ranked`;
