@@ -66,8 +66,8 @@ A second exception, ruled by jakob for History (2026-10-05, the final
 brief's 4): its day dividers name the day things were first seen as
 `Today`, `Yesterday`, then the dateline's date (`2 October`) — the words
 a reader uses for "the post I saw three days ago". They are the list's,
-never a card's, whose ages keep the ladder (*new 2026-10-05, flagged for
-blessing*). The removal mark's `when` speaks this vocabulary like any
+never a card's, whose ages keep the ladder (*new 2026-10-05, blessed
+(jakob 2026-10-05)*). The removal mark's `when` speaks this vocabulary like any
 other timestamp — it is the redaction's own moment, not the content's
 age.
 
@@ -778,8 +778,8 @@ A form's commit stays disabled until its fields hold something (readme
 §4, *Interaction states*), and one quiet line right above it says what
 it waits for, in the voice for what something waits on (`Waiting for
 your key`) — the construction `Report a problem`'s empty foot first
-drew. One line per form (`WaitingCommit`; *new 2026-10-05, flagged for
-blessing*):
+drew. One line per form (`WaitingCommit`; *new 2026-10-05, blessed
+(jakob 2026-10-05)*):
 
 - `Waiting for both passwords` — `ChangePassword`.
 - `Waiting for a new handle` — `ChangeHandle`.
@@ -1087,12 +1087,13 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
     `Discard the changes?` over `Nothing is kept.`, with `Keep writing`
     and `Discard` (jakob 2026-10-02, the residue round's Q1). *`Discard the edit` new 2026-10-02, blessed (jakob 2026-10-02).*
     The post edit takes the comment edit's words, `Discard the edit`
-    asking `Discard the changes?` (*flagged for blessing* — the placement).
-    A seal with no draft to lose takes `Not now` instead, one stage back
-    with everything as it was (jakob 2026-10-05, the collected brief's
-    D8): the kept picks' seal, back to the review with every pick still
-    kept, and — *flagged for blessing* — the profile's seal, back to the
-    edit, and the picture's seal, back to the crop.
+    asking `Discard the changes?` (the placement *blessed (jakob
+    2026-10-05)*). A seal with no draft to lose takes `Not now` instead,
+    one stage back with everything as it was (jakob 2026-10-05, the
+    collected brief's D8): the kept picks' seal, back to the review with
+    every pick still kept, the profile's seal, back to the edit, and the
+    picture's seal, back to the crop (the two seals' *blessed (jakob
+    2026-10-05)*).
 
 **A read-side comfort that fails** (save, unsave, hide, undo, unhide,
 the default license; not a code): it reverts, and the target's row says `That didn't go
@@ -2082,8 +2083,8 @@ carries that name.` before `ExploreNone`'s blessed `Search reads names
 and titles, never bodies — fewer words reach further.`; kinds that hold
 nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Show everything`, which clears the query and the kinds at once (*new
-2026-10-05, flagged for blessing*: the two first sentences and `Show
-everything`).
+2026-10-05, blessed (jakob 2026-10-05)*: the two first sentences and
+`Show everything`).
 
 **Two empty states, and each says why the list is empty.**
 `Nothing saved yet. A post, a comment or a person can be saved from its
