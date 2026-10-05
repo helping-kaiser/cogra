@@ -14,6 +14,14 @@ export interface ActsFooterProps {
   /** The whole line is the button; opening the acts is what it does. Unused at
    *  zero, where there is nothing to open. */
   onOpen?: () => void;
+  /**
+   * The slow line, once an edit's signing runs past 5s from the press:
+   * `Still signing — the network is slow right now.` It stands under the
+   * line, outside the button, in `--tertiary` ink and spoken once as a
+   * status — `ActsCard`'s `noteTone="slow"` at the footer's size. Omitted,
+   * the footer is the line alone.
+   */
+  subline?: string;
 }
 
 export declare function ActsFooter(props: ActsFooterProps): JSX.Element;
