@@ -1812,14 +1812,14 @@ picture didn't upload. Signing waits for it.` with `Retry`, and the slow
 line `Still signing — the network is slow right now.` A cover the edit
 set is named by its own noun, `Uploading 0 of 1 — signing waits for the
 cover.` (`EditComposeVideo`, `CommentEditVideo`; *new 2026-10-05,
-flagged for blessing*).
+blessed (jakob 2026-10-05)*).
 
 **A standing citation whose target was removed** wears the kept picks'
 face (jakob 2026-10-05): `Removed by its author` where the name stood,
 on `EditCompose` and `CommentEdit`. Its controls name it by the mark,
 never by the removed name: the × `Remove this citation: Post, Removed by
 its author` and the row `Post, Removed by its author — set how it
-relates` (spoken only; *new 2026-10-05, flagged for blessing*).
+relates` (spoken only; *new 2026-10-05, blessed (jakob 2026-10-05)*).
 
 ## Saved, History and hiding
 
