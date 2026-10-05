@@ -23,7 +23,7 @@ Use `TextField` for every labeled input and, with `rows`, for every composer tex
 
 **The return key follows the form, not the kind.** A single-line field reads `next` (`ImeAction.Next`) while another field follows it; the form's last one passes `enterKeyHint="go"` (`ImeAction.Go`) and submits as the form's commit does — HTML's implicit submission — never while the commit is disabled. A multi-line field's Enter is a new line, on a soft keyboard and a hardware one alike, and never submits.
 
-**Arrival focus, one line per composer** (the K13 round). A stage that is one field opens with it focused and the keyboard up; a stage of several fields lands focus on its title (readme §10) and the keyboard waits for the reader's tap.
+**Arrival focus, one line per composer** (the K13 round; the audit's K14.33 adopts it as its answer, jakob 2026-10-05). A stage that is one field opens with it focused and the keyboard up; a stage of several fields lands focus on its title (readme §10) and the keyboard waits for the reader's tap.
 
 | Composer | On arrival |
 |---|---|

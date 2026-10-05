@@ -32,4 +32,6 @@ WHEN typing in Current password GIVEN the field reads That password isn't right.
 
 WHEN press Change email GIVEN the new address already belongs to another account -> NEVER the request says so
 
+WHEN the fresh link is opened GIVEN the new address belongs to another account -> the landing reads That address is taken now over the address-taken line AND NEVER the address moves
+
 ALWAYS the Current password field names the account by a hidden username carrying the address on file

@@ -2,7 +2,9 @@
 
 WHEN tap a row's close on Invites -> the dialog Close @imke's application? opens, named for the row it was raised from, with It leaves your list and @imke is told. Their account stays exactly as it is — signed in, and free to keep reading. and This is your call and nobody else's. Any member can still vouch them in, and @imke gets a link to ask with.
 
-ALWAYS one dialog serves every row's close, a ready application's and one not fully registered yet alike
+ALWAYS one dialog serves every row's close, a ready application's, one not fully registered yet and a kept approval's alike
+
+WHEN the closing is taken GIVEN the row was a kept approval -> the kept vouch is dropped AND nothing is signed
 
 ALWAYS Keep it is the filled answer in the right-hand slot and Close it the quiet one on the left
 

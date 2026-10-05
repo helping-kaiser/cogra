@@ -1566,7 +1566,9 @@ settings`. Past the window it takes `VerifyExpired`'s heading, `This
 link doesn't work anymore` (blessed), with `The change it belonged to
 ran out before both sides landed. Your email is still
 sol@solferreira.art.` and `Back to settings`; with the address taken,
-`That address is taken now` over the `EMAIL_IN_USE` line above. Signed
+`That address is taken now` over the `EMAIL_IN_USE` line above — an
+applicant's fresh link (`ApplicantEmail`) answers a taken address the
+same way on its landing (jakob 2026-10-05). Signed
 out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
 `This link confirms sol@ferreira.studio as your new address. It counts
 once you're signed in.` · `Sign in`. Opened under a different account,

@@ -66,11 +66,13 @@ ALWAYS the kept approval's second line reads Waiting for your key GIVEN the key 
 
 ALWAYS the kept approval's second line reads Ready for your approval GIVEN the key is back
 
-WHEN tap the kept approval's row GIVEN the key is elsewhere -> the key notice opens AND NEVER the approval pad opens
+WHEN tap the kept approval's row GIVEN the key is elsewhere -> the key notice opens, as a kept pick's face does AND NEVER the approval pad opens
 
 WHEN tap the kept approval's row GIVEN the key is back -> the approval pad opens on that applicant
 
-WHEN tap the kept approval's close -> the dialog asking to close that application opens
+WHEN tap the kept approval's close -> the dialog asking to close that application opens, the one every row's close raises
+
+WHEN the close of a kept approval is taken -> the row leaves AND the kept vouch is dropped AND nothing is signed
 
 WHEN pull down GIVEN the page stands all the way at its top -> the page refreshes AND the platform's own refresh indicator shows
 
