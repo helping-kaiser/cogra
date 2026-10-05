@@ -9,3 +9,7 @@ ALWAYS the pager's position reads in dots only, never a count pill
 WHEN swipe the pager -> the next or the previous picture takes the frame AND the dots read the new position
 
 WHEN tap the pager -> the post opens
+
+ALWAYS the pager strip takes focus and its spoken name reads Picture N of M, and the dots are not spoken
+
+WHEN press the right or the left arrow key GIVEN the pager strip has focus -> the next or the previous picture takes the frame AND NEVER the strip wraps past the last or the first

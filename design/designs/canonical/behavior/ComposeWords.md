@@ -27,3 +27,5 @@ WHEN press the header X -> the whole flow is left AND the draft is kept AND NEVE
 WHEN tap Add pictures instead GIVEN the body holds words -> an ask to discard the body opens over the stage AND NEVER the body switches before the ask is answered
 
 WHEN tap Add pictures instead GIVEN the body is empty -> the pick step opens AND NEVER an ask opens
+
+WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises

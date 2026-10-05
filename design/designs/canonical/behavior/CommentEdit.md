@@ -67,3 +67,5 @@ WHEN the signing is refused for one staged citation GIVEN the cited post never l
 WHEN the signing is refused for one staged act GIVEN the act's target landed -> the notice This shouldn't have happened takes the commit's place AND Try again, Report a problem and Discard the edit stand with it
 
 WHEN tap Discard the edit under the notice This shouldn't have happened -> the discard dialog Discard the changes? opens over the edit with Nothing is kept. AND NEVER the changes are discarded unasked
+
+WHEN the stage opens -> focus lands on the stage's heading AND NEVER the keyboard rises before a field is tapped
