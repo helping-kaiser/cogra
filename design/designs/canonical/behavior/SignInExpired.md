@@ -43,3 +43,5 @@ WHEN the sign-in is taken GIVEN an applicant -> ApplicantFeed opens
 WHEN the sign-in is refused for its email and password -> the line That email and password don't match. stands above Sign in AND the fields keep what was typed
 
 WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Sign in AND Sign in stays, the retry
+
+ALWAYS a line the server answered stands until the next press of Sign in, and only a field's local format line re-checks as the text changes

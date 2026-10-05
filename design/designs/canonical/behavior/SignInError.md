@@ -4,6 +4,8 @@ WHEN the sign-in is refused for its email and password -> the line That email an
 
 ALWAYS the line speaks in the fault voice and accuses neither the email nor the password
 
+WHEN typing in either field GIVEN the line stands -> the line stands AND NEVER it goes before the next press of Sign in
+
 ALWAYS the header's arrow reads Back and is a link to the bare view, never history
 
 WHEN press the header's back arrow -> FeedBare opens
@@ -37,3 +39,5 @@ WHEN the sign-in is refused again for its email and password -> the line stands 
 WHEN the sign-in is refused by the login backoff -> the line reads Too many tries in a row. Wait a moment, then try again. in the same place
 
 WHEN press Sign in GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Sign in AND Sign in stays, the retry
+
+ALWAYS a line the server answered stands until the next press of Sign in, and only a field's local format line re-checks as the text changes

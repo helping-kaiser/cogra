@@ -1258,7 +1258,9 @@ the field `Current recovery code`, the commitment `Create a new recovery
 code`, and last: `The new code is shown once and never stored. Have
 somewhere to write it down before you go on — the old code keeps working
 until the new one is confirmed.` A refused current code wears Restore's
-line, `That code doesn't check out.`, and under the field a browser that
+line, `That code doesn't check out.`, a code of the wrong length
+`RestoreLength`'s, `A recovery code is 26 characters.` (jakob
+2026-10-05), and under the field a browser that
 lost its code is told where to go instead of retrying forever: `Lost it?
 This browser can't make a new code without the current one. If the
 Android app holds your key, make the new code there.`
@@ -1510,7 +1512,8 @@ the device it was made on.`
 sealed): `On this browser your key is sealed inside its backup. Enter
 your recovery code to open it and see the key.` — the field `Current
 recovery code`, the commitment `Show my key`, a refused code in
-Restore's line. Either copy on `YourKey` answers with the snackbar
+Restore's line and a code of the wrong length in `RestoreLength`'s, `A
+recovery code is 26 characters.` (jakob 2026-10-05). Either copy on `YourKey` answers with the snackbar
 `Copied`.
 
 **Signing out without a backup** (`SignOutConfirm`, the don't-remember

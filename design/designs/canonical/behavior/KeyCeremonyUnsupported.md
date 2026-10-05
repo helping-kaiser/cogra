@@ -13,3 +13,5 @@ WHEN tap On Android? Download the app (APK) -> the browser downloads the app, th
 WHEN press the header's back arrow GIVEN the screen opened from the applicant's task card -> ApplicantFeed opens AND the task card stays until a browser or the app that can hold a key makes the key
 
 WHEN press the header's back arrow GIVEN the screen opened from the key-elsewhere card -> ApplicantKeyElsewhere opens with the attached key untouched
+
+WHEN press the header's back arrow GIVEN the screen opened from a key row in settings -> Settings opens AND nothing is made

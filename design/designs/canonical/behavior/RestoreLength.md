@@ -6,6 +6,8 @@ ALWAYS the wrong length is the one shape problem said apart, and every other ref
 
 ALWAYS the length is counted after the reading takes the dashes and spaces out
 
+WHEN typing in the field GIVEN it carries A recovery code is 26 characters. -> the field re-checks the length as the text changes AND the line goes once the code reads 26 characters AND the field leaves the error state
+
 ALWAYS the body reads Enter your recovery code to bring your signing key onto this browser. on the web and Enter your recovery code to bring your signing key into this app. in the app
 
 ALWAYS the header's arrow reads Back and is a link to the reader's own home, never history
@@ -31,3 +33,5 @@ WHEN the key is restored -> the line goes AND the reader returns where restore b
 WHEN the key is restored -> the key-absent state that sent the reader is gone AND the settings row that opened restore shows its key-present board AND the feed's key card leaves AND a draft that waited on the key goes on to be signed
 
 WHEN the key is restored GIVEN picks kept pending wait -> KeptPicksReview opens under the same snackbar AND NEVER a kept pick signs on its own
+
+ALWAYS a line the server answered stands until the next press of Restore the key, and only a field's local format line re-checks as the text changes

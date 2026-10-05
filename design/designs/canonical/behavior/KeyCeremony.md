@@ -6,6 +6,8 @@ WHEN press Make a new key on the applicant's key-elsewhere card GIVEN this brows
 
 WHEN tap the Recovery code row or the Your key row in settings GIVEN an applicant before any key -> KeyCeremony opens
 
+WHEN tap the Recovery code row or the Your key row in settings GIVEN an applicant before any key, in a browser that can't hold a key -> KeyCeremonyUnsupported opens AND NEVER anything is minted
+
 WHEN press Create my key or Make a new key -> the ceremony probes this browser for WebCrypto Ed25519 before anything is minted
 
 WHEN the probe finds no Ed25519 -> KeyCeremonyUnsupported opens in the ceremony's place AND nothing is minted
