@@ -1,4 +1,4 @@
-/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"eb60413a5f48","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"2d8cf7b5da7d","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"6114a0d46969","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"8454a542759a","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"508605628bd7","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"be39381d89d2","components/content/PostCard.jsx":"d40e04e1abbf","components/content/ReferenceRow.jsx":"2f5bd90998a5","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"33c43184037b","components/core/Button.jsx":"ac7a527a22df","components/core/Card.jsx":"2809bdee6885","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"1ed47419caf2","components/core/JoinPrompt.jsx":"d2acc138c1cd","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"4aec1e664e57","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"a1802efa3d23","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"3db02bf35181","components/forms/PasswordField.jsx":"20829e9ff0ce","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"932d93eea89a","components/forms/TextField.jsx":"7a35a56b7e23","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"321150ea0677","components/honesty/SensitiveVeil.jsx":"2b32453555c5","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/MediaAttachment.jsx":"e4caae25904e","components/media/MediaViewer.jsx":"effe0227584f","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"9800c146a9fb","components/media/ReelRail.jsx":"4d6bc4f35b39","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"913660857446","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"bb27e6864d03","components/navigation/Icon.jsx":"9b3765a45d42","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"5295e2204971","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"eb0266bed8e4","components/stance/SeveranceConfirm.jsx":"b73b0163db81","components/stance/StanceAlternates.jsx":"4e0d2d99eaea","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"746a5a489b52","components/stance/StancePad.jsx":"b3d058be9db9","components/stance/StanceReadout.jsx":"1e3b65ad7d82","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"}]} */
+/* @ds-bundle: {"format":4,"namespace":"CoGraDesignSystem_9084ba","components":[{"name":"ActsCard","sourcePath":"components/compose/ActsCard.jsx"},{"name":"ActsFooter","sourcePath":"components/compose/ActsFooter.jsx"},{"name":"Caret","sourcePath":"components/compose/Caret.jsx"},{"name":"CitedSheet","sourcePath":"components/compose/CitedSheet.jsx"},{"name":"CoverRow","sourcePath":"components/compose/CoverRow.jsx"},{"name":"CROP_ZOOM_MIN","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_MAX","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropViewport","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_PAN_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CROP_ZOOM_NAME","sourcePath":"components/compose/CropViewport.jsx"},{"name":"CropZoom","sourcePath":"components/compose/CropViewport.jsx"},{"name":"DescribeSheet","sourcePath":"components/compose/DescribeSheet.jsx"},{"name":"MediaThumb","sourcePath":"components/compose/MediaThumb.jsx"},{"name":"PickPrompt","sourcePath":"components/compose/PickPrompt.jsx"},{"name":"PickTray","sourcePath":"components/compose/PickTray.jsx"},{"name":"PickedRow","sourcePath":"components/compose/PickedRow.jsx"},{"name":"DescribeCounter","sourcePath":"components/compose/PickedRow.jsx"},{"name":"PickedSheet","sourcePath":"components/compose/PickedSheet.jsx"},{"name":"RefusedFile","sourcePath":"components/compose/RefusedFile.jsx"},{"name":"SealFooter","sourcePath":"components/compose/SealFooter.jsx"},{"name":"StagedReference","sourcePath":"components/compose/StagedReference.jsx"},{"name":"TagsSheet","sourcePath":"components/compose/TagsSheet.jsx"},{"name":"TopicRemovable","sourcePath":"components/compose/TopicRemovable.jsx"},{"name":"UploadStatusLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"UploadErrorLine","sourcePath":"components/compose/UploadNotice.jsx"},{"name":"WizardFooter","sourcePath":"components/compose/WizardFooter.jsx"},{"name":"WizardHeader","sourcePath":"components/compose/WizardHeader.jsx"},{"name":"CommentCard","sourcePath":"components/content/CommentCard.jsx"},{"name":"GlyphAction","sourcePath":"components/content/GlyphAction.jsx"},{"name":"OverflowMenu","sourcePath":"components/content/OverflowMenu.jsx"},{"name":"PostCard","sourcePath":"components/content/PostCard.jsx"},{"name":"NodeMark","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ReferenceRow","sourcePath":"components/content/ReferenceRow.jsx"},{"name":"ShareButton","sourcePath":"components/content/ShareButton.jsx"},{"name":"TaggedRow","sourcePath":"components/content/TaggedRow.jsx"},{"name":"TopicsLine","sourcePath":"components/content/TopicsLine.jsx"},{"name":"BottomSheet","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetItem","sourcePath":"components/core/BottomSheet.jsx"},{"name":"SheetTitle","sourcePath":"components/core/BottomSheet.jsx"},{"name":"BUTTON_CLASS","sourcePath":"components/core/Button.jsx"},{"name":"InlineAction","sourcePath":"components/core/Button.jsx"},{"name":"Button","sourcePath":"components/core/Button.jsx"},{"name":"Card","sourcePath":"components/core/Card.jsx"},{"name":"Chip","sourcePath":"components/core/Chip.jsx"},{"name":"TopicChip","sourcePath":"components/core/Chip.jsx"},{"name":"ContentRow","sourcePath":"components/core/ContentRow.jsx"},{"name":"FactRow","sourcePath":"components/core/FactRow.jsx"},{"name":"HelpDot","sourcePath":"components/core/HelpDot.jsx"},{"name":"DialogSurface","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"JoinPrompt","sourcePath":"components/core/JoinPrompt.jsx"},{"name":"CgtMark","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"MoneyFigure","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"QuietNote","sourcePath":"components/core/QuietNote.jsx"},{"name":"QuotedRow","sourcePath":"components/core/QuotedRow.jsx"},{"name":"SectionLabel","sourcePath":"components/core/SectionLabel.jsx"},{"name":"Switch","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsRow","sourcePath":"components/core/SettingsRow.jsx"},{"name":"SettingsGroup","sourcePath":"components/core/SettingsRow.jsx"},{"name":"Snackbar","sourcePath":"components/core/Snackbar.jsx"},{"name":"Checkbox","sourcePath":"components/forms/Checkbox.jsx"},{"name":"ATTRIBUTION_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PROVENANCE_TIERS","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PUBLIC_DOMAIN","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LICENSE_MENU_LABEL","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseChooser","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"LicenseTerms","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"PasswordField","sourcePath":"components/forms/PasswordField.jsx"},{"name":"RecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"SearchBar","sourcePath":"components/forms/SearchBar.jsx"},{"name":"FIELD_KINDS","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldCount","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldSupport","sourcePath":"components/forms/TextField.jsx"},{"name":"FieldLabel","sourcePath":"components/forms/TextField.jsx"},{"name":"TextField","sourcePath":"components/forms/TextField.jsx"},{"name":"NoticePanel","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"NoticeLine","sourcePath":"components/honesty/NoticePanel.jsx"},{"name":"PendingMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"EditedMarker","sourcePath":"components/honesty/PendingMarker.jsx"},{"name":"SensitiveScope","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"SensitiveVeil","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"RedactedContent","sourcePath":"components/honesty/SensitiveVeil.jsx"},{"name":"TransportError","sourcePath":"components/honesty/TransportError.jsx"},{"name":"SigningPending","sourcePath":"components/honesty/TransportError.jsx"},{"name":"MediaDisc","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaAttachment","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"PagerDots","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaGallery","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"MediaViewer","sourcePath":"components/media/MediaViewer.jsx"},{"name":"PinnedClip","sourcePath":"components/media/PinnedClip.jsx"},{"name":"ReelCaption","sourcePath":"components/media/ReelCaption.jsx"},{"name":"ReelRailItem","sourcePath":"components/media/ReelRail.jsx"},{"name":"ReelRail","sourcePath":"components/media/ReelRail.jsx"},{"name":"GESTURE_ZONE","sourcePath":"components/media/VideoControls.jsx"},{"name":"Timeline","sourcePath":"components/media/VideoControls.jsx"},{"name":"VideoTransport","sourcePath":"components/media/VideoControls.jsx"},{"name":"SeekLine","sourcePath":"components/media/VideoControls.jsx"},{"name":"BackToTop","sourcePath":"components/navigation/BackToTop.jsx"},{"name":"BorrowedViewBand","sourcePath":"components/navigation/BorrowedViewBand.jsx"},{"name":"ALL_SLOTS","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BottomNav","sourcePath":"components/navigation/BottomNav.jsx"},{"name":"BandIcon","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CograBand","sourcePath":"components/navigation/CograBand.jsx"},{"name":"CollapsingTop","sourcePath":"components/navigation/CollapsingTop.jsx"},{"name":"DeletionBand","sourcePath":"components/navigation/DeletionBand.jsx"},{"name":"FEED_KINDS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FORMS","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ORDER","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_ALSO","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FEED_FILTER_DEFAULT","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"BAND_CEILING_PX","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterTrigger","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilterSheet","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FilterFoot","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"FeedFilter","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"NODE_GLYPHS","sourcePath":"components/navigation/Icon.jsx"},{"name":"Icon","sourcePath":"components/navigation/Icon.jsx"},{"name":"FILTER_ORDER","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"FilterSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"OrderSection","sourcePath":"components/navigation/OrderSection.jsx"},{"name":"PageHeader","sourcePath":"components/navigation/PageHeader.jsx"},{"name":"SegmentedFilter","sourcePath":"components/navigation/SegmentedFilter.jsx"},{"name":"TabBar","sourcePath":"components/navigation/TabBar.jsx"},{"name":"REDACTED_ACTOR_NAME","sourcePath":"components/people/ActorChip.jsx"},{"name":"HIDE_ACTOR_LABEL","sourcePath":"components/people/ActorChip.jsx"},{"name":"MonogramAvatar","sourcePath":"components/people/ActorChip.jsx"},{"name":"ActorChip","sourcePath":"components/people/ActorChip.jsx"},{"name":"ProfileHeader","sourcePath":"components/people/ProfileHeader.jsx"},{"name":"HISTORY_DOOR_LABEL","sourcePath":"components/people/StanceRow.jsx"},{"name":"StanceRow","sourcePath":"components/people/StanceRow.jsx"},{"name":"ExplainableNumber","sourcePath":"components/proposed/ExplainableNumber.jsx"},{"name":"SeveranceConfirm","sourcePath":"components/stance/SeveranceConfirm.jsx"},{"name":"StanceAlternates","sourcePath":"components/stance/StanceAlternates.jsx"},{"name":"HelpLine","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_EXPLANATION","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_PAD_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"STANCE_ALTERNATES_HELP","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"StanceCoachMark","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"LONG_PRESS_MS","sourcePath":"components/stance/StanceControl.jsx"},{"name":"StanceControl","sourcePath":"components/stance/StanceControl.jsx"},{"name":"STANCE_AXES","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_X_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"AXIS_GUTTER_Y_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"FIELD_CORNER_RADIUS_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_DIAMETER_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"KNOB_TRAVEL_INSET_PX","sourcePath":"components/stance/StancePad.jsx"},{"name":"StancePad","sourcePath":"components/stance/StancePad.jsx"},{"name":"DIMENSION_MIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIMENSION_MAX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ORIGIN","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RELEVANCE_FLOOR","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_RANGES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAP_DEFAULT","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"DIRECTED_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"INTEREST_POLES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_AXIS_NAMES","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"PICK_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"HISTORY_DOOR_TAIL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SEVERED_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"NO_STANDING_LABEL","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_SEVERANCE_WORDS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"ZERO_BUNDLE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"RESTING_FACE_EMOJI","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SR_ONLY","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"STANCE_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"VALENCE_SIX","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"TAG_ANCHORS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceValue","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"OwnStanceReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"SETTLE_MS","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceStanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceLandingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"StanceSlider","sourcePath":"components/stance/StanceSlider.jsx"},{"name":"ComingSoonCard","sourcePath":"components/states/ComingSoonCard.jsx"},{"name":"EmptyState","sourcePath":"components/states/EmptyState.jsx"},{"name":"LoadingState","sourcePath":"components/states/EmptyState.jsx"},{"name":"EarnedChart","sourcePath":"components/wallet/EarnedChart.jsx"},{"name":"LedgerRow","sourcePath":"components/wallet/LedgerRow.jsx"},{"name":"PayoutAddressRow","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"PayoutAddress","sourcePath":"components/wallet/PayoutAddress.jsx"},{"name":"WalletBalance","sourcePath":"components/wallet/WalletBalance.jsx"},{"name":"WashCard","sourcePath":"components/wallet/WashCard.jsx"}],"sourceHashes":{"components/compose/ActsCard.jsx":"fc4b6cba1d23","components/compose/ActsFooter.jsx":"e61cf3a09d3b","components/compose/Caret.jsx":"7c8616dba407","components/compose/CitedSheet.jsx":"484cf4ec5042","components/compose/CoverRow.jsx":"0ced0eb13a97","components/compose/CropViewport.jsx":"f2e22c796289","components/compose/DescribeSheet.jsx":"a3dc71375f12","components/compose/MediaThumb.jsx":"eab3571676b8","components/compose/PickPrompt.jsx":"1be0b85b52bd","components/compose/PickTray.jsx":"0353ff9cb078","components/compose/PickedRow.jsx":"361803c98f90","components/compose/PickedSheet.jsx":"555deb4838e8","components/compose/RefusedFile.jsx":"6bf885333867","components/compose/SealFooter.jsx":"92f8711c1dd7","components/compose/StagedReference.jsx":"6114a0d46969","components/compose/TagsSheet.jsx":"c0033f11b9b6","components/compose/TopicRemovable.jsx":"472ce41c6d6e","components/compose/UploadNotice.jsx":"8454a542759a","components/compose/WizardFooter.jsx":"7c6eab67e4b6","components/compose/WizardHeader.jsx":"542088e1080c","components/content/CommentCard.jsx":"08753a5f7524","components/content/GlyphAction.jsx":"2c79fecadaa8","components/content/OverflowMenu.jsx":"be39381d89d2","components/content/PostCard.jsx":"96e9f6b0c99d","components/content/ReferenceRow.jsx":"2f5bd90998a5","components/content/ShareButton.jsx":"dbac7f7213e4","components/content/TaggedRow.jsx":"b7532ea9da3f","components/content/TopicsLine.jsx":"6cac33b88746","components/core/BottomSheet.jsx":"33c43184037b","components/core/Button.jsx":"c36c49ea873f","components/core/Card.jsx":"5362918c235f","components/core/Chip.jsx":"1588653670c3","components/core/ContentRow.jsx":"a8356e435065","components/core/FactRow.jsx":"23d47817cc2a","components/core/HelpDot.jsx":"0f57f53086fe","components/core/JoinPrompt.jsx":"d2acc138c1cd","components/core/MoneyFigure.jsx":"bfe6d45dca11","components/core/QuietNote.jsx":"6c3d5a4241d8","components/core/QuotedRow.jsx":"4aec1e664e57","components/core/SectionLabel.jsx":"a6fe980e29c1","components/core/SettingsRow.jsx":"0017e03582b3","components/core/Snackbar.jsx":"a1802efa3d23","components/forms/Checkbox.jsx":"71882a13b79b","components/forms/LicenseChooser.jsx":"3db02bf35181","components/forms/PasswordField.jsx":"9b4b44745e5f","components/forms/RecoveryCode.jsx":"ba518188d3f9","components/forms/SearchBar.jsx":"8025f52df728","components/forms/TextField.jsx":"7d92cfe84fe0","components/honesty/NoticePanel.jsx":"08b3077f436b","components/honesty/PendingMarker.jsx":"a78c42f5a664","components/honesty/SensitiveVeil.jsx":"2b32453555c5","components/honesty/TransportError.jsx":"20877c1cbcac","components/media/MediaAttachment.jsx":"8bf4aad953aa","components/media/MediaViewer.jsx":"d204aa72f6e9","components/media/PinnedClip.jsx":"3bf1f66dffa8","components/media/ReelCaption.jsx":"4b169c6624b5","components/media/ReelRail.jsx":"35a87ba2141e","components/media/VideoControls.jsx":"764e24f234b8","components/navigation/BackToTop.jsx":"1c9424d17472","components/navigation/BorrowedViewBand.jsx":"913660857446","components/navigation/BottomNav.jsx":"c8ce2c81b283","components/navigation/CograBand.jsx":"2eec80edb42a","components/navigation/CollapsingTop.jsx":"496789a57ad4","components/navigation/DeletionBand.jsx":"d1f2130d25da","components/navigation/FeedFilter.jsx":"e331bc8a316d","components/navigation/Icon.jsx":"9b3765a45d42","components/navigation/OrderSection.jsx":"d1e322f05352","components/navigation/PageHeader.jsx":"ff3ad7040d89","components/navigation/SegmentedFilter.jsx":"47f652dec1c5","components/navigation/TabBar.jsx":"51077ec7ec80","components/people/ActorChip.jsx":"9c966a839e89","components/people/ProfileHeader.jsx":"ce7c5a9e88e1","components/people/StanceRow.jsx":"986b390b9cf2","components/proposed/ExplainableNumber.jsx":"eb0266bed8e4","components/stance/SeveranceConfirm.jsx":"b73b0163db81","components/stance/StanceAlternates.jsx":"4e0d2d99eaea","components/stance/StanceCoachMark.jsx":"21f34483afb8","components/stance/StanceControl.jsx":"e810129eaa7b","components/stance/StancePad.jsx":"c89120e875be","components/stance/StanceReadout.jsx":"37915086b244","components/stance/StanceSlider.jsx":"57078ae91304","components/states/ComingSoonCard.jsx":"ea42604133b3","components/states/EmptyState.jsx":"ada7c8e59cc9","components/wallet/EarnedChart.jsx":"9c5108090061","components/wallet/LedgerRow.jsx":"f4fe11e39cc1","components/wallet/PayoutAddress.jsx":"a6823903db34","components/wallet/WalletBalance.jsx":"9f80bcec7fca","components/wallet/WashCard.jsx":"9e7da75bfa8d","designs/core-loop/app.jsx":"06ae78da2e5f","designs/core-loop/data.jsx":"d70934651528"},"inlinedExternals":[],"unexposedExports":[{"name":"alternatesHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"bundleReadout","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"buttonStyle","sourcePath":"components/core/Button.jsx"},{"name":"clampDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clampPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"clipFrame","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"feedFilterSummary","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"formatCgt","sourcePath":"components/core/MoneyFigure.jsx"},{"name":"formatDimension","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStancePair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatStanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatTagPair","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"formatUnsigned","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"helpKey","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"knobTravelInset","sourcePath":"components/stance/StancePad.jsx"},{"name":"landingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"landingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"licenseReadings","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"licenseSummary","sourcePath":"components/forms/LicenseChooser.jsx"},{"name":"localLanding","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"measureTriggerText","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"nearestAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestTagAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"nearestValenceAnchor","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"padHelp","sourcePath":"components/stance/StanceCoachMark.jsx"},{"name":"padPairFrom","sourcePath":"components/stance/StancePad.jsx"},{"name":"padPercentOf","sourcePath":"components/stance/StancePad.jsx"},{"name":"padTravelHalfExtent","sourcePath":"components/stance/StancePad.jsx"},{"name":"readRecoveryCode","sourcePath":"components/forms/RecoveryCode.jsx"},{"name":"severanceParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"severanceWords","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"signedLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingLine","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"standingParts","sourcePath":"components/stance/StanceReadout.jsx"},{"name":"triggerName","sourcePath":"components/navigation/FeedFilter.jsx"},{"name":"useGlobalMute","sourcePath":"components/media/MediaAttachment.jsx"},{"name":"useModalFocus","sourcePath":"components/core/BottomSheet.jsx"},{"name":"useSettled","sourcePath":"components/stance/StanceReadout.jsx"}]} */
 
 (() => {
 
@@ -192,7 +192,7 @@ function InlineAction({
    present participle the caller passes as `busyLabel` — the verb takes -ing,
    the rest of the label stays, and `…` closes it ("Sign and publish" →
    "Signing and publishing…") — and the control goes INERT, not dimmed. It is
-   still the one committing action on the surface, and 40% opacity would say
+   still the one committing action on the surface, and the disabled 38% would say
    it could not be pressed for a reason the reader has to go and find. No
    spinner: the word is the indicator, the way `LoadingState` is text.
 
@@ -275,6 +275,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
    Nothing sits under the knob: a thumb on the control covers exactly the spot
    where feedback would otherwise appear. Both lines are `aria-live`.
+
+   THEY SPEAK WHEN THE PICK SETTLES, NOT AT EVERY STEP (the K13 round). The
+   visible readouts follow the knob live; what is spoken follows it only once
+   the pick has rested about 500ms — on release, or a pause mid-drag — so a
+   listener hears where the pick landed, never every 0.01 it passed on the
+   way. The slider's own value is the platform's to speak.
 
    The anchor table IS THE CONTRACT — both clients read these twenty values, and a
    change here changes both apps. They are deliberately dense in the
@@ -1071,6 +1077,21 @@ function landingParts(landing, names = STANCE_AXIS_NAMES) {
    the line below it. Three of these stack in the pad — current opinion, the pick,
    the resulting opinion — and they are formatted identically so the eye can compare
    them without reading. */
+const SETTLE_MS = 500;
+
+/* What the readouts say aloud: the value once it has stopped changing for
+   `SETTLE_MS`. A static render — and the first paint — say the value as it
+   stands, so nothing is withheld; only a run of changes is held back until it
+   rests. */
+function useSettled(value, ms = SETTLE_MS) {
+  const [settled, setSettled] = React.useState(value);
+  React.useEffect(() => {
+    if (value === settled) return undefined;
+    const timer = setTimeout(() => setSettled(value), ms);
+    return () => clearTimeout(timer);
+  }, [value, settled, ms]);
+  return settled;
+}
 function ReadoutBlock({
   label,
   emoji,
@@ -1081,6 +1102,8 @@ function ReadoutBlock({
   style,
   onOpenHistory
 }) {
+  // Spoken once the readout rests (the K13 round); drawn at once.
+  const said = useSettled(sentence !== undefined ? sentence : spoken);
   if (sentence !== undefined) {
     return /*#__PURE__*/React.createElement("p", {
       style: {
@@ -1089,7 +1112,11 @@ function ReadoutBlock({
         color: "var(--text-secondary)",
         ...style
       }
-    }, sentence);
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true"
+    }, sentence), /*#__PURE__*/React.createElement("span", {
+      style: SR_ONLY
+    }, said));
   }
   const labelInk = {
     fontSize: "var(--text-label-small)",
@@ -1110,11 +1137,12 @@ function ReadoutBlock({
      the line takes the `EditedMarker`'s tappable form — the same underline,
      the same quiet ink — and the tail says where it goes. It sits ABOVE the
      readout and well clear of the field below, so no drag of the knob can
-     end on it. */
+     end on it. It answers to 48px with the pressed layer, as every
+     pressable does (readme §4, the K13 round). */
   React.createElement("button", {
     type: "button",
     onClick: onOpenHistory,
-    className: "cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       ...labelInk,
       alignSelf: "flex-start",
@@ -1150,7 +1178,7 @@ function ReadoutBlock({
     }
   }, pair)), /*#__PURE__*/React.createElement("span", {
     style: SR_ONLY
-  }, spoken));
+  }, said));
 }
 
 /** The current opinion and the pick — everything that sits above the field. */
@@ -1241,6 +1269,8 @@ __ds_scope.StanceReadout = StanceReadout;
 __ds_scope.OwnStanceReadout = OwnStanceReadout;
 __ds_scope.standingParts = standingParts;
 __ds_scope.landingParts = landingParts;
+__ds_scope.SETTLE_MS = SETTLE_MS;
+__ds_scope.useSettled = useSettled;
 __ds_scope.StanceStanding = StanceStanding;
 __ds_scope.StanceLandingLine = StanceLandingLine;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/stance/StanceReadout.jsx", error: String((e && e.message) || e) }); }
@@ -2539,7 +2569,11 @@ function PendingMarker({
     every version whole, newest first, never a diff. Friendly, not forensic.
     V1.0 PASSES NO HISTORY DOOR (readme §13, the scope cut's F-1): no canonical
     screen hands `onInspect`, so the marker renders as plain text and no door
-    exists in V1.0. The change-histories round wires it. */
+    exists in V1.0. The change-histories round wires it.
+
+    AS A DOOR IT IS A PRESSABLE LIKE ANY OTHER (readme §4, the K13 round):
+    `cg-state cg-focus cg-hit`, so the label-small ink answers to a 48px target
+    with the pressed layer and the focus ring every control carries. */
 function EditedMarker({
   label = "Edited",
   onInspect
@@ -2556,6 +2590,7 @@ function EditedMarker({
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onInspect,
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       background: "none",
@@ -3321,8 +3356,21 @@ try { (() => {
    THE WINDOW IS ALWAYS CENTRED, and that is why it takes a height and not a
    position: it is inset `inset` from each side, and the leftover height splits
    evenly above and below. The circle's 342 square lands at top 24, the cover's
-   342×192 at top 99, and neither board has to state a coordinate. */
+   342×192 at top 99, and neither board has to state a coordinate.
 
+   THE DRAG HAS A NON-DRAG TWIN, AND THE PINCH A VISIBLE ONE (the K13 round;
+   readme §10). Under the viewport stands `CropZoom`, a visible slider on both
+   platforms — a desktop browser has no pinch, so zoom has to be on screen for
+   everyone, not only for assistive tech. Its bounds are the crop's own: at
+   the minimum the picture just fills the window (1×, nothing outside the
+   picture can show), at the maximum it stands at about 4×. The viewport
+   itself takes focus, and the arrow keys pan the picture inside the window,
+   stopping where an edge of the picture meets the window's edge. A pinch
+   moves the slider with it, and the slider moves the picture: one value, two
+   ways to set it. */
+
+const CROP_ZOOM_MIN = 1;
+const CROP_ZOOM_MAX = 4;
 function CropViewport({
   src,
   alt = "",
@@ -3331,11 +3379,29 @@ function CropViewport({
   origin = "50% 50%",
   size = 390,
   inset = 24,
-  height
+  height,
+  onPan
 }) {
   const width = size - inset * 2;
   const windowHeight = height ?? width;
+  const onKeyDown = event => {
+    const moves = {
+      ArrowLeft: [-1, 0],
+      ArrowRight: [1, 0],
+      ArrowUp: [0, -1],
+      ArrowDown: [0, 1]
+    };
+    const move = moves[event.key];
+    if (!move || !onPan) return;
+    event.preventDefault();
+    onPan(move[0], move[1]);
+  };
   return /*#__PURE__*/React.createElement("div", {
+    tabIndex: 0,
+    role: "group",
+    "aria-label": CROP_PAN_NAME,
+    onKeyDown: onKeyDown,
+    className: "cg-focus",
     style: {
       position: "relative",
       width: size,
@@ -3370,7 +3436,57 @@ function CropViewport({
     }
   }));
 }
+
+/* The viewport's and the slider's spoken names (flagged for blessing, the K13
+   round): what the focused picture and the slider are for, in the reader's
+   words. */
+const CROP_PAN_NAME = "Move the picture";
+const CROP_ZOOM_NAME = "Zoom";
+
+/* THE ZOOM, ON SCREEN. The house slider (`StanceSlider`'s range input in
+   `primary`) at the full width of the column, under the viewport, its thumb
+   at the crop's current scale between `CROP_ZOOM_MIN` and `CROP_ZOOM_MAX`.
+   No words beside it: the viewport above is what it acts on, and its name
+   carries what it does. The input stands 48px tall, so the thumb's target is
+   the system's minimum. */
+function CropZoom({
+  scale = CROP_ZOOM_MIN,
+  onChange
+}) {
+  return (
+    /*#__PURE__*/
+    // `data-field` for the flow badge, `TextField`'s reason: a range input is a
+    // replaced element and cannot host the badge's ::after.
+    React.createElement("div", {
+      "data-field": CROP_ZOOM_NAME,
+      style: {
+        flex: "none"
+      }
+    }, /*#__PURE__*/React.createElement("input", {
+      type: "range",
+      min: CROP_ZOOM_MIN,
+      max: CROP_ZOOM_MAX,
+      step: 0.01,
+      value: scale,
+      "aria-label": CROP_ZOOM_NAME,
+      onChange: event => onChange && onChange(Number(event.target.value)),
+      className: "cg-focus",
+      style: {
+        display: "block",
+        width: "100%",
+        height: "var(--touch-target-min)",
+        margin: 0,
+        accentColor: "var(--primary)"
+      }
+    }))
+  );
+}
+__ds_scope.CROP_ZOOM_MIN = CROP_ZOOM_MIN;
+__ds_scope.CROP_ZOOM_MAX = CROP_ZOOM_MAX;
 __ds_scope.CropViewport = CropViewport;
+__ds_scope.CROP_PAN_NAME = CROP_PAN_NAME;
+__ds_scope.CROP_ZOOM_NAME = CROP_ZOOM_NAME;
+__ds_scope.CropZoom = CropZoom;
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/compose/CropViewport.jsx", error: String((e && e.message) || e) }); }
 
 // components/core/HelpDot.jsx
@@ -3380,7 +3496,13 @@ try { (() => {
    "?", at most one per screen, top-right of the header or of the sheet/card it
    explains). A 32px ring inside the 48px target. It began as a screen helper
    on the search boards and moved into the system when the filter sheet — a
-   master — needed to carry one. */
+   master — needed to carry one.
+
+   IT CARRIES THE STATE LAYER as every pressable does (readme §4, the K13
+   round): `cg-state cg-focus` on the 48px button, so the pressed layer fills
+   the target's circle around the ring. The button is already 48px, so it needs
+   no `cg-hit`. Its accessible name is the dialog it opens — the tag picker's
+   `Tagging`, the citation picker's `Citing` (the K13 round). */
 
 /* `inverse` is `Button`'s word for the same situation: the component standing on
    a TONAL PANEL instead of the page's ground. On the page the ring is
@@ -3408,7 +3530,7 @@ function HelpDot({
     type: "button",
     "aria-label": ariaLabel,
     onClick: onOpen,
-    className: "cg-focus",
+    className: "cg-state cg-focus",
     style: {
       display: "grid",
       placeItems: "center",
@@ -3441,6 +3563,7 @@ __ds_scope.HelpDot = HelpDot;
 
 // components/forms/TextField.jsx
 try { (() => {
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* The house labeled text input. `label-large` label above a field on the
    EXTRA-SMALL rung (4px) — Material's text-field corner — with a 1px `outline`
    border and a transparent fill. `mono` dresses codes and identifiers in the
@@ -3539,6 +3662,76 @@ try { (() => {
    to fit it (`ComposeDetailsCaps`, `WordsBody`'s tail). Growth is behaviour, and
    behaviour that cannot be drawn is stated where the drawing is. */
 
+/* WHAT EACH KIND OF FIELD ASKS OF THE KEYBOARD (the K13 round, ruled — the
+   field-semantics table; `TextField.prompt.md` carries it with the Android
+   names). A field's kind decides its keyboard, its capitalization, whether
+   the platform corrects it, and what the platform may fill into it; the
+   return key follows the field's place in its form instead (below). A board
+   names the kind; `type="email"` and `mono` name theirs, and a field with
+   neither is prose.
+
+   `code` IS THE MONO KIND, and every code field inherits it: a string read
+   and typed character by character takes no guessing — no capitals guessed,
+   nothing corrected — and the platform may fill it as a one-time code.
+
+   A URL FIELD TAKES THE URL KEYBOARD, NOT THE URL TYPE: `type="url"` would
+   add the browser's own validation, which refuses a website without a scheme
+   and says so in the browser's words instead of the field's. */
+const FIELD_KINDS = {
+  prose: {
+    type: "text",
+    inputMode: "text",
+    autoCapitalize: "sentences",
+    autoCorrect: true,
+    autoComplete: "off"
+  },
+  name: {
+    type: "text",
+    inputMode: "text",
+    autoCapitalize: "words",
+    autoCorrect: false,
+    autoComplete: "off"
+  },
+  email: {
+    type: "email",
+    inputMode: "email",
+    autoCapitalize: "none",
+    autoCorrect: false,
+    autoComplete: "email"
+  },
+  handle: {
+    type: "text",
+    inputMode: "text",
+    autoCapitalize: "none",
+    autoCorrect: false,
+    autoComplete: "nickname"
+  },
+  url: {
+    type: "text",
+    inputMode: "url",
+    autoCapitalize: "none",
+    autoCorrect: false,
+    autoComplete: "off"
+  },
+  code: {
+    type: "text",
+    inputMode: "text",
+    autoCapitalize: "characters",
+    autoCorrect: false,
+    autoComplete: "one-time-code"
+  }
+};
+
+/* THE RETURN KEY FOLLOWS THE FORM. A single-line field reads `next` while
+   another field follows it, and the form's last one passes `go`: it submits
+   as the form's commit does — HTML's implicit submission, and Android's
+   `ImeAction.Go` wired to the same commit — never while the commit is
+   disabled. A multi-line field's Enter is a new line, on a soft keyboard and
+   a hardware one alike; it never submits. */
+const RETURN_KEY = {
+  single: "next",
+  multi: "enter"
+};
 const COUNT_WINDOW_MINIMUM = 20;
 function countReading(value, cap, used) {
   if (!cap) return null;
@@ -3670,8 +3863,10 @@ function TextField({
   corner,
   value,
   onChange,
-  type = "text",
+  type,
+  kind,
   autoComplete,
+  enterKeyHint,
   mono = false,
   placeholder,
   rows,
@@ -3684,6 +3879,15 @@ function TextField({
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
+  const semantics = FIELD_KINDS[kind ?? (mono ? "code" : type === "email" ? "email" : "prose")] ?? FIELD_KINDS.prose;
+  const keyboard = {
+    inputMode: semantics.inputMode,
+    autoCapitalize: semantics.autoCapitalize,
+    autoCorrect: semantics.autoCorrect ? "on" : "off",
+    spellCheck: semantics.autoCorrect,
+    autoComplete: autoComplete ?? semantics.autoComplete,
+    enterKeyHint: enterKeyHint ?? (rows ? RETURN_KEY.multi : RETURN_KEY.single)
+  };
   const supportId = `${fieldId}-support`;
   const countId = `${fieldId}-count`;
   const reading = countReading(value, cap, used);
@@ -3722,28 +3926,29 @@ function TextField({
       corner: corner,
       error: error,
       node: node && "label"
-    }, label), rows ? /*#__PURE__*/React.createElement("textarea", {
+    }, label), rows ? /*#__PURE__*/React.createElement("textarea", _extends({
       id: fieldId,
       rows: rows,
       value: value,
-      placeholder: placeholder,
+      placeholder: placeholder
+    }, keyboard, {
       "aria-describedby": described,
       "aria-invalid": error ? "true" : undefined,
       onChange: event => onChange && onChange(event.target.value),
       style: shared,
       "data-node": node && "input"
-    }) : /*#__PURE__*/React.createElement("input", {
+    })) : /*#__PURE__*/React.createElement("input", _extends({
       id: fieldId,
-      type: type,
+      type: type ?? semantics.type,
       value: value,
-      placeholder: placeholder,
-      autoComplete: autoComplete,
+      placeholder: placeholder
+    }, keyboard, {
       "aria-describedby": described,
       "aria-invalid": error ? "true" : undefined,
       onChange: event => onChange && onChange(event.target.value),
       style: shared,
       "data-node": node && "input"
-    }), /*#__PURE__*/React.createElement(FieldSupport, {
+    })), /*#__PURE__*/React.createElement(FieldSupport, {
       id: supportId,
       countId: countId,
       hint: hint,
@@ -3754,6 +3959,7 @@ function TextField({
     }))
   );
 }
+__ds_scope.FIELD_KINDS = FIELD_KINDS;
 __ds_scope.FieldCount = FieldCount;
 __ds_scope.FieldSupport = FieldSupport;
 __ds_scope.FieldLabel = FieldLabel;
@@ -4448,7 +4654,17 @@ const { BottomSheet, SheetTitle, Button, InlineAction, Icon, MediaThumb } = __ds
    every per-picture concern:
 
    · ORDER — drag by the handle; the FIRST one is the cover and the badge
-     travels with it. No separate cover control exists.
+     travels with it. No separate cover control exists. When the drag lifts a
+     row, Android gives the platform's one lift pulse —
+     `HapticFeedbackConstants.DRAG_START` (`LONG_PRESS` below API 34; readme
+     §4, *Haptics*) — and nothing else in the reorder vibrates; the web gives
+     none.
+   · THE DRAG HAS NON-DRAG TWINS (the K13 round, ruled; readme §10). Every row
+     offers `Make it the cover` · `Move up` · `Move down` as visible actions,
+     the same three as TalkBack custom actions on Android, and on a keyboard
+     the arrow keys move the focused row. Where on the row the three stand,
+     and what the first and last rows offer, is filed for a drawing (backlog
+     13X-k13); this master draws the drag alone until then.
    · REMOVE — the X on each row.
    · DESCRIBE — the per-picture entry into `DescribeSheet`; a described
      picture shows the quiet word "Described" instead of the link.
@@ -5127,7 +5343,14 @@ try { (() => {
    page's `surface`, the medium shape rung, 16px padding, 12px inner gap — no
    border and no shadow. The step up off the page ground is what makes a card read
    as a card; an outline on top of it would be Material's *outlined* card, a
-   different component. */
+   different component.
+
+   `door` makes the whole card the pressed layer (the K13 round, readme §4,
+   *Interaction states*): the card carries `cg-door-card`, and a region inside
+   it carrying `cg-door` — the words and the media that open the post — lights
+   the card's whole surface while it is hovered or pressed. A control inside the
+   card (the stance face, the ⋮, a count) keeps its own layer and never lights
+   the card. */
 
 function Card({
   children,
@@ -5135,11 +5358,13 @@ function Card({
   ariaLabel,
   style,
   node,
-  nodeKey
+  nodeKey,
+  door = false
 }) {
   const Tag = as;
   return /*#__PURE__*/React.createElement(Tag, {
     "aria-label": ariaLabel,
+    className: door ? "cg-door-card" : undefined,
     style: {
       display: "flex",
       flexDirection: "column",
@@ -5838,20 +6063,37 @@ function padPercentOf(pair, ranges = STANCE_RANGES) {
 function zeroPercentOf(range) {
   return range.min < 0 && range.max > 0 ? percent(fractionOf(0, range)) : null;
 }
+
+/* THE KNOB WHILE HELD (the K13 round). A finger on the field puts M3's
+   pressed state layer around the knob — a 40px disc in the knob's own colour
+   at the press opacity (10 %) — for as long as the pointer is down, and lifts
+   it on release. It is a layer, never a scale: §4 forbids a control that
+   grows or shrinks under the thumb. `held` draws it for a board
+   (`PadStanding`'s `knob` chip).
+
+   THE KNOB TICKS, ON ANDROID ONLY (readme §4, *Haptics*). Crossing either
+   zero line, and meeting the field's edge where the pick clamps, gives one
+   short platform tick each — `HapticFeedbackConstants.SEGMENT_TICK`, the
+   constant Android documents for discrete points on a slider (`CLOCK_TICK`
+   below API 34). Nothing else in the drag vibrates, and the web gives none. */
+const KNOB_LAYER_PX = 40;
 function StancePad({
   value = ORIGIN,
   onChange,
   fieldRef,
   showAxes = true,
   axes = STANCE_AXES,
-  ranges = STANCE_RANGES
+  ranges = STANCE_RANGES,
+  held = false
 }) {
   const localRef = React.useRef(null);
   const ref = fieldRef ?? localRef;
   const drag = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
   const knob = padPercentOf(value, ranges);
   const zeroAcross = zeroPercentOf(ranges.pInterest);
   const zeroDown = zeroPercentOf(ranges.pDirected);
+  const layered = held || dragging;
   const onPointerDown = event => {
     if (!onChange) return;
     drag.current = {
@@ -5859,6 +6101,7 @@ function StancePad({
       y: event.clientY,
       base: value
     };
+    setDragging(true);
     event.currentTarget.setPointerCapture?.(event.pointerId);
   };
   const onPointerMove = event => {
@@ -5872,6 +6115,7 @@ function StancePad({
   };
   const endDrag = () => {
     drag.current = null;
+    setDragging(false);
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5966,7 +6210,19 @@ function StancePad({
       position: "absolute",
       inset: `${KNOB_TRAVEL_INSET_PX}px`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, layered && /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: `${knob.x}%`,
+      top: `${knob.y}%`,
+      height: `${KNOB_LAYER_PX}px`,
+      width: `${KNOB_LAYER_PX}px`,
+      transform: "translate(-50%, -50%)",
+      borderRadius: "var(--radius-full)",
+      background: "var(--surface-loud)",
+      opacity: "var(--state-press)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: "absolute",
       left: `${knob.x}%`,
@@ -6939,6 +7195,14 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE
    signature is the one that takes a held finger, and the gesture nobody gives by
    mistake is the only one allowed to act by itself.
 
+   THE HOLD SHOWS IT COMING (the K13 round). From the press, a ring fills
+   around the face over the 500ms — `primary`, clockwise from twelve o'clock —
+   so the reader sees the threshold before the signature spends; lifting
+   before it closes leaves the ring and the signature both unspent. At the
+   commit, Android gives the platform's long-press haptic, its one pulse
+   (readme §4, *Haptics*); the web gives none. `holdProgress` draws the ring
+   at a fixed fill for a board (`RowSigning`'s `hold` chip).
+
    THE HOLD IS NEVER SILENT, AND IT WAITS FOR ITS SIGNATURE (jakob, the failure
    pack: signed acts are pessimistic). A gesture that stages a priced act must
    never be silent, because silence reads as failure and invites the same act
@@ -6976,6 +7240,50 @@ const { buttonStyle, BUTTON_CLASS, Icon, Snackbar, JoinPrompt, StancePad, STANCE
    what the in-flight states above wait on; `signing` draws them. */
 
 const LONG_PRESS_MS = 500;
+
+/* THE HOLD'S RING: M3's determinate circular indicator — a 40px circle, a 4px
+   active stroke in `primary`, no track — drawn around the face. `progress` is
+   0–1; `live` lets it fill itself over the hold. */
+const HOLD_RING_PX = 40;
+const HOLD_RING_STROKE_PX = 4;
+function HoldRing({
+  progress = 0,
+  live = false
+}) {
+  const r = (HOLD_RING_PX - HOLD_RING_STROKE_PX) / 2;
+  const circumference = Math.round(2 * Math.PI * r * 1000) / 1000;
+  const offset = Math.round(circumference * (1 - progress) * 1000) / 1000;
+  return /*#__PURE__*/React.createElement("svg", {
+    "aria-hidden": "true",
+    width: HOLD_RING_PX,
+    height: HOLD_RING_PX,
+    viewBox: `0 0 ${HOLD_RING_PX} ${HOLD_RING_PX}`,
+    style: {
+      position: "absolute",
+      left: "50%",
+      top: "50%",
+      transform: "translate(-50%, -50%) rotate(-90deg)",
+      pointerEvents: "none",
+      overflow: "visible"
+    }
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: HOLD_RING_PX / 2,
+    cy: HOLD_RING_PX / 2,
+    r: r,
+    fill: "none",
+    stroke: "var(--primary)",
+    strokeWidth: HOLD_RING_STROKE_PX,
+    strokeLinecap: "round",
+    strokeDasharray: circumference,
+    strokeDashoffset: offset
+  }, live && /*#__PURE__*/React.createElement("animate", {
+    attributeName: "stroke-dashoffset",
+    from: circumference,
+    to: "0",
+    dur: `${LONG_PRESS_MS}ms`,
+    fill: "freeze"
+  })));
+}
 
 /* The write rule's words at the pad's and the row's scale (copy-voice,
    *Faults by code*). The seal's panel says the draft is kept; a pad has no
@@ -7112,9 +7420,18 @@ function StanceControl({
      through.` with Retry. Additive — absent, the control renders exactly as
      before. */
   signing,
+  /* THE HOLD MID-WAY, for a board (the K13 round): a 0–1 fill draws the
+     hold's ring standing at that point. Additive — absent, the control renders
+     exactly as before, and the live ring is the press's own. */
+  holdProgress,
+  /* THE KNOB UNDER THE FINGER, for a board: the pad's pressed layer drawn
+     around the knob (`StancePad`'s `held`). Additive — absent, the pad renders
+     exactly as before, and the live layer is the drag's own. */
+  knobHeld = false,
   node
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
+  const [holding, setHolding] = React.useState(false);
   React.useEffect(() => {
     if (supplied !== undefined) setBundle(supplied);
   }, [supplied]);
@@ -7142,6 +7459,7 @@ function StanceControl({
       clearTimeout(holdTimer.current);
       holdTimer.current = null;
     }
+    setHolding(false);
   };
   const closeAll = () => {
     clearHold();
@@ -7232,8 +7550,10 @@ function StanceControl({
   const onPointerDown = () => {
     if (!signedIn) return;
     clearHold();
+    setHolding(true);
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
+      setHolding(false);
       suppressClick.current = true;
       setSigned(null);
       commitChecked(TAP_DEFAULT);
@@ -7246,6 +7566,19 @@ function StanceControl({
   const rowSigning = open ? undefined : signing;
   const padSigning = open ? signing : undefined;
   const anchorBusy = rowSigning === "busy";
+  /* The face, ringed while a hold is under way — the ring centred on it, the
+     face's own box unchanged, so nothing beside it moves. */
+  const ringed = holding || holdProgress !== undefined;
+  const withHoldRing = face => ringed ? /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "relative",
+      display: "inline-grid",
+      placeItems: "center"
+    }
+  }, face, /*#__PURE__*/React.createElement(HoldRing, {
+    progress: holdProgress ?? 0,
+    live: holding
+  })) : face;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       position: "relative",
@@ -7297,7 +7630,7 @@ function StanceControl({
       ...(overMedia ? OVER_MEDIA_ANCHOR : null)
     },
     "data-node": node && "anchor"
-  }, overMedia && restingFace === null ?
+  }, withHoldRing(overMedia && restingFace === null ?
   /*#__PURE__*/
   /* OVER MEDIA THE UNSET STATE IS A LINE FACE, not a muted emoji: on
      photography "quiet" and "invisible" are the same thing, and the
@@ -7315,7 +7648,7 @@ function StanceControl({
       filter: restingFace === null ? "grayscale(1)" : "none"
     },
     "data-node": node && "face"
-  }, restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji), wide && restingPair === null &&
+  }, restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji)), wide && restingPair === null &&
   /*#__PURE__*/
   /* The wide anchor's words — only where there is no pair to show. */
   React.createElement("span", {
@@ -7480,7 +7813,8 @@ function StanceControl({
     value: pick,
     onChange: setPick,
     fieldRef: fieldRef,
-    axes: axes
+    axes: axes,
+    held: knobHeld
   }), padNote, padSigning !== "writeRule" && /*#__PURE__*/React.createElement(StanceLandingLine, {
     landing: landing,
     names: axes
@@ -8636,7 +8970,11 @@ function clipFrame(ratio) {
    surface behind the glyph, at the tile's lower-right corner — the thumb's
    side while scrolling (jakob, 2026-09-15). Every disc a media surface draws
    is this one — sound, play, and the stream's way back — so they sit at one
-   size and one weight wherever the reader meets them. */
+   size and one weight wherever the reader meets them.
+
+   36px OF INK, 48px OF TARGET (readme §4, the K13 round). There is no real
+   option: the floor is ruled. `cg-hit` grows the target around the disc, so
+   the disc keeps its size on the photograph and the thumb keeps its 48. */
 function MediaDisc({
   label,
   glyph,
@@ -8655,7 +8993,7 @@ function MediaDisc({
       event.stopPropagation();
       if (onClick) onClick(event);
     },
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       position: "absolute",
       [vertical]: "8px",
@@ -8849,9 +9187,11 @@ function MediaAttachment({
    dot, so shrinking one moves nothing beside it — a row that reflowed as the
    reader swiped would be its own kind of noise.
 
-   THE COUNT IS NOT DRAWN. The plain "Picture n of m" stays in the accessible
-   name, where it has always been: the frame carries the dots, a listener
-   carries the number.
+   THE COUNT IS NOT DRAWN, AND THE DOTS ARE NOT SPOKEN (the K13 round). The
+   row is a visual readout and nothing else — `aria-hidden`, never a target.
+   The plain "Picture n of m" is the accessible name of the strip it reads
+   (`MediaGallery`), which is what a listener focuses and pages: the frame
+   carries the dots, a listener carries the number.
 
    TWO TONES, ONE ROW. On a card the dots are the page's own ink — `primary`
    for here, the hairline for the rest. Over the viewer's scrim there is no
@@ -8888,7 +9228,7 @@ function PagerDots({
   const moreBefore = start > 0;
   const moreAfter = start + window < count;
   return /*#__PURE__*/React.createElement("div", {
-    "aria-label": `Picture ${current + 1} of ${count}`,
+    "aria-hidden": "true",
     style: {
       display: "flex",
       alignItems: "center",
@@ -8932,25 +9272,62 @@ function PagerDots({
    Every frame renders at the ONE frame ratio: the explicit `ratio` prop, else
    the first item's, so uncropped sets (a comment's pictures) pass a fixed frame
    (square) and each display-crops to it — a pager whose height changed per
-   swipe would bounce the card under the reader's thumb. */
+   swipe would bounce the card under the reader's thumb.
+
+   THE SWIPE HAS A NON-DRAG TWIN (the K13 round; readme §10, every drag gesture
+   has one). The strip is focusable, named by where the reader is — `Picture 2
+   of 4` — and pages with ← and →, one frame per press, stopping at either end:
+   the card's pager never wraps, and neither does the viewer's. On Android the
+   pager exposes the platform's scroll actions (TalkBack's scroll forward and
+   back), which are the same two moves. The dots stay a visual readout.
+
+   `onOpen(index)` makes the frames a door — the detail surface's way into the
+   viewer. A tap on a frame opens it at that frame; on the focused strip, or the
+   one frame of a single, Enter and Space do. The opener is the element focus
+   returns to when the viewer closes (`MediaViewer`). In a feed card no
+   `onOpen` is passed: the card's words are its keyboard door, and the media is
+   only the pointer's larger version of it. A clip is never wrapped: its
+   transport is its own set of controls, and its way into the viewer is the
+   transport's fullscreen — a door around a transport would nest one control
+   inside another. */
+const PICTURE_NAME = "Picture";
+const openKeys = open => event => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    open();
+  }
+};
 function MediaGallery({
   items = [],
   ratio,
   radius,
   maxHeight,
+  onOpen,
   node
 }) {
   const [page, setPage] = React.useState(0);
   const stripRef = React.useRef(null);
   if (items.length === 0) return null;
   if (items.length === 1) {
-    return /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, items[0], {
+    const single = /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, items[0], {
       ratio: items[0].ratio ?? ratio ?? "wide",
       radius: radius ?? items[0].radius,
       maxHeight: maxHeight ?? items[0].maxHeight,
       node: node && "frame",
       nodeKey: node && "1"
     }));
+    if (!onOpen || items[0].kind === "video") return single;
+    return /*#__PURE__*/React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      "aria-label": items[0].alt ? undefined : PICTURE_NAME,
+      onClick: () => onOpen(0),
+      onKeyDown: openKeys(() => onOpen(0)),
+      className: "cg-state cg-focus",
+      style: {
+        cursor: "pointer"
+      }
+    }, single);
   }
   const frameRatio = ratio ?? items[0].ratio ?? "wide";
   const onScroll = () => {
@@ -8958,6 +9335,27 @@ function MediaGallery({
     if (!strip || strip.clientWidth === 0) return;
     const next = Math.round(strip.scrollLeft / strip.clientWidth);
     if (next !== page) setPage(next);
+  };
+  const pageTo = next => {
+    const strip = stripRef.current;
+    const bounded = Math.max(0, Math.min(items.length - 1, next));
+    if (bounded === page) return;
+    setPage(bounded);
+    if (strip) strip.scrollTo({
+      left: bounded * strip.clientWidth,
+      behavior: "smooth"
+    });
+  };
+  const onKeyDown = event => {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      pageTo(page + 1);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      pageTo(page - 1);
+    } else if (onOpen) {
+      openKeys(() => onOpen(page))(event);
+    }
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -8967,6 +9365,11 @@ function MediaGallery({
   }, /*#__PURE__*/React.createElement("div", {
     ref: stripRef,
     onScroll: onScroll,
+    onKeyDown: onKeyDown,
+    tabIndex: 0,
+    role: "group",
+    "aria-label": `Picture ${page + 1} of ${items.length}`,
+    className: "cg-focus",
     style: {
       display: "flex",
       overflowX: "auto",
@@ -8975,10 +9378,12 @@ function MediaGallery({
     }
   }, items.map((item, index) => /*#__PURE__*/React.createElement("div", {
     key: item.src ?? index,
+    onClick: onOpen ? () => onOpen(index) : undefined,
     style: {
       flex: "none",
       width: "100%",
-      scrollSnapAlign: "start"
+      scrollSnapAlign: "start",
+      cursor: onOpen ? "pointer" : undefined
     }
   }, /*#__PURE__*/React.createElement(MediaAttachment, _extends({}, item, {
     ratio: frameRatio,
@@ -9659,7 +10064,7 @@ function CommentCard({
     type: "button",
     "aria-expanded": unfolded,
     onClick: () => setUnfolded(shown => !shown),
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       border: 0,
@@ -9675,7 +10080,9 @@ function CommentCard({
   }, unfolded ? "Less" : "More") : null;
   /* With a door (`onOpen`) the words are a link and the pictures take the
      same tap, `PostCard`'s rule for its media in the feed — one door, no
-     control nested in another. */
+     control nested in another. Both carry `cg-door`, and the card takes the
+     pressed layer across its whole surface while either is pressed
+     (`PostCard`'s rule; readme §4, *Interaction states*). */
   const open = event => {
     event.preventDefault();
     onOpen();
@@ -9683,7 +10090,7 @@ function CommentCard({
   const body = /*#__PURE__*/React.createElement(React.Fragment, null, onOpen ? /*#__PURE__*/React.createElement("a", {
     href: "#",
     onClick: open,
-    className: "cg-focus",
+    className: "cg-focus cg-door",
     style: {
       display: "block",
       color: "inherit",
@@ -9691,6 +10098,7 @@ function CommentCard({
     }
   }, words) : words, opener, Array.isArray(media) && media.length > 0 && (onOpen ? /*#__PURE__*/React.createElement("div", {
     onClick: open,
+    className: "cg-door",
     "data-node": node && "media"
   }, /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
@@ -9758,12 +10166,13 @@ function CommentCard({
     style: attach ? {
       borderTopLeftRadius: 0
     } : undefined,
+    door: Boolean(onOpen),
     node: node,
     nodeKey: node && author?.handle
   }, target && onOpenTarget && shape === "line" && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenTarget,
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       display: "flex",
       alignItems: "center",
@@ -9989,9 +10398,24 @@ const { Icon, VideoTransport, GESTURE_ZONE, useGlobalMute, PagerDots } = __ds_sc
      see the frame, and printing it under the picture turns a description into a
      caption the author never wrote.
 
+   · IT IS NAMED BY WHAT IT SHOWS, AND IT HOLDS FOCUS (the K13 round; readme
+     §10's four rules). The dialog's accessible name is its content — `Picture
+     2 of 4` in a set, `Picture` alone, `Video` for a clip — and it follows the
+     paging. Opening it moves focus to the X; closing it hands focus back to
+     the frame that was tapped (the host remembers it — `PostCard`'s
+     `openViewer`).
+   · PAGING STOPS AT THE ENDS. The card's pager does not wrap, so neither does
+     this one: → on the last picture and ← on the first do nothing, and so
+     does a swipe past either end.
+
    The scrim is the dialog scrim, so the viewer belongs to the same family as
    every other thing that covers the screen in this system. */
 
+/* The viewer's name, by content: a set counts, a single names its kind. */
+function viewerName(item, current, count) {
+  if (count > 1) return `Picture ${current + 1} of ${count}`;
+  return item && item.kind === "video" ? "Video" : "Picture";
+}
 function MediaViewer({
   items = [],
   index = 0,
@@ -10004,14 +10428,20 @@ function MediaViewer({
 }) {
   const [current, setCurrent] = React.useState(index);
   const [muted, setMuted] = useGlobalMute();
+  const closeRef = React.useRef(null);
   const count = items.length;
   const item = items[Math.min(current, Math.max(count - 1, 0))];
   const move = React.useCallback(next => {
-    const wrapped = (next + count) % count;
-    setCurrent(wrapped);
-    if (onIndexChange) onIndexChange(wrapped);
+    if (next < 0 || next > count - 1) return;
+    setCurrent(next);
+    if (onIndexChange) onIndexChange(next);
   }, [count, onIndexChange]);
   React.useEffect(() => setCurrent(index), [index]);
+
+  // Focus lands on the way out the moment the layer opens.
+  React.useEffect(() => {
+    if (closeRef.current) closeRef.current.focus();
+  }, []);
   React.useEffect(() => {
     const onKey = event => {
       if (event.key === "Escape") onClose && onClose();
@@ -10071,7 +10501,7 @@ function MediaViewer({
   return /*#__PURE__*/React.createElement("div", {
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "Media",
+    "aria-label": viewerName(item, current, count),
     style: {
       position: "absolute",
       inset: 0,
@@ -10105,6 +10535,7 @@ function MediaViewer({
       zIndex: 3
     }
   }, /*#__PURE__*/React.createElement("button", {
+    ref: closeRef,
     type: "button",
     "aria-label": "Close",
     onClick: onClose,
@@ -10217,6 +10648,8 @@ function PostCard({
   stancePendingPick,
   stancePendingReview,
   stanceSigning,
+  stanceHoldProgress,
+  stanceKnobHeld,
   score,
   onOpenScore,
   comments,
@@ -10286,6 +10719,17 @@ function PostCard({
   // opens the post instead: a reader scrolling is choosing between posts, not
   // looking at one picture.
   const [viewing, setViewing] = React.useState(null);
+  // THE VIEWER HANDS FOCUS BACK TO THE FRAME THAT OPENED IT (readme §10; the
+  // K13 round): the opener is remembered at the tap and focused on close.
+  const viewerOpener = React.useRef(null);
+  const openViewer = index => {
+    viewerOpener.current = typeof document !== "undefined" ? document.activeElement : null;
+    if (onOpenMedia) onOpenMedia(index);else setViewing(index);
+  };
+  const closeViewer = () => {
+    setViewing(null);
+    if (viewerOpener.current && viewerOpener.current.focus) viewerOpener.current.focus();
+  };
 
   // The license is a term over downstream reuse, checked once in a hundred
   // readings — so it is not on the card at all. The menu's row opens it in a
@@ -10360,7 +10804,7 @@ function PostCard({
     type: "button",
     "aria-expanded": open,
     onClick: () => setOpen(shown => !shown),
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       border: 0,
@@ -10383,13 +10827,19 @@ function PostCard({
     }
   }, !hasMedia && heading, caption);
   const bodyBlock = main ?? textBlock;
+  /* THE CARD'S DOORS LIGHT THE WHOLE CARD (readme §4, *Interaction states*;
+     the K13 round). The words and the media open the post, so they carry
+     `cg-door`, and the card that holds them takes the pressed layer across
+     its whole surface — the product's most common tap shows where it went.
+     The stance face, the ⋮, the counts and the share keep their own layers. */
+  const door = !detail && Boolean(onOpen);
   const linkedText = detail || !onOpen ? bodyBlock : /*#__PURE__*/React.createElement("a", {
     href: href ?? "#",
     onClick: event => {
       event.preventDefault();
       onOpen();
     },
-    className: "cg-focus",
+    className: "cg-focus cg-door",
     style: {
       display: "block",
       color: "inherit",
@@ -10430,17 +10880,21 @@ function PostCard({
   // the card's edges, and drops its side radii — it meets the card's straight
   // sides, never its corners, so nothing needs clipping. It is the largest
   // thing in the card by a wide margin, which is the point.
+  // In the feed the region is the card's door (`cg-door`); on the detail
+  // surface each picture is its own door into the viewer (`MediaGallery`'s
+  // `onOpen`), and a clip enters it through its transport.
   React.createElement("div", {
     style: {
       margin: "0 calc(-1 * var(--card-padding))"
     },
+    className: door ? "cg-door" : undefined,
     onClick: event => {
-      if (!detail && onOpen) {
+      if (door) {
         event.preventDefault();
         onOpen();
-      } else if (detail) {
+      } else if (detail && media[0].kind === "video") {
         event.preventDefault();
-        if (onOpenMedia) onOpenMedia(0);else setViewing(0);
+        openViewer(0);
       }
     },
     "data-node": node && "media"
@@ -10452,15 +10906,17 @@ function PostCard({
   }, /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
     radius: "0px",
+    onOpen: detail ? openViewer : undefined,
     node: node && "media"
   })) : /*#__PURE__*/React.createElement(MediaGallery, {
     items: media,
     radius: "0px",
+    onOpen: detail ? openViewer : undefined,
     node: node && "media"
   })), viewing !== null && /*#__PURE__*/React.createElement(MediaViewer, {
     items: media,
     index: viewing,
-    onClose: () => setViewing(null)
+    onClose: closeViewer
   }), redacted ? /*#__PURE__*/React.createElement(RedactedContent, redacted === true ? {} : redacted) : linkedText, !redacted && opener, !redacted && /*#__PURE__*/React.createElement(TopicsLine, {
     topics: topics,
     references: references,
@@ -10470,8 +10926,7 @@ function PostCard({
   }), !redacted && detail && opinions > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenOpinions ?? (() => {}),
-    "aria-label": "Opinions on this post",
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       display: "flex",
       alignItems: "center",
@@ -10487,13 +10942,10 @@ function PostCard({
       textAlign: "left"
     },
     "data-node": node && "opinions"
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
-  }, opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`)), !redacted && detail && citedBy > 0 && /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", null, opinions === 1 ? "1 opinion on this post" : `${opinions} opinions on this post`)), !redacted && detail && citedBy > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onOpenCitedBy ?? (() => {}),
-    "aria-label": "Cited by",
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       display: "flex",
       alignItems: "center",
@@ -10509,9 +10961,7 @@ function PostCard({
       textAlign: "left"
     },
     "data-node": node && "citedBy"
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true"
-  }, "Cited by ", citedBy)), edited && /*#__PURE__*/React.createElement(EditedMarker, {
+  }, /*#__PURE__*/React.createElement("span", null, "Cited by ", citedBy)), edited && /*#__PURE__*/React.createElement(EditedMarker, {
     onInspect: onInspectEdit
   }), pending && /*#__PURE__*/React.createElement(PendingMarker, null), (showStance || score !== undefined || comments !== undefined || act || actions) && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -10536,7 +10986,9 @@ function PostCard({
     onOpenHistory: stanceOnOpenHistory,
     pendingPick: stancePendingPick,
     pendingReview: stancePendingReview,
-    signing: stanceSigning
+    signing: stanceSigning,
+    holdProgress: stanceHoldProgress,
+    knobHeld: stanceKnobHeld
   }, stanceAxes ? {
     axes: stanceAxes
   } : null, {
@@ -10586,6 +11038,7 @@ function PostCard({
     style: attach ? {
       borderTopLeftRadius: 0
     } : undefined,
+    door: door,
     node: node,
     nodeKey: node && author?.handle
   }, veil ? /*#__PURE__*/React.createElement(SensitiveScope, null, body) : body);
@@ -11820,7 +12273,22 @@ const { BUTTON_CLASS, Icon } = __ds_scope;
    The line is wired to the input exactly as `TextField` wires its own —
    `aria-describedby` always, `aria-invalid` and `role="alert"` in the error
    state — because duplicating the markup must not mean duplicating it minus
-   the part that makes the message reach anyone. */
+   the part that makes the message reach anyone.
+
+   ONE RULE FOR CREDENTIAL FORMS (the K13 round, ruled; readme §10). A form
+   that signs in or sets a password names the account it is for by its email —
+   the login identifier — as `autocomplete="username"`: on its email field
+   where it draws one (`SignIn`, `Join`), and where it draws none
+   (`ChangePassword`, `ResetNew`) in a hidden input carrying the address, which
+   is Chromium's documented way to tell a password manager whose password is
+   changing. `account` renders that input beside this field. A password is
+   `current-password` or `new-password`, never guessed at, never corrected,
+   never capitalized; and a handle is never `username` — it is not what the
+   reader signs in with.
+
+   THE RETURN KEY: `go` by default — a password is the last field of every
+   credential form but one — and `next` where a field follows
+   (`ChangePassword`'s current password). */
 
 function PasswordField({
   label,
@@ -11829,7 +12297,9 @@ function PasswordField({
   autoComplete = "current-password",
   id,
   hint,
-  error
+  error,
+  account,
+  enterKeyHint = "go"
 }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
@@ -11856,7 +12326,13 @@ function PasswordField({
         fontWeight: "var(--text-label-large--font-weight)",
         color: error ? "var(--error)" : undefined
       }
-    }, label), /*#__PURE__*/React.createElement("div", {
+    }, label), account && /*#__PURE__*/React.createElement("input", {
+      type: "email",
+      autoComplete: "username",
+      value: account,
+      readOnly: true,
+      hidden: true
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         display: "flex",
         gap: "var(--space-2)",
@@ -11867,6 +12343,10 @@ function PasswordField({
       type: visible ? "text" : "password",
       value: value,
       autoComplete: autoComplete,
+      autoCapitalize: "none",
+      autoCorrect: "off",
+      spellCheck: false,
+      enterKeyHint: enterKeyHint,
       "aria-describedby": error || hint ? supportId : undefined,
       "aria-invalid": error ? "true" : undefined,
       onChange: event => onChange && onChange(event.target.value),
@@ -12035,9 +12515,21 @@ try { (() => {
 const { Icon } = __ds_scope;
 /* The search field (item 9's port) — M3's search-bar idiom rather than a
    TextField variant: a full 48px pill on the container surface, a leading
-   search glyph, placeholder register until a query exists. It lives at the top
-   of the Explore tab and nowhere else; an inner surface that needs text input
-   uses TextField.
+   search glyph, placeholder register until a query exists. It heads the
+   surfaces that search: the Explore tab, and the two pickers that search to
+   stage — the tag picker and the citation picker. Any other inner surface that
+   needs text input uses TextField.
+
+   ITS NAME IS THE USE'S, NOT THE PLACEHOLDER (the K13 round). A placeholder
+   leaves when the reader types, so it cannot be the field's accessible name:
+   `ariaLabel` names it per use — `Search` on Explore, `Name a tag` in the tag
+   picker, `Cite something` in the citation picker. The static board carries
+   the same name on the pill's text, the bound input in the product.
+
+   ITS KEYBOARD IS THE SEARCH KEYBOARD (`TextField`'s field-semantics table,
+   the K13 round): the `search` return key (`ImeAction.Search`), no capitals
+   guessed and nothing corrected — a query carries handles and tag names, which
+   correction would break. What the action key does is each surface's own.
 
    This is a STATIC-RENDER-FRIENDLY control: `query` is the shown text and a
    caret bar stands in for focus on prototype boards; the product binds a real
@@ -12061,6 +12553,7 @@ const { Icon } = __ds_scope;
 function SearchBar({
   query = "",
   placeholder = "Search",
+  ariaLabel = "Search",
   onChange,
   error = false,
   describedBy
@@ -12097,6 +12590,12 @@ function SearchBar({
     value: query,
     placeholder: placeholder,
     onChange: event => onChange(event.target.value),
+    inputMode: "search",
+    enterKeyHint: "search",
+    autoCapitalize: "none",
+    autoCorrect: "off",
+    spellCheck: false,
+    "aria-label": ariaLabel,
     "aria-invalid": error ? "true" : undefined,
     "aria-describedby": describedBy,
     className: "cg-focus",
@@ -12113,6 +12612,8 @@ function SearchBar({
       outline: "none"
     }
   }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    role: "searchbox",
+    "aria-label": ariaLabel,
     style: {
       fontSize: "var(--text-body-large)",
       lineHeight: "var(--text-body-large--line-height)",
@@ -12216,7 +12717,11 @@ const { SensitiveVeil } = __ds_scope;
    law, `PostCard`'s idiom): the description blurs in place behind the
    `text` veil, the handle and the title stay readable so choosing to look is
    informed, and the reveal belongs to the post's one `SensitiveScope` — the
-   same tap that unveils the clip unveils these words. */
+   same tap that unveils the clip unveils these words.
+
+   `More` ANSWERS TO 48px (readme §4, the K13 round): `cg-hit` grows its target
+   around the word, which keeps its ink. There is no real option; the floor is
+   ruled. */
 
 function ReelCaption({
   handle,
@@ -12266,7 +12771,7 @@ function ReelCaption({
   }, description)), description && /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onMore ?? (() => {}),
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       alignSelf: "flex-start",
       border: 0,
@@ -12302,6 +12807,21 @@ const { Icon, MonogramAvatar, StanceControl, ExplainableNumber } = __ds_scope;
    control but an invisible one, which is why nothing here takes `onSurface`;
    the shadow does the work a plate would otherwise do, because a column of five
    plates is a wall of chrome down the frame.
+
+   THE LOOK IS RULED, AND ITS CONTRAST WAS MEASURED ONCE (the K13 round; jakob
+   accepted white-with-shadow over a token pair). Against the lightest fixture
+   photograph — `04-square-1x1.jpg`, the honey jars (`gallery-honey.jpg`),
+   mean relative luminance 0.555 — bare white reads 1.73:1 on the photo's
+   mean and 1.04:1 on its near-white right-hand strip, where the rail stands.
+   Under the shadow's 55–60 % black core the glyph's edge reaches about
+   3.9:1 on the mean and about 2.4:1 on that strip. So on the brightest frame
+   the fixtures hold, the rail sits below WCAG's 3:1 for controls; the clip
+   fixture the stream draws (`clip-lakeside.jpg`) gives 3.3:1 bare and well
+   over it shadowed. Recorded, not changed: the look stands as ruled, and the
+   finding is filed (backlog 13X-k13). Method: relative luminance per WCAG
+   2.x over every fixture photo, the rail's strip being the right fifth of the
+   lower two-thirds; the shadow modelled as its core alpha over that
+   luminance.
 
    THE STANCE IS THE SYSTEM'S OWN CONTROL, in its media dress (`overMedia`): the
    unset state is a line face at the rail's weight rather than the card's muted
@@ -13471,7 +13991,18 @@ function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_
 }
 
 /* The worded trigger alone — for surfaces that own their sheet (search draws
-   its own, with its own kind semantics) but must wear the same pill. */
+   its own, with its own kind semantics) but must wear the same pill.
+
+   ITS NAME IS THE READING, THEN THE PURPOSE (the K13 round; WCAG 2.5.3). The
+   pill's own words lead the accessible name and `ariaLabel` — what the sheet
+   is for — follows them: `Posts, what your feed shows`, `Posts · 3 changes,
+   what your feed shows`. A name that replaced the reading would hide the
+   filter's state from exactly the reader who cannot see the pill, and a
+   speech-input reader says what they see. */
+function triggerName(reading, purpose) {
+  if (!purpose) return reading;
+  return `${reading}, ${purpose.charAt(0).toLowerCase()}${purpose.slice(1)}`;
+}
 function FilterTrigger({
   reading,
   onOpen,
@@ -13482,7 +14013,7 @@ function FilterTrigger({
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-expanded": expanded,
-    "aria-label": ariaLabel,
+    "aria-label": triggerName(reading, ariaLabel),
     onClick: onOpen,
     className: "cg-state cg-focus cg-hit",
     style: {
@@ -13697,7 +14228,25 @@ function FilterFoot({
    The sheet works on a staged copy taken when it opens; `onChange` fires once,
    on Done, with the staged filter, and every other way out drops the copy.
    `readerDefault` is what the foot's `Reset` stages: the reader's own default,
-   the app's until they set one in Settings. */
+   the app's until they set one in Settings.
+
+   THE APPLY IS SAID ONCE (the K13 round; WCAG 4.1.3). The feed changing
+   under a filter is a change an eye sees and an ear does not, so `Done`
+   leaves one polite status message — the new reading in the trigger's own
+   name, `Posts · newest, what your feed shows` — in a region mounted from
+   the start, because assistive technology announces only changes to a
+   region it was already watching. It draws nothing. */
+const SPOKEN_ONLY = {
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0 0 0 0)",
+  whiteSpace: "nowrap",
+  border: 0
+};
 function FeedFilter({
   value = FEED_FILTER_DEFAULT,
   readerDefault = FEED_FILTER_DEFAULT,
@@ -13711,15 +14260,21 @@ function FeedFilter({
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const [staged, setStaged] = React.useState(value);
+  const [said, setSaid] = React.useState("");
   const openSheet = () => {
     setStaged(value);
     setOpen(true);
   };
   const commit = () => {
     setOpen(false);
+    setSaid(triggerName(feedFilterSummary(staged), ariaLabel));
     if (onChange) onChange(staged);
   };
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(FilterTrigger, {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    role: "status",
+    "aria-live": "polite",
+    style: SPOKEN_ONLY
+  }, said), /*#__PURE__*/React.createElement(FilterTrigger, {
     reading: feedFilterSummary(value),
     onOpen: openSheet,
     expanded: open,
@@ -13748,6 +14303,7 @@ __ds_scope.FEED_FILTER_DEFAULT = FEED_FILTER_DEFAULT;
 __ds_scope.BAND_CEILING_PX = BAND_CEILING_PX;
 __ds_scope.measureTriggerText = measureTriggerText;
 __ds_scope.feedFilterSummary = feedFilterSummary;
+__ds_scope.triggerName = triggerName;
 __ds_scope.FilterTrigger = FilterTrigger;
 __ds_scope.FeedFilterSheet = FeedFilterSheet;
 __ds_scope.FilterFoot = FilterFoot;
@@ -13893,7 +14449,13 @@ const { MonogramAvatar, REDACTED_ACTOR_NAME, Button, Icon, StanceControl } = __d
    THE AVATAR CHANGES WITHOUT THE EDIT SCREEN (jakob 2026-09-01). Changing the
    picture is frequent and mostly standalone, so one's own avatar wears a change
    badge right here — the same signed act, the same crop-and-seal flow the edit
-   screen reaches; the edit screen keeps its row too.
+   screen reaches; the edit screen keeps its row too. THE AVATAR ITSELF IS NOT
+   TAPPABLE (the K13 round): the badge is the door, and the picture is a
+   picture.
+
+   BOTH DOORS ANSWER TO 48px (readme §4, the K13 round): the 28px badge and the
+   figures row (about 40px of ink) carry `cg-hit`, which grows each target
+   without moving a pixel of the drawing. The floor is ruled.
 
    No cover image, no banner: the system has no imagery slot that size, and a
    decorative band would be the largest thing on a screen whose subject is a
@@ -13914,6 +14476,13 @@ const { MonogramAvatar, REDACTED_ACTOR_NAME, Button, Icon, StanceControl } = __d
    product pretending less was there than there was, which is the one thing the
    erasure ethic forbids. */
 
+/* The header's one stylesheet: the figures' second arrangement, under the
+   avatar-and-name block, below each profile's measured fit (the header's
+   width under 96px of avatar and gap plus 15.5rem of another's labels, or
+   14.5rem of one's own). The name centres on the avatar there, and the
+   figures keep the header's own 12px gap. */
+const UNDER = `{ .cg-profile-grid { grid-template-areas: "avatar name" "figures figures" !important } .cg-profile-name { align-self: center !important } .cg-profile-figures { margin-top: var(--space-3) !important } }`;
+const PROFILE_TOP_CSS = `@container cg-profile-other (width < calc(96px + 15.5rem)) ${UNDER} @container cg-profile-own (width < calc(96px + 14.5rem)) ${UNDER}`;
 function Figure({
   value,
   label
@@ -13982,6 +14551,50 @@ function ProfileHeader({
     value: stancesTaken,
     label: own ? "Opinions by you" : "Opinions by them"
   }));
+  /* THE FIGURES MOVE UNDER WHEN THEY DO NOT FIT (the K13 round; readme §4,
+     *Type*). Three labels that never wrap need about 243px for another's
+     profile and 228px for one's own at 1× — and the column beside the avatar
+     is 262px at 390, 232 at 360, 192 at 320, measured. So while the figures fit
+     that column at their rendered size they stand under the name, and where
+     they do not they move under the avatar-and-name block, the header's full
+     width. One grid, two arrangements: the avatar spans the name's row and
+     the figures' row while they fit, and the figures take the second row's
+     full width when they do not. The switch is a container query on the
+     header's own width — 96px of avatar and gap plus the labels' measured
+     width in `rem`, so it moves with the reader's text size. */
+  const container = own ? "cg-profile-own" : "cg-profile-other";
+  const figuresCell = hasFigures ? onCounts ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle,
+    onClick: onCounts,
+    className: "cg-state cg-focus cg-hit cg-profile-figures",
+    style: {
+      gridArea: "figures",
+      alignSelf: "start",
+      display: "flex",
+      gap: "var(--space-5)",
+      border: 0,
+      background: "none",
+      padding: 0,
+      marginTop: 6,
+      cursor: "pointer",
+      fontFamily: "var(--font-sans)",
+      color: "var(--on-surface)",
+      textAlign: "left",
+      width: "fit-content",
+      maxWidth: "100%",
+      borderRadius: "var(--radius-small)"
+    }
+  }, figures) : /*#__PURE__*/React.createElement("div", {
+    className: "cg-profile-figures",
+    style: {
+      gridArea: "figures",
+      alignSelf: "start",
+      display: "flex",
+      gap: "var(--space-5)",
+      marginTop: 6
+    }
+  }, figures) : null;
   return /*#__PURE__*/React.createElement("header", {
     style: {
       display: "flex",
@@ -13989,14 +14602,27 @@ function ProfileHeader({
       gap: "var(--space-3)",
       padding: "var(--space-3) 0 var(--space-1)"
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("style", {
+    dangerouslySetInnerHTML: {
+      __html: PROFILE_TOP_CSS
+    }
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
-      display: "flex",
-      alignItems: "center",
-      gap: "var(--space-4)"
+      containerType: "inline-size",
+      containerName: container
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cg-profile-grid",
+    style: {
+      display: "grid",
+      gridTemplateColumns: "auto minmax(0, 1fr)",
+      gridTemplateAreas: '"avatar name" "avatar figures"',
+      columnGap: "var(--space-4)",
+      alignItems: "center"
     }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
+      gridArea: "avatar",
       position: "relative",
       flex: "none"
     }
@@ -14009,7 +14635,7 @@ function ProfileHeader({
     type: "button",
     "aria-label": "Change your picture",
     onClick: onAvatarChange,
-    className: "cg-state cg-focus",
+    className: "cg-state cg-focus cg-hit",
     style: {
       position: "absolute",
       right: -2,
@@ -14029,12 +14655,14 @@ function ProfileHeader({
     name: "photo_camera",
     size: 16
   }))), /*#__PURE__*/React.createElement("div", {
+    className: "cg-profile-name",
     style: {
+      gridArea: "name",
+      alignSelf: "end",
       display: "flex",
       flexDirection: "column",
       gap: 2,
-      minWidth: 0,
-      flex: 1
+      minWidth: 0
     }
   }, /*#__PURE__*/React.createElement("h1", {
     style: {
@@ -14051,33 +14679,7 @@ function ProfileHeader({
       lineHeight: "var(--text-body-small--line-height)",
       color: "var(--text-secondary)"
     }
-  }, "@", handle), hasFigures && (onCounts ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    "aria-label": own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle,
-    onClick: onCounts,
-    className: "cg-state cg-focus",
-    style: {
-      display: "flex",
-      gap: "var(--space-5)",
-      border: 0,
-      background: "none",
-      padding: 0,
-      marginTop: 4,
-      cursor: "pointer",
-      fontFamily: "var(--font-sans)",
-      color: "var(--on-surface)",
-      textAlign: "left",
-      width: "fit-content",
-      maxWidth: "100%",
-      borderRadius: "var(--radius-small)"
-    }
-  }, figures) : /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: "var(--space-5)",
-      marginTop: 4
-    }
-  }, figures)))), bio && (typeof bio === "string" ? /*#__PURE__*/React.createElement("p", {
+  }, "@", handle)), figuresCell)), bio && (typeof bio === "string" ? /*#__PURE__*/React.createElement("p", {
     style: {
       margin: 0,
       fontSize: "var(--text-body-medium)",
@@ -14843,7 +15445,17 @@ __ds_ns.CitedSheet = __ds_scope.CitedSheet;
 
 __ds_ns.CoverRow = __ds_scope.CoverRow;
 
+__ds_ns.CROP_ZOOM_MIN = __ds_scope.CROP_ZOOM_MIN;
+
+__ds_ns.CROP_ZOOM_MAX = __ds_scope.CROP_ZOOM_MAX;
+
 __ds_ns.CropViewport = __ds_scope.CropViewport;
+
+__ds_ns.CROP_PAN_NAME = __ds_scope.CROP_PAN_NAME;
+
+__ds_ns.CROP_ZOOM_NAME = __ds_scope.CROP_ZOOM_NAME;
+
+__ds_ns.CropZoom = __ds_scope.CropZoom;
 
 __ds_ns.DescribeSheet = __ds_scope.DescribeSheet;
 
@@ -14962,6 +15574,8 @@ __ds_ns.PasswordField = __ds_scope.PasswordField;
 __ds_ns.RecoveryCode = __ds_scope.RecoveryCode;
 
 __ds_ns.SearchBar = __ds_scope.SearchBar;
+
+__ds_ns.FIELD_KINDS = __ds_scope.FIELD_KINDS;
 
 __ds_ns.FieldCount = __ds_scope.FieldCount;
 
@@ -15166,6 +15780,8 @@ __ds_ns.StanceValue = __ds_scope.StanceValue;
 __ds_ns.StanceReadout = __ds_scope.StanceReadout;
 
 __ds_ns.OwnStanceReadout = __ds_scope.OwnStanceReadout;
+
+__ds_ns.SETTLE_MS = __ds_scope.SETTLE_MS;
 
 __ds_ns.StanceStanding = __ds_scope.StanceStanding;
 

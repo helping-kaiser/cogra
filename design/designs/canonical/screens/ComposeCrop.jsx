@@ -13,7 +13,13 @@
    THE STRIP IS `MediaThumb`, dressed the way `CoverRow` dresses its frames:
    the framed picture takes the primary outline offset off the tile, the rest
    sit at 65%. Selection by outline and not by badge, for the same reason —
-   at 48px a badge covers the thing being chosen. */
+   at 48px a badge covers the thing being chosen.
+
+   THE ZOOM IS ON SCREEN, AND THE CUT PANS BY KEY (the K13 round): the
+   master's `CropZoom` under the cut, its thumb at this crop's 1.15× between
+   the fill (1×) and about 4×, on both platforms; the cut takes focus under
+   `CropViewport`'s name and its arrow keys pan the picture, stopping where an
+   edge of the picture meets the cut's. */
 export function Screen() {
   return (
     <>
@@ -25,7 +31,7 @@ export function Screen() {
           <Chip label="Wide 1.91:1" onToggle={() => {}} />
         </div>
 
-        <div style={{ position: "relative", width: 390, height: 488, margin: "0 -24px", overflow: "hidden", flex: "none" }}>
+        <div tabIndex={0} role="group" aria-label={CROP_PAN_NAME} className="cg-focus" style={{ position: "relative", width: 390, height: 488, margin: "0 -24px", overflow: "hidden", flex: "none" }}>
           <img
             src="post-photo.jpg"
             alt=""
@@ -37,6 +43,8 @@ export function Screen() {
           <span aria-hidden="true" style={{ position: "absolute", top: "33.33%", left: 0, right: 0, height: 1, background: "rgba(255,255,255,0.55)" }} />
           <span aria-hidden="true" style={{ position: "absolute", top: "66.66%", left: 0, right: 0, height: 1, background: "rgba(255,255,255,0.55)" }} />
         </div>
+
+        <CropZoom scale={1.15} />
 
         <QuietNote>One shape for the whole post. Drag to move, pinch to zoom.</QuietNote>
 

@@ -31,3 +31,5 @@ WHEN press I've written it down GIVEN the code was made or replaced from setting
 WHEN press I've written it down GIVEN no answer reaches the device -> the code stays on screen until the backup uploads AND the fault is said in place
 
 WHEN the tab is closed or the app is killed before the code confirms -> nothing this screen would make exists
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

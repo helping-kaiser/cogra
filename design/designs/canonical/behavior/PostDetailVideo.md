@@ -27,3 +27,5 @@ WHEN tap the pinned clip GIVEN the reader came from anywhere else -> the fullscr
 WHEN tap the fullscreen toggle -> the fullscreen viewer opens on the clip
 
 WHEN tap the comment count -> the comments sheet opens over the post AND the clip stops
+
+WHEN the phone turns to landscape GIVEN the detail holds a landscape clip -> the fullscreen viewer opens on the clip, filling the turned screen

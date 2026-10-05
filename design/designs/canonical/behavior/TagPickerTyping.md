@@ -17,3 +17,5 @@ WHEN tap the first row -> the typed name is staged in the composer's tags AND th
 WHEN tap Done -> the picker closes to the composer it was opened from AND every staged tag is kept AND NEVER the typed name is staged by leaving
 
 WHEN press the header back -> the picker closes to the composer it was opened from AND every staged tag is kept AND NEVER the typed name is staged by leaving
+
+ALWAYS the back arrow reads Back to the post from a post's composer or its edit, and Back to the comment from a reply's composer or a comment's edit

@@ -15,3 +15,5 @@ WHEN the new address's link is opened GIVEN the new address was registered by an
 ALWAYS the landing carries no back arrow
 
 ALWAYS the landing's way on is a text button, and the landing offers no commitment
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

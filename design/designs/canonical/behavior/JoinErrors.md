@@ -37,3 +37,5 @@ WHEN press Create account GIVEN a field still fails -> its line updates in place
 WHEN press Create account GIVEN no answer reaches the device -> the fields keep what was typed AND the fault is said in place on the form
 
 WHEN tap Already have an account? Sign in -> SignIn opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

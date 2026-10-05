@@ -49,7 +49,7 @@ export function Screen() {
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <PasswordField id="current-password" label="Current password" autoComplete="current-password" value="" />
+          <PasswordField id="current-password" label="Current password" autoComplete="current-password" account="sol@solferreira.art" enterKeyHint="next" value="" />
         </div>
 
         <div style={{ marginTop: 24 }}>

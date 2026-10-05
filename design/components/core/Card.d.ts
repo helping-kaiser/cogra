@@ -11,6 +11,8 @@ export interface CardProps {
   node?: string;
   /** The card's content key when it is a repeated instance. */
   nodeKey?: string;
+  /** The card is a door: it carries `cg-door-card`, and a `cg-door` region inside it lights the whole card's state layer while hovered or pressed. */
+  door?: boolean;
 }
 
 export declare function Card(props: CardProps): JSX.Element;

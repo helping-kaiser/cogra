@@ -31,3 +31,5 @@ WHEN press Go to the feed GIVEN the application is still running -> ApplicantFee
 WHEN press Go to the feed GIVEN the account is already a member -> Feed opens
 
 WHEN press Sign in GIVEN no session -> SignIn opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

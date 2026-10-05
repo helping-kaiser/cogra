@@ -3,13 +3,18 @@
    avatar badge on one's own profile — the standalone shortcut, Next goes to
    the picture's own seal — and Change picture on the edit screen, where Next
    returns to the edit instead: ONE seal covers picture and fields together,
-   so nobody pays twice for one profile update. */
+   so nobody pays twice for one profile update.
+
+   THE ZOOM IS ON SCREEN (the K13 round): `CropZoom` under the circle, its
+   thumb at this crop's 1.2× between the fill (1×) and about 4×, on both
+   platforms; the focused circle pans with the arrow keys (`CropViewport`). */
 export function Screen() {
   return (
     <>
       <WizardHeader title="Your picture" leaveLabel="Leave" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 24px 16px", overflow: "hidden" }}>
         <CropViewport src="comment-camera.jpg" shape="circle" scale={1.2} origin="50% 35%" />
+        <CropZoom scale={1.2} />
         <QuietNote>Drag to move, pinch to zoom.</QuietNote>
         <QuietNote>One picture, shown everywhere you appear.</QuietNote>
         <div style={{ flex: 1 }} />

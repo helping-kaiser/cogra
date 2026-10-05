@@ -127,17 +127,34 @@ function zeroPercentOf(range) {
   return range.min < 0 && range.max > 0 ? percent(fractionOf(0, range)) : null;
 }
 
-export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true, axes = STANCE_AXES, ranges = STANCE_RANGES }) {
+/* THE KNOB WHILE HELD (the K13 round). A finger on the field puts M3's
+   pressed state layer around the knob — a 40px disc in the knob's own colour
+   at the press opacity (10 %) — for as long as the pointer is down, and lifts
+   it on release. It is a layer, never a scale: §4 forbids a control that
+   grows or shrinks under the thumb. `held` draws it for a board
+   (`PadStanding`'s `knob` chip).
+
+   THE KNOB TICKS, ON ANDROID ONLY (readme §4, *Haptics*). Crossing either
+   zero line, and meeting the field's edge where the pick clamps, gives one
+   short platform tick each — `HapticFeedbackConstants.SEGMENT_TICK`, the
+   constant Android documents for discrete points on a slider (`CLOCK_TICK`
+   below API 34). Nothing else in the drag vibrates, and the web gives none. */
+const KNOB_LAYER_PX = 40;
+
+export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true, axes = STANCE_AXES, ranges = STANCE_RANGES, held = false }) {
   const localRef = React.useRef(null);
   const ref = fieldRef ?? localRef;
   const drag = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
   const knob = padPercentOf(value, ranges);
   const zeroAcross = zeroPercentOf(ranges.pInterest);
   const zeroDown = zeroPercentOf(ranges.pDirected);
+  const layered = held || dragging;
 
   const onPointerDown = (event) => {
     if (!onChange) return;
     drag.current = { x: event.clientX, y: event.clientY, base: value };
+    setDragging(true);
     event.currentTarget.setPointerCapture?.(event.pointerId);
   };
   const onPointerMove = (event) => {
@@ -156,6 +173,7 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
   };
   const endDrag = () => {
     drag.current = null;
+    setDragging(false);
   };
 
   return (
@@ -207,6 +225,21 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
           <div aria-hidden="true" style={{ position: "absolute", left: `${zeroDown}%`, top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }} />
         )}
         <div aria-hidden="true" style={{ position: "absolute", inset: `${KNOB_TRAVEL_INSET_PX}px` }}>
+          {layered && (
+            <div
+              style={{
+                position: "absolute",
+                left: `${knob.x}%`,
+                top: `${knob.y}%`,
+                height: `${KNOB_LAYER_PX}px`,
+                width: `${KNOB_LAYER_PX}px`,
+                transform: "translate(-50%, -50%)",
+                borderRadius: "var(--radius-full)",
+                background: "var(--surface-loud)",
+                opacity: "var(--state-press)",
+              }}
+            />
+          )}
           <div
             style={{
               position: "absolute",

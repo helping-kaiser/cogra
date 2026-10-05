@@ -42,6 +42,14 @@ import {
    signature is the one that takes a held finger, and the gesture nobody gives by
    mistake is the only one allowed to act by itself.
 
+   THE HOLD SHOWS IT COMING (the K13 round). From the press, a ring fills
+   around the face over the 500ms — `primary`, clockwise from twelve o'clock —
+   so the reader sees the threshold before the signature spends; lifting
+   before it closes leaves the ring and the signature both unspent. At the
+   commit, Android gives the platform's long-press haptic, its one pulse
+   (readme §4, *Haptics*); the web gives none. `holdProgress` draws the ring
+   at a fixed fill for a board (`RowSigning`'s `hold` chip).
+
    THE HOLD IS NEVER SILENT, AND IT WAITS FOR ITS SIGNATURE (jakob, the failure
    pack: signed acts are pessimistic). A gesture that stages a priced act must
    never be silent, because silence reads as failure and invites the same act
@@ -79,6 +87,40 @@ import {
    what the in-flight states above wait on; `signing` draws them. */
 
 export const LONG_PRESS_MS = 500;
+
+/* THE HOLD'S RING: M3's determinate circular indicator — a 40px circle, a 4px
+   active stroke in `primary`, no track — drawn around the face. `progress` is
+   0–1; `live` lets it fill itself over the hold. */
+const HOLD_RING_PX = 40;
+const HOLD_RING_STROKE_PX = 4;
+function HoldRing({ progress = 0, live = false }) {
+  const r = (HOLD_RING_PX - HOLD_RING_STROKE_PX) / 2;
+  const circumference = Math.round(2 * Math.PI * r * 1000) / 1000;
+  const offset = Math.round(circumference * (1 - progress) * 1000) / 1000;
+  return (
+    <svg
+      aria-hidden="true"
+      width={HOLD_RING_PX}
+      height={HOLD_RING_PX}
+      viewBox={`0 0 ${HOLD_RING_PX} ${HOLD_RING_PX}`}
+      style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%) rotate(-90deg)", pointerEvents: "none", overflow: "visible" }}
+    >
+      <circle
+        cx={HOLD_RING_PX / 2}
+        cy={HOLD_RING_PX / 2}
+        r={r}
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth={HOLD_RING_STROKE_PX}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+      >
+        {live && <animate attributeName="stroke-dashoffset" from={circumference} to="0" dur={`${LONG_PRESS_MS}ms`} fill="freeze" />}
+      </circle>
+    </svg>
+  );
+}
 
 /* The write rule's words at the pad's and the row's scale (copy-voice,
    *Faults by code*). The seal's panel says the draft is kept; a pad has no
@@ -210,9 +252,18 @@ export function StanceControl({
      through.` with Retry. Additive — absent, the control renders exactly as
      before. */
   signing,
+  /* THE HOLD MID-WAY, for a board (the K13 round): a 0–1 fill draws the
+     hold's ring standing at that point. Additive — absent, the control renders
+     exactly as before, and the live ring is the press's own. */
+  holdProgress,
+  /* THE KNOB UNDER THE FINGER, for a board: the pad's pressed layer drawn
+     around the knob (`StancePad`'s `held`). Additive — absent, the pad renders
+     exactly as before, and the live layer is the drag's own. */
+  knobHeld = false,
   node,
 }) {
   const [bundle, setBundle] = React.useState(supplied ?? EMPTY_BUNDLE);
+  const [holding, setHolding] = React.useState(false);
   React.useEffect(() => {
     if (supplied !== undefined) setBundle(supplied);
   }, [supplied]);
@@ -244,6 +295,7 @@ export function StanceControl({
       clearTimeout(holdTimer.current);
       holdTimer.current = null;
     }
+    setHolding(false);
   };
   const closeAll = () => {
     clearHold();
@@ -325,8 +377,10 @@ export function StanceControl({
   const onPointerDown = () => {
     if (!signedIn) return;
     clearHold();
+    setHolding(true);
     holdTimer.current = setTimeout(() => {
       holdTimer.current = null;
+      setHolding(false);
       suppressClick.current = true;
       setSigned(null);
       commitChecked(TAP_DEFAULT);
@@ -340,6 +394,18 @@ export function StanceControl({
   const rowSigning = open ? undefined : signing;
   const padSigning = open ? signing : undefined;
   const anchorBusy = rowSigning === "busy";
+  /* The face, ringed while a hold is under way — the ring centred on it, the
+     face's own box unchanged, so nothing beside it moves. */
+  const ringed = holding || holdProgress !== undefined;
+  const withHoldRing = (face) =>
+    ringed ? (
+      <span style={{ position: "relative", display: "inline-grid", placeItems: "center" }}>
+        {face}
+        <HoldRing progress={holdProgress ?? 0} live={holding} />
+      </span>
+    ) : (
+      face
+    );
 
   return (
     <div
@@ -398,7 +464,7 @@ export function StanceControl({
               waiting to be given a value, and never the shrug a zero opinion
               owns (§8.4). The anchor's words are not drawn beside it; they ride
               the button's accessible name above. */}
-          {overMedia && restingFace === null ? (
+          {withHoldRing(overMedia && restingFace === null ? (
             /* OVER MEDIA THE UNSET STATE IS A LINE FACE, not a muted emoji: on
                photography "quiet" and "invisible" are the same thing, and the
                glyph says "no opinion yet" by being the empty face rather than
@@ -417,7 +483,7 @@ export function StanceControl({
             >
               {restingFace === null ? RESTING_FACE_EMOJI : restingFace.emoji}
             </span>
-          )}
+          ))}
           {wide && restingPair === null && (
             /* The wide anchor's words — only where there is no pair to show. */
             <span aria-hidden="true" style={{ whiteSpace: "nowrap" }}>
@@ -612,7 +678,7 @@ export function StanceControl({
               </div>
             ) : (
               <>
-                <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} />
+                <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} held={knobHeld} />
                 {padNote}
                 {padSigning !== "writeRule" && <StanceLandingLine landing={landing} names={axes} />}
               </>

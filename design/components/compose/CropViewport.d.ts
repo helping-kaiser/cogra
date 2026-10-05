@@ -20,6 +20,24 @@ export interface CropViewportProps {
   /** The window's height; square by default. It is centred vertically, so a
    *  board states the ratio it wants and never a coordinate. */
   height?: number;
+  /** The arrow keys' pan, the drag's non-drag twin: called with (−1|0|1, −1|0|1) per press while the focused viewport holds focus; the picture stops where its edge meets the window's. */
+  onPan?: (dx: number, dy: number) => void;
 }
 
 export declare function CropViewport(props: CropViewportProps): JSX.Element;
+
+/** The zoom's bounds: 1× is the fill (the picture just covers the window), 4× the most. */
+export declare const CROP_ZOOM_MIN: number;
+export declare const CROP_ZOOM_MAX: number;
+/** The spoken names of the focusable viewport (`Move the picture`) and the slider (`Zoom`). */
+export declare const CROP_PAN_NAME: string;
+export declare const CROP_ZOOM_NAME: string;
+
+export interface CropZoomProps {
+  /** The crop's current scale, between `CROP_ZOOM_MIN` and `CROP_ZOOM_MAX`. */
+  scale?: number;
+  onChange?: (scale: number) => void;
+}
+
+/** The visible zoom slider under every crop viewport, on both platforms — a desktop browser has no pinch. */
+export declare function CropZoom(props: CropZoomProps): JSX.Element;

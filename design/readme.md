@@ -278,6 +278,22 @@ Role assignment is fixed (see `tokens/typography.css`). Weight is
 400 for display/headline/body, 500 for title-medium/small and all label
 roles; 600–700 exist in the variable file for emphasis.
 
+**Text scale is honoured and never capped** (the K13 round; WCAG 1.4.4).
+Type is `rem` on the web and `sp` on Android, so it follows the reader's
+size, and **the budgets follow it: a budget is measured at the rendered
+size**. A width ruled in pixels is its width at 1×, scaling with the
+type — the filter trigger's 154px band is the room its words have at
+any scale, so the summary collapses where its words stop fitting, never
+where they would have stopped at 1×. A clamp counts lines, never
+pixels: the text body's 18 lines are 18 lines at 2×. The bottom bar's
+labels may wrap to a second line above 1.3×. **The intro's stages scale
+to the column**, and **the entry and settings pages scroll** when their
+content outgrows the screen: a board's `overflow: hidden` frame is a
+drawing convenience, never the spec. A footer the placement law pins
+(*Spacing and layout*) stays pinned while the page scrolls under it; a
+task page's action, which follows its last field, scrolls with the
+page.
+
 ### Spacing and layout
 
 A **4px base grid**. The web client's actual numbers: screen gutter
@@ -370,26 +386,42 @@ came from; it never performs.** **Reduced motion is a house quality
 bar** (jakob, the key-loss round): WCAG places it at AAA, and the house
 holds every surface to it anyway — on both platforms, under the OS's
 own preference, every motion either stops travelling and fading or
-does not run. The two motions that exist in the product:
+does not run.
 
-- the collapsing top's 200ms `translateY(-110%)` exit — it hides only
-  once half its own slot has scrolled past, and returns only after about
-  a third of a screen of accumulated upward scroll;
-- the pad's bloom when the stance face is tapped.
+**Every motion in the product is in this table, and nothing else moves**
+(the K13 round; `tokens/motion.css`, `tokens/transitions.css`, the
+Motion cards). The product defined none, so every consumer was
+inventing one:
 
-**Screen transitions are defined here** (`tokens/transitions.css`, and the
-Motion card *Screen transitions*), because the product defines none and
-every consumer was inventing one. Forward is 300ms, in from 12% of the
-screen's width with a fade, emphasized-decelerate; the outgoing screen
-leaves half as far, accelerating. **Back is the same motion reversed at
-200ms** — returning is retracing, and a shorter move reads as backward
-without a second drawing. A sheet comes up over 400ms and goes back down
-over 200ms; a dialog fades in place with an 8px rise, never a scale.
+| What changes | The motion |
+|---|---|
+| Forward into a screen — a drill-in, and entering a task flow (a composer, an edit, a ceremony) | 300ms, in from 12% of the screen's width with a fade, emphasized-decelerate; the outgoing screen leaves half as far, accelerating |
+| Back | the forward motion reversed at 200ms — returning is retracing, and a shorter move reads as backward without a second drawing. Leaving a task flow from any stage is one back to where the flow began, never a replay of its stages |
+| A tab switch, slot to slot on the bottom bar | M3's fade-through at 200ms: the outgoing tab fades out, then the incoming fades in; nothing travels |
+| A sheet | up over 400ms, down over 200ms |
+| A dialog | a 200ms fade with an 8px rise, in place, never a scale |
+| The pad's bloom | the dialog's entrance at the pad's parked spot — 200ms fade and 8px rise — with the wash at the scrim's 200ms; closing is the reverse |
+| The scrim | 200ms linear, with the surface it belongs to |
+| The media handover, feed to detail and back | a shared element: the media frame persists in place while the chrome fades around it (M3's container transform), 300ms. A post with no media takes the forward motion |
+| The reel's squish, through the score's door | the clip, still playing, moves to the top of the screen and the post rises beneath it — a shared element, 300ms, never a new page |
+| The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns only after about a third of a screen of accumulated upward scroll |
+| In place — `More`, `View n replies`, a row leaving and the rows closing up, the veil's reveal, the face after `Set`, the snackbar coming and going | height and opacity at `--duration-short-4`, `--ease-standard`; nothing travels in from elsewhere |
+| `Back to top` | the platform's smooth scroll to the top |
+| The hold's ring | fills over the 500ms hold, linear — a reading of the time left, not a flourish |
+
 **A dismissal exits the edge it entered from**, never sideways.
 **Nothing inside an arriving screen animates** — no list entrance, no
-stagger — and one transition is on screen at a time. Under
-`prefers-reduced-motion` the swap still happens; it just does not travel
-or fade.
+stagger — and one transition is on screen at a time. **The handover and
+the squish are the arrival exceptions**, and they are the transition
+itself: the one frame the reader is following carries over while the
+screen around it arrives whole. Under `prefers-reduced-motion` every row
+above still swaps; it just does not travel or fade.
+
+**Android's predictive back follows the finger** (targetSdk 36): the
+back gesture drives the back motion by its progress — the same geometry
+as the 200ms back — completing past the platform's threshold and
+settling back short of it; a sheet, the pad and the viewer follow it
+with their own dismissal.
 
 **`VouchedIn` is the one accepted exception** (jakob, the close-out
 round), and it stays inside the rules it breaks: every duration and
@@ -400,6 +432,22 @@ Under `prefers-reduced-motion` the phases collapse to nothing and the
 board arrives at the state it ends in.
 
 No bounce, no spring, no parallax, no entrance animation on lists.
+
+### Haptics and sound
+
+**Haptics only where the platform documents one, and Android only** (the
+K13 round; jakob 2026-10-05). Three moments, one platform pulse each:
+
+- the hold's commit, when the 500ms closes and the default signs —
+  `HapticFeedbackConstants.LONG_PRESS`;
+- the reorder's lift, when a dragged picture leaves its row —
+  `DRAG_START` (`LONG_PRESS` below API 34);
+- the pad's knob crossing either zero line, and meeting the field's edge
+  where the pick clamps — `SEGMENT_TICK` (`CLOCK_TICK` below API 34).
+
+Nothing else vibrates, and the web gives none. **There are no UI
+sounds**: no tap, signature or arrival in the app makes one; the only
+sound in the product is the media's own.
 
 ### Interaction states
 
@@ -427,9 +475,16 @@ rule covers all three button variants:
   chronicle filter swaps an outlined button for a filled one. No
   underline, no indicator pill.
 
-Every pressable component carries `class="cg-state cg-focus"`, so
-anything a consumer builds gets the same behaviour by adding those two
-classes.
+Every pressable component carries `class="cg-state cg-focus"`, and
+`cg-hit` wherever its ink is under 48px, so anything a consumer builds
+gets the same behaviour by adding those classes — the masters hold to it
+without exception (the K13 round: the help dot, the edited marker, the
+history door, the count lines, `More`, the media discs, the profile's
+badge and figures). **A card that is a door lights whole**: its words
+and its media carry `cg-door`, and the card takes the pressed layer
+across its whole surface while either is pressed (`cg-door-card`); the
+controls inside it keep their own layers. The avatar picture is not a
+door — the badge is.
 
 ### Loading
 
@@ -537,6 +592,19 @@ fading, closes past about **20 %** of the screen's height or on a
 fling, and otherwise snaps back; under reduced motion the close is
 plain. Two thresholds, stated apart: 25 % for a sheet, 20 % for the
 viewer.
+
+### Orientation
+
+**Portrait everywhere but the viewer** (the K13 round). The product is
+one column read and acted on with one thumb, and every surface is drawn,
+budgeted and placed for a phone held upright — the pad's parked spot,
+the bar, the pinned footers. The viewer is the one surface whose job is
+to show a frame whole, and a landscape frame is only whole turned. So
+Android holds every screen in portrait and lets the viewer follow the
+device; **turning the phone on a detail that holds a landscape clip
+opens the viewer**, the clip filling the turned screen. The web locks
+nothing — a browser window is the reader's — and the column stays the
+column at its 42rem.
 
 ### Imagery
 
@@ -960,6 +1028,37 @@ every sheet, pad and dialog — each modal (§4, *Sheets*):
 - **A forward navigation** lands focus on the new screen's title, and
   back returns it to the control that left; a sheet that comes back — a
   return, a signed reply, a deep link — lands it on the row it opens on.
+
+**The drags' non-drag twins** (the K13 round): the card's and the
+detail's pager is a focusable strip paged by ← and →, with the platform's
+scroll actions, its dots a visual readout only; the crops carry a
+visible zoom slider and pan by arrow keys (`CropZoom`, `CropViewport`);
+picture reordering offers `Make it the cover`, `Move up` and `Move
+down` (`PickedSheet`); the pad has its sliders and direct entry (§8).
+The viewer is named by what it shows (`Picture 2 of 4`), takes focus on
+its X and hands it back to the frame that opened it, and pages without
+wrapping.
+
+**Names carry what the eye reads** (the K13 round): a control's
+accessible name keeps the visible words and the number in them — the
+filter pill's reading before its purpose, `8 opinions on this post`,
+`Cited by 4`, `Unsave The long way home` — and a search field is named
+by its use, never its placeholder.
+
+**What changes without a tap is said once** (the K13 round): the pad's
+readouts speak when the pick has rested about 500ms, never at every
+step, and a feed's filter, once `Done` applies it, says what the feed
+now shows in one polite announcement. Type over media — the reel's
+rail, the over-media face, the veil's media face — stays white with its
+shadow: the look is ruled, and its contrast was checked against the
+lightest fixture photograph (`ReelRail`).
+
+**One rule for credential forms** (the K13 round): a form that signs in
+or sets a password names its account by the login email as
+`autocomplete="username"` — on its email field, or in a hidden input
+where it draws none (`ChangePassword`, `ResetNew`); passwords are
+`current-password` or `new-password`; a handle is never `username`
+(`PasswordField`, `TextField`'s field-semantics table).
 
 ---
 
@@ -8826,6 +8925,62 @@ quoted wording is blessed unless marked.
 - **The gate**: 270 screens, 1810 → **1812 edges** (`EditCompose`'s
   `Retry` and `Remove it`), 0 gaps, flows 66, every one resolved, 134
   sidecars. The witness did not move.
+
+### The K13 round — 2026-10-05
+
+jakob's rulings on the audit's nineteen accessibility and rubric
+systemics (K13.1–K13.19), as recommended — haptics corrected the same
+day: the tick is kept, and there are no UI sounds.
+
+- **Motion is one table** (§4): forward, back, tab fade-through, sheet,
+  dialog, the pad's bloom as the dialog's entrance, the scrim, the media
+  handover and the reel's squish as shared elements and arrival
+  exceptions, the collapsing top, in-place changes, `Back to top` and the
+  hold's ring; predictive back follows the finger. `motion.css` and the
+  Motion card lose the stale long-press row.
+- **Haptics only where the platform documents one, Android only** — the
+  hold's commit, the reorder's lift, the knob's tick at the zero lines
+  and the clamp — **and no UI sounds** (§4). jakob's phone has no
+  vibration, so the hand test cannot cover them; review and any device
+  at hand do.
+- **Fields know their keyboard** (`TextField`'s kind table: keyboard,
+  caps, correction, autofill, return key; `mono` is the one-time-code
+  kind), each composer states its arrival focus, and **credential forms
+  name their account by the login email** (`PasswordField`; hidden
+  usernames on `ChangePassword` and `ResetNew`; a handle is `nickname`).
+- **Targets and states conform** (§4): `cg-hit` and the state layer on
+  every master named; a door card lights whole (`cg-door-card`);
+  `Button`'s disabled is 0.38. **The hold shows its ring** filling over
+  500ms — `RowSigning`'s `hold` chip (`holding`) — and **the knob its
+  pressed layer** — `PadStanding`'s `knob` chip (`held`).
+- **Text scale**: budgets measure at rendered size; intro stages scale
+  to the column; entry, settings and intro pages scroll (their sidecars
+  say so). **The profile's figures move under the avatar** below their
+  fit, measured: another's 243px row overflowed 232px at 360 and 192px
+  at 320, so it moves there; at 390 every profile board is pixel-identical.
+  `Feed` was rendered at 1.5× as the proof (a verification artifact, not
+  a board).
+- **The drags' twins**: the crops' visible zoom slider (`CropZoom`, 1× to
+  about 4×, three new edges) and arrow-key pan; the pager's focusable
+  strip and arrows; the reorder's three per-row actions, ruled, their
+  placement filed.
+- **Orientation**: portrait everywhere but the viewer, reason written;
+  turning a landscape clip's detail opens the viewer (§4).
+- **Names and announcements** (§10, copy-voice): the filter pill's name
+  leads with its reading, counts keep their number, an unsave names its
+  thing, a "?" its dialog, a search field its use; the comment foot is a
+  button in the field's shape; the viewer is named by content, holds
+  focus and stops at its ends; the pad's readouts speak after 500ms of
+  rest; the filter's `Done` is said once. The over-media look stands,
+  measured against the lightest fixture (`ReelRail`).
+- **Flagged for blessing** (copy-voice, *Names that carry what the eye
+  reads*): the filter pill's name and announcement, `Back to the
+  comment`, `Picture` and `Video`, `Move the picture` and `Zoom`.
+- **A harness fix**: `check-flows` no longer loops on a field with no
+  tagged ancestor.
+- **The gate**: 270 screens, 1812 → **1815 edges** (the three zoom
+  sliders), 0 gaps, flows 66, every one resolved, 270 sidecars. The
+  witness did not move. What the round left open is backlog `13X-k13`.
 
 ## 15. Index
 

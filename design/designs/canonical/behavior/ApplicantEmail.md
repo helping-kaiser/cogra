@@ -15,3 +15,5 @@ WHEN press Change email GIVEN the reader is offline -> the network error answers
 WHEN the address changes -> NEVER the seven days restart AND NEVER the screen speaks of them
 
 WHEN tap the back arrow -> the applicant's feed comes back at the verify card AND nothing is sent AND the address on file stands
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
