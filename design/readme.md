@@ -8684,6 +8684,31 @@ yep · 6. yes"). Every quoted wording is blessed unless marked.
   resolved, 134 sidecars. The witness did not move. What the round left
   open is backlog `136`.
 
+### Pass C's applicant and vouch sidecars — 2026-10-05
+
+jakob's pass C remainder plan (ruled as recommended), the applicant, vouch,
+intro and arrival lane: prose only, no board touched.
+
+- **Nineteen sidecars**: the six applicant boards (`ApplicantFeed`,
+  `ApplicantEmail`, `ApplicantKeyElsewhere`, `ApplicantWaiting`,
+  `ApplicantLanding`, `ApplicantRejected`), `FeedBare`, the five intro
+  cards, the ask link's four boards (`VouchAsk`, `VouchAskPad`,
+  `VouchAskUnusable`, `VouchAskInvalid`), `VouchBack`, `VouchBackPad` and
+  `VouchedIn`.
+- **Their words** are each board's docblock and its graph edges, the
+  applicant and vouch records above (*The applicant's life round* through
+  *The 134 and 135 residue*, *The vouch-back ceremony*, *The invites
+  round*, *The entry funnel round*), copy-voice's staged-act, entry-funnel,
+  ceremony and Invites sections, and auth.md's application and landing.
+- **`VouchBackPad` is the master pad**, so its sidecar carries the
+  vouch-back and the plain opening apart; both vouch pads name
+  `PadFailed`, `PadWriteRule` and `PadKeyAbsent` for the states they share.
+- **No new string.** `Changing email…` is the in-flight construction.
+- **The gate**: 270 screens, 1810 edges, 0 gaps, flows 66, every one
+  resolved, 134 → **153 sidecars**; the boards came back byte-clean. The
+  witness did not move. The filed questions are backlog
+  `13X-passc-entry-b`.
+
 ## 15. Index
 
 **Root**
