@@ -787,10 +787,12 @@ blessing*):
   `ApplicantEmail`.
 - `Waiting for the code` — `ChangeEmailConfirm`.
 - `Waiting for your current recovery code` — `SettingsBackup`.
-- `Waiting for your email and password` — `SignIn`.
-- `Waiting for your invite link` — `InviteEntry`.
+- `Waiting for your email and password` — `SignIn`, `SignInExpired`.
+- `Waiting for your invite link` — `InviteEntry`, `JoinInvalid`.
 - `Waiting for your email` — `Reset`.
-- `Waiting for your recovery code` — `YourKeyGate`.
+- `Waiting for your recovery code` — `YourKeyGate`, `Restore`.
+- `Waiting for a handle, your email and a password` — `Join`.
+- `Waiting for a new password` — `ResetNew`.
 
 `Report a problem` carries none: its `Send by email` only prefills a
 draft, which is no commit for the law to gate.

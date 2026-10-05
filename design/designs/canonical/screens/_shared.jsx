@@ -3320,7 +3320,7 @@ function RestoreBody({ value = "", error }) {
         </div>
 
         <div style={{ marginTop: 16 }}>
-          <Button style={{ width: "100%" }}>Restore the key</Button>
+          <WaitingCommit id="restore" label="Restore the key" reason="Waiting for your recovery code" waiting={!value && !error} />
         </div>
 
         <p
