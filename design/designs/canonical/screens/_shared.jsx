@@ -2758,8 +2758,14 @@ function ReportProblemBody({ words }) {
    reads back (jakob 2026-10-01, audit K3.21 and K3.22): an email change with
    a side still owed, and a confirmed deletion in its grace. Each changes one
    row's status, and the deletion also brings its band, which rides every
-   logged-in surface and sits under an inner page's header. */
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false } = {}) {
+   logged-in surface and sits under an inner page's header.
+
+   `deleteFootnote` is the deletion group's footnote — the member's by
+   default; `Settings` passes its reader chip's hole. */
+const SETTINGS_DELETE_FOOTNOTE =
+  "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
+
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
@@ -2970,15 +2976,13 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             THE FOOTNOTE IS THE GROUP'S ONE DEBT — that nothing happens from the
             tap. It is the fact a reader needs exactly once, which is what a
             footnote is for, and saying it here is what lets the row stay one
-            quiet line. */}
-        <SettingsGroup
-          ariaLabel="Delete account"
-          footnote={
-            deleting
-              ? undefined
-              : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."
-          }
-        >
+            quiet line.
+
+            AN APPLICANT'S FOOTNOTE DROPS THE MAILED LINK (jakob 2026-10-05):
+            their deletion is confirmed in the app and nothing is mailed, so it
+            reads `Nothing is deleted here. The next screen says what goes and
+            what stays.` `Settings`' reader chip passes it as a hole. */}
+        <SettingsGroup ariaLabel="Delete account" footnote={deleting ? undefined : deleteFootnote}>
           <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} />
         </SettingsGroup>
       </div>

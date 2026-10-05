@@ -1985,7 +1985,10 @@ navigating row, and under the group: `Nothing is deleted here. The next
 screen says what goes and what stays, and the deletion is confirmed by a
 link we email you.` The row is quiet by ruling; the footnote is what lets
 it be, because the fact a reader needs before tapping is that the tap
-deletes nothing.
+deletes nothing. An applicant's deletion is confirmed in the app and
+nothing is mailed, so their footnote stops at `Nothing is deleted here.
+The next screen says what goes and what stays.` (`Settings`' reader chip;
+**blessed**, jakob 2026-10-05).
 
 **The request screen says what goes before what stays, and says both.**
 Heading `Delete account`; then `This takes your name off CoGra. What you
