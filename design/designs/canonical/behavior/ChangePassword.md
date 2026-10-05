@@ -26,7 +26,7 @@ WHEN press Change password GIVEN the new password has turned up in a data breach
 
 WHEN the change has not answered 200ms after the press -> Change password reads Changing password… in its own place AND NEVER a spinner appears
 
-WHEN press Change password GIVEN the reader is offline -> the network error answers AND NEVER the password changes
+WHEN press Change password GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change password AND Change password stays, the retry AND NEVER the password changes
 
 WHEN press the header back arrow -> settings returns AND NEVER the password changes
 

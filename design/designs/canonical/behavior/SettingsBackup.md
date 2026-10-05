@@ -26,7 +26,7 @@ WHEN press Create a new recovery code on Android GIVEN the phone has no screen l
 
 WHEN the replace has not answered 200ms after the press -> Create a new recovery code reads Creating a new recovery code… in its own place AND NEVER a spinner appears
 
-WHEN press Create a new recovery code GIVEN the reader is offline -> the network error answers AND NEVER the old backup changes
+WHEN press Create a new recovery code GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Create a new recovery code AND Create a new recovery code stays, the retry AND NEVER the old backup changes
 
 WHEN the new code is typed back on the code screen -> the new backup uploads AND the old code stops working AND a notice of the replacement is mailed AND settings returns with the snackbar Your key is backed up with the new code.
 

@@ -20,7 +20,7 @@ WHEN press Change email GIVEN the new address already belongs to another account
 
 WHEN the request has not answered 200ms after the press -> Change email reads Changing email… in its own place AND NEVER a spinner appears
 
-WHEN press Change email GIVEN the reader is offline -> the network error answers AND NEVER a message is sent
+WHEN press Change email GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change email AND Change email stays, the retry AND NEVER a message is sent
 
 WHEN press the header back arrow -> settings returns AND NEVER a message is sent
 

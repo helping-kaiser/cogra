@@ -18,7 +18,7 @@ WHEN tap Also remove what I posted -> the box ticks or unticks AND NEVER anythin
 
 WHEN press Send the confirmation link GIVEN the reader is a member -> the request is recorded with its content-sweep choice AND a confirmation link is mailed to the account's address AND the mail screen opens AND NEVER anything is scheduled AND NEVER anything is deleted
 
-WHEN press Send the confirmation link GIVEN the reader is offline -> the network error answers AND NEVER a link is mailed
+WHEN press Send the confirmation link GIVEN no answer reaches the device -> the content-sweep choice stays as it was AND the line That didn't send. Try again. stands above Send the confirmation link AND Send the confirmation link stays, the retry AND NEVER a link is mailed
 
 WHEN press the header back arrow -> settings returns AND NEVER a link is mailed AND NEVER anything is deleted
 
@@ -26,6 +26,6 @@ WHEN the board opens GIVEN the reader is an applicant -> the body reads Nothing 
 
 WHEN Delete my account is pressed GIVEN the reader is an applicant -> the account and its application are deleted at once AND the reader lands signed out on the bare view AND the snackbar reads Your account is deleted. AND NEVER a confirmation link is mailed AND NEVER the seven-day grace runs AND NEVER the deletion band stands AND NEVER DeleteAccountConfirmed opens
 
-WHEN press Delete my account GIVEN the reader is an applicant and offline -> the network error answers AND NEVER the account is deleted
+WHEN press Delete my account GIVEN the reader is an applicant and no answer reaches the device -> the line That didn't send. Try again. stands above Delete my account AND Delete my account stays, the retry AND NEVER the account is deleted
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

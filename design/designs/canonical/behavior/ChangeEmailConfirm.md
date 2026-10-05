@@ -26,7 +26,7 @@ WHEN press Confirm the code again GIVEN the new address belonged to another acco
 
 WHEN the confirm has not answered 200ms after the press -> Confirm the code reads Confirming the code… in its own place AND NEVER a spinner appears
 
-WHEN press Confirm the code GIVEN the reader is offline -> the network error answers AND NEVER the change moves
+WHEN press Confirm the code GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Confirm the code AND Confirm the code stays, the retry AND NEVER the change moves
 
 WHEN tap Resend -> both messages go out again AND the snackbar reads Sent again — check both inboxes. AND NEVER a dialog asks
 
