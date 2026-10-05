@@ -14,12 +14,16 @@ import { MediaThumb } from "./MediaThumb.jsx";
      `HapticFeedbackConstants.DRAG_START` (`LONG_PRESS` below API 34; readme
      §4, *Haptics*) — and nothing else in the reorder vibrates; the web gives
      none.
-   · THE DRAG HAS NON-DRAG TWINS (the K13 round, ruled; readme §10). Every row
-     offers `Make it the cover` · `Move up` · `Move down` as visible actions,
-     the same three as TalkBack custom actions on Android, and on a keyboard
-     the arrow keys move the focused row. Where on the row the three stand,
-     and what the first and last rows offer, is filed for a drawing (backlog
-     13X-k13); this master draws the drag alone until then.
+   · THE DRAG HAS NON-DRAG TWINS (the K13 round, ruled; readme §10; drawn by
+     jakob's final brief, 2026-10-05). The row's second line carries, after
+     `Describe`, three small inline actions — `Make it the cover` · `Move up` ·
+     `Move down` — and each row offers only the moves it can make: the cover
+     neither becomes the cover nor moves up, the last row does not move down.
+     The same moves are TalkBack custom actions on Android. The handle is
+     focusable — named for its picture, `Reorder the cover` or `Reorder
+     picture 2` — and ↑ / ↓ move the focused row, focus riding along. The
+     footnote names the cover rule and nothing else, since the drag is no
+     longer the only way.
    · REMOVE — the X on each row.
    · DESCRIBE — the per-picture entry into `DescribeSheet`; a described
      picture shows the quiet word "Described" instead of the link.
@@ -43,12 +47,23 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
               borderBottom: "1px solid var(--border-hairline)",
             }}
           >
-            <span
-              aria-hidden="true"
-              style={{ color: "var(--text-secondary)", flex: "none", display: "inline-flex", cursor: "grab" }}
+            <button
+              type="button"
+              aria-label={`Reorder ${index === 0 ? "the cover" : `picture ${index + 1}`}`}
+              aria-keyshortcuts="ArrowUp ArrowDown"
+              className="cg-state cg-focus cg-hit"
+              style={{
+                border: 0,
+                background: "none",
+                padding: 0,
+                color: "var(--text-secondary)",
+                flex: "none",
+                display: "inline-flex",
+                cursor: "grab",
+              }}
             >
               <Icon name="drag_indicator" size={20} />
-            </span>
+            </button>
             <MediaThumb src={item.src} alt={item.alt} size={56} cover={index === 0} />
             <span style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
               <span
@@ -61,15 +76,34 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
               >
                 {index === 0 ? "Cover — shown first" : `Picture ${index + 1}`}
               </span>
-              {item.described ? (
-                <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
-                  Described
-                </span>
-              ) : (
-                <InlineAction size="sm" selfStart onClick={item.onDescribe}>
-                  Describe
-                </InlineAction>
-              )}
+              {/* The actions wrap; a wrapped line keeps a 24px pitch, so their
+                  hit areas stand clear under WCAG 2.5.8's spacing rule. */}
+              <span style={{ display: "flex", flexWrap: "wrap", alignItems: "center", columnGap: "var(--space-3)", rowGap: "var(--space-2)" }}>
+                {item.described ? (
+                  <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)" }}>
+                    Described
+                  </span>
+                ) : (
+                  <InlineAction size="sm" onClick={item.onDescribe}>
+                    Describe
+                  </InlineAction>
+                )}
+                {index > 0 && (
+                  <InlineAction size="sm" onClick={item.onMakeCover}>
+                    Make it the cover
+                  </InlineAction>
+                )}
+                {index > 0 && (
+                  <InlineAction size="sm" onClick={item.onMoveUp}>
+                    Move up
+                  </InlineAction>
+                )}
+                {index < items.length - 1 && (
+                  <InlineAction size="sm" onClick={item.onMoveDown}>
+                    Move down
+                  </InlineAction>
+                )}
+              </span>
             </span>
             <button
               type="button"
@@ -101,7 +135,7 @@ export function PickedSheet({ open = false, onClose, items = [], onDone, inline 
           color: "var(--text-secondary)",
         }}
       >
-        The first one is the cover — drag to reorder.
+        The first one is the cover.
       </p>
       <div style={{ display: "flex", justifyContent: "flex-end", padding: "var(--space-2) var(--space-4) var(--space-2)" }}>
         <Button variant="text" onClick={onDone ?? onClose}>

@@ -876,11 +876,14 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
   ],
   ComposePicked: [
-    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 1, find: "cursor:grab", tag: "button", all: true },
     { n: 2, find: ">Describe</button>", tag: "button", all: true },
     { n: 3, find: 'aria-label="Remove', tag: "button", all: true },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
+    { n: 7, find: ">Move up</button>", tag: "button", all: true },
+    { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   ComposePickedErrors: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1983,12 +1986,15 @@ Object.assign(FLOW_MARKERS, {
   // sheet has remove buttons of its own (its tag chips, its staged citation)
   // and a prefix match with `all` would badge them through the scrim.
   EditPicked: [
-    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 1, find: "cursor:grab", tag: "button", all: true },
     { n: 2, find: ">Describe</button>", tag: "button" },
     { n: 3, find: 'aria-label="Remove the cover"', tag: "button" },
     { n: 3, find: 'aria-label="Remove picture 2"', tag: "button" },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
+    { n: 7, find: ">Move up</button>", tag: "button", all: true },
+    { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   // The words edit. Marker 4 is the growing body box, anchored on the field
   // border: it is the FIRST such border on the board, standing above the

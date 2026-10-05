@@ -1215,7 +1215,10 @@
     { "from": "EditComposeUnchanged", "via": 15, "kind": "advance", "label": "staged reference row", "to": [{ "board": "RefPairEdit", "case": "the standing citation's pair sheet — the pick adds one record to what stands" }] },
     { "from": "EditComposeUnchanged", "via": 16, "kind": "advance", "label": "+ Add pictures · 2 of 10", "to": [{ "terminal": "os", "case": "the device's own picker — an edit has no pick stage to return to" }, { "board": "ComposeCrop", "case": "the pictures come back through the crop, locked to the post's one shape, and the edit's row has grown" }, { "board": "ComposePickedErrors", "case": "over the cap of ten, or a format nothing here reads — the picker's answer says why" }] },
 
-    { "from": "EditPicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
+    { "from": "EditPicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder, or ↑ / ↓ on the focused handle — the first is the cover" }] },
+    { "from": "EditPicked", "via": 6, "kind": "advance", "label": "Make it the cover", "to": [{ "terminal": "self", "case": "the picture moves to the head of the list and takes the cover badge; every picture above it moves down one" }] },
+    { "from": "EditPicked", "via": 7, "kind": "advance", "label": "Move up", "to": [{ "terminal": "self", "case": "the picture trades places with the one above it — reaching the top, it takes the cover badge" }] },
+    { "from": "EditPicked", "via": 8, "kind": "advance", "label": "Move down", "to": [{ "terminal": "self", "case": "the picture trades places with the one below it — the cover moving down hands the badge to the picture now first" }] },
     { "from": "EditPicked", "via": 2, "kind": "advance", "label": "Describe", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the compose page)" }] },
     { "from": "EditPicked", "via": 3, "kind": "advance", "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the edit's batch" }, { "board": "EditWords", "case": "the last one leaves — the body becomes words, and the field arrives empty" }] },
     { "from": "EditPicked", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
@@ -1696,7 +1699,10 @@
     { "from": "ComposePickedErrors", "via": 6, "kind": "advance", "label": "tray remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the tray" }] },
     { "from": "ComposePickedErrors", "via": 7, "kind": "advance", "label": "Remove it (a refused file)", "to": [{ "terminal": "self", "case": "the refusal leaves the list — the file never joined the batch" }] },
 
-    { "from": "ComposePicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder — the first is the cover" }] },
+    { "from": "ComposePicked", "via": 1, "kind": "advance", "label": "drag handles", "to": [{ "terminal": "self", "case": "drag to reorder, or ↑ / ↓ on the focused handle — the first is the cover" }] },
+    { "from": "ComposePicked", "via": 6, "kind": "advance", "label": "Make it the cover", "to": [{ "terminal": "self", "case": "the picture moves to the head of the list and takes the cover badge; every picture above it moves down one" }] },
+    { "from": "ComposePicked", "via": 7, "kind": "advance", "label": "Move up", "to": [{ "terminal": "self", "case": "the picture trades places with the one above it — reaching the top, it takes the cover badge" }] },
+    { "from": "ComposePicked", "via": 8, "kind": "advance", "label": "Move down", "to": [{ "terminal": "self", "case": "the picture trades places with the one below it — the cover moving down hands the badge to the picture now first" }] },
     { "from": "ComposePicked", "via": 2, "kind": "advance", "label": "Describe", "to": [{ "board": "ComposeDescribe" }] },
     { "from": "ComposePicked", "via": 3, "kind": "advance", "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }, { "board": "ComposePick", "case": "the last one leaves — the manager closes and the pick step comes back, tray empty, the way the video path's × gives the step back; the details stay staged in the draft" }] },
     { "from": "ComposePicked", "via": 4, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the pick or the details stage, wherever it opened" }] },
