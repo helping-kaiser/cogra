@@ -2218,7 +2218,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 20, find: 'aria-label="What your feed shows"', tag: "button" },
   ],
   VouchAsk: [
-    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 1, find: 'aria-label="Back"', tag: "a" },
     { n: 2, find: ">Not now</button>", tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on @noor"', tag: "button" },
     { n: 3, find: ">Choose your opinion on @noor</button>", tag: "button" },

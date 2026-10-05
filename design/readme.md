@@ -468,7 +468,9 @@ entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
 page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
 beneath them, so their arrows are links that name a board (*The shell
-round's stops*) — `VouchAsk`'s arrow and its `Not now` land on Feed.
+round's stops*). The ask link is not the funnel: `VouchAsk` and its two
+siblings follow the layer law, so an ask opened from a chat returns there
+and a cold open lands on Feed, and their arrows read a plain `Back`.
 A funnel arrow carries no origin noun: `Join` reads a plain `Back`, and
 About opened from the join form keeps that plain `Back`.
 
@@ -8112,7 +8114,7 @@ the rest as recommended. Both laws stand in §4.
   that shared content does send you back to your before state of the
   app"). With no prior state, back lands on the owning tab's root: a
   post, a comment or a profile on Feed, a tag on Explore. The entry
-  funnel keeps its links: `VouchAsk`'s arrow and `Not now` land on Feed.
+  funnel keeps its links.
   `PageHeader` scopes "a link, never history" to the funnel.
 - **THE SHEET LAW** (§4, *Sheets*). Every sheet carries a commit; the
   commit applies; the scrim, a swipe down and Back discard — no

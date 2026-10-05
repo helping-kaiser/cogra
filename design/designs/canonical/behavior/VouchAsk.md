@@ -22,8 +22,16 @@ WHEN tap the stance affordance GIVEN a guest -> the guest gate rises over the as
 
 WHEN a guest signs in from the gate over the ask -> the ask comes back
 
-WHEN tap Not now -> the feed's root opens AND nothing is signed AND the ask still stands
+ALWAYS the header's arrow reads a plain Back, with no origin noun
 
-WHEN tap the back arrow -> the feed's root opens AND nothing is signed AND the ask still stands
+WHEN tap Not now -> the state the link opened over comes back AND nothing is signed AND the ask still stands
+
+WHEN tap the back arrow -> the state the link opened over comes back AND nothing is signed AND the ask still stands
+
+WHEN tap Not now GIVEN the link opened the app cold -> the feed's root opens AND nothing is signed
+
+WHEN tap the back arrow GIVEN the link opened the app cold -> the feed's root opens AND nothing is signed
+
+WHEN an ask link opens GIVEN the reader is an applicant or the asker and the link cannot stage anyone right now -> the reader's own case answers, at app-open with its snackbar AND NEVER VouchAskUnusable opens
 
 ALWAYS the same ask link opens this page again for every reader it was sent to GIVEN its application can still be staged
