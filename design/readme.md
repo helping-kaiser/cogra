@@ -470,6 +470,10 @@ rule covers all three button variants:
   visible-but-disabled, with the reason on screen** (jakob, the key-loss
   round): never hidden, and never left live only to refuse on press — the
   reader sees the commitment exists and reads what it is waiting for.
+  The reason is one quiet line right above the commit, in the voice for
+  what something waits on — `Waiting for both passwords` — and the
+  commit's description (`WaitingCommit`; drawn on the credential and
+  entry forms, jakob 2026-10-05).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -1074,10 +1078,11 @@ rail, the over-media face, the veil's media face — stays white with its
 shadow: the look is ruled, and its contrast was checked against the
 lightest fixture photograph (`ReelRail`).
 
-**One rule for credential forms** (the K13 round): a form that signs in
-or sets a password names its account by the login email as
+**One rule for credential forms** (the K13 round): a form that signs in,
+sets a password or re-proves one names its account by the login email as
 `autocomplete="username"` — on its email field, or in a hidden input
-where it draws none (`ChangePassword`, `ResetNew`); passwords are
+where it draws none (`ChangePassword`, `ResetNew`, `ChangeEmail`,
+`ApplicantEmail`; jakob 2026-10-05); passwords are
 `current-password` or `new-password`; a handle is never `username`
 (`PasswordField`, `TextField`'s field-semantics table).
 

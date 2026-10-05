@@ -25,3 +25,7 @@ ALWAYS the screen's ways out stay live while Send reset link waits on its answer
 ALWAYS the status line stands only after a press of Send reset link, never at rest
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Send reset link stands disabled with Waiting for your email right above it GIVEN Email is empty
+
+WHEN the first character is typed in Email -> Send reset link wakes AND the line Waiting for your email goes

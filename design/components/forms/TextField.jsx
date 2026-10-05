@@ -109,6 +109,10 @@ import React from "react";
    `code` IS THE MONO KIND, and every code field inherits it: a string read
    and typed character by character takes no guessing — no capitals guessed,
    nothing corrected — and the platform may fill it as a one-time code.
+   `digits` is its numeric twin, for the one code made only of digits: the
+   email change's 6-digit single-use code (auth.md, *Email change*; jakob
+   2026-10-05) takes the numeric keyboard and the same one-time-code fill, the
+   shape both platforms' code autofill expects. It is still drawn `mono`.
 
    A URL FIELD TAKES THE URL KEYBOARD, NOT THE URL TYPE: `type="url"` would
    add the browser's own validation, which refuses a website without a scheme
@@ -120,6 +124,7 @@ export const FIELD_KINDS = {
   handle: { type: "text", inputMode: "text", autoCapitalize: "none", autoCorrect: false, autoComplete: "nickname" },
   url: { type: "text", inputMode: "url", autoCapitalize: "none", autoCorrect: false, autoComplete: "off" },
   code: { type: "text", inputMode: "text", autoCapitalize: "characters", autoCorrect: false, autoComplete: "one-time-code" },
+  digits: { type: "text", inputMode: "numeric", autoCapitalize: "none", autoCorrect: false, autoComplete: "one-time-code" },
 };
 
 /* THE RETURN KEY FOLLOWS THE FORM. A single-line field reads `next` while

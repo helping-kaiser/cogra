@@ -35,3 +35,7 @@ WHEN the code screen is left before the new code is typed back -> the old backup
 WHEN press the header back arrow -> settings returns AND NEVER a code is made AND NEVER the old backup changes
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Create a new recovery code stands disabled with Waiting for your current recovery code right above it GIVEN Current recovery code is empty
+
+WHEN the first character is typed in Current recovery code -> Create a new recovery code wakes AND the line Waiting for your current recovery code goes

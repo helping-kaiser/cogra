@@ -17,7 +17,8 @@ Use `TextField` for every labeled input and, with `rows`, for every composer tex
 | `email` | Email, New email | `email` · `Email` | none | off | `email` · `EmailAddress` — `username` · `Username` on a credential form |
 | `handle` | Handle, New handle | `text` · `Ascii` | none | off | `nickname` · none — never `username` |
 | `url` | Invite link, Website | `url` keyboard (type stays `text`) · `Uri` | none | off | off, `url` on Website · none |
-| `code` (= `mono`) | Recovery code, Current recovery code, Confirmation code | `text` · `Ascii` | characters | off | `one-time-code` · `SmsOtpCode` |
+| `code` (= `mono`) | Recovery code, Current recovery code | `text` · `Ascii` | characters | off | `one-time-code` · `SmsOtpCode` |
+| `digits` (drawn `mono`) | Confirmation code — the email change's 6-digit single-use code | `numeric` · `Number` | none | off | `one-time-code` · `SmsOtpCode` |
 | password (`PasswordField`) | Password, Current password, New password | password · `Password` | none | off | `current-password` / `new-password` · `Password` / `NewPassword` |
 
 **The return key follows the form, not the kind.** A single-line field reads `next` (`ImeAction.Next`) while another field follows it; the form's last one passes `enterKeyHint="go"` (`ImeAction.Go`) and submits as the form's commit does — HTML's implicit submission — never while the commit is disabled. A multi-line field's Enter is a new line, on a soft keyboard and a hardware one alike, and never submits.

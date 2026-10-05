@@ -35,3 +35,7 @@ WHEN no answer has come 5s after the press of Show my key -> Show my key still r
 ALWAYS the screen's ways out stay live while Show my key waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Show my key stands disabled with Waiting for your recovery code right above it GIVEN Current recovery code is empty
+
+WHEN the first character is typed in Current recovery code -> Show my key wakes AND the line Waiting for your recovery code goes

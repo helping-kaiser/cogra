@@ -21,10 +21,11 @@ import { Icon } from "../navigation/Icon.jsx";
    the part that makes the message reach anyone.
 
    ONE RULE FOR CREDENTIAL FORMS (the K13 round, ruled; readme §10). A form
-   that signs in or sets a password names the account it is for by its email —
-   the login identifier — as `autocomplete="username"`: on its email field
-   where it draws one (`SignIn`, `Join`), and where it draws none
-   (`ChangePassword`, `ResetNew`) in a hidden input carrying the address, which
+   that signs in, sets a password or re-proves one names the account it is for
+   by its email — the login identifier — as `autocomplete="username"`: on its
+   email field where it draws one (`SignIn`, `Join`), and where it draws none
+   (`ChangePassword`, `ResetNew`, and the re-proving `ChangeEmail` and
+   `ApplicantEmail`, jakob 2026-10-05) in a hidden input carrying the address, which
    is Chromium's documented way to tell a password manager whose password is
    changing. `account` renders that input beside this field. A password is
    `current-password` or `new-password`, never guessed at, never corrected,

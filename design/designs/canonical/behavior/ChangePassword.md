@@ -31,3 +31,7 @@ WHEN press Change password GIVEN no answer reaches the device -> the fields keep
 WHEN press the header back arrow -> settings returns AND NEVER the password changes
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Change password stands disabled with Waiting for both passwords right above it GIVEN either password field is empty
+
+WHEN both password fields hold a character -> Change password wakes AND the line Waiting for both passwords goes

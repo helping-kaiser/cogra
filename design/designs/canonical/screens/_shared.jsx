@@ -2891,6 +2891,43 @@ function WhatsNewBody({ newer }) {
 
 /* THE HANDLE CHANGE, whole (`ChangeHandle`'s anatomy, shared the moment its
    confirm dialog drew it a second time). `value` is what the field holds. */
+/* A COMMIT WAITING ON ITS FIELDS — the disabled-until-filled law drawn
+   (readme §4, *Interaction states*; jakob 2026-10-05, the collected brief's D6,
+   drawn by the final brief). A form's commit that cannot go yet stands where it
+   always stands, visible and disabled at the 38%, and one quiet line right
+   above it says what it waits for — the construction `Report a problem`'s
+   empty foot first drew (`Nothing to send yet`), in the kept picks' blessed
+   voice for what something waits on (`Waiting for your key`). The line is the
+   button's description, so a listener hears the reason with the control. The
+   first character in the last empty field wakes the commit and the line goes.
+   Every reason is flagged for blessing (copy-voice, *Commits that wait*).
+
+   `waiting` false draws the live commit alone, for a state whose fields are
+   filled. */
+function WaitingCommit({ id, label, reason, waiting = true }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {waiting && (
+        <span
+          id={`${id}-waits`}
+          style={{
+            textAlign: "center",
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          {reason}
+        </span>
+      )}
+      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined}>
+        {label}
+      </Button>
+    </div>
+  );
+}
+
 function ChangeHandleBody({ value = "" } = {}) {
   return (
     <>
@@ -2931,7 +2968,7 @@ function ChangeHandleBody({ value = "" } = {}) {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Change handle</Button>
+          <WaitingCommit id="change-handle" label="Change handle" reason="Waiting for a new handle" waiting={!value} />
         </div>
 
         <div style={{ marginTop: 24 }}>
@@ -3363,7 +3400,12 @@ function SettingsBackupBody({ app = false, error }) {
         )}
 
         <div style={{ marginTop: app ? 32 : 16 }}>
-          <Button style={{ width: "100%" }}>Create a new recovery code</Button>
+          <WaitingCommit
+            id="settings-rekey"
+            label="Create a new recovery code"
+            reason="Waiting for your current recovery code"
+            waiting={!app && !error}
+          />
         </div>
 
         <p

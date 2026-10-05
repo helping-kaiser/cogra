@@ -38,7 +38,10 @@
 
    THE FIELD IS MONO, like the recovery gate's: a code is transcribed
    character by character, and the shape of what has been typed is part of
-   reading it back.
+   reading it back. The code is 6 digits, single-use (auth.md, *Email change*;
+   jakob 2026-10-05), so the field is the `digits` kind: the numeric keyboard
+   and the platform's one-time-code fill. At rest `Confirm the code` waits on
+   it, disabled, its reason above it (`WaitingCommit`).
 
    NO BACK TRAP. Nothing is lost by leaving — the change is live on the server
    for its window and this screen is reachable again from the row — so the
@@ -136,6 +139,7 @@ export function Screen() {
             id="email-change-code"
             label="Confirmation code"
             mono
+            kind="digits"
             enterKeyHint="go"
             value=""
             hint="From the message to sol@solferreira.art."
@@ -143,7 +147,7 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Confirm the code</Button>
+          <WaitingCommit id="email-change-code" label="Confirm the code" reason="Waiting for the code" />
         </div>
 
         <div style={{ marginTop: 24 }}>

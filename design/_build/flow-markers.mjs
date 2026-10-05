@@ -1585,12 +1585,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  // The `fault` chip draws the fields three times, one shown at a time — the
+  // same controls, so the same numbers on every instance.
   ChangeEmail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'data-field="New email"', tag: "div" },
-    { n: 3, find: 'data-field="Current password"', tag: "div" },
-    { n: 4, find: 'aria-label="Show password"', tag: "button" },
-    { n: 5, find: ">Change email</button>", tag: "button" },
+    { n: 2, find: 'data-field="New email"', tag: "div", all: true },
+    { n: 3, find: 'data-field="Current password"', tag: "div", all: true },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 5, find: ">Change email</button>", tag: "button", all: true },
   ],
   ChangeEmailConfirm: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },

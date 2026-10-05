@@ -755,12 +755,38 @@ doesn't know which field is wrong.
 validation exists yet to trigger them):
 
 - `A handle is 3–30 characters: a–z, 0–9, _.` — Join's Handle field,
-  a local format failure.
+  a local format failure; `ChangeHandle`'s New handle answers with it on
+  the press, and its dialog never opens (jakob 2026-10-05).
 - `That doesn't look like an email address.` — Join's Email field, a
-  local format failure.
+  local format failure; the email change's New email takes it too, and
+  that one is **drawn**: `ChangeEmail`'s `fault` chip at `malformed`
+  (jakob 2026-10-05).
 - `That doesn't look like an invite link.` — the invite field's local
   format failure, in the email line's shape; it names the link because
   the field asks for a link. Drawn on `InviteEntryError`.
+
+## Commits that wait
+
+A form's commit stays disabled until its fields hold something (readme
+§4, *Interaction states*), and one quiet line right above it says what
+it waits for, in the voice for what something waits on (`Waiting for
+your key`) — the construction `Report a problem`'s empty foot first
+drew. One line per form (`WaitingCommit`; *new 2026-10-05, flagged for
+blessing*):
+
+- `Waiting for both passwords` — `ChangePassword`.
+- `Waiting for a new handle` — `ChangeHandle`.
+- `Waiting for a new email and your password` — `ChangeEmail`,
+  `ApplicantEmail`.
+- `Waiting for the code` — `ChangeEmailConfirm`.
+- `Waiting for your current recovery code` — `SettingsBackup`.
+- `Waiting for your email and password` — `SignIn`.
+- `Waiting for your invite link` — `InviteEntry`.
+- `Waiting for your email` — `Reset`.
+- `Waiting for your recovery code` — `YourKeyGate`.
+
+`Report a problem` carries none: its `Send by email` only prefills a
+draft, which is no commit for the law to gate.
 
 ## Menu rows
 
@@ -1433,7 +1459,8 @@ password`, and last, the reason the first field is there at all:
 `Your current password is asked for even though you are signed in: a
 live session is not proof enough to change the credential behind it.`
 A wrong current password reads `That password isn't right.` under its
-field — on `ChangeEmail` too, which asks for it the same way — and a
+field — on `ChangeEmail` and `ApplicantEmail` too, which ask for it the
+same way, drawn once on `ChangeEmail`'s `fault` chip — and a
 change that lands answers `Password changed — other devices are signed
 out.` over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 

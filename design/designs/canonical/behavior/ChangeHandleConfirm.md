@@ -10,6 +10,14 @@ ALWAYS the dialog carries no error colour
 
 WHEN the dialog opens -> focus moves to its title AND focus stays inside the dialog until it closes
 
+WHEN tap Change it -> the dialog stays up until the change answers AND Change it refuses a second press AND NEVER Change it dims
+
+WHEN the change has not answered 200ms after Change it -> Change it reads Changing handle… AND NEVER a spinner appears
+
+WHEN the change has answered within 200ms of Change it -> NEVER the label Changing handle… appears
+
+WHEN tap Keep it, tap the scrim, press system Back or press Escape GIVEN the change is in flight -> NEVER the dialog closes AND NEVER Keep it dims
+
 WHEN tap Change it GIVEN the new handle is free -> settings returns AND the snackbar reads Your handle is now, then the new handle, as Your handle is now @solferreira. AND the Handle row reads the new handle AND the old handle is free for anyone at once AND links to the old handle stop resolving to the reader
 
 WHEN tap Change it GIVEN the new handle is taken -> the dialog closes onto the form AND the New handle field reads That handle is taken. AND NEVER the handle changes

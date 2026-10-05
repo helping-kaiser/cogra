@@ -24,7 +24,13 @@
    A TASK PAGE OF THE ENTRY FUNNEL, its fixed link back to the shell the door
    was on; the commit follows its fields in content flow (readme §4, the two
    placements). It returns to `ApplicantFeed`, whose card then prints the new
-   address. */
+   address.
+
+   IT INHERITS `ChangeEmail`'s FORM WHOLE (jakob 2026-10-05, the final brief):
+   at rest the commit waits on both fields (`WaitingCommit`); the field errors
+   are `ChangeEmail`'s drawing — a wrong password under its field, a malformed
+   address under its own, and an address in use never answered at the request
+   (auth.md); and the password names the account by a hidden username. */
 export function Screen() {
   return (
     <>
@@ -58,11 +64,17 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <PasswordField id="email-current-password" label="Current password" autoComplete="current-password" value="" />
+          <PasswordField
+            id="email-current-password"
+            label="Current password"
+            autoComplete="current-password"
+            account="noor@fieldmail.org"
+            value=""
+          />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Change email</Button>
+          <WaitingCommit id="change-email" label="Change email" reason="Waiting for a new email and your password" />
         </div>
       </div>
     </>

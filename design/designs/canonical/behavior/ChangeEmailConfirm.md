@@ -39,3 +39,9 @@ WHEN tap Cancel the change GIVEN the reader is offline -> the network error answ
 WHEN press the header back arrow -> settings returns AND the change stays live for its window AND the Email row reads Change pending
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Confirm the code stands disabled with Waiting for the code right above it GIVEN Confirmation code is empty
+
+WHEN the first character is typed in Confirmation code -> Confirm the code wakes AND the line Waiting for the code goes
+
+ALWAYS Confirmation code takes a 6-digit single-use code, on the numeric keyboard, offered by the platform's one-time-code autofill

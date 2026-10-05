@@ -43,7 +43,7 @@ export function Screen() {
           <TextField id="signin-email" label="Email" type="email" autoComplete="username" value="" />
           <PasswordField id="signin-password" label="Password" autoComplete="current-password" value="" />
           <Checkbox label="Don't remember this account on this device" />
-          <Button style={{ width: "100%" }}>Sign in</Button>
+          <WaitingCommit id="signin" label="Sign in" reason="Waiting for your email and password" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>
