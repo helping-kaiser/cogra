@@ -1945,6 +1945,7 @@ const EDIT_WITHDRAWN_CITATION = `${REPLY_CITATION} — @juno`;
    `EditCompose` alone adds the 136 round's two (jakob 2026-10-05) —
    `EditComposeBody` turns the helpers' `faultHoles` on with its `holes`, and
    `CommentEditBody` never does:
+   - an upload running (`{{rowUploadingShown}}`): the second tile's ring;
    - an upload failed (`{{rowShown}}` / `{{rowFailedShown}}`,
      `{{errorShown}}`, `{{gateFailedShown}}`, `{{signFailedShown}}`): the
      compose media row's failure — the tile marked, `UploadErrorLine` under
@@ -1985,9 +1986,11 @@ function EditGate({ holes, faultHoles, done, total }) {
   );
 }
 
-/* The post edit's picked row, and with `faultHoles` its failed reading: the
-   second picture — the one still going up at the `uploading` reading — marked
-   on its tile, and the compose rule's line under the row. */
+/* The post edit's picked row, and with `faultHoles` its two upload readings:
+   at `uploading` the second picture — the one still going up — wears the
+   compose row's ring on its tile (jakob 2026-10-05, the residue's 1: the
+   edit's row is the compose row), and at `failed` it is marked on its tile,
+   the compose rule's line under the row. */
 const EDIT_PICTURES = [{ src: "post-photo.jpg" }, { src: "inviter.jpg" }];
 
 function EditPickedRow({ faultHoles }) {
@@ -1996,6 +1999,7 @@ function EditPickedRow({ faultHoles }) {
   return (
     <>
       <div style={{ display: "{{rowShown}}" }}>{row(EDIT_PICTURES)}</div>
+      <div style={{ display: "{{rowUploadingShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], progress: 0.55 }])}</div>
       <div style={{ display: "{{rowFailedShown}}" }}>{row([EDIT_PICTURES[0], { ...EDIT_PICTURES[1], failed: true }])}</div>
       <div style={{ display: "{{errorShown}}" }}>
         <UploadErrorLine onRetry={() => {}} onRemove={() => {}} />
@@ -2764,8 +2768,8 @@ const NEWER_RELEASE = {
   notes: ["The filter's Reset brings back your own default."],
 };
 
-/* The behind state's two lines — drafts flagged for blessing (copy-voice,
-   *The settings page*, About): the quiet line atop the chronicle, and the
+/* The behind state's two lines — blessed (copy-voice, *The settings page*,
+   About; jakob 2026-10-01): the quiet line atop the chronicle, and the
    once-per-release snackbar on a cold open's feed. Both carry `Update now`
    (jakob 2026-10-02): the reader wants the new version, not its code, so
    the door leads to the download — the store listing in the app, and on the

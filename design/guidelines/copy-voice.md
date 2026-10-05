@@ -1890,7 +1890,9 @@ records it signs, heard as `2 things` where a withdrawal takes two.
 
 **The reply's gate, failed.** `One picture didn't upload. Signing waits
 for it.` with `Retry` — the fact in error ink, the consequence in the
-quiet voice. The running line stays `Uploading 1 of 2 — signing waits
+quiet voice. A clip's reads `The video didn't upload. Signing waits for
+it.` (*new 2026-10-05, blessed (jakob 2026-10-05)*); a failed cover keeps
+the one-picture line, the cover being one picture. The running line stays `Uploading 1 of 2 — signing waits
 for the pictures.`, and names the body's own content: on a clip it
 reads `…signing waits for the video.` (jakob 2026-10-02, pads 3: "per
 content of course"; *new, blessed (jakob 2026-10-02)*).
@@ -1904,7 +1906,7 @@ set is named by its own noun, `Uploading 0 of 1 — signing waits for the
 cover.` (`EditComposeVideo`, `CommentEditVideo`; *new 2026-10-05,
 blessed (jakob 2026-10-05)*). The pictures' noun counts: a gate waiting
 on one picture reads `Uploading 0 of 1 — signing waits for the
-picture.` (`CommentEdit`; *new 2026-10-05, flagged for blessing*), and
+picture.` (`CommentEdit`; *new 2026-10-05, blessed (jakob 2026-10-05)*), and
 `the pictures` from two up; `the video` and `the cover` are one thing
 already and never change.
 

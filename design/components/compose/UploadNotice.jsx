@@ -48,7 +48,10 @@ function Ring({ progress = 0.55, size = 18 }) {
    quiet voice, and `Retry` — a fault, so the way out is to ask again, the way
    every transport fault in the product does. No `Remove it` here: the seal reads
    back, and what the reply carries is changed one stage back. The sign button
-   stays disabled while either reading shows.
+   is disabled at this reading only (jakob 2026-10-05); the running reading
+   keeps it enabled. A clip's fault reads `The video didn't upload.` through
+   `message`; a failed cover keeps `One picture didn't upload.`, the cover
+   being one picture.
 
    THE GATE NAMES WHAT IT WAITS FOR, PER KIND (jakob 2026-10-02, pads 3: "per
    content of course"). `media` is the body's kind: pictures by default, and a

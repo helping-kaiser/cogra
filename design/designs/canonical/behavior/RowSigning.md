@@ -14,6 +14,8 @@ ALWAYS the row line stands under the face, in the slot the pending marker uses, 
 
 ALWAYS the failure line is announced as an alert
 
+ALWAYS a row line stands until Retry is pressed, another act is made on the same anchor, or the surface's next fresh load, and never fades on a timer
+
 WHEN tap Retry on the row line GIVEN the hold did not sign -> the same hold is signed again AND the line under the face reads Signing… once 200ms pass without an answer
 
 WHEN a read-side comfort on the target does not go through -> the comfort reverts AND the line under the face reads That didn't go through. in the failure voice followed by Retry AND the face never moves AND NEVER the snackbar carries the failure

@@ -12,6 +12,8 @@ ALWAYS the anchor's accessible name says the opinion is waiting for your review,
 
 WHEN tap the kept pick's face -> the kept picks' review opens with every kept pick still in it AND NEVER the key notice opens AND NEVER a pad opens
 
+WHEN press and hold the kept pick's face -> the kept picks' review opens as the tap opens it AND NEVER a hold signs anything
+
 ALWAYS a kept pick signs only from the review's own seal, together with every other pick still in it
 
 WHEN the key leaves this device again GIVEN kept picks wait unsigned -> the line reads Waiting for your key AND the face's tap opens the key notice again

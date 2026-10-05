@@ -470,6 +470,11 @@ rule covers all three button variants:
   visible-but-disabled, with the reason on screen** (jakob, the key-loss
   round): never hidden, and never left live only to refuse on press — the
   reader sees the commitment exists and reads what it is waiting for.
+  **The law gates commits; a handoff that only prefills another app's
+  draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
+  by email` stays live from an empty field, because what it enforces is
+  the spec prefill, and the words can be written — or deleted — in the
+  mail it opens.
 - **Selected** — colour only: the bottom bar's active slot moves from
   `onSurfaceVariant` to `onSurface` and to the filled icon cut; the
   chronicle filter swaps an outlined button for a filled one. No

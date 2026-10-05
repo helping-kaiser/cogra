@@ -40,6 +40,8 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after the press GIVEN Sign the edit was pressed while the uploads ran -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
 
+ALWAYS each picture the edit took that is still uploading wears its progress as a ring on its thumbnail
+
 WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes

@@ -453,11 +453,14 @@ Object.assign(FLOW_MARKERS, {
   ReplyPictures: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
     { n: 2, find: 'aria-label="Leave — the reply is discarded"', tag: "button" },
-    { n: 3, find: ">Next</button>", tag: "button" },
+    { n: 3, find: ">Next</button>", tag: "button", all: true },
     { n: 4, find: "almost catches it.", tag: "p" },
-    { n: 5, find: 'aria-label="Remove this picture"', tag: "button" },
+    { n: 5, find: 'aria-label="Remove this picture"', tag: "button", all: true },
     { n: 6, find: ">Describe the pictures</button>", tag: "button" },
     { n: 7, find: "+ Add pictures · 2 of 4", tag: "button" },
+    // The failed picture's line (the `upload` chip, jakob 2026-10-05, P17).
+    { n: 8, find: ">Retry</button>", tag: "button" },
+    { n: 9, find: ">Remove it</button>", tag: "button" },
   ],
   ReplyVideo: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },

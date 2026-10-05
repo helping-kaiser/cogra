@@ -37,3 +37,5 @@ WHEN press the header back arrow -> the edit is left toward where it began AND t
 WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
 
 WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises
+
+WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
