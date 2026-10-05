@@ -328,8 +328,7 @@ title, at most two short paragraphs, Close. The texts, verbatim
   opinion of the person who vouched you in, and your feed grows from
   it. / The pad is how you shape what reaches you — for or against, and
   how much. Nothing is signed until Set. *(The title is blessed (jakob
-  2026-10-02); the first paragraph is new 2026-10-02, flagged for
-  blessing.)*
+  2026-10-02); the first paragraph is blessed (jakob 2026-10-05).)*
 
   *The italicised tails are the `cg-exact` spans: the face is drawn in
   both reading modes, the digits only when the reader has asked for
@@ -2012,7 +2011,7 @@ runs in seven days, and you can cancel from any device until it does.`
 jakob 2026-10-02). Nothing has landed, so nothing waits: the body reads
 `Nothing has landed yet — deleting removes your application and your
 account right away.` (**blessed**, jakob 2026-10-02), and the commitment
-`Delete my account` (*new 2026-10-02, flagged for blessing*) deletes at
+`Delete my account` (**blessed**, jakob 2026-10-05) deletes at
 once — here the press does what the words say. What goes, what stays,
 the content sweep and the link's note speak of landed records and the
 mailed link, so the case draws none of them.
