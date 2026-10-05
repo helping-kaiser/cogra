@@ -19,3 +19,5 @@ WHEN the link is opened GIVEN this browser is signed in to a different account -
 WHEN press Back to CoGra GIVEN this browser is signed in to a different account -> CoGra opens where app-open lands for the signed-in account
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN press system Back -> the platform leaves to wherever the mail link was opened from AND NEVER a CoGra screen opens in its place

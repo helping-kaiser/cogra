@@ -272,7 +272,12 @@ header's — readme §13, *The compose flow*) opening a plain dialog:
 title, at most two short paragraphs, Close. On the stance pad the "?"
 opens nothing: its text replaces the pad's body in place, with `Back to
 the pad` (readme §11; jakob 2026-10-05, the collected brief's D4) — the
-pad's four help lines, or a named pad's own text below. The texts,
+pad's four help lines, or a named pad's own text below. The two
+seal-scale pads keep their dialogs (jakob 2026-10-05, the final brief's
+5): the compose pad's and the reply pad's "?" open their named dialog
+over the seal, a board of its own (`ReplyPadHelp`), because those pads
+sit inside a seal rather than standing alone. So both grammars are law —
+in place on the stance pad, a dialog on the two seal-scale pads. The texts,
 verbatim (browser wording shown; the app variant swaps the platform
 noun):
 
@@ -719,7 +724,9 @@ settings commits' labels are the construction's, confirmed as a set
 (jakob 2026-10-05, blessed): `Revoking…`, `Signing out…`, `Changing
 password…`, `Changing handle…`, `Changing email…`, `Confirming the
 code…`, `Creating a new recovery code…`, `Resending the link…`, `Adding
-it to the deletion…`, `Canceling…`.
+it to the deletion…`, `Canceling…` — and `Sending the confirmation
+link…`, the deletion request's, recorded as the construction's own
+(jakob 2026-10-05).
 
 A seal gated on its uploads keeps its commit enabled, and a press there
 swaps to the same word while it waits for the bytes — `Signing and

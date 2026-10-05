@@ -35,3 +35,5 @@ ALWAYS the page scrolls when its content outgrows the screen at any width or tex
 ALWAYS Continue stands disabled with Waiting for your invite link right above it GIVEN Invite link is empty
 
 WHEN the first character is typed in Invite link -> Continue wakes AND the line Waiting for your invite link goes
+
+WHEN press system Back -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead

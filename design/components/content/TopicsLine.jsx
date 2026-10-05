@@ -50,7 +50,17 @@ const VISIBLE_CHIPS = 2;
    counts span, and a var(--space-2) gap between every pair of them — clears
    358px. Whichever count of chips survives is always a PREFIX of `topics`:
    there's no version of this line where a later, shorter tag is shown and
-   an earlier, longer one is folded instead. */
+   an earlier, longer one is folded instead.
+
+   AT ANY TEXT SIZE THE COUNT STAYS WHOLE (jakob 2026-10-05, the final brief;
+   the K13 round's 1.5× proof clipped `Feed`'s to `· 1 re`). The estimate
+   above is the 1× drawing's; the clients run the same fold MEASURED at the
+   rendered size (readme §4, *Type*, the budgets law) — the last chip folds
+   into the count, then the first — so a scaled line never cuts a chip and
+   never clips the count. The drawing keeps the count whole on its own as
+   well: the chips ride a shrinkable run and the count never shrinks, so
+   should the estimate ever undershoot, the chips give way, never the
+   count. */
 const CHIP_TEXT_AVG_PX = 7.5;
 const COUNTS_TEXT_AVG_PX = 5.5;
 const PILL_OVERHEAD_PX = 26;
@@ -79,6 +89,20 @@ function estimateLineWidth(shownTopics, hiddenTopics, references) {
 }
 
 const CHIP_STYLE = { flex: "none" };
+
+/* The chips' run: it may shrink (and hide what no longer fits), the count
+   beside it may not. With no chip shown it is not drawn at all. */
+const CHIPS_RUN = {
+  display: "flex",
+  alignItems: "center",
+  gap: "var(--space-2)",
+  minWidth: 0,
+  flex: "0 1 auto",
+  // Clip, with a margin for the pill's antialiased edge, so the run draws
+  // exactly as loose chips do until it actually has to give way.
+  overflow: "clip",
+  overflowClipMargin: "2px",
+};
 
 const COUNT_STYLE = {
   flex: "none",
@@ -140,9 +164,13 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
         }}
         data-node={node}
       >
-        {visible.map((topic) => (
-          <TopicChip key={topic} topic={topic} inert style={CHIP_STYLE} node={tag} nodeKey={tag && topic.replace(/^#/, "")} />
-        ))}
+        {visible.length > 0 && (
+          <span style={CHIPS_RUN}>
+            {visible.map((topic) => (
+              <TopicChip key={topic} topic={topic} inert style={CHIP_STYLE} node={tag} nodeKey={tag && topic.replace(/^#/, "")} />
+            ))}
+          </span>
+        )}
         {counts && (
           <span style={COUNT_STYLE} data-node={countsNode}>
             {counts}
@@ -154,9 +182,13 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
 
   return (
     <div style={LINE} data-node={node}>
-      {visible.map((topic) => (
-        <TopicChip key={topic} topic={topic} style={CHIP_STYLE} node={tag} nodeKey={tag && topic.replace(/^#/, "")} />
-      ))}
+      {visible.length > 0 && (
+        <span style={CHIPS_RUN}>
+          {visible.map((topic) => (
+            <TopicChip key={topic} topic={topic} style={CHIP_STYLE} node={tag} nodeKey={tag && topic.replace(/^#/, "")} />
+          ))}
+        </span>
+      )}
       {counts &&
         (onOpenReferences ? (
           <button

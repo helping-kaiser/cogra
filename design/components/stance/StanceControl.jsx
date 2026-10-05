@@ -169,7 +169,8 @@ const OVER_MEDIA_ANCHOR = {
   border: 0,
   background: "none",
   color: "#fff",
-  filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.55))",
+  // The rail's own shadow, kept equal to `ReelRail`'s RAIL_SHADOW.
+  filter: "drop-shadow(0 1px 6px rgba(0,0,0,0.75))",
 };
 
 const EMPTY_BUNDLE = { current: ORIGIN, rawSum: ORIGIN, records: 0, severed: false, severance: { records: 0 } };

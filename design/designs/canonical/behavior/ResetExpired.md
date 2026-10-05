@@ -17,3 +17,5 @@ WHEN press Reset your password -> Reset opens with its field empty
 WHEN press Sign in -> SignIn opens
 
 WHEN press Set the new password on ResetNew GIVEN the link was spent or went past its time while the form stood open -> ResetExpired opens AND NEVER the password changes
+
+WHEN press system Back -> the platform leaves to wherever the mail link was opened from AND NEVER a CoGra screen opens in its place

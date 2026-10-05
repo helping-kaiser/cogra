@@ -41,3 +41,5 @@ WHEN the tab is closed or the app is killed before the code confirms -> nothing 
 ALWAYS the old code keeps working until the new one is confirmed GIVEN a code being replaced
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN press the browser's back on the web -> the snackbar reads Type the code back to finish AND the screen stays, as Android Back answers AND NEVER the browser leaves the screen

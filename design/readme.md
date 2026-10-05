@@ -286,7 +286,10 @@ type — the filter trigger's 154px band is the room its words have at
 any scale, so the summary collapses where its words stop fitting, never
 where they would have stopped at 1×. A clamp counts lines, never
 pixels: the text body's 18 lines are 18 lines at 2×. The bottom bar's
-labels may wrap to a second line above 1.3×. **The intro's stages scale
+labels may wrap to a second line above 1.3×. **The tags line keeps its
+count whole** (jakob 2026-10-05): measured at the rendered size, the chips
+give way — the last folds into the count, then the first — and the count
+is never clipped (`TopicsLine`). **The intro's stages scale
 to the column**, and **the entry and settings pages scroll** when their
 content outgrows the screen: a board's `overflow: hidden` frame is a
 drawing convenience, never the spec. A footer the placement law pins
@@ -532,7 +535,11 @@ entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
 page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
 beneath them, so their arrows are links that name a board (*The shell
-round's stops*). The ask link is not the funnel: `VouchAsk` and its two
+round's stops*). **System Back answers as the arrow does** (jakob
+2026-10-05): on a funnel screen it follows the arrow's link; an arrowless
+mail landing leaves to wherever the mail was opened from; and the web's
+recovery-code screen holds a history entry, so the browser's back answers
+as Android's Back does there. The ask link is not the funnel: `VouchAsk` and its two
 siblings follow the layer law, so an ask opened from a chat returns there
 and a cold open lands on Feed, and their arrows read a plain `Back`.
 A funnel arrow carries no origin noun: `Join` reads a plain `Back`, and

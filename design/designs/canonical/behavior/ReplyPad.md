@@ -18,4 +18,4 @@ WHEN tap Cancel -> the pad closes onto the seal AND nothing is staged
 
 WHEN tap the scrim -> the pad closes onto the seal AND nothing is staged
 
-WHEN tap the pad's ? -> the reply pad's own help opens AND NEVER the post pad's help opens
+WHEN tap the pad's ? -> the reply pad's own help opens as a dialog over the seal AND NEVER the post pad's help opens AND NEVER the pad's body is replaced in place
