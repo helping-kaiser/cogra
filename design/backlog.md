@@ -4739,7 +4739,12 @@ jakob's eye:
   supersedes the first; the handle's taken answer now arrives after the
   dialog's `Change it`.
 
-### 13X-final · What the final brief's round left open · *design + contract* · **filed 2026-10-05**
+### 13X-final · What the final brief's round left open · *design + contract* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob's last ruling of the fabric (the audit README,
+*The fabric's last ruling · 2026-10-05 (night)*) blessed every string and
+adopted every recommendation, executed in readme §13, *The close bite*.
+What it left waits in `13X-close-bite`.
 
 The final brief executed (readme §13) closed `13X-k13`, `13X-history`,
 `13X-exec-entry-vouch` and `13X-exec-settings-pads`. What no ruling
@@ -4787,3 +4792,24 @@ each with the lane's recommendation in the round's report:
   index does not yet carry; the walk-back's cost is `severanceCost`, a
   second deletion request supersedes the first, and the handle's taken
   answer arrives after the dialog's `Change it`.
+
+### 13X-close-bite · What the close bite left open · *design* · **filed 2026-10-05**
+
+The close bite (readme §13) executed the fabric's last ruling and left
+these for jakob's eye, each with the lane's recommendation in its report:
+
+- **One string to bless**, for the next casual look: the crops' no-pinch
+  line, `Drag or use the arrow keys to move, the slider to zoom.`
+  (copy-voice, *The crops' how-to line*).
+- **The arrow step's base.** The crops move 1 % a press and 10 % with
+  Shift; whether that is of the crop window along the pressed axis or of
+  the picture is unwritten.
+- **The applicant's taken-address landing** reads `That address is taken
+  now` over the `EMAIL_IN_USE` line; its way on is unwritten, and the
+  member's landing goes `Back to settings`.
+- **Three tag-round strings** — `Un-tag`, `Withdrawn: #coastroad`, `Tags
+  withdrawn` — stand in copy-voice as still unblessed, while the next
+  section counts them among its blessed lines.
+- **The moderation variant's name**, `Removed by the network`, is still
+  proposed and unblessed in `ActorChip`'s docblock; copy-voice says
+  neither.
