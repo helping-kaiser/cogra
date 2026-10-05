@@ -2026,7 +2026,9 @@ account right away.` (**blessed**, jakob 2026-10-02), and the commitment
 `Delete my account` (**blessed**, jakob 2026-10-05) deletes at
 once — here the press does what the words say. What goes, what stays,
 the content sweep and the link's note speak of landed records and the
-mailed link, so the case draws none of them.
+mailed link, so the case draws none of them. The reader lands signed out
+on the bare view, and one snackbar answers there: `Your account is
+deleted.` (**blessed**, jakob 2026-10-05).
 
 **No "are you sure".** Nothing in this flow asks twice, scolds, or lists
 what the reader will miss. The friction is the emailed link, which is

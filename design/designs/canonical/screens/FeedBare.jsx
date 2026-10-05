@@ -1,6 +1,9 @@
 /* Bare arrival — no invite link, so the genesis moderator's borrowed view.
    An invite link that resolves to nothing carries no issuer and lands here
-   too, with `Main`'s dead-link snackbar (jakob 2026-10-02). */
+   too, with `Main`'s dead-link snackbar (jakob 2026-10-02). An applicant who
+   deletes their account lands here signed out, and one snackbar answers on
+   arrival: `Your account is deleted.` (jakob 2026-10-05; `DeleteAccount`'s
+   applicant case). */
 export function Screen() {
   return (
     <>
