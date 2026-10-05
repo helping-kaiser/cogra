@@ -306,6 +306,33 @@ function FeedList({ children }) {
   );
 }
 
+/* HISTORY'S DAY DIVIDER (jakob 2026-10-05, the final brief's 4: "the post I
+   saw three days ago"). A quiet line naming the day the things under it were
+   first seen — `Today`, `Yesterday`, then the dateline's date (`2 October`,
+   the year only when it is not the current one). It is the chat thread's
+   divider construction, the one day divider the system draws: label-small,
+   secondary, centred, no rule and no fill. It belongs to the list, never to
+   a card — no card anatomy changes for it. Strings flagged for blessing
+   (copy-voice, *Ages*). */
+function HistoryDayDivider({ children }) {
+  return (
+    <div
+      role="heading"
+      aria-level={2}
+      style={{
+        alignSelf: "center",
+        padding: "4px 0",
+        fontSize: "var(--text-label-small)",
+        lineHeight: "var(--text-label-small--line-height)",
+        letterSpacing: "var(--text-label-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* An application step riding the feed as a card (readme §13, entry).
 
    IT IS THE PRODUCT SPEAKING, AND IT HAS TO LOOK LIKE IT (jakob 2026-09-15, on
@@ -1338,8 +1365,10 @@ const KEPT_PICKS = [
    on Invites — so when one also waits, the review and its seal each carry one
    quiet line saying so, with the door to Invites at its end, the
    newer-version line's construction (`WhatsNewBody`). Signing the picks
-   never implies the approval happened.
-   `shown` is the boards' `approval` chip. Wording flagged for blessing. */
+   never implies the approval happened, and the line is a call to act — the
+   approval waits for the reader, nothing signs it for them.
+   `shown` is the boards' `approval` chip. The wording is jakob's own,
+   blessed (jakob 2026-10-05). */
 function KeptApprovalLine({ shown }) {
   return (
     <p
@@ -1352,7 +1381,7 @@ function KeptApprovalLine({ shown }) {
         color: "var(--text-secondary)",
       }}
     >
-      An approval waits on Invites — it signs on its own there.{" "}
+      An approval waits in your invites — go there to sign it.{" "}
       <InlineAction size="sm" onClick={() => {}}>
         Open Invites
       </InlineAction>
@@ -2862,6 +2891,43 @@ function WhatsNewBody({ newer }) {
 
 /* THE HANDLE CHANGE, whole (`ChangeHandle`'s anatomy, shared the moment its
    confirm dialog drew it a second time). `value` is what the field holds. */
+/* A COMMIT WAITING ON ITS FIELDS — the disabled-until-filled law drawn
+   (readme §4, *Interaction states*; jakob 2026-10-05, the collected brief's D6,
+   drawn by the final brief). A form's commit that cannot go yet stands where it
+   always stands, visible and disabled at the 38%, and one quiet line right
+   above it says what it waits for — the construction `Report a problem`'s
+   empty foot first drew (`Nothing to send yet`), in the kept picks' blessed
+   voice for what something waits on (`Waiting for your key`). The line is the
+   button's description, so a listener hears the reason with the control. The
+   first character in the last empty field wakes the commit and the line goes.
+   Every reason is flagged for blessing (copy-voice, *Commits that wait*).
+
+   `waiting` false draws the live commit alone, for a state whose fields are
+   filled. */
+function WaitingCommit({ id, label, reason, waiting = true }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      {waiting && (
+        <span
+          id={`${id}-waits`}
+          style={{
+            textAlign: "center",
+            fontSize: "var(--text-label-small)",
+            lineHeight: "var(--text-label-small--line-height)",
+            letterSpacing: "var(--text-label-small--letter-spacing)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          {reason}
+        </span>
+      )}
+      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined}>
+        {label}
+      </Button>
+    </div>
+  );
+}
+
 function ChangeHandleBody({ value = "" } = {}) {
   return (
     <>
@@ -2902,7 +2968,7 @@ function ChangeHandleBody({ value = "" } = {}) {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Change handle</Button>
+          <WaitingCommit id="change-handle" label="Change handle" reason="Waiting for a new handle" waiting={!value} />
         </div>
 
         <div style={{ marginTop: 24 }}>
@@ -3254,7 +3320,7 @@ function RestoreBody({ value = "", error }) {
         </div>
 
         <div style={{ marginTop: 16 }}>
-          <Button style={{ width: "100%" }}>Restore the key</Button>
+          <WaitingCommit id="restore" label="Restore the key" reason="Waiting for your recovery code" waiting={!value && !error} />
         </div>
 
         <p
@@ -3334,7 +3400,12 @@ function SettingsBackupBody({ app = false, error }) {
         )}
 
         <div style={{ marginTop: app ? 32 : 16 }}>
-          <Button style={{ width: "100%" }}>Create a new recovery code</Button>
+          <WaitingCommit
+            id="settings-rekey"
+            label="Create a new recovery code"
+            reason="Waiting for your current recovery code"
+            waiting={!app && !error}
+          />
         </div>
 
         <p
@@ -3920,8 +3991,8 @@ const FEED_COMMENT_MENU = COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 const FEED_OWN_COMMENT_MENU = OWN_COMMENT_MENU.filter((row) => row !== LICENSE_ROW);
 /* WHAT THE HEAD ROW NAMES, PER TARGET (the closing batch, jakob 2026-10-01).
    · AN UNTITLED POST — a text post's title is optional — is named by its
-     first words in the title's place, the way `History` lists one and the
-     quote names a comment: the words are the post.
+     first words in the title's place, the way the quote names a comment:
+     the words are the post.
    · A REMOVED POST keeps its row, as it keeps its place in every thread:
      the title's place reads `Removed by its author`, the removal mark's own
      line, over the author, who stays; its mark keeps its space empty.
@@ -4361,7 +4432,8 @@ function ApprovePadNote({ handle }) {
    D4): the vouching pads' "?" replaces the pad's body with this, never a
    dialog. Its first paragraph is the Invites empty state's two blessed
    sentences on the mechanic, its second the pads' own `Nothing is signed
-   until Set.` (copy-voice, *The "?" dialogs*; flagged as a text). */
+   until Set.` (copy-voice, *The "?" dialogs*; blessed as a text, jakob
+   2026-10-05). */
 const HOW_VOUCHING_WORKS_HELP = [
   "A link lets someone make an account. Your vouch — the opinion you sign when you approve them — is what brings them in.",
   "Nothing is signed until Set.",
@@ -4432,7 +4504,36 @@ const YOUR_VOUCH_BACK_HELP = [
    own card on the feed and signs through `VouchBackPad` into `VouchedIn`.
    Neither twin is drawn as a state of its own: the ready row here, and the
    vouch-back card there, are the cards they surface as. */
-function InvitesBody({ approving = false }) {
+/* A KEPT APPROVAL ON INVITES (jakob 2026-10-05, the final brief: "rest sounds
+   good" — the entry lane's F-eev-4). A vouch the reader set on an ask link
+   while the key was elsewhere is a kept approval: never in the kept picks'
+   batch, signed through the approval pad here. It stands as ONE row at the
+   head of Applications, before every group — it is the reader's own act
+   waiting, not a stranger's request in the queue — in the application row's
+   anatomy: the monogram, the handle, the second line, the age and the row's
+   own close. While the key is elsewhere the second line is the kept pick's
+   blessed `Waiting for your key`, and the row's tap meets the key notice, as
+   a kept pick's face does; once the key is back it reads `Ready for your
+   approval` and the tap opens the approval pad. `shown` is `Invites`'
+   `kept` chip. */
+function KeptApprovalRow({ shown }) {
+  return (
+    <div style={{ display: shown, padding: "0 16px 8px" }}>
+      <ContentRow
+        variant="chronicle"
+        chevron={false}
+        name="noor"
+        title="@noor"
+        second="Waiting for your key"
+        trailing="2d"
+        action={<CloseApplication handle="@noor" />}
+        onOpen={() => {}}
+      />
+    </div>
+  );
+}
+
+function InvitesBody({ approving = false, kept = "none" }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
@@ -4455,6 +4556,7 @@ function InvitesBody({ approving = false }) {
         </div>
 
         <SectionLabel>Applications</SectionLabel>
+        {kept !== "none" && <KeptApprovalRow shown={kept} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           <ApplicationGroup label="Many uses" count={4} />
           <ContentRow

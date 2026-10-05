@@ -60,7 +60,7 @@ looking like a bug.
 | Release | parks the pick; the pad stays open; **nothing is signed** |
 | Set | signs the pick |
 | Cancel, outside press, Esc | dismisses and stages nothing |
-| `?` | replaces the pad's body with four lines of help, and disables Set while it shows |
+| `?` | replaces the pad's body with four lines of help, and disables Set while it shows — on the seal-scale compose and reply pads it opens their named dialog instead (copy-voice, *The "?" dialogs*) |
 | Walk it back | the explicit route to `(0, 0)` |
 
 **The light gesture costs nothing and the held one spends.** A tap is

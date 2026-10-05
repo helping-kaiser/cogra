@@ -33,8 +33,8 @@
    `YourKeyGate`.
 
    THE PLATFORM NOUN IS THE `wording` CHIP (jakob 2026-10-05, E13), as on
-   `KeyElsewhere` and `Restore`: the key lives `only in this browser` or `only in this app`, and is read from either. The app renderings are flagged
-   for blessing (copy-voice, *The collected rulings' entry lines*). */
+   `KeyElsewhere` and `Restore`: the key lives `only in this browser` or `only in this app`, and is read from either. The app renderings are blessed
+   (jakob 2026-10-05; copy-voice, *The collected rulings' entry lines*). */
 
 function SecretBlock({ label, value, copyLabel }) {
   return (

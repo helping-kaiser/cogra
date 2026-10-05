@@ -47,3 +47,5 @@ WHEN no answer has come 5s after the press of Resend the link -> Resend the link
 ALWAYS the screen's ways out stay live while Resend the link waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN press system Back -> the platform leaves to wherever the mail link was opened from AND NEVER a CoGra screen opens in its place

@@ -25,3 +25,15 @@ WHEN press Change email GIVEN no answer reaches the device -> the fields keep wh
 WHEN press the header back arrow -> settings returns AND NEVER a message is sent
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Change email stands disabled with Waiting for a new email and your password right above it GIVEN New email or Current password is empty
+
+WHEN both fields hold a character -> Change email wakes AND the line Waiting for a new email and your password goes
+
+WHEN press Change email GIVEN the new address is not an email address -> the New email field reads That doesn't look like an email address. AND NEVER a message is sent
+
+WHEN typing in New email GIVEN the field reads That doesn't look like an email address. -> the line re-checks as the reader types and goes once the address is well formed
+
+WHEN typing in Current password GIVEN the field reads That password isn't right. -> the line stands until the next press of Change email
+
+ALWAYS the Current password field names the account by a hidden username carrying the current address

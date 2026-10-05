@@ -37,7 +37,7 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Continue</Button>
+          <WaitingCommit id="invite-link" label="Continue" reason="Waiting for your invite link" />
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column" }}>

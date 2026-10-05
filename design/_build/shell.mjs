@@ -52,8 +52,15 @@ const fontTokens = `:root { --font-figtree: "Figtree"; --font-sans: var(--font-f
 // state layer — is the same pseudo-element, and its `inset: 0` left the badge
 // pinned on all four sides, stretched across the control as an orange bar.
 // `left` and `bottom` are released so the badge is the corner number it says.
+//
+// A DISABLED CONTROL KEEPS ITS BADGE (2026-10-05, the forms' waiting commits).
+// `states.css` hides the state layer on a disabled pressable, and that rule
+// outranks the badge's own opacity, so every disabled commit on the canvas
+// carried a number nobody could see. The badge is restored there; it reads at
+// the control's own 38%.
 export const flowBadgeCss = `[data-flow]:not(.cg-sr-focusable) { position: relative; }
-[data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; left: auto; bottom: auto; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }`;
+[data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; left: auto; bottom: auto; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
+[data-flow].cg-state:disabled::after, [data-flow].cg-state[aria-disabled="true"]::after { opacity: 1; }`;
 
 // GEEK MODE, the second chip (readme §13, backlog item 53): the exact values of
 // the signal numbers — stance, tag and citation pairs, the Feed score, the

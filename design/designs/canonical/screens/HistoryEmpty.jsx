@@ -5,14 +5,13 @@
    IT SAYS THE LIST IS AUTOMATIC, which is the one fact a reader cannot infer.
    Saved fills because you acted; this fills because you read, and an empty
    screen that did not say so reads as a feature that is switched off. Its
-   words name no kind, because the list holds every kind (flagged for
-   blessing, copy-voice *Saved, History and hiding*).
+   words name no kind, because the list holds every kind (blessed, jakob
+   2026-10-05; copy-voice *Saved, History and hiding*).
 
-   NO SEARCH FIELD AND NO TRIGGER YET (a lane call, flagged for jakob's canvas
-   pass). Both act on what has been seen, and here nothing has; they arrive
+   NO SEARCH FIELD AND NO TRIGGER YET (jakob 2026-10-05, "canvas looks
+   good"). Both act on what has been seen, and here nothing has; they arrive
    with the first thing seen. A history narrowed or searched to nothing is a
-   different state — the reader's own narrowing — and it is not this board
-   (backlog `13X-history`). */
+   different state — the reader's own narrowing — and it is `HistoryNone`. */
 export function Screen() {
   return (
     <>

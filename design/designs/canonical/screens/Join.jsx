@@ -70,7 +70,7 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-          <Button style={{ width: "100%" }}>Create account</Button>
+          <WaitingCommit id="join" label="Create account" reason="Waiting for a handle, your email and a password" />
           <Button variant="text" style={{ width: "100%" }}>
             Already have an account? Sign in
           </Button>

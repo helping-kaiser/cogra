@@ -86,8 +86,8 @@ export function CropViewport({
   );
 }
 
-/* The viewport's and the slider's spoken names (flagged for blessing, the K13
-   round): what the focused picture and the slider are for, in the reader's
+/* The viewport's and the slider's spoken names (the K13 round; blessed,
+   jakob 2026-10-05): what the focused picture and the slider are for, in the reader's
    words. */
 export const CROP_PAN_NAME = "Move the picture";
 export const CROP_ZOOM_NAME = "Zoom";

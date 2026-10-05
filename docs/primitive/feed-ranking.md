@@ -736,12 +736,15 @@ list rides each request
 standing delegation is
 [open-questions.md Q25](../open-questions.md)).
 
-Reference-frontend conventions: "seen" = passed through the
-viewport during a render, batched and flushed at natural
+Reference-frontend conventions: "seen" = fully in the viewport
+during a render, the first time only — a re-seeing is never counted
+and never moves an entry; batched and flushed at natural
 checkpoints; "show everything" toggle and direct navigation bypass
-the filter; a history tab is the same data read chronologically;
-entries compact away after ~1 year (resurfacing a resurging old
-post is accepted feed character).
+the filter; a history tab is the same data read by first seeing,
+newest first; entries compact away after ~1 year (resurfacing a
+resurging old post is accepted feed character). Seeing never
+reaches the graph: the list is application state, and only a
+reader's own gestures become records.
 
 ### 9.5 The ranked order is a snapshot
 

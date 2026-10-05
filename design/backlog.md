@@ -4603,7 +4603,11 @@ left these for his eye:
 - **Two stale notes.** `EditComposeVideo`'s and `CommentEditVideo`'s
   docblocks still call the cover noun flagged; it is blessed.
 
-### 13X-k13 · What the K13 round left for rulings · *design + docs* · **filed 2026-10-05**
+### 13X-k13 · What the K13 round left for rulings · *design + docs* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob's final-brief ruling (the audit README, *The
+final brief's ruling · 2026-10-05 (night)*), executed in readme §13, *The
+final brief executed*. What no ruling reached carries to `13X-final`.
 
 The K13 round (readme §13) executed the nineteen rulings and left these
 for jakob's eye, each with the lane's recommendation in the round's
@@ -4644,7 +4648,11 @@ report:
 - **Two stacked count lines' 48px targets overlap** on the post detail;
   the later line takes the overlap.
 
-### 13X-history · What the History redesign left for rulings · *design + contract* · **filed 2026-10-05**
+### 13X-history · What the History redesign left for rulings · *design + contract* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob's final-brief ruling (the audit README, *The
+final brief's ruling · 2026-10-05 (night)*), executed in readme §13, *The
+final brief executed*.
 
 The History redesign (readme §13) drew the seen-list as a feed and left
 these for jakob's eye, each with the lane's recommendation in its report:
@@ -4675,7 +4683,11 @@ these for jakob's eye, each with the lane's recommendation in its report:
   still says `History` lists an untitled post by its words.
 
 
-### 13X-exec-entry-vouch · What the entry and vouch execution left open · *design + contract* · **filed 2026-10-05**
+### 13X-exec-entry-vouch · What the entry and vouch execution left open · *design + contract* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob's final-brief ruling (the audit README, *The
+final brief's ruling · 2026-10-05 (night)*), executed in readme §13, *The
+final brief executed*. What no ruling reached carries to `13X-final`.
 
 The entry and vouch rulings executed (readme §13) left these for
 jakob's eye:
@@ -4699,7 +4711,11 @@ jakob's eye:
 - **`Back to the search` on a profile** waits for Explore's person row
   (audit K14.11) to be drawn.
 
-### 13X-exec-settings-pads · What the settings and pads execution left open · *design + contract* · **filed 2026-10-05**
+### 13X-exec-settings-pads · What the settings and pads execution left open · *design + contract* · **filed 2026-10-05** · **closed 2026-10-05**
+
+Closed 2026-10-05: jakob's final-brief ruling (the audit README, *The
+final brief's ruling · 2026-10-05 (night)*), executed in readme §13, *The
+final brief executed*. What no ruling reached carries to `13X-final`.
 
 The settings and pads rulings executed (readme §13) left these for
 jakob's eye:
@@ -4722,3 +4738,52 @@ jakob's eye:
   `severanceCost`, the pick route's one record; a second deletion request
   supersedes the first; the handle's taken answer now arrives after the
   dialog's `Change it`.
+
+### 13X-final · What the final brief's round left open · *design + contract* · **filed 2026-10-05**
+
+The final brief executed (readme §13) closed `13X-k13`, `13X-history`,
+`13X-exec-entry-vouch` and `13X-exec-settings-pads`. What no ruling
+reached, and what the round itself found, waits here for jakob's eye,
+each with the lane's recommendation in the round's report:
+
+- **Strings to bless.** History's day dividers (`Today`, `Yesterday`,
+  the dateline's date) — a second exception to *Ages*' no-"today" law,
+  written as jakob's; `HistoryNone`'s two first sentences and `Show
+  everything`; the waiting commits' eleven reasons (copy-voice, *Commits
+  that wait*); the reorder handle's names `Reorder the cover` and
+  `Reorder picture 2`. Still flagged from the settings round and in no
+  blessing list: the post edit's bug way out `Discard the edit`, and the
+  profile and picture seals' `Not now`.
+- **An address in use at the email change's request.** The brief listed
+  it among `ChangeEmail`'s field errors; auth.md keeps
+  `requestEmailChange` silent so no enumeration channel opens, so it is
+  not drawn there, and `ChangeEmailConfirm` answers it once the account
+  is proved. Where an applicant (`ApplicantEmail`, no code) learns the
+  new address is taken is unwritten.
+- **The rail's rendered edge.** With the deepened shadow the rail clears
+  3:1 at the shadow's core on the brightest fixture, but not at the
+  glyph's rendered edge (median 2.4:1; `ReelRail`'s docblock has the
+  numbers).
+- **The error boards' empty fields.** `SignInError`, `JoinErrors`,
+  `SettingsBackupError` and their kin draw a pressed form with its fields
+  empty under a live commit, which now reads against the waiting commits.
+- **The handle dialog's locked ways out** against the B2 ruling, which
+  locks ways out only for `Create account` and `Restore the key`.
+- **The kept approval's row**: its tap while the key is away (drawn as
+  the key notice, a kept pick's grammar) and what its close drops.
+- **Carried, never ruled**: the composers' arrival focus against K14.33;
+  "pinned" against the placement law (§4 writes the reading); the crop's
+  arrow-key step and the web's pinch line on a device with no pinch; the
+  handle's `nickname` and a display name's `off` autofill; the profile
+  and picture seals' key-absent notice still offering `Keep the draft,
+  restore later`; the bug notice's `Not now` at three scales and the
+  email link's wrong-account landing, written but undrawn.
+- **Notes, not questions**: the intro's swipe is revisited after the MVP
+  (jakob, "fine for v1"); `Back to the search` waits for Explore's person
+  row (K14.11).
+- **Contract seam** (for the relay): History orders by `firstSeenAt`
+  alone and needs a kinds filter and a query argument; the shared search
+  rule matches an untitled post by its first words, which api-spec's
+  index does not yet carry; the walk-back's cost is `severanceCost`, a
+  second deletion request supersedes the first, and the handle's taken
+  answer arrives after the dialog's `Change it`.

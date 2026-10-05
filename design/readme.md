@@ -286,7 +286,10 @@ type — the filter trigger's 154px band is the room its words have at
 any scale, so the summary collapses where its words stop fitting, never
 where they would have stopped at 1×. A clamp counts lines, never
 pixels: the text body's 18 lines are 18 lines at 2×. The bottom bar's
-labels may wrap to a second line above 1.3×. **The intro's stages scale
+labels may wrap to a second line above 1.3×. **The tags line keeps its
+count whole** (jakob 2026-10-05): measured at the rendered size, the chips
+give way — the last folds into the count, then the first — and the count
+is never clipped (`TopicsLine`). **The intro's stages scale
 to the column**, and **the entry and settings pages scroll** when their
 content outgrows the screen: a board's `overflow: hidden` frame is a
 drawing convenience, never the spec. A footer the placement law pins
@@ -470,6 +473,10 @@ rule covers all three button variants:
   visible-but-disabled, with the reason on screen** (jakob, the key-loss
   round): never hidden, and never left live only to refuse on press — the
   reader sees the commitment exists and reads what it is waiting for.
+  The reason is one quiet line right above the commit, in the voice for
+  what something waits on — `Waiting for both passwords` — and the
+  commit's description (`WaitingCommit`; drawn on every credential and
+  entry form, jakob 2026-10-05; the reasons flagged for blessing).
   **The law gates commits; a handoff that only prefills another app's
   draft is not a commit** (jakob 2026-10-05): `Report a problem`'s `Send
   by email` stays live from an empty field, because what it enforces is
@@ -528,7 +535,11 @@ entry wears its root's label: `Back to feed`, `Back to Explore` on a tag
 page, and the boards draw that state. **The entry funnel is the
 exception**: its screens are reached from outside the app with nothing
 beneath them, so their arrows are links that name a board (*The shell
-round's stops*). The ask link is not the funnel: `VouchAsk` and its two
+round's stops*). **System Back answers as the arrow does** (jakob
+2026-10-05): on a funnel screen it follows the arrow's link; an arrowless
+mail landing leaves to wherever the mail was opened from; and the web's
+recovery-code screen holds a history entry, so the browser's back answers
+as Android's Back does there. The ask link is not the funnel: `VouchAsk` and its two
 siblings follow the layer law, so an ask opened from a chat returns there
 and a cold open lands on Feed, and their arrows read a plain `Back`.
 A funnel arrow carries no origin noun: `Join` reads a plain `Back`, and
@@ -599,6 +610,20 @@ fading, closes past about **20 %** of the screen's height or on a
 fling, and otherwise snaps back; under reduced motion the close is
 plain. Two thresholds, stated apart: 25 % for a sheet, 20 % for the
 viewer.
+
+### Search
+
+**One match rule for every search field** (jakob 2026-10-05, the final
+brief): Explore's and History's. A query matches names and titles — a
+person's handle and display name, a tag's name, a post's title — and an
+untitled post by its first words, the name it wears wherever a title
+would stand; never a body, a description or a bio. `@handle <text>`
+scopes the query to one person's work, their comments found through the
+titles of what they answer; `#tag <text>` scopes it inside a tag.
+Explore searches the graph, in its ranked tiers (§13, *The search
+rulings*); History searches the reader's seen-list, newest-seen first. A
+query that finds nothing says so in the list's place and offers the way
+back (`ExploreNone`, `HistoryNone`).
 
 ### Orientation
 
@@ -1060,10 +1085,11 @@ rail, the over-media face, the veil's media face — stays white with its
 shadow: the look is ruled, and its contrast was checked against the
 lightest fixture photograph (`ReelRail`).
 
-**One rule for credential forms** (the K13 round): a form that signs in
-or sets a password names its account by the login email as
+**One rule for credential forms** (the K13 round): a form that signs in,
+sets a password or re-proves one names its account by the login email as
 `autocomplete="username"` — on its email field, or in a hidden input
-where it draws none (`ChangePassword`, `ResetNew`); passwords are
+where it draws none (`ChangePassword`, `ResetNew`, `ChangeEmail`,
+`ApplicantEmail`; jakob 2026-10-05); passwords are
 `current-password` or `new-password`; a handle is never `username`
 (`PasswordField`, `TextField`'s field-semantics table).
 
@@ -3827,9 +3853,9 @@ four-rung ladder.
   `Back to top` pill rides in with the returning collapsing band,
   centred under it, and does exactly what the re-tap does. The two are
   one outcome reached two ways — a rung a reader has to be told about,
-  and a control that tells them. The pill is the feed's alone, because
-  the feed is the only root with a top the reader is trying to get back
-  to; it needs 3 viewport-heights of depth (jakob 2026-10-02), since shallower the
+  and a control that tells them. The pill is the feed's, because the
+  feed is the root with a top the reader is trying to get back to —
+  and History's, which is a feed (jakob 2026-10-05); it needs 3 viewport-heights of depth (jakob 2026-10-02), since shallower the
   returning band has already brought the top within a flick; and it is
   drawn OUTSIDE the collapsing block, because height added to that block
   moves the band's own threshold and re-clamps the list (item 45.3).
@@ -3845,8 +3871,9 @@ four-rung ladder.
   own**, so the system draws none.
 - **The pull-down lives on every full-screen scrolling root** (ruled
   2026-09-10): the feed in all its views, the profile pages and the
-  chronicle, the opinions page, Invites (jakob 2026-10-05), search
-  results, the wallet's history, the tag page — and
+  chronicle, the opinions page, Invites (jakob 2026-10-05), History
+  (jakob 2026-10-05), search results, the wallet's history, the tag
+  page — and
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
@@ -5557,6 +5584,7 @@ none of them needing a board. Ruled by jakob the same day.
   | a post, through its tags-and-references sheet | `Back to the post` |
   | a comment's chips, in the thread | `Back to the comments` |
   | a profile's posts | `Back to the profile` |
+  | History (jakob 2026-10-05) | `Back to History` |
   | another tag's page | `Back to #<thattag>` |
   | nowhere — a shared URL | `Back to Explore` |
 
@@ -8260,6 +8288,7 @@ the rest as recommended. Both laws stand in §4.
   | the stream | `Back to the stream` |
   | Notifications | `Back to Notifications` |
   | Saved | `Back to Saved` |
+  | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
@@ -8406,11 +8435,12 @@ as the board's own; the back edge in `graph.json` carries the table.
   `Back to the post` from a post's detail, clip detail, veiled twin or
   `Removed`, `Back to #<thattag>` from a tag's page, `Back to the
   profile` from another's posts, `Back to your profile` from the
-  reader's own (jakob 2026-10-05).
+  reader's own, `Back to History` from History (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
   it narrowed (drawn), `Back to the post` from a post's pinned clip,
   `Back to the profile` from another's posts, `Back to your profile`
-  from the reader's own (jakob 2026-10-05).
+  from the reader's own, `Back to History` from History (jakob
+  2026-10-05).
 - **The opinions page** (`ProfileStances`): `Back to the profile`
   (drawn; another's profile) or `Back to your profile` (the reader's
   own). It drew a bare `Back`.
@@ -9154,6 +9184,60 @@ quoted wording is blessed unless marked flagged.
   resolved, 273 sidecars. The witness re-blessed for `New post`'s start
   narrowed to the wizard. What stays open is backlog
   `13X-exec-settings-pads`.
+
+### The final brief executed — 2026-10-05
+
+jakob's ruling on the day's last brief (the audit README, *The final
+brief's ruling · 2026-10-05 (night)*): five eye items, two corrections,
+the rest as recommended, every listed string blessed.
+
+- **History counts the first seeing only.** It orders by first seeing,
+  newest first; a re-seen thing never moves, and seeing never reaches the
+  graph — only the reader's own gestures become records. feed-ranking.md
+  §9.4, `OrderSection` and `ExploreFilter` say the same: fully in the
+  viewport, the first time. No clear and no per-item remove — decided.
+  Quiet day dividers name the day (`HistoryDayDivider`; `History`'s slot
+  1620 → **1720**); the pull-down, `Back to top` and a frozen order per
+  open are History's too; a removed thing keeps its place with its mark,
+  a hidden account stays out, a veil stays. `Back to History` joins the
+  profile's, the tag page's, the trace's and the stream's tables.
+- **One search rule** (§4, *Search*): names and titles, an untitled post
+  by its first words, `@handle` and `#tag` scopes — Explore's and
+  History's. **`HistoryNone`** (new) draws a narrowing that finds
+  nothing, its `cause` chip `search` or `kinds`, with `Show everything`.
+- **The kept approval's line** is jakob's own: `An approval waits in your
+  invites — go there to sign it.` **Invites draws the row it sends to**:
+  `Invites`' `kept` chip (`waiting`) puts `KeptApprovalRow` at the head of
+  Applications, `Waiting for your key`, `Ready for your approval` once
+  the key is back.
+- **Commits that wait** (§4, *Interaction states*): every credential and
+  entry form draws its commit disabled with one reason line above it
+  (`WaitingCommit`). `ChangeEmail`'s `fault` chip draws the field-error
+  idiom once — `password`, `malformed` — and `ApplicantEmail` inherits it;
+  an address in use stays unanswered at the request (auth.md). Both carry
+  a hidden username. The email change's code is 6 digits, single-use
+  (auth.md; the `digits` field kind). A malformed handle is answered by
+  its field and never reaches `ChangeHandleConfirm`, whose `Change it`
+  carries the wait.
+- **The reorder's three moves** stand on `PickedSheet`'s rows, each row
+  only the moves it can make; the handle takes the arrow keys.
+- **Smaller laws**: system Back follows a funnel arrow's link, leaves an
+  arrowless mail landing to the OS, and the web's recovery code holds a
+  history entry (§4, *Navigation*); the compose and reply pads keep their
+  help dialogs beside the stance pad's in-place help (copy-voice); the
+  count lines' overlap is accepted (`PostCard`); the tags line keeps its
+  count whole at any size (`TopicsLine`); the rail's shadow is 75 % at
+  6px, re-measured (`ReelRail`); `Sending the confirmation link…` is the
+  construction's; the entry canvas reads `Join · @mira invited you`.
+- **A canvas fix**: a disabled control's flow badge shows again (the
+  state layer's disabled rule had hidden it).
+- **Flagged for blessing**: the day dividers, `HistoryNone`'s words, the
+  waiting commits' reasons, the reorder handle's names. Everything else
+  the brief listed is blessed (jakob 2026-10-05).
+- **The gate**: 273 → **274 screens** (`HistoryNone`), 1848 → **1864
+  edges**, 2 → **0 gaps**, flows 66, every one resolved, 274 sidecars.
+  The witness re-blessed for `New post`'s start on `HistoryNone`. What
+  stays open is backlog `13X-final`.
 
 ## 15. Index
 

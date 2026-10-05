@@ -20,7 +20,8 @@
 
    DRAWN AT REST. Validation is on submit (§13), so an untouched form has
    nothing marked; the marked states are their own boards when they are
-   drawn. */
+   drawn. At rest the commit waits on both fields, disabled, its reason above
+   it (`WaitingCommit`, the disabled-until-filled law, jakob 2026-10-05). */
 export function Screen() {
   return (
     <>
@@ -63,7 +64,7 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Change password</Button>
+          <WaitingCommit id="change-password" label="Change password" reason="Waiting for both passwords" />
         </div>
 
         <div style={{ marginTop: 24 }}>

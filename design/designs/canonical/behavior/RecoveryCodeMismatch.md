@@ -33,3 +33,5 @@ WHEN press I've written it down GIVEN no answer reaches the device -> the code s
 WHEN the tab is closed or the app is killed before the code confirms -> nothing this screen would make exists
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN press the browser's back on the web -> the snackbar reads Type the code back to finish AND the screen stays, as Android Back answers AND NEVER the browser leaves the screen

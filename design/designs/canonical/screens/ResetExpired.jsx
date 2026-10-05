@@ -18,7 +18,7 @@
 
    NO MARK, NO ARROW, NO ERROR COLOUR, for `VerifyExpired`'s reasons: a mail
    link has no previous screen of ours, and the dead link is not the
-   reader's failure. The paragraph is new and flagged for blessing. */
+   reader's failure. The paragraph is blessed (jakob 2026-10-05). */
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>

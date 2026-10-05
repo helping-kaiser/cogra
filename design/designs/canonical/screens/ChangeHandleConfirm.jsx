@@ -17,7 +17,15 @@
    button on the left. No `error` colour: renaming yourself is not a fault
    (§11). The scrim, Escape and Back take `Keep it`.
 
-   WORDING FLAGGED for blessing (copy-voice, *The settings subpages*).
+   WORDING BLESSED (jakob 2026-10-05; copy-voice, *The settings subpages*).
+
+   THE WAIT IS `Change it`'s (jakob 2026-10-05, the final brief; the severance
+   dialog's precedent): the change is sent from the dialog, so the dialog stays
+   up until it answers, `Change it` reads `Changing handle…` once the wait
+   passes 200ms, and `Keep it`, the scrim and Back are locked meanwhile —
+   locked, never dimmed. Only a well-formed handle reaches this dialog: one
+   that breaks the field's rules is answered by the field's own line on
+   `Change handle`'s press, and the dialog never opens.
 
    THE PAGE BENEATH is `ChangeHandleBody` with the new handle typed, inert
    under the scrim and wired on `ChangeHandle`. */

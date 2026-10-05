@@ -391,7 +391,10 @@ export function PostCard({
           opinions on this post`, `Cited by 4` — because a door's name replaces
           everything in it and the number is why the line exists. Both lines
           answer to 48px through `cg-hit`, their ink unchanged: the floor is
-          ruled. */}
+          ruled. Stacked, the two hit areas overlap by about 20px (a 28px
+          pitch) and the later line takes the overlap; that is ACCEPTED under
+          WCAG 2.5.8's spacing exception (jakob 2026-10-05), since 24px circles
+          on the two lines stand clear of each other. */}
       {!redacted && detail && opinions > 0 && (
         <button
           type="button"

@@ -57,7 +57,7 @@ export interface FieldSupportProps {
 export declare function FieldSupport(props: FieldSupportProps): JSX.Element | null;
 
 /** The kinds of field the product draws, each with what it asks of the keyboard. */
-export type FieldKind = "prose" | "name" | "email" | "handle" | "url" | "code";
+export type FieldKind = "prose" | "name" | "email" | "handle" | "url" | "code" | "digits";
 export declare const FIELD_KINDS: Record<
   FieldKind,
   { type: string; inputMode: string; autoCapitalize: string; autoCorrect: boolean; autoComplete: string }

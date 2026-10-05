@@ -7,9 +7,11 @@ import { Checkbox } from "../forms/Checkbox.jsx";
    combine, and the seen toggle riding under it in the same section, because
    both answer "how is this list arranged".
 
-   SEEN, PRECISELY. Seen means the card's impression entered the viewport —
-   device-local, never signed, shared transiently with the viewer's chosen
-   ranker. Default OFF (ruled 2026-08-28, flipping the search session's first
+   SEEN, PRECISELY. Seen means the content was fully in the viewport, the
+   first time only — a re-seeing is never counted. The seen-list is the
+   reader's `History` (feed-ranking.md §9.4): application state, never a
+   graph record, shared transiently with the viewer's chosen ranker. Default
+   OFF (ruled 2026-08-28, flipping the search session's first
    call): what you've seen stays out until you ask for it back, so the box
    arrives unticked and "showing seen" is the deviation the trigger speaks.
 

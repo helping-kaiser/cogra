@@ -23,3 +23,5 @@ WHEN press Set -> the pad closes AND the seal's Your opinion row reads the pick
 WHEN press Cancel -> the pad closes AND nothing is staged
 
 WHEN press the scrim outside the pad -> the pad closes AND nothing is staged
+
+WHEN tap the pad's ? -> the stances help opens as a dialog over the seal AND NEVER the pad's body is replaced in place

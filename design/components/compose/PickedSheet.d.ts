@@ -11,6 +11,11 @@ export interface PickedSheetItem {
   described?: boolean;
   onDescribe?: () => void;
   onRemove?: () => void;
+  /** The drag's non-drag twins — offered only where the move is possible:
+   *  never on the cover for the first two, never on the last row for the third. */
+  onMakeCover?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
 }
 
 export interface PickedSheetProps {

@@ -57,7 +57,7 @@ export function Screen() {
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <Button style={{ width: "100%" }}>Set the new password</Button>
+        <WaitingCommit id="reset-new" label="Set the new password" reason="Waiting for a new password" />
       </div>
 
       <div style={{ marginTop: 24 }}>

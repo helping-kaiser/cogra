@@ -48,7 +48,8 @@
    A KEPT APPROVAL IS NAMED HERE TOO (jakob 2026-10-05, the B round's 7,
    amended): the review's line, `KeptApprovalLine`, under the acts card, with
    the door to Invites — the seal signs the picks and nothing else. The
-   `approval` chip draws it. Wording flagged for blessing. */
+   `approval` chip draws it. The wording is jakob's own, blessed (jakob
+   2026-10-05). */
 export const PROPS = { approval: { editor: "enum", options: ["none", "waiting"], default: "none" } };
 export const VALS = `approvalShown: this.props.approval === "waiting" ? "block" : "none"`;
 

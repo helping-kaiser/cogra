@@ -29,3 +29,5 @@ WHEN Delete my account is pressed GIVEN the reader is an applicant -> the accoun
 WHEN press Delete my account GIVEN the reader is an applicant and no answer reaches the device -> the line That didn't send. Try again. stands above Delete my account AND Delete my account stays, the retry AND NEVER the account is deleted
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN the request has not answered 200ms after Send the confirmation link GIVEN the reader is a member -> Send the confirmation link reads Sending the confirmation link… in its own place AND NEVER a spinner appears

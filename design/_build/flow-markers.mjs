@@ -876,11 +876,14 @@ Object.assign(FLOW_MARKERS, {
     ...nav(10),
   ],
   ComposePicked: [
-    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 1, find: "cursor:grab", tag: "button", all: true },
     { n: 2, find: ">Describe</button>", tag: "button", all: true },
     { n: 3, find: 'aria-label="Remove', tag: "button", all: true },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
+    { n: 7, find: ">Move up</button>", tag: "button", all: true },
+    { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   ComposePickedErrors: [
     { n: 1, find: 'aria-label="Back a step"', tag: "a" },
@@ -1491,6 +1494,17 @@ Object.assign(FLOW_MARKERS, {
     ...nav(23),
   ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
+  /* History narrowed to nothing (the final brief, 2026-10-05). The `cause`
+     chip draws the field, the trigger and the empty state twice, one shown
+     at a time — the same control in each, so one number each. */
+  HistoryNone: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">brackish cartography<", tag: "div" },
+    { n: 2, find: ">Search your history<", tag: "div" },
+    { n: 3, find: 'what your history shows"', tag: "button", all: true },
+    { n: 4, find: ">Show everything</button>", tag: "button", all: true },
+    ...nav(5),
+  ],
   // The history's filter sheet. scanExempt like the feed's and search's, so
   // only the sheet's own controls and its scrim carry numbers.
   HistoryFilter: [
@@ -1574,12 +1588,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Keep it</button>", tag: "button" },
     { n: 3, find: "background:var(--scrim-dialog)", tag: "div" },
   ],
+  // The `fault` chip draws the fields three times, one shown at a time — the
+  // same controls, so the same numbers on every instance.
   ChangeEmail: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
-    { n: 2, find: 'data-field="New email"', tag: "div" },
-    { n: 3, find: 'data-field="Current password"', tag: "div" },
-    { n: 4, find: 'aria-label="Show password"', tag: "button" },
-    { n: 5, find: ">Change email</button>", tag: "button" },
+    { n: 2, find: 'data-field="New email"', tag: "div", all: true },
+    { n: 3, find: 'data-field="Current password"', tag: "div", all: true },
+    { n: 4, find: 'aria-label="Show password"', tag: "button", all: true },
+    { n: 5, find: ">Change email</button>", tag: "button", all: true },
   ],
   ChangeEmailConfirm: [
     { n: 1, find: 'aria-label="Back to settings"', tag: "a" },
@@ -1970,12 +1986,15 @@ Object.assign(FLOW_MARKERS, {
   // sheet has remove buttons of its own (its tag chips, its staged citation)
   // and a prefix match with `all` would badge them through the scrim.
   EditPicked: [
-    { n: 1, find: "cursor:grab", tag: "span", all: true },
+    { n: 1, find: "cursor:grab", tag: "button", all: true },
     { n: 2, find: ">Describe</button>", tag: "button" },
     { n: 3, find: 'aria-label="Remove the cover"', tag: "button" },
     { n: 3, find: 'aria-label="Remove picture 2"', tag: "button" },
     { n: 4, find: ">Done</button>", tag: "button" },
     { n: 5, find: "background:var(--scrim-dialog)", tag: "div" },
+    { n: 6, find: ">Make it the cover</button>", tag: "button", all: true },
+    { n: 7, find: ">Move up</button>", tag: "button", all: true },
+    { n: 8, find: ">Move down</button>", tag: "button", all: true },
   ],
   // The words edit. Marker 4 is the growing body box, anchored on the field
   // border: it is the FIRST such border on the board, standing above the
@@ -2532,6 +2551,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'aria-label="Copy the link"', tag: "button", all: true },
     { n: 7, find: ">Revoke</button>", tag: "button", all: true },
     { n: 8, find: ">Close all</button>", tag: "button" },
+    // The kept approval's row (the `kept` chip), head of Applications.
+    { n: 9, find: ">@noor<", tag: "button" },
+    { n: 5, find: 'aria-label="Close @noor&#x27;s application"', tag: "button" },
   ],
   RejectAllConfirm: [
     { n: 1, find: ">Close them</button>", tag: "button" },

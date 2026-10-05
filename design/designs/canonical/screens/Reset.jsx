@@ -38,7 +38,7 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Send reset link</Button>
+          <WaitingCommit id="reset" label="Send reset link" reason="Waiting for your email" />
         </div>
 
         <p

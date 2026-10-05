@@ -45,3 +45,9 @@ WHEN no answer has come 5s after the press of Restore the key -> Restore the key
 ALWAYS the header's arrow refuses a press, never dimmed, while Restore the key waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN press system Back -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
+
+ALWAYS Restore the key stands disabled with Waiting for your recovery code right above it GIVEN Recovery code is empty
+
+WHEN the first character is typed in Recovery code -> Restore the key wakes AND the line Waiting for your recovery code goes

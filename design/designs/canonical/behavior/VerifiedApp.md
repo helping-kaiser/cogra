@@ -21,3 +21,5 @@ WHEN the link is opened GIVEN the app is signed in to a different account -> the
 WHEN press Go to the feed GIVEN the app is signed in to a different account -> the app opens where app-open lands for the signed-in account
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN press system Back -> the platform leaves to wherever the mail link was opened from AND NEVER a CoGra screen opens in its place

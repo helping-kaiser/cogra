@@ -26,7 +26,7 @@
    WITHOUT A BACKUP THE BODY SAYS SO (jakob 2026-10-05; the `backup` chip):
    `Restore the key` is not drawn, and the body takes `KeyElsewhereNoBackup`'s
    reason with the new-key clause kept, so it never asks for a code that
-   cannot open anything. The body is new and flagged for blessing. */
+   cannot open anything. The body is blessed (jakob 2026-10-05). */
 export const PROPS = {
   wording: { editor: "enum", options: ["browser", "app"], default: "browser" },
   backup: { editor: "enum", options: ["made", "none"], default: "made" },

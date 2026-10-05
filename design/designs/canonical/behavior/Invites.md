@@ -8,7 +8,7 @@ ALWAYS the page reads Applications, then Live links, in that order
 
 ALWAYS applications stand grouped by the link they came through, each group labelled with its link and its waiting count, as Many uses · 4 waiting
 
-ALWAYS the groups stand by their oldest waiting application and the rows by age inside them, so the oldest application in the queue is the first row
+ALWAYS the groups stand by their oldest waiting application and the rows by age inside them, so the oldest application in the queue is the first row under any kept approval
 
 ALWAYS the queue is never ordered by whether the reader can act on a row
 
@@ -56,7 +56,21 @@ WHEN a row or a card removes itself -> focus moves to the next row, else the pre
 
 WHEN the key comes back GIVEN an approval was set while the key was elsewhere -> it surfaces on Invites as that application's ready row AND it signs through the approval pad AND NEVER it joins the kept picks' review
 
-WHEN the key comes back GIVEN a vouch on an ask link was kept for the key -> it surfaces on Invites as a kept approval of its own AND it signs through the approval pad AND NEVER it joins the kept picks' review
+WHEN a vouch on an ask link is kept for the key -> it stands on Invites as a kept approval of its own AND NEVER it joins the kept picks
+
+WHEN the key comes back GIVEN a vouch on an ask link was kept for the key -> the kept approval waits on Invites AND it signs through the approval pad AND NEVER it joins the kept picks' review
+
+ALWAYS a kept approval stands as one row at the head of Applications, before every group, in the application row's anatomy GIVEN a vouch on an ask link was kept for the key
+
+ALWAYS the kept approval's second line reads Waiting for your key GIVEN the key is elsewhere
+
+ALWAYS the kept approval's second line reads Ready for your approval GIVEN the key is back
+
+WHEN tap the kept approval's row GIVEN the key is elsewhere -> the key notice opens AND NEVER the approval pad opens
+
+WHEN tap the kept approval's row GIVEN the key is back -> the approval pad opens on that applicant
+
+WHEN tap the kept approval's close -> the dialog asking to close that application opens
 
 WHEN pull down GIVEN the page stands all the way at its top -> the page refreshes AND the platform's own refresh indicator shows
 

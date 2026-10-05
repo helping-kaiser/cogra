@@ -1201,6 +1201,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 
 [data-flow]:not(.cg-sr-focusable) { position: relative; }
 [data-flow]::after { content: attr(data-flow); opacity: 1; position: absolute; top: 1px; right: 1px; left: auto; bottom: auto; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: #e8590c; color: #fff; font-family: var(--font-sans); font-size: 10px; font-weight: 700; line-height: 15px; text-align: center; z-index: 40; pointer-events: none; box-sizing: border-box; }
+[data-flow].cg-state:disabled::after, [data-flow].cg-state[aria-disabled="true"]::after { opacity: 1; }
 .screen:not([data-geek="on"]) .cg-exact { display: none !important; }
   </style>
 </helmet>

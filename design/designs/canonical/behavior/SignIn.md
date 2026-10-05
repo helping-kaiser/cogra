@@ -75,3 +75,9 @@ WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Sig
 ALWAYS the screen's ways out stay live while Sign in waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Sign in stands disabled with Waiting for your email and password right above it GIVEN Email or Password is empty
+
+WHEN both fields hold a character -> Sign in wakes AND the line Waiting for your email and password goes
+
+WHEN press system Back -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead

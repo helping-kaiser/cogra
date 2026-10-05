@@ -2,15 +2,21 @@
 
 ALWAYS History is the reader's seen-list, the list slice-3 ranking filters the feed by, and holds nothing else
 
-ALWAYS a content joins History when it was fully in the viewport
+ALWAYS a content joins History the first time it was fully in the viewport
+
+WHEN the reader sees a thing already in History -> NEVER the seeing is counted AND NEVER the thing moves AND NEVER the thing stands twice
+
+ALWAYS a seeing stays in the app and never becomes a graph record
 
 ALWAYS History is a feed of every kind the feed serves, Posts, Comments, Profiles and Tags, each as its own feed card
 
 ALWAYS every card in History is the same card the feed draws, fully live, and History draws no card of its own
 
-ALWAYS History stands ordered by the latest time the reader saw each thing, newest-seen first
+ALWAYS History stands ordered by the time the reader first saw each thing, newest first
 
-WHEN the reader sees a thing already in History -> the thing moves to where the latest seeing puts it AND NEVER the thing stands twice
+ALWAYS a quiet day divider stands above the first thing first seen on each day, reading Today, Yesterday, or the date as 2 October with the year only when it is not the current one
+
+ALWAYS a day divider is part of the list and never part of a card
 
 ALWAYS the score on a card in History is that card's own, and the scores never order History
 
@@ -22,17 +28,27 @@ ALWAYS a comment's replies appear only in its thread, never in History
 
 ALWAYS a comment card carries no view-replies line
 
+ALWAYS a thing removed after it was seen keeps its place in History and wears its removal mark
+
+ALWAYS a hidden account's things stay out of History while the account is hidden
+
+ALWAYS sensitive content in History keeps its veil, as on the feed
+
+ALWAYS History offers no way to clear the list and no way to remove one thing from it
+
 WHEN the comment card's head row is tapped -> the post it answers opens AND its back arrow reads Back to History
 
-WHEN the comment card is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment
+WHEN the comment card is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to History
 
 WHEN the comment glyph on a comment card is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
 WHEN a post's media is tapped -> the post opens as it does from the feed AND its back arrow reads Back to History
 
-WHEN the profile card is tapped -> that person's profile opens
+WHEN the profile card is tapped -> that person's profile opens AND its back arrow reads Back to History
 
-WHEN the tag card is tapped -> the tag's page opens
+WHEN the tag card is tapped -> the tag's page opens AND its back arrow reads Back to History
+
+WHEN a card's Feed score is tapped -> the score's trace opens AND its back arrow reads Back to History
 
 WHEN Tag a new post with it on a tag card is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
 
@@ -56,9 +72,27 @@ ALWAYS the search field reads Search your history at rest
 
 WHEN the reader types in the search field -> History narrows to what matches AND the matches stand newest-seen first
 
+ALWAYS the search field matches by the one search rule Explore uses: names and titles, an untitled post by its first words, and never a body, a description or a bio
+
+WHEN the query starts with @handle -> the remainder matches that person's own things in History, a comment through the title of what it answers
+
+WHEN the query starts with #tag -> the remainder matches the things in History that carry that tag
+
+WHEN the reader types a query nothing in History carries -> History stands narrowed to nothing, with Show everything
+
 ALWAYS the filter trigger reads Everything GIVEN no kind is narrowed
 
 WHEN tap the filter trigger -> the history's filter sheet opens over History
+
+ALWAYS the order History opened in stands frozen while the reader scrolls, and a thing first seen meanwhile joins only at the next open or the next pull down
+
+WHEN pull down GIVEN History stands all the way at its top -> History re-reads AND the platform's own refresh indicator shows
+
+WHEN the reader scrolls back up far enough to summon the collapsing top GIVEN History is 3 viewport-heights deep or more -> the Back to top pill rides in with the top, centred under it
+
+WHEN the reader scrolls back up far enough to summon the collapsing top GIVEN History is shallower than 3 viewport-heights -> NEVER the Back to top pill appears
+
+WHEN tap Back to top -> the list goes to the top, animated AND NEVER History re-reads
 
 ALWAYS the header, the search field and the filter trigger collapse on the way down and return on the way up
 

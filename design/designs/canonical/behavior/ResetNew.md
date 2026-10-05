@@ -37,3 +37,9 @@ WHEN press Set the new password GIVEN the link was spent or went past its time w
 WHEN a reset link already used or past its time is opened -> ResetExpired opens AND NEVER ResetNew opens
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+WHEN press system Back -> the platform leaves to wherever the mail link was opened from AND NEVER a CoGra screen opens in its place
+
+ALWAYS Set the new password stands disabled with Waiting for a new password right above it GIVEN New password is empty
+
+WHEN the first character is typed in New password -> Set the new password wakes AND the line Waiting for a new password goes

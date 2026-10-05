@@ -1,7 +1,7 @@
 /* HISTORY · what it shows — the sheet the history's worded trigger opens (the
    History redesign, 2026-10-05: "ofcourse it should be filterable"). The
-   feed's filter idiom, scoped to history; its composition is a lane call,
-   flagged for jakob's canvas pass.
+   feed's filter idiom, scoped to history; its composition stands as drawn
+   (jakob 2026-10-05, "canvas looks good").
 
    KINDS, AND ONLY KINDS. The kind list is `FEED_KINDS` — one list, so the
    history gains a kind the round the feed does. The feed sheet's other
@@ -24,9 +24,9 @@
    so there is no reader's default to restore and nothing to say about one.
 
    NO "?" ON THIS SHEET. The feed's and search's filter dialog explains the
-   settings default, which this list does not have; a history text is not
-   written, so none is drawn (backlog `13X-history`). The sheet is short
-   enough that its content sizes it. */
+   settings default, which this list does not have, so none is drawn. A
+   `Done` that narrows the list to nothing lands on `HistoryNone`. The sheet
+   is short enough that its content sizes it. */
 export function Screen() {
   return (
     <>

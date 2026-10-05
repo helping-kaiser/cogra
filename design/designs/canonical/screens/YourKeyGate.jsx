@@ -45,7 +45,7 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 16 }}>
-          <Button style={{ width: "100%" }}>Show my key</Button>
+          <WaitingCommit id="your-key-gate" label="Show my key" reason="Waiting for your recovery code" />
         </div>
       </div>
     </>

@@ -710,8 +710,8 @@ two-sided proof, since the address is the account's sole
 login-recovery channel.
 
 1. The user submits the new address and re-enters the current
-   password. The server sends a single-use, short-lived code to the
-   **current (original)** address — proving control of the account as
+   password. The server sends a 6-digit single-use, short-lived code
+   to the **current (original)** address — proving control of the account as
    it stands — and a verification link to the **new** address —
    proving it is reachable.
 2. The change applies only once **both** are satisfied: the
