@@ -13,3 +13,5 @@ WHEN tap the scrim or press system Back or Escape -> the dialog closes onto the 
 WHEN press Show my code -> the recovery code screen opens with the code shown AND the seed and the code are made and held in memory AND NEVER the key is attached, kept or backed up before the typed-back code confirms
 
 ALWAYS the pledge reads Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never holds it and can never reissue it. on the web, and says in this app in the app GIVEN the ceremony stands beneath the dialog
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

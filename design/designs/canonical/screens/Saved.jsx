@@ -37,7 +37,7 @@ export function Screen() {
           titleAside="@ada"
           second="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
           trailing="2d"
-          action={<Unsave />}
+          action={<Unsave name="The long way home" />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -48,7 +48,7 @@ export function Screen() {
           titleAside="@tobias"
           second="on The long way home"
           trailing="3d"
-          action={<Unsave />}
+          action={<Unsave name="The third headland light is real" />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -59,7 +59,7 @@ export function Screen() {
           titleAside="@mira"
           second="Runs the stand by the sea wall — honey from the headland hives."
           trailing="5d"
-          action={<Unsave />}
+          action={<Unsave name="Mira Voss" />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -70,7 +70,7 @@ export function Screen() {
           titleAside="@mira"
           second="Everything the flats give up in one morning."
           trailing="7d"
-          action={<Unsave />}
+          action={<Unsave name="Sunday at the tide market" />}
           onOpen={() => {}}
         />
       </ChronicleList>

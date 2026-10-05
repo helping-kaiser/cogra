@@ -53,7 +53,7 @@ export function Screen() {
       </p>
 
       <div style={{ marginTop: 32 }}>
-        <PasswordField id="new-password" label="New password" autoComplete="new-password" value="" hint="At least 12 characters." />
+        <PasswordField id="new-password" label="New password" autoComplete="new-password" account="sol@solferreira.art" value="" hint="At least 12 characters." />
       </div>
 
       <div style={{ marginTop: 24 }}>

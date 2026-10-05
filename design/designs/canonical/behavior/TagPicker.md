@@ -19,3 +19,7 @@ WHEN press the header back -> the picker closes to the composer it was opened fr
 WHEN tap a row in the list GIVEN the row's name is withdrawn in the edit the picker was opened from -> the name's withdrawal is unstaged AND NEVER a second record is staged for the name
 
 WHEN press the keyboard's action key GIVEN the typed name is withdrawn in the edit the picker was opened from -> the name's withdrawal is unstaged AND NEVER a second record is staged for the name
+
+ALWAYS the back arrow reads Back to the post from a post's composer or its edit, and Back to the comment from a reply's composer or a comment's edit
+
+WHEN the picker opens -> the name field takes focus AND the keyboard rises

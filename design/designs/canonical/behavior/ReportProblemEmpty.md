@@ -11,3 +11,5 @@ WHEN press Send by email GIVEN What happened is empty -> NEVER the mail opens AN
 WHEN the first character is typed in What happened -> Send by email wakes AND Nothing to send yet goes
 
 WHEN press the header back arrow GIVEN What happened is empty -> the surface that opened the report returns AND nothing is sent AND NEVER words are kept
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

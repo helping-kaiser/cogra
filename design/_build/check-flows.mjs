@@ -39,6 +39,10 @@ function hasAncestorDataFlow(html, pos) {
   let depth = 0;
   let i = pos;
   for (;;) {
+    // At the document's start there is nothing further out — and
+    // `lastIndexOf` clamps a negative start to 0, so without this stop a
+    // field with no tagged ancestor would find the first tag forever.
+    if (i <= 0) return false;
     const lt = html.lastIndexOf("<", i - 1);
     if (lt === -1) return false;
     const gt = html.indexOf(">", lt);

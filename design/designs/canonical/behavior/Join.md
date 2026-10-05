@@ -73,3 +73,5 @@ WHEN tap Already have an account? Sign in -> SignIn opens
 ALWAYS Already have an account? Sign in stands GIVEN the form opened over the signed-in state
 
 ALWAYS a line the server answered stands until the next press of Create account, and only a field's local format line re-checks as the text changes
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

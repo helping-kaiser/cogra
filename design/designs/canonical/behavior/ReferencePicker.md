@@ -11,3 +11,7 @@ WHEN tap Done -> the picker closes to the composer it was opened from AND NEVER 
 WHEN press the header back -> the picker closes to the composer it was opened from AND NEVER a staged reference is unstaged
 
 WHEN tap a result row GIVEN the row's target is withdrawn in the edit the picker was opened from -> the target's withdrawal is unstaged AND NEVER a second record is staged for the target
+
+ALWAYS the back arrow reads Back to the post from a post's composer or its edit, and Back to the comment from a reply's composer or a comment's edit
+
+WHEN the picker opens -> the search field takes focus AND the keyboard rises

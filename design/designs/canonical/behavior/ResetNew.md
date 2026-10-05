@@ -35,3 +35,5 @@ WHEN press Set the new password GIVEN the password is longer than 128 characters
 WHEN press Set the new password GIVEN the link was spent or went past its time while the form stood open -> ResetExpired opens AND NEVER the password changes
 
 WHEN a reset link already used or past its time is opened -> ResetExpired opens AND NEVER ResetNew opens
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

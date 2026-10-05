@@ -34,7 +34,7 @@ export function Screen() {
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <TextField id="reset-email" label="Email" type="email" autoComplete="email" value="" />
+          <TextField id="reset-email" label="Email" type="email" autoComplete="email" enterKeyHint="go" value="" />
         </div>
 
         <div style={{ marginTop: 24 }}>

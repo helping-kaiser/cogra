@@ -47,3 +47,7 @@ ALWAYS the filter's "?" says Reset brings back your defaults, to change them go 
 WHEN the last kind chip is switched off -> NEVER the chip refuses the tap
 
 WHEN pull down inside the filter sheet -> NEVER the feed refreshes
+
+ALWAYS the trigger's spoken name is its reading followed by what your feed shows
+
+WHEN tap Done -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything

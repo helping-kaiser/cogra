@@ -39,3 +39,5 @@ WHEN press I've written it down GIVEN no answer reaches the device -> the code s
 WHEN the tab is closed or the app is killed before the code confirms -> nothing this screen would make exists AND the next open shows what stood before the ceremony exactly as it was
 
 ALWAYS the old code keeps working until the new one is confirmed GIVEN a code being replaced
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

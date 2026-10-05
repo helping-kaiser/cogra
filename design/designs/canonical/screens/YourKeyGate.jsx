@@ -38,6 +38,7 @@ export function Screen() {
             id="your-key-gate-code"
             label="Current recovery code"
             mono
+            enterKeyHint="go"
             placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX"
             value=""
           />

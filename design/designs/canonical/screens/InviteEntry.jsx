@@ -31,7 +31,7 @@ export function Screen() {
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <TextField id="invite-link" label="Invite link" value="" />
+          <TextField id="invite-link" label="Invite link" kind="url" enterKeyHint="go" value="" />
         </div>
 
         <div style={{ marginTop: 24 }}>

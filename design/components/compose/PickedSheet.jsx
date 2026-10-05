@@ -9,7 +9,17 @@ import { MediaThumb } from "./MediaThumb.jsx";
    every per-picture concern:
 
    · ORDER — drag by the handle; the FIRST one is the cover and the badge
-     travels with it. No separate cover control exists.
+     travels with it. No separate cover control exists. When the drag lifts a
+     row, Android gives the platform's one lift pulse —
+     `HapticFeedbackConstants.DRAG_START` (`LONG_PRESS` below API 34; readme
+     §4, *Haptics*) — and nothing else in the reorder vibrates; the web gives
+     none.
+   · THE DRAG HAS NON-DRAG TWINS (the K13 round, ruled; readme §10). Every row
+     offers `Make it the cover` · `Move up` · `Move down` as visible actions,
+     the same three as TalkBack custom actions on Android, and on a keyboard
+     the arrow keys move the focused row. Where on the row the three stand,
+     and what the first and last rows offer, is filed for a drawing (backlog
+     13X-k13); this master draws the drag alone until then.
    · REMOVE — the X on each row.
    · DESCRIBE — the per-picture entry into `DescribeSheet`; a described
      picture shows the quiet word "Described" instead of the link.

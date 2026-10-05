@@ -17,3 +17,5 @@ WHEN the offending characters are gone -> the first row comes back AND the rule 
 WHEN tap Done -> the picker closes to the composer it was opened from AND every staged tag is kept AND NEVER the refused name adds a tag
 
 WHEN press the header back -> the picker closes to the composer it was opened from AND every staged tag is kept AND NEVER the refused name adds a tag
+
+ALWAYS the back arrow reads Back to the post from a post's composer or its edit, and Back to the comment from a reply's composer or a comment's edit

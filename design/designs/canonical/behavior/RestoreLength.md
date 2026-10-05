@@ -39,3 +39,5 @@ ALWAYS a line the server answered stands until the next press of Restore the key
 WHEN no answer has come 5s after the press of Restore the key -> Restore the key still reads Restoring the key… AND NEVER a slow line or a progress indicator appears
 
 ALWAYS the header's arrow refuses a press, never dimmed, while Restore the key waits on its answer
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

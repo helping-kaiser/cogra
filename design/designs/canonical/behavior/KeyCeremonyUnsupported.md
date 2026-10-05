@@ -15,3 +15,5 @@ WHEN press the header's back arrow GIVEN the screen opened from the applicant's 
 WHEN press the header's back arrow GIVEN the screen opened from the key-elsewhere card -> ApplicantKeyElsewhere opens with the attached key untouched
 
 WHEN press the header's back arrow GIVEN the screen opened from a key row in settings -> Settings opens AND nothing is made
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

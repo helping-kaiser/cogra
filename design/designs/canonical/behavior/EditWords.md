@@ -35,3 +35,5 @@ WHEN the signing answers GIVEN the slow line stands under the acts footer -> the
 WHEN press the header back arrow -> the edit is left toward where it began AND the draft is kept AND NEVER a dialog asks
 
 WHEN press the header X -> the edit is left AND the draft is kept AND NEVER a dialog asks
+
+WHEN the words stage opens -> the body takes focus with its caret at the end AND the keyboard rises

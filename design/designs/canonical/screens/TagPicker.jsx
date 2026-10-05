@@ -85,13 +85,19 @@
    navigation, never an undo; `Done` is the affirmative twin, because a back
    arrow reads as an abort to a reader who has finished adding tags. It is the
    full-width foot every wizard stage wears (`ReplyDraft`'s `Next`), and every
-   state of both pickers carries it. */
+   state of both pickers carries it.
+
+   THE ARROW NAMES THE COMPOSER IT RETURNS TO, by the content being written
+   (readme §4, *Navigation*; the K13 round): `Back to the post` from a post's
+   composer or its edit — the state drawn here — and `Back to the comment` from
+   a reply's composer or a comment's edit. The "?" is named by the dialog it
+   opens, `Tagging`. Both rules hold on every state of both pickers. */
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
       <div style={{ flex: "none" }}>
-        <SearchBar query="salt" placeholder="Name a tag" />
+        <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" />
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
           <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} />
           <StagedReference kind="topic" name="saltflats" onRemove={() => {}} />

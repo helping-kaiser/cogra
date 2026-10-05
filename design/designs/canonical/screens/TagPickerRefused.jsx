@@ -38,9 +38,9 @@
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot />} />
+      <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
       <div style={{ flex: "none" }}>
-        <SearchBar query="#salt maps" placeholder="Name a tag" error describedBy="tag-name-refusal" />
+        <SearchBar query="#salt maps" placeholder="Name a tag" ariaLabel="Name a tag" error describedBy="tag-name-refusal" />
         <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
           <p
             id="tag-name-refusal"

@@ -3,9 +3,21 @@ import { Icon } from "../navigation/Icon.jsx";
 
 /* The search field (item 9's port) — M3's search-bar idiom rather than a
    TextField variant: a full 48px pill on the container surface, a leading
-   search glyph, placeholder register until a query exists. It lives at the top
-   of the Explore tab and nowhere else; an inner surface that needs text input
-   uses TextField.
+   search glyph, placeholder register until a query exists. It heads the
+   surfaces that search: the Explore tab, and the two pickers that search to
+   stage — the tag picker and the citation picker. Any other inner surface that
+   needs text input uses TextField.
+
+   ITS NAME IS THE USE'S, NOT THE PLACEHOLDER (the K13 round). A placeholder
+   leaves when the reader types, so it cannot be the field's accessible name:
+   `ariaLabel` names it per use — `Search` on Explore, `Name a tag` in the tag
+   picker, `Cite something` in the citation picker. The static board carries
+   the same name on the pill's text, the bound input in the product.
+
+   ITS KEYBOARD IS THE SEARCH KEYBOARD (`TextField`'s field-semantics table,
+   the K13 round): the `search` return key (`ImeAction.Search`), no capitals
+   guessed and nothing corrected — a query carries handles and tag names, which
+   correction would break. What the action key does is each surface's own.
 
    This is a STATIC-RENDER-FRIENDLY control: `query` is the shown text and a
    caret bar stands in for focus on prototype boards; the product binds a real
@@ -26,7 +38,7 @@ import { Icon } from "../navigation/Icon.jsx";
    because a border on a control whose height is fixed would push its own content
    over by a pixel the moment the state arrived. */
 
-export function SearchBar({ query = "", placeholder = "Search", onChange, error = false, describedBy }) {
+export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Search", onChange, error = false, describedBy }) {
   return (
     <div style={{ padding: "4px 16px 12px 16px" }}>
       <div
@@ -53,6 +65,12 @@ export function SearchBar({ query = "", placeholder = "Search", onChange, error 
             value={query}
             placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
+            inputMode="search"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-label={ariaLabel}
             aria-invalid={error ? "true" : undefined}
             aria-describedby={describedBy}
             className="cg-focus"
@@ -72,6 +90,8 @@ export function SearchBar({ query = "", placeholder = "Search", onChange, error 
         ) : (
           <>
             <span
+              role="searchbox"
+              aria-label={ariaLabel}
               style={{
                 fontSize: "var(--text-body-large)",
                 lineHeight: "var(--text-body-large--line-height)",

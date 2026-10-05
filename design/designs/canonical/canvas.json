@@ -1617,7 +1617,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 6302,
+      "h": 7336,
       "page": "profile",
       "title": "Profile · flow map"
     },
@@ -2230,13 +2230,22 @@
       "x": 960,
       "y": 4661,
       "w": 390,
-      "h": 844,
+      "h": 1620,
       "page": "profile"
     },
     {
       "file": "HistoryEmpty.dc.html",
       "title": "History · nothing seen yet",
       "x": 1440,
+      "y": 4661,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "HistoryFilter.dc.html",
+      "title": "History · what it shows",
+      "x": 2880,
       "y": 4661,
       "w": 390,
       "h": 844,

@@ -21,3 +21,5 @@ WHEN the request has not answered 200ms after the press -> Change email reads Ch
 WHEN press Change email GIVEN the reader is offline -> the network error answers AND NEVER a message is sent
 
 WHEN press the header back arrow -> settings returns AND NEVER a message is sent
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

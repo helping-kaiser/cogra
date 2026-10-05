@@ -27,3 +27,5 @@ WHEN press Android Back -> the intro leaves the way Skip leaves
 WHEN tap Skip GIVEN Settings re-opened the intro -> Settings comes back AND NEVER a later card shows
 
 WHEN the intro shows for the first time -> the account's seen flag is set at once AND NEVER the flag waits for Skip or Start reading
+
+ALWAYS the illustration scales to the column, and the card scrolls between Skip and its button when its words outgrow the screen at any width or text size

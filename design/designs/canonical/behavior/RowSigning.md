@@ -21,3 +21,11 @@ WHEN a read-side comfort on the target does not go through -> the comfort revert
 WHEN tap Retry on the row line GIVEN a comfort did not go through -> the comfort is asked again AND NEVER anything is signed
 
 ALWAYS save, unsave, hide, undo and unhide answer at the tap and revert on failure, and every signed act waits for its signature
+
+WHEN a press on a stance face is held -> a ring fills around the face in primary, clockwise from twelve o'clock, over 500ms AND NEVER the signature spends before the ring closes
+
+WHEN the press lifts before 500ms -> the ring clears AND the press counts as a tap AND NEVER anything is signed
+
+WHEN the hold reaches 500ms GIVEN the device is Android -> the platform's one long-press pulse is given
+
+ALWAYS the web gives no haptic, and nothing in the hold makes a sound

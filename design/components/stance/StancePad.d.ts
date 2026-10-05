@@ -31,6 +31,8 @@ export interface StancePadProps {
    * lines all follow it.
    */
   ranges?: PadRanges;
+  /** Draws the knob under the finger for a board: M3's pressed state layer, a 40px disc in the knob's colour at 10 %, around the knob. A live drag draws it on its own while the pointer is down. Never a scale. */
+  held?: boolean;
 }
 
 /**

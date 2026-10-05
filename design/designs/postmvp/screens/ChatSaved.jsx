@@ -23,10 +23,10 @@
    THE MIGRATION NOTE: Saved is canonical's. At migration the message row joins
    canonical's list and this excerpt goes; the other two rows stand for
    canonical's rows so the new one is drawn in place. */
-const Unsave = () => (
+const Unsave = ({ name }) => (
   <button
     type="button"
-    aria-label="Unsave"
+    aria-label={`Unsave ${name}`}
     className="cg-state cg-focus cg-hit"
     style={{ display: "grid", placeItems: "center", height: "40px", width: "40px", border: 0, background: "none", borderRadius: "var(--radius-full)", color: "var(--text-secondary)", cursor: "pointer", padding: 0 }}
   >
@@ -47,7 +47,7 @@ export function Screen() {
           titleAside="@mira"
           second="in Coast walkers"
           trailing="1d"
-          action={<Unsave />}
+          action={<Unsave name="Six it is. Meet at the harbour office." />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -58,7 +58,7 @@ export function Screen() {
           titleAside="@sol"
           second="Rubbings from three weekends at low tide."
           trailing="2d"
-          action={<Unsave />}
+          action={<Unsave name="Salt maps of the coast road" />}
           onOpen={() => {}}
         />
         <ContentRow
@@ -69,7 +69,7 @@ export function Screen() {
           titleAside="@tobias"
           second="on The long way home"
           trailing="3d"
-          action={<Unsave />}
+          action={<Unsave name="The third headland light is real" />}
           onOpen={() => {}}
         />
       </ChronicleList>

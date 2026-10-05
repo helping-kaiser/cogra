@@ -29,3 +29,5 @@ WHEN press Android Back -> the fourth card opens
 WHEN tap Skip GIVEN Settings re-opened the intro -> Settings comes back AND NEVER a later card shows
 
 WHEN tap Start reading GIVEN Settings re-opened the intro -> Settings comes back
+
+ALWAYS the illustration scales to the column, and the card scrolls between Skip and its button when its words outgrow the screen at any width or text size

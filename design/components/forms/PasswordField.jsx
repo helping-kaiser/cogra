@@ -18,9 +18,24 @@ import { Icon } from "../navigation/Icon.jsx";
    The line is wired to the input exactly as `TextField` wires its own —
    `aria-describedby` always, `aria-invalid` and `role="alert"` in the error
    state — because duplicating the markup must not mean duplicating it minus
-   the part that makes the message reach anyone. */
+   the part that makes the message reach anyone.
 
-export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, hint, error }) {
+   ONE RULE FOR CREDENTIAL FORMS (the K13 round, ruled; readme §10). A form
+   that signs in or sets a password names the account it is for by its email —
+   the login identifier — as `autocomplete="username"`: on its email field
+   where it draws one (`SignIn`, `Join`), and where it draws none
+   (`ChangePassword`, `ResetNew`) in a hidden input carrying the address, which
+   is Chromium's documented way to tell a password manager whose password is
+   changing. `account` renders that input beside this field. A password is
+   `current-password` or `new-password`, never guessed at, never corrected,
+   never capitalized; and a handle is never `username` — it is not what the
+   reader signs in with.
+
+   THE RETURN KEY: `go` by default — a password is the last field of every
+   credential form but one — and `next` where a field follows
+   (`ChangePassword`'s current password). */
+
+export function PasswordField({ label, value, onChange, autoComplete = "current-password", id, hint, error, account, enterKeyHint = "go" }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
   const supportId = `${fieldId}-support`;
@@ -42,12 +57,17 @@ export function PasswordField({ label, value, onChange, autoComplete = "current-
       >
         {label}
       </label>
+      {account && <input type="email" autoComplete="username" value={account} readOnly hidden />}
       <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
         <input
           id={fieldId}
           type={visible ? "text" : "password"}
           value={value}
           autoComplete={autoComplete}
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          enterKeyHint={enterKeyHint}
           aria-describedby={error || hint ? supportId : undefined}
           aria-invalid={error ? "true" : undefined}
           onChange={(event) => onChange && onChange(event.target.value)}

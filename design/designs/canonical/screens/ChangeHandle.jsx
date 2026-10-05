@@ -53,7 +53,8 @@ export function Screen() {
           <TextField
             id="new-handle"
             label="New handle"
-            autoComplete="username"
+            kind="handle"
+            enterKeyHint="go"
             value=""
             hint="3 to 30 characters: letters, numbers and underscore. Handles are always lowercase."
           />

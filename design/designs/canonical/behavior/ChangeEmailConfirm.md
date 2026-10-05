@@ -37,3 +37,5 @@ WHEN tap Cancel the change -> the change is called off AND settings returns AND 
 WHEN tap Cancel the change GIVEN the reader is offline -> the network error answers AND the change still stands
 
 WHEN press the header back arrow -> settings returns AND the change stays live for its window AND the Email row reads Change pending
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

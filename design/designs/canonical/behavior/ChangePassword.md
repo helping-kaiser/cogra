@@ -25,3 +25,5 @@ WHEN the change has not answered 200ms after the press -> Change password reads 
 WHEN press Change password GIVEN the reader is offline -> the network error answers AND NEVER the password changes
 
 WHEN press the header back arrow -> settings returns AND NEVER the password changes
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

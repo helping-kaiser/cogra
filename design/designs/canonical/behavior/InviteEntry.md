@@ -29,3 +29,5 @@ WHEN tap Just looking? Browse the feed GIVEN no usable link was seen -> FeedBare
 WHEN no answer has come 5s after the press of Continue -> Continue still reads Continuing… AND NEVER a slow line or a progress indicator appears
 
 ALWAYS the screen's ways out stay live while Continue waits on its answer
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

@@ -51,3 +51,5 @@ WHEN no answer has come 5s after the press of Sign in -> Sign in still reads Sig
 ALWAYS the screen's ways out stay live while Sign in waits on its answer
 
 ALWAYS the sign-in lands wherever app-open lands for the account, never back on the surface where the session ended
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

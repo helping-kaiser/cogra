@@ -45,3 +45,5 @@ WHEN press Go to the feed GIVEN a session on a different account than the link's
 WHEN no answer has come 5s after the press of Resend the link -> Resend the link still reads Resending the link… AND NEVER a slow line or a progress indicator appears
 
 ALWAYS the screen's ways out stay live while Resend the link waits on its answer
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

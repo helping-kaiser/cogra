@@ -23,3 +23,5 @@ WHEN no answer has come 5s after the press of Send reset link -> Send reset link
 ALWAYS the screen's ways out stay live while Send reset link waits on its answer
 
 ALWAYS the status line stands only after a press of Send reset link, never at rest
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

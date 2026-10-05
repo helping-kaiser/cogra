@@ -194,7 +194,7 @@ export function CommentCard({
       type="button"
       aria-expanded={unfolded}
       onClick={() => setUnfolded((shown) => !shown)}
-      className="cg-state cg-focus"
+      className="cg-state cg-focus cg-hit"
       style={{
         alignSelf: "flex-start",
         border: 0,
@@ -213,7 +213,9 @@ export function CommentCard({
   ) : null;
   /* With a door (`onOpen`) the words are a link and the pictures take the
      same tap, `PostCard`'s rule for its media in the feed — one door, no
-     control nested in another. */
+     control nested in another. Both carry `cg-door`, and the card takes the
+     pressed layer across its whole surface while either is pressed
+     (`PostCard`'s rule; readme §4, *Interaction states*). */
   const open = (event) => {
     event.preventDefault();
     onOpen();
@@ -221,7 +223,7 @@ export function CommentCard({
   const body = (
     <>
       {onOpen ? (
-        <a href="#" onClick={open} className="cg-focus" style={{ display: "block", color: "inherit", textDecoration: "none" }}>
+        <a href="#" onClick={open} className="cg-focus cg-door" style={{ display: "block", color: "inherit", textDecoration: "none" }}>
           {words}
         </a>
       ) : (
@@ -236,7 +238,7 @@ export function CommentCard({
           pictures and clips fill it, display-cropped and centred, while the
           bytes travel uncropped; at most four ride one comment. */}
       {Array.isArray(media) && media.length > 0 && (onOpen ? (
-        <div onClick={open} data-node={node && "media"}>
+        <div onClick={open} className="cg-door" data-node={node && "media"}>
           <MediaGallery items={media} ratio={media.length > 1 ? "square" : undefined} maxHeight="220px" node={node && "media"} />
         </div>
       ) : node ? (
@@ -286,7 +288,7 @@ export function CommentCard({
     >
       {/* `attach` squares the top-left corner so a row flag (TaggedRow) fuses
           with the card (jakob's review, the tag round). */}
-      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} node={node} nodeKey={node && author?.handle}>
+      <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={Boolean(onOpen)} node={node} nodeKey={node && author?.handle}>
         {/* The comment's TARGET pointer (jakob 2026-09-01): where a comment
             shows OUT of its thread — the profile's comments view, a search
             result — the card leads with what it answers, one line, one tap to
@@ -298,7 +300,7 @@ export function CommentCard({
           <button
             type="button"
             onClick={onOpenTarget}
-            className="cg-state cg-focus"
+            className="cg-state cg-focus cg-hit"
             style={{
               display: "flex",
               alignItems: "center",

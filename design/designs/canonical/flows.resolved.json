@@ -202,6 +202,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -215,7 +216,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 25 boards → ReplyEntry",
+        "start · «comment count» on 26 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -239,6 +240,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailVideo",
@@ -1427,6 +1429,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1440,7 +1443,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 30 boards → ProfileOther",
+        "start · «author chip» on 31 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1464,6 +1467,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1552,13 +1556,14 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 20 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 21 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -1579,6 +1584,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
@@ -1629,13 +1635,14 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 17 boards → RefsSheet",
+        "start · «reference count» on 18 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
@@ -1654,6 +1661,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
@@ -1773,6 +1781,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1785,7 +1794,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 29 boards → FeedEntry",
+        "start · «Feed score» on 30 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1815,6 +1824,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "History",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -2545,10 +2555,15 @@
     },
     "History": {
       "flows": [
+        "follow-a-citation",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "reply-to-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
       ],
       "endpoint": []
     },
@@ -3347,5 +3362,7 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": []
+  "gapsOnFlows": [
+    "History/2: nothing in the history matches — the no-match state is undrawn (backlog 13X-history)"
+  ]
 }

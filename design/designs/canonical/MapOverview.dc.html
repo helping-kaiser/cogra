@@ -320,7 +320,8 @@
   --duration-collapsing-top: 200ms; /* @kind other */
   /* Material's short snackbar duration; the confirmation clears itself. */
   --duration-snackbar: 4000ms; /* @kind other */
-  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  /* Android's platform long-press timeout — the press-and-hold that signs the
+     default opinion, its ring filling over it. A tap blooms the pad at once. */
   --duration-long-press: 500ms; /* @kind other */
 }
 
@@ -502,6 +503,24 @@
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
+/* A door card lights whole while a `cg-door` inside it is hovered or pressed
+   (readme §4). Not `cg-state`: `:active` matches every ancestor, so the stance
+   face or ⋮ would light it too. No `isolation`: the parked pad inside must
+   keep stacking above the shell's wash. */
+.cg-door-card { position: relative }
+.cg-door-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+.cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
+
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
    disappears against a filled primary button, and this one reads on the page
    ground and on the loud surface alike, in both themes. Nothing removes it. */
@@ -562,7 +581,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cg-state::after { transition: none }
+  .cg-state::after, .cg-door-card::after { transition: none }
 }
 
 /* The page ground and the default type role. `body-large` is Material's role for
@@ -895,7 +914,8 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --duration-collapsing-top: 200ms; /* @kind other */
   /* Material's short snackbar duration; the confirmation clears itself. */
   --duration-snackbar: 4000ms; /* @kind other */
-  /* Android's platform long-press timeout — what the pad's bloom waits for. */
+  /* Android's platform long-press timeout — the press-and-hold that signs the
+     default opinion, its ring filling over it. A tap blooms the pad at once. */
   --duration-long-press: 500ms; /* @kind other */
 }
 
@@ -1077,6 +1097,24 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 .cg-state:active::after { opacity: var(--state-press) }
 .cg-state:disabled::after, .cg-state[aria-disabled="true"]::after { opacity: 0 }
 
+/* A door card lights whole while a `cg-door` inside it is hovered or pressed
+   (readme §4). Not `cg-state`: `:active` matches every ancestor, so the stance
+   face or ⋮ would light it too. No `isolation`: the parked pad inside must
+   keep stacking above the shell's wash. */
+.cg-door-card { position: relative }
+.cg-door-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--duration-short-2) var(--ease-standard);
+  pointer-events: none;
+}
+.cg-door-card:has(.cg-door:hover)::after { opacity: var(--state-hover) }
+.cg-door-card:has(.cg-door:active)::after { opacity: var(--state-press) }
+
 /* The focus indicator is `onSurface` rather than `primary`: a primary ring
    disappears against a filled primary button, and this one reads on the page
    ground and on the loud surface alike, in both themes. Nothing removes it. */
@@ -1137,7 +1175,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cg-state::after { transition: none }
+  .cg-state::after, .cg-door-card::after { transition: none }
 }
 
 /* The page ground and the default type role. `body-large` is Material's role for
@@ -1178,7 +1216,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:absolute;left:340px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Compose<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">44 boards · 296 edges · <span style="color:inherit;">0 gaps</span></div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">44 boards · 297 edges · <span style="color:inherit;">0 gaps</span></div>
 <div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 29</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 36</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 7</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 19</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 9</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 4</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 3</div>
 </div>
 <div style="position:absolute;left:660px;top:80px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
@@ -1198,13 +1236,13 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 </div>
 <div style="position:absolute;left:340px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Media<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">24 boards · 212 edges · <span style="color:inherit;">0 gaps</span></div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">24 boards · 213 edges · <span style="color:inherit;">0 gaps</span></div>
 <div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 44</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 15</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 28</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Profile × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 6</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 6</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 6</div>
 </div>
 <div style="position:absolute;left:660px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Profile<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>
-<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">66 boards · 368 edges · <span style="color:inherit;">0 gaps</span></div>
-<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 53</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 21</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 56</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 10</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 29</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 2</div>
+<div style="margin-top:6px;font-size:10px;line-height:14px;color:var(--on-surface-variant);">67 boards · 393 edges · <span style="color:var(--error);">2 gaps</span></div>
+<div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Patterns &amp; reference × 53</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Compose × 23</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Feed &amp; Search × 61</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Comments × 16</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Money &amp; Wallet × 17</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Entry × 31</div><div style="margin-top:3px;font-size:10px;line-height:13px;color:var(--on-surface-variant);">→ Media × 4</div>
 </div>
 <div style="position:absolute;left:980px;top:290px;width:290px;height:180px;box-sizing:border-box;border:1px solid var(--outline-variant);border-radius:10px;background:var(--surface-container,var(--surface));padding:12px;">
 <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;">Patterns &amp; reference<span style="font-weight:400;font-size:10px;color:var(--primary);">wired ✓</span></div>

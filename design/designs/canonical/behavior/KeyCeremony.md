@@ -31,3 +31,5 @@ WHEN press the header's back arrow GIVEN the ceremony opened from a key row in s
 WHEN the tab is closed or the app is killed before the ceremony ends -> nothing is made AND the next open shows the task card exactly as it was
 
 ALWAYS the pledge reads Everything you publish is signed with a key that is created on this browser and stays in your hands — CoGra never holds it and can never reissue it. on the web, and says in this app in the app
+
+ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

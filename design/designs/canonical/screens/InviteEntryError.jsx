@@ -46,7 +46,7 @@ export function Screen() {
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <TextField id="invite-link" label="Invite link" value="cogra" error="That doesn't look like an invite link." />
+          <TextField id="invite-link" label="Invite link" kind="url" enterKeyHint="go" value="cogra" error="That doesn't look like an invite link." />
         </div>
 
         <div style={{ marginTop: 24 }}>
