@@ -22,7 +22,9 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after the press GIVEN Sign the edit was pressed while the uploads ran -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
 
-WHEN the signing has not answered 5s after the press GIVEN Sign the edit was pressed while the uploads ran -> the slow line reads Still signing — the network is slow right now. AND NEVER a progress indicator appears
+WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
+
+WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
 WHEN the last upload lands GIVEN Sign the edit was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
 
@@ -31,5 +33,11 @@ WHEN an upload fails GIVEN Sign the edit was pressed while the uploads ran -> th
 ALWAYS Sign the edit is disabled GIVEN the gate line shows its fault reading
 
 WHEN press Retry GIVEN the held press dropped -> the gate runs again AND NEVER signing proceeds until Sign the edit is pressed again
+
+WHEN the cover the edit set fails to upload -> the cover's thumbnail is marked AND the line One picture didn't upload. stands under the cover row with Retry and Remove it AND the gate line takes its fault reading
+
+WHEN press Retry under the cover row -> the cover's upload tries again AND the gate runs again
+
+WHEN press Remove it under the cover row -> the new cover leaves the batch AND the gate line goes AND Sign the edit is enabled
 
 WHEN the last upload lands GIVEN Sign the edit was not pressed -> the upload line goes AND Sign the edit stays as it was

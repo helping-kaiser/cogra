@@ -14,6 +14,10 @@ ALWAYS the line over the foot reads Signed with the post, as its own action. GIV
 
 ALWAYS the line over the foot reads Signed with the comment, as its own action. GIVEN the sheet was opened from the comment edit
 
+ALWAYS the sheet stands over the edit it was opened from, the post edit or the comment edit
+
+ALWAYS the sheet opened from the comment edit differs from the sheet opened from the post edit only in the noun of the line over the foot
+
 WHEN drag on the field -> the pair follows the drag AND NEVER relevance goes below +0.01 AND NEVER anything signs
 
 WHEN press Un-tag -> the sheet closes AND the tag's withdrawal is staged in the edit's batch AND the chip leaves the row for the line Withdrawn: AND the acts count one more AND NEVER a dialog asks
