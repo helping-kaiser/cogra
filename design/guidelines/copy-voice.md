@@ -1724,7 +1724,9 @@ feedback the surface draws:
 - The profile and picture seals keep no draft, so the write rule's
   notice there takes the pad's reading (jakob 2026-10-05): `Nothing was
   signed or spent.`, with `Not now` back to the seal — never `your draft
-  is kept` or `Keep the draft, sign later`.
+  is kept` or `Keep the draft, sign later`. Their key-absent notice takes
+  the same way out: `Not now` back to the seal, nothing kept — never `Keep
+  the draft, restore later` (jakob 2026-10-05).
 
 ## The vouch-back ceremony
 
