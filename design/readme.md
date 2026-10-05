@@ -9088,8 +9088,9 @@ and the profile. Every quoted wording is blessed unless marked flagged.
   docblock says so); sign-in keeps its drawn backoff line and every other
   `RATE_LIMITED` the generic one; the 26-characters line reaches the key
   gate and the backup sheet; `A password is at most 128 characters.`; a
-  slow non-signing commit adds nothing, and only `Create account` and
-  `Restore the key` lock the ways out; `Reset`'s status line stands only
+  slow non-signing commit adds nothing, and only `Create account`,
+  `Restore the key` and the handle dialog's `Change it` lock the ways out
+  (the third jakob 2026-10-05); `Reset`'s status line stands only
   after the press, and `VerifyExpired`'s resend answers in its
   construction (flagged).
 - **Platform nouns.** The ceremony, its two dialogs, `YourKey` and
