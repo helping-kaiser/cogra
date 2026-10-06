@@ -8,6 +8,8 @@ ALWAYS the band names the borrowed view, Browsing from @mira's view — join to 
 
 ALWAYS the band carries no bell GIVEN the reader is a guest
 
+ALWAYS every stance face wears the issuer's own stance, read-only, at the member's anchor geometry, and the hollow face wherever the issuer holds none GIVEN the reader is a guest
+
 ALWAYS the landing carries On Android? Download the app (APK) under the band on the web, and never in the app
 
 WHEN tap Sign in or join GIVEN the invite link held is live -> the join form opens with the link in hand AND NEVER the invite-link door opens AND NEVER the reader pastes the link again

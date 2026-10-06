@@ -46,6 +46,8 @@ WHEN back leaves the detail for the card it was opened from -> the card's clip s
 
 WHEN the fullscreen viewer opens over the post -> the pinned clip stops AND NEVER it plays behind the viewer
 
-WHEN the fullscreen viewer closes -> the pinned clip stands at the position the viewer's clip reached AND NEVER the clip starts over
+WHEN the fullscreen viewer closes GIVEN the viewer's clip was playing -> the pinned clip plays on from the position the viewer's clip reached AND NEVER the clip starts over
+
+WHEN the fullscreen viewer closes GIVEN the viewer's clip was paused -> the pinned clip stands paused at the position the viewer's clip reached AND NEVER the clip starts over
 
 WHEN the phone turns to landscape GIVEN the detail holds a landscape clip -> the fullscreen viewer opens on the clip, filling the turned screen

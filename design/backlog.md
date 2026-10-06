@@ -4852,3 +4852,49 @@ these for jakob's eye, each with the lane's recommendation in its report:
   open micro-contracts (~20, none MVP-blocking); readme §13's check-
   wave record points at no in-repo list, this item is that pointer
   (jakob 2026-10-06).
+
+### 137 · The pre-release fixture pass · *design* · **filed 2026-10-06** · **jakob's own, before the MVP releases**
+
+Ruled by jakob on 2026-10-06: the boards' demo and fixture content stays
+placeholder until this pass, and the pass is jakob's own. Before the MVP
+releases he replaces the onboarding's posts and images with his own
+words and pictures, and changes ALL example posts, names, handles and
+mails across the tree. No lane redraws a fixture ahead of it.
+
+- **Folded in: PR #96's fixture flag.** The email change's applied
+  landing (`ChangeEmailLinked`, `applied`) was blessed naming
+  `mia@rivera.photo`; the board keeps its established fixture pair,
+  `sol@solferreira.art` → `sol@ferreira.studio`, and reads `The change
+  it belonged to already happened. Your email is now
+  sol@ferreira.studio.` The words are blessed; the address settles in
+  this pass.
+
+### 13X-exec-night · What the night-rulings execution left open · *design + contract* · **filed 2026-10-06**
+
+The night rulings executed (readme §13) left these for jakob's eye:
+
+- **The borrowed stance's words — RULED same day.** The guest
+  anchor's accessible name reads the viewpoint's handle,
+  `@genesismod's stance on this post`, never `Your opinion` (jakob
+  2026-10-06; stance-control, *A guest's view*). Still open here:
+  sweeping the printed `Your opinion` beside the hollow face on
+  `ProfileOther` and `TagPage` for the guest reading, and the
+  at-rest spoken string's exact remaining wording.
+- **The applicant's anchor — RULED same day.** Only a nobody borrows
+  stances: an applicant's faces are their own, hollow where they hold
+  none (jakob 2026-10-06; stance-control, *Only a nobody borrows
+  stances*; the ApplicantFeed line is written).
+- **No board draws a borrowed stance.** Every guest board's posts hold
+  no stance from the viewpoint, so only the hollow face is drawn.
+- **An untitled media post on a comment's head row.** The head row
+  draws a title over its author; for a media post the stand-in
+  `Pictures by @ada` already names the author, and no board draws it.
+- **One picture.** The blessed stand-ins are `Pictures by @ada` and `A
+  video by @ada`; whether a single-picture post reads `Pictures` is
+  unwritten.
+- **The Saved key's edges.** A first line is uncapped, so its slug
+  is too; and the `entry` rule, unlike `recent`'s, does not drop a
+  leading or trailing `-`, which the key grammar refuses.
+- **The comment clip's custom action.** The mute action is written on
+  the post card's frame (`FeedCover`); the comment card's frame
+  (`FeedCommentShapes`) carries the same disc and no line yet.

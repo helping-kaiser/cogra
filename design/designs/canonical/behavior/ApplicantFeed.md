@@ -38,6 +38,8 @@ WHEN tap Create my key -> the key ceremony opens
 
 WHEN tap Create my key GIVEN a browser that cannot hold a key -> the ceremony says so before anything is minted
 
+ALWAYS every stance face wears the applicant's own stance — staged or held, never the inviter's — and the hollow face wherever they hold none, the feed's walk alone borrowing the inviter's vantage (stance-control, *Only a nobody borrows stances*)
+
 WHEN tap a stance face for the first time as an applicant -> the pad blooms AND the opinion stages with the application once Set
 
 WHEN the first opinion stages, by Set or by a press-and-hold -> the face takes the staged pick AND the snackbar reads Your opinion waits with your application — it arrives with you.

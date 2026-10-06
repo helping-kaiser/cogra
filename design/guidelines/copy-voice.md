@@ -2956,7 +2956,14 @@ tag, `TagPageEmpty`'s own first sentence.
 
 **A comment's head row, over a removed post**: `Removed by its author` in
 the title's place, the removal mark's own line in the system's voice, over
-the author's handle. An untitled post is named there by its first words.
+the author's handle.
+
+**An untitled post** (jakob 2026-10-06): a words post is represented by
+its first line, the content itself, so a comment's head row shows its
+first words in the title's place; a media post by its kind and author,
+`Pictures by @ada` or `A video by @ada` — blessed, the handle the row's
+author — because a description is never a name. Matching is titles
+only: search never matches the stand-in.
 
 **The tag's glimpse line**: `@tobias · and 2 more` — blessed. Under the
 newest thing's name, its author, then how many more stand behind it; with

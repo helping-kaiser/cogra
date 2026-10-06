@@ -1702,7 +1702,7 @@
     "Saved": {
       "prefix": "saved",
       "keys": {
-        "saved.list.entry": "the saved thing's title, lowercased, each run of other characters one - (Saved)"
+        "saved.list.entry": "the saved thing's title, or an untitled post's stand-in (a words post's first line, a media post's kind and author's handle: Pictures by @ada, A video by @ada), lowercased, each run of other characters one - (Saved)"
       },
       "nodes": {
         "saved.bottomBar": [],
@@ -1779,7 +1779,7 @@
     "SavedUndo": {
       "prefix": "saved",
       "keys": {
-        "saved.list.entry": "the saved thing's title, lowercased, each run of other characters one - (Saved)"
+        "saved.list.entry": "the saved thing's title, or an untitled post's stand-in (a words post's first line, a media post's kind and author's handle: Pictures by @ada, A video by @ada), lowercased, each run of other characters one - (Saved)"
       },
       "nodes": {
         "saved.bottomBar": [],

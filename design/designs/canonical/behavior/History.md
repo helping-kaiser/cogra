@@ -76,7 +76,7 @@ ALWAYS history.searchField reads Search your history at rest
 
 WHEN the reader types in history.searchField -> History narrows to what matches AND the matches stand ordered by the time the reader first saw each thing, newest first
 
-ALWAYS history.searchField matches by the one search rule Explore uses: names and titles, an untitled post by its first words, and never a body, a description or a bio
+ALWAYS history.searchField matches by the one search rule Explore uses: names and titles, and never a body, a description or a bio
 
 WHEN the query starts with @handle -> the remainder matches that person's own things in History, a comment through the title of what it answers
 
