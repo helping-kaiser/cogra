@@ -4291,7 +4291,9 @@ Ruled by jakob the same day.
   which is a row there rather than a glyph on the band.
   The dot keeps the slot left of the gear: Material's app bar would put
   an overflow last, and the gear has been the band's right edge since
-  the profile round, where every reader already aims at it.
+  the profile round, where every reader already aims at it. (The band
+  law supersedes the placement: the ⋮ moves to the Edit profile ·
+  Invites row — §13, *The review-fix round*.)
 - **Saved is ONE MIXED LIST** (jakob). Posts, comments and people in
   one column, newest first by when they were saved, because a reader
   looking for the thing they kept on Tuesday is looking for a moment
@@ -4449,7 +4451,9 @@ drew against it. Ruled by jakob the same day.
   profile's gear — because one corner everywhere is what makes it
   findable, and a different corner per tab is four things to learn. It
   rides `CograBand` built in, the way chats does, so no board hand-builds
-  it and `bell={false}` is the only way to be without one.
+  it and `bell={false}` is the only way to be without one. (The band
+  law sets the whole cluster since: the screen's own control · chats ·
+  bell — §13, *The review-fix round*.)
 - **Guests have no bell; applicants do.** Nothing can be addressed to an
   account that does not exist, so `Main`, `FeedBare`, `GuestGate` and
   `WalletGuest` opt out. An applicant is an addressee already — the
@@ -9287,6 +9291,10 @@ graph describes. It gets its edges when it migrates.
   `npm install` once in `_build/`, then `node _build/bundle.mjs`.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
+- `_build/export-tokens.mjs` — the pipeline's second stage: exports
+  every custom property in `tokens/*.css`, raw and resolved, per theme
+  context, as `tokens.json` — the token contract implementation lints
+  both platform themes against. Token names are append-only.
 - `_build/trees.mjs` — the generated trees, named once (§13, *The
   post-MVP separation*). The stages below read this list; the ideation
   canvases are deliberately not on it.
