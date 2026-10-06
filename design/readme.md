@@ -3744,7 +3744,7 @@ one sitting.
 - **The borrowed-view band dies after signing, not on approach.** Until
   the member's first opinion is signed they have no stance of their own
   and the view is still borrowed, so the band stands through the whole
-  approach to the pad and goes when that signature lands.
+  approach to the pad and goes once that opinion is signed.
 - **The Collective founding-name force is removed.**
   `PrepareCollectiveInput`'s `displayName` is optional, an explicit null
   clears it exactly as on a person's profile, and a Collective with none
