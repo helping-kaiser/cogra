@@ -86,6 +86,50 @@ fn counted() -> BTreeMap<&'static str, usize> {
     by_rule
 }
 
+/// The API contract over the real tree reports exactly what
+/// `[api-contract]` allows: every finding advisory, one per allowance, none
+/// suppressed and none stale. An unallowed drift would be failing, a missing
+/// one would leave a stale allowance, and a renamed document would leave the
+/// reconciliation suppressed, so the three together pin the run to the list.
+///
+/// The real contract reports exactly the drifts its allowance lists, each as advisory.
+/// ´claim:corpus:the-api-contract-reports-exactly-its-allowance´
+#[test]
+fn the_api_contract_reports_exactly_its_allowance() {
+    use cogra_linter::judge::contract;
+
+    let declared = adoption()
+        .api_contract
+        .as_ref()
+        .expect("this corpus declares its API contract");
+    let found: Vec<&Diagnostic> = run()
+        .findings
+        .iter()
+        .filter(|one| contract::RULES.contains(&one.rule))
+        .collect();
+    let spelled: Vec<String> = found.iter().map(|one| spell(one)).collect();
+    assert!(
+        found
+            .iter()
+            .all(|one| one.enforcement == Enforcement::Advisory),
+        "a contract finding fails:\n{}",
+        spelled.join("\n")
+    );
+    assert!(
+        found
+            .iter()
+            .all(|one| one.rule != contract::SUPPRESSED && one.rule != contract::STALE_ALLOWANCE),
+        "{}",
+        spelled.join("\n")
+    );
+    assert_eq!(
+        found.len(),
+        declared.known_drift.len() + declared.known_unreadable.len(),
+        "{}",
+        spelled.join("\n")
+    );
+}
+
 /// (´rep:lint:first-corpus´): the milestone. The four discipline documents
 /// practice the disciplines they define, and the linter finds nothing
 /// against them.

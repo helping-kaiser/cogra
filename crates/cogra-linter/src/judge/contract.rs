@@ -973,6 +973,7 @@ impl<'s> Reader<'_, 's> {
     fn definition(&mut self) -> Result<Definition, Refusal> {
         self.description();
         self.eat_word("extend");
+        let opened = self.here();
         let (keyword, _) = self.name()?;
         let mut definition = Definition {
             kind: DefinitionKind::Scalar,
@@ -1077,7 +1078,12 @@ impl<'s> Reader<'_, 's> {
                     self.name()?;
                 }
             }
-            _ => return self.refuse("a type-system definition"),
+            _ => {
+                return Err(Refusal {
+                    at: opened,
+                    expected: String::from("a type-system definition"),
+                });
+            }
         }
         Ok(definition)
     }

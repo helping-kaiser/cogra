@@ -2092,3 +2092,123 @@ fn every_ruled_profile_is_activated_over_every_owner() {
         assert!(profile.collision.equivalence.contains("derived label"));
     }
 }
+
+/// A minimal adoption carrying an `[api-contract]` section.
+fn contract_document(contract: &str) -> String {
+    format!(
+        "{}{contract}",
+        document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+    )
+}
+
+/// The contract's two paths and the rows planted around them.
+fn contract_with(spec: &str, rows: &str) -> String {
+    contract_document(&format!(
+        "
+[api-contract]
+spec = \"{spec}\"
+schema = \"schema.graphql\"
+fence = \"graphql\"
+error_enum = \"ErrorCode\"
+{rows}"
+    ))
+}
+
+/// An allowance is a debt with a creditor, so a known drift row naming
+/// nothing that removes it is refused at load, at its own row.
+///
+/// A contract allowance naming nothing that removes it is refused at its row.
+/// ´claim:adoption:an-unexplained-contract-allowance-is-refused´
+#[test]
+fn a_contract_allowance_naming_no_removal_is_refused() {
+    let source = contract_with(
+        "docs/spec.md",
+        "
+[[api-contract.known_drift]]
+surface = \"mutation\"
+side = \"spec-only\"
+removed_by = \"  \"
+names = [\"logOut\"]
+",
+    );
+    let error = load(&source).expect_err("the allowance names no removal");
+    assert!(
+        matches!(error, AdoptionError::ContractDriftUnexplained { .. }),
+        "{error:?}"
+    );
+    assert!(row(&source, &error).contains("surface"));
+}
+
+/// Each name is its own allowance, so one name allowed twice — in one row or
+/// across two — is refused at the second.
+///
+/// A contract drift allowed twice is refused at the second name.
+/// ´claim:adoption:a-repeated-contract-allowance-is-refused´
+#[test]
+fn a_contract_drift_allowed_twice_is_refused() {
+    let source = contract_with(
+        "docs/spec.md",
+        "
+[[api-contract.known_drift]]
+surface = \"mutation\"
+side = \"spec-only\"
+removed_by = \"a packet\"
+names = [\"logOut\"]
+
+[[api-contract.known_drift]]
+surface = \"mutation\"
+side = \"spec-only\"
+removed_by = \"another packet\"
+names = [\"logIn\", \"logOut\"]
+",
+    );
+    let error = load(&source).expect_err("logOut is allowed twice");
+    let AdoptionError::ContractDriftRepeated { ref name, .. } = error else {
+        panic!("expected ContractDriftRepeated, got {error:?}");
+    };
+    assert_eq!(name, "logOut");
+    assert!(row(&source, &error).contains("\"logIn\", \"logOut\""));
+}
+
+/// The specification and the schema are each one document, so a path naming
+/// a tree is refused rather than reconciling nothing.
+///
+/// A contract path naming a tree rather than one file is refused.
+/// ´claim:adoption:a-contract-path-names-one-file´
+#[test]
+fn a_contract_path_naming_a_tree_is_refused() {
+    let error = load(&contract_with("docs/", "")).expect_err("docs/ is a tree");
+    let AdoptionError::ContractPathNotAFile { key, ref path, .. } = error else {
+        panic!("expected ContractPathNotAFile, got {error:?}");
+    };
+    assert_eq!(key, "spec");
+    assert_eq!(path, "docs/");
+}
+
+/// The corpus's own contract names its two documents, and every allowance
+/// it carries names what removes it.
+///
+/// The ruled contract names its documents, and every allowance names its removal.
+/// ´claim:adoption:the-ruled-contract-names-its-removals´
+#[test]
+fn the_ruled_contract_names_its_documents_and_removals() {
+    let ruled = ruled();
+    let contract = ruled.api_contract.as_ref().expect("the corpus declares it");
+    assert_eq!(
+        contract.spec,
+        PathBuf::from("docs/implementation/api-spec.md")
+    );
+    assert_eq!(contract.schema, PathBuf::from("schema.graphql"));
+    assert!(
+        contract
+            .known_drift
+            .iter()
+            .all(|row| !row.removed_by.trim().is_empty())
+    );
+    assert!(
+        contract
+            .known_unreadable
+            .iter()
+            .all(|row| !row.removed_by.trim().is_empty())
+    );
+}
