@@ -452,6 +452,23 @@
         "feed.snackbar.message": []
       }
     },
+    "HistoryEmpty": {
+      "prefix": "history",
+      "keys": {},
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.empty": [],
+        "history.empty.title": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": []
+      }
+    },
     "PostDetail": {
       "prefix": "postDetail",
       "keys": {
