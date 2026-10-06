@@ -9253,6 +9253,34 @@ blessings bite closed it (#89).
   flows 66 → **222**, every one resolved, 276 sidecars; the corpus lint
   reads 3063 sources, none failing.
 
+### The contract recon executed — 2026-10-06
+
+jakob's rulings on the implementation side's contract-recon gaps (seam
+065), every quoted wording blessed.
+
+- **A vouch on an asker not fully registered yet is kept.** Set or the
+  hold stages the application and keeps the pick as a kept approval,
+  nothing signed or spent; its row reads `Not fully registered yet`,
+  then `Ready for your approval`, and signs only through the approval
+  pad.
+- **The email change answers its mail faults.** `Resend` mails only the
+  side still owed and names that inbox; a code disabled after too many
+  tries says so on the field, pointing at `Resend`; a spent mail budget
+  answers with `RATE_LIMITED`'s line in place.
+- **A change link that outlived its change** lands on `ChangeEmailLinked`
+  under `This link doesn't work anymore`: canceled, or opened again
+  after the change applied (the chip's `canceled` and `applied`). A
+  verification link an address change replaced lands on `VerifyExpired`.
+- **An edit whose count changed before signing** drops its press and
+  asks again under the new count.
+- **Only an opinion ends the borrowed view**, toward any target; an
+  Affinity never does. An opinion carried from the application lands
+  with the registration, so the band never stands.
+- **An approved applicant cannot delete during the landing**: the row
+  wears the locked look and answers `You can delete your account once
+  you're in.`
+- **The release is named CoGra v1.0.0** across the design prose.
+
 ---
 
 ## 14. The canvases
