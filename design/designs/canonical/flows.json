@@ -145,7 +145,7 @@
       "waypoints": [
         { "board": "Invites", "via": 4 }
       ],
-      "end": { "board": "ApprovePad", "via": 4, "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }
+      "end": { "board": "ApprovePad", "via": 4, "to": "Invites" }
     },
     {
       "name": "answer-someones-ask-link",
@@ -357,10 +357,7 @@
     {
       "name": "publish-while-the-uploads-run",
       "description": "Details written while the pictures are still climbing reach the gated seal; signing waits for them, then the post lands in its detail view, still settling.",
-      "start": { "board": "ComposeDetails", "via": 10, "to": "ComposeUploading" },
-      "waypoints": [
-        { "board": "ComposeUploading", "via": 11, "case": "uploads still running — the gated seal" }
-      ],
+      "start": { "board": "ComposeDetails", "via": 10, "to": "ComposeSealUploading" },
       "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the detail view, still settling" }
     },
     {
