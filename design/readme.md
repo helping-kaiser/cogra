@@ -2068,8 +2068,9 @@ entry first". What stands:
   the shell); each number has exactly one edge `{from, via, kind,
   label, to}`, and `to` lists every outcome as one of four shapes: a
   **board**, a shared **pattern board**, a declared **terminal**
-  (`back` / `self` / `os`), or an explicit **gap** — a design still
-  owed, greppable, listed by the checker, drawn red on the maps.
+  (`back` / `self` / `os` / `document`), or an explicit **gap** — a
+  design still owed, greppable, listed by the checker, drawn red on
+  the maps.
   `entries` records the non-tap ways onto a screen (app open, a mail
   link, time passing); a screen on a wired page must be an entry or
   an edge target. `boardKinds` marks reference boards (anatomy plates,
