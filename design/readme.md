@@ -278,6 +278,32 @@ designed, not derived by inversion.
 - **Material You dynamic colour is off.** The brand hue carries identity
   a wallpaper-derived palette would erase.
 
+**Where the palette departs from stock Material, and why** — written
+down because each departure is one a future reader would otherwise
+"correct". The scheme is `Content`, not the usual `TonalSpot`:
+TonalSpot cuts the seed's chroma until the orange turns a muted brown
+(`#8D4E2C`) and the brand hue is gone, where `Content` keeps it —
+`primaryContainer` is the seed itself. In dark, `Content` takes the
+neutrals from the seed at chroma 8.6 (12.6 for `neutralVariant`), which
+tints every surface cocoa; they are rebuilt at 1.5 / 2.5, a warm grey
+with a trace of the brand. Dark `primary` sits at tone 70, because at
+Material's 80 an orange cannot pass chroma 30.8 and reads as peach;
+tone 70 measures 8.08:1 against the dark surface, and `surfaceTint`
+follows `primary`, so elevation cannot bring the peach back. `error`
+moves for the same underlying reason — Material places it for an accent
+less saturated and further from red than this one. At Material's hue 25
+it sat 19.6° from `primary` (hue 44.6) at the same weight (6.16:1
+against 6.19:1 on `surface`) and read as a second brand colour; hue 5
+doubles the separation and stays unmistakably a warning. Its tones are
+35 / 65, not 40 / 80: tone 80 holds only chroma 32.6 of the palette's
+84, a pastel brighter than `primary` on the dark surface, and the deeper
+tones make the error heavier than the brand colour in both themes.
+`success` is made the way Material Theme Builder makes a custom colour,
+`#00897B` harmonised toward the seed, and read at Material's stock error
+tones — 40 light, 80 dark — the weight Material gives an alarm. The
+generator, `web/src/lib/ui/design-tokens.test.ts`, carries all of this
+as code and writes `tokens/scheme.json`.
+
 ### Type
 
 **Figtree** (variable, 300–900, latin + latin-ext), one family for
