@@ -22,9 +22,10 @@ const TOKENS_PATH = new URL("../../../../design/tokens/scheme.json", import.meta
 
 const SEED = 0xffef6c1a;
 
-// The design colour behind the Success role (design/readme.md §4 Colour). Teal rather than a true green:
-// harmonizing a green into an orange-led palette lands it on top of `tertiary`,
-// and teal keeps a blue component that survives red/green colour blindness.
+// The design colour behind the Success role (design/readme.md §4 Colour).
+// Teal rather than a true green: harmonizing a green into an orange-led
+// palette lands it on top of `tertiary`, and teal keeps a blue component that
+// survives red/green colour blindness.
 const SUCCESS_DESIGN_COLOR = 0xff00897b;
 
 // The Material 3 roles Compose's ColorScheme carries, in ColorScheme order so
@@ -105,8 +106,9 @@ function roles(isDark: boolean): Record<string, string> {
     out[role] = hex((dynamic as { getArgb(s: DynamicScheme): number }).getArgb(s));
   }
   if (isDark) {
-    // §2.1's two dark overrides. surfaceTint follows primary rather than MCU's
-    // tone-80 output, so dark elevation cannot reintroduce the rejected peach.
+    // design/readme.md §4 Colour's two dark overrides. surfaceTint follows
+    // primary rather than MCU's tone-80 output, so dark elevation cannot
+    // reintroduce the rejected peach.
     out.primary = hex(s.primaryPalette.tone(70));
     out.onPrimary = hex(s.primaryPalette.tone(10));
   }
@@ -150,7 +152,7 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-/** The `on`-pairs design.md §2.1 guarantees at WCAG AA. */
+/** The `on`-pairs design/readme.md §4 Colour guarantees at WCAG AA. */
 const ON_PAIRS = [
   ["onPrimary", "primary"],
   ["onPrimaryContainer", "primaryContainer"],
@@ -178,7 +180,8 @@ describe("design tokens", () => {
     expect(committed, "design/tokens/scheme.json is stale — run `make tokens`").toBe(rendered);
   });
 
-  // design.md §2.1: "A palette change that fails that check does not ship."
+  // design/readme.md §4 Colour: every on-pair is verified at generation, so a
+  // palette that fails the check does not ship.
   // The check runs here, against what generation just produced.
   it.each(["light", "dark"] as const)("clear WCAG AA on every %s on-pair", (theme) => {
     const roles = build()[theme];

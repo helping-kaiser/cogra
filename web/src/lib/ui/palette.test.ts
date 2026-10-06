@@ -57,7 +57,7 @@ describe("globals.css", () => {
 
   it("leaves no raw palette colour in the stylesheet", () => {
     // Roles are defined in the :root blocks and nowhere else; a hex loose in a
-    // rule is the bug design.md §2.3 names. Comments are prose, not styling.
+    // rule is the bug design/readme.md §4 Colour names. Comments are prose, not styling.
     const styling = CSS.replace(/\/\*[\s\S]*?\*\//g, "").replace(/:root\s*\{[^}]*\}/g, "");
     expect(styling).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
