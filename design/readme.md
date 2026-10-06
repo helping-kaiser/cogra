@@ -94,6 +94,16 @@ What that means for design work:
   show what something scored — provided every number shown is
   explainable and the detail is layered.
 
+**The anti-goals**, named because they are the failure modes this
+product is most likely to drift into: nothing that reads as crypto,
+fintech, trading, enterprise, or a developer tool. No dense
+dashboards, no dark "hacker" aesthetic, and no monospace as UI — the
+platform monospace is kept to codes and identifiers read character by
+character, a payout address among them (§4, *Type*). Geek mode is not
+the developer-tool look: it is opt-in numeric detail, the exact pair
+painted beside the glyph it already stood behind, in the same type,
+colour and row (*Geek mode*, §13).
+
 ### Surfaces represented here
 
 | Surface | Where |
@@ -275,7 +285,8 @@ everything — headers included, with weight doing the work a second face
 would. **Material 3's fifteen type roles, unmodified**: only the family
 is swapped. There is no italic axis; italics are for emphasis in user
 text, never a display device. The platform monospace appears on exactly
-one class of content: recovery codes, key ids, seed entry.
+one class of content, codes and identifiers read character by
+character: recovery codes, key ids, seed entry, a payout address.
 
 Role assignment is fixed (see `tokens/typography.css`). Weight is
 400 for display/headline/body, 500 for title-medium/small and all label
@@ -2180,8 +2191,8 @@ entry first". What stands:
   (path, key), never DOM order. A copy a board's tweak chip draws once
   per value is one element in several states: it keeps one path and
   carries the chip's value as its key (`history.searchField` under
-  `search` and under `kinds`; jakob 2026-10-06, seam 069). Every other board renders the
-  annotations stripped, so a name reaches a built board only once it
+  `search` and under `kinds`; jakob 2026-10-06, seam 069). Every
+  other board renders the annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the
   render, and so does a registered path that stops rendering — a
