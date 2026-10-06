@@ -116,7 +116,8 @@ slice binds. An affordance whose destination is neither designed nor built
 stays out of the apps until one exists: never a dead control, and never a
 label that says what the code does not do (the feed's filter reads
 *Newest* until the ranker ships, §13 below). A drawn surface a release does
-not carry yet is staged, not divergent.
+not carry yet is staged, not divergent, and `staged-surfaces.md` lists
+what that leaves on screen.
 
 ---
 
@@ -7147,7 +7148,8 @@ The verdict round of the V1.0 audit (the full trail, findings and
 candidates list live in the dev-state audit directory,
 `2026-09-24-mvp-audit/`): every affordance canonical drew beyond what
 the first release serves got a ruling, and the two precedents that used
-to compete got their chooser.
+to compete got their chooser. (What the cut leaves on screen is one
+list since — `staged-surfaces.md`, the release cut's checklist.)
 
 - **A door belongs to a slot, never to a list** (jakob 2026-09-25). The
   staging rule (§2) and the coming-soon door (`ChatsComingSoon`, the Sky
