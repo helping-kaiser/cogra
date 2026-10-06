@@ -44,6 +44,10 @@ WHEN the signing has not answered 5s after the press -> the line Still signing â
 
 WHEN the signing answers GIVEN the slow line stands under the acts footer -> the slow line goes
 
+WHEN press Sign the edit GIVEN the count the signing prepared differs from the count the footer read -> the held press drops AND the footer reads the prepared count AND Sign the edit reads Sign the edit again AND the line The count changed while you were editing â€” check it, then sign again. stands under the acts footer AND NEVER anything is signed
+
+WHEN press Sign the edit again GIVEN the count line stands under the acts footer -> the count line goes
+
 WHEN the last upload lands GIVEN Sign the edit was pressed while the uploads ran -> signing proceeds AND NEVER a second press is asked
 
 WHEN an upload fails GIVEN Sign the edit was pressed while the uploads ran -> the held press drops AND the gate line takes its fault reading AND Sign the edit reads Sign the edit again AND the header back arrow and the header X answer again AND NEVER anything is signed

@@ -927,6 +927,17 @@ publishing…` on `ComposeSealUploading`, `Signing comment…` on
 pictures gates `Sign the edit` the same way, swapping to `Signing the
 edit…` (jakob 2026-10-05; the construction's own word).
 
+A held press that drops — an upload failing under it — leaves the commit
+asking again in its own words: `Sign and publish again`
+(`ComposeSealUploading`) and `Sign the edit again` (`EditCompose`,
+`EditComposeVideo`, `CommentEdit`, `CommentEditVideo`). *Carried over —
+blessed by use (jakob 2026-10-06).* An edit whose batch counts
+differently at the signing than the footer read drops its press the same
+way: the footer reads the new count, `Sign the edit` reads `Sign the
+edit again`, and under the acts footer stands `The count changed while
+you were editing — check it, then sign again.` (*new 2026-10-06, blessed
+(jakob 2026-10-06)*).
+
 ## Field errors
 
 The lines the errored entry and profile boards carry — a field's own
