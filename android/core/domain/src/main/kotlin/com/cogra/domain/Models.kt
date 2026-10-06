@@ -189,7 +189,6 @@ const val MIN_HANDLE_LENGTH = 3
 /** The house starting point for a stance dimension — sliders start here. */
 const val DEFAULT_STANCE = 0.1
 
-
 // ---------------------------------------------------------------------
 // Content (slice 2 — api-spec.md "Content nodes", "Content authoring")
 // ---------------------------------------------------------------------
