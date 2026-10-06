@@ -98,6 +98,13 @@ export function Screen() {
       <PageHeader backHref="#" backLabel="Back to the post" title="Add a tag" action={<HelpDot ariaLabel="Tagging" />} />
       <div style={{ flex: "none" }}>
         <SearchBar query="salt" placeholder="Name a tag" ariaLabel="Name a tag" />
+        {/* The naming rule stands under the field at rest too (copy-voice; the
+            gate is stated, not discovered — `TagPickerTyping`). */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 24px 8px" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+            Letters, digits, dot, dash and underscore. Capitals become lowercase.
+          </p>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px 8px" }}>
           <StagedReference kind="topic" name="saltmarsh" onRemove={() => {}} />
           <StagedReference kind="topic" name="saltflats" onRemove={() => {}} />
