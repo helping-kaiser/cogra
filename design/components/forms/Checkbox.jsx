@@ -13,12 +13,13 @@ import { Icon } from "../navigation/Icon.jsx";
    reaches the 48px minimum however small the box is drawn — the same
    drawn-vs-tapped split the chips use. */
 
-export function Checkbox({ label, checked = false, onChange, id }) {
+export function Checkbox({ label, checked = false, onChange, id, node }) {
   const generated = React.useId();
   const fieldId = id ?? generated;
   return (
     <label
       htmlFor={fieldId}
+      data-node={node}
       className="cg-state cg-focus"
       style={{
         display: "flex",
@@ -51,6 +52,7 @@ export function Checkbox({ label, checked = false, onChange, id }) {
           alignItems: "center",
           justifyContent: "center",
         }}
+        data-node={node && "box"}
       >
         {checked && <Icon name="check" size={14} />}
       </span>
@@ -60,6 +62,7 @@ export function Checkbox({ label, checked = false, onChange, id }) {
           lineHeight: "var(--text-body-medium--line-height)",
           letterSpacing: "var(--text-body-medium--letter-spacing)",
         }}
+        data-node={node && "label"}
       >
         {label}
       </span>

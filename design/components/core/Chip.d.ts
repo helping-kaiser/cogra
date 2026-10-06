@@ -18,6 +18,8 @@ export interface ChipProps {
    * no size, no selection and no handler, because it is not pressed.
    */
   tone?: "filter" | "readout";
+  /** The data-node name its placer gives this chip (design ⇄ impl seam 002; renders as attributes only). A filter sheet names each kind chip as `<value>Chip` — `postsChip`, `topicsChip` — the way `SegmentedFilter` names its segments. */
+  node?: string;
 }
 
 export declare function Chip(props: ChipProps): JSX.Element;

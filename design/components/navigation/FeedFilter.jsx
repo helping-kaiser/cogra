@@ -413,13 +413,17 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
    there `Reset` stages CoGra's default: the one place a reader gets back to
    it. Plain `Reset` (jakob, N3): the "?" is where a reader learns what it
    restores. A text button, the quiet half of the row; `Done` keeps its seat. */
-export function FilterFoot({ onReset, onDone }) {
+export function FilterFoot({ onReset, onDone, node }) {
   return (
     <div style={{ padding: "0 var(--space-6)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-        <Button variant="text" onClick={onReset}>Reset</Button>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }} data-node={node}>
+        <Button variant="text" onClick={onReset} node={node && "reset"}>
+          Reset
+        </Button>
         <span style={{ flex: 1 }} />
-        <Button onClick={onDone}>Done</Button>
+        <Button onClick={onDone} node={node && "done"}>
+          Done
+        </Button>
       </div>
     </div>
   );

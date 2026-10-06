@@ -23,14 +23,22 @@
    Typing on, or narrowing again from the trigger, are the other ways on.
 
    Its words are new and blessed (jakob 2026-10-05; copy-voice, *Saved,
-   History and hiding*). */
+   History and hiding*).
+
+   REGISTERED under the `history` prefix (design ⇄ impl seam 062/063), the
+   header and the bar named as `History` names them. THE FIELD, THE TRIGGER
+   AND THE EMPTY STATE ARE NOT NAMED YET: the `cause` chip draws each of them
+   twice, one shown at a time, and one path cannot stand on two elements of
+   one board — how a chip-drawn state names its copies is a convention still
+   to rule. Naming them then is pure addition. */
+export const NODE = "history";
 export const PROPS = { cause: { editor: "enum", options: ["search", "kinds"], default: "search" } };
 export const VALS = `searchShown: this.props.cause === "kinds" ? "none" : "block", kindsShown: this.props.cause === "kinds" ? "block" : "none"`;
 
 export function Screen() {
   return (
     <>
-      <PageHeader title="History" backHref="#" backLabel="Back to your profile" />
+      <PageHeader title="History" backHref="#" backLabel="Back to your profile" node="header" />
       <div style={{ display: "{{searchShown}}" }}>
         <div style={{ flex: "none" }}>
           <SearchBar query="brackish cartography" ariaLabel="Search your history" />
@@ -58,7 +66,7 @@ export function Screen() {
         </div>
       </div>
       <div style={{ flex: 1 }} />
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
