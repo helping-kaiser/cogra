@@ -10,11 +10,11 @@ ALWAYS the playing clip keeps the stage GIVEN it still qualifies and the scroll 
 
 WHEN a second clip scrolls into view GIVEN the incumbent still qualifies -> NEVER the stage changes hands
 
-WHEN the incumbent falls below the 70% gate GIVEN another clip qualifies -> the topmost qualifying clip takes the stage in the same moment AND the outgoing clip freezes on the frame it reached AND NEVER the handover waits for the scroll to settle
+WHEN the incumbent falls below the 70% gate GIVEN another clip qualifies and the device allows autoplay -> the topmost qualifying clip takes the stage in the same moment AND the outgoing clip freezes on the frame it reached AND NEVER the handover waits for the scroll to settle
 
-WHEN the incumbent falls below the 70% gate GIVEN no other clip qualifies -> the outgoing clip freezes on the frame it reached AND NEVER a clip plays
+WHEN the incumbent falls below the 70% gate GIVEN no other clip qualifies or the device suppresses autoplay -> the outgoing clip freezes on the frame it reached AND NEVER a clip plays
 
-WHEN a clip starts to qualify GIVEN the stage is empty -> the topmost qualifying clip takes the stage
+WHEN a clip starts to qualify GIVEN the stage is empty and the device allows autoplay -> the topmost qualifying clip takes the stage
 
 WHEN scroll settles at the feed's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in feed order
 
@@ -22,13 +22,23 @@ WHEN an overscroll bounce settles back at the feed's hard top GIVEN a qualifying
 
 ALWAYS a clip the reader started by its play disc keeps the stage GIVEN it still qualifies, at the feed's hard top included
 
+ALWAYS a clip the reader started by its play disc below the 70% gate keeps the stage while any of it stands on screen GIVEN it has not qualified since the tap
+
+WHEN a clip the reader started by its play disc below the 70% gate leaves the screen GIVEN it has not qualified since the tap -> it freezes on the frame it reached AND the stage law's ordinary succession takes over
+
 WHEN scroll settles anywhere below the hard top GIVEN the incumbent still qualifies -> NEVER the stage re-elects upward
 
-WHEN a sheet opens over the feed -> the incumbent stops
+WHEN a sheet or a dialog opens over the feed -> the incumbent stops
 
-ALWAYS no clip on the feed plays GIVEN a sheet covers the feed
+ALWAYS no clip on the feed plays GIVEN a sheet or a dialog covers the feed
 
-WHEN the sheet over the feed dismisses GIVEN a clip qualifies -> the topmost qualifying clip takes the stage
+WHEN the sheet or the dialog over the feed dismisses GIVEN a clip qualifies and the device allows autoplay -> the topmost qualifying clip takes the stage
+
+WHEN the sheet or the dialog over the feed dismisses GIVEN the device suppresses autoplay -> NEVER a clip plays AND a clip the reader had started by its play disc stands on the frame it reached, wearing its play disc again
+
+WHEN the opinion pad opens over the feed -> the playing clip pauses on the frame it reached AND NEVER the stage changes hands
+
+WHEN the opinion pad over the feed closes GIVEN it paused a clip, under suppressed autoplay included -> that same clip resumes from the frame it reached AND NEVER the stage re-elects
 
 ALWAYS a veiled clip has no playback and no sound-disc presence
 
@@ -36,7 +46,13 @@ ALWAYS feed.card.media.frame.soundDisc is absent GIVEN feed.card.media.frame's c
 
 WHEN a veiled clip unveils GIVEN the incumbent still qualifies -> NEVER the stage changes hands
 
-WHEN a veiled clip unveils GIVEN the stage is empty -> the topmost qualifying clip takes the stage
+WHEN a veiled clip unveils GIVEN the stage is empty and the device allows autoplay -> the topmost qualifying clip takes the stage
+
+WHEN the page is hidden, a backgrounded app and a locked screen included -> the playing clip pauses on the frame it reached
+
+WHEN the hidden page shows again GIVEN a clip was playing when it hid and the device allows autoplay -> that clip resumes from the frame it reached AND NEVER the stage re-elects
+
+WHEN the hidden page shows again GIVEN the device suppresses autoplay -> NEVER a clip plays AND the clip that was playing stands frozen on the frame it reached, wearing its play disc
 
 WHEN a press-and-hold on feed.card.actionRow.stance.anchor signs -> feed.card.actionRow.stance.anchor refuses a second press-and-hold until the signing answers AND NEVER feed.card.actionRow.stance.anchor.face moves before the signature is taken
 
