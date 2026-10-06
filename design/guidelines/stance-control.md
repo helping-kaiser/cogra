@@ -14,7 +14,9 @@ in `[−1, +1]`:
 | `p_i` | **How much reaches you** | from keep-it-away to tell-me-everything |
 
 The ends are named wherever the axis appears: `Against` / `For` and
-`Less` / `More`, on the pad's field and on the sliders alike.
+`Less` / `More`, in gutters outside the pad's field and on the sliders
+alike — inside the field the knob can reach every point, so no word sits
+there.
 
 All four quadrants are legitimate and there is no authoring bar.
 A negative second value genuinely means *do not let this reach people
@@ -87,7 +89,7 @@ at rest, visibly waiting to be given a value, never a bare word.
 readout; a third encoding of the same value in words was redundant. The
 words remain in the accessibility tree on every readout, because an
 emoji's own accessible name is "slightly smiling face" and never "Like
-this" — see readme §11.7.
+this" — see readme §11, *The stance control*.
 
 ## Severance
 
@@ -152,7 +154,7 @@ well-supported controls rather than a degraded version of the gesture.
 Selecting an alternate replaces the pad **everywhere**, not per-screen.
 The entry into them is present on every stance control regardless of the
 stored preference — as `Choose your opinion`, visually hidden until
-focused (readme §11.3), so it is one tab away without being printed
+focused (readme §11, *The stance control*), so it is one tab away without being printed
 beside every stance in a feed. Both surfaces carry the same circled `?`
 as the pad, and on the alternates its first line is the one thing two
 sliders cannot teach by themselves: *two values, not one*.
@@ -161,10 +163,12 @@ sliders cannot teach by themselves: *two values, not one*.
 
 A held gesture is invisible until taught — and the pad is the teacher.
 The tap that opens it costs nothing, so a reader finds the considered
-route on their own; what is left to teach is the shortcut. The **first
-open ever** carries the coach mark inside the pad, above the field,
-staying until dismissed or until the pad closes, and it says one thing:
-the same button, held, signs the gentle default outright.
+route on their own; what is left to teach is the shortcut. The
+account's **first open ever**, wherever that pad opens, carries two
+coaching lines: how the pad opens and that the same face, held, signs
+the gentle default outright; then that nothing is signed until Set and
+that the input can be swapped in settings. They close with the pad and
+never show again.
 
 ## Confirmation
 

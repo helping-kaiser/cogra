@@ -181,7 +181,6 @@ before it is signed, and anything half-finished says who acts next.
 - `It signs 3 things, each paid separately.`
 - `Your opinion of this post drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`
 - `Signing needs your key, which isn't in this browser — the write waits as pending.`
-- `Nothing was signed just now.` (the first line of the coach mark)
 
 **Empty and waiting states are written, not blank.**
 
@@ -951,14 +950,17 @@ own (§3). All four quadrants are legitimate.
   pair. A viewer with no opinion sees a **muted, translucent 🫥** —
   never a bare word.
 - **A plain tap** blooms the pad at the lower centre of the viewport and
-  stages nothing. The **first open ever teaches** — the coach mark rides
-  inside the pad and names the shortcut.
+  stages nothing. The **first open ever teaches**, wherever that pad
+  opens — two coaching lines: how the pad opens and its press-and-hold
+  shortcut, then that nothing is signed until Set and that the input can
+  be swapped in settings. They close with the pad and never show again.
 - **Press and hold 500ms** commits a modest positive `(+0.1, +0.1)`
   outright. The light gesture opens, the held one spends: nobody holds a
   control for half a second by mistake.
 - The pad's drawn field *is* the value space: its corners are
   `(±1, ±1)` and the knob never leaves it. Horizontal runs Against → For,
-  vertical runs Less → More, and those four words are drawn on the field.
+  vertical runs Less → More, and those four words sit outside the field,
+  in gutters around it, so nothing but dead ground stays inside.
 - **Releasing the finger never commits.** Release parks the pick, an
   explicit **Set** signs it, **Cancel** or a press outside stages
   nothing.
@@ -981,9 +983,9 @@ own (§3). All four quadrants are legitimate.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
-  own coordinate. It is a reference for implementers: the product field
-  draws its four axis words and nothing else, and the anchors' words
-  stay accessibility-only.
+  own coordinate. It is a reference for implementers: the product pad
+  draws its four axis words around the field and nothing else, and the
+  anchors' words stay accessibility-only.
 - Paired sliders and direct entry are the alternate *and* accessible
   path; choosing one replaces the pad everywhere.
 
@@ -1200,8 +1202,8 @@ transient line is read away from the pad, so it *is* the accessible text.
 
 **The axes are renamed and their ends are named.** `How you stand` →
 **For or against**, `In your world` → **How much reaches you**, with
-`Against`/`For` and `Less`/`More` drawn on the pad's field and under the
-sliders. The originals were the repo's own framing rather than words a
+`Against`/`For` and `Less`/`More` drawn in gutters outside the pad's
+field and under the sliders. The originals were the repo's own framing rather than words a
 reader could act on, and a square with no edge labels taught nothing.
 
 **Three labelled readouts, formatted alike.** `Current opinion` ·
@@ -1219,10 +1221,10 @@ alternates' first line instead teaches the thing two sliders cannot —
 would push `Set` away from the thumb, and in the centred dialog it would
 move every button. `Set` is disabled while the pad's help shows.
 
-**The coach mark says less** — two facts (a tap opens the pad; a hold
-signs `+0.10 / +0.10`) instead of five at the moment a reader is least
-willing to read. `Nothing was signed just now.` stays: it is the line
-the mark exists for.
+**The first-open teaching says less** — two coaching lines (how the pad
+opens and that a hold signs `+0.10 / +0.10`; that nothing is signed
+until Set and the input can be swapped) instead of five facts at the
+moment a reader is least willing to read.
 
 **The non-drag route is not drawn, and it is renamed.** `Choose values`
 was a `primary` text button beside every stance, so a feed of twenty
@@ -1289,7 +1291,7 @@ product puts the picture first.
   surface opts in. Found while building the core loop.
 - `StanceControl` re-syncs `taught` when the prop turns true, the way it
   already re-synced `bundle`. Without it a shell that flips "taught" after
-  the first coach mark taught again on the next card down.
+  the first-open teaching showed again on the next card down.
 - `Snackbar` carries the whole `body-medium` role, not just its size —
   mounted under a heading it inherited the wrong weight.
 - `Snackbar`'s bottom offset is a prop. The source hardcodes 80px to
@@ -1464,9 +1466,10 @@ whatever it parks over — the bottom bar where one exists, a sheet's
 bottom edge otherwise, the keyboard while one is up; one number
 everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
-carries it — what it is for, how it opens, that nothing signs until
-Set, and that the input can be swapped in settings. Beside those
-marks stands **one skippable intro** (ruled 2026-09-14): five
+carries it — two coaching lines on the account's first-ever pad open:
+how it opens and its press-and-hold shortcut, then that nothing signs
+until Set and that the input can be swapped in settings. Beside those
+lines stands **one skippable intro** (ruled 2026-09-14): five
 full-screen cards — the feed is your own steps, opinions have a
 shape, everything is public, nothing is lost, someone brings you in
 — fired on the first authenticated feed entry, from applicant on,
@@ -1476,8 +1479,8 @@ leaves for the feed the intro opened over — or for Settings, when
 Settings re-opened it. The buttons are the only movement: no swipe in
 V1.0, and Android's Back walks the cards back, card 1 leaving as Skip
 does (jakob 2026-10-05). It teaches what the product IS rather
-than what a control does, so it neither replaces a coach mark nor
-adds one; the per-control marks are unchanged by it. The last card
+than what a control does, so it neither replaces the pad's coaching
+lines nor adds any; the per-control teaching is unchanged by it. The last card
 carries the applicant's one task — the friend who sent the invite
 still has to let them in — and its inviter face is personalized by
 the client to the actual link-issuer's avatar, the monogram
@@ -4277,7 +4280,8 @@ row's geometry is identical in both modes.
   `(+0.1, +0.1)` takes a held finger. The price is accepted
   deliberately, because nobody holds a control for half a second by
   mistake. The one-time coach mark moves to the pad's first open,
-  inside the pad, and what it teaches is the shortcut.
+  inside the pad, and what it teaches is the shortcut. (The two coaching
+  lines replace the mark — §8, 2026-10-06.)
 - **The affordance rows spread.** `PostCard`'s and `CommentCard`'s
   controls sit at even intervals across the card's full width — the
   social pattern a thumb already has a habit for — and every control in
