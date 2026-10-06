@@ -1576,8 +1576,10 @@ function ReplyPadBody() {
 
         {/* The pick's readout, above the field where a thumb cannot cover it:
             what the pick is toward, then the face and the pair under it. The
-            readout clears the corner the "?" sits in. */}
-        <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
+            readout clears the corner the "?" sits in. It is the master's
+            polite live region (`StanceStanding`; P6, K13.17): the pick
+            speaks once it rests, never at every step. */}
+        <div aria-live="polite" style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Toward what you answer
           </span>
