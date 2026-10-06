@@ -1,6 +1,8 @@
 # FeedKinds · `spec:design:behavior-feed-kinds`
 
-ALWAYS every feed card's row reads the opinion, then the score, then the kind's own act, then the share
+ALWAYS every feed card's row reads the opinion, then the score, then the kind's own act, then the share GIVEN the card is a post's, a comment's or a tag's
+
+ALWAYS a person's feed card's row reads the opinion, then the score, then the share, its act's slot waiting for chats
 
 ALWAYS a comment's replies appear only in its thread, never in the feed
 

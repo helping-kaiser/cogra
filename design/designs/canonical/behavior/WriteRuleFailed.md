@@ -12,6 +12,8 @@ ALWAYS the notice's words name no payer
 
 ALWAYS the notice's words stand as drawn for every refusal of this code, whichever of the write rule's gates refused
 
+WHEN the reader goes a stage back and returns, or changes a fact, GIVEN the notice stood on the seal -> the seal shows its plain commit AND NEVER the notice stands again before the next press
+
 ALWAYS the notice carries its own ? beside the header's ?
 
 WHEN tap the notice's ? -> the dialog Why signing waits opens with There's a limit to how many signed actions can go through in a short time — it keeps the network safe from flooding. You've hit it for now. and Nothing was signed or spent, and your draft is kept. Try again in a little while.
