@@ -3659,7 +3659,9 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   review removed it. The tag page carries no follow control; the
   gesture gets its surface in slice 3's round, which is also when the
   roadmap first lets it ship (topic follow is client-hidden until the
-  topic feed lands).
+  topic feed lands). (Ruled since: topic holding ships whole inside
+  V1.0 — slice sequencing, never a hidden surface at the release cut;
+  jakob 2026-10-06, `staged-surfaces.md`.)
 - **Every row carries its claim, plainly.** A signed act is public
   record, so `TaggedRow` simply shows it: the nearest of the thirteen
   `TAG_ANCHORS` leads the flag and the exact pair sits with it. There

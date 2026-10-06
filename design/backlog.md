@@ -4846,3 +4846,9 @@ these for jakob's eye, each with the lane's recommendation in its report:
 - **The moderation variant's name**, `Removed by the network`, is still
   proposed and unblessed in `ActorChip`'s docblock; copy-voice says
   neither.
+- **The check wave's filed questions live in dev-state** —
+  `cogra/tmp_dev/2026-09-24-mvp-audit/2026-10-06-check-round/`
+  `check-wave-filed-questions.md` is the accumulator of the wave's
+  open micro-contracts (~20, none MVP-blocking); readme §13's check-
+  wave record points at no in-repo list, this item is that pointer
+  (jakob 2026-10-06).
