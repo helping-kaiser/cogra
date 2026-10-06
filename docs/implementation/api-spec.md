@@ -969,8 +969,20 @@ type User implements Node & Actor {
   # viewer is this User; null otherwise (see "Private viewer state" below).
   "Saved-for-later nodes, most recent first."
   bookmarks(first: Int, after: String, last: Int, before: String): BookmarkConnection
-  "Nodes this user has seen — the view history behind feed de-duplication."
-  viewHistory(first: Int, after: String, last: Int, before: String): ViewHistoryConnection
+  "The seen-list (feed-ranking.md §9.4): every node the viewer has
+   seen, once each, newest first by first seeing — the list the
+   ranked feed filters by, and History's feed. Re-seeing never moves
+   an entry. `kinds` narrows (null = every kind History serves: POST,
+   COMMENT, USER, HASHTAG; other kinds join with their slices);
+   `query` matches by the one search rule (\"Search\"), narrowing the
+   seen-list instead of searching the graph. A hidden actor's things
+   stay out while the actor is hidden; a removed thing keeps its
+   place and reads its removal mark."
+  viewHistory(
+    kinds: [NodeKind!]
+    query: String
+    first: Int, after: String, last: Int, before: String
+  ): ViewHistoryConnection
   "Actors this user has hidden from their own feed — a read-side
    comfort that does not lift the viewer's own records' effect on
    anyone else's feed (feed-ranking.md §8)."
@@ -1556,6 +1568,10 @@ type BookmarkEdge {
   bookmarkedAt: DateTime!
 }
 
+"The seen-list page. Paging is keyset on `(firstSeenAt, node id)`: a
+ thing first seen while the reader scrolls sorts above the open page,
+ so forward paging never shifts, and it joins at the next open or pull
+ (the order History opened in stands frozen)."
 type ViewHistoryConnection {
   edges: [ViewHistoryEdge!]!
   pageInfo: PageInfo!
@@ -4603,7 +4619,10 @@ extend type Mutation {
   removeBookmark(input: RemoveBookmarkInput!): RemoveBookmarkPayload!
   hideActor(input: HideActorInput!): HideActorPayload!
   unhideActor(input: UnhideActorInput!): UnhideActorPayload!
-  "Record that the viewer has seen nodes (the feed de-dup signal)."
+  "Record that the viewer has seen nodes — first seeing only: a node
+   already on the list is left as it is (re-seeing never counts, never
+   moves it). Posts, comments, profiles and topics are seeable. L2
+   only; nothing here becomes a graph record."
   markSeen(input: MarkSeenInput!): MarkSeenPayload!
   "Advance the viewer's last-read pointer in a Chat."
   markChatRead(input: MarkChatReadInput!): MarkChatReadPayload!
@@ -4616,6 +4635,11 @@ the "no destructive operation" rule is a *graph* invariant —
 private operational state carries no append-only history and no
 public visibility, so a remove is a genuine delete of a row, not a
 redaction.
+
+The seen-list has no remove verb — no clear and no per-item
+removal, by decision (2026-10-05). It is append-only with no
+compaction ([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)),
+ordered by `firstSeenAt` alone.
 
 ### Governance inputs
 

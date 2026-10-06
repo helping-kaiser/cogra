@@ -1077,7 +1077,8 @@ the chat-read pointer (`chat_read_state`), and bookmarks
 ```sql
 -- View log: per-viewer record of which content nodes have been seen.
 -- Used by the feed-ranking computation as an exclusion set
--- (see feed-ranking.md §8).
+-- (see feed-ranking.md §8). History's `kinds` filter routes through
+-- an indexed `kind` column; the slice-2.6 builder finalizes it.
 CREATE TABLE user_view_log (
     user_id        UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     content_id     UUID        NOT NULL,
@@ -1088,10 +1089,8 @@ CREATE INDEX user_view_log_recency_idx
     ON user_view_log (user_id, first_seen_at);
 ```
 
-The seen-list's compaction policy (1-year default, ~7 MB/active-
-user-year bound, trade-off, frontend tunability) lives with the
-seen-list mechanism in
-[feed-ranking.md §8.5](../primitive/feed-ranking.md#94-the-already-seen-filter).
+The seen-list is append-only and never compacts
+([feed-ranking.md §9.4](../primitive/feed-ranking.md#94-the-already-seen-filter)).
 
 ```sql
 -- Hidden actors: per-viewer list of actors the viewing user
