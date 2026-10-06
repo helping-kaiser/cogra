@@ -181,7 +181,7 @@ server about a number it enforces.
 | `client-crypto-vectors.json` | `common::l1` | `make vectors` |
 | `client-constants.json` | `api` — caps, page size, registration grammar, write-handshake constants | `make constants` |
 | `stance-fold-vectors.json` | `common::l1::fold` | `make fold-vectors` |
-| `design/tokens/scheme.json` | design.md §2.2, via web | `make tokens` |
+| `design/tokens/scheme.json` | the generator in `web/src/lib/ui/design-tokens.test.ts`, via web ([readme §4 Colour](../../design/readme.md#colour)) | `make tokens` |
 
 ### What the gates cost
 
