@@ -332,9 +332,10 @@ typographic one.
 (`tokens/typography.css`); each platform expresses it in its native
 unit and rounds on its own unit grid, so three roles (`display-large`,
 `body-medium`, `title-medium`) can land up to 0.05px apart. That is a
-capability expression, never a per-client choice — *One design, both
-platforms* (*Spacing and layout*) holds: "the 100% design match is the
-goal and both platforms will need their own way to get there."
+capability expression, never a per-client choice, so *One design, both
+platforms* (*Spacing and layout*) holds; in jakob's words, "the 100%
+design match is the goal and both platforms will need their own way to
+get there."
 
 **Text scale is honoured and never capped** (the K13 round; WCAG 1.4.4).
 Type is `rem` on the web and `sp` on Android, so it follows the reader's
