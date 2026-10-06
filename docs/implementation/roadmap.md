@@ -77,7 +77,7 @@ post-detail surfaces on both clients, public reads included.
 Behind it landed two hardening passes: key custody (the signed
 key-backup upload, the on-device key gate, key export, the
 recovery-code confirm — [auth.md](auth.md)) and the design
-system ([design.md](design.md)): palette, type, shape, and
+system ([design/readme.md](../../design/readme.md)): palette, type, shape, and
 components, with web brought to parity.
 
 **Slice 2.1 is closed** (hand-tested 2026-08-18): the app shell —
@@ -90,7 +90,7 @@ read surfaces, task flows carry a back arrow).
 the generic `prepareStance` toward posts, comments, and profiles
 with the raw-edge semantic, the read-side bundle fold serving both
 the clipped pair and the raw sums, batch severance, and the pad on
-both clients per [design.md §8](design.md) — explicit-Set commits,
+both clients per [design/readme.md §8](../../design/readme.md#8-the-stance-control) — explicit-Set commits,
 fixed lower-centre placement, re-draggable field, local realtime
 landing, first-tap coach, and the 🤷 zero-bundle readout. The
 current visual treatment is accepted as interim: the feed, detail,
@@ -329,7 +329,7 @@ can land in any order — 2.3 (topics) needs only the text core.
 
 ### Slice 2.1 — The shell and profiles
 
-- The app shell from the [design.md §6](design.md) inventory —
+- The app shell from the [design/readme.md §7](../../design/readme.md#7-components) inventory —
   bottom navigation, top app bars, the compose action, bottom
   sheets, snackbars — the frame every content-era surface hangs
   from.
@@ -356,7 +356,7 @@ can land in any order — 2.3 (topics) needs only the text core.
   slice-1 intended-net-state prepare): a stance record carries
   exactly the picked values — the client never computes, and
   the backend never derives, a delta against the author's
-  bundle ([design.md §8.1](design.md)). Severance is the one
+  bundle ([stance-control.md "What is being authored"](../../design/guidelines/stance-control.md#what-is-being-authored)). Severance is the one
   explicit gesture that does net the bundle to `(0, 0)`, over
   `⌈max(|Σ_d|, |Σ_i|)⌉` counter-records — each its own priced
   act, so the batch is the gesture's cost. The shipped
@@ -367,7 +367,7 @@ can land in any order — 2.3 (topics) needs only the text core.
   or pending-inclusive, on the `includePending` convention;
   severance computes against the pending-inclusive one, so a
   sever reads through immediately.
-- The pad on both clients ([design.md §8](design.md)): tap for
+- The pad on both clients ([design/readme.md §8](../../design/readme.md#8-the-stance-control)): tap for
   the `(+0.1, +0.1)` default, the press-and-hold pad, the face
   readout, the severance confirm.
 - **Hand test:** stance a post and a person; watch the bundle
@@ -597,7 +597,7 @@ from the media path and carrying their own doc write-back:
 - **The "topics you follow" list** — a viewerTopics-style query over
   the viewer's own Affinity bundle, surfaced alongside the unhidden
   follow control.
-- The score readout — [design.md §7](design.md) "numbers are in
+- The score readout — [copy-voice.md](../../design/guidelines/copy-voice.md#the-two-hard-rules-about-numbers) "numbers are in
   scope": a post can show what it scored and why it sits where
   it does, opening into the actual paths behind it.
 - **The feed, detail, and creation surfaces rework** on both
@@ -612,7 +612,7 @@ from the media path and carrying their own doc write-back:
   [design/readme.md §13](../../design/readme.md#13-decided-in-design-sessions)),
   the license qualifiers on the feed card
   (already fetched), the author's did-not-land notice
-  ([design.md §9](design.md); rides `stagedWrite`/`EXPIRED`), and
+  ([design/readme.md §9](../../design/readme.md#9-honesty-surfaces); rides `stagedWrite`/`EXPIRED`), and
   the composer's unchanged-snapshot guard (disable save when the
   edit is byte-identical; the protocol keeps accepting priced
   no-ops), and an optional **quick-pad variant** — hold, drag,

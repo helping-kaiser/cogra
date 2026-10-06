@@ -1,8 +1,8 @@
 //! Refusal and repair branches of the applicant-as-account flow (auth.md
 //! "Account lifecycle"; api-spec "Auth and accounts"): every named
 //! refusal of the registration form, dead-account replacement, link-slot
-//! semantics, the key ceremony's attach guards, approval guards,
-//! re-arming, and the reaper.
+//! semantics, the key ceremony's attach guards, approval guards, the
+//! untimed application, and the reaper.
 
 use std::sync::Mutex;
 
@@ -88,8 +88,6 @@ impl Rig {
             &self.pool,
             Uuid::new_v4(),
             inviter,
-            0.1,
-            0.1,
             single_use,
             Utc::now() + Duration::days(1),
         )
@@ -270,7 +268,7 @@ async fn handles_and_emails_collide_at_the_form(pool: PgPool) {
         Err(OnboardingError::EmailInUse)
     ));
 
-    sqlx::query("UPDATE user_credentials SET created_at = NOW() - INTERVAL '25 hours'")
+    sqlx::query("UPDATE user_credentials SET created_at = NOW() - INTERVAL '7 days 1 hour'")
         .execute(&rig.pool)
         .await
         .expect("age");
@@ -347,7 +345,7 @@ async fn verification_tokens_are_single_purpose(pool: PgPool) {
     let resend_target = store::unverified_account_by_email(
         &rig.pool,
         "n@example.com",
-        Utc::now() - Duration::hours(24),
+        Utc::now() - Duration::days(onboarding::UNVERIFIED_TTL_DAYS),
     )
     .await
     .expect("query");
@@ -442,6 +440,7 @@ async fn the_attach_guards_hold(pool: PgPool) {
         &rig.boundary,
         &rig.standin,
         &rig.cfg,
+        &api::ratelimit::SigningBudget::UNLIMITED,
         inviter,
         &[Approval {
             application: application.id,
@@ -620,6 +619,7 @@ async fn approval_guards_hold(pool: PgPool) {
             &rig.boundary,
             &rig.standin,
             &rig.cfg,
+            &api::ratelimit::SigningBudget::UNLIMITED,
             who,
             &[Approval {
                 application: id,
@@ -850,43 +850,90 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
     assert_eq!(staged_rows, 2);
 }
 
-/// Re-arming refuses while the application is still live. Once it has
-/// expired never approved, a fresh link re-arms it with a new row,
-/// leaving the account untouched. A member account cannot apply at all.
+/// The two clocks are independent (auth.md "Expiry"): the link's expiry
+/// bounds registration through it, never the application it started. A
+/// verified application whose link has expired — and whose account is
+/// long past the never-verified bound — still approves.
 ///
-/// A live application refuses re-arming and an expired one takes a fresh link as a new row, the account untouched either way, and a member cannot apply at all.
-/// ´claim:onboarding:only-an-expired-application-re-arms´
+/// A verified application carries no timer: it stays approvable after its link expires and its account ages.
+/// ´claim:onboarding:an-application-waits-with-no-timer´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_fresh_invite_rearms_an_expired_application(pool: PgPool) {
+async fn a_verified_application_stays_approvable_past_the_links_expiry(pool: PgPool) {
     let rig = Rig::new(pool).await;
     let inviter = rig.inviter("inviter").await;
-    let link = rig.link(inviter, false).await;
+    let link = rig.link(inviter, true).await;
     let account = rig
-        .register(rig.form(link, "newbie", "n@example.com"))
+        .ceremony_done_account(link, "newbie", "n@example.com")
+        .await;
+    sqlx::query(
+        "UPDATE auth_invite_links SET expires_at = NOW() - INTERVAL '1 hour' WHERE id = $1",
+    )
+    .bind(link)
+    .execute(&rig.pool)
+    .await
+    .expect("expire the link");
+    sqlx::query(
+        "UPDATE user_credentials SET created_at = NOW() - INTERVAL '30 days' WHERE actor_id = $1",
+    )
+    .bind(account)
+    .execute(&rig.pool)
+    .await
+    .expect("age the account");
+
+    let application = rig.application_of(account).await;
+    let prepared = onboarding::approve_applicants(
+        &rig.pool,
+        &rig.boundary,
+        &rig.standin,
+        &rig.cfg,
+        &api::ratelimit::SigningBudget::UNLIMITED,
+        inviter,
+        &[Approval {
+            application: application.id,
+            p_d: 0.1,
+            p_i: 0.1,
+        }],
+    )
+    .await
+    .expect("approves past the link's expiry");
+    assert_eq!(prepared.len(), 1);
+    assert!(rig.application_of(account).await.approved_at.is_some());
+}
+
+/// A waiting application holds its single-use link's slot — applications
+/// carry no timer, so nothing about waiting frees it. The reaper deleting
+/// the never-verified account, application and all, is what does.
+///
+/// A single-use slot is held by a waiting application and freed only when the reaper deletes its never-verified account.
+/// ´claim:onboarding:a-waiting-application-holds-its-slot-until-reaped´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_waiting_application_holds_a_single_use_slot_until_reaped(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    let link = rig.link(inviter, true).await;
+    rig.register(rig.form(link, "first", "first@example.com"))
         .await
-        .expect("registers");
-    rig.verify_directly(account).await;
+        .expect("takes the slot");
+    assert!(
+        !store::invite_link_usable(&rig.pool, link)
+            .await
+            .expect("query")
+    );
 
-    assert!(matches!(
-        onboarding::apply_with_invite(&rig.pool, account, link).await,
-        Err(OnboardingError::BadInput { .. })
-    ));
-
-    sqlx::query("UPDATE auth_applications SET expires_at = NOW() - INTERVAL '1 hour'")
+    sqlx::query("UPDATE user_credentials SET created_at = NOW() - INTERVAL '7 days 1 hour'")
         .execute(&rig.pool)
         .await
-        .expect("expire");
-    let fresh_link = rig.link(inviter, false).await;
-    let rearmed = onboarding::apply_with_invite(&rig.pool, account, fresh_link)
+        .expect("age");
+    let swept = store::reap_unverified_accounts(
+        &rig.pool,
+        Utc::now() - Duration::days(onboarding::UNVERIFIED_TTL_DAYS),
+    )
+    .await
+    .expect("reaps");
+    assert_eq!(swept, 1);
+    rig.register(rig.form(link, "second", "second@example.com"))
         .await
-        .expect("re-arms");
-    assert_eq!(rearmed.account_id, account);
-    assert_eq!(rearmed.invite_link_id, fresh_link);
-
-    assert!(matches!(
-        onboarding::apply_with_invite(&rig.pool, inviter, fresh_link).await,
-        Err(OnboardingError::Forbidden)
-    ));
+        .expect("the reaped slot is free again");
 }
 
 /// With two accounts past the bound, only the never-verified one is dead:
@@ -910,13 +957,16 @@ async fn the_reaper_deletes_only_never_verified_accounts(pool: PgPool) {
         .expect("registers");
     rig.verify_directly(survivor).await;
 
-    sqlx::query("UPDATE user_credentials SET created_at = NOW() - INTERVAL '25 hours'")
+    sqlx::query("UPDATE user_credentials SET created_at = NOW() - INTERVAL '7 days 1 hour'")
         .execute(&rig.pool)
         .await
         .expect("age");
-    let swept = store::reap_unverified_accounts(&rig.pool, Utc::now() - Duration::hours(24))
-        .await
-        .expect("reaps");
+    let swept = store::reap_unverified_accounts(
+        &rig.pool,
+        Utc::now() - Duration::days(onboarding::UNVERIFIED_TTL_DAYS),
+    )
+    .await
+    .expect("reaps");
     assert_eq!(swept, 1);
     assert!(
         store::actor_identity(&rig.pool, doomed)

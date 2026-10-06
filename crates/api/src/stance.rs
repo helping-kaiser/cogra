@@ -17,14 +17,15 @@
 use common::hashtag::canonicalize;
 use common::l1::census::Family;
 use common::l1::fold::BundleSum;
-use common::l1::identifier::NodeId;
+use common::l1::identifier::{ActId, NodeId};
 use postgres_store::stance::BundleView;
 use postgres_store::{PgPool, stance as stance_store};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
 use crate::nodes::{self, NodeError};
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::SigningClass;
 
 #[derive(Debug, thiserror::Error)]
 pub enum StanceError {
@@ -56,6 +57,10 @@ impl From<NodeError> for StanceError {
 pub struct StanceTarget {
     pub node: NodeId,
     pub family: Family,
+    /// The act minting the node while it is still in flight. A stance on
+    /// pending content declares it, so the record lands behind the node or
+    /// expires with it, never toward a node that never existed.
+    pub awaits: Option<ActId>,
 }
 
 /// How a stance names the node it points at.
@@ -98,24 +103,32 @@ pub async fn resolve_target(
     pool: &PgPool,
     target: &TargetRef,
 ) -> Result<StanceTarget, StanceError> {
-    let node = match target {
+    let (node, awaits) = match target {
         TargetRef::Topic(raw) => {
             let name = canonicalize(raw).map_err(|e| StanceError::BadInput {
                 field: "topicName",
                 message: e.to_string(),
             })?;
-            NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()))?
+            let node = NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()))?;
+            (node, None)
         }
-        TargetRef::Node(id) => resolve_id(pool, *id).await?,
+        TargetRef::Node(id) => {
+            let resolved = resolve_id(pool, *id).await?;
+            (resolved.node, resolved.awaits)
+        }
     };
     let family = family_for(&node);
-    Ok(StanceTarget { node, family })
+    Ok(StanceTarget {
+        node,
+        family,
+        awaits,
+    })
 }
 
 /// Resolves an L2 id to the node a stance points at, naming `target` as
 /// the offending field when nothing answers to the id.
-async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<NodeId, StanceError> {
-    nodes::resolve_id(pool, target)
+async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode, StanceError> {
+    nodes::resolve_target(pool, target)
         .await?
         .ok_or_else(|| StanceError::BadInput {
             field: "target",
@@ -186,7 +199,7 @@ async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, StanceErr
 pub async fn prepare_stance<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     target: &TargetRef,
     p_d: f64,
@@ -200,10 +213,19 @@ pub async fn prepare_stance<B: L1Boundary>(
     }
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, target).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Stance, 1)],
+    )
+    .await?;
     Ok(prepare::prepare(
         boundary,
         pool,
-        gc_after_epochs,
+        staging.gc_after_epochs,
         viewer,
         stance_gesture(&author, &resolved, p_d, p_i),
     )
@@ -220,7 +242,7 @@ pub async fn prepare_stance<B: L1Boundary>(
 pub async fn prepare_severance<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     target: &TargetRef,
 ) -> Result<Vec<prepare::Prepared>, StanceError> {
@@ -234,14 +256,22 @@ pub async fn prepare_severance<B: L1Boundary>(
             message: "the bundle toward this target already nets to (0, 0)".into(),
         });
     }
-    prepare::check_batch_solvency(boundary, &author, batch.len()).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Stance, batch.len())],
+    )
+    .await?;
     let mut prepared = Vec::with_capacity(batch.len());
     for (p_d, p_i) in batch {
         prepared.push(
             prepare::prepare(
                 boundary,
                 pool,
-                gc_after_epochs,
+                staging.gc_after_epochs,
                 viewer,
                 stance_gesture(&author, &resolved, p_d, p_i),
             )
@@ -262,7 +292,7 @@ fn stance_gesture(author: &str, resolved: &StanceTarget, p_d: f64, p_i: f64) -> 
         settlement_ref: None,
         license: None,
         asserted_parents: vec![],
-        deps: vec![],
+        deps: nodes::deps_awaiting(&[], [&resolved.awaits]),
         payload: vec![],
         node: None,
     }

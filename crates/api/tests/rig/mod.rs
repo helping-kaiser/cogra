@@ -185,6 +185,269 @@ pub async fn body_json(response: axum::response::Response) -> serde_json::Value 
     serde_json::from_slice(&bytes).expect("json body")
 }
 
+/// A device's-eye client of the whole HTTP surface: the router over a
+/// throwaway database, the stand-in behind it for epoch control, and the
+/// inbox the mailer writes to. Every request goes through the real
+/// router with a real bearer token, and every signature is made by the
+/// device-side `ActorKey`.
+pub struct WireRig {
+    pub app: axum::Router,
+    pub pool: PgPool,
+    pub standin: StandIn,
+    pub mailer: Arc<TestMailer>,
+}
+
+/// The password every `WireRig::seed_member` account logs in with.
+pub const MEMBER_PASSWORD: &str = "a strong password";
+
+impl WireRig {
+    pub fn new(pool: PgPool, rate_limits: RateLimitConfig) -> Self {
+        let mailer = Arc::new(TestMailer::default());
+        let (app, standin) =
+            connect_info_app_with_standin(pool.clone(), mailer.clone(), rate_limits);
+        Self {
+            app,
+            pool,
+            standin,
+            mailer,
+        }
+    }
+
+    /// One request, returned whole — transport errors included.
+    pub async fn send(&self, request: axum::http::Request<axum::body::Body>) -> serde_json::Value {
+        use tower::ServiceExt;
+        let response = self.app.clone().oneshot(request).await.expect("response");
+        body_json(response).await
+    }
+
+    /// One GraphQL request, returned whole — transport errors included.
+    pub async fn gql_raw(
+        &self,
+        token: Option<&str>,
+        query: &str,
+        variables: serde_json::Value,
+    ) -> serde_json::Value {
+        let mut builder = axum::http::Request::builder()
+            .method("POST")
+            .uri("/graphql")
+            .header("content-type", "application/json");
+        if let Some(token) = token {
+            builder = builder.header("authorization", format!("Bearer {token}"));
+        }
+        let body = serde_json::json!({ "query": query, "variables": variables }).to_string();
+        self.send(builder.body(axum::body::Body::from(body)).expect("request"))
+            .await
+    }
+
+    /// One GraphQL request that must not fault at the transport; returns
+    /// `data`.
+    pub async fn gql(
+        &self,
+        token: Option<&str>,
+        query: &str,
+        variables: serde_json::Value,
+    ) -> serde_json::Value {
+        let json = self.gql_raw(token, query, variables).await;
+        assert!(
+            json.get("errors").is_none(),
+            "unexpected transport errors: {json}"
+        );
+        json["data"].clone()
+    }
+
+    /// A funded member with a device key, able to log in with
+    /// [`MEMBER_PASSWORD`].
+    pub async fn seed_member(
+        &self,
+        handle: &str,
+        email: &str,
+    ) -> (uuid::Uuid, common::l1::client::ActorKey) {
+        let key = common::l1::client::ActorKey::generate();
+        let id = uuid::Uuid::new_v4();
+        let mut conn = self.pool.acquire().await.expect("conn");
+        postgres_store::genesis::insert_actor(
+            &mut conn,
+            id,
+            "user",
+            handle,
+            &key.public_key_bytes(),
+            &key.address(),
+        )
+        .await
+        .expect("actor");
+        drop(conn);
+        postgres_store::genesis::insert_credentials(
+            &self.pool,
+            id,
+            email,
+            &api::auth::hash_password(MEMBER_PASSWORD).expect("hash"),
+        )
+        .await
+        .expect("credentials");
+        self.standin
+            .credit_burn(&key.address(), 10_000_000)
+            .await
+            .expect("burn");
+        (id, key)
+    }
+
+    /// A session for a seeded account.
+    pub async fn log_in(&self, email: &str) -> String {
+        let login = self
+            .gql(
+                None,
+                "mutation($input: LogInInput!) {
+                   logIn(input: $input) { auth { accessToken } userErrors { code } }
+                 }",
+                serde_json::json!({ "input": { "email": email, "password": MEMBER_PASSWORD }}),
+            )
+            .await;
+        login["logIn"]["auth"]["accessToken"]
+            .as_str()
+            .expect("session")
+            .to_string()
+    }
+
+    /// Closes an epoch and ingests it under the given staged-write GC
+    /// bound.
+    pub async fn close_and_ingest_under(&self, gc_after_epochs: i64) {
+        self.standin.close_epoch().await.expect("closes");
+        let outcome = api::ingest::ingest_pending(
+            &api::l1::StandInBoundary(self.standin.clone()),
+            &self.pool,
+            gc_after_epochs,
+        )
+        .await
+        .expect("ingests");
+        assert!(
+            outcome.promotion_failures.is_empty(),
+            "confirm-side promotion failed: {:?}",
+            outcome.promotion_failures
+        );
+    }
+
+    /// Closes an epoch and ingests it under the default GC bound.
+    pub async fn close_and_ingest(&self) {
+        self.close_and_ingest_under(api::ingest::DEFAULT_GC_AFTER_EPOCHS)
+            .await;
+    }
+
+    /// The device's two signing steps over a prepare payload's writes,
+    /// through the session-authorized relay mutations. Both legs must
+    /// succeed.
+    pub async fn sign_prepared(
+        &self,
+        token: &str,
+        key: &common::l1::client::ActorKey,
+        writes: &serde_json::Value,
+    ) {
+        use base64::Engine;
+        use base64::engine::general_purpose::STANDARD as B64;
+        use common::l1::wire;
+        let host_key = self.standin.host_public_key().await.expect("host key");
+        for write in writes.as_array().expect("writes") {
+            let id = write["id"].as_str().expect("id");
+            let proposal = wire::decode_proposal(
+                &B64.decode(write["canonicalProposal"].as_str().expect("proposal"))
+                    .expect("b64"),
+            )
+            .expect("decodes");
+            let pre = key.pre_sign(proposal);
+            let sealed = self
+                .gql(
+                    Some(token),
+                    "mutation($input: SubmitProposalsInput!) {
+                       submitProposals(input: $input) {
+                         stagedWrites { id verifiedAct } userErrors { code message }
+                       }
+                     }",
+                    serde_json::json!({ "input": { "proposals": [{
+                        "stagedWriteId": id,
+                        "signature": B64.encode(wire::encode_pre_commitment_of(&pre)),
+                    }]}}),
+                )
+                .await;
+            assert_eq!(
+                sealed["submitProposals"]["userErrors"],
+                serde_json::json!([]),
+                "the seal leg refused: {sealed}"
+            );
+            let staged = &sealed["submitProposals"]["stagedWrites"][0];
+            let act = wire::decode_verified_act(
+                &B64.decode(staged["verifiedAct"].as_str().expect("sealed"))
+                    .expect("b64"),
+            )
+            .expect("decodes");
+            let witness = key.approve(&pre, &act, &host_key).expect("approves");
+            let approved = self
+                .gql(
+                    Some(token),
+                    "mutation($input: ApproveActsInput!) {
+                       approveActs(input: $input) {
+                         stagedWrites { state } userErrors { code message }
+                       }
+                     }",
+                    serde_json::json!({ "input": { "approvals": [{
+                        "stagedWriteId": id,
+                        "signature": B64.encode(witness.approval_signature),
+                    }]}}),
+                )
+                .await;
+            assert_eq!(
+                approved["approveActs"]["userErrors"],
+                serde_json::json!([]),
+                "the approval leg refused: {approved}"
+            );
+        }
+    }
+
+    /// One `uploadMedia` multipart request, built to the multipart-request
+    /// specification `Upload` implements; returned whole.
+    pub async fn upload_media_raw(&self, token: &str, file: &[u8]) -> serde_json::Value {
+        const BOUNDARY: &str = "cogra-test-boundary";
+        let operations = serde_json::json!({
+            "query": "mutation($input: UploadMediaInput!) {
+                        uploadMedia(input: $input) { media { id } userErrors { code } }
+                      }",
+            "variables": { "input": { "file": null }},
+        })
+        .to_string();
+        let mut body: Vec<u8> = Vec::new();
+        let mut part = |headers: &str, payload: &[u8]| {
+            body.extend_from_slice(format!("--{BOUNDARY}\r\n{headers}\r\n\r\n").as_bytes());
+            body.extend_from_slice(payload);
+            body.extend_from_slice(b"\r\n");
+        };
+        part(
+            "Content-Disposition: form-data; name=\"operations\"",
+            operations.as_bytes(),
+        );
+        part(
+            "Content-Disposition: form-data; name=\"map\"",
+            br#"{"0":["variables.input.file"]}"#,
+        );
+        part(
+            "Content-Disposition: form-data; name=\"0\"; filename=\"photo.webp\"\r\n\
+             Content-Type: image/webp",
+            file,
+        );
+        body.extend_from_slice(format!("--{BOUNDARY}--\r\n").as_bytes());
+        self.send(
+            axum::http::Request::builder()
+                .method("POST")
+                .uri("/graphql")
+                .header(
+                    "content-type",
+                    format!("multipart/form-data; boundary={BOUNDARY}"),
+                )
+                .header("authorization", format!("Bearer {token}"))
+                .body(axum::body::Body::from(body))
+                .expect("request"),
+        )
+        .await
+    }
+}
+
 /// Captures outbound mail so a test can read tokens like a user reads
 /// their inbox.
 #[derive(Default)]

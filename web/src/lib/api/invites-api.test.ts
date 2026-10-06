@@ -23,8 +23,6 @@ function client() {
 const linkNode = {
   __typename: "InviteLink",
   id: "l1",
-  prefillPDirected: 0.1,
-  prefillPInterest: 0.1,
   singleUse: false,
   createdAt: "2026-08-07T00:00:00Z",
   expiresAt: "2026-08-14T00:00:00Z",
@@ -64,8 +62,6 @@ describe("fetchInviteLinks", () => {
 describe("createInviteLink", () => {
   const input = {
     expiresAt: "2026-08-14T00:00:00Z",
-    prefillPDirected: 0.1,
-    prefillPInterest: 0.1,
     singleUse: true,
   };
 

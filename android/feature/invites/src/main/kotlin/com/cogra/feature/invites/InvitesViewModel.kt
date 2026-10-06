@@ -2,7 +2,6 @@ package com.cogra.feature.invites
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.Outcome
@@ -25,9 +24,8 @@ data class InvitesUiState(
     val loading: Boolean = true,
     val links: List<InviteLinkInfo> = emptyList(),
     val creating: Boolean = false,
-    val singleUse: Boolean = false,
-    val prefillPDirected: Double = DEFAULT_STANCE,
-    val prefillPInterest: Double = DEFAULT_STANCE,
+    /** Single-use is the server default too; multi-use is an explicit opening. */
+    val singleUse: Boolean = true,
     /** The application currently being approved, if any. */
     val approvingId: String? = null,
     /** The link currently being revoked, if any. */
@@ -83,10 +81,6 @@ class InvitesViewModel @Inject constructor(
 
     fun onSingleUseChange(v: Boolean) = _state.update { it.copy(singleUse = v) }
 
-    fun onPrefillPDirectedChange(v: Double) = _state.update { it.copy(prefillPDirected = v) }
-
-    fun onPrefillPInterestChange(v: Double) = _state.update { it.copy(prefillPInterest = v) }
-
     fun refresh() {
         viewModelScope.launch {
             val seedOnDevice = identity.actorSeed() != null
@@ -115,8 +109,6 @@ class InvitesViewModel @Inject constructor(
         viewModelScope.launch {
             val outcome = account.createInviteLink(
                 expiresAt = Instant.now().plus(LINK_LIFETIME_DAYS, ChronoUnit.DAYS),
-                prefillPDirected = _state.value.prefillPDirected,
-                prefillPInterest = _state.value.prefillPInterest,
                 singleUse = _state.value.singleUse,
             )
             when (outcome) {

@@ -3,7 +3,7 @@
     <string name="invites_title">Invites</string>
     <string name="back">Back</string>
     <string name="invites_create_title">Invite someone you know</string>
-    <string name="invites_create_body">The stance values are a pre-filled suggestion — you commit them at approval, and approving is your priced vouch.</string>
+    <string name="invites_create_body">The link carries no stance — you choose it when you approve, and approving is your priced vouch.</string>
     <string name="invites_single_use">Single-use</string>
     <string name="invites_multi_use">Multi-use</string>
     <string name="invites_create">Create link</string>

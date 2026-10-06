@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 
 import { hasCode } from "./outcome";
 import {
-  applyWithInvite,
   attachActorKey,
   checkInviteLink,
   fetchApplicationStatus,
@@ -32,7 +31,6 @@ const application = {
   approvedAt: null,
   landedAt: null,
   createdAt: "2026-08-07T00:00:00Z",
-  expiresAt: "2026-08-08T00:00:00Z",
 };
 
 function stagedNode(id: string, family: string, state: string) {
@@ -238,44 +236,6 @@ describe("attachActorKey", () => {
       ),
     );
     expect(hasCode(await attachActorKey(client(), "cHVi", "aabb"), "FORBIDDEN")).toBe(true);
-  });
-});
-
-describe("applyWithInvite", () => {
-  it("re-arms against a fresh link", async () => {
-    server.use(
-      graphql.mutation("ApplyWithInvite", () =>
-        HttpResponse.json({
-          data: {
-            applyWithInvite: {
-              __typename: "ApplyWithInvitePayload",
-              application: { __typename: "Application", id: "app-2" },
-              userErrors: [],
-            },
-          },
-        }),
-      ),
-    );
-    expect(await applyWithInvite(client(), "link-2")).toEqual({ kind: "success", value: true });
-  });
-
-  it("refuses a dead link", async () => {
-    server.use(
-      graphql.mutation("ApplyWithInvite", () =>
-        HttpResponse.json({
-          data: {
-            applyWithInvite: {
-              __typename: "ApplyWithInvitePayload",
-              application: null,
-              userErrors: [
-                { __typename: "UserError", message: "dead", code: "INVITE_UNUSABLE", field: null },
-              ],
-            },
-          },
-        }),
-      ),
-    );
-    expect(hasCode(await applyWithInvite(client(), "link-2"), "INVITE_UNUSABLE")).toBe(true);
   });
 });
 

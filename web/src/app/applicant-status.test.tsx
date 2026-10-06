@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -10,8 +10,6 @@ import { fakeFlow } from "@/test/registration";
 import { ApplicantStatus } from "./applicant-status";
 
 const server = startMswServer();
-
-const ID = "0198c9a2-1f6b-7c31-9d70-3a4f5b6c7d8e";
 
 function approval(overrides: Partial<{
   emailVerified: boolean;
@@ -115,74 +113,5 @@ describe("ApplicantStatus", () => {
     expect(screen.getByTestId("home_waiting")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("home_waiting_dismiss"));
     expect(screen.queryByTestId("home_waiting")).not.toBeInTheDocument();
-  });
-
-  it("re-arms with a pasted invite and pokes the loop", async () => {
-    server.use(
-      graphql.mutation("ApplyWithInvite", () =>
-        HttpResponse.json({
-          data: {
-            applyWithInvite: {
-              __typename: "ApplyWithInvitePayload",
-              application: { __typename: "Application", id: "app-2" },
-              userErrors: [],
-            },
-          },
-        }),
-      ),
-    );
-    const { flow } = fakeFlow();
-    renderStatus({ kind: "needsInvite" }, flow);
-    fireEvent.change(screen.getByTestId("rearm_input"), {
-      target: { value: `https://cogra.example/join/${ID}` },
-    });
-    fireEvent.click(screen.getByTestId("rearm_submit"));
-    await waitFor(() => expect(flow.ensureAdvancing).toHaveBeenCalled());
-    expect(screen.getByTestId("rearm_input")).toHaveValue("");
-  });
-
-  it("flags a re-arm paste with no invite in it without a network call", () => {
-    renderStatus({ kind: "needsInvite" });
-    fireEvent.change(screen.getByTestId("rearm_input"), { target: { value: "junk" } });
-    fireEvent.click(screen.getByTestId("rearm_submit"));
-    expect(screen.getByTestId("rearm_error")).toBeInTheDocument();
-  });
-
-  it("surfaces a re-arm refusal for a dead link", async () => {
-    server.use(
-      graphql.mutation("ApplyWithInvite", () =>
-        HttpResponse.json({
-          data: {
-            applyWithInvite: {
-              __typename: "ApplyWithInvitePayload",
-              application: null,
-              userErrors: [
-                { __typename: "UserError", message: "dead", code: "INVITE_UNUSABLE", field: null },
-              ],
-            },
-          },
-        }),
-      ),
-    );
-    renderStatus({ kind: "needsInvite" });
-    fireEvent.change(screen.getByTestId("rearm_input"), { target: { value: ID } });
-    fireEvent.click(screen.getByTestId("rearm_submit"));
-    expect(await screen.findByTestId("rearm_error")).toHaveTextContent(/can't be used/);
-  });
-
-  it("renders a rate-limited re-arm as a backoff", async () => {
-    server.use(
-      graphql.mutation("ApplyWithInvite", () =>
-        HttpResponse.json({
-          errors: [{ message: "too many attempts", extensions: { code: "RATE_LIMITED" } }],
-        }),
-      ),
-    );
-    renderStatus({ kind: "needsInvite" });
-    fireEvent.change(screen.getByTestId("rearm_input"), { target: { value: ID } });
-    fireEvent.click(screen.getByTestId("rearm_submit"));
-    expect(await screen.findByTestId("rearm_error")).toHaveTextContent(
-      "Too many attempts — wait a moment and try again.",
-    );
   });
 });

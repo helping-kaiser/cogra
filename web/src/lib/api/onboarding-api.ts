@@ -7,7 +7,6 @@ import type { ApolloClient } from "@apollo/client";
 
 import {
   ApplicationStatusDocument,
-  ApplyWithInviteDocument,
   AttachActorKeyDocument,
   InviteLinkCheckDocument,
   RegisterDocument,
@@ -114,18 +113,6 @@ export function attachActorKey(
       }),
     (data) => data.attachActorKey.userErrors,
     (data) => (data.attachActorKey.user === null ? null : true),
-  );
-}
-
-export function applyWithInvite(
-  client: ApolloClient,
-  inviteLink: string,
-): Promise<Outcome<true>> {
-  return payloadOutcome(
-    () =>
-      client.mutate({ mutation: ApplyWithInviteDocument, variables: { input: { inviteLink } } }),
-    (data) => data.applyWithInvite.userErrors,
-    (data) => (data.applyWithInvite.application === null ? null : true),
   );
 }
 

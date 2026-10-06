@@ -179,8 +179,9 @@ generic delete on ordinary writes
 Reads need no authentication. When a request *does* carry an auth
 token, the resolved viewer lives in the GraphQL execution context
 — never passed as a field argument. Its only two jobs are the
-field-level authorization above and `me` resolution; it never
-scopes an ordinary read. The same query is valid authenticated or
+field-level authorization above and `me` resolution, plus the one
+viewer-relative value `AskLinkCheck.reason`; it never scopes an
+ordinary read. The same query is valid authenticated or
 anonymous — authentication only changes what the gated fields
 yield. The auth model (staged-applicant admission, JWT access +
 rotating refresh tokens, sessions) is specified in
@@ -214,15 +215,20 @@ record-backed connection encodes the landing-order key
 `(epoch, act time, position)`; pages walk forward with
 `first`/`after` or backward with `last`/`before` (one direction
 per request), and results always come back in the connection's
-declared order. The chronicle, the post listing, and thread
-reads all serve newest-first — a node's landing position is its
-genesis, so editing a comment never moves it up its thread.
+declared order. The chronicle, the post listing, and a thread's
+top level all serve newest-first; a reply branch serves
+oldest-first by default (`Comment.replies(order: ReplyOrder)`) —
+the same order read the other way, so its cursors are the same
+cursors. A node's landing position is its genesis, so editing a
+comment never moves it within its thread.
 
 **Pending entries come first, in their own cursor namespace.** A
 pending write has no causal key yet, so it sorts under a sentinel
 epoch above every real one and orders among pending entries by
 `(authoring instant, node id)` — the instant alone is not unique,
-because nothing serializes two authors' signatures apart. A
+because nothing serializes two authors' signatures apart. Under
+`OLDEST_FIRST` they close the page set instead, since they are the
+newest; the cursor namespaces are unchanged. A
 pending entry's cursor changes when it lands, because its position
 in the order changes; a content cursor therefore carries the
 entry's own id alongside the key, so a walk resuming from it can
@@ -377,6 +383,10 @@ normal, visible account state, not an auth fault — prepare
 returns it as a `userError` with the restoration flow left to the
 product surface
 ([architecture.md "Write eligibility"](architecture.md#write-eligibility-and-account-states)).
+The per-account signing budget is the third such refusal and rides
+the same `WRITE_RULE_FAILED`: there is only so much to sign at a
+time, and the person acts on it by waiting (see "The signing
+budget" under the mutation conventions).
 
 A single `ErrorCode` enum is the one vocabulary across both tiers — the
 `extensions.code` on a transport fault and the `code` on a `UserError`
@@ -473,13 +483,13 @@ enum ErrorCode {
   EMAIL_NOT_VERIFIED           # acting before the address is proven
   NOT_FOUND                    # an id resolved to nothing
   BAD_INPUT                    # malformed args, or a constraint not modeled as data
-  RATE_LIMITED                 # an auth endpoint's per-IP / per-account backoff
+  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget — never a signing act
   INTERNAL                     # collapsed server fault; detail is logged, not surfaced
 
   # Expected business failures — carried in UserError.code
   INVALID_CREDENTIALS          # email / password pair did not match
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
-  ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed or already staged
+  ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed, already staged elsewhere, or already waiting in your own queue
   HANDLE_TAKEN                 # the requested handle is already in use
   WEAK_PASSWORD                # under the length floor or in the breach corpus
   EMAIL_IN_USE                 # the email already belongs to an account
@@ -487,7 +497,7 @@ enum ErrorCode {
   VERIFICATION_TOKEN_INVALID   # email verification token invalid or expired
   RESET_TOKEN_INVALID          # password-reset token invalid, expired, or used
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
-  WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency or W2 stamps
+  WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency, W2 stamps, or the signing budget
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
   SIGNATURE_INVALID            # a submitted signature does not verify the record
   CHALLENGE_EXPIRED            # the key-backup upload challenge is unknown, expired, or spent
@@ -702,8 +712,9 @@ type PostEdge {
   node: Post!
 }
 
-"A page of comments, newest-first: pending entries, then landed
- entries in landing order."
+"A page of comments in the read's order — newest-first (pending
+ entries, then landed entries in landing order) or, for a reply
+ branch by default, that sequence reversed."
 type CommentConnection {
   edges: [CommentEdge!]!
   pageInfo: PageInfo!
@@ -1133,8 +1144,9 @@ type Comment implements Node {
   moderationStatus: ModerationStatus!
   "The qualifiers the minting Review record carried."
   license: License!
-  "This comment's direct replies, newest-first."
-  replies(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
+  "This comment's direct replies, oldest-first by default: landed
+   replies in landing order, then pending ones closing the branch."
+  replies(order: ReplyOrder! = OLDEST_FIRST, first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
   "This comment's current topics — the same fold and the same
    author-owned channel as `Post.topics`; a Comment is Taggable
    like any other content node."
@@ -1144,6 +1156,10 @@ type Comment implements Node {
    artifact like any other passive node."
   references(includePending: Boolean! = true): [ReferenceClaim!]!
 }
+
+"Reply order within one branch (design: replies read oldest first,
+ the thread's top level newest first)."
+enum ReplyOrder { OLDEST_FIRST NEWEST_FIRST }
 
 "What a Review can respond to — root content, another Comment, a
  conversation, a good, or a person's profile (edges.md §3)."
@@ -1537,16 +1553,15 @@ type Application {
   approvedAt: DateTime
   "When the approver closed the application without approving it —
    on its own (rejectApplication) or with its link's whole waiting
-   queue (rejectLinkApplications); null otherwise. A rejected
-   application ends like an expired one — the entry closes, the
-   account persists, and either re-arm path opens a new one
+   queue (rejectLinkApplications); null otherwise. A rejection
+   closes this queue entry only: the account persists, and a member
+   taking up the account's ask link stages a new application
    (auth.md \"Rejection\")."
   rejectedAt: DateTime
   "When the Registration confirmed and the account became a
    member; null before."
   landedAt: DateTime
   createdAt: DateTime!
-  expiresAt: DateTime!
 }
 type ApplicationConnection {
   edges: [ApplicationEdge!]!
@@ -2181,17 +2196,22 @@ type Query {
   ): NodeConnection!
 
   "Global search across nodes; returns mixed node types. Recall is
-   lexical over the indexed name-class fields and post titles; order
-   is exact-match tier first, then newest first — viewer-independent,
-   the backend never graph-ranks (feed-ranking.md §11). A ranker may
-   re-order fetched results by the viewer's feed metric. Valid kinds:
-   USER, COLLECTIVE, POST, CHAT, ITEM, HASHTAG; any other kind is a
-   validation error — comments carry no indexed field, and chat
-   messages are searchable only through chatSearch. Full semantics in
-   the Search section."
+   lexical over the indexed name-class fields and post titles — an
+   untitled post is never matched by its words; order is exact-match
+   tier first, then newest first — viewer-independent, the backend
+   never graph-ranks (feed-ranking.md §11). A ranker may re-order
+   fetched results by the viewer's feed metric. Served kinds grow
+   with the slices: USER, POST, HASHTAG unscoped; COMMENT is always a
+   valid kind but is served only under a scope operator (`@handle`,
+   `#tag`) — unscoped, it contributes no rows, never an error.
+   COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with their
+   slices and read empty until then. `includeSeen: false` drops nodes
+   on the viewer's seen-list (`User.viewHistory`); it needs a session
+   and is ignored without one. Full semantics in the Search section."
   search(
     query: String!
     kinds: [NodeKind!]
+    includeSeen: Boolean = true
     first: Int, after: String, last: Int, before: String
   ): SearchConnection!
 
@@ -2286,7 +2306,11 @@ the name-class fields and post titles: actor `handle` +
 `displayName`, Hashtag `name` (served by the naming-service
 registry — [hashtag.md §1](../instances/hashtag.md#1-identity-and-the-naming-service)),
 Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
-bios, and attachments are not indexed. A comment, a chat message
+bios, and attachments are not indexed. An untitled post has no
+indexed field: it is never matched by its words, and the name it
+wears in place of a title (its first line, or its kind and author
+for a media post) is display only, never indexed — so a comment
+answering it cannot be found through it either. A comment, a chat message
 and an offer carry no indexed field of their own and never appear
 in an unscoped result — casual conversation doesn't surface to
 strangers by keyword; per-chat body search is `chatSearch`'s, and
@@ -2304,7 +2328,14 @@ its item's name — joined through authorship. No body index exists;
 the join runs against the same global index above. A scoped
 message result reaches any plaintext chat regardless of the
 viewer's membership — chats are public reads (the design record:
-readme §13, "The indirect kinds are scope-served").
+readme §13, "The indirect kinds are scope-served"). An indirect
+result carries no extra field: it is a Comment (in the MVP's kind
+set), and the target it was found through is its own
+`Comment.target`; the scope is the caller's own query.
+
+`includeSeen` defaults to `true`, which keeps the anonymous read
+stable; the client passes the reader's "Show what you've already
+seen" filter, which is off by default.
 
 **Match semantics.** Name-class fields match case-insensitively
 by prefix and substring; Post titles and chat-message bodies
@@ -2391,13 +2422,20 @@ These bind every mutation below.
   a post with tags and references, a proposal anchor with its
   subject Reference, a Collective founding — returns several
   `PreparedWrite`s in relay order. **Each is its own priced act**
-  (one θ-debit each) running its own two-signature handshake; the
-  transport batches freely — one `submitProposals` or
-  `approveActs` call carries the whole batch's signatures — but
-  there is no cross-record atomicity: whether each lands is L1's
-  fact alone, and the flow state advances per record at confirm.
-  The batch size is visible to the client, so the total cost is
-  legible before signing.
+  (one θ-debit each) running its own two-signature handshake, and
+  the transport batches freely — one `submitProposals` or
+  `approveActs` call carries the whole batch's signatures. The
+  product promises the batch lands together or not at all — the
+  seals' `They land together, or none does.`, a design guarantee
+  (2026-09-30). Today the substrate decides each
+  act's landing alone and does not yet back that promise; how CoGra
+  keeps it if Layer 1 never lands a batch whole — records marked as
+  a bundle of N, never shown until all N land, the mirror still
+  mirroring every record — is
+  [open-questions.md Q57](../open-questions.md#q57--batch-atomicity-if-layer-1-cannot-back-it).
+  The flow state advances per record at confirm. The batch size is
+  visible to the client, so the total cost is legible before
+  signing.
 - **A batch is priced whole before any of it is staged.** Staging
   reserves nothing and every act commits its own transaction, so
   without a cumulative check a batch could stage part of itself
@@ -2412,6 +2450,22 @@ These bind every mutation below.
   common failure — an author who plainly cannot afford the batch —
   is refused whole and up front rather than discovered halfway
   through.
+- **The signing budget.** Beside solvency, prepare spends the
+  batch from the acting account's signing budget — under `actAs`,
+  the Collective's actor's — before staging a single act, and a
+  batch the budget cannot carry is refused entire and spends
+  nothing. The unit is the staged act, counted per signing class
+  (posts, comments, edits, stances with their severance
+  counter-records, claims — Tags and References with their
+  withdrawals and a creation batch's topics and citations — and
+  approvals), plus a daily backstop over every act. A refusal is a
+  `WRITE_RULE_FAILED` userError with no field, never the auth
+  endpoints' `RATE_LIMITED`. Only prepare spends: `submitProposals`
+  and `approveActs` are never budgeted, so an act the author
+  already signed is never dropped by a transient limit. The
+  thresholds are operational, sized so no one acting in earnest
+  meets them
+  ([development.md](development.md#environment-variables)).
 - **The viewer is the actor; `actAs` names a Collective acting
   through them.** No mutation takes an author argument — the
   authenticated viewer in the execution context initiates every
@@ -2432,7 +2486,7 @@ These bind every mutation below.
 - **Stance prepares write the picked values; severance alone is
   net-state.** A stance record carries exactly the two values the
   author picked — one new edge against the bundle, never a
-  derived delta ([design.md §8.1](design.md)). The bundle is a
+  derived delta ([stance-control.md "What is being authored"](../../design/guidelines/stance-control.md#what-is-being-authored)). The bundle is a
   read-side per-author fold — `viewerStance` on every stance-able
   node: current standing and where a pick lands it are shown,
   never folded into what is written. The one exception is the
@@ -2510,9 +2564,10 @@ These bind every mutation below.
 The system view is
 [architecture.md "The write path"](architecture.md#the-write-path);
 these are its API types. A prepare validates, pre-checks the write
-rule (a failure is a `WRITE_RULE_FAILED` userError — a normal
-account state with a product-surfaced restoration flow, never an
-auth fault), stages the write, and returns the canonical material.
+rule — solvency, and the per-account signing budget (a failure is
+a `WRITE_RULE_FAILED` userError — a normal account state with a
+product-surfaced restoration flow, never an auth fault) — stages
+the write, and returns the canonical material.
 The device recomputes the pre-digests from the proposal and
 pre-signs; after `submitProposals` returns the host-sealed
 verified act, it verifies the seal, the exact body, and both
@@ -2737,7 +2792,7 @@ selection rule, or a different bundle.
 
 What a pick *writes* is never derived from the bundle; where the
 pick *lands* is, and the control has to show it
-([design.md §8.2](design.md)). Every stance-able node carries the
+([stance-control.md "Two numbers, never one"](../../design/guidelines/stance-control.md#two-numbers-never-one)). Every stance-able node carries the
 viewer's own bundle as a field, folded by the published rule —
 same-author sum-then-clip, keyed (author, target, family), with
 payload-marked records excluded
@@ -2793,7 +2848,7 @@ Severance is priced off it: `severanceCost` is
 `⌈max(|Σ_d|, |Σ_i|)⌉`, which the folded pair alone cannot yield.
 Clients recompute the landing the same way, folding `raw + pick`
 locally under the drag so the pad answers with no round trip
-([design.md §8.3](design.md)); `projected` gives a caller the same
+([stance-control.md "Two numbers, never one"](../../design/guidelines/stance-control.md#two-numbers-never-one)); `projected` gives a caller the same
 fold server-side in the read that already fetched the bundle.
 
 The field is `viewerStance(pick: StancePickInput, includePending:
@@ -2968,10 +3023,13 @@ input TagInput {
  and never through the author's netted bundle — so a note would
  silently remove the citation from the very fold that renders it.
 
- The target may still be in flight when it is the viewer's own: a
- citation toward a pending node declares that node's act as a
- dependency, so the epoch close cannot order the citation ahead of
- what it cites."
+ The target may still be in flight — the viewer's own or anyone's:
+ reads serve pending content to every viewer, and a citation toward
+ a pending node declares that node's minting act as a dependency, so
+ the epoch close cannot order the citation ahead of what it cites. A
+ target that never lands takes the citation with it: the citation's
+ staged write expires (`STAGED_WRITE_EXPIRED`), which the seal reads
+ as did-not-land."
 input ReferenceInput {
   "The cited node — a post, a comment, or a person's profile.
    External links are body text, never citations: both endpoints of
@@ -3148,6 +3206,12 @@ input PrepareReferenceInput {
  withdrawalCost` serves it on the read side, so a client asks for
  confirmation first and prepares only once the author has agreed —
  the same order every other multi-act gesture follows.
+
+ A count read earlier can differ from the batch prepared here — the
+ bundle may have moved in between (another device's act staging or
+ landing). The prepared `writes` are the truth; a client whose shown
+ count differs re-states it before signing. A bundle that netted to
+ `(0, 0)` meanwhile refuses at `target`.
 
  A citation whose target this instance cannot type is not
  addressable here: the mutation names its target by L2 id, and a
@@ -4166,6 +4230,20 @@ asking (`askLinkCheck`) and stages them into their own queue
 (`stageApplicant`), from where approval is the ordinary path
 ([auth.md "The ask link"](auth.md#the-ask-link-applicant-side)).
 
+Answering an ask (VouchAsk's Set, or its press-and-hold at the
+modest positive +0.10 / +0.10) is `stageApplicant`, then — when the
+returned application is approvable (`emailVerified` and
+`keyAttached`) — `approveApplicants` with the chosen values, and
+the device signs the returned Opinion records. When it is not yet
+approvable, only `stageApplicant` runs: nothing is approved,
+signed or spent, and the client keeps the chosen values on the
+device as a kept approval. The kept approval signs later through
+the ordinary `approveApplicants`, once the application reads
+approvable. Closing the row is the ordinary `rejectApplication`
+and drops the kept values. A key held elsewhere composes the same
+way: `stageApplicant`, values kept on the device until the key is
+back.
+
 ```graphql
 "Register through an invite link. Creates the account — the
  actor row (no key yet) and its credentials, in the applicant
@@ -4184,7 +4262,7 @@ input RegisterInput {
  the form, before any later step."
 type RegisterPayload {
   auth: AuthSession
-  "When the account expires unless its email is verified (24 h,
+  "When the account expires unless its email is verified (7 days,
    auth.md \"Expiry\")."
   expiresAt: DateTime
 }
@@ -4213,30 +4291,19 @@ input AttachActorKeyInput {
 }
 type AttachActorKeyPayload { user: User }
 
-"Re-arm a closed, never-approved application — expired or
- rejected — with a fresh invite link: a new application row for
- the viewer's account (auth.md \"Expiry\", \"Rejection\"). One of
- the two re-arm paths; the other is a member taking up the
- account's ask link (stageApplicant). BAD_INPUT while a live
- application exists; INVITE_UNUSABLE for a dead link."
-input ApplyWithInviteInput { inviteLink: UUID! }
-type ApplyWithInvitePayload { application: Application }
-
 "Take up an ask link: stage its applicant as an application in the
  caller's own approval queue — the ask direction's answer to
- register and applyWithInvite, and a deliberate call rather than a
- side effect of opening the link (auth.md \"The ask link\"). The
- account already exists, so this writes only the queue entry;
- approving it is the ordinary approveApplicants act, with the
- stance values chosen there. Keep expiresAt at or above the
- 24-hour verification window, as for an invite link (auth.md
- \"Expiry floor\"). ASK_LINK_UNUSABLE when the id is unknown, the
- applicant has already landed, or a live application is already
- waiting on someone else."
+ register, and a deliberate call rather than a side effect of
+ opening the link (auth.md \"The ask link\"). The account already
+ exists, so this writes only the queue entry; approving it is the
+ ordinary approveApplicants act, with the stance values chosen
+ there, and the entry waits with no timer (auth.md \"Expiry\").
+ ASK_LINK_UNUSABLE when the id is unknown, the applicant has
+ already landed, or a live application is already waiting, in
+ another member's queue or the viewer's own; the client names the
+ case by re-reading askLinkCheck, whose reason carries it."
 input StageApplicantInput {
   askLink: UUID!
-  "How long the staged application stays approvable."
-  expiresAt: DateTime!
   "Act as this Collective; null = the viewer stages."
   actAs: UUID
 }
@@ -4251,8 +4318,8 @@ type StageApplicantPayload { application: Application }
  Returns the inviter's own Opinion records to sign — the vouch is
  the inviter's signature, not a server write. Approval requires an
  approvable application — email verified and key attached; an
- already-approved, rejected, expired, or foreign-queue application
- refuses with BAD_INPUT pinned to its entry."
+ already-approved, rejected, or foreign-queue application refuses
+ with BAD_INPUT pinned to its entry."
 input ApproveApplicantsInput {
   approvals: [ApplicationApprovalInput!]!
 }
@@ -4268,18 +4335,17 @@ input ApplicationApprovalInput {
  own gesture, never a side effect of revoking the link the
  applicant arrived through (auth.md \"Rejection\"). It closes this
  queue entry, not the person: the row is marked rejected, the
- account keeps its login, its reads and its attached key, and
- either re-arm path opens it again — a fresh invite link through
- applyWithInvite, or a member taking up the account's ask link.
- Nothing is deleted, and deletion is never the way out of a
+ account keeps its login, its reads and its attached key, and a
+ member taking up the account's ask link opens it again. Nothing
+ is deleted, and deletion is never the way out of a
  rejection. Writes the applicant an APPLICATION_REJECTED
  notification, since a refusal they could only infer from a status
  field going quiet would leave them waiting on a queue they have
  left. One person at a time — a decision about someone, which
  reaches them, so the client owns the explicit confirmation;
  closing a whole invite link's waiting queue in one gesture is
- rejectLinkApplications. An already-approved, already-rejected,
- expired, or foreign-queue application refuses with BAD_INPUT."
+ rejectLinkApplications. An already-approved, already-rejected, or
+ foreign-queue application refuses with BAD_INPUT."
 input RejectApplicationInput { application: UUID! }
 "The application in its closed state."
 type RejectApplicationPayload { application: Application }
@@ -4293,11 +4359,11 @@ type RejectApplicationPayload { application: Application }
  reads and its attached key, nothing deleted — and each applicant
  gets their own APPLICATION_REJECTED notification, since the act
  reaches each of them separately. Someone swept up by mistake
- comes back the ordinary way: either re-arm path opens a new
- application (applyWithInvite, stageApplicant), and the second
- look is the ask link's whole purpose. Scoped to what is waiting —
- applications already approved, rejected, or expired are passed
- over rather than refusing the call, because a queue that moves
+ comes back the ordinary way: a member taking up their ask link
+ stages a new application (stageApplicant), and the second look
+ is the ask link's whole purpose. Scoped to what is waiting —
+ applications already approved or rejected are passed over
+ rather than refusing the call, because a queue that moves
  under a flood must not defeat the sweep. A revoked link still
  sweeps: revocation stops new staging and leaves the queue
  standing. The client owns the explicit confirmation, which names
@@ -4336,7 +4402,9 @@ type AuthSession {
 }
 
 "A session from credentials; auth is null with an INVALID_CREDENTIALS
- userError when the email / password pair did not match."
+ userError when the email / password pair did not match. A login
+ backoff refuses at the transport with RATE_LIMITED and serves no
+ retry-after figure."
 type LogInPayload {
   auth: AuthSession
   "The pending refresh-token-reuse security event (auth.md 'Reuse
@@ -4446,10 +4514,11 @@ input UploadKeyBackupInput {
 type UploadKeyBackupPayload { ok: Boolean }
 
 "Issue a time-gated invite link. It carries no stance values —
- the inviter picks those at approval, the priced act. Keep
- expiresAt at or above the 24-hour verification window, which a
- shorter link can strand a registrant inside (auth.md \"Expiry
- floor\")."
+ the inviter picks those at approval, the priced act. expiresAt
+ must lie in the future and has no floor: it bounds registration
+ through the link and nothing else, so an account registered
+ through it keeps its full 7-day verification window and its
+ application waits with no timer (auth.md \"Expiry\")."
 input CreateInviteLinkInput {
   expiresAt: DateTime!
   "One applicant slot when true; many applicants otherwise.
@@ -4493,12 +4562,26 @@ type InviteLinkCheck {
 type AskLinkCheck {
   "Whether the link can stage its applicant now — the account is
    still an applicant and has no live application already waiting
-   on someone else (auth.md \"The ask link\"). An ask link itself
+   in any queue (auth.md \"The ask link\"). An ask link itself
    never expires."
   usable: Boolean!
-  "The asking account's handle."
+  "The asking account's handle. The profile door for LANDED
+   resolves by it."
   applicantHandle: String!
+  "Why the link cannot stage right now; null when usable. The
+   asker reading their own link needs no value — the client
+   compares against its own User.askLink."
+  reason: AskLinkUnusableReason
 }
+
+"Why an ask link stages nobody right now (auth.md \"The ask
+ link\"). LANDED: the account is a member — the profile door
+ replaces the ask. WAITING_ELSEWHERE: its one live application
+ waits on another member. WAITING_ON_VIEWER: its one live
+ application already sits in the authenticated viewer's own queue
+ — the client opens that row. WAITING_ON_VIEWER is
+ viewer-relative; an anonymous call never reads it."
+enum AskLinkUnusableReason { LANDED WAITING_ELSEWHERE WAITING_ON_VIEWER }
 
 "Remove the payload of a record the viewer authored — the
  per-content self-service erasure path (erasure.md §1). Immediate
@@ -4546,7 +4629,6 @@ extend type Mutation {
   verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
   resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
   attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
-  applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
   stageApplicant(input: StageApplicantInput!): StageApplicantPayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
   rejectApplication(input: RejectApplicationInput!): RejectApplicationPayload!

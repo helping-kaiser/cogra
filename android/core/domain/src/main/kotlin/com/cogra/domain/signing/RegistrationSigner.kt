@@ -14,7 +14,6 @@ import com.cogra.domain.UserError
 import com.cogra.domain.identity.KeyCeremony
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.store.IdentityStore
-import java.time.Instant
 import javax.inject.Inject
 
 /** Where the applicant flow stands after one `advance()` pass. */
@@ -36,9 +35,6 @@ sealed interface RegistrationProgress {
 
     /** The staged Registration awaits a signature this device cannot make. */
     data object AwaitingSigningKey : RegistrationProgress
-
-    /** No live application — expired unapproved, or reaped. A fresh invite re-arms. */
-    data object NeedsInvite : RegistrationProgress
 
     /** Landed: the account is a member; onboarding is over. */
     data object Member : RegistrationProgress
@@ -87,9 +83,11 @@ class RegistrationSigner @Inject constructor(
                 is WriteResult.Failed -> RegistrationProgress.Failed(result.cause)
             }
         }
-        val application = status.application ?: return RegistrationProgress.NeedsInvite
+        // Registration writes the application with the account, and an
+        // application carries no timer (auth.md "Expiry"), so an applicant
+        // without one is a server fault rather than a step the person takes.
+        val application = status.application ?: return RegistrationProgress.Refused(emptyList())
         if (application.approvedAt != null) return RegistrationProgress.AwaitingLanding
-        if (application.expiresAt.isBefore(Instant.now())) return RegistrationProgress.NeedsInvite
         return RegistrationProgress.AwaitingApproval(
             emailVerified = application.emailVerified,
             keyAttached = application.keyAttached || repairAttach(),

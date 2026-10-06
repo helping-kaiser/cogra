@@ -56,17 +56,6 @@ mutation AttachActorKey($input: AttachActorKeyInput!) {
   }
 }
 
-mutation ApplyWithInvite($input: ApplyWithInviteInput!) {
-  applyWithInvite(input: $input) {
-    application {
-      id
-    }
-    userErrors {
-      ...UserErrorFields
-    }
-  }
-}
-
 query ApplicationStatus {
   me {
     id
@@ -80,7 +69,6 @@ query ApplicationStatus {
       approvedAt
       landedAt
       createdAt
-      expiresAt
     }
     stagedWrites(first: 10) {
       edges {

@@ -59,17 +59,9 @@ async fn seed_member(pool: &PgPool, handle: &str) -> Uuid {
 /// the application does: no email proof, no key, `applicant` state.
 async fn seed_applicant(pool: &PgPool, inviter: Uuid, handle: &str) -> Uuid {
     let link = Uuid::new_v4();
-    store::create_invite_link(
-        pool,
-        link,
-        inviter,
-        0.4,
-        0.4,
-        false,
-        Utc::now() + Duration::days(7),
-    )
-    .await
-    .expect("link");
+    store::create_invite_link(pool, link, inviter, false, Utc::now() + Duration::days(7))
+        .await
+        .expect("link");
     let account = Uuid::new_v4();
     let outcome = store::register_account(
         pool,
@@ -81,7 +73,6 @@ async fn seed_applicant(pool: &PgPool, inviter: Uuid, handle: &str) -> Uuid {
         "argon2-placeholder",
         b"token-hash",
         Utc::now() - Duration::days(1),
-        Utc::now() + Duration::days(7),
     )
     .await
     .expect("register");
@@ -156,8 +147,7 @@ fn acting_mutations(target: Uuid) -> Vec<(&'static str, String)> {
             "createInviteLink",
             format!(
                 r#"mutation {{ createInviteLink(input: {{
-                     expiresAt: "{expires}", prefillPDirected: 0.4,
-                     prefillPInterest: 0.4
+                     expiresAt: "{expires}"
                    }}) {{ userErrors {{ code }} }} }}"#
             ),
         ),

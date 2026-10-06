@@ -27,6 +27,7 @@ fn cursor_of(p: &content_store::Post) -> content_store::ContentCursor {
 }
 
 const GC: i64 = 8;
+const STAGING: api::prepare::Staging = api::prepare::Staging::unbudgeted(GC);
 
 fn license() -> License {
     License {
@@ -113,7 +114,7 @@ impl Rig {
         let prepared = content::prepare_post(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             PostDraft {
                 title: Some(title.into()),
@@ -149,7 +150,7 @@ async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool)
     let prepared = content::prepare_post(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostDraft {
             title: Some("A hard thing".into()),
@@ -189,7 +190,7 @@ async fn a_self_mark_rides_the_signed_payload_into_the_display_row(pool: PgPool)
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         content::PostEditDraft {
             id: prepared.node,
@@ -245,9 +246,15 @@ async fn a_self_mark_reconciles_its_switch_and_its_reason(pool: PgPool) {
         },
     };
 
-    let blank = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(true, Some("  ")))
-        .await
-        .expect("prepares");
+    let blank = content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        actor,
+        draft(true, Some("  ")),
+    )
+    .await
+    .expect("prepares");
     assert_eq!(
         CograContent::decode_payload(&blank.writes[0].proposal.payload)
             .expect("decodes")
@@ -261,7 +268,7 @@ async fn a_self_mark_reconciles_its_switch_and_its_reason(pool: PgPool) {
     let refused = content::prepare_post(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         draft(false, Some("why")),
     )
@@ -310,7 +317,7 @@ async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
         2 * content::MAX_TITLE_CHARS,
         "the fixture is two bytes per character, so bytes and characters cannot agree by accident"
     );
-    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&at_cap))
         .await
         .expect("a title at the cap prepares");
     assert_eq!(
@@ -322,13 +329,14 @@ async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
     );
 
     let over = "x".repeat(content::MAX_TITLE_CHARS + 1);
-    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    let refused =
+        content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&over)).await;
     assert!(
         matches!(refused, Err(ContentError::BadInput { field: "title", .. })),
         "one character past the cap is refused at the title"
     );
 
-    let blank = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft("   "))
+    let blank = content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft("   "))
         .await
         .expect("prepares");
     assert_eq!(
@@ -343,7 +351,7 @@ async fn a_post_title_is_capped_at_a_hundred_characters(pool: PgPool) {
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostEditDraft {
             id: post,
@@ -384,7 +392,7 @@ async fn a_post_description_is_capped_at_five_hundred_characters(pool: PgPool) {
     };
 
     let at_cap = "é".repeat(content::MAX_DESCRIPTION_CHARS);
-    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&at_cap))
         .await
         .expect("a description at the cap prepares");
     assert_eq!(
@@ -395,7 +403,8 @@ async fn a_post_description_is_capped_at_five_hundred_characters(pool: PgPool) {
     );
 
     let over = "x".repeat(content::MAX_DESCRIPTION_CHARS + 1);
-    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    let refused =
+        content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&over)).await;
     assert!(
         matches!(
             refused,
@@ -411,7 +420,7 @@ async fn a_post_description_is_capped_at_five_hundred_characters(pool: PgPool) {
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostEditDraft {
             id: post,
@@ -458,7 +467,7 @@ async fn a_post_body_is_capped_at_five_thousand_characters(pool: PgPool) {
     };
 
     let at_cap = "é".repeat(content::MAX_POST_BODY_CHARS);
-    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&at_cap))
         .await
         .expect("a body at the cap prepares");
     assert_eq!(
@@ -469,7 +478,8 @@ async fn a_post_body_is_capped_at_five_thousand_characters(pool: PgPool) {
     );
 
     let over = "x".repeat(content::MAX_POST_BODY_CHARS + 1);
-    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    let refused =
+        content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&over)).await;
     assert!(
         matches!(
             refused,
@@ -485,7 +495,7 @@ async fn a_post_body_is_capped_at_five_thousand_characters(pool: PgPool) {
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostEditDraft {
             id: post,
@@ -534,9 +544,10 @@ async fn a_comment_body_is_capped_at_two_thousand_characters(pool: PgPool) {
     };
 
     let at_cap = "é".repeat(content::MAX_COMMENT_BODY_CHARS);
-    let prepared = content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
-        .await
-        .expect("a comment at the cap prepares");
+    let prepared =
+        content::prepare_comment(&rig.pool, &rig.boundary, STAGING, actor, draft(&at_cap))
+            .await
+            .expect("a comment at the cap prepares");
     assert_eq!(
         CograContent::decode_payload(&prepared.writes[0].proposal.payload)
             .expect("decodes")
@@ -545,7 +556,8 @@ async fn a_comment_body_is_capped_at_two_thousand_characters(pool: PgPool) {
     );
 
     let over = "x".repeat(content::MAX_COMMENT_BODY_CHARS + 1);
-    let refused = content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    let refused =
+        content::prepare_comment(&rig.pool, &rig.boundary, STAGING, actor, draft(&over)).await;
     assert!(
         matches!(
             refused,
@@ -562,7 +574,7 @@ async fn a_comment_body_is_capped_at_two_thousand_characters(pool: PgPool) {
     let edit = content::prepare_comment_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         CommentEditDraft {
             id: comment_id,
@@ -610,7 +622,7 @@ async fn a_sensitive_reason_is_capped_at_a_hundred_forty_characters(pool: PgPool
     };
 
     let at_cap = "é".repeat(content::MAX_SENSITIVE_REASON_CHARS);
-    let prepared = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&at_cap))
+    let prepared = content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&at_cap))
         .await
         .expect("a reason at the cap prepares");
     assert_eq!(
@@ -623,7 +635,8 @@ async fn a_sensitive_reason_is_capped_at_a_hundred_forty_characters(pool: PgPool
     );
 
     let over = "x".repeat(content::MAX_SENSITIVE_REASON_CHARS + 1);
-    let refused = content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft(&over)).await;
+    let refused =
+        content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft(&over)).await;
     assert!(
         matches!(
             refused,
@@ -653,7 +666,7 @@ async fn a_post_lands_with_carriage_display_row_and_envelope_binding(pool: PgPoo
     let prepared = content::prepare_post(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostDraft {
             title: Some("First".into()),
@@ -736,7 +749,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostEditDraft {
             id: post_id,
@@ -765,7 +778,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     let clear = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostEditDraft {
             id: post_id,
@@ -794,7 +807,7 @@ async fn a_post_edit_replaces_the_snapshot_and_appends_a_version(pool: PgPool) {
     let empty = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostEditDraft {
             id: post_id,
@@ -844,7 +857,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     let refused = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         bob,
         PostEditDraft {
             id: post_id,
@@ -861,7 +874,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     let refused = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         PostEditDraft {
             id: Uuid::new_v4(),
@@ -878,7 +891,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     let first = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         PostEditDraft {
             id: post_id,
@@ -894,7 +907,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     let second = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         PostEditDraft {
             id: post_id,
@@ -912,7 +925,7 @@ async fn edit_eligibility_and_serialization_refuse(pool: PgPool) {
     content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         PostEditDraft {
             id: post_id,
@@ -947,7 +960,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     let comment = content::prepare_comment(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         bob,
         CommentDraft {
             target: post_id,
@@ -982,7 +995,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     let reply = content::prepare_comment(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         CommentDraft {
             target: comment.node,
@@ -1007,22 +1020,37 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     assert_eq!(reply_row.target_id, comment.node);
     assert_eq!(reply_row.target_type, "comment");
 
-    let on_post = content_store::comments_for_target(&rig.pool, post_id, None, false, 10, true)
-        .await
-        .expect("thread");
+    let on_post = content_store::comments_for_target(
+        &rig.pool,
+        post_id,
+        None,
+        false,
+        10,
+        true,
+        content_store::ThreadOrder::NewestFirst,
+    )
+    .await
+    .expect("thread");
     assert_eq!(on_post.len(), 1);
     assert_eq!(on_post[0].id, comment.node);
-    let on_comment =
-        content_store::comments_for_target(&rig.pool, comment.node, None, false, 10, true)
-            .await
-            .expect("replies");
+    let on_comment = content_store::comments_for_target(
+        &rig.pool,
+        comment.node,
+        None,
+        false,
+        10,
+        true,
+        content_store::ThreadOrder::NewestFirst,
+    )
+    .await
+    .expect("replies");
     assert_eq!(on_comment.len(), 1);
     assert_eq!(on_comment[0].id, reply.node);
 
     let edit = content::prepare_comment_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         bob,
         CommentEditDraft {
             id: comment.node,
@@ -1053,7 +1081,7 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     let refused = content::prepare_comment(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         bob,
         CommentDraft {
             target: Uuid::new_v4(),
@@ -1157,7 +1185,7 @@ async fn the_chain_head_tracks_the_newest_landed_edit(pool: PgPool) {
     let edit = content::prepare_post_edit(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         actor,
         PostEditDraft {
             id: post_id,
@@ -1212,7 +1240,7 @@ async fn the_chronicle_filters_compose_and_carriage_is_idempotent(pool: PgPool) 
     let comment = content::prepare_comment(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         bob,
         CommentDraft {
             target: post_id,
@@ -1525,7 +1553,7 @@ mod galleries {
         let prepared = content::prepare_post(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             media_post(placements(&[a, b])),
         )
@@ -1601,7 +1629,7 @@ mod galleries {
         let prepared = content::prepare_post(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             PostDraft {
                 title: Some("Before".into()),
@@ -1624,7 +1652,7 @@ mod galleries {
         let edit = content::prepare_post_edit(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             PostEditDraft {
                 id: post_id,
@@ -1708,7 +1736,7 @@ mod galleries {
         let prepared = content::prepare_post(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             media_post(placements(&[a])),
         )
@@ -1719,7 +1747,7 @@ mod galleries {
         let edit = content::prepare_post_edit(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             PostEditDraft {
                 id: prepared.node,
@@ -1759,7 +1787,7 @@ mod galleries {
         let prepared = content::prepare_comment(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             CommentDraft {
                 target: post,
@@ -1899,8 +1927,14 @@ mod galleries {
 
         for (attachments, expected) in cases {
             let e = refused(
-                content::prepare_post(&rig.pool, &rig.boundary, GC, actor, media_post(attachments))
-                    .await,
+                content::prepare_post(
+                    &rig.pool,
+                    &rig.boundary,
+                    STAGING,
+                    actor,
+                    media_post(attachments),
+                )
+                .await,
             );
             assert_eq!(gallery_refusal(e).0, expected);
         }
@@ -1933,7 +1967,7 @@ mod galleries {
             content::prepare_comment(
                 &rig.pool,
                 &rig.boundary,
-                GC,
+                STAGING,
                 actor,
                 CommentDraft {
                     target: post,
@@ -1990,8 +2024,14 @@ mod galleries {
             (covered(video, Some(second_clip)), "a video is not a poster"),
         ] {
             let e = refused(
-                content::prepare_post(&rig.pool, &rig.boundary, GC, actor, media_post(attachments))
-                    .await,
+                content::prepare_post(
+                    &rig.pool,
+                    &rig.boundary,
+                    STAGING,
+                    actor,
+                    media_post(attachments),
+                )
+                .await,
             );
             assert_eq!(
                 gallery_refusal(e).0,
@@ -2003,7 +2043,7 @@ mod galleries {
         let uncovered = content::prepare_post(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             media_post(covered(video, None)),
         )
@@ -2032,7 +2072,7 @@ mod galleries {
             content::prepare_post(
                 &rig.pool,
                 &rig.boundary,
-                GC,
+                STAGING,
                 actor,
                 media_post(placements(&[video, picture])),
             )
@@ -2045,7 +2085,7 @@ mod galleries {
         let alone = content::prepare_post(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             media_post(placements(&[video])),
         )
@@ -2089,7 +2129,7 @@ mod galleries {
         let created = content::prepare_post(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             media_post(placement(first)),
         )
@@ -2101,7 +2141,7 @@ mod galleries {
         let edited = content::prepare_post_edit(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             PostEditDraft {
                 id: created.node,
@@ -2152,13 +2192,14 @@ mod galleries {
             sensitive: Default::default(),
         };
 
-        let landed = content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, comment(under))
-            .await
-            .expect("a comment carries a video under its cap");
+        let landed =
+            content::prepare_comment(&rig.pool, &rig.boundary, STAGING, actor, comment(under))
+                .await
+                .expect("a comment carries a video under its cap");
         rig.land(&landed, &key).await;
 
         let e = refused(
-            content::prepare_comment(&rig.pool, &rig.boundary, GC, actor, comment(over)).await,
+            content::prepare_comment(&rig.pool, &rig.boundary, STAGING, actor, comment(over)).await,
         );
         let (path, message) = gallery_refusal(e);
         assert_eq!(path, vec!["attachments", "0", "mediaId"]);
@@ -2167,7 +2208,7 @@ mod galleries {
         let on_a_post = content::prepare_post(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             actor,
             media_post(placements(&[over])),
         )
@@ -2191,7 +2232,7 @@ mod galleries {
             content::prepare_post(
                 &rig.pool,
                 &rig.boundary,
-                GC,
+                STAGING,
                 actor,
                 media_post(placements(&[huge])),
             )
@@ -2222,7 +2263,9 @@ mod galleries {
             ..media_post(vec![])
         };
         for draft in [both, neither] {
-            match refused(content::prepare_post(&rig.pool, &rig.boundary, GC, actor, draft).await) {
+            match refused(
+                content::prepare_post(&rig.pool, &rig.boundary, STAGING, actor, draft).await,
+            ) {
                 ContentError::BadInput { field, .. } => assert_eq!(field, "content"),
                 other => panic!("expected a body refusal, got {other}"),
             }
@@ -2233,7 +2276,7 @@ mod galleries {
             content::prepare_post_edit(
                 &rig.pool,
                 &rig.boundary,
-                GC,
+                STAGING,
                 actor,
                 PostEditDraft {
                     id: post,

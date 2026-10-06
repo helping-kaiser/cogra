@@ -25,7 +25,8 @@ use crate::media::{
     self, AttachmentDraft, GalleryError, GalleryKind, GalleryPlanError, PlannedGallery,
 };
 use crate::nodes;
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::SigningClass;
 use crate::references::{self, ReferenceDraft, ReferenceError, ReferencesError};
 use crate::topics::{self, TagDraft, TagError, TopicsError};
 
@@ -638,10 +639,11 @@ async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, ContentEr
 pub async fn prepare_post<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     draft: PostDraft,
 ) -> Result<PreparedContent, ContentError> {
+    let gc_after_epochs = staging.gc_after_epochs;
     let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
     let title = checked_title(draft.title)?;
@@ -652,7 +654,15 @@ pub async fn prepare_post<B: L1Boundary>(
     let body = post_body(draft.content, &gallery)?;
     let mark = self_mark(draft.sensitive)?;
     let address = author_address(pool, viewer).await?;
-    prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &address,
+        &batch_acts(SigningClass::Post, &tags, &citations),
+    )
+    .await?;
     let node = Uuid::new_v4();
     let payload = CograContent {
         node,
@@ -710,14 +720,25 @@ pub async fn prepare_post<B: L1Boundary>(
     Ok(PreparedContent { node, writes })
 }
 
-/// How many priced acts a creation batch stages: the minting record, plus
-/// one per topic and one per citation (api-spec.md "Content authoring").
+/// The priced acts a creation batch stages, per signing class: the minting
+/// record, plus one claim per topic and one per citation (api-spec.md
+/// "Content authoring").
 ///
-/// This is the number D19's pre-check prices, and the number the composer
-/// shows as "creates N signed actions" — one gesture to the author, N
-/// θ-debits to the substrate.
-fn batch_acts(tags: &[topics::PlannedTag], citations: &[references::PlannedReference]) -> usize {
-    1 + tags.len() + references::act_count(citations)
+/// Their sum is the number D19's pre-check prices, and the number the
+/// composer shows as "creates N signed actions" — one gesture to the
+/// author, N θ-debits to the substrate.
+fn batch_acts(
+    minting: SigningClass,
+    tags: &[topics::PlannedTag],
+    citations: &[references::PlannedReference],
+) -> [(SigningClass, usize); 2] {
+    [
+        (minting, 1),
+        (
+            SigningClass::Claim,
+            tags.len() + references::act_count(citations),
+        ),
+    ]
 }
 
 /// The tag half of a creation batch: one Tag per topic, each entering the
@@ -759,7 +780,8 @@ async fn stage_tags<B: L1Boundary>(
 /// identifier, and it exists only once prepare has allocated the sequence
 /// value. Each citation declares the minting act as a dependency, so the
 /// epoch close cannot order a citation ahead of the artifact it cites
-/// from (D17: an own in-flight target declares the dep).
+/// from; a still-pending *target* adds its own minting act beside it, in
+/// `references::reference_gesture` (D17).
 async fn stage_references<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -794,7 +816,7 @@ async fn stage_references<B: L1Boundary>(
 pub async fn prepare_post_edit<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     draft: PostEditDraft,
 ) -> Result<PreparedContent, ContentError> {
@@ -812,6 +834,15 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Publish, &post.l1_node_id, &address).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &address,
+        &[(SigningClass::Edit, 1)],
+    )
+    .await?;
     let payload = CograContent {
         node: post.id,
         title,
@@ -824,7 +855,7 @@ pub async fn prepare_post_edit<B: L1Boundary>(
     let prepared = prepare::prepare(
         boundary,
         pool,
-        gc_after_epochs,
+        staging.gc_after_epochs,
         viewer,
         Gesture {
             author: address,
@@ -853,13 +884,18 @@ pub async fn prepare_post_edit<B: L1Boundary>(
 ///
 /// The same whole-batch discipline as `prepare_post`: everything
 /// refusable is refused before the minting record is staged.
+///
+/// A reply to a still-pending parent declares the parent's minting act
+/// as a dependency, so it lands behind its parent or expires with it —
+/// never as a reply to a parent that never existed.
 pub async fn prepare_comment<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     draft: CommentDraft,
 ) -> Result<PreparedContent, ContentError> {
+    let gc_after_epochs = staging.gc_after_epochs;
     let p_d = draft.p_directed.unwrap_or(DEFAULT_STANCE);
     let p_i = draft.p_interest.unwrap_or(DEFAULT_STANCE);
     stance_range("pDirected", p_d)?;
@@ -872,7 +908,15 @@ pub async fn prepare_comment<B: L1Boundary>(
     let mark = self_mark(draft.sensitive)?;
     let parent = parent_node(pool, draft.target).await?;
     let address = author_address(pool, viewer).await?;
-    prepare::check_batch_solvency(boundary, &address, batch_acts(&tags, &citations)).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &address,
+        &batch_acts(SigningClass::Comment, &tags, &citations),
+    )
+    .await?;
     let node = Uuid::new_v4();
     let payload = CograContent {
         node,
@@ -891,14 +935,14 @@ pub async fn prepare_comment<B: L1Boundary>(
         Gesture {
             author: address.clone(),
             family: Family::Review,
-            middle: Some(parent),
+            middle: Some(parent.node),
             target: Target::OwnMint,
             p_d,
             p_i,
             settlement_ref: None,
             license: Some(draft.license.canonical()),
             asserted_parents: vec![],
-            deps: vec![],
+            deps: nodes::deps_awaiting(&[], [&parent.awaits]),
             payload,
             node: Some(node),
         },
@@ -933,10 +977,13 @@ pub async fn prepare_comment<B: L1Boundary>(
 /// Prepares a Comment edit: an ordinary-role Review at (0,0) — A leg to
 /// the genesis parent, terminal leg to the existing Comment
 /// (comment.md §4).
+///
+/// An edit awaits no parent mint: it chains behind its landed genesis
+/// (`asserted_parents`), and the genesis already declared the parent's.
 pub async fn prepare_comment_edit<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     draft: CommentEditDraft,
 ) -> Result<PreparedContent, ContentError> {
@@ -953,7 +1000,16 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Review, &comment.l1_node_id, &address).await?;
-    let parent = parent_node(pool, comment.target_id).await?;
+    let parent = parent_node(pool, comment.target_id).await?.node;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &address,
+        &[(SigningClass::Edit, 1)],
+    )
+    .await?;
     let payload = CograContent {
         node: comment.id,
         title: None,
@@ -966,7 +1022,7 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     let prepared = prepare::prepare(
         boundary,
         pool,
-        gc_after_epochs,
+        staging.gc_after_epochs,
         viewer,
         Gesture {
             author: address,
@@ -1024,10 +1080,10 @@ async fn chained_edit_target(
     Ok(ChainedTarget { target, parent })
 }
 
-/// Resolves a comment target UUID to its minted node identifier — a
-/// Post or Comment this slice.
-async fn parent_node(pool: &PgPool, target: Uuid) -> Result<NodeId, ContentError> {
-    nodes::resolve_content_node(pool, target)
+/// Resolves a comment target UUID to its minted node — a Post or Comment
+/// this slice — with the act minting it while that is still in flight.
+async fn parent_node(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode, ContentError> {
+    nodes::resolve_content_target(pool, target)
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?
         .ok_or_else(|| ContentError::BadInput {

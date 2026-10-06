@@ -25,8 +25,6 @@ export type ApplicationView = InviteLinkView["applications"]["edges"][number]["n
 
 export type CreateInviteLinkFields = {
   expiresAt: string;
-  prefillPDirected: number;
-  prefillPInterest: number;
   singleUse: boolean;
 };
 

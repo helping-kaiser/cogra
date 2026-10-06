@@ -206,7 +206,7 @@ The route map (Android parity per surface):
 | `/login` | public; signed-in → redirect `/` | Login — the signed-out entry: sign in, plus the invite (`/join`) and feed-browse entries |
 | `/reset` (+`?token=` pre-fills the confirm form) | public | PasswordReset |
 | `/join` | public | InviteEntry — paste an invite to start an application |
-| `/join/<link-id>` | public, SSR for unfurl | InviteEntry + Apply; signed in: re-arm |
+| `/join/<link-id>` | public, SSR for unfurl | InviteEntry + Apply (the same form signed in, auth.md §Application) |
 | `/verify?token=` | public, sessionless | email-verification result |
 | `/feed` | public | Feed — the chronological listing; the shell's root tab |
 | `/posts/<id>` | public | PostDetail |
@@ -234,7 +234,7 @@ login screen — the signed-out entry — carries the browse entry so
 an anonymous visitor finds the public read without an account.
 
 The shell is the bottom bar
-([design.md §6](design.md#6-components)), rendered from the root
+([design/readme.md §7](../../design/readme.md#7-components)), rendered from the root
 layout so it frames the read surfaces across the public tier and
 the `(app)` group alike — `/feed`, `/posts/<id>`, `/u/<handle>`,
 and `/profile`. The task flows (`/compose`, `/profile/edit`,
@@ -259,11 +259,8 @@ phase, rendering nothing. Phase flips replace the location,
 never push — the
 Android navigation parity. Web deltas from Android: `/invites`
 renders the applicant lock in-page (the URL is directly
-addressable), `/reset?token=` and `/verify?token=` arrive as
-links where Android pastes the token in-app, and re-arm lives in
-two places — the Home card (Android parity) and a context action
-on `/join/<link-id>` for a signed-in visitor, since the link
-itself is directly addressable.
+addressable), and `/reset?token=` and `/verify?token=` arrive as
+links where Android pastes the token in-app.
 
 ## The onboarding poll loop
 
@@ -275,11 +272,11 @@ parity, not doc-fixed:
 
 - One pass: poll the viewer status → flush a parked backup blob
   unconditionally → branch (member / sign the staged Registration
-  / re-arm needed / landing awaited / the applicant cards, with a
-  silent repair-attach when the server lost the key proof).
+  / landing awaited / the applicant cards, with a silent
+  repair-attach when the server lost the key proof).
 - Cadence: 3 s while the wait is on a machine (landing, a
   transport retry), 30 s while it is on a human (verification,
-  approval, a fresh invite). `ensureAdvancing()` starts the loop
+  approval). `ensureAdvancing()` starts the loop
   or pokes a running one into an immediate pass — called whenever
   a proof just changed server-side.
 - The loop is onboarding-only: it ends for good at member and at
@@ -311,7 +308,7 @@ whichever surface started it.
 
 ## Design guidelines
 
-[design.md](design.md) is the design system both clients
+[design/readme.md](../../design/readme.md) is the design system both clients
 implement — colour tokens, type, shape, motion, components,
 copy rules, and the stance control. Read it before writing UI.
 Web-side: the Material 3 roles land as CSS custom properties in

@@ -29,6 +29,7 @@ mod rig;
 use rig::TestMailer;
 
 const GC: i64 = 8;
+const STAGING: api::prepare::Staging = api::prepare::Staging::unbudgeted(GC);
 
 fn license() -> License {
     License {
@@ -121,7 +122,7 @@ impl Chronicle {
         let prepared = content::prepare_post(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             PostDraft {
                 title: Some(title.into()),
@@ -145,7 +146,7 @@ impl Chronicle {
         let prepared = content::prepare_comment(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             CommentDraft {
                 target,
@@ -169,7 +170,7 @@ impl Chronicle {
         let prepared = stance::prepare_stance(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             &TargetRef::Node(target),
             p_d,
@@ -738,7 +739,7 @@ impl Chronicle {
         let prepared = content::prepare_post(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             PostDraft {
                 title: Some(title.into()),
@@ -773,7 +774,7 @@ impl Chronicle {
         let prepared = content::prepare_comment(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             CommentDraft {
                 target,

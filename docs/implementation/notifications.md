@@ -318,7 +318,7 @@ enum NotificationKind {
   "The viewer's inviter approved their application."
   APPLICATION_APPROVED
   "The approver closed the viewer's application without approving
-   it — that queue entry only; the account and both re-arm paths
+   it — that queue entry only; the account and its ask link
    remain."
   APPLICATION_REJECTED
 }
@@ -459,5 +459,5 @@ are reached:
   Opinion families the kinds resolve to.
 - [auth.md](auth.md) — the application lifecycle behind the four
   invite-flow kinds.
-- [design.md](design.md) — the band the bell sits in and the list
+- [design/readme.md](../../design/readme.md) — the band the bell sits in and the list
   conventions the surface follows.

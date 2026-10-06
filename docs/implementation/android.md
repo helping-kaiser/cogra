@@ -7,7 +7,7 @@ sharing this repository with the backend
 | Concern | Choice |
 |---|---|
 | Language / UI | Kotlin + Jetpack Compose |
-| Design language | [Material 3](https://m3.material.io) — what Compose's component library implements; the system built on it is [design.md](design.md) |
+| Design language | [Material 3](https://m3.material.io) — what Compose's component library implements; the system built on it is [design/readme.md](../../design/readme.md) |
 | GraphQL client | Apollo Kotlin, generated from the exported `schema.graphql` |
 | Ranking core | the `ranker` crate, bound via UniFFI |
 | Build | Gradle, multi-module |
@@ -168,7 +168,7 @@ a phase flip lands on the new phase's root — `Login` signed
 out, the `Feed` tab signed in — with a cleared stack, so which
 stack reaches a destination is its access gate. The shell frames
 every read surface with the bottom bar
-([design.md §6](design.md#6-components)) — the tabs plus the read
+([design/readme.md §7](../../design/readme.md#7-components)) — the tabs plus the read
 drill-ins `PostDetail` and `Profile(handle)`; the task flows drop
 it. Tabs carry no back
 arrow, every inner screen carries one over `navigateUp()`. The

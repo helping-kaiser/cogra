@@ -49,7 +49,8 @@ use uuid::Uuid;
 
 use crate::l1::L1Boundary;
 use crate::nodes::{self, NodeError};
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::SigningClass;
 
 /// Citations per creation batch (D7). Each is its own priced act, so a
 /// maximal creation batch is 1 minting record + 10 tags + 10 references =
@@ -153,6 +154,11 @@ pub struct PlannedReference {
     /// The target as the client named it, kept so a refusal can quote it.
     pub target_id: Uuid,
     pub target: NodeId,
+    /// The act minting the target while that act is still in flight — any
+    /// author's, the viewer's own included. The citation declares it as a
+    /// dependency (D17), so it lands only behind what it cites, and expires
+    /// with a target that never lands.
+    pub awaits: Option<ActId>,
     /// Effort `f` — written to `p_d`.
     pub relevance: f64,
     /// Enthusiasm `e` — written to `p_i`.
@@ -213,15 +219,16 @@ async fn resolve(
         Ok(pair) => pair,
         Err(e) => return Ok(Err(e)),
     };
-    let Some(target) = nodes::resolve_id(pool, draft.target).await? else {
+    let Some(resolved) = nodes::resolve_target(pool, draft.target).await? else {
         return Ok(Err(("target", "no such reference target".to_string())));
     };
-    if let Err(e) = refuse_topic_target(&target) {
+    if let Err(e) = refuse_topic_target(&resolved.node) {
         return Ok(Err(e));
     }
     Ok(Ok(PlannedReference {
         target_id: draft.target,
-        target,
+        target: resolved.node,
+        awaits: resolved.awaits,
         relevance,
         support,
     }))
@@ -287,9 +294,14 @@ fn path(index: usize, field: &str) -> Vec<String> {
 }
 
 /// The Reference gesture: the act tuple `(effort, enthusiasm)` toward the
-/// citing artifact, terminating at the cited target. `deps` orders the act
-/// behind the records it must not be ordered ahead of — the act that mints
-/// its middle, and the act that mints a still-pending target (D17).
+/// citing artifact, terminating at the cited target.
+///
+/// `site_deps` orders the act behind the records its site must not be
+/// ordered ahead of — the act that mints a still-pending middle. The act
+/// that mints a still-pending *target* (D17) is added here, from the plan,
+/// rather than by each caller: it belongs to the citation, not its site,
+/// and every staging path — creation batch, standalone citation, withdrawal
+/// — builds through this one function, so none of them can leave it out.
 ///
 /// The payload stays empty (D14). A note would make the record
 /// payload-marked, and payload-marked records are read individually and
@@ -299,8 +311,9 @@ pub fn reference_gesture(
     author: &str,
     middle: NodeId,
     reference: &PlannedReference,
-    deps: Vec<ActId>,
+    site_deps: &[ActId],
 ) -> Gesture {
+    let deps = nodes::deps_awaiting(site_deps, [&reference.awaits]);
     Gesture {
         author: author.to_string(),
         family: Family::Reference,
@@ -345,12 +358,7 @@ pub async fn stage_references<B: L1Boundary>(
     refuse_self_citation(site.middle, planned)?;
     let mut staged = Vec::with_capacity(planned.len());
     for reference in planned {
-        let gesture = reference_gesture(
-            site.author,
-            site.middle.clone(),
-            reference,
-            site.deps.to_vec(),
-        );
+        let gesture = reference_gesture(site.author, site.middle.clone(), reference, site.deps);
         staged.push(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?);
     }
     Ok(staged)
@@ -459,22 +467,32 @@ async fn live_targets(
 pub async fn prepare_reference<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     artifact: Uuid,
     draft: &ReferenceDraft,
 ) -> Result<prepare::Prepared, ReferencesError> {
     let reference = plan_one(pool, draft).await?;
-    let middle = citing_node(pool, artifact).await?;
-    refuse_self_citation(&middle, std::slice::from_ref(&reference))
+    let citing = citing_node(pool, artifact).await?;
+    refuse_self_citation(&citing.node, std::slice::from_ref(&reference))
         .map_err(|e| ReferenceError::at(vec!["target".to_string()], e.message))?;
     let author = author_address(pool, viewer).await?;
-    let live = live_targets(pool, &author, &middle).await?;
+    let live = live_targets(pool, &author, &citing.node).await?;
     if let Some(message) = over_the_standing_cap(&live, std::slice::from_ref(&reference)) {
         return Err(ReferenceError::at(vec!["target".to_string()], message).into());
     }
-    let gesture = reference_gesture(&author, middle, &reference, vec![]);
-    Ok(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?)
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Claim, 1)],
+    )
+    .await?;
+    let site_deps = nodes::deps_awaiting(&[], [&citing.awaits]);
+    let gesture = reference_gesture(&author, citing.node, &reference, &site_deps);
+    Ok(prepare::prepare(boundary, pool, staging.gc_after_epochs, viewer, gesture).await?)
 }
 
 /// Prepares the withdrawal of one citation: the counter-records that net
@@ -488,29 +506,40 @@ pub async fn prepare_reference<B: L1Boundary>(
 ///
 /// The batch is computed against the pending-inclusive view, so a
 /// withdrawal followed by a refetch reads as withdrawn at once rather than
-/// after the acts land.
+/// after the acts land. That view is read *now*: a count shown earlier can
+/// differ from the batch prepared here, because the bundle may have moved
+/// in between, and the prepared batch is the truth (api-spec.md
+/// `PrepareReferenceWithdrawalInput`).
+///
+/// Each counter-record declares the same dependencies a citation on this
+/// pair would: the minting act of a still-pending artifact or target. The
+/// records it nets declared them, so they land only behind those mints or
+/// expire with them; a counter-record free of the dependency could land
+/// alone, and the bundle would then net to the negation of what was
+/// withdrawn — a refutation nobody authored. Only a declared dependency
+/// orders one act behind another (layer1-interface.md §8.2).
 pub async fn prepare_reference_withdrawal<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     artifact: Uuid,
     target: Uuid,
 ) -> Result<Vec<prepare::Prepared>, ReferencesError> {
-    let middle = citing_node(pool, artifact).await?;
-    let Some(target_node) = nodes::resolve_id(pool, target).await? else {
+    let citing = citing_node(pool, artifact).await?;
+    let Some(resolved) = nodes::resolve_target(pool, target).await? else {
         return Err(
             ReferenceError::at(vec!["target".to_string()], "no such reference target").into(),
         );
     };
-    refuse_topic_target(&target_node)
+    refuse_topic_target(&resolved.node)
         .map_err(|(field, message)| ReferenceError::at(vec![field.to_string()], message))?;
     let author = author_address(pool, viewer).await?;
     let sum = store_refs::bundle(
         pool,
         &author,
-        &middle.to_string(),
-        &target_node.to_string(),
+        &citing.node.to_string(),
+        &resolved.node.to_string(),
         ReferenceView::IncludingPending { actor: &author },
     )
     .await?;
@@ -522,27 +551,43 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
         )
         .into());
     }
-    prepare::check_batch_solvency(boundary, &author, batch.len()).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Claim, batch.len())],
+    )
+    .await?;
+    let site_deps = nodes::deps_awaiting(&[], [&citing.awaits]);
     let mut prepared = Vec::with_capacity(batch.len());
     for (relevance, support) in batch {
         let counter = PlannedReference {
             target_id: target,
-            target: target_node.clone(),
+            target: resolved.node.clone(),
+            awaits: resolved.awaits.clone(),
             relevance,
             support,
         };
-        let gesture = reference_gesture(&author, middle.clone(), &counter, vec![]);
-        prepared.push(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?);
+        let gesture = reference_gesture(&author, citing.node.clone(), &counter, &site_deps);
+        prepared.push(
+            prepare::prepare(boundary, pool, staging.gc_after_epochs, viewer, gesture).await?,
+        );
     }
     Ok(prepared)
 }
 
-/// The minted node a citation hangs off. The substrate admits every
-/// passive node as a citing artifact (layer1-interface.md §9.3); the
-/// classes with an API surface to cite from are the content nodes this
-/// slice carries, exactly as `taggable_node` narrows Tag.
-async fn citing_node(pool: &PgPool, artifact: Uuid) -> Result<NodeId, ReferencesError> {
-    crate::nodes::resolve_content_node(pool, artifact)
+/// The minted node a citation hangs off, with its minting act while that
+/// is in flight. The substrate admits every passive node as a citing
+/// artifact (layer1-interface.md §9.3); the classes with an API surface to
+/// cite from are the content nodes this slice carries, exactly as
+/// `taggable_node` narrows Tag.
+async fn citing_node(
+    pool: &PgPool,
+    artifact: Uuid,
+) -> Result<nodes::ResolvedNode, ReferencesError> {
+    crate::nodes::resolve_content_target(pool, artifact)
         .await
         .map_err(|e| ReferencesError::Internal(e.to_string()))?
         .ok_or_else(|| {
@@ -565,9 +610,32 @@ mod tests {
         PlannedReference {
             target_id: Uuid::nil(),
             target: NodeId::parse(target).expect("node"),
+            awaits: None,
             relevance,
             support,
         }
+    }
+
+    /// D17, for every author: a citation toward a target whose minting act
+    /// is still in flight declares that act, beside whatever its site
+    /// orders it behind — so no staging path can stage it without.
+    ///
+    /// Every citation of a still-pending target declares the act that mints it, whoever authored that act.
+    /// ´claim:references:a-pending-target-is-a-dependency´
+    #[test]
+    fn a_pending_target_rides_into_the_gesture_deps() {
+        let mint = ActId::new("bob", 4, Family::Publish).expect("act");
+        let own = ActId::new("alice", 0, Family::Publish).expect("act");
+        let reference = PlannedReference {
+            awaits: Some(mint.clone()),
+            ..planned(&format!("mint:{mint}"), 0.1, 0.1)
+        };
+        let g = reference_gesture("alice", middle(), &reference, std::slice::from_ref(&own));
+        assert_eq!(g.deps, vec![own, mint]);
+
+        let landed = planned("prof:bob", 0.1, 0.1);
+        let g = reference_gesture("alice", middle(), &landed, &[]);
+        assert!(g.deps.is_empty(), "a settled target orders nothing");
     }
 
     fn middle() -> NodeId {
@@ -585,7 +653,7 @@ mod tests {
     #[test]
     fn the_reference_gesture_writes_the_act_tuple_never_a_leg_rendering() {
         let reference = planned("prof:bob", -0.25, 0.75);
-        let g = reference_gesture("alice", middle(), &reference, vec![]);
+        let g = reference_gesture("alice", middle(), &reference, &[]);
 
         assert_eq!(g.p_d, -0.25, "p_d carries relevance (effort f)");
         assert_eq!(g.p_i, 0.75, "p_i carries support (enthusiasm e)");
@@ -609,7 +677,7 @@ mod tests {
     #[test]
     fn the_gesture_is_a_well_formed_reference() {
         let reference = planned("prof:bob", 1.0, -1.0);
-        let g = reference_gesture("alice", middle(), &reference, vec![]);
+        let g = reference_gesture("alice", middle(), &reference, &[]);
         g.family.params_check(g.p_d, g.p_i).expect("params");
         let target = match &g.target {
             Target::Node(n) => n.clone(),
@@ -635,7 +703,7 @@ mod tests {
     /// ´claim:references:an-inert-citation-is-well-formed´
     #[test]
     fn a_zero_zero_citation_is_well_formed() {
-        let g = reference_gesture("alice", middle(), &planned("prof:bob", 0.0, 0.0), vec![]);
+        let g = reference_gesture("alice", middle(), &planned("prof:bob", 0.0, 0.0), &[]);
         g.family.params_check(g.p_d, g.p_i).expect("params");
     }
 

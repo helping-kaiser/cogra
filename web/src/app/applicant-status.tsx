@@ -8,15 +8,10 @@ import Link from "next/link";
 import { useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import type { ErrorCode } from "@/__generated__/graphql";
-import { applyWithInvite, resendVerificationEmail } from "@/lib/api/onboarding-api";
-import { extractInviteId } from "@/lib/onboarding/invite-input";
-import { useAuthGuard } from "@/lib/session/runtime";
-import { useRegistrationFlow } from "@/lib/signing/provider";
+import { resendVerificationEmail } from "@/lib/api/onboarding-api";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
 import { Button, buttonClassName } from "@/lib/ui/button";
 import { Card } from "@/lib/ui/card";
-import { rearmMessage as sharedRearmMessage } from "@/lib/ui/error-messages";
 import { TransportError } from "@/lib/ui/transport-error";
 
 export function ApplicantStatus({ progress }: { progress: RegistrationProgress | null }) {
@@ -43,8 +38,6 @@ export function ApplicantStatus({ progress }: { progress: RegistrationProgress |
       // The restore card rides the screen's collapsing top (the
       // keyless read from the identity store covers this state).
       return null;
-    case "needsInvite":
-      return <RearmCard />;
     case "rejectedByDevice":
       return (
         <p role="alert" data-testid="home_application_rejected" className="text-body-medium text-error">
@@ -102,8 +95,8 @@ function VerifyCard() {
     <Card>
       <h2 className="text-title-medium">Verify your email</h2>
       <p data-testid="home_verify" className="text-body-medium text-on-surface-variant">
-        We sent you a verification link — open it to prove this email is yours. Unverified
-        applications expire after 24 hours.
+        We sent you a verification link — open it to prove this email is yours. An account left
+        unverified for seven days is removed — joining again then starts over.
       </p>
       <form onSubmit={onResend} className="flex flex-col gap-2" noValidate>
         <label htmlFor="resend-email" className="text-label-large">
@@ -210,94 +203,3 @@ function WaitingHint({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
-function rearmMessage(code: ErrorCode | "MALFORMED"): string {
-  if (code === "MALFORMED") {
-    return "That doesn't look like an invite — paste the whole link or its code.";
-  }
-  return sharedRearmMessage(code);
-}
-
-function RearmCard() {
-  const client = useApolloClient();
-  const guard = useAuthGuard();
-  const flow = useRegistrationFlow();
-
-  const [input, setInput] = useState("");
-  const [rearming, setRearming] = useState(false);
-  const [error, setError] = useState<ErrorCode | "MALFORMED" | null>(null);
-
-  const onRearm = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (input.trim() === "" || rearming) return;
-    const id = extractInviteId(input);
-    if (id === null) {
-      setError("MALFORMED");
-      return;
-    }
-    setRearming(true);
-    setError(null);
-    const outcome = await guard.run(() => applyWithInvite(client, id));
-    setRearming(false);
-    switch (outcome.kind) {
-      case "success":
-        setInput("");
-        flow.ensureAdvancing();
-        break;
-      case "refused":
-        setError(outcome.errors[0].code);
-        break;
-      case "failed":
-        setError("INTERNAL");
-        break;
-    }
-  };
-
-  return (
-    <Card>
-      <h2 data-testid="home_rearm" className="text-title-medium">
-        Your application needs a fresh invite
-      </h2>
-      <p className="text-body-medium text-on-surface-variant">
-        The invite behind your application ran out before approval. Paste a fresh one to re-arm it —
-        your account, email verification, and key carry over.
-      </p>
-      <form onSubmit={onRearm} className="flex flex-col gap-2" noValidate>
-        <label htmlFor="rearm-input" className="text-label-large">
-          Invite link
-        </label>
-        <input
-          id="rearm-input"
-          data-testid="rearm_input"
-          type="text"
-          value={input}
-          onChange={(event) => {
-            setInput(event.target.value);
-            setError(null);
-          }}
-          autoComplete="off"
-          spellCheck={false}
-          className="rounded-extra-small border border-outline bg-transparent px-3 py-2"
-        />
-        {error !== null && (
-          <p role="alert" data-testid="rearm_error" className="text-body-medium text-error">
-            {rearmMessage(error)}
-          </p>
-        )}
-        {rearming && (
-          <p role="status" data-testid="rearm_progress" className="text-body-medium text-on-surface-variant">
-            Applying the invite…
-          </p>
-        )}
-        <Button
-          type="submit"
-          testId="rearm_submit"
-          size="sm"
-          selfStart
-          disabled={input.trim() === "" || rearming}
-        >
-          Re-arm my application
-        </Button>
-      </form>
-    </Card>
-  );
-}

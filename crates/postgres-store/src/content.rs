@@ -1293,11 +1293,34 @@ pub async fn comments_by_nodes(
     Ok(rows.into_iter().map(comment_from_row).collect())
 }
 
+/// Which end of a thread a read starts from (api-spec.md `ReplyOrder`).
+///
+/// Both are the one total order the listing keys define — pending entries
+/// newest-authored-first, then landed entries newest-landed-first — read
+/// in opposite directions. Oldest-first therefore needs no keyset of its
+/// own: the same cursor names the same boundary in either order, and the
+/// pending entries, being the newest, close an oldest-first read instead
+/// of leading it.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ThreadOrder {
+    #[default]
+    NewestFirst,
+    OldestFirst,
+}
+
 /// A target's comments — the thread read (comment.md §2): direct
-/// children only, newest-first — pending entries, then landed entries in
-/// landing order (a comment's landing position is its genesis, so edits
-/// never reorder the thread — api-spec.md "Pagination"). `backward`
-/// serves `last`/`before`; results always come back newest-first.
+/// children only, in `order` — newest-first is pending entries, then
+/// landed entries in landing order (a comment's landing position is its
+/// genesis, so edits never reorder the thread — api-spec.md
+/// "Pagination"); oldest-first is that sequence reversed. `backward`
+/// serves `last`/`before` in the requested order; results always come
+/// back in it.
+///
+/// An oldest-first walk is the newest-first walk run the other way and
+/// read back reversed: the `limit` entries after a cursor in one order are
+/// the `limit` entries before it in the other. Reusing the two-branch walk
+/// keeps one set of statements, written per direction for the index (see
+/// `merge_walk`), behind both orders.
 pub async fn comments_for_target(
     pool: &PgPool,
     target_id: Uuid,
@@ -1305,17 +1328,23 @@ pub async fn comments_for_target(
     backward: bool,
     limit: i64,
     include_pending: bool,
+    order: ThreadOrder,
 ) -> Result<Vec<Comment>, ContentError> {
     let cursor = resolve_comment_cursor(pool, cursor).await?;
-    merge_walk(
+    let oldest_first = order == ThreadOrder::OldestFirst;
+    let mut rows = merge_walk(
         cursor,
-        backward,
+        backward != oldest_first,
         limit,
         include_pending,
         |c, back, n| comments_landed(pool, target_id, c, back, n, include_pending),
         |c, back, n| comments_pending(pool, target_id, c, back, n),
     )
-    .await
+    .await?;
+    if oldest_first {
+        rows.reverse();
+    }
+    Ok(rows)
 }
 
 /// The landed branch of the thread read; `include_pending` gates the

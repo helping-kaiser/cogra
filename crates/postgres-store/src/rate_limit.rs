@@ -1,11 +1,12 @@
 //! ´mod:module:rate-limit´
 //!
-//! Auth-endpoint throttle state (auth.md "Rate limiting") — the SQL half
-//! of the api crate's ratelimit module.
+//! Throttle state — the auth endpoints' limits (auth.md "Rate limiting")
+//! and the signing budget (api-spec.md "Conventions") — the SQL half of
+//! the api crate's ratelimit module.
 //!
-//! Counted limits and the login backoff share the `auth_rate_limits`
-//! table; every state change is one atomic upsert, so concurrent attempts
-//! never race.
+//! Counted limits, budget charges, and the login backoff share the
+//! `auth_rate_limits` table; every state change is an atomic upsert, so
+//! concurrent attempts never race.
 
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
@@ -41,6 +42,64 @@ pub async fn count_in_window(
     .fetch_one(pool)
     .await?;
     Ok(row.count)
+}
+
+/// One charge against a fixed window: `n` units into the `(scope, key)`
+/// window, which holds at most `limit` per `window_secs`.
+#[derive(Debug, Clone, Copy)]
+pub struct Charge<'a> {
+    pub scope: &'a str,
+    pub key: &'a str,
+    pub window_secs: f64,
+    pub n: i32,
+    pub limit: i32,
+}
+
+/// Charges every window or none: each charge lands only if its window
+/// still has room for all `n` units, and one charge without room rolls
+/// the whole set back. Returns whether the set was charged.
+///
+/// Unlike `count_in_window`, a refusal spends nothing — the charge is a
+/// budget the caller waits out, not an attempt being counted against a
+/// guesser. Rows are locked in `(scope, key)` order, so two concurrent
+/// sets over the same windows cannot deadlock.
+pub async fn charge_all_within(pool: &PgPool, charges: &[Charge<'_>]) -> Result<bool, sqlx::Error> {
+    let mut ordered = charges.to_vec();
+    ordered.sort_by(|a, b| (a.scope, a.key).cmp(&(b.scope, b.key)));
+    let mut tx = pool.begin().await?;
+    for charge in ordered {
+        let charged = sqlx::query_scalar!(
+            r#"
+            INSERT INTO auth_rate_limits AS r (scope, key, window_start, count)
+            SELECT $1::text, $2::text, now(), $4::int4
+            WHERE $4::int4 <= $5::int4
+            ON CONFLICT (scope, key) DO UPDATE SET
+                count = CASE
+                    WHEN r.window_start <= now() - make_interval(secs => $3::float8)
+                    THEN $4::int4 ELSE r.count + $4::int4 END,
+                window_start = CASE
+                    WHEN r.window_start <= now() - make_interval(secs => $3::float8)
+                    THEN now() ELSE r.window_start END
+            WHERE CASE
+                WHEN r.window_start <= now() - make_interval(secs => $3::float8)
+                THEN $4::int4 ELSE r.count + $4::int4 END <= $5::int4
+            RETURNING count
+            "#,
+            charge.scope,
+            charge.key,
+            charge.window_secs,
+            charge.n,
+            charge.limit,
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+        if charged.is_none() {
+            tx.rollback().await?;
+            return Ok(false);
+        }
+    }
+    tx.commit().await?;
+    Ok(true)
 }
 
 /// The moment a backoff-scoped key unblocks, when it is currently

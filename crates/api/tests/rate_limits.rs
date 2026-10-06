@@ -92,8 +92,6 @@ impl Rig {
             &self.pool,
             Uuid::new_v4(),
             inviter,
-            0.1,
-            0.1,
             false,
             Utc::now() + chrono::Duration::days(1),
         )
@@ -116,9 +114,6 @@ const LOG_IN: &str = "mutation($input: LogInInput!) {
 }";
 const REGISTER: &str = "mutation($input: RegisterInput!) {
     register(input: $input) { auth { accessToken } userErrors { code } }
-}";
-const APPLY: &str = "mutation($input: ApplyWithInviteInput!) {
-    applyWithInvite(input: $input) { application { id } userErrors { code } }
 }";
 const REQUEST_RESET: &str = "mutation($input: RequestPasswordResetInput!) {
     requestPasswordReset(input: $input) { ok }
@@ -216,6 +211,15 @@ async fn login_backoff_blocks_after_consecutive_failures(pool: PgPool) {
         )
         .await;
     assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
+    assert_eq!(
+        json["errors"][0]["extensions"]
+            .as_object()
+            .expect("extensions")
+            .keys()
+            .collect::<Vec<_>>(),
+        vec!["code"],
+        "the backoff serves no retry-after figure or other hint: {json}"
+    );
 
     let json = rig
         .gql(
@@ -225,6 +229,50 @@ async fn login_backoff_blocks_after_consecutive_failures(pool: PgPool) {
         )
         .await;
     assert_eq!(transport_code(&json), None, "{json}");
+}
+
+/// Both upload paths draw on one per-account budget: a resumable session
+/// costs what one whole upload costs, and once the budget is spent either
+/// path is refused at the transport, before any byte is read.
+///
+/// Whole and resumable uploads spend one per-account budget, and past it either path is refused at the transport.
+/// ´claim:ratelimit:both-upload-paths-share-one-budget´
+#[sqlx::test(migrations = "../../migrations")]
+async fn uploads_trip_the_account_budget(pool: PgPool) {
+    let mut limits = RateLimitConfig::unlimited();
+    limits.upload_account = Window {
+        limit: 2,
+        window_secs: 3600.0,
+    };
+    let rig = rig::WireRig::new(pool, limits);
+    rig.seed_member("uploader", "uploader@example.com").await;
+    let token = rig.log_in("uploader@example.com").await;
+    const BEGIN: &str = "mutation($input: BeginMediaUploadInput!) {
+        beginMediaUpload(input: $input) { upload { id } userErrors { code } }
+    }";
+    let begin = json!({ "input": { "declaredBytes": 1024, "kind": "STILL" }});
+
+    let json = rig
+        .upload_media_raw(&token, &rig::photo_with_location())
+        .await;
+    assert_eq!(transport_code(&json), None, "{json}");
+    assert!(
+        json["data"]["uploadMedia"]["media"]["id"].is_string(),
+        "{json}"
+    );
+    let json = rig.gql_raw(Some(&token), BEGIN, begin.clone()).await;
+    assert_eq!(transport_code(&json), None, "{json}");
+    assert!(
+        json["data"]["beginMediaUpload"]["upload"]["id"].is_string(),
+        "{json}"
+    );
+
+    let json = rig
+        .upload_media_raw(&token, &rig::photo_with_location())
+        .await;
+    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
+    let json = rig.gql_raw(Some(&token), BEGIN, begin).await;
+    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
 }
 
 /// The backoff must not become an account-existence oracle: an email with
@@ -359,51 +407,6 @@ async fn register_budgets_per_ip_and_per_link(pool: PgPool) {
     let json = rig.gql("10.1.0.2", REGISTER, register_vars(link, 3)).await;
     assert_eq!(transport_code(&json), None, "{json}");
     let json = rig.gql("10.1.0.2", REGISTER, register_vars(link, 4)).await;
-    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
-}
-
-/// A re-arm is an application submit, so the same IP budget refuses it
-/// before any flow logic runs.
-///
-/// A re-arm is a registration submit, so it spends the same budget and is refused before any flow logic runs.
-/// ´claim:ratelimit:a-re-arm-spends-the-register-budget´
-#[sqlx::test(migrations = "../../migrations")]
-async fn apply_with_invite_spends_the_register_budget(pool: PgPool) {
-    let mut limits = RateLimitConfig::unlimited();
-    limits.register_ip = Window {
-        limit: 1,
-        window_secs: 3600.0,
-    };
-    let rig = Rig::new(pool, limits);
-    let link = rig.invite_link().await;
-
-    let json = rig.gql("10.1.1.1", REGISTER, register_vars(link, 0)).await;
-    let token = json["data"]["register"]["auth"]["accessToken"]
-        .as_str()
-        .expect("session")
-        .to_string();
-
-    let body = json!({
-        "query": APPLY,
-        "variables": { "input": { "inviteLink": link } },
-    })
-    .to_string();
-    let request = Request::builder()
-        .method("POST")
-        .uri("/graphql")
-        .header("content-type", "application/json")
-        .header("x-real-ip", "10.1.1.1")
-        .header("authorization", format!("Bearer {token}"))
-        .body(Body::from(body))
-        .expect("request");
-    let response = rig.app.clone().oneshot(request).await.expect("response");
-    let bytes = response
-        .into_body()
-        .collect()
-        .await
-        .expect("body")
-        .to_bytes();
-    let json: Value = serde_json::from_slice(&bytes).expect("json");
     assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
 }
 

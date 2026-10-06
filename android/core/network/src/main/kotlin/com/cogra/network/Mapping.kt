@@ -187,7 +187,6 @@ internal fun ApplicationFields.toView(): ApplicationView = ApplicationView(
     keyAttached = keyAttached,
     approvedAt = approvedAt,
     landedAt = landedAt,
-    expiresAt = expiresAt,
 )
 
 /** The same row, as the inviter's queue shows it. */

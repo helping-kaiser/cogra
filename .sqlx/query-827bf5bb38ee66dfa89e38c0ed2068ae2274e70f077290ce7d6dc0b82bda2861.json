@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO auth_rate_limits AS r (scope, key, window_start, count)\n            SELECT $1::text, $2::text, now(), $4::int4\n            WHERE $4::int4 <= $5::int4\n            ON CONFLICT (scope, key) DO UPDATE SET\n                count = CASE\n                    WHEN r.window_start <= now() - make_interval(secs => $3::float8)\n                    THEN $4::int4 ELSE r.count + $4::int4 END,\n                window_start = CASE\n                    WHEN r.window_start <= now() - make_interval(secs => $3::float8)\n                    THEN now() ELSE r.window_start END\n            WHERE CASE\n                WHEN r.window_start <= now() - make_interval(secs => $3::float8)\n                THEN $4::int4 ELSE r.count + $4::int4 END <= $5::int4\n            RETURNING count\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Float8",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "827bf5bb38ee66dfa89e38c0ed2068ae2274e70f077290ce7d6dc0b82bda2861"
+}

@@ -16,6 +16,7 @@ use postgres_store::{PgPool, hashtag as hashtag_store, mirror};
 use uuid::Uuid;
 
 use crate::l1::{BoundaryError, L1Boundary};
+use crate::ratelimit::{self, SigningBudget, SigningClass};
 
 #[derive(Debug, thiserror::Error)]
 pub enum PrepareError {
@@ -38,6 +39,12 @@ pub enum PrepareError {
         theta: f64,
         acts: usize,
     },
+    /// The account's signing budget cannot carry the batch — the third
+    /// write-rule refusal, the same surface as solvency (api-spec.md
+    /// "Conventions" — the signing budget). The author acts on it by
+    /// waiting.
+    #[error("write rule: the signing budget cannot carry this batch right now")]
+    SigningBudget,
     #[error(transparent)]
     Boundary(#[from] BoundaryError),
     #[error(transparent)]
@@ -92,6 +99,61 @@ pub struct Prepared {
     /// The GC bound the staged write lives under (api-spec.md
     /// `PreparedWrite.gcAfterEpochs`).
     pub gc_after_epochs: i64,
+}
+
+/// What every member-facing prepare entry point stages under: the GC
+/// bound its staged writes report, and the signing budget its batch
+/// spends from.
+#[derive(Debug, Clone, Copy)]
+pub struct Staging {
+    /// The staged-write GC bound (api-spec.md
+    /// `PreparedWrite.gcAfterEpochs`).
+    pub gc_after_epochs: i64,
+    pub budget: SigningBudget,
+}
+
+impl Staging {
+    /// Staging with a budget no test can trip by accident — for rigs
+    /// exercising other surfaces.
+    pub const fn unbudgeted(gc_after_epochs: i64) -> Self {
+        Self {
+            gc_after_epochs,
+            budget: SigningBudget::UNLIMITED,
+        }
+    }
+}
+
+/// The write-rule pre-check of a whole gesture, before a single act of it
+/// is staged: the batch's solvency (D19), then the account's signing
+/// budget (api-spec.md "Conventions" — the signing budget).
+///
+/// The budget is asked the way solvency is: of the whole batch, up front,
+/// so a batch the budget would cut is refused entire and the author never
+/// holds half a gesture. Callers run this last, after the gesture's own
+/// validation, so a gesture refused for anything else spends nothing — and
+/// a batch the budget refuses spends nothing either.
+///
+/// `acts` lists the gesture's staged acts per signing class; their sum is
+/// the count solvency prices.
+///
+/// Only prepare spends. The handshake legs (`submitProposals`,
+/// `approveActs`) never consult the budget: they run after the pre-sign,
+/// and a transient limit there would drop an act the author already
+/// signed.
+pub async fn check_write_rule<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    staging: &Staging,
+    account: Uuid,
+    author: &str,
+    acts: &[(SigningClass, usize)],
+) -> Result<(), PrepareError> {
+    check_batch_solvency(boundary, author, acts.iter().map(|(_, n)| n).sum()).await?;
+    if ratelimit::spend_signing(pool, &staging.budget, account, acts).await? {
+        Ok(())
+    } else {
+        Err(PrepareError::SigningBudget)
+    }
 }
 
 /// Prices a whole batch against the author's balance before a single act

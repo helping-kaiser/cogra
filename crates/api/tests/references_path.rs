@@ -33,6 +33,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 const GC: i64 = 8;
+const STAGING: api::prepare::Staging = api::prepare::Staging::unbudgeted(GC);
 
 fn license() -> api::content::License {
     api::content::License {
@@ -113,7 +114,7 @@ impl Rig {
         let prepared = api::content::prepare_post(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             api::content::PostDraft {
                 title: Some(title.into()),
@@ -147,7 +148,7 @@ impl Rig {
         let prepared = references::prepare_reference(
             &self.pool,
             &self.boundary,
-            GC,
+            STAGING,
             actor,
             artifact,
             &ReferenceDraft {
@@ -321,7 +322,7 @@ async fn an_artifact_cannot_cite_itself(pool: PgPool) {
     let post = rig.post(alice, &key, "post").await;
 
     let e = bad_input(
-        references::prepare_reference(&rig.pool, &rig.boundary, GC, alice, post, &draft(post))
+        references::prepare_reference(&rig.pool, &rig.boundary, STAGING, alice, post, &draft(post))
             .await
             .expect_err("refused"),
     );
@@ -340,7 +341,7 @@ async fn citing_from_an_artifact_that_does_not_exist_names_the_artifact(pool: Pg
         references::prepare_reference(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             alice,
             Uuid::new_v4(),
             &draft(target),
@@ -371,7 +372,7 @@ async fn a_mention_resolves_its_target_to_a_profile(pool: PgPool) {
 
     let alice_address = rig.address(alice).await;
     let middle = common::l1::identifier::NodeId::parse("mint:act:alice:0:publish").expect("node");
-    let g = references::reference_gesture(&alice_address, middle, &planned, vec![]);
+    let g = references::reference_gesture(&alice_address, middle, &planned, &[]);
     let target = match &g.target {
         api::prepare::Target::Node(n) => n.clone(),
         api::prepare::Target::OwnMint => panic!("never an own mint"),
@@ -445,10 +446,16 @@ async fn a_citation_commits_an_empty_payload(pool: PgPool) {
     let carrier = rig.post(alice, &key, "carrier").await;
     let cited = rig.post(alice, &key, "cited").await;
 
-    let prepared =
-        references::prepare_reference(&rig.pool, &rig.boundary, GC, alice, carrier, &draft(cited))
-            .await
-            .expect("prepares");
+    let prepared = references::prepare_reference(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        alice,
+        carrier,
+        &draft(cited),
+    )
+    .await
+    .expect("prepares");
     assert!(prepared.proposal.payload.is_empty());
     assert_eq!(prepared.proposal.body.family, Family::Reference);
 }
@@ -577,7 +584,7 @@ async fn the_standing_reference_cap_refuses_the_citation_past_fifty(pool: PgPool
         references::prepare_reference(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             alice,
             artifact,
             &draft(target),
@@ -614,7 +621,7 @@ async fn a_netted_bundle_frees_a_slot_under_the_standing_reference_cap(pool: PgP
     references::prepare_reference(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         artifact,
         &draft(target),
@@ -646,9 +653,16 @@ async fn the_standing_reference_cap_counts_only_the_citing_authors_own_set(pool:
     )
     .await;
 
-    references::prepare_reference(&rig.pool, &rig.boundary, GC, bob, artifact, &draft(target))
-        .await
-        .expect("bob's own set on this artifact is empty");
+    references::prepare_reference(
+        &rig.pool,
+        &rig.boundary,
+        STAGING,
+        bob,
+        artifact,
+        &draft(target),
+    )
+    .await
+    .expect("bob's own set on this artifact is empty");
 }
 
 /// The fold nets — it does not pick a winner. Three records from one
@@ -802,7 +816,7 @@ async fn a_pending_citation_shows_only_in_the_pending_inclusive_view(pool: PgPoo
     let prepared = references::prepare_reference(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         carrier,
         &ReferenceDraft {
@@ -930,7 +944,7 @@ async fn withdrawal_stages_the_counter_records_that_net_the_bundle(pool: PgPool)
     let batch = references::prepare_reference_withdrawal(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         carrier,
         cited,
@@ -999,7 +1013,7 @@ async fn the_served_withdrawal_cost_is_the_batch_the_prepare_stages(pool: PgPool
     let batch = references::prepare_reference_withdrawal(
         &rig.pool,
         &rig.boundary,
-        GC,
+        STAGING,
         alice,
         carrier,
         cited,
@@ -1186,7 +1200,7 @@ async fn withdrawing_an_absent_citation_is_refused(pool: PgPool) {
         references::prepare_reference_withdrawal(
             &rig.pool,
             &rig.boundary,
-            GC,
+            STAGING,
             alice,
             carrier,
             cited,
