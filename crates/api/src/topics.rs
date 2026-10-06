@@ -177,7 +177,8 @@ fn path(index: usize, field: &str) -> Vec<String> {
 
 /// The Tag gesture: the A-leg's act tuple toward the middle, terminating
 /// at the Type. `deps` orders the act behind the record that mints its
-/// middle, when the two are staged together.
+/// middle while that record is in flight — staged in the same batch, or
+/// already pending when the tag is added later.
 pub fn tag_gesture(
     author: &str,
     middle: NodeId,
@@ -301,11 +302,12 @@ pub async fn prepare_tag<B: L1Boundary>(
     let tag = plan_one(draft)?;
     let middle = taggable_node(pool, target).await?;
     let author = author_address(pool, viewer).await?;
-    let live = live_names(pool, &author, &middle).await?;
+    let live = live_names(pool, &author, &middle.node).await?;
     if let Some(message) = over_the_standing_cap(&live, std::slice::from_ref(&tag)) {
         return Err(TagError::at(vec!["name".to_string()], message).into());
     }
-    let gesture = tag_gesture(&author, middle, &tag, vec![])?;
+    let deps = crate::nodes::deps_awaiting(&[], [&middle.awaits]);
+    let gesture = tag_gesture(&author, middle.node, &tag, deps)?;
     prepare::check_write_rule(
         boundary,
         pool,
@@ -318,12 +320,16 @@ pub async fn prepare_tag<B: L1Boundary>(
     Ok(prepare::prepare(boundary, pool, staging.gc_after_epochs, viewer, gesture).await?)
 }
 
-/// The minted node a tag's middle leg enters. The Taggable classes the
-/// substrate admits are wider than this (layer1-interface.md §9); the
-/// classes with an API surface to tag are the content nodes this slice
-/// carries.
-async fn taggable_node(pool: &PgPool, target: Uuid) -> Result<NodeId, TopicsError> {
-    crate::nodes::resolve_content_node(pool, target)
+/// The minted node a tag's middle leg enters, with its minting act while
+/// that is in flight — a tag on still-pending content lands behind it or
+/// expires with it. The Taggable classes the substrate admits are wider
+/// than this (layer1-interface.md §9); the classes with an API surface to
+/// tag are the content nodes this slice carries.
+async fn taggable_node(
+    pool: &PgPool,
+    target: Uuid,
+) -> Result<crate::nodes::ResolvedNode, TopicsError> {
+    crate::nodes::resolve_content_target(pool, target)
         .await
         .map_err(|e| TopicsError::Internal(e.to_string()))?
         .ok_or_else(|| TagError::at(vec!["target".to_string()], "no such taggable content").into())

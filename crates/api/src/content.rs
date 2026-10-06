@@ -780,7 +780,8 @@ async fn stage_tags<B: L1Boundary>(
 /// identifier, and it exists only once prepare has allocated the sequence
 /// value. Each citation declares the minting act as a dependency, so the
 /// epoch close cannot order a citation ahead of the artifact it cites
-/// from (D17: an own in-flight target declares the dep).
+/// from; a still-pending *target* adds its own minting act beside it, in
+/// `references::reference_gesture` (D17).
 async fn stage_references<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -930,14 +931,16 @@ pub async fn prepare_comment<B: L1Boundary>(
         Gesture {
             author: address.clone(),
             family: Family::Review,
-            middle: Some(parent),
+            middle: Some(parent.node),
             target: Target::OwnMint,
             p_d,
             p_i,
             settlement_ref: None,
             license: Some(draft.license.canonical()),
             asserted_parents: vec![],
-            deps: vec![],
+            // A reply to a still-pending parent lands behind it, or
+            // expires with it — never toward a parent that never existed.
+            deps: nodes::deps_awaiting(&[], [&parent.awaits]),
             payload,
             node: Some(node),
         },
@@ -992,7 +995,9 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Review, &comment.l1_node_id, &address).await?;
-    let parent = parent_node(pool, comment.target_id).await?;
+    // An edit chains behind its landed genesis (`asserted_parents`), and
+    // the genesis already declared the parent's mint: nothing to await.
+    let parent = parent_node(pool, comment.target_id).await?.node;
     prepare::check_write_rule(
         boundary,
         pool,
@@ -1072,10 +1077,10 @@ async fn chained_edit_target(
     Ok(ChainedTarget { target, parent })
 }
 
-/// Resolves a comment target UUID to its minted node identifier — a
-/// Post or Comment this slice.
-async fn parent_node(pool: &PgPool, target: Uuid) -> Result<NodeId, ContentError> {
-    nodes::resolve_content_node(pool, target)
+/// Resolves a comment target UUID to its minted node — a Post or Comment
+/// this slice — with the act minting it while that is still in flight.
+async fn parent_node(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode, ContentError> {
+    nodes::resolve_content_target(pool, target)
         .await
         .map_err(|e| ContentError::Internal(e.to_string()))?
         .ok_or_else(|| ContentError::BadInput {

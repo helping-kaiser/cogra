@@ -17,7 +17,7 @@
 use common::hashtag::canonicalize;
 use common::l1::census::Family;
 use common::l1::fold::BundleSum;
-use common::l1::identifier::NodeId;
+use common::l1::identifier::{ActId, NodeId};
 use postgres_store::stance::BundleView;
 use postgres_store::{PgPool, stance as stance_store};
 use uuid::Uuid;
@@ -57,6 +57,10 @@ impl From<NodeError> for StanceError {
 pub struct StanceTarget {
     pub node: NodeId,
     pub family: Family,
+    /// The act minting the node while it is still in flight. A stance on
+    /// pending content declares it, so the record lands behind the node or
+    /// expires with it, never toward a node that never existed.
+    pub awaits: Option<ActId>,
 }
 
 /// How a stance names the node it points at.
@@ -99,24 +103,32 @@ pub async fn resolve_target(
     pool: &PgPool,
     target: &TargetRef,
 ) -> Result<StanceTarget, StanceError> {
-    let node = match target {
+    let (node, awaits) = match target {
         TargetRef::Topic(raw) => {
             let name = canonicalize(raw).map_err(|e| StanceError::BadInput {
                 field: "topicName",
                 message: e.to_string(),
             })?;
-            NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()))?
+            let node = NodeId::name(&name).map_err(|e| StanceError::Internal(e.to_string()))?;
+            (node, None)
         }
-        TargetRef::Node(id) => resolve_id(pool, *id).await?,
+        TargetRef::Node(id) => {
+            let resolved = resolve_id(pool, *id).await?;
+            (resolved.node, resolved.awaits)
+        }
     };
     let family = family_for(&node);
-    Ok(StanceTarget { node, family })
+    Ok(StanceTarget {
+        node,
+        family,
+        awaits,
+    })
 }
 
 /// Resolves an L2 id to the node a stance points at, naming `target` as
 /// the offending field when nothing answers to the id.
-async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<NodeId, StanceError> {
-    nodes::resolve_id(pool, target)
+async fn resolve_id(pool: &PgPool, target: Uuid) -> Result<nodes::ResolvedNode, StanceError> {
+    nodes::resolve_target(pool, target)
         .await?
         .ok_or_else(|| StanceError::BadInput {
             field: "target",
@@ -280,7 +292,7 @@ fn stance_gesture(author: &str, resolved: &StanceTarget, p_d: f64, p_i: f64) -> 
         settlement_ref: None,
         license: None,
         asserted_parents: vec![],
-        deps: vec![],
+        deps: nodes::deps_awaiting(&[], [&resolved.awaits]),
         payload: vec![],
         node: None,
     }

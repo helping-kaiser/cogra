@@ -938,6 +938,7 @@ async fn a_topic_target_record_serves_a_null_target_beside_its_id(pool: PgPool) 
     let reference = api::references::PlannedReference {
         target_id: Uuid::nil(),
         target: common::l1::identifier::NodeId::name("rust").expect("node"),
+        awaits: None,
         relevance: 0.5,
         support: 0.5,
     };
@@ -945,7 +946,7 @@ async fn a_topic_target_record_serves_a_null_target_beside_its_id(pool: PgPool) 
         &key.address(),
         common::l1::identifier::NodeId::parse(&middle).expect("node"),
         &reference,
-        vec![],
+        &[],
     );
     let prepared = api::prepare::prepare(
         &api::l1::StandInBoundary(rig.standin.clone()),
