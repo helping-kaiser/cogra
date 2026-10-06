@@ -100,8 +100,13 @@
    unsigned — the page's one row that comes and goes. If the key goes again,
    the row goes with it and the waiting-for-key state owns the surface
    (jakob 2026-10-02, kept picks 7). Quiet: a navigating row and nothing
-   more, no badge, no colour, no reminder anywhere else. */
+   more, no badge, no colour, no reminder anywhere else.
 
+   REGISTERED under the `settings` prefix (design ⇄ impl seam 059/061, the Hide
+   packet): the body names its parts, and `NODE` carries them onto the built
+   board and into `nodes.json`. */
+
+export const NODE = "settings";
 export const FRAME = { width: 390, height: 2670 };
 export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
 export const VALS = `deleteFootnote: this.props.reader === "applicant" ? "Nothing is deleted here. The next screen says what goes and what stays." : "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you."`;

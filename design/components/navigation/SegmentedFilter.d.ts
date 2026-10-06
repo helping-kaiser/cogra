@@ -21,6 +21,8 @@ export interface SegmentedFilterProps {
    * unfinished. Segments stay equal width.
    */
   block?: boolean;
+  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names each segment as `<value>Option` — `lightOption`, `autoOption`. */
+  node?: string;
 }
 
 export declare function SegmentedFilter(props: SegmentedFilterProps): JSX.Element | null;

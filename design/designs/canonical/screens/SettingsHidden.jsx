@@ -22,15 +22,20 @@
 
    WHEN NOBODY IS HIDDEN THIS SHEET DOES NOT OPEN. The settings row goes inert
    and reads `None` — the menus round's own rule, that a tap which can only
-   produce an empty surface is a tap spent on nothing. */
+   produce an empty surface is a tap spent on nothing.
+
+   REGISTERED under the `settings` prefix (design ⇄ impl seam 059/061, the Hide
+   packet): the page is `Settings`', and the sheet is `hiddenSheet`, its rows
+   `account`s keyed by the hidden person's handle. */
+export const NODE = "settings";
 export function Screen() {
   return (
     <>
       <SettingsBody />
 
-      <BottomSheet open ariaLabel="Hidden accounts" maxHeight="88%">
-        <SheetTitle>Hidden accounts</SheetTitle>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 var(--space-6)" }}>
+      <BottomSheet open ariaLabel="Hidden accounts" maxHeight="88%" node="hiddenSheet">
+        <SheetTitle node="title">Hidden accounts</SheetTitle>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 var(--space-6)" }} data-node="list">
           <ContentRow
             variant="chronicle"
             inert
@@ -39,7 +44,13 @@ export function Screen() {
             title="Juno Baptiste"
             titleAside="@juno"
             second="Hidden 3d"
-            trailing={<InlineAction onClick={() => {}}>Unhide</InlineAction>}
+            trailing={
+              <InlineAction onClick={() => {}} node="unhide">
+                Unhide
+              </InlineAction>
+            }
+            node="account"
+            nodeKey="juno"
           />
           <ContentRow
             variant="chronicle"
@@ -49,7 +60,13 @@ export function Screen() {
             title="Ada Okonkwo"
             titleAside="@ada"
             second="Hidden 14d"
-            trailing={<InlineAction onClick={() => {}}>Unhide</InlineAction>}
+            trailing={
+              <InlineAction onClick={() => {}} node="unhide">
+                Unhide
+              </InlineAction>
+            }
+            node="account"
+            nodeKey="ada"
           />
           <ContentRow
             variant="chronicle"
@@ -59,7 +76,13 @@ export function Screen() {
             title="Tobias Lindqvist"
             titleAside="@tobias"
             second="Hidden 12.08.2026"
-            trailing={<InlineAction onClick={() => {}}>Unhide</InlineAction>}
+            trailing={
+              <InlineAction onClick={() => {}} node="unhide">
+                Unhide
+              </InlineAction>
+            }
+            node="account"
+            nodeKey="tobias"
           />
         </div>
       </BottomSheet>

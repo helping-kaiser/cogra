@@ -3075,20 +3075,28 @@ function ReportProblemBody({ words }) {
    logged-in surface and sits under an inner page's header.
 
    `deleteFootnote` is the deletion group's footnote — the member's by
-   default; `Settings` passes its reader chip's hole. */
+   default; `Settings` passes its reader chip's hole.
+
+   The element names are the `settings` prefix's (design ⇄ impl seam 059/061):
+   `Settings` and `SettingsHidden` register them, and every other board this
+   page stands on renders them stripped. A group is named for its heading, the
+   two unheaded ones for what the page's own note calls them — leaving and
+   ending — and a row by one word for what it is. The sessions are keyed by
+   their position, this device first: two devices can carry one name. */
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
 function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE } = {}) {
   return (
     <>
-      <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
+      <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
       {deleting && <DeletionBand days={6} />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
           label="Theme"
           footnote="Auto follows your device's own setting, and the choice stays on this device."
+          node="theme"
         >
           <div>
             <SegmentedFilter
@@ -3100,6 +3108,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
                 { value: "dark", label: "Dark" },
                 { value: "auto", label: "Auto" },
               ]}
+              node="picker"
             />
           </div>
         </SettingsGroup>
@@ -3107,38 +3116,44 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
         <SettingsGroup
           label="Giving an opinion"
           footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot."
+          node="stance"
         >
           <SettingsRow
             name="settings-stance-input"
             selected
             label="The pad"
             status="A tap opens it; drift to where it feels right."
+            node="pad"
           />
           <SettingsRow
             name="settings-stance-input"
             selected={false}
             label="Sliders"
             status="One slider per side of the opinion."
+            node="sliders"
           />
           <SettingsRow
             name="settings-stance-input"
             selected={false}
             label="Typed values"
             status="Type both numbers exactly."
+            node="typed"
           />
         </SettingsGroup>
 
         <SettingsGroup
           label="Writing"
           footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
+          node="writing"
         >
           <SettingsRow
             checked
             label="Confirm multi-action submits"
             status="Ask first when one submit signs more than one action."
             onOpen={() => {}}
+            node="confirm"
           />
-          <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} />
+          <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} node="license" />
         </SettingsGroup>
 
         {/* THE EXACT VALUES ARE A READING SETTING, and a client-local one —
@@ -3150,13 +3165,15 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
         <SettingsGroup
           label="Reading"
           footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
+          node="reading"
         >
-          <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} />
+          <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} node="feed" />
           <SettingsRow
             checked={false}
             label="Show exact values"
             status="The number pairs behind the faces."
             onOpen={() => {}}
+            node="exact"
           />
         </SettingsGroup>
 
@@ -3173,8 +3190,9 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
         <SettingsGroup
           label="People"
           footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+          node="people"
         >
-          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} />
+          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} node="hidden" />
         </SettingsGroup>
 
         <SettingsGroup
@@ -3184,45 +3202,66 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
               ? "Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back."
               : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
           }
+          node="backup"
         >
-          <SettingsRow label="Recovery code" status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"} onOpen={() => {}} />
-          <SettingsRow label="Your key" onOpen={() => {}} />
+          <SettingsRow
+            label="Recovery code"
+            status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"}
+            onOpen={() => {}}
+            node="recovery"
+          />
+          <SettingsRow label="Your key" onOpen={() => {}} node="key" />
           {keptPicks > 0 && (
-            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} />
+            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
           )}
         </SettingsGroup>
 
         <SettingsGroup
           label="Sessions"
           footnote="A device you sign out can stay signed in for up to 15 minutes."
+          node="sessions"
         >
-          <SettingsRow label="Firefox on Ubuntu" status="This browser" inert />
+          <SettingsRow label="Firefox on Ubuntu" status="This browser" inert node="session" nodeKey="1" />
           <SettingsRow
             label="Pixel 8"
             status="Last used 2d"
             inert
-            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
+            trailing={
+              <InlineAction onClick={() => {}} node="revoke">
+                Revoke
+              </InlineAction>
+            }
+            node="session"
+            nodeKey="2"
           />
           <SettingsRow
             label="Unnamed device"
             status="Last used 12.08.2026"
             inert
-            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
+            trailing={
+              <InlineAction onClick={() => {}} node="revoke">
+                Revoke
+              </InlineAction>
+            }
+            node="session"
+            nodeKey="3"
           />
-          <SettingsRow action label="Sign out everywhere else" onOpen={() => {}} />
+          <SettingsRow action label="Sign out everywhere else" onOpen={() => {}} node="elsewhere" />
         </SettingsGroup>
 
         <SettingsGroup
           label="Credentials"
           footnote="Changing your password signs out every other device."
+          node="credentials"
         >
-          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
-          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
+          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
           <SettingsRow
             label="Email"
             value="sol@solferreira.art"
             status={emailPending ? "Change pending" : undefined}
             onOpen={() => {}}
+            node="email"
           />
         </SettingsGroup>
 
@@ -3251,24 +3290,25 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             placeholders until CoGra is on a server, the APK path's way:
             real-shaped values on the repo's own `.local` domain, swapped
             when the addresses exist. */}
-        <SettingsGroup label="About">
-          <SettingsRow label="Watch the intro again" onOpen={() => {}} />
-          <SettingsRow label="About CoGra" onOpen={() => {}} />
-          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} />
-          <SettingsRow label="Report a problem" onOpen={() => {}} />
-          <SettingsRow label="Contact" value={CONTACT_ADDRESS} onOpen={() => {}} />
-          <SettingsRow label="Privacy" onOpen={() => {}} />
-          <SettingsRow label="Terms" onOpen={() => {}} />
+        <SettingsGroup label="About" node="about">
+          <SettingsRow label="Watch the intro again" onOpen={() => {}} node="intro" />
+          <SettingsRow label="About CoGra" onOpen={() => {}} node="aboutCogra" />
+          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} node="whatsNew" />
+          <SettingsRow label="Report a problem" onOpen={() => {}} node="report" />
+          <SettingsRow label="Contact" value={CONTACT_ADDRESS} onOpen={() => {}} node="contact" />
+          <SettingsRow label="Privacy" onOpen={() => {}} node="privacy" />
+          <SettingsRow label="Terms" onOpen={() => {}} node="terms" />
         </SettingsGroup>
 
-        <SettingsGroup ariaLabel="Sign out">
+        <SettingsGroup ariaLabel="Sign out" node="leaving">
           <SettingsRow
             checked={forget}
             label="Don't remember this account on this device"
             status="Your key, your draft and any kept picks are cleared from this browser when you sign out."
             onOpen={() => {}}
+            node="forget"
           />
-          <SettingsRow action label="Sign out" onOpen={() => {}} />
+          <SettingsRow action label="Sign out" onOpen={() => {}} node="leave" />
         </SettingsGroup>
 
         {/* DELETING THE ACCOUNT IS THE LAST ROW, IN ITS OWN GROUP, QUIET AT REST
@@ -3296,8 +3336,8 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             their deletion is confirmed in the app and nothing is mailed, so it
             reads `Nothing is deleted here. The next screen says what goes and
             what stays.` `Settings`' reader chip passes it as a hole. */}
-        <SettingsGroup ariaLabel="Delete account" footnote={deleting ? undefined : deleteFootnote}>
-          <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} />
+        <SettingsGroup ariaLabel="Delete account" footnote={deleting ? undefined : deleteFootnote} node="ending">
+          <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} node="delete" />
         </SettingsGroup>
       </div>
     </>
