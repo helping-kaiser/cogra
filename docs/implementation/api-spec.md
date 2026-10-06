@@ -377,6 +377,10 @@ normal, visible account state, not an auth fault — prepare
 returns it as a `userError` with the restoration flow left to the
 product surface
 ([architecture.md "Write eligibility"](architecture.md#write-eligibility-and-account-states)).
+The per-account signing budget is the third such refusal and rides
+the same `WRITE_RULE_FAILED`: there is only so much to sign at a
+time, and the person acts on it by waiting (see "The signing
+budget" under the mutation conventions).
 
 A single `ErrorCode` enum is the one vocabulary across both tiers — the
 `extensions.code` on a transport fault and the `code` on a `UserError`
@@ -473,7 +477,7 @@ enum ErrorCode {
   EMAIL_NOT_VERIFIED           # acting before the address is proven
   NOT_FOUND                    # an id resolved to nothing
   BAD_INPUT                    # malformed args, or a constraint not modeled as data
-  RATE_LIMITED                 # an auth endpoint's per-IP / per-account backoff
+  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget — never a signing act
   INTERNAL                     # collapsed server fault; detail is logged, not surfaced
 
   # Expected business failures — carried in UserError.code
@@ -487,7 +491,7 @@ enum ErrorCode {
   VERIFICATION_TOKEN_INVALID   # email verification token invalid or expired
   RESET_TOKEN_INVALID          # password-reset token invalid, expired, or used
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
-  WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency or W2 stamps
+  WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency, W2 stamps, or the signing budget
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
   SIGNATURE_INVALID            # a submitted signature does not verify the record
   CHALLENGE_EXPIRED            # the key-backup upload challenge is unknown, expired, or spent
@@ -2412,6 +2416,22 @@ These bind every mutation below.
   common failure — an author who plainly cannot afford the batch —
   is refused whole and up front rather than discovered halfway
   through.
+- **The signing budget.** Beside solvency, prepare spends the
+  batch from the acting account's signing budget — under `actAs`,
+  the Collective's actor's — before staging a single act, and a
+  batch the budget cannot carry is refused entire and spends
+  nothing. The unit is the staged act, counted per signing class
+  (posts, comments, edits, stances with their severance
+  counter-records, claims — Tags and References with their
+  withdrawals and a creation batch's topics and citations — and
+  approvals), plus a daily backstop over every act. A refusal is a
+  `WRITE_RULE_FAILED` userError with no field, never the auth
+  endpoints' `RATE_LIMITED`. Only prepare spends: `submitProposals`
+  and `approveActs` are never budgeted, so an act the author
+  already signed is never dropped by a transient limit. The
+  thresholds are operational, sized so no one acting in earnest
+  meets them
+  ([development.md](development.md#environment-variables)).
 - **The viewer is the actor; `actAs` names a Collective acting
   through them.** No mutation takes an author argument — the
   authenticated viewer in the execution context initiates every
@@ -2510,9 +2530,10 @@ These bind every mutation below.
 The system view is
 [architecture.md "The write path"](architecture.md#the-write-path);
 these are its API types. A prepare validates, pre-checks the write
-rule (a failure is a `WRITE_RULE_FAILED` userError — a normal
-account state with a product-surfaced restoration flow, never an
-auth fault), stages the write, and returns the canonical material.
+rule — solvency, and the per-account signing budget (a failure is
+a `WRITE_RULE_FAILED` userError — a normal account state with a
+product-surfaced restoration flow, never an auth fault) — stages
+the write, and returns the canonical material.
 The device recomputes the pre-digests from the proposal and
 pre-signs; after `submitProposals` returns the host-sealed
 verified act, it verifies the seal, the exact body, and both
@@ -4336,7 +4357,9 @@ type AuthSession {
 }
 
 "A session from credentials; auth is null with an INVALID_CREDENTIALS
- userError when the email / password pair did not match."
+ userError when the email / password pair did not match. A login
+ backoff refuses at the transport with RATE_LIMITED and serves no
+ retry-after figure."
 type LogInPayload {
   auth: AuthSession
   "The pending refresh-token-reuse security event (auth.md 'Reuse

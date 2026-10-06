@@ -36,6 +36,7 @@ use crate::l1::StandInBoundary;
 use crate::mailer::{Mail, Mailer, WebOrigin};
 use crate::media::{self, BlobStore, MediaConfig, resumable};
 use crate::onboarding::{self, OnboardingConfig, OnboardingError};
+use crate::prepare::Staging;
 use crate::profile::ProfileError;
 use crate::ratelimit::{self, RateLimitConfig, RequestIp, Window, scope};
 use crate::references::ReferencesError;
@@ -111,6 +112,16 @@ async fn actor_pubkey(pool: &PgPool, user_id: Uuid) -> async_graphql::Result<Opt
 /// The request's derived client IP as a limiter key.
 fn request_ip(ctx: &Context<'_>) -> async_graphql::Result<String> {
     Ok(ctx.data::<RequestIp>()?.0.to_string())
+}
+
+/// What a member's prepare stages under: the GC bound its staged writes
+/// report and the signing budget its batch spends (api-spec.md
+/// "Conventions" — the signing budget).
+fn staging(ctx: &Context<'_>) -> async_graphql::Result<Staging> {
+    Ok(Staging {
+        gc_after_epochs: ctx.data::<OnboardingConfig>()?.gc_after_epochs,
+        budget: ctx.data::<RateLimitConfig>()?.signing,
+    })
 }
 
 /// The transport-tier refusal for an acting request from a non-member
@@ -229,6 +240,15 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
         ),
         RelayError::Staged(staged::StagedError::NotFound(_)) => {
             UserError::at(ErrorCode::NotFound, "unknown staged write", path)
+        }
+        RelayError::Staged(staged::StagedError::WrongState { actual, .. })
+            if actual == staged::StagedState::Expired.as_str() =>
+        {
+            UserError::at(
+                ErrorCode::StagedWriteExpired,
+                "the staged write was garbage-collected unlanded; re-prepare",
+                path,
+            )
         }
         RelayError::Staged(staged::StagedError::WrongState { actual, .. }) => UserError::at(
             ErrorCode::BadInput,
@@ -1423,6 +1443,7 @@ impl Mutation {
         let boundary = ctx.data::<StandInBoundary>()?;
         let funding = ctx.data::<StandIn>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
         let approvals: Vec<onboarding::Approval> = input
             .approvals
             .iter()
@@ -1432,8 +1453,16 @@ impl Mutation {
                 p_i: a.p_interest.0,
             })
             .collect();
-        match onboarding::approve_applicants(pool, boundary, funding, cfg, v.user_id, &approvals)
-            .await
+        match onboarding::approve_applicants(
+            pool,
+            boundary,
+            funding,
+            cfg,
+            &limits.signing,
+            v.user_id,
+            &approvals,
+        )
+        .await
         {
             Ok(prepared) => Ok(PreparePayload {
                 writes: Some(
@@ -2090,7 +2119,7 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         let target = match stance::TargetRef::of(input.target, input.topic_name) {
             Ok(target) => target,
             Err(e) => return Ok(stance_refusal(e)),
@@ -2098,7 +2127,7 @@ impl Mutation {
         match stance::prepare_stance(
             pool,
             boundary,
-            cfg.gc_after_epochs,
+            staging,
             v.user_id,
             &target,
             input.p_directed.0,
@@ -2127,14 +2156,12 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         let target = match stance::TargetRef::of(input.target, input.topic_name) {
             Ok(target) => target,
             Err(e) => return Ok(stance_refusal(e)),
         };
-        match stance::prepare_severance(pool, boundary, cfg.gc_after_epochs, v.user_id, &target)
-            .await
-        {
+        match stance::prepare_severance(pool, boundary, staging, v.user_id, &target).await {
             Ok(prepared) => Ok(PreparePayload {
                 writes: Some(
                     prepared
@@ -2360,7 +2387,7 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         let license = match input.license.to_content() {
             Ok(license) => license,
             Err(e) => return Ok(PrepareContentPayload::from_error(e)),
@@ -2376,9 +2403,7 @@ impl Mutation {
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
-        match crate::content::prepare_post(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
-            .await
-        {
+        match crate::content::prepare_post(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
             Err(e) => Ok(PrepareContentPayload::from_error(e)),
         }
@@ -2396,7 +2421,7 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         let draft = crate::content::PostEditDraft {
             id: input.id,
             title: input.title,
@@ -2405,15 +2430,7 @@ impl Mutation {
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
-        match crate::content::prepare_post_edit(
-            pool,
-            boundary,
-            cfg.gc_after_epochs,
-            v.user_id,
-            draft,
-        )
-        .await
-        {
+        match crate::content::prepare_post_edit(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
             Err(e) => Ok(PrepareContentPayload::from_error(e)),
         }
@@ -2429,7 +2446,7 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         let license = match input.license.to_content() {
             Ok(license) => license,
             Err(e) => return Ok(PrepareContentPayload::from_error(e)),
@@ -2445,9 +2462,7 @@ impl Mutation {
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
-        match crate::content::prepare_comment(pool, boundary, cfg.gc_after_epochs, v.user_id, draft)
-            .await
-        {
+        match crate::content::prepare_comment(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
             Err(e) => Ok(PrepareContentPayload::from_error(e)),
         }
@@ -2467,11 +2482,11 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         match crate::topics::prepare_tag(
             pool,
             boundary,
-            cfg.gc_after_epochs,
+            staging,
             v.user_id,
             input.target,
             &input.to_draft(),
@@ -2510,11 +2525,11 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         match crate::references::prepare_reference(
             pool,
             boundary,
-            cfg.gc_after_epochs,
+            staging,
             v.user_id,
             input.artifact,
             &input.to_draft(),
@@ -2544,11 +2559,11 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         match crate::references::prepare_reference_withdrawal(
             pool,
             boundary,
-            cfg.gc_after_epochs,
+            staging,
             v.user_id,
             input.artifact,
             input.target,
@@ -2579,21 +2594,14 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         let draft = crate::content::CommentEditDraft {
             id: input.id,
             content: input.content,
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
         };
-        match crate::content::prepare_comment_edit(
-            pool,
-            boundary,
-            cfg.gc_after_epochs,
-            v.user_id,
-            draft,
-        )
-        .await
+        match crate::content::prepare_comment_edit(pool, boundary, staging, v.user_id, draft).await
         {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),
             Err(e) => Ok(PrepareContentPayload::from_error(e)),
@@ -2612,21 +2620,15 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let cfg = ctx.data::<OnboardingConfig>()?;
+        let staging = staging(ctx)?;
         let draft = crate::profile::ProfileUpdateDraft {
             display_name: edit_field(input.display_name),
             bio: edit_field(input.bio),
             website_url: edit_field(input.website_url),
             avatar_media_id: image_field(input.avatar_media_id),
         };
-        match crate::profile::prepare_profile_update(
-            pool,
-            boundary,
-            cfg.gc_after_epochs,
-            v.user_id,
-            draft,
-        )
-        .await
+        match crate::profile::prepare_profile_update(pool, boundary, staging, v.user_id, draft)
+            .await
         {
             Ok(prepared) => Ok(PreparePayload {
                 writes: Some(vec![PreparedWrite::from_prepared(prepared)]),

@@ -461,7 +461,7 @@ async fn relay_operator_profile_update(host: &StandIn, pool: &PgPool) -> (Uuid, 
     let prepared = api::profile::prepare_profile_update(
         pool,
         &boundary,
-        api::ingest::DEFAULT_GC_AFTER_EPOCHS,
+        api::prepare::Staging::unbudgeted(api::ingest::DEFAULT_GC_AFTER_EPOCHS),
         operator.id,
         ProfileUpdateDraft {
             display_name: Some("The Operator, edited".into()),

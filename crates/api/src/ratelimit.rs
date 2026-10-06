@@ -1,20 +1,24 @@
 //! ´mod:module:ratelimit´
 //!
-//! Auth-endpoint rate limiting (auth.md "Rate limiting"): per-IP and
-//! per-key fixed windows plus the login backoff.
+//! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
+//! plus the login backoff (auth.md "Rate limiting"), the media upload
+//! budget, and the per-account signing budget spent at prepare
+//! (api-spec.md "Conventions").
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
-//! survive restarts and hold across instances. Keys that name an account
-//! use the submitted, normalized email string: an unknown email consumes
-//! budget exactly like a known one, so the limiter never becomes an
-//! account-existence oracle (auth.md "Password reset" — success
-//! regardless of existence).
+//! survive restarts and hold across instances. Auth keys that name an
+//! account use the submitted, normalized email string: an unknown email
+//! consumes budget exactly like a known one, so the limiter never becomes
+//! an account-existence oracle (auth.md "Password reset" — success
+//! regardless of existence). The upload and signing budgets are keyed by
+//! the authenticated account itself.
 
 use std::net::IpAddr;
 
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use postgres_store::{PgPool, rate_limit as store};
+use uuid::Uuid;
 
 /// The request's derived client IP, injected by the GraphQL handler
 /// (lib.rs) from the CLIENT_IP_SOURCE-configured extractor.
@@ -34,6 +38,13 @@ pub mod scope {
     pub const RESEND_EMAIL: &str = "resend_email";
     pub const CONFIRM_IP: &str = "confirm_ip";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
+    pub const SIGN_POST: &str = "sign_post";
+    pub const SIGN_COMMENT: &str = "sign_comment";
+    pub const SIGN_EDIT: &str = "sign_edit";
+    pub const SIGN_STANCE: &str = "sign_stance";
+    pub const SIGN_CLAIM: &str = "sign_claim";
+    pub const SIGN_APPROVAL: &str = "sign_approval";
+    pub const SIGN_ANY: &str = "sign_any";
 }
 
 /// One fixed-window budget: at most `limit` attempts per `window_secs`.
@@ -41,6 +52,126 @@ pub mod scope {
 pub struct Window {
     pub limit: i32,
     pub window_secs: f64,
+}
+
+impl Window {
+    /// A window no test can trip by accident.
+    pub const GENEROUS: Self = Self {
+        limit: i32::MAX,
+        window_secs: 1.0,
+    };
+}
+
+/// The family class a staged act spends its signing budget from
+/// (api-spec.md "Conventions" — the signing budget). The classes follow
+/// the gestures a person makes, not the census families: an edit is its
+/// own class whatever it edits, and a counter-record spends from the
+/// class of the record it nets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SigningClass {
+    /// A Post's genesis Publish.
+    Post,
+    /// A Comment's genesis Review.
+    Comment,
+    /// An edit record — Post, Comment, or profile.
+    Edit,
+    /// Opinion and Affinity acts, severance counter-records included.
+    Stance,
+    /// Tag and Reference acts, withdrawal counter-records and creation-batch
+    /// claims included.
+    Claim,
+    /// An inviter's vouching Opinion on approval.
+    Approval,
+}
+
+impl SigningClass {
+    fn scope(self) -> &'static str {
+        match self {
+            Self::Post => scope::SIGN_POST,
+            Self::Comment => scope::SIGN_COMMENT,
+            Self::Edit => scope::SIGN_EDIT,
+            Self::Stance => scope::SIGN_STANCE,
+            Self::Claim => scope::SIGN_CLAIM,
+            Self::Approval => scope::SIGN_APPROVAL,
+        }
+    }
+}
+
+/// The per-account signing budget: one window per class, plus the daily
+/// backstop every staged act spends from. Thresholds are sized so no one
+/// acting in earnest meets them (seam 045.1); they exist to bound a
+/// runaway client, not to ration a person.
+#[derive(Debug, Clone, Copy)]
+pub struct SigningBudget {
+    pub post: Window,
+    pub comment: Window,
+    pub edit: Window,
+    pub stance: Window,
+    pub claim: Window,
+    pub approval: Window,
+    /// Every staged act, whatever its class.
+    pub any: Window,
+}
+
+impl SigningBudget {
+    /// A budget no test can trip by accident.
+    pub const UNLIMITED: Self = Self {
+        post: Window::GENEROUS,
+        comment: Window::GENEROUS,
+        edit: Window::GENEROUS,
+        stance: Window::GENEROUS,
+        claim: Window::GENEROUS,
+        approval: Window::GENEROUS,
+        any: Window::GENEROUS,
+    };
+
+    fn window(&self, class: SigningClass) -> Window {
+        match class {
+            SigningClass::Post => self.post,
+            SigningClass::Comment => self.comment,
+            SigningClass::Edit => self.edit,
+            SigningClass::Stance => self.stance,
+            SigningClass::Claim => self.claim,
+            SigningClass::Approval => self.approval,
+        }
+    }
+}
+
+impl Default for SigningBudget {
+    fn default() -> Self {
+        const HOUR: f64 = 3600.0;
+        const DAY: f64 = 86_400.0;
+        Self {
+            post: Window {
+                limit: 10,
+                window_secs: HOUR,
+            },
+            comment: Window {
+                limit: 60,
+                window_secs: HOUR,
+            },
+            edit: Window {
+                limit: 30,
+                window_secs: HOUR,
+            },
+            stance: Window {
+                limit: 300,
+                window_secs: HOUR,
+            },
+            claim: Window {
+                limit: 300,
+                window_secs: HOUR,
+            },
+            approval: Window {
+                limit: 50,
+                window_secs: DAY,
+            },
+            any: Window {
+                limit: 2000,
+                window_secs: DAY,
+            },
+        }
+    }
 }
 
 /// The thresholds (auth.md "Rate limiting" — the spec commits to which
@@ -74,6 +205,8 @@ pub struct RateLimitConfig {
     /// nothing about it and an insolvent actor can still fill the store —
     /// this is the only cost control media has.
     pub upload_account: Window,
+    /// The per-account signing budget, spent at prepare.
+    pub signing: SigningBudget,
 }
 
 impl Default for RateLimitConfig {
@@ -114,6 +247,7 @@ impl Default for RateLimitConfig {
                 limit: 60,
                 window_secs: 3600.0,
             },
+            signing: SigningBudget::default(),
         }
     }
 }
@@ -136,6 +270,13 @@ impl RateLimitConfig {
                 "RATE_LIMIT_UPLOAD_PER_ACCOUNT",
                 &mut cfg.upload_account.limit,
             ),
+            ("RATE_LIMIT_SIGN_POST", &mut cfg.signing.post.limit),
+            ("RATE_LIMIT_SIGN_COMMENT", &mut cfg.signing.comment.limit),
+            ("RATE_LIMIT_SIGN_EDIT", &mut cfg.signing.edit.limit),
+            ("RATE_LIMIT_SIGN_STANCE", &mut cfg.signing.stance.limit),
+            ("RATE_LIMIT_SIGN_CLAIM", &mut cfg.signing.claim.limit),
+            ("RATE_LIMIT_SIGN_APPROVAL", &mut cfg.signing.approval.limit),
+            ("RATE_LIMIT_SIGN_ANY", &mut cfg.signing.any.limit),
         ] {
             if let Ok(raw) = std::env::var(var) {
                 *limit = raw
@@ -149,10 +290,7 @@ impl RateLimitConfig {
     /// A config no test can trip by accident — for rigs exercising other
     /// surfaces.
     pub fn unlimited() -> Self {
-        let generous = Window {
-            limit: i32::MAX,
-            window_secs: 1.0,
-        };
+        let generous = Window::GENEROUS;
         Self {
             login_ip: generous,
             login_backoff_threshold: i32::MAX,
@@ -165,8 +303,51 @@ impl RateLimitConfig {
             resend_email: generous,
             confirm_ip: generous,
             upload_account: generous,
+            signing: SigningBudget::UNLIMITED,
         }
     }
+}
+
+/// Spends a batch's acts from the account's signing budget — each class's
+/// window and the backstop — whole or not at all. Answers whether the
+/// batch fit; a batch that does not fit spends nothing, so the author who
+/// waits is not charged for having asked.
+///
+/// `acts` lists the batch's staged acts per class; a class may repeat.
+pub async fn spend_signing(
+    pool: &PgPool,
+    budget: &SigningBudget,
+    account: Uuid,
+    acts: &[(SigningClass, usize)],
+) -> Result<bool, sqlx::Error> {
+    let key = account.to_string();
+    let mut per_class: Vec<(SigningClass, i32)> = Vec::new();
+    for &(class, n) in acts {
+        let n = i32::try_from(n).unwrap_or(i32::MAX);
+        match per_class.iter_mut().find(|(c, _)| *c == class) {
+            Some((_, total)) => *total = total.saturating_add(n),
+            None => per_class.push((class, n)),
+        }
+    }
+    let total = per_class
+        .iter()
+        .fold(0i32, |sum, (_, n)| sum.saturating_add(*n));
+    if total == 0 {
+        return Ok(true);
+    }
+    let charge = |scope: &'static str, window: Window, n: i32| store::Charge {
+        scope,
+        key: &key,
+        window_secs: window.window_secs,
+        n,
+        limit: window.limit,
+    };
+    let mut charges: Vec<store::Charge<'_>> = per_class
+        .iter()
+        .map(|&(class, n)| charge(class.scope(), budget.window(class), n))
+        .collect();
+    charges.push(charge(scope::SIGN_ANY, budget.any, total));
+    store::charge_all_within(pool, &charges).await
 }
 
 /// Counts the attempt and answers whether it is within the window's

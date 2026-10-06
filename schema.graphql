@@ -493,7 +493,8 @@ enum ErrorCode {
 	"""
 	BAD_INPUT
 	"""
-	An auth endpoint's per-IP / per-account backoff.
+	An auth or upload endpoint's per-IP / per-account budget — never a
+	signing act. The login backoff serves no retry-after figure.
 	"""
 	RATE_LIMITED
 	"""
@@ -537,7 +538,8 @@ enum ErrorCode {
 	"""
 	REFRESH_TOKEN_INVALID
 	"""
-	The prepare pre-check: W1 solvency or W2 stamps.
+	The prepare pre-check: W1 solvency, W2 stamps, or the signing
+	budget.
 	"""
 	WRITE_RULE_FAILED
 	"""

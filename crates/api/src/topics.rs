@@ -27,7 +27,8 @@ use postgres_store::{PgPool, topics as topics_store};
 use uuid::Uuid;
 
 use crate::l1::L1Boundary;
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::SigningClass;
 
 /// Tags per creation batch (D18). Each tag is its own priced act, so an
 /// N-tag post is an N+1-act batch through one prepare, one device signing
@@ -292,7 +293,7 @@ async fn live_names(
 pub async fn prepare_tag<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     target: Uuid,
     draft: &TagDraft,
@@ -305,7 +306,16 @@ pub async fn prepare_tag<B: L1Boundary>(
         return Err(TagError::at(vec!["name".to_string()], message).into());
     }
     let gesture = tag_gesture(&author, middle, &tag, vec![])?;
-    Ok(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?)
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Claim, 1)],
+    )
+    .await?;
+    Ok(prepare::prepare(boundary, pool, staging.gc_after_epochs, viewer, gesture).await?)
 }
 
 /// The minted node a tag's middle leg enters. The Taggable classes the
