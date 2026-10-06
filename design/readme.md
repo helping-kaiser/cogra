@@ -9209,6 +9209,39 @@ blessed, every `13X-final` recommendation adopted.
   resolved, 274 sidecars; five boards re-render. What stays open is
   backlog `13X-close-bite`.
 
+### The check wave — 2026-10-06
+
+The fabric's check round: four audit lanes read the merged tree against
+itself — code against sidecars, prose against prose, rulings against
+strings, and the MVP's coverage — and jakob ruled the brief whole (the
+digest `2026-10-06-check-round-rulings.md`: families A–J and fifteen
+questions, no vetoes). Seven lanes executed it (PRs #82–#88); a
+blessings bite closed it (#89).
+
+- **Every non-reference board walks a flow.** The witness round
+  declared the journeys the boards carry — sign-in, join and the
+  applicant; the key, the intro, settings and deletion; the compose
+  branches and the seal's faults; comments and edits; the feed, the
+  profile, the stance and invites — so all 260 sit on a resolved flow
+  and implementation never guesses a screen order.
+- **copy-voice is the complete registry** of drawn user-facing strings:
+  one transcription recorded every drawn line it lacked, the older ones
+  marked *carried over — blessed by use*, and the round's new lines
+  blessed.
+- **The editing-sheet exemption is law** (§4, *Sheets*), and every sheet
+  sidecar transcribes its kind.
+- **The offline convention is drawn** (the round's Q9) on 25 form-submit
+  edges.
+- **Two boards**: `ComposeDetailsReused` (the already-published marker,
+  backlog 110) and `FeedWordsSensitive` (the words-only veil's source
+  line, backlog 25). Invites' arrow returns to its origin,
+  `StanceCoachMark` retires for the pad's two coaching lines, History
+  stays append-only in first-seen order, and `ChatsComingSoon` conforms
+  to `WalletComingSoon` whole.
+- **The gate**: 274 → **276 screens**, 1864 → **1901 edges**, 0 gaps,
+  flows 66 → **222**, every one resolved, 276 sidecars; the corpus lint
+  reads 3063 sources, none failing.
+
 ---
 
 ## 14. The canvases
