@@ -216,6 +216,15 @@ async fn login_backoff_blocks_after_consecutive_failures(pool: PgPool) {
         )
         .await;
     assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
+    assert_eq!(
+        json["errors"][0]["extensions"]
+            .as_object()
+            .expect("extensions")
+            .keys()
+            .collect::<Vec<_>>(),
+        vec!["code"],
+        "the backoff serves no retry-after figure or other hint: {json}"
+    );
 
     let json = rig
         .gql(
@@ -225,6 +234,50 @@ async fn login_backoff_blocks_after_consecutive_failures(pool: PgPool) {
         )
         .await;
     assert_eq!(transport_code(&json), None, "{json}");
+}
+
+/// Both upload paths draw on one per-account budget: a resumable session
+/// costs what one whole upload costs, and once the budget is spent either
+/// path is refused at the transport, before any byte is read.
+///
+/// Whole and resumable uploads spend one per-account budget, and past it either path is refused at the transport.
+/// ´claim:ratelimit:both-upload-paths-share-one-budget´
+#[sqlx::test(migrations = "../../migrations")]
+async fn uploads_trip_the_account_budget(pool: PgPool) {
+    let mut limits = RateLimitConfig::unlimited();
+    limits.upload_account = Window {
+        limit: 2,
+        window_secs: 3600.0,
+    };
+    let rig = rig::WireRig::new(pool, limits);
+    rig.seed_member("uploader", "uploader@example.com").await;
+    let token = rig.log_in("uploader@example.com").await;
+    const BEGIN: &str = "mutation($input: BeginMediaUploadInput!) {
+        beginMediaUpload(input: $input) { upload { id } userErrors { code } }
+    }";
+    let begin = json!({ "input": { "declaredBytes": 1024, "kind": "STILL" }});
+
+    let json = rig
+        .upload_media_raw(&token, &rig::photo_with_location())
+        .await;
+    assert_eq!(transport_code(&json), None, "{json}");
+    assert!(
+        json["data"]["uploadMedia"]["media"]["id"].is_string(),
+        "{json}"
+    );
+    let json = rig.gql_raw(Some(&token), BEGIN, begin.clone()).await;
+    assert_eq!(transport_code(&json), None, "{json}");
+    assert!(
+        json["data"]["beginMediaUpload"]["upload"]["id"].is_string(),
+        "{json}"
+    );
+
+    let json = rig
+        .upload_media_raw(&token, &rig::photo_with_location())
+        .await;
+    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
+    let json = rig.gql_raw(Some(&token), BEGIN, begin).await;
+    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
 }
 
 /// The backoff must not become an account-existence oracle: an email with
