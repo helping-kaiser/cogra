@@ -647,6 +647,289 @@
       "name": "read-your-own-page-as-an-applicant",
       "description": "The Profile tab in the applicant days opens the reader's own page in its applicant state — a reading journey that concludes on arrival.",
       "start": { "board": "ApplicantFeed", "via": 17 }
+    },
+    {
+      "name": "make-your-key-without-a-backup",
+      "description": "Not now at the ceremony asks once whether to go on without a backup; I accept the risk makes the key alone and returns where the ceremony began, the snackbar saying so.",
+      "start": { "board": "KeyCeremony", "via": 3 },
+      "end": { "board": "KeyDecline", "via": 1, "case": "key without backup — returns where the ceremony began, and the snackbar says so" }
+    },
+    {
+      "name": "meet-a-browser-that-cant-hold-a-key",
+      "description": "Create my key in a browser that cannot hold one says so before minting anything, and offers the app instead.",
+      "start": { "board": "ApplicantFeed", "via": 3, "to": "KeyCeremonyUnsupported" },
+      "end": { "board": "KeyCeremonyUnsupported", "via": 2 }
+    },
+    {
+      "name": "type-the-recovery-code-back-wrong",
+      "description": "A typed-back code that diverges from the one shown keeps the button from enabling and says where; typed right, the key is made and backed up and the ceremony returns where it began.",
+      "start": { "board": "ApplicantFeed", "via": 3, "to": "KeyCeremony" },
+      "waypoints": [
+        { "board": "KeyCeremony", "via": 2 },
+        { "board": "KeyConfirm", "via": 2 },
+        { "board": "RecoveryCode", "via": 3, "to": "RecoveryCodeMismatch" }
+      ],
+      "end": { "board": "RecoveryCodeMismatch", "via": 3, "case": "code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so" }
+    },
+    {
+      "name": "restore-your-key-as-an-applicant",
+      "description": "An applicant signed in where their key is not finds the key card on their own shell; Restore the key takes the recovery code and returns to it with the key here.",
+      "start": { "board": "ApplicantKeyElsewhere" },
+      "waypoints": [
+        { "board": "ApplicantKeyElsewhere", "via": 1 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "make-a-new-key-in-place-of-the-attached-one",
+      "description": "Make a new key on the applicant's key card runs the ceremony again; its end replaces the key attached elsewhere.",
+      "start": { "board": "ApplicantKeyElsewhere", "via": 2, "to": "KeyCeremony" },
+      "waypoints": [
+        { "board": "KeyCeremony", "via": 2 },
+        { "board": "KeyConfirm", "via": 2 }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "case": "code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so" }
+    },
+    {
+      "name": "restore-after-a-mistyped-code",
+      "description": "A recovery code of the wrong length is the one shape the reader can fix, and the field says so; the right length that still doesn't check out says that instead, and the code that does restores the key where restore began.",
+      "start": { "board": "KeyElsewhere", "via": 2 },
+      "waypoints": [
+        { "board": "Restore", "via": 4, "to": "RestoreLength" },
+        { "board": "RestoreLength", "via": 4, "to": "RestoreError" }
+      ],
+      "end": { "board": "RestoreError", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "sign-the-picks-kept-while-the-key-was-away",
+      "description": "A key restored with picks kept pending opens their review, every pick in one batch the reader looks over first; Sign them reaches the standard seal, and one signature lands them all, still settling.",
+      "start": { "board": "KeyElsewhere", "via": 2 },
+      "waypoints": [
+        { "board": "Restore", "via": 4, "to": "KeptPicksReview" },
+        { "board": "KeptPicksReview", "via": 3 }
+      ],
+      "end": { "board": "KeptPicksSeal", "via": 4, "case": "signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone" }
+    },
+    {
+      "name": "take-a-stance-without-the-key",
+      "description": "The stance face, tapped or held where the key is elsewhere, opens the pad carrying the key notice; Keep it pending keeps the pick on this device, and the post's anchor wears it.",
+      "start": { "board": "KeyElsewhere", "via": 9 },
+      "end": { "board": "PadKeyAbsent", "via": 3 }
+    },
+    {
+      "name": "meet-an-ask-link-that-cant-be-taken-up",
+      "description": "An ask link that can stage nobody right now says so; when the person has already landed, their profile is one tap on, where the member can look and give an opinion.",
+      "start": { "board": "VouchAskUnusable" },
+      "end": { "board": "VouchAskUnusable", "via": 2, "to": "ProfileOther" }
+    },
+    {
+      "name": "watch-the-intro",
+      "description": "The first authenticated feed entry opens the intro over the feed once; its five cards run to Start reading, which ends where Skip ends — the applicant days.",
+      "start": { "board": "OnboardingSteps" },
+      "end": { "board": "OnboardingVouch", "via": 2, "to": "ApplicantFeed" }
+    },
+    {
+      "name": "watch-the-intro-again",
+      "description": "Watch the intro again in settings is the one way back to the intro once it has been seen; it runs from the first card and ends back on settings.",
+      "start": { "board": "Settings", "via": 19 },
+      "end": { "board": "OnboardingVouch", "via": 2, "to": "Settings" }
+    },
+    {
+      "name": "change-your-password",
+      "description": "The Password row asks for the current password and a new one; the change answers with the snackbar, and every other device is signed out.",
+      "start": { "board": "Settings", "via": 12 },
+      "end": { "board": "ChangePassword", "via": 5, "to": "Settings" }
+    },
+    {
+      "name": "change-your-handle",
+      "description": "The Handle row takes the new handle; a well-formed one meets the think-twice dialog naming the cost before anything is sent, and Change it lands the handle on the row.",
+      "start": { "board": "Settings", "via": 13 },
+      "waypoints": [
+        { "board": "ChangeHandle", "via": 3, "to": "ChangeHandleConfirm" }
+      ],
+      "end": { "board": "ChangeHandleConfirm", "via": 1, "to": "Settings" }
+    },
+    {
+      "name": "change-your-email",
+      "description": "The Email row takes the new address and the current password and sends both messages; the code from the current address is typed here, and with the new address's link clicked too the address moves.",
+      "start": { "board": "Settings", "via": 14, "to": "ChangeEmail" },
+      "waypoints": [
+        { "board": "ChangeEmail", "via": 5, "to": "ChangeEmailConfirm" }
+      ],
+      "end": { "board": "ChangeEmailConfirm", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "confirm-the-email-change-from-the-new-address",
+      "description": "The new address's verification link, opened signed in, applies its side; when it is the last side the change lands and settings reads the new address.",
+      "start": { "board": "ChangeEmailLinked" },
+      "end": { "board": "ChangeEmailLinked", "via": 1, "to": "Settings" }
+    },
+    {
+      "name": "open-the-new-address-link-signed-out",
+      "description": "The same link opened where no session is asks for sign-in first, since the proof counts only signed in; signed in, its side applies, and when it was the first side the code from the old address is still owed.",
+      "start": { "board": "ChangeEmailLinkedSignedOut" },
+      "waypoints": [
+        { "board": "ChangeEmailLinkedSignedOut", "via": 1 },
+        { "board": "SignIn", "via": 6, "to": "ChangeEmailLinked" }
+      ],
+      "end": { "board": "ChangeEmailLinked", "via": 1, "to": "ChangeEmailConfirm" }
+    },
+    {
+      "name": "finish-a-pending-email-change",
+      "description": "Settings with an email change in flight leads the Email row back to the side still owed; the code confirmed with the link already clicked moves the address.",
+      "start": { "board": "SettingsEmailPending" },
+      "end": { "board": "ChangeEmailConfirm", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "call-off-an-email-change",
+      "description": "Cancel the change on the confirmation calls a change in flight off without asking first — a change is started again from the row — and settings reads the address alone.",
+      "start": { "board": "Settings", "via": 14, "to": "ChangeEmailConfirm" },
+      "end": { "board": "ChangeEmailConfirm", "via": 5, "to": "Settings" }
+    },
+    {
+      "name": "replace-the-recovery-code",
+      "description": "The Recovery code row, with the key on this browser, takes the current code as proof and makes a new one on the ceremony's own board; typed back, the new backup uploads and settings says so.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackup" },
+      "waypoints": [
+        { "board": "SettingsBackup", "via": 3, "to": "RecoveryCode" }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "replace-the-recovery-code-after-a-refused-one",
+      "description": "A current code that doesn't check out is answered on the replace screen itself; the right one goes on to the new code, typed back the same way.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackup" },
+      "waypoints": [
+        { "board": "SettingsBackup", "via": 3, "to": "SettingsBackupError" },
+        { "board": "SettingsBackupError", "via": 3, "to": "RecoveryCode" }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "replace-the-recovery-code-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the replace warns before the unlock that isn't there; Go on anyway shows the new code, typed back the same way.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackup" },
+      "waypoints": [
+        { "board": "SettingsBackup", "via": 3, "to": "NoScreenLock" },
+        { "board": "NoScreenLock", "via": 1, "to": "RecoveryCode" }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "restore-the-key-from-the-recovery-code-row",
+      "description": "The Recovery code row with the key elsewhere has nothing to re-encrypt and offers Restore the key, which returns to settings with the key here.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackupKeyAbsent" },
+      "waypoints": [
+        { "board": "SettingsBackupKeyAbsent", "via": 3 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "see-your-key",
+      "description": "The Your key row, after the platform's own unlock, shows the key, and either form of it goes to the clipboard with the snackbar saying Copied.",
+      "start": { "board": "Settings", "via": 9, "to": "YourKey" },
+      "end": { "board": "YourKey", "via": 2 }
+    },
+    {
+      "name": "see-your-key-behind-the-browsers-gate",
+      "description": "A browser whose seed is sealed behind the backup asks for the current recovery code first; the code opens the backup, the key is shown, and nothing is re-persisted.",
+      "start": { "board": "Settings", "via": 9, "to": "YourKeyGate" },
+      "waypoints": [
+        { "board": "YourKeyGate", "via": 3, "to": "YourKey" }
+      ],
+      "end": { "board": "YourKey", "via": 2 }
+    },
+    {
+      "name": "see-your-key-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the Your key row warns before the unlock that isn't there; Go on anyway shows the key.",
+      "start": { "board": "Settings", "via": 9, "to": "NoScreenLock" },
+      "waypoints": [
+        { "board": "NoScreenLock", "via": 1, "to": "YourKey" }
+      ],
+      "end": { "board": "YourKey", "via": 2 }
+    },
+    {
+      "name": "restore-the-key-from-the-your-key-row",
+      "description": "The Your key row with the key elsewhere asks for no unlock, since nothing stands behind it to reveal, and offers Restore the key instead.",
+      "start": { "board": "Settings", "via": 9, "to": "YourKeyAbsent" },
+      "waypoints": [
+        { "board": "YourKeyAbsent", "via": 3 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "set-the-default-license",
+      "description": "Default license opens the seal's own license question over settings; Done sets what every new post starts from, never the last one.",
+      "start": { "board": "Settings", "via": 5 },
+      "end": { "board": "SettingsLicense", "via": 4, "to": "Settings" }
+    },
+    {
+      "name": "set-what-every-feed-opens-with",
+      "description": "What your feed shows opens the feed's own filter over settings; Done saves the default every feed opens with, and the row reads it back.",
+      "start": { "board": "Settings", "via": 6 },
+      "end": { "board": "SettingsReading", "via": 7, "to": "Settings" }
+    },
+    {
+      "name": "read-whats-new",
+      "description": "What's new opens the release chronicle, newest first, the version running here marked; a release's own page on GitHub is one tap away.",
+      "start": { "board": "Settings", "via": 23 },
+      "end": { "board": "WhatsNew", "via": 2 }
+    },
+    {
+      "name": "update-from-whats-new",
+      "description": "What's new opened while this version is behind the newest release offers Update now — the app's store listing, or on the web a reload into the new version.",
+      "start": { "board": "WhatsNewBehind" },
+      "end": { "board": "WhatsNewBehind", "via": 2, "case": "the app: CoGra's Play Store listing (a placeholder id until published — https://play.google.com/store/apps/details?id=local.cogra.app)" }
+    },
+    {
+      "name": "report-a-problem",
+      "description": "Report a problem opens an empty field with Send by email live all the same; what is written goes into the reader's own mail with the four facts and the report address filled in, and nothing leaves until it is sent there.",
+      "start": { "board": "Settings", "via": 24, "to": "ReportProblemEmpty" },
+      "waypoints": [
+        { "board": "ReportProblemEmpty", "via": 2 }
+      ],
+      "end": { "board": "ReportProblem", "via": 3 }
+    },
+    {
+      "name": "unhide-an-account",
+      "description": "Hidden accounts opens the hidden list over settings; Unhide takes a row away and their posts return to the feed, the snackbar answering.",
+      "start": { "board": "Settings", "via": 17 },
+      "end": { "board": "SettingsHidden", "via": 1, "case": "the row goes and their posts return to your feed — the snackbar answers" }
+    },
+    {
+      "name": "read-about-cogra",
+      "description": "About CoGra opens the whole page from settings — each topic unfolding on its own; reading it is the whole journey.",
+      "start": { "board": "Settings", "via": 20 }
+    },
+    {
+      "name": "sign-out",
+      "description": "Sign out on a remembered device ends the session and keeps the account offered on the sign-in screen.",
+      "start": { "board": "Settings" },
+      "end": { "board": "Settings", "via": 16, "case": "remembered — the session ends and the account stays offered here" }
+    },
+    {
+      "name": "sign-out-without-a-backup",
+      "description": "Sign out where this device holds the only copy of an unbacked key asks first; Sign out, keep them locked ends the session with the key, the draft and any kept picks sealed on this device until the account signs in here again.",
+      "start": { "board": "Settings", "via": 16, "to": "SignOutConfirm" },
+      "end": { "board": "SignOutConfirm", "via": 2 }
+    },
+    {
+      "name": "confirm-the-account-deletion",
+      "description": "The deletion mail's link is the confirmation, signed in or not; Go to the feed opens the feed under the deletion band, which rides every signed-in surface until the deadline.",
+      "start": { "board": "DeleteAccountConfirmed" },
+      "end": { "board": "DeleteAccountConfirmed", "via": 3, "to": "FeedDeleting" }
+    },
+    {
+      "name": "cancel-the-deletion-from-the-feed",
+      "description": "Cancel on the deletion band abandons the request before the deadline; the band goes and the snackbar answers, nothing having been redacted yet.",
+      "start": { "board": "FeedDeleting" },
+      "end": { "board": "FeedDeleting", "via": 19, "to": "DeleteAccountCanceled" }
+    },
+    {
+      "name": "cancel-the-deletion-from-settings",
+      "description": "Settings during the grace reads the deadline on its Delete account row; the row opens it in full with Cancel, which calls the deletion off and returns to settings with the band gone.",
+      "start": { "board": "SettingsDeleting" },
+      "end": { "board": "DeleteAccountPending", "via": 2, "to": "Settings" }
     }
   ]
 }

@@ -2140,9 +2140,578 @@
         "ApplicantFeed",
         "ProfileApplicant"
       ]
+    },
+    {
+      "name": "make-your-key-without-a-backup",
+      "description": "Not now at the ceremony asks once whether to go on without a backup; I accept the risk makes the key alone and returns where the ceremony began, the snackbar saying so.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyCeremony · 3 «Not now» → KeyDecline",
+        "end · KeyDecline · 1 «I accept the risk» → back — key without backup — returns where the ceremony began, and the snackbar says so"
+      ],
+      "boards": [
+        "KeyCeremony",
+        "KeyDecline"
+      ]
+    },
+    {
+      "name": "meet-a-browser-that-cant-hold-a-key",
+      "description": "Create my key in a browser that cannot hold one says so before minting anything, and offers the app instead.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 3 «Create my key» → KeyCeremonyUnsupported — a browser without WebCrypto Ed25519 — the ceremony says so before minting anything",
+        "end · KeyCeremonyUnsupported · 2 «Download the app (APK)» → os — the browser downloads the APK — the login landing's own link"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "KeyCeremonyUnsupported"
+      ]
+    },
+    {
+      "name": "type-the-recovery-code-back-wrong",
+      "description": "A typed-back code that diverges from the one shown keeps the button from enabling and says where; typed right, the key is made and backed up and the ceremony returns where it began.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 3 «Create my key» → KeyCeremony",
+        "KeyCeremony · 2 «Create my recovery code» → KeyConfirm",
+        "KeyConfirm · 2 «Show my code» → RecoveryCode",
+        "RecoveryCode · 3 «I've written it down» → RecoveryCodeMismatch — the typed prefix diverges from the code — the button never enables",
+        "end · RecoveryCodeMismatch · 3 «I've written it down» → back — code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "KeyCeremony",
+        "KeyConfirm",
+        "RecoveryCode",
+        "RecoveryCodeMismatch"
+      ]
+    },
+    {
+      "name": "restore-your-key-as-an-applicant",
+      "description": "An applicant signed in where their key is not finds the key card on their own shell; Restore the key takes the recovery code and returns to it with the key here.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantKeyElsewhere",
+        "ApplicantKeyElsewhere · 1 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ApplicantKeyElsewhere",
+        "Restore"
+      ]
+    },
+    {
+      "name": "make-a-new-key-in-place-of-the-attached-one",
+      "description": "Make a new key on the applicant's key card runs the ceremony again; its end replaces the key attached elsewhere.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantKeyElsewhere · 2 «Make a new key» → KeyCeremony — the ceremony again — its end replaces the attached key",
+        "KeyCeremony · 2 «Create my recovery code» → KeyConfirm",
+        "KeyConfirm · 2 «Show my code» → RecoveryCode",
+        "end · RecoveryCode · 3 «I've written it down» → back — code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so"
+      ],
+      "boards": [
+        "ApplicantKeyElsewhere",
+        "KeyCeremony",
+        "KeyConfirm",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "restore-after-a-mistyped-code",
+      "description": "A recovery code of the wrong length is the one shape the reader can fix, and the field says so; the right length that still doesn't check out says that instead, and the code that does restores the key where restore began.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyElsewhere · 2 «Restore the key» → Restore",
+        "Restore · 4 «Restore the key» → RestoreLength — the code is the wrong length once folded — the one shape a reader can fix",
+        "RestoreLength · 4 «Restore the key» → RestoreError — the right length, and the code doesn't check out",
+        "end · RestoreError · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "KeyElsewhere",
+        "Restore",
+        "RestoreLength",
+        "RestoreError"
+      ]
+    },
+    {
+      "name": "sign-the-picks-kept-while-the-key-was-away",
+      "description": "A key restored with picks kept pending opens their review, every pick in one batch the reader looks over first; Sign them reaches the standard seal, and one signature lands them all, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyElsewhere · 2 «Restore the key» → Restore",
+        "Restore · 4 «Restore the key» → KeptPicksReview — key restored, with picks kept pending — the kept picks' review opens, the restore's snackbar riding in over it; they sign together, in one batch the reader looks over first",
+        "KeptPicksReview · 3 «Sign them» → KeptPicksSeal — the standard seal, the kept picks its what-you-sign list",
+        "end · KeptPicksSeal · 4 «Sign the opinions» → back — signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
+      ],
+      "boards": [
+        "KeyElsewhere",
+        "Restore",
+        "KeptPicksReview",
+        "KeptPicksSeal"
+      ]
+    },
+    {
+      "name": "take-a-stance-without-the-key",
+      "description": "The stance face, tapped or held where the key is elsewhere, opens the pad carrying the key notice; Keep it pending keeps the pick on this device, and the post's anchor wears it.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyElsewhere · 9 «stance face» → PadKeyAbsent — a tap or a press-and-hold — both open the pad carrying the key notice, so nothing signs without the key",
+        "end · PadKeyAbsent · 3 «Keep it pending, restore later» → back — kept — the pick waits on this device, and the post's anchor wears it (the PadPending plate)"
+      ],
+      "boards": [
+        "KeyElsewhere",
+        "PadKeyAbsent"
+      ]
+    },
+    {
+      "name": "meet-an-ask-link-that-cant-be-taken-up",
+      "description": "An ask link that can stage nobody right now says so; when the person has already landed, their profile is one tap on, where the member can look and give an opinion.",
+      "status": "resolved",
+      "steps": [
+        "start · VouchAskUnusable",
+        "end · VouchAskUnusable · 2 «See @noor's profile» → ProfileOther — the landed case only — the person's profile, where the member can look and give an opinion (master, drawn on @ada's); the waiting case has no public profile yet and draws back alone"
+      ],
+      "boards": [
+        "VouchAskUnusable",
+        "ProfileOther"
+      ]
+    },
+    {
+      "name": "watch-the-intro",
+      "description": "The first authenticated feed entry opens the intro over the feed once; its five cards run to Start reading, which ends where Skip ends — the applicant days.",
+      "status": "resolved",
+      "steps": [
+        "start · OnboardingSteps",
+        "OnboardingSteps · 2 «Next» → OnboardingShape",
+        "OnboardingShape · 2 «Next» → OnboardingPublic",
+        "OnboardingPublic · 2 «Next» → OnboardingLayers",
+        "OnboardingLayers · 2 «Next» → OnboardingVouch",
+        "end · OnboardingVouch · 2 «Start reading» → ApplicantFeed — the last card ends where Skip ends — applicant days"
+      ],
+      "boards": [
+        "OnboardingSteps",
+        "OnboardingShape",
+        "OnboardingPublic",
+        "OnboardingLayers",
+        "OnboardingVouch",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "watch-the-intro-again",
+      "description": "Watch the intro again in settings is the one way back to the intro once it has been seen; it runs from the first card and ends back on settings.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 19 «Watch the intro again» → OnboardingSteps — the intro from its first card — the one way back to it once the seen flag is set",
+        "OnboardingSteps · 2 «Next» → OnboardingShape",
+        "OnboardingShape · 2 «Next» → OnboardingPublic",
+        "OnboardingPublic · 2 «Next» → OnboardingLayers",
+        "OnboardingLayers · 2 «Next» → OnboardingVouch",
+        "end · OnboardingVouch · 2 «Start reading» → Settings — re-opened from Settings' Watch the intro again — back to Settings, the surface it opened over"
+      ],
+      "boards": [
+        "Settings",
+        "OnboardingSteps",
+        "OnboardingShape",
+        "OnboardingPublic",
+        "OnboardingLayers",
+        "OnboardingVouch"
+      ]
+    },
+    {
+      "name": "change-your-password",
+      "description": "The Password row asks for the current password and a new one; the change answers with the snackbar, and every other device is signed out.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 12 «Password» → ChangePassword",
+        "end · ChangePassword · 5 «Change password» → Settings — changed — the snackbar answers, and every other device is signed out"
+      ],
+      "boards": [
+        "Settings",
+        "ChangePassword"
+      ]
+    },
+    {
+      "name": "change-your-handle",
+      "description": "The Handle row takes the new handle; a well-formed one meets the think-twice dialog naming the cost before anything is sent, and Change it lands the handle on the row.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 13 «Handle» → ChangeHandle",
+        "ChangeHandle · 3 «Change handle» → ChangeHandleConfirm — a well-formed handle — the think-twice dialog asks first, naming the cost; nothing is sent before its answer",
+        "end · ChangeHandleConfirm · 1 «Change it» → Settings — changed — the snackbar says Your handle is now @solferreira., and the Handle row reads it"
+      ],
+      "boards": [
+        "Settings",
+        "ChangeHandle",
+        "ChangeHandleConfirm"
+      ]
+    },
+    {
+      "name": "change-your-email",
+      "description": "The Email row takes the new address and the current password and sends both messages; the code from the current address is typed here, and with the new address's link clicked too the address moves.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 14 «Email» → ChangeEmail — the request; the confirmation is its own board — also once a change ran out before both sides landed: the row reads the address alone again and opens the request",
+        "ChangeEmail · 5 «Change email» → ChangeEmailConfirm — both messages sent — the code is typed here, the link is clicked there",
+        "end · ChangeEmailConfirm · 3 «Confirm the code» → Settings — the link was clicked too — the address moves and the snackbar answers"
+      ],
+      "boards": [
+        "Settings",
+        "ChangeEmail",
+        "ChangeEmailConfirm"
+      ]
+    },
+    {
+      "name": "confirm-the-email-change-from-the-new-address",
+      "description": "The new address's verification link, opened signed in, applies its side; when it is the last side the change lands and settings reads the new address.",
+      "status": "resolved",
+      "steps": [
+        "start · ChangeEmailLinked",
+        "end · ChangeEmailLinked · 1 «Enter the code / Back to settings» → Settings — the link was the last side — the change applied, and the row reads the new address"
+      ],
+      "boards": [
+        "ChangeEmailLinked",
+        "Settings"
+      ]
+    },
+    {
+      "name": "open-the-new-address-link-signed-out",
+      "description": "The same link opened where no session is asks for sign-in first, since the proof counts only signed in; signed in, its side applies, and when it was the first side the code from the old address is still owed.",
+      "status": "resolved",
+      "steps": [
+        "start · ChangeEmailLinkedSignedOut",
+        "ChangeEmailLinkedSignedOut · 1 «Sign in» → SignIn — after sign-in the link's side applies, and its landing follows (ChangeEmailLinked)",
+        "SignIn · 6 «Sign in» → ChangeEmailLinked — signed in from the email change's signed-out landing — the link's side applies, and its landing follows",
+        "end · ChangeEmailLinked · 1 «Enter the code / Back to settings» → ChangeEmailConfirm — the link was the first side — the code from the old address is still owed"
+      ],
+      "boards": [
+        "ChangeEmailLinkedSignedOut",
+        "SignIn",
+        "ChangeEmailLinked",
+        "ChangeEmailConfirm"
+      ]
+    },
+    {
+      "name": "finish-a-pending-email-change",
+      "description": "Settings with an email change in flight leads the Email row back to the side still owed; the code confirmed with the link already clicked moves the address.",
+      "status": "resolved",
+      "steps": [
+        "start · SettingsEmailPending",
+        "SettingsEmailPending · 1 «Email» → ChangeEmailConfirm — the change in flight — the page shows which side is still owed",
+        "end · ChangeEmailConfirm · 3 «Confirm the code» → Settings — the link was clicked too — the address moves and the snackbar answers"
+      ],
+      "boards": [
+        "SettingsEmailPending",
+        "ChangeEmailConfirm",
+        "Settings"
+      ]
+    },
+    {
+      "name": "call-off-an-email-change",
+      "description": "Cancel the change on the confirmation calls a change in flight off without asking first — a change is started again from the row — and settings reads the address alone.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 14 «Email» → ChangeEmailConfirm — a change already in flight — the row returns to the side still owed",
+        "end · ChangeEmailConfirm · 5 «Cancel the change» → Settings — the change is called off — the row reads the address alone, and the snackbar answers; nothing asks first, since a change is started again from the row"
+      ],
+      "boards": [
+        "Settings",
+        "ChangeEmailConfirm"
+      ]
+    },
+    {
+      "name": "replace-the-recovery-code",
+      "description": "The Recovery code row, with the key on this browser, takes the current code as proof and makes a new one on the ceremony's own board; typed back, the new backup uploads and settings says so.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackup — the key is on this browser — the replace screen, ready to take the proof",
+        "SettingsBackup · 3 «Create a new recovery code» → RecoveryCode — the new code on the ceremony's own board — back stays swallowed until it is typed back",
+        "end · RecoveryCode · 3 «I've written it down» → Settings — a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackup",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "replace-the-recovery-code-after-a-refused-one",
+      "description": "A current code that doesn't check out is answered on the replace screen itself; the right one goes on to the new code, typed back the same way.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackup — the key is on this browser — the replace screen, ready to take the proof",
+        "SettingsBackup · 3 «Create a new recovery code» → SettingsBackupError — the current code doesn't check out",
+        "SettingsBackupError · 3 «Create a new recovery code» → RecoveryCode — the new code on the ceremony's own board — back stays swallowed until it is typed back",
+        "end · RecoveryCode · 3 «I've written it down» → Settings — a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackup",
+        "SettingsBackupError",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "replace-the-recovery-code-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the replace warns before the unlock that isn't there; Go on anyway shows the new code, typed back the same way.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackup — the key is on this browser — the replace screen, ready to take the proof",
+        "SettingsBackup · 3 «Create a new recovery code» → NoScreenLock — Android, on a phone with no screen lock — warned before the unlock that isn't there",
+        "NoScreenLock · 1 «Go on anyway» → RecoveryCode — from a recovery code being made or replaced — the code is shown",
+        "end · RecoveryCode · 3 «I've written it down» → Settings — a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackup",
+        "NoScreenLock",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "restore-the-key-from-the-recovery-code-row",
+      "description": "The Recovery code row with the key elsewhere has nothing to re-encrypt and offers Restore the key, which returns to settings with the key here.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackupKeyAbsent — key elsewhere — the same screen with nothing to re-encrypt",
+        "SettingsBackupKeyAbsent · 3 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackupKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "see-your-key",
+      "description": "The Your key row, after the platform's own unlock, shows the key, and either form of it goes to the clipboard with the snackbar saying Copied.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → YourKey — after the platform's own unlock — the phone's lock on Android; a browser still keeping the seed asks nothing",
+        "end · YourKey · 2 «Copy the PEM block» → self — the PEM lands on the clipboard, flagged sensitive on Android — the snackbar says Copied"
+      ],
+      "boards": [
+        "Settings",
+        "YourKey"
+      ]
+    },
+    {
+      "name": "see-your-key-behind-the-browsers-gate",
+      "description": "A browser whose seed is sealed behind the backup asks for the current recovery code first; the code opens the backup, the key is shown, and nothing is re-persisted.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → YourKeyGate — a browser whose seed is sealed behind the backup — the current code first",
+        "YourKeyGate · 3 «Show my key» → YourKey — the code opens the backup — the key is shown, and nothing is re-persisted",
+        "end · YourKey · 2 «Copy the PEM block» → self — the PEM lands on the clipboard, flagged sensitive on Android — the snackbar says Copied"
+      ],
+      "boards": [
+        "Settings",
+        "YourKeyGate",
+        "YourKey"
+      ]
+    },
+    {
+      "name": "see-your-key-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the Your key row warns before the unlock that isn't there; Go on anyway shows the key.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → NoScreenLock — Android, on a phone with no screen lock — warned before the unlock that isn't there",
+        "NoScreenLock · 1 «Go on anyway» → YourKey — from the Your key row — the key is shown",
+        "end · YourKey · 2 «Copy the PEM block» → self — the PEM lands on the clipboard, flagged sensitive on Android — the snackbar says Copied"
+      ],
+      "boards": [
+        "Settings",
+        "NoScreenLock",
+        "YourKey"
+      ]
+    },
+    {
+      "name": "restore-the-key-from-the-your-key-row",
+      "description": "The Your key row with the key elsewhere asks for no unlock, since nothing stands behind it to reveal, and offers Restore the key instead.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → YourKeyAbsent — key elsewhere — no unlock is asked for, because there is nothing behind it to reveal",
+        "YourKeyAbsent · 3 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "Settings",
+        "YourKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "set-the-default-license",
+      "description": "Default license opens the seal's own license question over settings; Done sets what every new post starts from, never the last one.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 5 «Default license» → SettingsLicense — the license sheet over settings — the same question the seal asks, set here as what every new post starts from",
+        "end · SettingsLicense · 4 «Done» → Settings — the sheet closes — the Default license row reads the new default"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsLicense"
+      ]
+    },
+    {
+      "name": "set-what-every-feed-opens-with",
+      "description": "What your feed shows opens the feed's own filter over settings; Done saves the default every feed opens with, and the row reads it back.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 6 «What your feed shows» → SettingsReading — the filter sheet over settings — the same control the feed carries, set here as the default every feed opens with",
+        "end · SettingsReading · 7 «Done» → Settings — the sheet closes — the default is saved, and the row reads it back"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsReading"
+      ]
+    },
+    {
+      "name": "read-whats-new",
+      "description": "What's new opens the release chronicle, newest first, the version running here marked; a release's own page on GitHub is one tap away.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 23 «What's new» → WhatsNew — the release chronicle, newest first, the version running here marked",
+        "end · WhatsNew · 2 «See it on GitHub» → os — that release's public page on GitHub — its full notes and its code (https://github.com/helping-kaiser/cogra/releases/tag/v<version>)"
+      ],
+      "boards": [
+        "Settings",
+        "WhatsNew"
+      ]
+    },
+    {
+      "name": "update-from-whats-new",
+      "description": "What's new opened while this version is behind the newest release offers Update now — the app's store listing, or on the web a reload into the new version.",
+      "status": "resolved",
+      "steps": [
+        "start · WhatsNewBehind",
+        "end · WhatsNewBehind · 2 «Update now» → os — the app: CoGra's Play Store listing (a placeholder id until published — https://play.google.com/store/apps/details?id=local.cogra.app)"
+      ],
+      "boards": [
+        "WhatsNewBehind"
+      ]
+    },
+    {
+      "name": "report-a-problem",
+      "description": "Report a problem opens an empty field with Send by email live all the same; what is written goes into the reader's own mail with the four facts and the report address filled in, and nothing leaves until it is sent there.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 24 «Report a problem» → ReportProblemEmpty — nothing written yet — the field empty, Send by email live all the same",
+        "ReportProblemEmpty · 2 «What happened» → ReportProblem — the first character",
+        "end · ReportProblem · 3 «Send by email» → os — the reader's own mail opens with the words, the four facts and the report address filled in, Time the moment of the press — nothing leaves until it is sent there, and the words stay on the page until the reader clears them"
+      ],
+      "boards": [
+        "Settings",
+        "ReportProblemEmpty",
+        "ReportProblem"
+      ]
+    },
+    {
+      "name": "unhide-an-account",
+      "description": "Hidden accounts opens the hidden list over settings; Unhide takes a row away and their posts return to the feed, the snackbar answering.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 17 «Hidden accounts» → SettingsHidden — the hidden list in a sheet over settings; with nobody hidden the row is inert and reads None, so there is nothing to open",
+        "end · SettingsHidden · 1 «Unhide» → self — the row goes and their posts return to your feed — the snackbar answers"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsHidden"
+      ]
+    },
+    {
+      "name": "read-about-cogra",
+      "description": "About CoGra opens the whole page from settings — each topic unfolding on its own; reading it is the whole journey.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 20 «About CoGra» → About",
+        "end · arrival at About"
+      ],
+      "boards": [
+        "Settings",
+        "About"
+      ]
+    },
+    {
+      "name": "sign-out",
+      "description": "Sign out on a remembered device ends the session and keeps the account offered on the sign-in screen.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings",
+        "end · Settings · 16 «Sign out» → SignIn — remembered — the session ends and the account stays offered here"
+      ],
+      "boards": [
+        "Settings",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "sign-out-without-a-backup",
+      "description": "Sign out where this device holds the only copy of an unbacked key asks first; Sign out, keep them locked ends the session with the key, the draft and any kept picks sealed on this device until the account signs in here again.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 16 «Sign out» → SignOutConfirm — not remembered, and this device holds the only copy of an unbacked key — it asks first",
+        "end · SignOutConfirm · 2 «Sign out, keep them locked» → SignIn — the session ends; the unbacked key, the draft and any picks kept pending stay on this device, sealed until this account signs in here again, online, with its current credentials"
+      ],
+      "boards": [
+        "Settings",
+        "SignOutConfirm",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "confirm-the-account-deletion",
+      "description": "The deletion mail's link is the confirmation, signed in or not; Go to the feed opens the feed under the deletion band, which rides every signed-in surface until the deadline.",
+      "status": "resolved",
+      "steps": [
+        "start · DeleteAccountConfirmed",
+        "end · DeleteAccountConfirmed · 3 «Go to the feed» → FeedDeleting — signed in — the feed under the deletion band"
+      ],
+      "boards": [
+        "DeleteAccountConfirmed",
+        "FeedDeleting"
+      ]
+    },
+    {
+      "name": "cancel-the-deletion-from-the-feed",
+      "description": "Cancel on the deletion band abandons the request before the deadline; the band goes and the snackbar answers, nothing having been redacted yet.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedDeleting",
+        "end · FeedDeleting · 19 «Cancel (deletion band)» → DeleteAccountCanceled — the request is abandoned — the band goes and the snackbar answers; nothing had been redacted yet"
+      ],
+      "boards": [
+        "FeedDeleting",
+        "DeleteAccountCanceled"
+      ]
+    },
+    {
+      "name": "cancel-the-deletion-from-settings",
+      "description": "Settings during the grace reads the deadline on its Delete account row; the row opens it in full with Cancel, which calls the deletion off and returns to settings with the band gone.",
+      "status": "resolved",
+      "steps": [
+        "start · SettingsDeleting",
+        "SettingsDeleting · 2 «Delete account (Deletion in 6 days)» → DeleteAccountPending — the deadline in full, and Cancel",
+        "end · DeleteAccountPending · 2 «Cancel» → Settings — the deletion is called off — back to settings with the band gone, the row reading Delete account, and the canceled snackbar; nothing had been deleted"
+      ],
+      "boards": [
+        "SettingsDeleting",
+        "DeleteAccountPending",
+        "Settings"
+      ]
     }
   ],
   "boardsOnFlows": {
+    "About": {
+      "flows": [
+        "read-about-cogra"
+      ],
+      "endpoint": [
+        "read-about-cogra"
+      ]
+    },
     "ApplicantEmail": {
       "flows": [
         "correct-an-applicants-address"
@@ -2159,12 +2728,15 @@
         "join-with-an-invite",
         "join-with-the-link-in-hand",
         "make-your-key",
+        "meet-a-browser-that-cant-hold-a-key",
         "open-a-posts-pictures",
         "read-your-own-page-as-an-applicant",
         "trace-a-score-to-its-records",
+        "type-the-recovery-code-back-wrong",
         "verify-the-email",
         "verify-the-email-in-the-app",
         "visit-an-author",
+        "watch-the-intro",
         "watch-the-stream"
       ],
       "endpoint": [
@@ -2175,16 +2747,24 @@
         "join-with-an-invite",
         "join-with-the-link-in-hand",
         "make-your-key",
+        "meet-a-browser-that-cant-hold-a-key",
         "read-your-own-page-as-an-applicant",
+        "type-the-recovery-code-back-wrong",
         "verify-the-email",
-        "verify-the-email-in-the-app"
+        "verify-the-email-in-the-app",
+        "watch-the-intro"
       ]
     },
     "ApplicantKeyElsewhere": {
       "flows": [
-        "restore-your-key"
+        "make-a-new-key-in-place-of-the-attached-one",
+        "restore-your-key",
+        "restore-your-key-as-an-applicant"
       ],
-      "endpoint": []
+      "endpoint": [
+        "make-a-new-key-in-place-of-the-attached-one",
+        "restore-your-key-as-an-applicant"
+      ]
     },
     "ApplicantLanding": {
       "flows": [
@@ -2247,8 +2827,55 @@
         "edit-avatar-standalone"
       ]
     },
+    "ChangeEmail": {
+      "flows": [
+        "change-your-email"
+      ],
+      "endpoint": []
+    },
+    "ChangeEmailConfirm": {
+      "flows": [
+        "call-off-an-email-change",
+        "change-your-email",
+        "finish-a-pending-email-change",
+        "open-the-new-address-link-signed-out"
+      ],
+      "endpoint": [
+        "open-the-new-address-link-signed-out"
+      ]
+    },
+    "ChangeEmailLinked": {
+      "flows": [
+        "confirm-the-email-change-from-the-new-address",
+        "open-the-new-address-link-signed-out"
+      ],
+      "endpoint": [
+        "confirm-the-email-change-from-the-new-address"
+      ]
+    },
+    "ChangeEmailLinkedSignedOut": {
+      "flows": [
+        "open-the-new-address-link-signed-out"
+      ],
+      "endpoint": [
+        "open-the-new-address-link-signed-out"
+      ]
+    },
+    "ChangeHandle": {
+      "flows": [
+        "change-your-handle"
+      ],
+      "endpoint": []
+    },
+    "ChangeHandleConfirm": {
+      "flows": [
+        "change-your-handle"
+      ],
+      "endpoint": []
+    },
     "ChangePassword": {
       "flows": [
+        "change-your-password",
         "meet-the-security-notice"
       ],
       "endpoint": []
@@ -2535,6 +3162,7 @@
     },
     "DeleteAccountCanceled": {
       "flows": [
+        "cancel-the-deletion-from-the-feed",
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
@@ -2547,7 +3175,17 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "cancel-the-deletion-from-the-feed"
+      ]
+    },
+    "DeleteAccountConfirmed": {
+      "flows": [
+        "confirm-the-account-deletion"
+      ],
+      "endpoint": [
+        "confirm-the-account-deletion"
+      ]
     },
     "DeleteAccountMail": {
       "flows": [
@@ -2556,6 +3194,12 @@
       "endpoint": [
         "request-account-deletion"
       ]
+    },
+    "DeleteAccountPending": {
+      "flows": [
+        "cancel-the-deletion-from-settings"
+      ],
+      "endpoint": []
     },
     "EditCompose": {
       "flows": [
@@ -2696,6 +3340,8 @@
     },
     "FeedDeleting": {
       "flows": [
+        "cancel-the-deletion-from-the-feed",
+        "confirm-the-account-deletion",
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
@@ -2708,7 +3354,10 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "cancel-the-deletion-from-the-feed",
+        "confirm-the-account-deletion"
+      ]
     },
     "FeedEntry": {
       "flows": [
@@ -2999,17 +3648,54 @@
       ],
       "endpoint": []
     },
-    "KeyCeremony": {
+    "KeptPicksReview": {
       "flows": [
-        "make-your-key"
+        "sign-the-picks-kept-while-the-key-was-away"
       ],
       "endpoint": []
     },
+    "KeptPicksSeal": {
+      "flows": [
+        "sign-the-picks-kept-while-the-key-was-away"
+      ],
+      "endpoint": [
+        "sign-the-picks-kept-while-the-key-was-away"
+      ]
+    },
+    "KeyCeremony": {
+      "flows": [
+        "make-a-new-key-in-place-of-the-attached-one",
+        "make-your-key",
+        "make-your-key-without-a-backup",
+        "type-the-recovery-code-back-wrong"
+      ],
+      "endpoint": [
+        "make-your-key-without-a-backup"
+      ]
+    },
+    "KeyCeremonyUnsupported": {
+      "flows": [
+        "meet-a-browser-that-cant-hold-a-key"
+      ],
+      "endpoint": [
+        "meet-a-browser-that-cant-hold-a-key"
+      ]
+    },
     "KeyConfirm": {
       "flows": [
-        "make-your-key"
+        "make-a-new-key-in-place-of-the-attached-one",
+        "make-your-key",
+        "type-the-recovery-code-back-wrong"
       ],
       "endpoint": []
+    },
+    "KeyDecline": {
+      "flows": [
+        "make-your-key-without-a-backup"
+      ],
+      "endpoint": [
+        "make-your-key-without-a-backup"
+      ]
     },
     "KeyElsewhere": {
       "flows": [
@@ -3020,14 +3706,20 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "restore-after-a-mistyped-code",
         "restore-your-key",
         "sign-in-with-the-key-elsewhere",
+        "sign-the-picks-kept-while-the-key-was-away",
+        "take-a-stance-without-the-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
       "endpoint": [
-        "sign-in-with-the-key-elsewhere"
+        "restore-after-a-mistyped-code",
+        "sign-in-with-the-key-elsewhere",
+        "sign-the-picks-kept-while-the-key-was-away",
+        "take-a-stance-without-the-key"
       ]
     },
     "KeyElsewhereNoBackup": {
@@ -3054,6 +3746,13 @@
         "arrive-through-an-invite-link"
       ]
     },
+    "NoScreenLock": {
+      "flows": [
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "see-your-key-on-a-phone-without-a-lock"
+      ],
+      "endpoint": []
+    },
     "Notifications": {
       "flows": [
         "ask-another-member-to-vouch",
@@ -3075,11 +3774,51 @@
       ],
       "endpoint": []
     },
-    "PadKeyAbsent": {
+    "OnboardingLayers": {
       "flows": [
-        "restore-your-key"
+        "watch-the-intro",
+        "watch-the-intro-again"
       ],
       "endpoint": []
+    },
+    "OnboardingPublic": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": []
+    },
+    "OnboardingShape": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": []
+    },
+    "OnboardingSteps": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": [
+        "watch-the-intro"
+      ]
+    },
+    "OnboardingVouch": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": []
+    },
+    "PadKeyAbsent": {
+      "flows": [
+        "restore-your-key",
+        "take-a-stance-without-the-key"
+      ],
+      "endpoint": [
+        "take-a-stance-without-the-key"
+      ]
     },
     "PostDetail": {
       "flows": [
@@ -3239,6 +3978,7 @@
     "ProfileOther": {
       "flows": [
         "find-the-thread-a-comment-answers",
+        "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -3250,6 +3990,7 @@
       ],
       "endpoint": [
         "find-the-thread-a-comment-answers",
+        "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
         "visit-an-author"
       ]
@@ -3348,11 +4089,25 @@
     },
     "RecoveryCode": {
       "flows": [
+        "make-a-new-key-in-place-of-the-attached-one",
         "make-a-recovery-code-later",
-        "make-your-key"
+        "make-your-key",
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "type-the-recovery-code-back-wrong"
       ],
       "endpoint": [
+        "make-a-new-key-in-place-of-the-attached-one",
         "make-your-key"
+      ]
+    },
+    "RecoveryCodeMismatch": {
+      "flows": [
+        "type-the-recovery-code-back-wrong"
+      ],
+      "endpoint": [
+        "type-the-recovery-code-back-wrong"
       ]
     },
     "Reel": {
@@ -3570,6 +4325,20 @@
       ],
       "endpoint": []
     },
+    "ReportProblem": {
+      "flows": [
+        "report-a-problem"
+      ],
+      "endpoint": [
+        "report-a-problem"
+      ]
+    },
+    "ReportProblemEmpty": {
+      "flows": [
+        "report-a-problem"
+      ],
+      "endpoint": []
+    },
     "Reset": {
       "flows": [
         "meet-a-spent-reset-link",
@@ -3598,11 +4367,33 @@
     },
     "Restore": {
       "flows": [
-        "restore-your-key"
+        "restore-after-a-mistyped-code",
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "restore-your-key",
+        "restore-your-key-as-an-applicant",
+        "sign-the-picks-kept-while-the-key-was-away"
       ],
       "endpoint": [
-        "restore-your-key"
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "restore-your-key",
+        "restore-your-key-as-an-applicant"
       ]
+    },
+    "RestoreError": {
+      "flows": [
+        "restore-after-a-mistyped-code"
+      ],
+      "endpoint": [
+        "restore-after-a-mistyped-code"
+      ]
+    },
+    "RestoreLength": {
+      "flows": [
+        "restore-after-a-mistyped-code"
+      ],
+      "endpoint": []
     },
     "Saved": {
       "flows": [
@@ -3633,18 +4424,81 @@
     },
     "Settings": {
       "flows": [
+        "call-off-an-email-change",
+        "cancel-the-deletion-from-settings",
+        "change-your-email",
+        "change-your-handle",
+        "change-your-password",
+        "confirm-the-email-change-from-the-new-address",
+        "finish-a-pending-email-change",
         "make-a-recovery-code-later",
         "meet-the-security-notice",
-        "request-account-deletion"
+        "read-about-cogra",
+        "read-whats-new",
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "report-a-problem",
+        "request-account-deletion",
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock",
+        "set-the-default-license",
+        "set-what-every-feed-opens-with",
+        "sign-out",
+        "sign-out-without-a-backup",
+        "unhide-an-account",
+        "watch-the-intro-again"
       ],
       "endpoint": [
+        "call-off-an-email-change",
+        "cancel-the-deletion-from-settings",
+        "change-your-email",
+        "change-your-handle",
+        "change-your-password",
+        "confirm-the-email-change-from-the-new-address",
+        "finish-a-pending-email-change",
         "make-a-recovery-code-later",
         "meet-the-security-notice",
-        "request-account-deletion"
+        "read-about-cogra",
+        "read-whats-new",
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "report-a-problem",
+        "request-account-deletion",
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock",
+        "set-the-default-license",
+        "set-what-every-feed-opens-with",
+        "sign-out",
+        "sign-out-without-a-backup",
+        "unhide-an-account",
+        "watch-the-intro-again"
       ]
+    },
+    "SettingsBackup": {
+      "flows": [
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock"
+      ],
+      "endpoint": []
+    },
+    "SettingsBackupError": {
+      "flows": [
+        "replace-the-recovery-code-after-a-refused-one"
+      ],
+      "endpoint": []
     },
     "SettingsBackupKeyAbsent": {
       "flows": [
+        "restore-the-key-from-the-recovery-code-row",
         "restore-your-key"
       ],
       "endpoint": []
@@ -3655,18 +4509,57 @@
       ],
       "endpoint": []
     },
+    "SettingsDeleting": {
+      "flows": [
+        "cancel-the-deletion-from-settings"
+      ],
+      "endpoint": [
+        "cancel-the-deletion-from-settings"
+      ]
+    },
+    "SettingsEmailPending": {
+      "flows": [
+        "finish-a-pending-email-change"
+      ],
+      "endpoint": [
+        "finish-a-pending-email-change"
+      ]
+    },
+    "SettingsHidden": {
+      "flows": [
+        "unhide-an-account"
+      ],
+      "endpoint": [
+        "unhide-an-account"
+      ]
+    },
+    "SettingsLicense": {
+      "flows": [
+        "set-the-default-license"
+      ],
+      "endpoint": []
+    },
+    "SettingsReading": {
+      "flows": [
+        "set-what-every-feed-opens-with"
+      ],
+      "endpoint": []
+    },
     "SignIn": {
       "flows": [
         "a-guest-meets-the-join-ask",
         "guest-turns-applicant",
         "meet-the-security-notice",
+        "open-the-new-address-link-signed-out",
         "request-a-password-reset",
         "set-a-new-password",
         "sign-in",
         "sign-in-after-a-wrong-password",
         "sign-in-after-the-backoff",
         "sign-in-where-no-backup-can-restore",
-        "sign-in-with-the-key-elsewhere"
+        "sign-in-with-the-key-elsewhere",
+        "sign-out",
+        "sign-out-without-a-backup"
       ],
       "endpoint": [
         "a-guest-meets-the-join-ask",
@@ -3678,7 +4571,9 @@
         "sign-in-after-a-wrong-password",
         "sign-in-after-the-backoff",
         "sign-in-where-no-backup-can-restore",
-        "sign-in-with-the-key-elsewhere"
+        "sign-in-with-the-key-elsewhere",
+        "sign-out",
+        "sign-out-without-a-backup"
       ]
     },
     "SignInError": {
@@ -3698,6 +4593,12 @@
     "SignInLimited": {
       "flows": [
         "sign-in-after-the-backoff"
+      ],
+      "endpoint": []
+    },
+    "SignOutConfirm": {
+      "flows": [
+        "sign-out-without-a-backup"
       ],
       "endpoint": []
     },
@@ -3786,6 +4687,14 @@
       ],
       "endpoint": []
     },
+    "VouchAskUnusable": {
+      "flows": [
+        "meet-an-ask-link-that-cant-be-taken-up"
+      ],
+      "endpoint": [
+        "meet-an-ask-link-that-cant-be-taken-up"
+      ]
+    },
     "VouchBack": {
       "flows": [
         "follow-a-citation",
@@ -3831,9 +4740,44 @@
       ],
       "endpoint": []
     },
+    "WhatsNew": {
+      "flows": [
+        "read-whats-new"
+      ],
+      "endpoint": [
+        "read-whats-new"
+      ]
+    },
+    "WhatsNewBehind": {
+      "flows": [
+        "update-from-whats-new"
+      ],
+      "endpoint": [
+        "update-from-whats-new"
+      ]
+    },
+    "YourKey": {
+      "flows": [
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock"
+      ],
+      "endpoint": [
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock"
+      ]
+    },
     "YourKeyAbsent": {
       "flows": [
+        "restore-the-key-from-the-your-key-row",
         "restore-your-key"
+      ],
+      "endpoint": []
+    },
+    "YourKeyGate": {
+      "flows": [
+        "see-your-key-behind-the-browsers-gate"
       ],
       "endpoint": []
     }
