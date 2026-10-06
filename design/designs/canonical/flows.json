@@ -1102,6 +1102,156 @@
       "description": "A ? opens its help dialog — on the seal, the Signed-actions text; Close returns to the screen that asked.",
       "start": { "board": "ComposeSeal", "via": 3 },
       "end": { "board": "HelpDialog", "via": 1 }
+    },
+    {
+      "name": "save-a-comment",
+      "description": "Save on a comment's menu keeps the comment in the one Saved list beside posts and people.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 1, "case": "the comment is kept — it joins the one Saved list beside posts and people" }
+    },
+    {
+      "name": "read-a-comments-license",
+      "description": "License terms on a comment's menu closes the menu and brings the comment's terms up in a sheet over the thread — reading them is the whole of it.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 3 }
+    },
+    {
+      "name": "see-who-holds-an-opinion-on-a-comment",
+      "description": "Opinions on this, on a comment's menu, brings the holders up over the thread — drawn in the state a comment nobody has answered leaves it.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 5 }
+    },
+    {
+      "name": "see-what-cites-a-comment",
+      "description": "Cited by, on a comment's menu, brings what cites the comment up over the thread — drawn in the state nothing citing it leaves it, which is the only door that state has.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 6 }
+    },
+    {
+      "name": "adjust-a-replys-stance",
+      "description": "Adjust on the reply's seal opens the reply pad, the stance toward what the reply answers; Set puts the adjusted stance on the seal.",
+      "start": { "board": "ReplySeal", "via": 6 },
+      "end": { "board": "ReplyPad", "via": 4, "to": "ReplySeal" }
+    },
+    {
+      "name": "read-the-reply-pads-help",
+      "description": "The reply pad's ? opens its own help topic — the post pad's text would say the opposite of what is true here; Close returns to the pad.",
+      "start": { "board": "ReplyPad", "via": 1 },
+      "end": { "board": "ReplyPadHelp", "via": 1 }
+    },
+    {
+      "name": "reply-carrying-a-citation",
+      "description": "A reference picked for a reply comes back staged on the reply's seal; Sign comment settles the reply and its reference on its parent, the thread reopened where it was left.",
+      "start": { "board": "ReplyCited" },
+      "end": { "board": "ReplyCited", "via": 9, "to": "ReplySettled" }
+    },
+    {
+      "name": "reply-carrying-many-citations",
+      "description": "A reply with several references staged counts them on its seal; Sign comment settles the reply and its references on its parent, the thread reopened where it was left.",
+      "start": { "board": "ReplyCitedMany" },
+      "end": { "board": "ReplyCitedMany", "via": 9, "to": "ReplySettled" }
+    },
+    {
+      "name": "reply-with-the-key-elsewhere",
+      "description": "A key that left while the reply was written meets Sign comment with the reply-scale fallback; Restore the key returns to the seal with the reply intact.",
+      "start": { "board": "ReplySeal", "via": 9, "to": "ReplySealKeyAbsent" },
+      "waypoints": [
+        { "board": "ReplySealKeyAbsent", "via": 2 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "reply-at-the-door-without-the-key",
+      "description": "Add a comment where the key is elsewhere meets the notice at the door, before a word is written; Restore the key takes the recovery code and returns where it began.",
+      "start": { "board": "ReplyEntry", "via": 7, "to": "ReplyKeyAbsent" },
+      "waypoints": [
+        { "board": "ReplyKeyAbsent", "via": 2 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "sign-a-reply-after-an-upload-failed",
+      "description": "An upload that doesn't land while the reply's seal waits disables Sign comment and drops any held press; Retry starts it again, and the reply settles once the uploads land.",
+      "start": { "board": "ReplySealUploadFailed" },
+      "waypoints": [
+        { "board": "ReplySealUploadFailed", "via": 1 }
+      ],
+      "end": { "board": "ReplySealUploading", "via": 1, "to": "ReplySettled" }
+    },
+    {
+      "name": "discard-a-reply",
+      "description": "Leaving a reply with something written asks first; Discard returns to the thread, the words gone.",
+      "start": { "board": "ReplyCompose", "via": 2, "to": "DiscardConfirm" },
+      "end": { "board": "DiscardConfirm", "via": 2, "to": "ReplyEntry" }
+    },
+    {
+      "name": "retry-a-clip-that-didnt-upload",
+      "description": "A reply's clip that didn't upload keeps Next disabled until it is retried or removed; Retry starts the upload again.",
+      "start": { "board": "ReplyVideoFailed" },
+      "end": { "board": "ReplyVideoFailed", "via": 5 }
+    },
+    {
+      "name": "reply-with-files-refused",
+      "description": "Picks over the reply's cap or in a format nothing here reads are named in the composer with why; what was accepted goes on with the words to the seal.",
+      "start": { "board": "ReplyCompose", "via": 5, "to": "ReplyMediaErrors" },
+      "end": { "board": "ReplyMediaErrors", "via": 3, "to": "ReplySeal" }
+    },
+    {
+      "name": "edit-a-video-comment",
+      "description": "Editing a comment whose body is a clip offers its description and its cover; the signed edit settles on its card, the thread reopened where it was left.",
+      "start": { "board": "CommentEditVideo" },
+      "end": { "board": "CommentEditVideo", "via": 12, "to": "ReplySettled" }
+    },
+    {
+      "name": "see-what-a-comment-edit-signs",
+      "description": "The count at the foot of a comment edit opens the acts it will sign; Done closes them back onto the edit.",
+      "start": { "board": "CommentEdit", "via": 11 },
+      "end": { "board": "CommentEditActs", "via": 1 }
+    },
+    {
+      "name": "leave-an-edit-unchanged",
+      "description": "An edit opened and left as it was found has nothing staged, so Sign the edit stays disabled and leaving keeps and discards nothing.",
+      "start": { "board": "EditComposeUnchanged" },
+      "end": { "board": "EditComposeUnchanged", "via": 2 }
+    },
+    {
+      "name": "see-what-a-post-edit-signs",
+      "description": "The count at the foot of a post edit opens the acts it will sign; Done closes them back onto the edit.",
+      "start": { "board": "EditCompose", "via": 11 },
+      "end": { "board": "EditActs", "via": 1 }
+    },
+    {
+      "name": "edit-a-video-post",
+      "description": "Editing a post whose body is a clip offers its description and a cover of your own; the signed edit settles on the post, the new cover pointed at.",
+      "start": { "board": "EditComposeVideo" },
+      "end": { "board": "EditComposeVideo", "via": 12, "case": "signed — the post, the edit settling, the new cover pointed at" }
+    },
+    {
+      "name": "reorder-an-edits-pictures",
+      "description": "The picked row on a post edit opens Show all over the edit; dragging sets the order, the first is the cover, and Done closes onto the edit.",
+      "start": { "board": "EditCompose", "via": 4 },
+      "end": { "board": "EditPicked", "via": 4 }
+    },
+    {
+      "name": "edit-a-post-down-to-words",
+      "description": "Removing an edit's last picture makes the body words, the field arriving empty; the signed edit settles on the post, its body now words.",
+      "start": { "board": "EditCompose", "via": 4 },
+      "waypoints": [
+        { "board": "EditPicked", "via": 3, "to": "EditWords" }
+      ],
+      "end": { "board": "EditWords", "via": 10, "case": "signed — the post, the edit settling, its body now words" }
+    },
+    {
+      "name": "untag-a-post-in-its-edit",
+      "description": "A tag chip on a post edit opens the tag's pair sheet; Un-tag closes it, the chip leaving for the body's withdrawn line and the acts counting one more.",
+      "start": { "board": "EditCompose", "via": 14 },
+      "end": { "board": "TagPad", "via": 2 }
+    },
+    {
+      "name": "revise-a-standing-citations-pair",
+      "description": "A standing citation's row on a post edit opens its pair sheet; Done stages the pick as one record added to the citation, and the row reads the resulting pair.",
+      "start": { "board": "EditCompose", "via": 15, "case": "the standing citation's pair sheet — the pick adds one record to what stands" },
+      "end": { "board": "RefPairEdit", "via": 3, "case": "the sheet closes — the pick is staged as one record added to the citation (Citations revised), the row reads the Resulting pair" }
     }
   ]
 }

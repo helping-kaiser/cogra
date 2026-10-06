@@ -3064,6 +3064,315 @@
         "ComposeSeal",
         "HelpDialog"
       ]
+    },
+    {
+      "name": "save-a-comment",
+      "description": "Save on a comment's menu keeps the comment in the one Saved list beside posts and people.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 1 «Save» → self — the comment is kept — it joins the one Saved list beside posts and people"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu"
+      ]
+    },
+    {
+      "name": "read-a-comments-license",
+      "description": "License terms on a comment's menu closes the menu and brings the comment's terms up in a sheet over the thread — reading them is the whole of it.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 3 «License terms» → CommentLicense — the menu closes and the comment's terms come up in a sheet over the thread"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu",
+        "CommentLicense"
+      ]
+    },
+    {
+      "name": "see-who-holds-an-opinion-on-a-comment",
+      "description": "Opinions on this, on a comment's menu, brings the holders up over the thread — drawn in the state a comment nobody has answered leaves it.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 5 «Opinions on this» → CommentOpinionsEmpty — the menu closes and the holders come up over the thread — drawn in the state a comment nobody has answered leaves it"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu",
+        "CommentOpinionsEmpty"
+      ]
+    },
+    {
+      "name": "see-what-cites-a-comment",
+      "description": "Cited by, on a comment's menu, brings what cites the comment up over the thread — drawn in the state nothing citing it leaves it, which is the only door that state has.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 6 «Cited by» → CommentCitedByEmpty — the menu closes and what cites this comes up over the thread — drawn in the state nothing citing it leaves it, which is the only door that state has"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu",
+        "CommentCitedByEmpty"
+      ]
+    },
+    {
+      "name": "adjust-a-replys-stance",
+      "description": "Adjust on the reply's seal opens the reply pad, the stance toward what the reply answers; Set puts the adjusted stance on the seal.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplySeal · 6 «Adjust (the stance)» → ReplyPad",
+        "end · ReplyPad · 4 «Set» → ReplySeal — the adjusted stance on the seal"
+      ],
+      "boards": [
+        "ReplySeal",
+        "ReplyPad"
+      ]
+    },
+    {
+      "name": "read-the-reply-pads-help",
+      "description": "The reply pad's ? opens its own help topic — the post pad's text would say the opposite of what is true here; Close returns to the pad.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyPad · 1 «? — how stances work» → ReplyPadHelp — the reply pad's own topic — the post pad's text says the opposite of what is true here",
+        "end · ReplyPadHelp · 1 «Close» → ReplyPad"
+      ],
+      "boards": [
+        "ReplyPad",
+        "ReplyPadHelp"
+      ]
+    },
+    {
+      "name": "reply-carrying-a-citation",
+      "description": "A reference picked for a reply comes back staged on the reply's seal; Sign comment settles the reply and its reference on its parent, the thread reopened where it was left.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCited",
+        "end · ReplyCited · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply and its reference settling on its parent"
+      ],
+      "boards": [
+        "ReplyCited",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "reply-carrying-many-citations",
+      "description": "A reply with several references staged counts them on its seal; Sign comment settles the reply and its references on its parent, the thread reopened where it was left.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCitedMany",
+        "end · ReplyCitedMany · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply and its references settling on its parent"
+      ],
+      "boards": [
+        "ReplyCitedMany",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "reply-with-the-key-elsewhere",
+      "description": "A key that left while the reply was written meets Sign comment with the reply-scale fallback; Restore the key returns to the seal with the reply intact.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplySeal · 9 «Sign comment» → ReplySealKeyAbsent — key elsewhere — the key left while the reply was written; the reply-scale fallback, restore or discard",
+        "ReplySealKeyAbsent · 2 «Restore the key» → Restore — restored — back to this seal, the reply intact",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ReplySeal",
+        "ReplySealKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "reply-at-the-door-without-the-key",
+      "description": "Add a comment where the key is elsewhere meets the notice at the door, before a word is written; Restore the key takes the recovery code and returns where it began.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 7 «Add a comment» → ReplyKeyAbsent — key elsewhere — the notice meets the reader at the door, before a word is written",
+        "ReplyKeyAbsent · 2 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "sign-a-reply-after-an-upload-failed",
+      "description": "An upload that doesn't land while the reply's seal waits disables Sign comment and drops any held press; Retry starts it again, and the reply settles once the uploads land.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplySealUploadFailed",
+        "ReplySealUploadFailed · 1 «Retry» → ReplySealUploading — the upload starts again — the gate reads its running line; a press held before the fault dropped, so the reader presses Sign comment again",
+        "end · ReplySealUploading · 1 «Sign comment» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
+      ],
+      "boards": [
+        "ReplySealUploadFailed",
+        "ReplySealUploading",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "discard-a-reply",
+      "description": "Leaving a reply with something written asks first; Discard returns to the thread, the words gone.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCompose · 2 «X — leave» → DiscardConfirm — something written — the confirm",
+        "end · DiscardConfirm · 2 «Discard» → ReplyEntry — from a reply — the thread"
+      ],
+      "boards": [
+        "ReplyCompose",
+        "DiscardConfirm",
+        "ReplyEntry"
+      ]
+    },
+    {
+      "name": "retry-a-clip-that-didnt-upload",
+      "description": "A reply's clip that didn't upload keeps Next disabled until it is retried or removed; Retry starts the upload again.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyVideoFailed",
+        "end · ReplyVideoFailed · 5 «Retry» → self — the upload starts again — a fault, not an answer"
+      ],
+      "boards": [
+        "ReplyVideoFailed"
+      ]
+    },
+    {
+      "name": "reply-with-files-refused",
+      "description": "Picks over the reply's cap or in a format nothing here reads are named in the composer with why; what was accepted goes on with the words to the seal.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCompose · 5 «+ Add pictures or a video» → ReplyMediaErrors — over its cap, or a format nothing here reads — the composer says why",
+        "end · ReplyMediaErrors · 3 «Next» → ReplySeal — what was accepted goes with the words"
+      ],
+      "boards": [
+        "ReplyCompose",
+        "ReplyMediaErrors",
+        "ReplySeal"
+      ]
+    },
+    {
+      "name": "edit-a-video-comment",
+      "description": "Editing a comment whose body is a clip offers its description and its cover; the signed edit settles on its card, the thread reopened where it was left.",
+      "status": "resolved",
+      "steps": [
+        "start · CommentEditVideo",
+        "end · CommentEditVideo · 12 «Sign the edit» → ReplySettled — signed — the thread reopened where it was left, the edit settling on its card, the new cover pointed at"
+      ],
+      "boards": [
+        "CommentEditVideo",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "see-what-a-comment-edit-signs",
+      "description": "The count at the foot of a comment edit opens the acts it will sign; Done closes them back onto the edit.",
+      "status": "resolved",
+      "steps": [
+        "start · CommentEdit · 11 «You're signing 5 things» → CommentEditActs",
+        "end · CommentEditActs · 1 «Done» → CommentEdit — the sheet closes"
+      ],
+      "boards": [
+        "CommentEdit",
+        "CommentEditActs"
+      ]
+    },
+    {
+      "name": "leave-an-edit-unchanged",
+      "description": "An edit opened and left as it was found has nothing staged, so Sign the edit stays disabled and leaving keeps and discards nothing.",
+      "status": "resolved",
+      "steps": [
+        "start · EditComposeUnchanged",
+        "end · EditComposeUnchanged · 2 «X — leave» → back — leaves — nothing was staged, so nothing is kept and nothing is discarded"
+      ],
+      "boards": [
+        "EditComposeUnchanged"
+      ]
+    },
+    {
+      "name": "see-what-a-post-edit-signs",
+      "description": "The count at the foot of a post edit opens the acts it will sign; Done closes them back onto the edit.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 11 «You're signing 5 things» → EditActs",
+        "end · EditActs · 1 «Done» → EditCompose — the sheet closes"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditActs"
+      ]
+    },
+    {
+      "name": "edit-a-video-post",
+      "description": "Editing a post whose body is a clip offers its description and a cover of your own; the signed edit settles on the post, the new cover pointed at.",
+      "status": "resolved",
+      "steps": [
+        "start · EditComposeVideo",
+        "end · EditComposeVideo · 12 «Sign the edit» → back — signed — the post, the edit settling, the new cover pointed at"
+      ],
+      "boards": [
+        "EditComposeVideo"
+      ]
+    },
+    {
+      "name": "reorder-an-edits-pictures",
+      "description": "The picked row on a post edit opens Show all over the edit; dragging sets the order, the first is the cover, and Done closes onto the edit.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 4 «picked row» → EditPicked — the whole row opens Show all, over the edit itself",
+        "end · EditPicked · 4 «Done» → EditCompose — the sheet closes"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditPicked"
+      ]
+    },
+    {
+      "name": "edit-a-post-down-to-words",
+      "description": "Removing an edit's last picture makes the body words, the field arriving empty; the signed edit settles on the post, its body now words.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 4 «picked row» → EditPicked — the whole row opens Show all, over the edit itself",
+        "EditPicked · 3 «remove ×» → EditWords — the last one leaves — the body becomes words, and the field arrives empty",
+        "end · EditWords · 10 «Sign the edit» → back — signed — the post, the edit settling, its body now words"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditPicked",
+        "EditWords"
+      ]
+    },
+    {
+      "name": "untag-a-post-in-its-edit",
+      "description": "A tag chip on a post edit opens the tag's pair sheet; Un-tag closes it, the chip leaving for the body's withdrawn line and the acts counting one more.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 14 «staged tag chip» → TagPad",
+        "end · TagPad · 2 «Un-tag» → back — the sheet closes — the chip leaves the row for the body's withdrawn line, and the acts card counts one more"
+      ],
+      "boards": [
+        "EditCompose",
+        "TagPad"
+      ]
+    },
+    {
+      "name": "revise-a-standing-citations-pair",
+      "description": "A standing citation's row on a post edit opens its pair sheet; Done stages the pick as one record added to the citation, and the row reads the resulting pair.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 15 «staged reference row» → RefPairEdit — the standing citation's pair sheet — the pick adds one record to what stands",
+        "end · RefPairEdit · 3 «Done» → back — the sheet closes — the pick is staged as one record added to the citation (Citations revised), the row reads the Resulting pair"
+      ],
+      "boards": [
+        "EditCompose",
+        "RefPairEdit"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -3255,25 +3564,59 @@
         "message-someone"
       ]
     },
+    "CommentCitedByEmpty": {
+      "flows": [
+        "see-what-cites-a-comment"
+      ],
+      "endpoint": [
+        "see-what-cites-a-comment"
+      ]
+    },
     "CommentEdit": {
       "flows": [
         "cite-something",
         "describe-your-pictures",
-        "edit-your-comment"
+        "edit-your-comment",
+        "see-what-a-comment-edit-signs"
+      ],
+      "endpoint": [
+        "see-what-a-comment-edit-signs"
+      ]
+    },
+    "CommentEditActs": {
+      "flows": [
+        "see-what-a-comment-edit-signs"
       ],
       "endpoint": []
     },
     "CommentEditVideo": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "edit-a-video-comment"
       ],
-      "endpoint": []
+      "endpoint": [
+        "edit-a-video-comment"
+      ]
+    },
+    "CommentLicense": {
+      "flows": [
+        "read-a-comments-license"
+      ],
+      "endpoint": [
+        "read-a-comments-license"
+      ]
     },
     "CommentMenu": {
       "flows": [
-        "cite-a-post"
+        "cite-a-post",
+        "read-a-comments-license",
+        "save-a-comment",
+        "see-what-cites-a-comment",
+        "see-who-holds-an-opinion-on-a-comment"
       ],
-      "endpoint": []
+      "endpoint": [
+        "save-a-comment"
+      ]
     },
     "CommentMenuOwn": {
       "flows": [
@@ -3290,6 +3633,14 @@
         "publish-words"
       ],
       "endpoint": []
+    },
+    "CommentOpinionsEmpty": {
+      "flows": [
+        "see-who-holds-an-opinion-on-a-comment"
+      ],
+      "endpoint": [
+        "see-who-holds-an-opinion-on-a-comment"
+      ]
     },
     "CommentRemoveConfirm": {
       "flows": [
@@ -3742,20 +4093,68 @@
       ],
       "endpoint": []
     },
+    "DiscardConfirm": {
+      "flows": [
+        "discard-a-reply"
+      ],
+      "endpoint": []
+    },
+    "EditActs": {
+      "flows": [
+        "see-what-a-post-edit-signs"
+      ],
+      "endpoint": []
+    },
     "EditCompose": {
       "flows": [
         "cite-something",
-        "edit-your-post"
+        "edit-a-post-down-to-words",
+        "edit-your-post",
+        "reorder-an-edits-pictures",
+        "revise-a-standing-citations-pair",
+        "see-what-a-post-edit-signs",
+        "untag-a-post-in-its-edit"
       ],
       "endpoint": [
-        "edit-your-post"
+        "edit-a-post-down-to-words",
+        "edit-your-post",
+        "reorder-an-edits-pictures",
+        "revise-a-standing-citations-pair",
+        "see-what-a-post-edit-signs",
+        "untag-a-post-in-its-edit"
       ]
     },
     "EditComposeUnchanged": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "leave-an-edit-unchanged"
+      ],
+      "endpoint": [
+        "leave-an-edit-unchanged"
+      ]
+    },
+    "EditComposeVideo": {
+      "flows": [
+        "edit-a-video-post"
+      ],
+      "endpoint": [
+        "edit-a-video-post"
+      ]
+    },
+    "EditPicked": {
+      "flows": [
+        "edit-a-post-down-to-words",
+        "reorder-an-edits-pictures"
       ],
       "endpoint": []
+    },
+    "EditWords": {
+      "flows": [
+        "edit-a-post-down-to-words"
+      ],
+      "endpoint": [
+        "edit-a-post-down-to-words"
+      ]
     },
     "Explore": {
       "flows": [
@@ -4704,6 +5103,14 @@
         "pair-a-staged-citation"
       ]
     },
+    "RefPairEdit": {
+      "flows": [
+        "revise-a-standing-citations-pair"
+      ],
+      "endpoint": [
+        "revise-a-standing-citations-pair"
+      ]
+    },
     "ReferencePicker": {
       "flows": [
         "cite-something"
@@ -4752,23 +5159,34 @@
     },
     "ReplyCited": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "reply-carrying-a-citation"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reply-carrying-a-citation"
+      ]
     },
     "ReplyCitedMany": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "reply-carrying-many-citations"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reply-carrying-many-citations"
+      ]
     },
     "ReplyCompose": {
       "flows": [
+        "discard-a-reply",
         "reply-to-a-post",
         "reply-with-a-video",
+        "reply-with-files-refused",
         "reply-with-pictures"
       ],
-      "endpoint": []
+      "endpoint": [
+        "discard-a-reply",
+        "reply-with-files-refused"
+      ]
     },
     "ReplyComposeComment": {
       "flows": [
@@ -4778,24 +5196,37 @@
     },
     "ReplyEntry": {
       "flows": [
+        "discard-a-reply",
         "find-the-thread-a-comment-answers",
+        "read-a-comments-license",
+        "reply-at-the-door-without-the-key",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-with-a-video",
         "reply-with-pictures",
-        "search-into-a-thread"
+        "save-a-comment",
+        "search-into-a-thread",
+        "see-what-cites-a-comment",
+        "see-who-holds-an-opinion-on-a-comment"
       ],
       "endpoint": [
+        "discard-a-reply",
         "find-the-thread-a-comment-answers",
+        "read-a-comments-license",
+        "reply-at-the-door-without-the-key",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-with-a-video",
         "reply-with-pictures",
-        "search-into-a-thread"
+        "save-a-comment",
+        "search-into-a-thread",
+        "see-what-cites-a-comment",
+        "see-who-holds-an-opinion-on-a-comment"
       ]
     },
     "ReplyKeyAbsent": {
       "flows": [
+        "reply-at-the-door-without-the-key",
         "restore-your-key"
       ],
       "endpoint": []
@@ -4812,7 +5243,23 @@
     },
     "ReplyMediaErrors": {
       "flows": [
-        "describe-your-pictures"
+        "describe-your-pictures",
+        "reply-with-files-refused"
+      ],
+      "endpoint": []
+    },
+    "ReplyPad": {
+      "flows": [
+        "adjust-a-replys-stance",
+        "read-the-reply-pads-help"
+      ],
+      "endpoint": [
+        "read-the-reply-pads-help"
+      ]
+    },
+    "ReplyPadHelp": {
+      "flows": [
+        "read-the-reply-pads-help"
       ],
       "endpoint": []
     },
@@ -4837,13 +5284,20 @@
     },
     "ReplySeal": {
       "flows": [
+        "adjust-a-replys-stance",
         "cite-something",
         "reply-from-the-browser",
         "reply-to-a-post",
         "reply-with-a-video",
-        "reply-with-pictures"
+        "reply-with-files-refused",
+        "reply-with-pictures",
+        "reply-with-the-key-elsewhere"
       ],
-      "endpoint": []
+      "endpoint": [
+        "adjust-a-replys-stance",
+        "reply-with-files-refused",
+        "reply-with-the-key-elsewhere"
+      ]
     },
     "ReplySealComment": {
       "flows": [
@@ -4854,34 +5308,52 @@
     },
     "ReplySealKeyAbsent": {
       "flows": [
+        "reply-with-the-key-elsewhere",
         "restore-your-key"
       ],
       "endpoint": []
     },
+    "ReplySealUploadFailed": {
+      "flows": [
+        "sign-a-reply-after-an-upload-failed"
+      ],
+      "endpoint": [
+        "sign-a-reply-after-an-upload-failed"
+      ]
+    },
     "ReplySealUploading": {
       "flows": [
-        "reply-while-the-pictures-upload"
+        "reply-while-the-pictures-upload",
+        "sign-a-reply-after-an-upload-failed"
       ],
       "endpoint": []
     },
     "ReplySettled": {
       "flows": [
+        "edit-a-video-comment",
         "edit-your-comment",
+        "reply-carrying-a-citation",
+        "reply-carrying-many-citations",
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
         "reply-with-a-video",
-        "reply-with-pictures"
+        "reply-with-pictures",
+        "sign-a-reply-after-an-upload-failed"
       ],
       "endpoint": [
+        "edit-a-video-comment",
         "edit-your-comment",
+        "reply-carrying-a-citation",
+        "reply-carrying-many-citations",
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
         "reply-with-a-video",
-        "reply-with-pictures"
+        "reply-with-pictures",
+        "sign-a-reply-after-an-upload-failed"
       ]
     },
     "ReplyVideo": {
@@ -4889,6 +5361,14 @@
         "reply-with-a-video"
       ],
       "endpoint": []
+    },
+    "ReplyVideoFailed": {
+      "flows": [
+        "retry-a-clip-that-didnt-upload"
+      ],
+      "endpoint": [
+        "retry-a-clip-that-didnt-upload"
+      ]
     },
     "ReportProblem": {
       "flows": [
@@ -4936,6 +5416,8 @@
     "Restore": {
       "flows": [
         "publish-with-the-key-elsewhere",
+        "reply-at-the-door-without-the-key",
+        "reply-with-the-key-elsewhere",
         "restore-after-a-mistyped-code",
         "restore-the-key-from-the-recovery-code-row",
         "restore-the-key-from-the-your-key-row",
@@ -4945,6 +5427,8 @@
       ],
       "endpoint": [
         "publish-with-the-key-elsewhere",
+        "reply-at-the-door-without-the-key",
+        "reply-with-the-key-elsewhere",
         "restore-the-key-from-the-recovery-code-row",
         "restore-the-key-from-the-your-key-row",
         "restore-your-key",
@@ -5195,6 +5679,14 @@
         "sign-out-without-a-backup"
       ],
       "endpoint": []
+    },
+    "TagPad": {
+      "flows": [
+        "untag-a-post-in-its-edit"
+      ],
+      "endpoint": [
+        "untag-a-post-in-its-edit"
+      ]
     },
     "TagPadCompose": {
       "flows": [
