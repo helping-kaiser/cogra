@@ -1,7 +1,7 @@
 import React from "react";
 
-/* The bottom sheet (backlog item 3). `design.md` §6 lists sheets in the
-   scaffolding and the product never built one, so three surfaces were each
+/* The bottom sheet (backlog item 3; readme §7, *Intentional additions*). The
+   product never built one, so three surfaces were each
    improvising: the overflow menu, the license terms, a filter.
 
    WHY A SHEET AND NOT A DIALOG. A dialog is a question the reader has to answer

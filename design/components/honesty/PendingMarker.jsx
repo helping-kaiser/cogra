@@ -1,6 +1,6 @@
 import React from "react";
 
-/* The honesty markers of design.md §9. Nothing vanishes silently, and NONE of
+/* The honesty markers of readme §9. Nothing vanishes silently, and NONE of
    these use `error` colouring — they are statements of fact, not warnings.
 
    Both are `label-small` on `onSurfaceVariant`, deliberately the quietest type in

@@ -7,10 +7,10 @@ import { TextField } from "./TextField.jsx";
    EARNED rather than clicked: the reader types the code back, or pastes the one
    they copied.
 
-   Monospace is design.md §3's one exception to Figtree — read character by
+   Monospace is readme §4 *Type*'s one exception to Figtree — read character by
    character, where 0/O and l/1 have to separate and a mistyped code is
    unrecoverable. Wider tracking is the same legibility device, not styling.
-   `body-large` carries it, not design.md's `title-large`: a real code is 26
+   `body-large` carries it, not the source's `title-large`: a real code is 26
    Crockford characters in 5-5-5-5-6 groups, which cannot hold one line at
    22px inside a card at mobile width — and the one-line grouping is the
    point. The size gives way, the tracking stays (§11, Small fixes).

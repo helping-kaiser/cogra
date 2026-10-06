@@ -4,7 +4,8 @@ import { Button } from "../core/Button.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { StanceControl } from "../stance/StanceControl.jsx";
 
-/* The profile header (backlog item 5) — specified in design.md §6, never built.
+/* The profile header (backlog item 5) — specified in the source, never built (readme §7,
+   *Intentional additions*).
 
    PEOPLE FIRST, AND A PERSON IS A TARGET. A profile is the one surface whose
    subject is a person, so the stance control on THEM leads the actions: the whole

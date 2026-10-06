@@ -2,7 +2,7 @@ import React from "react";
 import { clampPair, ORIGIN, DIRECTED_POLES, INTEREST_POLES, STANCE_AXIS_NAMES, STANCE_RANGES } from "./StanceReadout.jsx";
 
 /* The pad's field: a SOFT ROUNDED SQUARE, and THE DRAWN FIELD IS THE VALUE SPACE
-   (design.md §8.3). The knob travels exactly the field, the corners are the two
+   (readme §8). The knob travels exactly the field, the corners are the two
    axes' own ends — (±1, ±1) for a stance, (0, 0) to (1, 1) for a tag — and the
    knob never leaves the drawn shape, so what the finger sees is what the value
    does. Horizontal is the directed slot and vertical the interest slot, and the
@@ -51,7 +51,7 @@ export const STANCE_AXES = {
 
    IT COULD NOT BE FIXED BY MAKING THE KNOB READ BETTER. A halo or a plate
    separates the disc from the ink under it, but the ink is still under it —
-   and the field IS the value space (design.md §8.3), so the knob travels
+   and the field IS the value space (readme §8), so the knob travels
    every point a word could occupy. Inside the field, any word is reachable.
    The collision is structural, so the words leave.
 
@@ -120,7 +120,7 @@ export function padPercentOf(pair, ranges = STANCE_RANGES) {
 
 /* THE DEAD-GROUND LINE MARKS THE AXIS'S ZERO, so an axis that never reaches
    zero has none to draw. On a stance's signed square both lines cross the
-   middle and the inert cross is legible dead ground (§8.3). The tag pad's
+   middle and the inert cross is legible dead ground (readme §8). The tag pad's
    confidence starts at zero and its relevance above it, so neither line falls
    anywhere but the field's own edge, where a hairline would read as a border
    rather than as a meaning. */

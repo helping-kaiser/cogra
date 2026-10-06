@@ -4,7 +4,8 @@ import { formatDimension, formatUnsigned } from "./StanceReadout.jsx";
 /* One authored dimension as an ordinary range input: a float, step 0.01, with
    the two-decimal value in the label. Android's StanceSlider.
 
-   For a STANCE this is the ACCESSIBLE path (design.md §8.6, §10) — the pad is a
+   For a STANCE this is the ACCESSIBLE path (stance-control, *Alternate and accessible
+   inputs*; readme §10) — the pad is a
    drag gesture, and a drag gesture always has a non-drag equivalent.
 
    FOR A TAG'S PAIR IT IS THE NON-DRAG EQUIVALENT (jakob's ruling, the tag pad

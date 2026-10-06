@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 
-/* design.md §9's two content states. They share only their register — soft, a
+/* readme §9's two content states. They share only their register — soft, a
    statement of fact, never `error` colouring. WHAT THEY TAKE is opposite, and
    the docs are unambiguous about why: one covers the body and gives it back on a
    tap, the other takes the whole record for good.

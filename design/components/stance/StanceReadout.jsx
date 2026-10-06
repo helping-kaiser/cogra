@@ -1,6 +1,7 @@
 import React from "react";
 
-/* The stance readout — the numbers and the faces (design.md §8.2, §8.3, §8.4).
+/* The stance readout — the numbers and the faces (guidelines/stance-control.md:
+   *Two numbers, never one*, *The gesture*, *The emoji readout*).
 
    TWO DIFFERENT NUMBERS, NEVER MERGED INTO ONE LINE:
      · "Current opinion" sits ABOVE the readout — the bundle as it stands.
@@ -251,7 +252,7 @@ export const VALENCE_SIX = [
 
    LIKE `STANCE_ANCHORS`, THIS TABLE IS THE CONTRACT — both clients read these
    thirteen rows, and a change here changes both apps. The words are the
-   spoken reading, never drawn beside the face: §8.3's rule that the face
+   spoken reading, never drawn beside the face: stance-control's rule that the face
    carries the feel and the pair carries the fact holds for a tag too. */
 export const TAG_ANCHORS = [
   { pDirected: 0.15, pInterest: 0.9, emoji: "🔍", label: "had to look, but it's in there" },
@@ -445,8 +446,8 @@ export function standingLine(bundle, targetLabel) {
  * so why does walking back take 1.40?" — because it presents the capped number as
  * the thing that exists and the true total as a correction to it. The total is
  * what the reader built up; the cap is what the feed reads of it. In that order it
- * explains itself, and §8.3's "clipped is not hidden" is honoured without
- * confusing anyone.
+ * explains itself, and *Two numbers, never one*'s "clipped is not hidden" is
+ * honoured without confusing anyone.
  *
  * `capped` is false when the sum never reached the clip, and then there is only
  * one number to show and no aside to make.
@@ -551,7 +552,7 @@ function ReadoutLine({ emoji, exact, spoken, style }) {
   );
 }
 
-/** Face and pair, and the words for a reader who cannot see the face (§8.3). */
+/** Face and pair, and the words for a reader who cannot see the face (readme §10). */
 export function StanceReadout({ pair, kind = "pick", zeroLabel = SEVERED_LABEL, names = STANCE_AXIS_NAMES, style }) {
   const readout = kind === "standing" ? bundleReadout(pair, zeroLabel) : nearestAnchor(pair);
   return (
@@ -737,8 +738,8 @@ export function helpKey(line) {
   return typeof line === "string" ? line : line.spoken;
 }
 
-/* What the pad's `?` opens (design.md §8.7: "a small `?` on the pad opens the
-   explanation on demand").
+/* What the pad's `?` opens (stance-control, *The gesture*: it replaces the pad's
+   body with four lines of help).
 
    It REPLACES the pad's body rather than growing below it. The pad is parked at a
    fixed spot and operated by muscle memory; a panel that pushes Set and Cancel

@@ -13,9 +13,9 @@ import { ShareButton } from "./ShareButton.jsx";
 import { Icon } from "../navigation/Icon.jsx";
 import { TopicsLine } from "./TopicsLine.jsx";
 
-/* The post card of design.md §6 — "author (avatar, display name, handle,
-   timestamp), optional title, optional description, body, media gallery, stance
-   control", with the text-only, single-image, gallery, with-title and
+/* The post card (readme §7, *Intentional additions*) — author (avatar, display
+   name, handle, timestamp), optional title, optional description, body, media
+   gallery, stance control, with the text-only, single-image, gallery, with-title and
    without-title variants.
 
    Built here because the source's own rule demands it: "the moment a piece

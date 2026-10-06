@@ -1,6 +1,6 @@
 import React from "react";
 
-/* The actor chip / row and its avatar (design.md §6): the compact
+/* The actor chip / row and its avatar (readme §7): the compact
    person-or-group reference every author attribution renders as, opening the
    actor's profile. A Collective looks like a person but reads as a shared
    identity.

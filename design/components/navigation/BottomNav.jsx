@@ -1,7 +1,7 @@
 import React from "react";
 import { Icon } from "./Icon.jsx";
 
-/* The app's frame (design.md §6). Five slots left to right — feed, search, create
+/* The app's frame (readme §7.1). Five slots left to right — feed, search, create
    post, wallet, profile — and V1.0 carries all five (readme §13, *The V1.0
    scope cut*, jakob 2026-09-25). A slot whose absence would deform the shell
    keeps its place even while its surface is drawn after V1.0, and opens a

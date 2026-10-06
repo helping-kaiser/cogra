@@ -1,4 +1,4 @@
-**Proposed, not shipped.** Media does not exist in the product yet; this is the part of `design.md` §6 that is decided, built early so no layout is designed without reserved space.
+**Proposed, not shipped.** Media does not exist in the product yet; this is the part of the media family (readme §7) that is decided, built early so no layout is designed without reserved space.
 
 ```jsx
 <MediaAttachment src={photo} alt="A wet street under a streetlight" />

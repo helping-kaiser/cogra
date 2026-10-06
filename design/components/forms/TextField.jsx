@@ -3,7 +3,7 @@ import React from "react";
 /* The house labeled text input. `label-large` label above a field on the
    EXTRA-SMALL rung (4px) — Material's text-field corner — with a 1px `outline`
    border and a transparent fill. `mono` dresses codes and identifiers in the
-   platform monospace: the one exception to Figtree (design.md §3), a legibility
+   platform monospace: the one exception to Figtree (readme §4, *Type*), a legibility
    device for strings read character by character.
 
    SUPPORTING TEXT IS ONE SLOT WITH TWO STATES, which is Material 3's own

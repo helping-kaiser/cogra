@@ -7,7 +7,7 @@ export interface PostAuthor {
 }
 
 /**
- * The post card of design.md §6, in its summary and detail variants.
+ * The post card of readme §7's inventory, in its summary and detail variants.
  *
  * A POST'S BODY IS `content` XOR `media` — words or a picture, never both
  * (`docs/instances/post.md`). The words that belong beside a picture are the
