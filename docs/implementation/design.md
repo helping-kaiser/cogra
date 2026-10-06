@@ -17,6 +17,7 @@ stay below, under their own section number.
 | § | Topic | Home |
 |---|---|---|
 | 1 | Direction | stays here ([§1](#1-direction)); tone also in [readme §3](../../design/readme.md#3-content-fundamentals) |
+| 2 | Colour | rows 2.1 to 2.5 |
 | 2.1 | The colour decision | [readme §4 Colour](../../design/readme.md#colour); the deviations' reasoning stays here ([§2.1](#21-the-decision)) |
 | 2.2 | Reproducing the palette | stays here ([§2.2](#22-reproducing-the-palette)) |
 | 2.3 | Tokens | the values: [scheme.json](../../design/tokens/scheme.json), [colors.css](../../design/tokens/colors.css), [tokens.json](../../design/tokens.json); notes stay here ([§2.3](#23-tokens)) |
