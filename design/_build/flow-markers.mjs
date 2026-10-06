@@ -980,11 +980,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "signing 2 things", tag: "button" },
-    // The `upload` chip's footer, counting the new cover's record.
     { n: 11, find: "signing 3 things", tag: "button" },
+    // The `upload` chip's footer, counting the new cover's record.
+    { n: 11, find: "signing 4 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
+    // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
+    { n: 15, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
   ],
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
@@ -1000,11 +1002,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 10, find: "+ Add a tag", tag: "button" },
-    { n: 11, find: "signing 3 things", tag: "button" },
-    // The `upload` chip's footer, counting the new cover's record.
     { n: 11, find: "signing 4 things", tag: "button" },
+    // The `upload` chip's footer, counting the new cover's record.
+    { n: 11, find: "signing 5 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
+    // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on EditCompose.
+    { n: 15, find: 'aria-label="Undo withdrawing #photography"', tag: "button" },
   ],
   ComposeUploading: [
     { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },

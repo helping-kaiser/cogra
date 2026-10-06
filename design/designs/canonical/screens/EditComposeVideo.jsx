@@ -91,6 +91,9 @@ export function Screen() {
               <TopicRemovable topic="coastroad" onEdit={() => {}} />
             </div>
             <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+            {/* The post's other tag, withdrawn in this edit — read back with its
+                Undo, as the picture edit reads its own (`WithdrawnLine`). */}
+            <WithdrawnLine name="#photography" />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
@@ -113,10 +116,10 @@ export function Screen() {
           <UploadStatusLine done={0} total={1} media="cover" />
         </div>
         <div style={{ display: "{{restShown}}", flexDirection: "column" }}>
-          <ActsFooter count={3} />
+          <ActsFooter count={4} />
         </div>
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
-          <ActsFooter count={4} />
+          <ActsFooter count={5} />
         </div>
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>
