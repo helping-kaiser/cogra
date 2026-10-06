@@ -16,6 +16,8 @@ ALWAYS Ranked is the order and Show what you've already seen stands off GIVEN th
 
 ALWAYS the search filter trigger speaks only the deviations from the search filter's default, a deviation back toward the app's default included
 
+ALWAYS the search filter trigger's spoken name is its reading followed by what the search shows
+
 ALWAYS the search filter's foot holds Reset in its corner and Done at its end
 
 ALWAYS the search filter's foot carries no reading of the staged filter

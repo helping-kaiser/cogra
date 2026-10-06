@@ -12,4 +12,6 @@ WHEN a press-and-hold on a removed comment's stance face lands -> a positive act
 
 ALWAYS a removed comment's replies stay under it and readable
 
+WHEN tap a comment's View N replies -> the branch unfolds in place AND it stays unfolded for as long as the sheet stays open
+
 ALWAYS the thread holds the reader's offset across the menu, the confirm and the removed comment, the comment and its branch in view

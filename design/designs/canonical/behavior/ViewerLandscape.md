@@ -28,4 +28,10 @@ WHEN tap the ground beside the frame GIVEN the phone is rotated and the frame le
 
 WHEN tap the clip -> NEVER the viewer closes
 
+ALWAYS the viewer's spoken name reads Video
+
+WHEN the viewer opens -> focus lands on the X
+
+WHEN the viewer closes -> focus returns to the frame that opened it
+
 ALWAYS on Android the viewer is the one screen that turns with the device, and every other screen stays upright
