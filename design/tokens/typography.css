@@ -1,13 +1,13 @@
-/* Material 3's fifteen type roles, unmodified (design.md §3) — sizes, line heights,
-   tracking, and weight are Material's; only the family is CoGra's. Values are
-   @material/web's generated typescale tokens, transcribed from the web client's
+/* Material 3's fifteen type roles, unmodified (readme §4 *Type*) — sizes, line
+   heights, tracking, and weight are Material's; only the family is CoGra's. Values
+   are @material/web's generated typescale tokens, transcribed from the web client's
    globals.css. Deviating from the scale is a decision to raise, not a per-screen
    liberty.
 
    Each role carries its whole style, so a surface reads a role once and gets size,
    leading, tracking, and weight together. Unclassed text lands on body-large.
 
-   Which role a surface takes (design.md §3):
+   Which role a surface takes (readme §4 *Type*; §11 *Small fixes*):
      page titles          title-large
      dialog headings      headline-small
      card/section heads   title-medium
@@ -15,7 +15,7 @@
      body and status      body-medium
      captions, bylines    body-small
      reading content      body-large
-     a recovery code      title-large, in the platform monospace, wider tracking */
+     a recovery code      body-large, in the platform monospace, wider tracking */
 
 :root {
   --text-display-large: 3.5625rem;

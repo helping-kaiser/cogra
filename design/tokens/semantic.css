@@ -1,5 +1,5 @@
 /* Semantic aliases over the Material roles. These name where a role is spent
-   (design.md §2.4) rather than introducing a second vocabulary — every one of them
+   (readme §4 *Colour*) rather than introducing a second vocabulary — every one of them
    resolves to a role above, and a screen may read either.
 
    `primaryContainer` is the loudest surface in the app: the bar's compose action

@@ -1,4 +1,4 @@
-/* A 4dp/4px base grid (design.md §4). Screen gutters and list spacing follow M3
+/* A 4dp/4px base grid (readme §4, *Spacing and layout*). Screen gutters and list spacing follow M3
    defaults; the values below are the ones the two clients actually use.
 
    Observed in the web client: screen gutter 24px (px-6), card padding 16px (p-4),
