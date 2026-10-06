@@ -7,3 +7,5 @@ ALWAYS the reader's own comment's menu opens stacked over the thread, the thread
 WHEN tap Save -> the reader's own comment is kept in the one Saved list beside posts and people
 
 WHEN tap Remove -> the menu closes AND the think-twice dialog comes up over the thread
+
+WHEN tap the scrim, swipe the menu down, press system Back or press Escape -> the menu closes AND the thread stands open beneath it as it was

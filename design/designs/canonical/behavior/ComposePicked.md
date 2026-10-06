@@ -6,6 +6,8 @@ ALWAYS the first picture in the sheet is the cover
 
 ALWAYS the sheet lists only the accepted pictures, never a refused file
 
+ALWAYS every change made in the sheet applies the moment it is made, and none waits on Done
+
 WHEN drag a picture by its handle to a new place -> the pictures take the new order AND the picture now first is the cover
 
 ALWAYS a picture's second line reads Describe or Described, then Make it the cover, Move up and Move down as small inline actions, each only where the move is possible
@@ -30,6 +32,6 @@ WHEN tap the last picture's remove control -> the sheet closes AND the pick step
 
 WHEN tap a picture's Describe -> the describe sheet opens for that picture
 
-WHEN press Done -> the sheet closes to the stage it opened from
+WHEN press Done -> the sheet closes to the stage it opened from AND everything already applied stands
 
-WHEN tap the scrim -> the sheet closes to the stage it opened from
+WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes to the stage it opened from AND everything already applied stands AND NEVER a change made in the sheet is undone

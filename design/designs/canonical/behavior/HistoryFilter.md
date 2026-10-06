@@ -20,7 +20,7 @@ WHEN tap Done GIVEN nothing seen is of the staged kinds -> the sheet closes AND 
 
 WHEN tap the scrim -> the sheet closes AND the staged kinds are dropped AND History stands as it was
 
-WHEN swipe down or press Back -> the sheet closes AND the staged kinds are dropped AND History stands as it was
+WHEN swipe down, press Back or press Escape -> the sheet closes AND the staged kinds are dropped AND History stands as it was
 
 ALWAYS the history's filter foot holds Reset in its corner and Done at its end
 
