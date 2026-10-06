@@ -1542,16 +1542,15 @@ type Application {
   approvedAt: DateTime
   "When the approver closed the application without approving it —
    on its own (rejectApplication) or with its link's whole waiting
-   queue (rejectLinkApplications); null otherwise. A rejected
-   application ends like an expired one — the entry closes, the
-   account persists, and either re-arm path opens a new one
+   queue (rejectLinkApplications); null otherwise. A rejection
+   closes this queue entry only: the account persists, and a member
+   taking up the account's ask link stages a new application
    (auth.md \"Rejection\")."
   rejectedAt: DateTime
   "When the Registration confirmed and the account became a
    member; null before."
   landedAt: DateTime
   createdAt: DateTime!
-  expiresAt: DateTime!
 }
 type ApplicationConnection {
   edges: [ApplicationEdge!]!
@@ -4236,7 +4235,7 @@ input RegisterInput {
  the form, before any later step."
 type RegisterPayload {
   auth: AuthSession
-  "When the account expires unless its email is verified (24 h,
+  "When the account expires unless its email is verified (7 days,
    auth.md \"Expiry\")."
   expiresAt: DateTime
 }
@@ -4265,18 +4264,9 @@ input AttachActorKeyInput {
 }
 type AttachActorKeyPayload { user: User }
 
-"Re-arm a closed, never-approved application — expired or
- rejected — with a fresh invite link: a new application row for
- the viewer's account (auth.md \"Expiry\", \"Rejection\"). One of
- the two re-arm paths; the other is a member taking up the
- account's ask link (stageApplicant). BAD_INPUT while a live
- application exists; INVITE_UNUSABLE for a dead link."
-input ApplyWithInviteInput { inviteLink: UUID! }
-type ApplyWithInvitePayload { application: Application }
-
 "Take up an ask link: stage its applicant as an application in the
  caller's own approval queue — the ask direction's answer to
- register and applyWithInvite, and a deliberate call rather than a
+ register, and a deliberate call rather than a
  side effect of opening the link (auth.md \"The ask link\"). The
  account already exists, so this writes only the queue entry;
  approving it is the ordinary approveApplicants act, with the
@@ -4301,8 +4291,8 @@ type StageApplicantPayload { application: Application }
  Returns the inviter's own Opinion records to sign — the vouch is
  the inviter's signature, not a server write. Approval requires an
  approvable application — email verified and key attached; an
- already-approved, rejected, expired, or foreign-queue application
- refuses with BAD_INPUT pinned to its entry."
+ already-approved, rejected, or foreign-queue application refuses
+ with BAD_INPUT pinned to its entry."
 input ApproveApplicantsInput {
   approvals: [ApplicationApprovalInput!]!
 }
@@ -4318,18 +4308,17 @@ input ApplicationApprovalInput {
  own gesture, never a side effect of revoking the link the
  applicant arrived through (auth.md \"Rejection\"). It closes this
  queue entry, not the person: the row is marked rejected, the
- account keeps its login, its reads and its attached key, and
- either re-arm path opens it again — a fresh invite link through
- applyWithInvite, or a member taking up the account's ask link.
- Nothing is deleted, and deletion is never the way out of a
+ account keeps its login, its reads and its attached key, and a
+ member taking up the account's ask link opens it again. Nothing
+ is deleted, and deletion is never the way out of a
  rejection. Writes the applicant an APPLICATION_REJECTED
  notification, since a refusal they could only infer from a status
  field going quiet would leave them waiting on a queue they have
  left. One person at a time — a decision about someone, which
  reaches them, so the client owns the explicit confirmation;
  closing a whole invite link's waiting queue in one gesture is
- rejectLinkApplications. An already-approved, already-rejected,
- expired, or foreign-queue application refuses with BAD_INPUT."
+ rejectLinkApplications. An already-approved, already-rejected, or
+ foreign-queue application refuses with BAD_INPUT."
 input RejectApplicationInput { application: UUID! }
 "The application in its closed state."
 type RejectApplicationPayload { application: Application }
@@ -4343,11 +4332,11 @@ type RejectApplicationPayload { application: Application }
  reads and its attached key, nothing deleted — and each applicant
  gets their own APPLICATION_REJECTED notification, since the act
  reaches each of them separately. Someone swept up by mistake
- comes back the ordinary way: either re-arm path opens a new
- application (applyWithInvite, stageApplicant), and the second
- look is the ask link's whole purpose. Scoped to what is waiting —
- applications already approved, rejected, or expired are passed
- over rather than refusing the call, because a queue that moves
+ comes back the ordinary way: a member taking up their ask link
+ stages a new application (stageApplicant), and the second look
+ is the ask link's whole purpose. Scoped to what is waiting —
+ applications already approved or rejected are passed over
+ rather than refusing the call, because a queue that moves
  under a flood must not defeat the sweep. A revoked link still
  sweeps: revocation stops new staging and leaves the queue
  standing. The client owns the explicit confirmation, which names
@@ -4498,10 +4487,11 @@ input UploadKeyBackupInput {
 type UploadKeyBackupPayload { ok: Boolean }
 
 "Issue a time-gated invite link. It carries no stance values —
- the inviter picks those at approval, the priced act. Keep
- expiresAt at or above the 24-hour verification window, which a
- shorter link can strand a registrant inside (auth.md \"Expiry
- floor\")."
+ the inviter picks those at approval, the priced act. expiresAt
+ must lie in the future and has no floor: it bounds registration
+ through the link and nothing else, so an account registered
+ through it keeps its full 7-day verification window and its
+ application waits with no timer (auth.md \"Expiry\")."
 input CreateInviteLinkInput {
   expiresAt: DateTime!
   "One applicant slot when true; many applicants otherwise.
@@ -4612,7 +4602,6 @@ extend type Mutation {
   verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
   resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
   attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
-  applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
   stageApplicant(input: StageApplicantInput!): StageApplicantPayload!
   approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
   rejectApplication(input: RejectApplicationInput!): RejectApplicationPayload!

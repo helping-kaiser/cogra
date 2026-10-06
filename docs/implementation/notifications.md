@@ -318,7 +318,7 @@ enum NotificationKind {
   "The viewer's inviter approved their application."
   APPLICATION_APPROVED
   "The approver closed the viewer's application without approving
-   it — that queue entry only; the account and both re-arm paths
+   it — that queue entry only; the account and its ask link
    remain."
   APPLICATION_REJECTED
 }

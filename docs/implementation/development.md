@@ -67,7 +67,7 @@ over file values.
 | `DEV_MAILER_LOG` | *(unset)* | Dev mailer log file (`tmp_dev/mailer.log` in `.env.example`, gitignored): every outbound message is also appended there, so hand tests read out-of-band secrets from one file; unset, no file logging |
 | `WEB_ORIGIN` | `http://localhost:3000` | The per-environment web origin emailed links ride on ([auth.md "Link URLs"](auth.md#link-urls)) |
 | `ADMISSION_BURN_MICRO` | `100000000` | The community-funded admission burn per approved applicant, micro-units — operational until the economics slice wires the subsidy machinery |
-| `ACCOUNT_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the account reaper — never-verified accounts past their 24-hour bound are deleted whole ([auth.md](auth.md#account-lifecycle)) |
+| `ACCOUNT_REAPER_INTERVAL_SECS` | `600` | Sweep interval of the account reaper — never-verified accounts past their 7-day bound are deleted whole ([auth.md](auth.md#account-lifecycle)) |
 | `RATE_LIMIT_LOGIN_PER_IP` | `30` | Login attempts per IP per 15 min ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
 | `RATE_LIMIT_REGISTER_PER_IP` | `5` | Application submits per IP per hour |
 | `RATE_LIMIT_REGISTER_PER_LINK` | `20` | Application submits per invite link per day |
