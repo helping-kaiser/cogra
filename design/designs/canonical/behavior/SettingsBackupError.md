@@ -10,6 +10,10 @@ WHEN press Create a new recovery code GIVEN the code now checks out -> the error
 
 WHEN press Create a new recovery code GIVEN the code still doesn't check out -> the error line stands in place AND NEVER a new code is made AND NEVER the old backup changes
 
+WHEN press Create a new recovery code GIVEN the current code, read the way every code input reads it, is not 26 characters -> the field reads A recovery code is 26 characters. AND NEVER a new code is made AND NEVER the old backup changes
+
+WHEN the replace has not answered 200ms after the press -> Create a new recovery code reads Creating a new recovery code… in its own place AND NEVER a spinner appears
+
 WHEN press Create a new recovery code GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Create a new recovery code AND Create a new recovery code stays, the retry AND NEVER the old backup changes
 
 WHEN press the header back arrow -> settings returns AND NEVER a code is made AND NEVER the old backup changes

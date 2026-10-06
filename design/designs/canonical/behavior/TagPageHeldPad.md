@@ -14,6 +14,12 @@ WHEN drag on the pad field -> the pick is set AND the landing line reads what it
 
 WHEN tap the pad field without dragging -> NEVER the pick moves
 
+ALWAYS the pad's ? is named How opinions work
+
+WHEN tap the pad's ? -> the pad's four help lines replace its body in place, in the topic family's words AND Set is disabled while they show AND NEVER a dialog opens AND NEVER anything is staged
+
+WHEN tap Back to the pad -> the field, the readouts and the pick return as they were
+
 WHEN tap Disconnect -> the dialog opens titled Disconnect from #saltmaps? AND NEVER the dialog carries a pick line
 
 WHEN tap Cancel -> the pad closes AND nothing is staged AND the topic stays held exactly as it was

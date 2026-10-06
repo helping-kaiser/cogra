@@ -14,7 +14,7 @@ ALWAYS the header's arrow reads Back and is a link to the bare view, never histo
 
 WHEN press the header's back arrow GIVEN the sign-in opened from the join layer over the signed-in state -> the join layer comes back AND NEVER FeedBare opens
 
-WHEN press the header's back arrow -> FeedBare opens
+WHEN press the header's back arrow GIVEN the sign-in did not open from the join layer over the signed-in state -> FeedBare opens
 
 WHEN press the password's reveal control GIVEN the password is hidden -> the password shows AND the control is named Hide password
 
@@ -31,6 +31,8 @@ WHEN tap Forgot password? -> Reset opens
 WHEN tap New here? Enter your invite GIVEN no invite link is held -> InviteEntry opens
 
 WHEN tap New here? Enter your invite GIVEN a live invite link is held -> Join opens with the link in hand AND NEVER the invite door is shown
+
+WHEN tap New here? Enter your invite GIVEN the invite link held no longer works -> JoinInvalid opens
 
 WHEN tap Just looking? Browse the feed -> FeedBare opens
 
@@ -54,4 +56,6 @@ ALWAYS the screen's ways out stay live while Sign in waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
-WHEN press system Back -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
+WHEN press system Back GIVEN the sign-in did not open from the join layer over the signed-in state -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
+
+WHEN press system Back GIVEN the sign-in opened from the join layer over the signed-in state -> the join layer comes back, exactly as the arrow's press brings it back AND NEVER FeedBare opens

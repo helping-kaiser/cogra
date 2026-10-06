@@ -47,3 +47,7 @@ WHEN no answer has come 5s after the press of Create account -> Create account s
 ALWAYS the header's arrow and Already have an account? Sign in refuse a press, never dimmed, while Create account waits on its answer
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
+
+ALWAYS Create account stands disabled with Waiting for a handle, your email and a password right above it GIVEN Handle, Email or Password is empty
+
+WHEN all three fields hold a character -> Create account wakes AND the line Waiting for a handle, your email and a password goes

@@ -18,6 +18,10 @@ ALWAYS the commit keeps its in-flight label and refuses a press GIVEN the slow l
 
 ALWAYS the header back arrow, Back and the header X refuse a press and keep their resting face GIVEN the slow line stands
 
+ALWAYS every fact row's Change, Adjust and Mark refuse a press and never dim GIVEN the slow line stands
+
+ALWAYS the header's ? stays live and opens the signing text GIVEN the slow line stands
+
 ALWAYS the fact rows stay readable GIVEN the slow line stands
 
 WHEN the signing is taken GIVEN the slow line stands -> the seal is left as any signed seal is left AND NEVER the slow line stands anywhere after it

@@ -14,7 +14,7 @@ ALWAYS the history's filter sheet carries no "?"
 
 WHEN tap a kind chip -> the chip stages AND NEVER History moves behind the sheet
 
-WHEN tap Done -> the sheet closes AND History re-reads once with the staged kinds, newest-seen first
+WHEN tap Done -> the sheet closes AND History re-reads once with the staged kinds, ordered by the time the reader first saw each thing, newest first
 
 WHEN tap Done GIVEN nothing seen is of the staged kinds -> the sheet closes AND History stands narrowed to nothing, with Show everything
 

@@ -20,9 +20,9 @@ WHEN tap the clip GIVEN the web's transport chrome has auto-hidden -> the chrome
 
 ALWAYS the transport chrome stays up on Android
 
-WHEN tap the pinned clip GIVEN the reader came from the stream -> the clip expands back into the stream AND the reader's place there is held
+WHEN tap the pinned clip GIVEN the reader came from the stream, on Android or with the web's transport chrome up -> the clip expands back into the stream AND the reader's place there is held
 
-WHEN tap the pinned clip GIVEN the reader came from anywhere else -> the fullscreen viewer opens on the clip
+WHEN tap the pinned clip GIVEN the reader came from anywhere else, on Android or with the web's transport chrome up -> the fullscreen viewer opens on the clip
 
 WHEN tap the fullscreen toggle -> the fullscreen viewer opens on the clip
 
