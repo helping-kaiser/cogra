@@ -183,6 +183,10 @@ nothing. `FEED_KINDS` is where the two meet — value `topics`, label
 One word keeps its ordinary sense throughout: a help dialog's *topic*
 is its subject, not a `#name`.
 
+**The bottom bar's labels** (`BottomNav`; *carried over — blessed by use
+(jakob 2026-10-06)*): `Feed` · `Explore` · `New post` · `Wallet` ·
+`Profile`.
+
 **What a reader gives is an OPINION; the record is a stance** (jakob's
 ruling, 2026-09-11). *Opinion* is the word people already have for
 saying what they think of something; *stance* is the repo's and the
@@ -985,6 +989,11 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Share this profile` — another's profile.
 - `Share your profile` — your own, the row that closes the profile's ⋮
   under the two private lists.
+- `Share` — the row a narrow phone's post menu gains when the card drops
+  its share glyph (`ReaderPostMenuNarrow`; *carried over — blessed by use
+  (jakob 2026-10-06)*). It stands against *Accessible names*' `Share this
+  post` "everywhere it appears, never a bare Share" — an open question
+  for jakob; the row stays as drawn meanwhile.
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
@@ -2292,6 +2301,8 @@ default) · `When it settles`.
 
 **The straight fixes.** `What your feed shows` as the filter's first
 section · `Your feed is showing nothing — everything is switched off.`
+(its action, `Show posts again`, carried over — blessed by use, jakob
+2026-10-06; `FeedNothing`)
 · `Your sky — every account a star, sized by your own paths to it.` ·
 `These wait with your application and arrive with you.` ·
 `What you post now arrives with you.`
