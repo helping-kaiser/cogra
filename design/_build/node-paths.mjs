@@ -23,6 +23,20 @@
 // instances join their keys outermost first with `/` (`ada/photography`).
 // Two nodes with one (path, key) on one board fail the build.
 //
+// A CHIP-DRAWN STATE DUPLICATE carries the SAME path, with its chip's value as
+// its key (jakob 2026-10-06, seam 069). Where a board's tweak chip draws an
+// element once per value — one copy shown at a time, `HistoryNone`'s `cause`
+// chip drawing the field, the trigger and the empty state once for `search`
+// and once for `kinds` — the copies are one element in two states, so they
+// take one path and the differ tells them apart by key: `history.searchField`
+// under `search` and under `kinds`. The screen marks each copy where it draws
+// it, on the element that holds that value's copy and nothing else:
+// `data-node-chip="cause" data-node-key="search"`, with no `data-node` — a copy
+// adds no segment. The value must be one of the chip's options (the screen's
+// PROPS), every node inside the copy carries it as a key like any keyed
+// instance's, and the copy's outermost nodes record the chip rule as their key
+// rule. The marker itself never reaches the built board.
+//
 // Because a path follows the annotated ancestry, two rules keep paths stable
 // once registered. A wrapper that holds named nodes is named when they are, or
 // never: naming it later renames every node inside it, which render-screens'
@@ -42,7 +56,7 @@ const SEGMENT = /^[a-z][a-zA-Z0-9]*$/;
 const KEY = /^[a-z0-9][a-z0-9_-]*$/;
 const TAG = /<(\/?)([a-zA-Z][a-zA-Z0-9-]*)((?:\s+[^\s"'>/=]+(?:="[^"]*")?)*)\s*(\/?)>/g;
 const ATTR = /\s+([^\s"'>/=]+)(?:="([^"]*)")?/g;
-const STRIP = / data-node(?:-key)?="[^"]*"/g;
+const STRIP = / data-node(?:-key|-chip)?="[^"]*"/g;
 
 // How each keyed instance's key is derived — the rule the implementation side
 // computes the same key from. Keyed by the instance's own segment; a keyed
@@ -66,6 +80,11 @@ export const KEY_RULES = {
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
 };
 
+// The key rule of a chip-drawn state duplicate (above): one rule for every
+// chip, named by the chip, since the key is the chip's value wherever it is.
+export const chipKeyRule = (chip) =>
+  `the ${chip} chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)`;
+
 export const isSegment = (s) => SEGMENT.test(s);
 
 /** Every node attribute out of markup that belongs to no registered screen. */
@@ -74,15 +93,16 @@ export function stripNodes(markup) {
 }
 
 /**
- * Joins a registered screen's local segments into full paths.
+ * Joins a registered screen's local segments into full paths. `chips` is the
+ * screen's PROPS (its tweak chips), which a chip-drawn copy's value is held to.
  * Returns the rewritten markup and the nodes in document order: { path, key }.
  */
-export function joinNodePaths(markup, prefix, board) {
+export function joinNodePaths(markup, prefix, board, chips = null) {
   const fail = (why) => {
     throw new Error(`data-node join, ${board}: ${why}`);
   };
   if (!SEGMENT.test(prefix)) fail(`NODE "${prefix}" is not a camelCase segment`);
-  const stack = [{ tag: null, path: [prefix], keys: [] }];
+  const stack = [{ tag: null, path: [prefix], keys: [], chipRule: null }];
   const nodes = [];
   const seen = new Map();
   let out = "";
@@ -99,12 +119,25 @@ export function joinNodePaths(markup, prefix, board) {
     const parent = stack[stack.length - 1];
     let seg;
     let key;
+    let chip;
     for (const [, name, value] of attrs.matchAll(ATTR)) {
       if (name === "data-node") seg = value;
       else if (name === "data-node-key") key = value;
+      else if (name === "data-node-chip") chip = value;
     }
-    let frame = { tag, path: parent.path, keys: parent.keys };
-    if (seg !== undefined || key !== undefined) {
+    let frame = { tag, path: parent.path, keys: parent.keys, chipRule: parent.chipRule };
+    if (chip !== undefined) {
+      // A chip-drawn copy: no segment, its chip's value as the key of all inside.
+      if (seg !== undefined) fail(`<${tag}> carries data-node-chip="${chip}" and data-node="${seg}" — a chip-drawn copy adds no segment`);
+      const options = chips?.[chip]?.options;
+      if (!Array.isArray(options)) fail(`data-node-chip="${chip}" names no chip the screen's PROPS draws with options`);
+      if (key === undefined || !options.includes(key)) fail(`the ${chip} chip's copy carries data-node-key="${key ?? ""}" — the key is one of its values: ${options.join(", ")}`);
+      if (!KEY.test(key)) fail(`the ${chip} chip's value "${key}" cannot be a key — a key is lowercase letters, digits, - and _`);
+      if (parent.chipRule !== null) fail(`the ${chip} chip's copy sits inside another chip's copy with no node between them`);
+      out += markup.slice(last, m.index) + `<${tag}${attrs.replace(STRIP, "")}${selfClose ? "/" : ""}>`;
+      last = m.index + whole.length;
+      frame = { tag, path: parent.path, keys: [...parent.keys, key], chipRule: chipKeyRule(chip) };
+    } else if (seg !== undefined || key !== undefined) {
       if (seg === undefined) fail(`<${tag}> carries data-node-key="${key}" and no data-node`);
       if (!SEGMENT.test(seg)) fail(`data-node="${seg}" is not one camelCase segment`);
       if (key !== undefined && !KEY.test(key)) fail(`data-node-key="${key}" on ${seg} — a key is lowercase letters, digits, - and _`);
@@ -122,12 +155,15 @@ export function joinNodePaths(markup, prefix, board) {
         );
       }
       seen.set(identity, true);
-      nodes.push({ path: full, key: chain || null, rule: key === undefined ? null : KEY_RULES[seg] });
+      if (key !== undefined && parent.chipRule !== null) {
+        fail(`keyed ${seg} sits directly in a chip-drawn copy — one path cannot record two key rules; name a node around it`);
+      }
+      nodes.push({ path: full, key: chain || null, rule: key === undefined ? parent.chipRule : KEY_RULES[seg] });
       const rest = attrs.replace(STRIP, "");
       const rewritten = `<${tag}${rest} data-node="${full}"${chain ? ` data-node-key="${chain}"` : ""}${selfClose ? "/" : ""}>`;
       out += markup.slice(last, m.index) + rewritten;
       last = m.index + whole.length;
-      frame = { tag, path, keys };
+      frame = { tag, path, keys, chipRule: null };
     }
     if (!selfClose && !VOID.has(tag)) stack.push(frame);
   }

@@ -84,7 +84,8 @@ import { applyFlowMarkers } from "./flow-markers.mjs";
 // path the committed registry holds that no longer renders fails this stage
 // and the registry is left as it was — a rename is a breaking change for the
 // implementation side, made by deleting the old path from `nodes.json` by hand
-// in a reviewed PR, never by a re-render.
+// in a reviewed PR, never by a re-render. A screen's PROPS go to the join too:
+// a copy its chip draws once per value is keyed by that value (node-paths.mjs).
 import { joinNodePaths, stripNodes, boardEntry, isSegment } from "./node-paths.mjs";
 const registryFails = [];
 
@@ -121,7 +122,7 @@ function renderTree(canvasDir) {
     let rendered = renderToStaticMarkup(React.createElement(Screen));
     if (NODE !== null) {
       if (typeof NODE !== "string" || !isSegment(NODE)) throw new Error(`${canvasDir}/${name}: NODE must be one camelCase segment`);
-      const joined = joinNodePaths(rendered, NODE, `${canvasDir}/${name}`);
+      const joined = joinNodePaths(rendered, NODE, `${canvasDir}/${name}`, PROPS);
       rendered = joined.markup;
       screens[name] = boardEntry(NODE, joined.nodes);
     } else {
