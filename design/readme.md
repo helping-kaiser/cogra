@@ -2177,7 +2177,10 @@ entry first". What stands:
   instance carries `data-node-key`, a content key (the author's
   handle, the tag's name; a position only where content has none),
   and so does every node inside it: the implementation side diffs
-  (path, key), never DOM order. Every other board renders the
+  (path, key), never DOM order. A copy a board's tweak chip draws once
+  per value is one element in several states: it keeps one path and
+  carries the chip's value as its key (`history.searchField` under
+  `search` and under `kinds`; jakob 2026-10-06, seam 069). Every other board renders the
   annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the
