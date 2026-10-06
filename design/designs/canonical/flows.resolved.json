@@ -1883,35 +1883,2265 @@
         "PostDetail",
         "PostOpinions"
       ]
+    },
+    {
+      "name": "request-a-password-reset",
+      "description": "Forgot password? on the sign-in screen asks for the address and sends the reset link; the status line confirms the same whether or not an account stands behind it, and the journey leaves the app with the mail.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn · 7 «Forgot password?» → Reset",
+        "end · Reset · 3 «Send reset link» → self — the status line confirms — always, no account enumeration"
+      ],
+      "boards": [
+        "SignIn",
+        "Reset"
+      ]
+    },
+    {
+      "name": "set-a-new-password",
+      "description": "The reset mail's link opens the new-password form; the new password set signs every device out, so signing in again is the next thing.",
+      "status": "resolved",
+      "steps": [
+        "start · ResetNew",
+        "end · ResetNew · 3 «Set the new password» → SignIn — set — every device is signed out, so signing in again is the next thing"
+      ],
+      "boards": [
+        "ResetNew",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "meet-a-spent-reset-link",
+      "description": "A reset link opened spent or past its fifteen minutes says so, and Reset your password asks for a fresh one, its field empty.",
+      "status": "resolved",
+      "steps": [
+        "start · ResetExpired",
+        "end · ResetExpired · 1 «Reset your password» → Reset — the request again, its field empty — a spent token says nothing about whose it was"
+      ],
+      "boards": [
+        "ResetExpired",
+        "Reset"
+      ]
+    },
+    {
+      "name": "sign-back-in-after-the-session-ran-out",
+      "description": "A session that ran out mid-use lands on the sign-in form; signing in again returns a member to the feed, the draft and any picks still kept.",
+      "status": "resolved",
+      "steps": [
+        "start · SignInExpired",
+        "end · SignInExpired · 6 «Sign in» → Feed — member, key on this device — the draft and any picks still kept"
+      ],
+      "boards": [
+        "SignInExpired",
+        "Feed"
+      ]
+    },
+    {
+      "name": "sign-in-after-a-wrong-password",
+      "description": "A pair that doesn't match answers in place on the sign-in form; the corrected pair signs a member with their key on this device into their feed.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "SignIn · 6 «Sign in» → SignInError — bad email or password",
+        "end · SignInError · 6 «Sign in» → Feed — member, key on this device"
+      ],
+      "boards": [
+        "SignIn",
+        "SignInError",
+        "Feed"
+      ]
+    },
+    {
+      "name": "sign-in-after-the-backoff",
+      "description": "Too many failed tries in a row answer with the backoff in place; once it has passed, Sign in lands wherever app-open lands for the account.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "SignIn · 6 «Sign in» → SignInLimited — too many failed tries in a row — the backoff answers in place",
+        "end · SignInLimited · 6 «Sign in» → Feed — the backoff has passed — sign-in lands wherever app-open lands for the account, as SignIn's own Sign in lists"
+      ],
+      "boards": [
+        "SignIn",
+        "SignInLimited",
+        "Feed"
+      ]
+    },
+    {
+      "name": "meet-the-security-notice",
+      "description": "A sign-in after a reused sign-in was detected lands with the notice as a card, once; Change password on it opens the credential screen, and the changed password signs every other device out.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "SignIn · 6 «Sign in» → FeedSecurityNotice — a reused sign-in was detected since the last one — the notice rides the landing as a card, once",
+        "FeedSecurityNotice · 1 «Change password» → ChangePassword — the credential screen — the reader decides; nothing about the notice depends on it",
+        "end · ChangePassword · 5 «Change password» → Settings — changed — the snackbar answers, and every other device is signed out"
+      ],
+      "boards": [
+        "SignIn",
+        "FeedSecurityNotice",
+        "ChangePassword",
+        "Settings"
+      ]
+    },
+    {
+      "name": "sign-in-where-no-backup-can-restore",
+      "description": "A member signing in on a device the key is not on, for an account with no backup, lands wherever app-open lands for that account — the key-elsewhere shell with nothing to restore from.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "end · SignIn · 6 «Sign in» → KeyElsewhereNoBackup — member, key not here and no backup — sign-in lands wherever app-open lands for the account"
+      ],
+      "boards": [
+        "SignIn",
+        "KeyElsewhereNoBackup"
+      ]
+    },
+    {
+      "name": "arrive-through-an-invite-link",
+      "description": "An invite link opens the issuer's borrowed view, feed first; Sign in or join meets the join form with the link already in hand, and Create account begins the applicant days.",
+      "status": "resolved",
+      "steps": [
+        "start · Main",
+        "Main · 2 «Sign in or join» → Join — the invite link held is live — the join form opens with it in hand, never the door; Join's own Sign in serves a returning reader",
+        "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "Main",
+        "Join",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "arrive-through-a-dead-invite-link",
+      "description": "An invite link that no longer works still opens the borrowed view; Sign in or join says the link is unusable and takes another, and a different link that checks out opens the join form.",
+      "status": "resolved",
+      "steps": [
+        "start · Main",
+        "Main · 2 «Sign in or join» → JoinInvalid — the link held no longer works — it says so, and takes another",
+        "end · JoinInvalid · 3 «Continue» → Join — a different link checks out"
+      ],
+      "boards": [
+        "Main",
+        "JoinInvalid",
+        "Join"
+      ]
+    },
+    {
+      "name": "paste-something-that-isnt-a-link",
+      "description": "Nothing that reads as a link at the door is answered in place on the field; a link that checks out then opens the join form.",
+      "status": "resolved",
+      "steps": [
+        "start · InviteEntry",
+        "InviteEntry · 3 «Continue» → InviteEntryError — nothing that reads as a link — the field says so in place",
+        "end · InviteEntryError · 3 «Continue» → Join — the link checks out"
+      ],
+      "boards": [
+        "InviteEntry",
+        "InviteEntryError",
+        "Join"
+      ]
+    },
+    {
+      "name": "fix-the-join-forms-errors",
+      "description": "A handle taken or an input refused answers in place on the join form; corrected, Create account makes the account and the applicant days begin.",
+      "status": "resolved",
+      "steps": [
+        "start · InviteEntry · 3 «Continue» → Join — the link checks out",
+        "Join · 6 «Create account» → JoinErrors — handle taken / invalid input",
+        "end · JoinErrors · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "InviteEntry",
+        "Join",
+        "JoinErrors",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "a-guest-meets-the-join-ask",
+      "description": "A signed act tried in the bare view — the stance face on a post — raises the join prompt over the read; Sign in or join opens the sign-in screen for a reader who holds no link.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedBare",
+        "FeedBare · 10 «stance face» → GuestGate — signed out",
+        "end · GuestGate · 2 «Sign in or join» → SignIn — no invite link held — the bare view's reader"
+      ],
+      "boards": [
+        "FeedBare",
+        "GuestGate",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "verify-the-email-in-the-app",
+      "description": "The verification mail's link opened where the app takes it lands on the in-app confirmation; Go to the feed returns an applicant to the task cards still left.",
+      "status": "resolved",
+      "steps": [
+        "start · VerifiedApp",
+        "end · VerifiedApp · 1 «Go to the feed» → ApplicantFeed — application still running — the remaining task cards"
+      ],
+      "boards": [
+        "VerifiedApp",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "meet-a-spent-verification-link",
+      "description": "A verification link opened spent or timed out says so; Resend the link sends a fresh one, the status line saying so the same whether or not the account is already verified.",
+      "status": "resolved",
+      "steps": [
+        "start · VerifyExpired",
+        "end · VerifyExpired · 1 «Resend the link» → self — a fresh link goes out — the same act the applicant feed's card offers; a status line under the pair says so in Reset's construction, the same whether or not the account is already verified"
+      ],
+      "boards": [
+        "VerifyExpired"
+      ]
+    },
+    {
+      "name": "correct-an-applicants-address",
+      "description": "Wrong address? on the applicant's card changes an address not yet verified with the new one alone; a fresh link goes to it, and the card prints where it went.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 21 «Wrong address?» → ApplicantEmail — the address is still unverified, so the new one alone changes it — no code goes to the old one (auth.md, the unverified carve-out)",
+        "end · ApplicantEmail · 5 «Change email» → ApplicantFeed — a fresh link is on its way to the new address — the card prints it, the snackbar says where it went, and the link sent to the old one stops working"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "ApplicantEmail"
+      ]
+    },
+    {
+      "name": "post-while-an-applicant",
+      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantWaiting · 12 «nav · New post» → ComposePick — first post — the wizard opens, the act stages",
+        "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
+        "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
+        "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
+        "end · ComposeSeal · 7 «Sign and publish» → ApplicantWaiting — an applicant — the post stages, signed only at approval: the wizard closes onto the applicant's own feed, its snackbar saying Your post waits with your application — it arrives with you., and the post waits in their chronicle, seen by them alone (drawn on the waiting shell; the first-steps shell answers the same, and the turned-down shell, with no application live, says Your post waits — it arrives when someone vouches you in.)"
+      ],
+      "boards": [
+        "ApplicantWaiting",
+        "ComposePick",
+        "ComposeWords",
+        "ComposeDetailsWords",
+        "ComposeSeal"
+      ]
+    },
+    {
+      "name": "watch-the-registration-land",
+      "description": "Once the approval is given the applicant's card flips where the reader stands while the device signs the registration — a machine's step, read rather than tapped; the landing itself opens the vouch-back.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantLanding",
+        "end · arrival at ApplicantLanding"
+      ],
+      "boards": [
+        "ApplicantLanding"
+      ]
+    },
+    {
+      "name": "ask-another-member-to-vouch",
+      "description": "The notification that an inviter closed the application opens the turned-down shell, where the ask link stands; copying it hands the reader a link that does not expire, for as many members as they know.",
+      "status": "resolved",
+      "steps": [
+        "start · Notifications · 15 «an inviter closed your application» → ApplicantRejected — the shell it happened in, where the ask link stands",
+        "end · ApplicantRejected · 17 «copy your ask link» → self — the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows"
+      ],
+      "boards": [
+        "Notifications",
+        "ApplicantRejected"
+      ]
+    },
+    {
+      "name": "read-your-own-page-as-an-applicant",
+      "description": "The Profile tab in the applicant days opens the reader's own page in its applicant state — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 17 «nav · Profile» → ProfileApplicant",
+        "end · arrival at ProfileApplicant"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "ProfileApplicant"
+      ]
+    },
+    {
+      "name": "make-your-key-without-a-backup",
+      "description": "Not now at the ceremony asks once whether to go on without a backup; I accept the risk makes the key alone and returns where the ceremony began, the snackbar saying so.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyCeremony · 3 «Not now» → KeyDecline",
+        "end · KeyDecline · 1 «I accept the risk» → back — key without backup — returns where the ceremony began, and the snackbar says so"
+      ],
+      "boards": [
+        "KeyCeremony",
+        "KeyDecline"
+      ]
+    },
+    {
+      "name": "meet-a-browser-that-cant-hold-a-key",
+      "description": "Create my key in a browser that cannot hold one says so before minting anything, and offers the app instead.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 3 «Create my key» → KeyCeremonyUnsupported — a browser without WebCrypto Ed25519 — the ceremony says so before minting anything",
+        "end · KeyCeremonyUnsupported · 2 «Download the app (APK)» → os — the browser downloads the APK — the login landing's own link"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "KeyCeremonyUnsupported"
+      ]
+    },
+    {
+      "name": "type-the-recovery-code-back-wrong",
+      "description": "A typed-back code that diverges from the one shown is answered at once, on the typing, and the button never enables; typed right, the key is made and backed up and the ceremony returns where it began.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 3 «Create my key» → KeyCeremony",
+        "KeyCeremony · 2 «Create my recovery code» → KeyConfirm",
+        "KeyConfirm · 2 «Show my code» → RecoveryCode",
+        "RecoveryCode · 2 «confirm field» → RecoveryCodeMismatch — the typed prefix diverges from the code — the line answers at once, on the typing, and the button never enables",
+        "end · RecoveryCodeMismatch · 3 «I've written it down» → back — code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "KeyCeremony",
+        "KeyConfirm",
+        "RecoveryCode",
+        "RecoveryCodeMismatch"
+      ]
+    },
+    {
+      "name": "restore-your-key-as-an-applicant",
+      "description": "An applicant signed in where their key is not finds the key card on their own shell; Restore the key takes the recovery code and returns to it with the key here.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantKeyElsewhere",
+        "ApplicantKeyElsewhere · 1 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ApplicantKeyElsewhere",
+        "Restore"
+      ]
+    },
+    {
+      "name": "make-a-new-key-in-place-of-the-attached-one",
+      "description": "Make a new key on the applicant's key card runs the ceremony again; its end replaces the key attached elsewhere.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantKeyElsewhere · 2 «Make a new key» → KeyCeremony — the ceremony again — its end replaces the attached key",
+        "KeyCeremony · 2 «Create my recovery code» → KeyConfirm",
+        "KeyConfirm · 2 «Show my code» → RecoveryCode",
+        "end · RecoveryCode · 3 «I've written it down» → back — code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so"
+      ],
+      "boards": [
+        "ApplicantKeyElsewhere",
+        "KeyCeremony",
+        "KeyConfirm",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "restore-after-a-mistyped-code",
+      "description": "A recovery code of the wrong length is the one shape the reader can fix, and the field says so; the right length that still doesn't check out says that instead, and the code that does restores the key where restore began.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyElsewhere · 2 «Restore the key» → Restore",
+        "Restore · 4 «Restore the key» → RestoreLength — the code is the wrong length once folded — the one shape a reader can fix",
+        "RestoreLength · 4 «Restore the key» → RestoreError — the right length, and the code doesn't check out",
+        "end · RestoreError · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "KeyElsewhere",
+        "Restore",
+        "RestoreLength",
+        "RestoreError"
+      ]
+    },
+    {
+      "name": "sign-the-picks-kept-while-the-key-was-away",
+      "description": "A key restored with picks kept pending opens their review, every pick in one batch the reader looks over first; Sign them reaches the standard seal, and one signature lands them all, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyElsewhere · 2 «Restore the key» → Restore",
+        "Restore · 4 «Restore the key» → KeptPicksReview — key restored, with picks kept pending — the kept picks' review opens, the restore's snackbar riding in over it; they sign together, in one batch the reader looks over first",
+        "KeptPicksReview · 3 «Sign them» → KeptPicksSeal — the standard seal, the kept picks its what-you-sign list",
+        "end · KeptPicksSeal · 4 «Sign the opinions» → back — signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone"
+      ],
+      "boards": [
+        "KeyElsewhere",
+        "Restore",
+        "KeptPicksReview",
+        "KeptPicksSeal"
+      ]
+    },
+    {
+      "name": "take-a-stance-without-the-key",
+      "description": "The stance face, tapped or held where the key is elsewhere, opens the pad carrying the key notice; Keep it pending keeps the pick on this device, and the post's anchor wears it.",
+      "status": "resolved",
+      "steps": [
+        "start · KeyElsewhere · 9 «stance face» → PadKeyAbsent — a tap or a press-and-hold — both open the pad carrying the key notice, so nothing signs without the key",
+        "end · PadKeyAbsent · 3 «Keep it pending, restore later» → back — kept — the pick waits on this device, and the post's anchor wears it (the PadPending plate)"
+      ],
+      "boards": [
+        "KeyElsewhere",
+        "PadKeyAbsent"
+      ]
+    },
+    {
+      "name": "meet-an-ask-link-that-cant-be-taken-up",
+      "description": "An ask link that can stage nobody right now says so; when the person has already landed, their profile is one tap on, where the member can look and give an opinion.",
+      "status": "resolved",
+      "steps": [
+        "start · VouchAskUnusable",
+        "end · VouchAskUnusable · 2 «See @noor's profile» → ProfileOther — the landed case only — the person's profile, where the member can look and give an opinion (master, drawn on @ada's); the waiting case has no public profile yet and draws back alone"
+      ],
+      "boards": [
+        "VouchAskUnusable",
+        "ProfileOther"
+      ]
+    },
+    {
+      "name": "watch-the-intro",
+      "description": "The first authenticated feed entry opens the intro over the feed once; its five cards run to Start reading, which ends where Skip ends — the applicant days.",
+      "status": "resolved",
+      "steps": [
+        "start · OnboardingSteps",
+        "OnboardingSteps · 2 «Next» → OnboardingShape",
+        "OnboardingShape · 2 «Next» → OnboardingPublic",
+        "OnboardingPublic · 2 «Next» → OnboardingLayers",
+        "OnboardingLayers · 2 «Next» → OnboardingVouch",
+        "end · OnboardingVouch · 2 «Start reading» → ApplicantFeed — the last card ends where Skip ends — applicant days"
+      ],
+      "boards": [
+        "OnboardingSteps",
+        "OnboardingShape",
+        "OnboardingPublic",
+        "OnboardingLayers",
+        "OnboardingVouch",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "watch-the-intro-again",
+      "description": "Watch the intro again in settings is the one way back to the intro once it has been seen; it runs from the first card and ends back on settings.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 19 «Watch the intro again» → OnboardingSteps — the intro from its first card — the one way back to it once the seen flag is set",
+        "OnboardingSteps · 2 «Next» → OnboardingShape",
+        "OnboardingShape · 2 «Next» → OnboardingPublic",
+        "OnboardingPublic · 2 «Next» → OnboardingLayers",
+        "OnboardingLayers · 2 «Next» → OnboardingVouch",
+        "end · OnboardingVouch · 2 «Start reading» → Settings — re-opened from Settings' Watch the intro again — back to Settings, the surface it opened over"
+      ],
+      "boards": [
+        "Settings",
+        "OnboardingSteps",
+        "OnboardingShape",
+        "OnboardingPublic",
+        "OnboardingLayers",
+        "OnboardingVouch"
+      ]
+    },
+    {
+      "name": "change-your-password",
+      "description": "The Password row asks for the current password and a new one; the change answers with the snackbar, and every other device is signed out.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 12 «Password» → ChangePassword",
+        "end · ChangePassword · 5 «Change password» → Settings — changed — the snackbar answers, and every other device is signed out"
+      ],
+      "boards": [
+        "Settings",
+        "ChangePassword"
+      ]
+    },
+    {
+      "name": "change-your-handle",
+      "description": "The Handle row takes the new handle; a well-formed one meets the think-twice dialog naming the cost before anything is sent, and Change it lands the handle on the row.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 13 «Handle» → ChangeHandle",
+        "ChangeHandle · 3 «Change handle» → ChangeHandleConfirm — a well-formed handle — the think-twice dialog asks first, naming the cost; nothing is sent before its answer",
+        "end · ChangeHandleConfirm · 1 «Change it» → Settings — changed — the snackbar says Your handle is now @solferreira., and the Handle row reads it"
+      ],
+      "boards": [
+        "Settings",
+        "ChangeHandle",
+        "ChangeHandleConfirm"
+      ]
+    },
+    {
+      "name": "change-your-email",
+      "description": "The Email row takes the new address and the current password and sends both messages; the code from the current address is typed here, and with the new address's link clicked too the address moves.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 14 «Email» → ChangeEmail — the request; the confirmation is its own board — also once a change ran out before both sides landed: the row reads the address alone again and opens the request",
+        "ChangeEmail · 5 «Change email» → ChangeEmailConfirm — both messages sent — the code is typed here, the link is clicked there",
+        "end · ChangeEmailConfirm · 3 «Confirm the code» → Settings — the link was clicked too — the address moves and the snackbar answers"
+      ],
+      "boards": [
+        "Settings",
+        "ChangeEmail",
+        "ChangeEmailConfirm"
+      ]
+    },
+    {
+      "name": "confirm-the-email-change-from-the-new-address",
+      "description": "The new address's verification link, opened signed in, applies its side; when it is the last side the change lands and settings reads the new address.",
+      "status": "resolved",
+      "steps": [
+        "start · ChangeEmailLinked",
+        "end · ChangeEmailLinked · 1 «Enter the code / Back to settings» → Settings — the link was the last side — the change applied, and the row reads the new address"
+      ],
+      "boards": [
+        "ChangeEmailLinked",
+        "Settings"
+      ]
+    },
+    {
+      "name": "open-the-new-address-link-signed-out",
+      "description": "The same link opened where no session is asks for sign-in first, since the proof counts only signed in; signed in, its side applies, and when it was the first side the code from the old address is still owed.",
+      "status": "resolved",
+      "steps": [
+        "start · ChangeEmailLinkedSignedOut",
+        "ChangeEmailLinkedSignedOut · 1 «Sign in» → SignIn — after sign-in the link's side applies, and its landing follows (ChangeEmailLinked)",
+        "SignIn · 6 «Sign in» → ChangeEmailLinked — signed in from the email change's signed-out landing — the link's side applies, and its landing follows",
+        "end · ChangeEmailLinked · 1 «Enter the code / Back to settings» → ChangeEmailConfirm — the link was the first side — the code from the old address is still owed"
+      ],
+      "boards": [
+        "ChangeEmailLinkedSignedOut",
+        "SignIn",
+        "ChangeEmailLinked",
+        "ChangeEmailConfirm"
+      ]
+    },
+    {
+      "name": "finish-a-pending-email-change",
+      "description": "Settings with an email change in flight leads the Email row back to the side still owed; the code confirmed with the link already clicked moves the address.",
+      "status": "resolved",
+      "steps": [
+        "start · SettingsEmailPending",
+        "SettingsEmailPending · 1 «Email» → ChangeEmailConfirm — the change in flight — the page shows which side is still owed",
+        "end · ChangeEmailConfirm · 3 «Confirm the code» → Settings — the link was clicked too — the address moves and the snackbar answers"
+      ],
+      "boards": [
+        "SettingsEmailPending",
+        "ChangeEmailConfirm",
+        "Settings"
+      ]
+    },
+    {
+      "name": "call-off-an-email-change",
+      "description": "Cancel the change on the confirmation calls a change in flight off without asking first — a change is started again from the row — and settings reads the address alone.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 14 «Email» → ChangeEmailConfirm — a change already in flight — the row returns to the side still owed",
+        "end · ChangeEmailConfirm · 5 «Cancel the change» → Settings — the change is called off — the row reads the address alone, and the snackbar answers; nothing asks first, since a change is started again from the row"
+      ],
+      "boards": [
+        "Settings",
+        "ChangeEmailConfirm"
+      ]
+    },
+    {
+      "name": "replace-the-recovery-code",
+      "description": "The Recovery code row, with the key on this browser, takes the current code as proof and makes a new one on the ceremony's own board; typed back, the new backup uploads and settings says so.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackup — the key is on this browser — the replace screen, ready to take the proof",
+        "SettingsBackup · 3 «Create a new recovery code» → RecoveryCode — the new code on the ceremony's own board — back stays swallowed until it is typed back",
+        "end · RecoveryCode · 3 «I've written it down» → Settings — a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackup",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "replace-the-recovery-code-after-a-refused-one",
+      "description": "A current code that doesn't check out is answered on the replace screen itself; the right one goes on to the new code, typed back the same way.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackup — the key is on this browser — the replace screen, ready to take the proof",
+        "SettingsBackup · 3 «Create a new recovery code» → SettingsBackupError — the current code doesn't check out",
+        "SettingsBackupError · 3 «Create a new recovery code» → RecoveryCode — the new code on the ceremony's own board — back stays swallowed until it is typed back",
+        "end · RecoveryCode · 3 «I've written it down» → Settings — a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackup",
+        "SettingsBackupError",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "replace-the-recovery-code-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the replace warns before the unlock that isn't there; Go on anyway shows the new code, typed back the same way.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackup — the key is on this browser — the replace screen, ready to take the proof",
+        "SettingsBackup · 3 «Create a new recovery code» → NoScreenLock — Android, on a phone with no screen lock — warned before the unlock that isn't there",
+        "NoScreenLock · 1 «Go on anyway» → RecoveryCode — from a recovery code being made or replaced — the code is shown",
+        "end · RecoveryCode · 3 «I've written it down» → Settings — a code made or replaced from settings — confirmed, the backup uploads, and the snackbar says so"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackup",
+        "NoScreenLock",
+        "RecoveryCode"
+      ]
+    },
+    {
+      "name": "restore-the-key-from-the-recovery-code-row",
+      "description": "The Recovery code row with the key elsewhere has nothing to re-encrypt and offers Restore the key, which returns to settings with the key here.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 8 «Recovery code» → SettingsBackupKeyAbsent — key elsewhere — the same screen with nothing to re-encrypt",
+        "SettingsBackupKeyAbsent · 3 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsBackupKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "see-your-key",
+      "description": "The Your key row, after the platform's own unlock, shows the key, and either form of it goes to the clipboard with the snackbar saying Copied.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → YourKey — after the platform's own unlock — the phone's lock on Android; a browser still keeping the seed asks nothing",
+        "end · YourKey · 2 «Copy the PEM block» → self — the PEM lands on the clipboard, flagged sensitive on Android — the snackbar says Copied"
+      ],
+      "boards": [
+        "Settings",
+        "YourKey"
+      ]
+    },
+    {
+      "name": "see-your-key-behind-the-browsers-gate",
+      "description": "A browser whose seed is sealed behind the backup asks for the current recovery code first; the code opens the backup, the key is shown, and nothing is re-persisted.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → YourKeyGate — a browser whose seed is sealed behind the backup — the current code first",
+        "YourKeyGate · 3 «Show my key» → YourKey — the code opens the backup — the key is shown, and nothing is re-persisted",
+        "end · YourKey · 2 «Copy the PEM block» → self — the PEM lands on the clipboard, flagged sensitive on Android — the snackbar says Copied"
+      ],
+      "boards": [
+        "Settings",
+        "YourKeyGate",
+        "YourKey"
+      ]
+    },
+    {
+      "name": "see-your-key-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the Your key row warns before the unlock that isn't there; Go on anyway shows the key.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → NoScreenLock — Android, on a phone with no screen lock — warned before the unlock that isn't there",
+        "NoScreenLock · 1 «Go on anyway» → YourKey — from the Your key row — the key is shown",
+        "end · YourKey · 2 «Copy the PEM block» → self — the PEM lands on the clipboard, flagged sensitive on Android — the snackbar says Copied"
+      ],
+      "boards": [
+        "Settings",
+        "NoScreenLock",
+        "YourKey"
+      ]
+    },
+    {
+      "name": "restore-the-key-from-the-your-key-row",
+      "description": "The Your key row with the key elsewhere asks for no unlock, since nothing stands behind it to reveal, and offers Restore the key instead.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 9 «Your key» → YourKeyAbsent — key elsewhere — no unlock is asked for, because there is nothing behind it to reveal",
+        "YourKeyAbsent · 3 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "Settings",
+        "YourKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "set-the-default-license",
+      "description": "Default license opens the seal's own license question over settings; Done sets what every new post starts from, never the last one.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 5 «Default license» → SettingsLicense — the license sheet over settings — the same question the seal asks, set here as what every new post starts from",
+        "end · SettingsLicense · 4 «Done» → Settings — the sheet closes — the Default license row reads the new default"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsLicense"
+      ]
+    },
+    {
+      "name": "set-what-every-feed-opens-with",
+      "description": "What your feed shows opens the feed's own filter over settings; Done saves the default every feed opens with, and the row reads it back.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 6 «What your feed shows» → SettingsReading — the filter sheet over settings — the same control the feed carries, set here as the default every feed opens with",
+        "end · SettingsReading · 7 «Done» → Settings — the sheet closes — the default is saved, and the row reads it back"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsReading"
+      ]
+    },
+    {
+      "name": "read-whats-new",
+      "description": "What's new opens the release chronicle, newest first, the version running here marked; a release's own page on GitHub is one tap away.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 23 «What's new» → WhatsNew — the release chronicle, newest first, the version running here marked",
+        "end · WhatsNew · 2 «See it on GitHub» → os — that release's public page on GitHub — its full notes and its code (https://github.com/helping-kaiser/cogra/releases/tag/v<version>)"
+      ],
+      "boards": [
+        "Settings",
+        "WhatsNew"
+      ]
+    },
+    {
+      "name": "update-from-whats-new",
+      "description": "What's new opened while this version is behind the newest release offers Update now — the app's store listing, or on the web a reload into the new version.",
+      "status": "resolved",
+      "steps": [
+        "start · WhatsNewBehind",
+        "end · WhatsNewBehind · 2 «Update now» → os — the app: CoGra's Play Store listing (a placeholder id until published — https://play.google.com/store/apps/details?id=local.cogra.app)"
+      ],
+      "boards": [
+        "WhatsNewBehind"
+      ]
+    },
+    {
+      "name": "report-a-problem",
+      "description": "Report a problem opens an empty field with Send by email live all the same; what is written goes into the reader's own mail with the four facts and the report address filled in, and nothing leaves until it is sent there.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 24 «Report a problem» → ReportProblemEmpty — nothing written yet — the field empty, Send by email live all the same",
+        "ReportProblemEmpty · 2 «What happened» → ReportProblem — the first character",
+        "end · ReportProblem · 3 «Send by email» → os — the reader's own mail opens with the words, the four facts and the report address filled in, Time the moment of the press — nothing leaves until it is sent there, and the words stay on the page until the reader clears them"
+      ],
+      "boards": [
+        "Settings",
+        "ReportProblemEmpty",
+        "ReportProblem"
+      ]
+    },
+    {
+      "name": "unhide-an-account",
+      "description": "Hidden accounts opens the hidden list over settings; Unhide takes a row away and their posts return to the feed, the snackbar answering.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 17 «Hidden accounts» → SettingsHidden — the hidden list in a sheet over settings; with nobody hidden the row is inert and reads None, so there is nothing to open",
+        "end · SettingsHidden · 1 «Unhide» → self — the row goes and their posts return to your feed — the snackbar answers"
+      ],
+      "boards": [
+        "Settings",
+        "SettingsHidden"
+      ]
+    },
+    {
+      "name": "read-about-cogra",
+      "description": "About CoGra opens the whole page from settings — each topic unfolding on its own; reading it is the whole journey.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 20 «About CoGra» → About",
+        "end · arrival at About"
+      ],
+      "boards": [
+        "Settings",
+        "About"
+      ]
+    },
+    {
+      "name": "sign-out",
+      "description": "Sign out on a remembered device ends the session and keeps the account offered on the sign-in screen.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings",
+        "end · Settings · 16 «Sign out» → SignIn — remembered — the session ends and the account stays offered here"
+      ],
+      "boards": [
+        "Settings",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "sign-out-without-a-backup",
+      "description": "Sign out where this device holds the only copy of an unbacked key asks first; Sign out, keep them locked ends the session with the key, the draft and any kept picks sealed on this device until the account signs in here again.",
+      "status": "resolved",
+      "steps": [
+        "start · Settings · 16 «Sign out» → SignOutConfirm — not remembered, and this device holds the only copy of an unbacked key — it asks first",
+        "end · SignOutConfirm · 2 «Sign out, keep them locked» → SignIn — the session ends; the unbacked key, the draft and any picks kept pending stay on this device, sealed until this account signs in here again, online, with its current credentials"
+      ],
+      "boards": [
+        "Settings",
+        "SignOutConfirm",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "confirm-the-account-deletion",
+      "description": "The deletion mail's link is the confirmation, signed in or not; Go to the feed opens the feed under the deletion band, which rides every signed-in surface until the deadline.",
+      "status": "resolved",
+      "steps": [
+        "start · DeleteAccountConfirmed",
+        "end · DeleteAccountConfirmed · 3 «Go to the feed» → FeedDeleting — signed in — the feed under the deletion band"
+      ],
+      "boards": [
+        "DeleteAccountConfirmed",
+        "FeedDeleting"
+      ]
+    },
+    {
+      "name": "cancel-the-deletion-from-the-feed",
+      "description": "Cancel on the deletion band abandons the request before the deadline; the band goes and the snackbar answers, nothing having been redacted yet.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedDeleting",
+        "end · FeedDeleting · 19 «Cancel (deletion band)» → DeleteAccountCanceled — the request is abandoned — the band goes and the snackbar answers; nothing had been redacted yet"
+      ],
+      "boards": [
+        "FeedDeleting",
+        "DeleteAccountCanceled"
+      ]
+    },
+    {
+      "name": "cancel-the-deletion-from-settings",
+      "description": "Settings during the grace reads the deadline on its Delete account row; the row opens it in full with Cancel, which calls the deletion off and returns to settings with the band gone.",
+      "status": "resolved",
+      "steps": [
+        "start · SettingsDeleting",
+        "SettingsDeleting · 2 «Delete account (Deletion in 6 days)» → DeleteAccountPending — the deadline in full, and Cancel",
+        "end · DeleteAccountPending · 2 «Cancel» → Settings — the deletion is called off — back to settings with the band gone, the row reading Delete account, and the canceled snackbar; nothing had been deleted"
+      ],
+      "boards": [
+        "SettingsDeleting",
+        "DeleteAccountPending",
+        "Settings"
+      ]
+    },
+    {
+      "name": "choose-a-posts-license",
+      "description": "Change on the seal's license row opens the license sheet; Done closes it onto the seal, the row reading the pair's name and both tier hints.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 4 «Change (license)» → ComposeLicense",
+        "end · ComposeLicense · 4 «Done» → ComposeSeal — the sheet closes — the row reads the pair's name and both tier hints (licenseSummary)"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "ComposeLicense"
+      ]
+    },
+    {
+      "name": "mark-a-post-sensitive",
+      "description": "Mark on the seal's sensitive row opens the sheet, where the switch and its reason are staged; Done closes it onto the seal, the row reading the mark.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 6 «Mark (sensitive)» → ComposeSensitive",
+        "end · ComposeSensitive · 4 «Done» → ComposeSeal — the sheet closes — the row reads the mark"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "ComposeSensitive"
+      ]
+    },
+    {
+      "name": "publish-with-the-key-elsewhere",
+      "description": "Sign and publish where the key is elsewhere reaches the key-absent seal; Restore the key takes the recovery code and returns to the seal it began from, the draft intact.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → ComposeKeyAbsent — key elsewhere",
+        "ComposeKeyAbsent · 5 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "ComposeKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "write-past-the-details-caps",
+      "description": "A description past the five hundred stops Next and says so on the field; cutting it clears the refusal the moment it fits.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetails · 5 «Description» → ComposeDetailsCaps — past the five hundred — the field says so and Next stops",
+        "end · ComposeDetailsCaps · 5 «Description» → self — typing — the refusal clears the moment it fits"
+      ],
+      "boards": [
+        "ComposeDetails",
+        "ComposeDetailsCaps"
+      ]
+    },
+    {
+      "name": "write-past-the-words-cap",
+      "description": "A words body past the five thousand says how far over and stops Next; cutting clears the refusal the moment it fits.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeWords · 5 «the body» → ComposeWordsCaps — past the five thousand — the box says how far over and Next stops",
+        "end · ComposeWordsCaps · 5 «the body» → self — cutting — the refusal clears the moment it fits and the count stays a while"
+      ],
+      "boards": [
+        "ComposeWords",
+        "ComposeWordsCaps"
+      ]
+    },
+    {
+      "name": "look-over-many-staged-citations",
+      "description": "A seal carrying more than one citation counts them on its References row, and the count opens what it counts; a staged citation's name opens its pair, and Done carries the pair it was given.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSealCited",
+        "ComposeSealCited · 9 «References row» → ComposeCitations — the count opens what it counts",
+        "ComposeCitations · 1 «staged reference name» → RefPair — the citation's pair sheet (master on the compose page)",
+        "end · RefPair · 2 «Done» → back — the sheet closes — the staged row carries the pair it was given"
+      ],
+      "boards": [
+        "ComposeSealCited",
+        "ComposeCitations",
+        "RefPair"
+      ]
+    },
+    {
+      "name": "look-over-many-staged-tags",
+      "description": "A seal carrying more tags than its row holds counts them, and the count opens the staged-tags sheet; a tag's name opens its pair, and Done carries the pair it was given.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSealTagged",
+        "ComposeSealTagged · 9 «Tags row» → ComposeTags — the count opens what it counts — the staged-tags sheet over the seal, the References row's own kind of door (backlog item 95)",
+        "ComposeTags · 1 «staged tag name» → TagPadCompose — the tag's pair sheet (master on the compose page)",
+        "end · TagPadCompose · 2 «Done» → back — the sheet closes — the chip carries the pair it was given"
+      ],
+      "boards": [
+        "ComposeSealTagged",
+        "ComposeTags",
+        "TagPadCompose"
+      ]
+    },
+    {
+      "name": "pair-a-staged-citation",
+      "description": "A staged reference row on the details stage opens the citation's pair sheet; the pair moves, nothing signs until the seal, and Done carries it back to the row.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetails · 13 «staged reference row» → RefPair",
+        "end · RefPair · 2 «Done» → back — the sheet closes — the staged row carries the pair it was given"
+      ],
+      "boards": [
+        "ComposeDetails",
+        "RefPair"
+      ]
+    },
+    {
+      "name": "discard-a-kept-draft",
+      "description": "Reaching past a kept draft to the dimmed roll is asking to discard it, and the dialog asks; Discard it brings the roll live and a fresh pick begins.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDraft · 5 «the roll, behind its shield» → ComposeDraftDiscard — any tap on the dimmed pictures — reaching past the draft is asking to discard it, and the ask is the answer a blocked surface owes (jakob 2026-09-15)",
+        "end · ComposeDraftDiscard · 1 «Discard it» → ComposePick — the draft discarded — the roll comes live and a fresh pick begins, the card's own Discard said from the dialog"
+      ],
+      "boards": [
+        "ComposeDraft",
+        "ComposeDraftDiscard",
+        "ComposePick"
+      ]
+    },
+    {
+      "name": "swap-the-pictures-for-words",
+      "description": "Write words instead with pictures or a clip already in the body asks first; Discard lets them go and opens the words stage empty, the rest of the draft kept.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePick · 4 «Write words instead» → ComposeBodyDiscard — the body holds pictures or a clip — the ask first",
+        "end · ComposeBodyDiscard · 2 «Discard» → ComposeWords — raised by Write words instead — the pictures or the clip go, and the words stage opens empty; the rest of the draft stays"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposeBodyDiscard",
+        "ComposeWords"
+      ]
+    },
+    {
+      "name": "pick-files-that-are-refused",
+      "description": "Picks over the cap or in a format nothing here reads are named on the pick step with why; what was accepted goes on to the crop.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePick · 9 «grid tiles» → ComposePickedErrors — over its cap, or a format nothing here reads — the step says why",
+        "end · ComposePickedErrors · 3 «Next» → ComposeCrop — what was accepted goes on — the crop"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposePickedErrors",
+        "ComposeCrop"
+      ]
+    },
+    {
+      "name": "pick-a-video-from-the-grid",
+      "description": "A video picked from the grid becomes the whole body and the step stops taking picks; a horizontal or square clip goes on to choose its face, and details and the seal follow.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePick · 9 «grid tiles» → ComposePickVideo — a video — the whole body, the step stops taking picks",
+        "ComposePickVideo · 3 «Next» → ComposeCover — horizontal or square — its face, the crop never enters the video path",
+        "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
+        "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposePickVideo",
+        "ComposeCover",
+        "ComposeDetailsVideo",
+        "ComposeSeal",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "go-back-to-a-clip-wearing-its-cover",
+      "description": "Back from the cover step once a face is chosen shows the pick with the clip wearing it; Next returns to the cover step, which holds the choice rather than asking again.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeCover · 1 «back arrow» → ComposePickVideoCover — a cover was chosen — the pick shows the clip wearing it",
+        "end · ComposePickVideoCover · 3 «Next» → ComposeCover — back to the face the author already chose — the cover step holds the choice, it does not re-ask it"
+      ],
+      "boards": [
+        "ComposeCover",
+        "ComposePickVideoCover"
+      ]
+    },
+    {
+      "name": "cover-a-clip-with-a-picture-of-your-own",
+      "description": "A picture of your own on the cover step comes back through the crop, locked to the video's shape; Next sets it as the cover on the row that asked.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeCover · 5 «A picture (tile)» → CoverCrop — the picture comes back through the crop, locked to the video's shape — both platforms",
+        "end · CoverCrop · 3 «Next» → back — the cover is set — back to the cover row that asked for it"
+      ],
+      "boards": [
+        "ComposeCover",
+        "CoverCrop"
+      ]
+    },
+    {
+      "name": "preview-the-clip-before-choosing-its-face",
+      "description": "Play on the cover step runs the preview, the transport in place of the cover; the face is still picked from the strip, and Next goes on to details.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeCover · 3 «play» → ComposeCoverPlaying — the preview runs — the cover gives way to the transport",
+        "end · ComposeCoverPlaying · 9 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open"
+      ],
+      "boards": [
+        "ComposeCover",
+        "ComposeCoverPlaying",
+        "ComposeDetailsVideo"
+      ]
+    },
+    {
+      "name": "cover-a-clip-the-device-cant-cut",
+      "description": "A horizontal or square clip the device returns no frames for meets the cover step with the gallery alone; with a cover or without one, Next goes on to details — a post never waits on a frame the device could not cut.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePickVideo · 3 «Next» → ComposeCoverNoFrames — horizontal or square, and the device returned no frames — the gallery alone",
+        "end · ComposeCoverNoFrames · 4 «Next» → ComposeDetailsVideo — with a cover or without one — a post never waits on a frame the device could not cut"
+      ],
+      "boards": [
+        "ComposePickVideo",
+        "ComposeCoverNoFrames",
+        "ComposeDetailsVideo"
+      ]
+    },
+    {
+      "name": "describe-a-video",
+      "description": "Describe the video on a clip's details opens the describe sheet's video shape — one description for the whole clip, none for its cover.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetailsVideo · 3 «Describe the video» → ComposeDescribeVideo — the describe sheet's video shape — one description for the clip, none for the cover",
+        "end · ComposeDescribeVideo · 3 «Done» → back — the sheet closes"
+      ],
+      "boards": [
+        "ComposeDetailsVideo",
+        "ComposeDescribeVideo"
+      ]
+    },
+    {
+      "name": "name-a-new-tag",
+      "description": "Typing in the tag picker canonicalizes the name as it goes and keeps it the first row; picking it stages it in the composer's tags, and the picker stays open for the next.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPicker · 3 «the name field» → TagPickerTyping — typing — the name canonicalized as it goes, always the first row",
+        "end · TagPickerTyping · 4 «rows — the typed name first» → self — the pick stages in the composer's tags — the row leaves the list for the staged section above it, wearing its ×, and the picker stays open for the next"
+      ],
+      "boards": [
+        "TagPicker",
+        "TagPickerTyping"
+      ]
+    },
+    {
+      "name": "meet-a-tag-name-it-cant-take",
+      "description": "A character no name may carry is refused where it was typed and nothing stages; with the offending characters gone the first row comes back.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPicker · 3 «the name field» → TagPickerRefused — a character no name may carry — the field refuses it where it was typed",
+        "end · TagPickerRefused · 3 «the name field» → TagPickerTyping — the offending characters gone — the first row comes back"
+      ],
+      "boards": [
+        "TagPicker",
+        "TagPickerRefused",
+        "TagPickerTyping"
+      ]
+    },
+    {
+      "name": "publish-past-a-cited-post-that-never-landed",
+      "description": "A cited post that never landed is named on its own seal row with Remove it; the refused act removed, Sign and publish lands the post in its detail view, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → SealFaultRow — a cited post that never landed — its row says so, with Remove it (master)",
+        "end · SealFaultRow · 7 «Sign and publish» → ComposeLanded — the refused act removed first — signed, the detail view, still settling"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "SealFaultRow",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "keep-the-draft-when-signing-is-refused",
+      "description": "The write rule refusing the seal stages and spends nothing; Keep the draft, sign later leaves with the draft on this device, offered back the next time you compose.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → WriteRuleFailed — the write rule refuses — nothing staged or spent, the draft kept (master)",
+        "end · WriteRuleFailed · 7 «Keep the draft, sign later» → back — leaves — the draft stays on this device and is offered back the next time you compose"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "WriteRuleFailed"
+      ]
+    },
+    {
+      "name": "try-again-after-a-bug",
+      "description": "Any other refusal of a staged act is a bug the notice owns; Try again that goes through this time lands the post in its detail view, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → SealFaultBug — any other refusal of one staged act — a bug the picker should have blocked: the notice owns it, with Try again, Report a problem and Discard the post (master)",
+        "end · SealFaultBug · 7 «Try again» → ComposeLanded — it goes through this time — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "SealFaultBug",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "report-a-bug-from-the-seal",
+      "description": "Report a problem on the bug notice opens the same report page Settings opens, nothing about the seal attached — the words are the reader's own.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → SealFaultBug — any other refusal of one staged act — a bug the picker should have blocked: the notice owns it, with Try again, Report a problem and Discard the post (master)",
+        "end · SealFaultBug · 8 «Report a problem» → ReportProblemEmpty — the report page Settings opens, nothing written yet — the words are the reader's own, nothing about the seal is attached"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "SealFaultBug",
+        "ReportProblemEmpty"
+      ]
+    },
+    {
+      "name": "discard-the-post-from-the-bug-notice",
+      "description": "Discard the post on the bug notice asks first, since the draft would be lost; Discard it leaves the flow back where composing began, nothing signed.",
+      "status": "resolved",
+      "steps": [
+        "start · SealFaultBug · 9 «Discard the post» → SealDiscardConfirm — losing the draft asks first",
+        "end · SealDiscardConfirm · 1 «Discard it» → back — the draft is gone — leaves the flow, back where composing began; nothing was signed"
+      ],
+      "boards": [
+        "SealFaultBug",
+        "SealDiscardConfirm"
+      ]
+    },
+    {
+      "name": "retry-a-post-after-the-network-drops",
+      "description": "Sign and publish offline meets the network-error board; Retry that reaches this time lands the post in its detail view, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → NetworkError — offline — the network-error board (master)",
+        "end · NetworkError · 1 «Retry» → ComposeLanded — reaches this time — the exemplar's signed landing"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "NetworkError",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "read-a-help-dialog",
+      "description": "A ? opens its help dialog — on the seal, the Signed-actions text; Close returns to the screen that asked.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 3 «? — Signed actions» → HelpDialog — the Signed-actions text",
+        "end · HelpDialog · 1 «Close» → back — the dialog closes — back to the screen that asked"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "HelpDialog"
+      ]
+    },
+    {
+      "name": "save-a-comment",
+      "description": "Save on a comment's menu keeps the comment in the one Saved list beside posts and people.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 1 «Save» → self — the comment is kept — it joins the one Saved list beside posts and people"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu"
+      ]
+    },
+    {
+      "name": "read-a-comments-license",
+      "description": "License terms on a comment's menu closes the menu and brings the comment's terms up in a sheet over the thread — reading them is the whole of it.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 3 «License terms» → CommentLicense — the menu closes and the comment's terms come up in a sheet over the thread"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu",
+        "CommentLicense"
+      ]
+    },
+    {
+      "name": "see-who-holds-an-opinion-on-a-comment",
+      "description": "Opinions on this, on a comment's menu, brings the holders up over the thread — drawn in the state a comment nobody has answered leaves it.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 5 «Opinions on this» → CommentOpinionsEmpty — the menu closes and the holders come up over the thread — drawn in the state a comment nobody has answered leaves it"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu",
+        "CommentOpinionsEmpty"
+      ]
+    },
+    {
+      "name": "see-what-cites-a-comment",
+      "description": "Cited by, on a comment's menu, brings what cites the comment up over the thread — drawn in the state nothing citing it leaves it, which is the only door that state has.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 2 «comment overflow ⋮» → CommentMenu — someone else's comment — the comment's sheet (master)",
+        "end · CommentMenu · 6 «Cited by» → CommentCitedByEmpty — the menu closes and what cites this comes up over the thread — drawn in the state nothing citing it leaves it, which is the only door that state has"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "CommentMenu",
+        "CommentCitedByEmpty"
+      ]
+    },
+    {
+      "name": "adjust-a-replys-stance",
+      "description": "Adjust on the reply's seal opens the reply pad, the stance toward what the reply answers; Set puts the adjusted stance on the seal.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplySeal · 6 «Adjust (the stance)» → ReplyPad",
+        "end · ReplyPad · 4 «Set» → ReplySeal — the adjusted stance on the seal"
+      ],
+      "boards": [
+        "ReplySeal",
+        "ReplyPad"
+      ]
+    },
+    {
+      "name": "read-the-reply-pads-help",
+      "description": "The reply pad's ? opens its own help topic — the post pad's text would say the opposite of what is true here; Close returns to the pad.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyPad · 1 «? — how stances work» → ReplyPadHelp — the reply pad's own topic — the post pad's text says the opposite of what is true here",
+        "end · ReplyPadHelp · 1 «Close» → ReplyPad"
+      ],
+      "boards": [
+        "ReplyPad",
+        "ReplyPadHelp"
+      ]
+    },
+    {
+      "name": "reply-carrying-a-citation",
+      "description": "A reference picked for a reply comes back staged on the reply's seal; Sign comment settles the reply and its reference on its parent, the thread reopened where it was left.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCited",
+        "end · ReplyCited · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply and its reference settling on its parent"
+      ],
+      "boards": [
+        "ReplyCited",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "reply-carrying-many-citations",
+      "description": "A reply with several references staged counts them on its seal; Sign comment settles the reply and its references on its parent, the thread reopened where it was left.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCitedMany",
+        "end · ReplyCitedMany · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply and its references settling on its parent"
+      ],
+      "boards": [
+        "ReplyCitedMany",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "reply-with-the-key-elsewhere",
+      "description": "A key that left while the reply was written meets Sign comment with the reply-scale fallback; Restore the key returns to the seal with the reply intact.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplySeal · 9 «Sign comment» → ReplySealKeyAbsent — key elsewhere — the key left while the reply was written; the reply-scale fallback, restore or discard",
+        "ReplySealKeyAbsent · 2 «Restore the key» → Restore — restored — back to this seal, the reply intact",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ReplySeal",
+        "ReplySealKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "reply-at-the-door-without-the-key",
+      "description": "Add a comment where the key is elsewhere meets the notice at the door, before a word is written; Restore the key takes the recovery code and returns where it began.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyEntry · 7 «Add a comment» → ReplyKeyAbsent — key elsewhere — the notice meets the reader at the door, before a word is written",
+        "ReplyKeyAbsent · 2 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ReplyEntry",
+        "ReplyKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "sign-a-reply-after-an-upload-failed",
+      "description": "An upload that doesn't land while the reply's seal waits disables Sign comment and drops any held press; Retry starts it again, and the reply settles once the uploads land.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplySealUploadFailed",
+        "ReplySealUploadFailed · 1 «Retry» → ReplySealUploading — the upload starts again — the gate reads its running line; a press held before the fault dropped, so the reader presses Sign comment again",
+        "end · ReplySealUploading · 1 «Sign comment» → ReplySettled — uploads land — signing proceeds to the thread reopened where it was left, the reply settling on its parent"
+      ],
+      "boards": [
+        "ReplySealUploadFailed",
+        "ReplySealUploading",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "discard-a-reply",
+      "description": "Leaving a reply with something written asks first; Discard returns to the thread, the words gone.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCompose · 2 «X — leave» → DiscardConfirm — something written — the confirm",
+        "end · DiscardConfirm · 2 «Discard» → ReplyEntry — from a reply — the thread"
+      ],
+      "boards": [
+        "ReplyCompose",
+        "DiscardConfirm",
+        "ReplyEntry"
+      ]
+    },
+    {
+      "name": "retry-a-clip-that-didnt-upload",
+      "description": "A reply's clip that didn't upload keeps Next disabled until it is retried or removed; Retry starts the upload again.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyVideoFailed",
+        "end · ReplyVideoFailed · 5 «Retry» → self — the upload starts again — a fault, not an answer"
+      ],
+      "boards": [
+        "ReplyVideoFailed"
+      ]
+    },
+    {
+      "name": "reply-with-files-refused",
+      "description": "Picks over the reply's cap or in a format nothing here reads are named in the composer with why; what was accepted goes on with the words to the seal.",
+      "status": "resolved",
+      "steps": [
+        "start · ReplyCompose · 5 «+ Add pictures or a video» → ReplyMediaErrors — over its cap, or a format nothing here reads — the composer says why",
+        "end · ReplyMediaErrors · 3 «Next» → ReplySeal — what was accepted goes with the words"
+      ],
+      "boards": [
+        "ReplyCompose",
+        "ReplyMediaErrors",
+        "ReplySeal"
+      ]
+    },
+    {
+      "name": "edit-a-video-comment",
+      "description": "Editing a comment whose body is a clip offers its description and its cover; the signed edit settles on its card, the thread reopened where it was left.",
+      "status": "resolved",
+      "steps": [
+        "start · CommentEditVideo",
+        "end · CommentEditVideo · 12 «Sign the edit» → ReplySettled — signed — the thread reopened where it was left, the edit settling on its card, the new cover pointed at"
+      ],
+      "boards": [
+        "CommentEditVideo",
+        "ReplySettled"
+      ]
+    },
+    {
+      "name": "see-what-a-comment-edit-signs",
+      "description": "The count at the foot of a comment edit opens the acts it will sign; Done closes them back onto the edit.",
+      "status": "resolved",
+      "steps": [
+        "start · CommentEdit · 11 «You're signing 5 things» → CommentEditActs",
+        "end · CommentEditActs · 1 «Done» → CommentEdit — the sheet closes"
+      ],
+      "boards": [
+        "CommentEdit",
+        "CommentEditActs"
+      ]
+    },
+    {
+      "name": "leave-an-edit-unchanged",
+      "description": "An edit opened and left as it was found has nothing staged, so Sign the edit stays disabled and leaving keeps and discards nothing.",
+      "status": "resolved",
+      "steps": [
+        "start · EditComposeUnchanged",
+        "end · EditComposeUnchanged · 2 «X — leave» → back — leaves — nothing was staged, so nothing is kept and nothing is discarded"
+      ],
+      "boards": [
+        "EditComposeUnchanged"
+      ]
+    },
+    {
+      "name": "see-what-a-post-edit-signs",
+      "description": "The count at the foot of a post edit opens the acts it will sign; Done closes them back onto the edit.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 11 «You're signing 5 things» → EditActs",
+        "end · EditActs · 1 «Done» → EditCompose — the sheet closes"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditActs"
+      ]
+    },
+    {
+      "name": "edit-a-video-post",
+      "description": "Editing a post whose body is a clip offers its description and a cover of your own; the signed edit settles on the post, the new cover pointed at.",
+      "status": "resolved",
+      "steps": [
+        "start · EditComposeVideo",
+        "end · EditComposeVideo · 12 «Sign the edit» → back — signed — the post, the edit settling, the new cover pointed at"
+      ],
+      "boards": [
+        "EditComposeVideo"
+      ]
+    },
+    {
+      "name": "reorder-an-edits-pictures",
+      "description": "The picked row on a post edit opens Show all over the edit; dragging sets the order, the first is the cover, and Done closes onto the edit.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 4 «picked row» → EditPicked — the whole row opens Show all, over the edit itself",
+        "end · EditPicked · 4 «Done» → EditCompose — the sheet closes"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditPicked"
+      ]
+    },
+    {
+      "name": "edit-a-post-down-to-words",
+      "description": "Removing an edit's last picture makes the body words, the field arriving empty; the signed edit settles on the post, its body now words.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 4 «picked row» → EditPicked — the whole row opens Show all, over the edit itself",
+        "EditPicked · 3 «remove ×» → EditWords — the last one leaves — the body becomes words, and the field arrives empty",
+        "end · EditWords · 10 «Sign the edit» → back — signed — the post, the edit settling, its body now words"
+      ],
+      "boards": [
+        "EditCompose",
+        "EditPicked",
+        "EditWords"
+      ]
+    },
+    {
+      "name": "untag-a-post-in-its-edit",
+      "description": "A tag chip on a post edit opens the tag's pair sheet; Un-tag closes it, the chip leaving for the body's withdrawn line and the acts counting one more.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 14 «staged tag chip» → TagPad",
+        "end · TagPad · 2 «Un-tag» → back — the sheet closes — the chip leaves the row for the body's withdrawn line, and the acts card counts one more"
+      ],
+      "boards": [
+        "EditCompose",
+        "TagPad"
+      ]
+    },
+    {
+      "name": "revise-a-standing-citations-pair",
+      "description": "A standing citation's row on a post edit opens its pair sheet; Done stages the pick as one record added to the citation, and the row reads the resulting pair.",
+      "status": "resolved",
+      "steps": [
+        "start · EditCompose · 15 «staged reference row» → RefPairEdit — the standing citation's pair sheet — the pick adds one record to what stands",
+        "end · RefPairEdit · 3 «Done» → back — the sheet closes — the pick is staged as one record added to the citation (Citations revised), the row reads the Resulting pair"
+      ],
+      "boards": [
+        "EditCompose",
+        "RefPairEdit"
+      ]
+    },
+    {
+      "name": "narrow-the-feed-to-one-topic",
+      "description": "The filter narrowed to a single topic re-queries the feed once, and the trigger spells the topic out.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
+        "end · FeedSheet · 8 «Done» → FeedTopic — narrowed to one topic — the feed re-queries once"
+      ],
+      "boards": [
+        "Feed",
+        "FeedSheet",
+        "FeedTopic"
+      ]
+    },
+    {
+      "name": "let-every-kind-into-the-feed",
+      "description": "All four kinds switched on bring comments, profiles and tags among the posts — the feed re-queries once.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
+        "end · FeedSheet · 8 «Done» → FeedKinds — all four kinds on — comments, profiles and tags among the posts; the feed re-queries once"
+      ],
+      "boards": [
+        "Feed",
+        "FeedSheet",
+        "FeedKinds"
+      ]
+    },
+    {
+      "name": "open-what-is-waiting",
+      "description": "A feed with something waiting wears the dot on its bell; the bell opens the notifications list.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedUnread",
+        "end · FeedUnread · 18 «notifications» → Notifications"
+      ],
+      "boards": [
+        "FeedUnread",
+        "Notifications"
+      ]
+    },
+    {
+      "name": "find-no-notifications-yet",
+      "description": "The bell on a feed where nothing has arrived opens the empty notifications list — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 18 «notifications» → NotificationsEmpty — nothing has arrived yet",
+        "end · arrival at NotificationsEmpty"
+      ],
+      "boards": [
+        "Feed",
+        "NotificationsEmpty"
+      ]
+    },
+    {
+      "name": "jump-back-to-the-top",
+      "description": "Scrolled back up from deep in the list, the band returns with Back to top, and the list jumps to the feed's own top state.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedScrolled",
+        "end · FeedScrolled · 19 «Back to top» → Feed — the list jumps to the top, animated — the feed's own top state, the same place the bar's re-tap lands from here"
+      ],
+      "boards": [
+        "FeedScrolled",
+        "Feed"
+      ]
+    },
+    {
+      "name": "page-through-a-gallery",
+      "description": "A post carrying several pictures pages between them in place on its card, the dots reading position; a tap opens the post, as on every other card.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedGallery",
+        "end · FeedGallery · 4 «the gallery pager» → PostDetail — tap — the post opens, as on every other card"
+      ],
+      "boards": [
+        "FeedGallery",
+        "PostDetail"
+      ]
+    },
+    {
+      "name": "play-a-clip-that-didnt-autoplay",
+      "description": "A clip at rest on its cover — before its first play, or on a device that will not autoplay — plays where it stands from its play disc.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedCover",
+        "end · FeedCover · 11 «play disc» → self — autoplay suppressed — the tap plays it where it stands"
+      ],
+      "boards": [
+        "FeedCover"
+      ]
+    },
+    {
+      "name": "reveal-a-sensitive-clip-in-the-stream",
+      "description": "A sensitive clip meets the stream veiled; tapping the veil reveals clip and caption together, and the clip joins the rotation and plays.",
+      "status": "resolved",
+      "steps": [
+        "start · ReelSensitive",
+        "end · ReelSensitive · 9 «the clip's veil face» → Reel — tap — the reveal: clip and caption unveil together, one SensitiveScope answering for both; the clip joins the rotation and plays"
+      ],
+      "boards": [
+        "ReelSensitive",
+        "Reel"
+      ]
+    },
+    {
+      "name": "reveal-a-sensitive-video-post",
+      "description": "A sensitive video post opens unrevealed; Show on the card unveils the pinned clip and the card together.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetailVideoSensitive",
+        "end · PostDetailVideoSensitive · 5 «the card's veil (Show)» → PostDetailVideo — the reveal — pinned clip and card unveil together, one SensitiveScope answering for both"
+      ],
+      "boards": [
+        "PostDetailVideoSensitive",
+        "PostDetailVideo"
+      ]
+    },
+    {
+      "name": "hide-someone-from-the-feed",
+      "description": "Hide on a post's menu, opened from a card in the feed, asks nothing: that person's rows go, the ones behind them move up, and the snackbar offers Undo.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 3 «post overflow ⋮» → ReaderPostMenu — the reader's sheet (master)",
+        "end · ReaderPostMenu · 3 «Hide @ada» → FeedHidden — opened from a card in the feed — no confirm: her rows go, the ones behind them move up, and the snackbar offers Undo"
+      ],
+      "boards": [
+        "Feed",
+        "ReaderPostMenu",
+        "FeedHidden"
+      ]
+    },
+    {
+      "name": "read-a-posts-license",
+      "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 3 «post overflow ⋮» → ReaderPostMenu — the reader's sheet (master)",
+        "end · ReaderPostMenu · 4 «License terms» → PostLicense — the menu closes and the terms come up in a sheet over the post"
+      ],
+      "boards": [
+        "Feed",
+        "ReaderPostMenu",
+        "PostLicense"
+      ]
+    },
+    {
+      "name": "share-from-the-narrow-menu",
+      "description": "On a phone too narrow for the whole action row, share moves into the post's menu and does there exactly what the glyph does on a wider phone.",
+      "status": "resolved",
+      "steps": [
+        "start · ReaderPostMenuNarrow",
+        "end · ReaderPostMenuNarrow · 1 «Share» → os — the platform's own share sheet — the row the action row could not hold, doing exactly what the glyph does on a wider phone"
+      ],
+      "boards": [
+        "ReaderPostMenuNarrow"
+      ]
+    },
+    {
+      "name": "watch-a-clip-full-screen",
+      "description": "Full screen on a video post's transport opens the viewer, the clip whole — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetailVideo · 19 «full screen» → ViewerVideo — the transport's own way into the viewer — the clip tap is the other",
+        "end · arrival at ViewerVideo"
+      ],
+      "boards": [
+        "PostDetailVideo",
+        "ViewerVideo"
+      ]
+    },
+    {
+      "name": "turn-the-viewer",
+      "description": "The viewer reached by turning the device — rotation, not a tap — closes with the X, as a swipe down does.",
+      "status": "resolved",
+      "steps": [
+        "start · ViewerLandscape",
+        "end · ViewerLandscape · 1 «close the viewer (X)» → back — the X, or a swipe down"
+      ],
+      "boards": [
+        "ViewerLandscape"
+      ]
+    },
+    {
+      "name": "open-the-wallet",
+      "description": "The Wallet tab lands on its screen saying the wallet is not here yet — the surface itself is still owed.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 14 «nav · Wallet» → WalletComingSoon",
+        "end · arrival at WalletComingSoon"
+      ],
+      "boards": [
+        "Feed",
+        "WalletComingSoon"
+      ]
+    },
+    {
+      "name": "see-what-cites-a-post",
+      "description": "Cited by on a post's own view opens what cites it; a citing post's row opens that post's detail.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetail · 16 «Cited by N» → CitedBy",
+        "end · CitedBy · 1 «a citing row» → PostDetail — the citing post opens"
+      ],
+      "boards": [
+        "PostDetail",
+        "CitedBy"
+      ]
+    },
+    {
+      "name": "search-for-a-name-nothing-carries",
+      "description": "A search for a name nothing carries says so where the results would stand; a name something carries brings results again.",
+      "status": "resolved",
+      "steps": [
+        "start · Explore · 1 «search field» → ExploreNone — nothing carries that name",
+        "end · ExploreNone · 1 «search field» → ExploreSearch — a name something carries"
+      ],
+      "boards": [
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch"
+      ]
+    },
+    {
+      "name": "search-comments-without-a-scope",
+      "description": "Comments alone in the search filter, with no @handle or #tag in the query, answer with the quiet line where results would stand; a scoped query brings the comments it reaches.",
+      "status": "resolved",
+      "steps": [
+        "start · ExploreSearch · 1 «search field» → ExploreUnscoped — Comments alone in the filter, and the query names no @handle or #tag — the quiet line where results would stand",
+        "end · ExploreUnscoped · 1 «search field» → ExploreSearch — a query scoped by @handle or #tag — the comments it reaches"
+      ],
+      "boards": [
+        "ExploreSearch",
+        "ExploreUnscoped"
+      ]
+    },
+    {
+      "name": "meet-a-profile-the-server-didnt-answer",
+      "description": "A profile whose read never reached the server says so in place; Retry that reaches this time loads the profile.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileUnreachable",
+        "end · ProfileUnreachable · 2 «Retry» → ProfileOther — reaches this time — the profile loads"
+      ],
+      "boards": [
+        "ProfileUnreachable",
+        "ProfileOther"
+      ]
+    },
+    {
+      "name": "meet-a-profile-link-that-names-nobody",
+      "description": "A shared profile link whose handle resolves to nothing says so — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileNotFound",
+        "end · arrival at ProfileNotFound"
+      ],
+      "boards": [
+        "ProfileNotFound"
+      ]
+    },
+    {
+      "name": "meet-a-post-link-that-names-nothing",
+      "description": "A shared post link or a notification whose post resolves to nothing says so — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · PostNotFound",
+        "end · arrival at PostNotFound"
+      ],
+      "boards": [
+        "PostNotFound"
+      ]
+    },
+    {
+      "name": "meet-a-comment-link-that-names-nothing",
+      "description": "A shared comment link or a notification whose comment resolves to nothing says so — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · CommentNotFound",
+        "end · arrival at CommentNotFound"
+      ],
+      "boards": [
+        "CommentNotFound"
+      ]
+    },
+    {
+      "name": "read-a-score-whose-paths-moved-on",
+      "description": "A score opened on a post whose paths have all aged out draws the state the dust floor leaves — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedEntryMoved",
+        "end · arrival at FeedEntryMoved"
+      ],
+      "boards": [
+        "FeedEntryMoved"
+      ]
+    },
+    {
+      "name": "load-more-of-a-chronicle-after-a-fault",
+      "description": "A chronicle's next page that didn't arrive leaves a row where it should stand; Retry that comes this time gives way to rows.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileMoreFailed",
+        "end · ProfileMoreFailed · 1 «Retry» → Profile — the page comes this time — the row gives way to rows"
+      ],
+      "boards": [
+        "ProfileMoreFailed",
+        "Profile"
+      ]
+    },
+    {
+      "name": "read-someones-posts",
+      "description": "The Posts tab of someone's chronicle shows their posts as cards — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOther · 6 «chronicle tabs» → ProfilePosts — Posts — the cards (master, drawn on @ada's)",
+        "end · arrival at ProfilePosts"
+      ],
+      "boards": [
+        "ProfileOther",
+        "ProfilePosts"
+      ]
+    },
+    {
+      "name": "hide-someone-from-their-profile",
+      "description": "Hide on another's profile menu asks nothing; the page stays open, and the feed, the next time it is opened, has their rows gone and the ones behind them moved up.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOther · 2 «profile overflow ⋮» → ProfileMenu — another's profile sheet (master)",
+        "end · ProfileMenu · 4 «Hide @ada» → FeedHidden — the feed, the next time it is opened — her rows gone, the ones behind them moved up"
+      ],
+      "boards": [
+        "ProfileOther",
+        "ProfileMenu",
+        "FeedHidden"
+      ]
+    },
+    {
+      "name": "hide-a-deleted-account",
+      "description": "A deleted account's page keeps its menu on the redacted wording; Hide this account clears that actor's rows from the feed the next time it is opened.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileDeleted · 11 «profile overflow ⋮» → ProfileDeletedMenu — the husk's sheet — the master's rows minus Mention, the hide row on its redacted wording",
+        "end · ProfileDeletedMenu · 3 «Hide this account» → FeedHidden — the feed, the next time it is opened — this actor's rows gone, the ones behind them moved up"
+      ],
+      "boards": [
+        "ProfileDeleted",
+        "ProfileDeletedMenu",
+        "FeedHidden"
+      ]
+    },
+    {
+      "name": "revise-a-standing-opinion",
+      "description": "The stance anchor on someone already held opens the pad over the opinion standing; Set signs the new pick and the stance lands back where the pad bloomed.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOtherHeld · 4 «the stance anchor» → PadStanding — tap — the pad blooms over the held opinion, the opinion already standing (never the vouch-back's opening: an opinion on the member who vouched the reader in is the vouch-back itself)",
+        "end · PadStanding · 5 «Set» → back — signed — the stance lands, back where the pad bloomed"
+      ],
+      "boards": [
+        "ProfileOtherHeld",
+        "PadStanding"
+      ]
+    },
+    {
+      "name": "walk-back-an-opinion",
+      "description": "Walk it back on a standing opinion's pad raises the severance dialog with its cost; Walk it back signs the bundle to nothing and the pad closes with the dialog.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOtherHeld · 4 «the stance anchor» → PadStanding — tap — the pad blooms over the held opinion, the opinion already standing (never the vouch-back's opening: an opinion on the member who vouched the reader in is the vouch-back itself)",
+        "PadStanding · 3 «Walk it back» → SeveranceConfirm — the explicit route — the same dialog the pick route raises, without the pick line, since nothing was picked",
+        "end · SeveranceConfirm · 1 «Walk it back» → back — signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader"
+      ],
+      "boards": [
+        "ProfileOtherHeld",
+        "PadStanding",
+        "SeveranceConfirm"
+      ]
+    },
+    {
+      "name": "retry-a-stance-that-didnt-sign",
+      "description": "A stance that didn't go through keeps the pad open at the pick, the fault above its commit row; Retry that signs this time lands the stance back where the pad bloomed.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 8 «stance face» → VouchBackPad — tap — the pad blooms (master board)",
+        "VouchBackPad · 4 «Set» → PadFailed — not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)",
+        "end · PadFailed · 5 «Retry» → back — signed this time — the stance lands, back where the pad bloomed"
+      ],
+      "boards": [
+        "Feed",
+        "VouchBackPad",
+        "PadFailed"
+      ]
+    },
+    {
+      "name": "meet-the-write-rule-on-the-pad",
+      "description": "The write rule refusing a stance stages and spends nothing; its notice stands where the landing line and Set were, and Not now closes the pad.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 8 «stance face» → VouchBackPad — tap — the pad blooms (master board)",
+        "VouchBackPad · 4 «Set» → PadWriteRule — the write rule refuses — nothing staged or spent: the notice stands where the landing line and Set were, with Not now (master)",
+        "end · PadWriteRule · 4 «Not now» → back — the pad closes — nothing signed or spent, the pick not kept, the standing opinion what it was"
+      ],
+      "boards": [
+        "Feed",
+        "VouchBackPad",
+        "PadWriteRule"
+      ]
+    },
+    {
+      "name": "walk-your-topics",
+      "description": "Your topics, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
+      "status": "resolved",
+      "steps": [
+        "start · Explore · 10 «Your topics (the door)» → YourTopics",
+        "YourTopics · 2 «topic rows» → TagPageHeld — the topic's own page — held, which every row on this list is",
+        "end · TagPageHeld · 15 «stance face (the topic, held)» → TagPageHeldPad — tap — the pad blooms over the held topic wearing the Affinity family's own words, and held it carries `Disconnect`: the same ceremony every held record has, said in the topic's own vocabulary and at this topic's own price"
+      ],
+      "boards": [
+        "Explore",
+        "YourTopics",
+        "TagPageHeld",
+        "TagPageHeldPad"
+      ]
+    },
+    {
+      "name": "add-to-a-held-topic",
+      "description": "The pad over a held topic takes a further pick; Set joins the Affinity to the bundle, back on the tag page.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPageHeld · 15 «stance face (the topic, held)» → TagPageHeldPad — tap — the pad blooms over the held topic wearing the Affinity family's own words, and held it carries `Disconnect`: the same ceremony every held record has, said in the topic's own vocabulary and at this topic's own price",
+        "end · TagPageHeldPad · 5 «Set» → back — signed — the Affinity joins the bundle, back on the tag page"
+      ],
+      "boards": [
+        "TagPageHeld",
+        "TagPageHeldPad"
+      ]
+    },
+    {
+      "name": "disconnect-from-a-topic",
+      "description": "Disconnect on a held topic's pad raises the severance dialog in the topic's own words and at its own price; Walk it back signs the bundle to nothing.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPageHeld · 15 «stance face (the topic, held)» → TagPageHeldPad — tap — the pad blooms over the held topic wearing the Affinity family's own words, and held it carries `Disconnect`: the same ceremony every held record has, said in the topic's own vocabulary and at this topic's own price",
+        "TagPageHeldPad · 3 «Disconnect» → SeveranceConfirm — the explicit route out of a held topic — the master dialog in the topic family's own words, titled `Disconnect from #saltmaps?`, without the pick line since nothing was picked; the fixture the master board draws is a person's, and the arithmetic is this topic's own",
+        "end · SeveranceConfirm · 1 «Walk it back» → back — signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader"
+      ],
+      "boards": [
+        "TagPageHeld",
+        "TagPageHeldPad",
+        "SeveranceConfirm"
+      ]
+    },
+    {
+      "name": "hold-a-topic-nothing-carries",
+      "description": "A tag everything has been untagged out of keeps its page and its stance face; press-and-hold lands a positive Affinity, and the topic is held.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPageEmpty",
+        "end · TagPageEmpty · 3 «stance face (the topic)» → self — press-and-hold — a positive Affinity lands, and the topic is held"
+      ],
+      "boards": [
+        "TagPageEmpty"
+      ]
+    },
+    {
+      "name": "open-something-you-saved",
+      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people in one list; a saved post's row opens the post.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 1 «Saved» → Saved",
+        "end · Saved · 2 «a saved row» → PostDetail — a post"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "Saved",
+        "PostDetail"
+      ]
+    },
+    {
+      "name": "unsave-and-undo",
+      "description": "A row's unsave takes it out of Saved, the list closing over it, and the line offers Undo; Undo puts the row back where it was.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 1 «Saved» → Saved",
+        "Saved · 8 «a row's unsave» → SavedUndo — the row goes, the list closes over it, and the line offers Undo — the last of them leaves SavedEmpty",
+        "end · SavedUndo · 9 «Undo» → Saved — the row comes back where it was and the list is as it was"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "Saved",
+        "SavedUndo"
+      ]
+    },
+    {
+      "name": "find-nothing-saved-yet",
+      "description": "Saved with nothing kept opens the empty list — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "end · ProfileOwnMenu · 1 «Saved» → SavedEmpty — nothing kept yet"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "SavedEmpty"
+      ]
+    },
+    {
+      "name": "read-your-history",
+      "description": "History, in your own profile's menu, opens what you have read, first-seen order — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "end · ProfileOwnMenu · 2 «History» → History"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "History"
+      ]
+    },
+    {
+      "name": "filter-your-history",
+      "description": "History's Everything trigger opens its filter; the kind chips stage, and Done re-reads the history once, narrowed.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 2 «History» → History",
+        "History · 3 «Everything (filter trigger)» → HistoryFilter",
+        "end · HistoryFilter · 3 «Done» → History — the sheet closes — the history re-reads once, narrowed, by the time the reader first saw each thing, newest first still"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "History",
+        "HistoryFilter"
+      ]
+    },
+    {
+      "name": "filter-your-history-to-nothing",
+      "description": "A filter no seen thing matches leaves History with nothing to show and the cause chip at kinds; Show everything puts the whole history back.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 2 «History» → History",
+        "History · 3 «Everything (filter trigger)» → HistoryFilter",
+        "HistoryFilter · 3 «Done» → HistoryNone — nothing seen is of the narrowed kinds (the cause chip at kinds)",
+        "end · HistoryNone · 4 «Show everything» → History — the query cleared and no kind narrowed — the whole history at Everything, by the time the reader first saw each thing, newest first"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "History",
+        "HistoryFilter",
+        "HistoryNone"
+      ]
+    },
+    {
+      "name": "find-nothing-read-yet",
+      "description": "History on a new account opens the empty list — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "end · ProfileOwnMenu · 2 «History» → HistoryEmpty — a new account — nothing read yet"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "HistoryEmpty"
+      ]
+    },
+    {
+      "name": "send-your-first-invite",
+      "description": "Invites with nothing out yet teaches what an invite is; Create invite opens the create sheet, and the link it makes goes straight to the platform's own share sheet.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → InvitesEmpty — nothing out yet — the teaching state, and the common one",
+        "InvitesEmpty · 2 «Create invite» → InviteNew — the create sheet (master, drawn over the populated list)",
+        "InviteNew · 3 «Create invite» → InviteCreated — the link exists — the same sheet, now holding it",
+        "end · InviteCreated · 2 «Share link» → os — the platform's own share sheet"
+      ],
+      "boards": [
+        "Profile",
+        "InvitesEmpty",
+        "InviteNew",
+        "InviteCreated"
+      ]
+    },
+    {
+      "name": "set-how-long-an-invite-lasts",
+      "description": "Expires after on the create sheet opens the length chooser stacked over it; picking a length is the commit, and the invite made carries it.",
+      "status": "resolved",
+      "steps": [
+        "start · Invites · 2 «New invite» → InviteNew — the create sheet — two decisions and a button",
+        "InviteNew · 2 «Expires after» → InviteExpiry — the chooser, stacked over this sheet",
+        "InviteExpiry · 1 «a length» → InviteNew — the chooser closes — the row reads the new length. Picking is the commit; a three-row chooser needs no Done",
+        "InviteNew · 3 «Create invite» → InviteCreated — the link exists — the same sheet, now holding it",
+        "end · InviteCreated · 2 «Share link» → os — the platform's own share sheet"
+      ],
+      "boards": [
+        "Invites",
+        "InviteNew",
+        "InviteExpiry",
+        "InviteCreated"
+      ]
+    },
+    {
+      "name": "close-an-application",
+      "description": "A waiting row's close in the invites queue asks first, named on the row; Close it takes the row off this inviter's list and tells the applicant, whom any other member can still vouch in.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
+        "Invites · 5 «a row's close» → RejectConfirm — the think-twice dialog, named on the row it was raised from",
+        "end · RejectConfirm · 1 «Close it» → Invites — the row leaves this inviter's list and the applicant is told — their account stays a signed-in reader, and any other member can still vouch them in"
+      ],
+      "boards": [
+        "Profile",
+        "Invites",
+        "RejectConfirm"
+      ]
+    },
+    {
+      "name": "close-a-links-applications",
+      "description": "A group's Close all asks first, naming the count; Close them takes every application still waiting on that link off this list at once, each person told.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
+        "Invites · 8 «a group's Close all» → RejectAllConfirm — the think-twice dialog for the whole group, naming the count it is about to act on",
+        "end · RejectAllConfirm · 1 «Close them» → Invites — every application still waiting on that link leaves this list at once and each person is told — the sweep passes over the ones already closed, and any member can still vouch any of them in"
+      ],
+      "boards": [
+        "Profile",
+        "Invites",
+        "RejectAllConfirm"
+      ]
+    },
+    {
+      "name": "step-back-from-the-gated-seal",
+      "description": "Back from the gated seal returns to details while the uploads still run; Next goes back to the gated seal, which signs once they land.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSealUploading · 1 «back arrow» → ComposeUploading — one stage back — details, uploads running",
+        "end · ComposeUploading · 11 «Next» → ComposeSealUploading — uploads still running — the gated seal"
+      ],
+      "boards": [
+        "ComposeSealUploading",
+        "ComposeUploading"
+      ]
+    },
+    {
+      "name": "follow-the-already-published-marker",
+      "description": "Media that already stands in one of the author's own published posts puts the marker on the details stage; its door opens the post the line names, with no dialog and no gate.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetailsReused",
+        "end · ComposeDetailsReused · 14 «Already in your post from 12 September. (the marker's door)» → PostDetail — the post the line names — the earliest of the author's published posts the media stands in; no dialog, no confirm step, no gate"
+      ],
+      "boards": [
+        "ComposeDetailsReused",
+        "PostDetail"
+      ]
+    },
+    {
+      "name": "reveal-a-sensitive-words-post",
+      "description": "A words-only post its author marked sensitive meets the feed veiled, the source line on the veil plate; Show unveils the words in place for the whole post, for the session.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedWordsSensitive",
+        "end · FeedWordsSensitive · 19 «Show (the words-only veil)» → self — the words unveil in place, the source line under them goes, and the reveal answers for the whole post for the session"
+      ],
+      "boards": [
+        "FeedWordsSensitive"
+      ]
     }
   ],
   "boardsOnFlows": {
+    "About": {
+      "flows": [
+        "read-about-cogra"
+      ],
+      "endpoint": [
+        "read-about-cogra"
+      ]
+    },
+    "ApplicantEmail": {
+      "flows": [
+        "correct-an-applicants-address"
+      ],
+      "endpoint": []
+    },
     "ApplicantFeed": {
       "flows": [
+        "arrive-through-an-invite-link",
+        "correct-an-applicants-address",
+        "fix-the-join-forms-errors",
         "follow-a-citation",
         "guest-turns-applicant",
         "join-with-an-invite",
         "join-with-the-link-in-hand",
         "make-your-key",
+        "meet-a-browser-that-cant-hold-a-key",
         "open-a-posts-pictures",
+        "read-your-own-page-as-an-applicant",
         "trace-a-score-to-its-records",
+        "type-the-recovery-code-back-wrong",
         "verify-the-email",
+        "verify-the-email-in-the-app",
         "visit-an-author",
+        "watch-the-intro",
         "watch-the-stream"
       ],
       "endpoint": [
+        "arrive-through-an-invite-link",
+        "correct-an-applicants-address",
+        "fix-the-join-forms-errors",
         "guest-turns-applicant",
         "join-with-an-invite",
         "join-with-the-link-in-hand",
         "make-your-key",
-        "verify-the-email"
+        "meet-a-browser-that-cant-hold-a-key",
+        "read-your-own-page-as-an-applicant",
+        "type-the-recovery-code-back-wrong",
+        "verify-the-email",
+        "verify-the-email-in-the-app",
+        "watch-the-intro"
       ]
     },
     "ApplicantKeyElsewhere": {
       "flows": [
-        "restore-your-key"
+        "make-a-new-key-in-place-of-the-attached-one",
+        "restore-your-key",
+        "restore-your-key-as-an-applicant"
       ],
-      "endpoint": []
+      "endpoint": [
+        "make-a-new-key-in-place-of-the-attached-one",
+        "restore-your-key-as-an-applicant"
+      ]
     },
     "ApplicantLanding": {
       "flows": [
@@ -1920,29 +4150,38 @@
         "restore-your-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
+        "watch-the-registration-land",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "watch-the-registration-land"
+      ]
     },
     "ApplicantRejected": {
       "flows": [
+        "ask-another-member-to-vouch",
         "follow-a-citation",
         "open-a-posts-pictures",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "ask-another-member-to-vouch"
+      ]
     },
     "ApplicantWaiting": {
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "post-while-an-applicant",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "post-while-an-applicant"
+      ]
     },
     "ApprovePad": {
       "flows": [
@@ -1965,6 +4204,59 @@
         "edit-avatar-standalone"
       ]
     },
+    "ChangeEmail": {
+      "flows": [
+        "change-your-email"
+      ],
+      "endpoint": []
+    },
+    "ChangeEmailConfirm": {
+      "flows": [
+        "call-off-an-email-change",
+        "change-your-email",
+        "finish-a-pending-email-change",
+        "open-the-new-address-link-signed-out"
+      ],
+      "endpoint": [
+        "open-the-new-address-link-signed-out"
+      ]
+    },
+    "ChangeEmailLinked": {
+      "flows": [
+        "confirm-the-email-change-from-the-new-address",
+        "open-the-new-address-link-signed-out"
+      ],
+      "endpoint": [
+        "confirm-the-email-change-from-the-new-address"
+      ]
+    },
+    "ChangeEmailLinkedSignedOut": {
+      "flows": [
+        "open-the-new-address-link-signed-out"
+      ],
+      "endpoint": [
+        "open-the-new-address-link-signed-out"
+      ]
+    },
+    "ChangeHandle": {
+      "flows": [
+        "change-your-handle"
+      ],
+      "endpoint": []
+    },
+    "ChangeHandleConfirm": {
+      "flows": [
+        "change-your-handle"
+      ],
+      "endpoint": []
+    },
+    "ChangePassword": {
+      "flows": [
+        "change-your-password",
+        "meet-the-security-notice"
+      ],
+      "endpoint": []
+    },
     "ChatsComingSoon": {
       "flows": [
         "message-someone",
@@ -1977,25 +4269,65 @@
         "message-someone"
       ]
     },
+    "CitedBy": {
+      "flows": [
+        "see-what-cites-a-post"
+      ],
+      "endpoint": []
+    },
+    "CommentCitedByEmpty": {
+      "flows": [
+        "see-what-cites-a-comment"
+      ],
+      "endpoint": [
+        "see-what-cites-a-comment"
+      ]
+    },
     "CommentEdit": {
       "flows": [
         "cite-something",
         "describe-your-pictures",
-        "edit-your-comment"
+        "edit-your-comment",
+        "see-what-a-comment-edit-signs"
+      ],
+      "endpoint": [
+        "see-what-a-comment-edit-signs"
+      ]
+    },
+    "CommentEditActs": {
+      "flows": [
+        "see-what-a-comment-edit-signs"
       ],
       "endpoint": []
     },
     "CommentEditVideo": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "edit-a-video-comment"
       ],
-      "endpoint": []
+      "endpoint": [
+        "edit-a-video-comment"
+      ]
+    },
+    "CommentLicense": {
+      "flows": [
+        "read-a-comments-license"
+      ],
+      "endpoint": [
+        "read-a-comments-license"
+      ]
     },
     "CommentMenu": {
       "flows": [
-        "cite-a-post"
+        "cite-a-post",
+        "read-a-comments-license",
+        "save-a-comment",
+        "see-what-cites-a-comment",
+        "see-who-holds-an-opinion-on-a-comment"
       ],
-      "endpoint": []
+      "endpoint": [
+        "save-a-comment"
+      ]
     },
     "CommentMenuOwn": {
       "flows": [
@@ -2006,12 +4338,23 @@
     },
     "CommentNotFound": {
       "flows": [
+        "meet-a-comment-link-that-names-nothing",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-comment-link-that-names-nothing"
+      ]
+    },
+    "CommentOpinionsEmpty": {
+      "flows": [
+        "see-who-holds-an-opinion-on-a-comment"
+      ],
+      "endpoint": [
+        "see-who-holds-an-opinion-on-a-comment"
+      ]
     },
     "CommentRemoveConfirm": {
       "flows": [
@@ -2027,6 +4370,18 @@
         "remove-your-comment"
       ]
     },
+    "ComposeBodyDiscard": {
+      "flows": [
+        "swap-the-pictures-for-words"
+      ],
+      "endpoint": []
+    },
+    "ComposeCitations": {
+      "flows": [
+        "look-over-many-staged-citations"
+      ],
+      "endpoint": []
+    },
     "ComposeCited": {
       "flows": [
         "cite-a-post",
@@ -2040,17 +4395,40 @@
     },
     "ComposeCover": {
       "flows": [
+        "cover-a-clip-with-a-picture-of-your-own",
         "give-a-vertical-clip-a-cover",
+        "go-back-to-a-clip-wearing-its-cover",
+        "pick-a-video-from-the-grid",
+        "preview-the-clip-before-choosing-its-face",
         "publish-a-video"
+      ],
+      "endpoint": [
+        "cover-a-clip-with-a-picture-of-your-own",
+        "go-back-to-a-clip-wearing-its-cover",
+        "preview-the-clip-before-choosing-its-face"
+      ]
+    },
+    "ComposeCoverNoFrames": {
+      "flows": [
+        "cover-a-clip-the-device-cant-cut"
+      ],
+      "endpoint": []
+    },
+    "ComposeCoverPlaying": {
+      "flows": [
+        "preview-the-clip-before-choosing-its-face"
       ],
       "endpoint": []
     },
     "ComposeCrop": {
       "flows": [
+        "pick-files-that-are-refused",
         "publish-a-post",
         "publish-from-the-browser"
       ],
-      "endpoint": []
+      "endpoint": [
+        "pick-files-that-are-refused"
+      ]
     },
     "ComposeDescribe": {
       "flows": [
@@ -2060,56 +4438,91 @@
         "describe-your-pictures"
       ]
     },
+    "ComposeDescribeVideo": {
+      "flows": [
+        "describe-a-video"
+      ],
+      "endpoint": [
+        "describe-a-video"
+      ]
+    },
     "ComposeDetails": {
       "flows": [
         "add-a-topic",
         "cite-something",
         "describe-your-pictures",
+        "pair-a-staged-citation",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-from-the-browser",
-        "publish-while-the-uploads-run"
+        "publish-while-the-uploads-run",
+        "write-past-the-details-caps"
       ],
       "endpoint": [
         "add-a-topic",
-        "publish-while-the-uploads-run"
+        "pair-a-staged-citation",
+        "publish-while-the-uploads-run",
+        "write-past-the-details-caps"
       ]
     },
     "ComposeDetailsCaps": {
       "flows": [
         "cite-something",
-        "describe-your-pictures"
+        "describe-your-pictures",
+        "write-past-the-details-caps"
       ],
-      "endpoint": []
+      "endpoint": [
+        "write-past-the-details-caps"
+      ]
     },
     "ComposeDetailsReused": {
       "flows": [
         "cite-something",
-        "describe-your-pictures"
+        "describe-your-pictures",
+        "follow-the-already-published-marker"
       ],
-      "endpoint": []
+      "endpoint": [
+        "follow-the-already-published-marker"
+      ]
     },
     "ComposeDetailsVideo": {
       "flows": [
         "cite-something",
+        "cover-a-clip-the-device-cant-cut",
+        "describe-a-video",
         "give-a-vertical-clip-a-cover",
+        "pick-a-video-from-the-grid",
+        "preview-the-clip-before-choosing-its-face",
         "publish-a-vertical-video",
         "publish-a-video"
       ],
       "endpoint": [
-        "give-a-vertical-clip-a-cover"
+        "cover-a-clip-the-device-cant-cut",
+        "describe-a-video",
+        "give-a-vertical-clip-a-cover",
+        "preview-the-clip-before-choosing-its-face"
       ]
     },
     "ComposeDetailsWords": {
       "flows": [
         "cite-something",
+        "post-while-an-applicant",
         "publish-words"
       ],
       "endpoint": []
     },
     "ComposeDraft": {
       "flows": [
+        "discard-a-kept-draft",
         "pick-a-kept-draft-back-up"
+      ],
+      "endpoint": [
+        "discard-a-kept-draft"
+      ]
+    },
+    "ComposeDraftDiscard": {
+      "flows": [
+        "discard-a-kept-draft"
       ],
       "endpoint": []
     },
@@ -2130,6 +4543,7 @@
     },
     "ComposeKeyAbsent": {
       "flows": [
+        "publish-with-the-key-elsewhere",
         "restore-your-key"
       ],
       "endpoint": []
@@ -2139,30 +4553,44 @@
         "edit-your-post",
         "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
+        "pick-a-video-from-the-grid",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
+        "publish-past-a-cited-post-that-never-landed",
         "publish-while-the-uploads-run",
         "publish-words",
         "remove-your-post",
         "reply-to-a-post",
+        "retry-a-post-after-the-network-drops",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
+        "try-again-after-a-bug",
         "visit-an-author"
       ],
       "endpoint": [
         "edit-your-post",
         "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
+        "pick-a-video-from-the-grid",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
+        "publish-past-a-cited-post-that-never-landed",
         "publish-while-the-uploads-run",
         "publish-words",
-        "remove-your-post"
+        "remove-your-post",
+        "retry-a-post-after-the-network-drops",
+        "try-again-after-a-bug"
       ]
+    },
+    "ComposeLicense": {
+      "flows": [
+        "choose-a-posts-license"
+      ],
+      "endpoint": []
     },
     "ComposePad": {
       "flows": [
@@ -2173,22 +4601,46 @@
     "ComposePick": {
       "flows": [
         "cite-a-post",
+        "discard-a-kept-draft",
         "mention-someone",
+        "pick-a-video-from-the-grid",
+        "pick-files-that-are-refused",
+        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "set-the-cover-and-order"
+        "set-the-cover-and-order",
+        "swap-the-pictures-for-words"
       ],
       "endpoint": [
         "cite-a-post",
+        "discard-a-kept-draft",
         "mention-someone",
+        "pick-a-video-from-the-grid",
+        "pick-files-that-are-refused",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "set-the-cover-and-order"
+        "set-the-cover-and-order",
+        "swap-the-pictures-for-words"
       ]
+    },
+    "ComposePickVideo": {
+      "flows": [
+        "cover-a-clip-the-device-cant-cut",
+        "pick-a-video-from-the-grid"
+      ],
+      "endpoint": [
+        "cover-a-clip-the-device-cant-cut"
+      ]
+    },
+    "ComposePickVideoCover": {
+      "flows": [
+        "go-back-to-a-clip-wearing-its-cover"
+      ],
+      "endpoint": []
     },
     "ComposePickWeb": {
       "flows": [
@@ -2206,30 +4658,88 @@
         "set-the-cover-and-order"
       ]
     },
+    "ComposePickedErrors": {
+      "flows": [
+        "pick-files-that-are-refused"
+      ],
+      "endpoint": []
+    },
     "ComposeSeal": {
       "flows": [
+        "choose-a-posts-license",
         "give-a-vertical-clip-a-cover",
+        "keep-the-draft-when-signing-is-refused",
+        "mark-a-post-sensitive",
         "pick-a-kept-draft-back-up",
+        "pick-a-video-from-the-grid",
+        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
+        "publish-past-a-cited-post-that-never-landed",
+        "publish-with-the-key-elsewhere",
         "publish-words",
-        "set-your-own-stance-on-your-post"
+        "read-a-help-dialog",
+        "report-a-bug-from-the-seal",
+        "retry-a-post-after-the-network-drops",
+        "set-your-own-stance-on-your-post",
+        "try-again-after-a-bug"
       ],
       "endpoint": [
-        "set-your-own-stance-on-your-post"
+        "choose-a-posts-license",
+        "keep-the-draft-when-signing-is-refused",
+        "mark-a-post-sensitive",
+        "publish-past-a-cited-post-that-never-landed",
+        "publish-with-the-key-elsewhere",
+        "read-a-help-dialog",
+        "report-a-bug-from-the-seal",
+        "retry-a-post-after-the-network-drops",
+        "set-your-own-stance-on-your-post",
+        "try-again-after-a-bug"
+      ]
+    },
+    "ComposeSealCited": {
+      "flows": [
+        "look-over-many-staged-citations"
+      ],
+      "endpoint": [
+        "look-over-many-staged-citations"
+      ]
+    },
+    "ComposeSealTagged": {
+      "flows": [
+        "look-over-many-staged-tags"
+      ],
+      "endpoint": [
+        "look-over-many-staged-tags"
       ]
     },
     "ComposeSealUploading": {
       "flows": [
-        "publish-while-the-uploads-run"
+        "publish-while-the-uploads-run",
+        "step-back-from-the-gated-seal"
+      ],
+      "endpoint": [
+        "step-back-from-the-gated-seal"
+      ]
+    },
+    "ComposeSensitive": {
+      "flows": [
+        "mark-a-post-sensitive"
+      ],
+      "endpoint": []
+    },
+    "ComposeTags": {
+      "flows": [
+        "look-over-many-staged-tags"
       ],
       "endpoint": []
     },
     "ComposeUploading": {
       "flows": [
-        "describe-your-pictures"
+        "describe-your-pictures",
+        "step-back-from-the-gated-seal"
       ],
       "endpoint": []
     },
@@ -2237,9 +4747,31 @@
       "flows": [
         "cite-a-post",
         "mention-someone",
-        "publish-words"
+        "post-while-an-applicant",
+        "publish-words",
+        "swap-the-pictures-for-words",
+        "write-past-the-words-cap"
       ],
-      "endpoint": []
+      "endpoint": [
+        "swap-the-pictures-for-words",
+        "write-past-the-words-cap"
+      ]
+    },
+    "ComposeWordsCaps": {
+      "flows": [
+        "write-past-the-words-cap"
+      ],
+      "endpoint": [
+        "write-past-the-words-cap"
+      ]
+    },
+    "CoverCrop": {
+      "flows": [
+        "cover-a-clip-with-a-picture-of-your-own"
+      ],
+      "endpoint": [
+        "cover-a-clip-with-a-picture-of-your-own"
+      ]
     },
     "DeleteAccount": {
       "flows": [
@@ -2249,6 +4781,7 @@
     },
     "DeleteAccountCanceled": {
       "flows": [
+        "cancel-the-deletion-from-the-feed",
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
@@ -2261,7 +4794,17 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "cancel-the-deletion-from-the-feed"
+      ]
+    },
+    "DeleteAccountConfirmed": {
+      "flows": [
+        "confirm-the-account-deletion"
+      ],
+      "endpoint": [
+        "confirm-the-account-deletion"
+      ]
     },
     "DeleteAccountMail": {
       "flows": [
@@ -2271,20 +4814,74 @@
         "request-account-deletion"
       ]
     },
+    "DeleteAccountPending": {
+      "flows": [
+        "cancel-the-deletion-from-settings"
+      ],
+      "endpoint": []
+    },
+    "DiscardConfirm": {
+      "flows": [
+        "discard-a-reply"
+      ],
+      "endpoint": []
+    },
+    "EditActs": {
+      "flows": [
+        "see-what-a-post-edit-signs"
+      ],
+      "endpoint": []
+    },
     "EditCompose": {
       "flows": [
         "cite-something",
-        "edit-your-post"
+        "edit-a-post-down-to-words",
+        "edit-your-post",
+        "reorder-an-edits-pictures",
+        "revise-a-standing-citations-pair",
+        "see-what-a-post-edit-signs",
+        "untag-a-post-in-its-edit"
       ],
       "endpoint": [
-        "edit-your-post"
+        "edit-a-post-down-to-words",
+        "edit-your-post",
+        "reorder-an-edits-pictures",
+        "revise-a-standing-citations-pair",
+        "see-what-a-post-edit-signs",
+        "untag-a-post-in-its-edit"
       ]
     },
     "EditComposeUnchanged": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "leave-an-edit-unchanged"
+      ],
+      "endpoint": [
+        "leave-an-edit-unchanged"
+      ]
+    },
+    "EditComposeVideo": {
+      "flows": [
+        "edit-a-video-post"
+      ],
+      "endpoint": [
+        "edit-a-video-post"
+      ]
+    },
+    "EditPicked": {
+      "flows": [
+        "edit-a-post-down-to-words",
+        "reorder-an-edits-pictures"
       ],
       "endpoint": []
+    },
+    "EditWords": {
+      "flows": [
+        "edit-a-post-down-to-words"
+      ],
+      "endpoint": [
+        "edit-a-post-down-to-words"
+      ]
     },
     "Explore": {
       "flows": [
@@ -2293,11 +4890,15 @@
         "publish-a-video",
         "publish-words",
         "search-and-open-a-post",
-        "search-into-a-thread"
+        "search-for-a-name-nothing-carries",
+        "search-into-a-thread",
+        "walk-your-topics"
       ],
       "endpoint": [
         "search-and-open-a-post",
-        "search-into-a-thread"
+        "search-for-a-name-nothing-carries",
+        "search-into-a-thread",
+        "walk-your-topics"
       ]
     },
     "ExploreFilter": {
@@ -2311,7 +4912,8 @@
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "search-for-a-name-nothing-carries"
       ],
       "endpoint": []
     },
@@ -2323,10 +4925,14 @@
         "publish-a-video",
         "publish-words",
         "search-and-open-a-post",
+        "search-comments-without-a-scope",
+        "search-for-a-name-nothing-carries",
         "search-into-a-thread"
       ],
       "endpoint": [
-        "narrow-a-search"
+        "narrow-a-search",
+        "search-comments-without-a-scope",
+        "search-for-a-name-nothing-carries"
       ]
     },
     "ExploreUnscoped": {
@@ -2334,7 +4940,8 @@
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "search-comments-without-a-scope"
       ],
       "endpoint": []
     },
@@ -2343,16 +4950,28 @@
         "close-the-filter-unchanged",
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
+        "find-no-notifications-yet",
         "follow-a-citation",
+        "hide-someone-from-the-feed",
+        "jump-back-to-the-top",
+        "let-every-kind-into-the-feed",
+        "meet-the-write-rule-on-the-pad",
         "narrow-the-feed",
+        "narrow-the-feed-to-one-topic",
         "open-a-posts-pictures",
         "open-a-topic",
+        "open-the-wallet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-a-posts-license",
         "reply-to-a-post",
+        "retry-a-stance-that-didnt-sign",
+        "sign-back-in-after-the-session-ran-out",
         "sign-in",
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "undo-the-narrowing",
@@ -2365,9 +4984,21 @@
         "close-the-filter-unchanged",
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
+        "find-no-notifications-yet",
+        "hide-someone-from-the-feed",
+        "jump-back-to-the-top",
+        "let-every-kind-into-the-feed",
+        "meet-the-write-rule-on-the-pad",
         "narrow-the-feed",
+        "narrow-the-feed-to-one-topic",
         "open-a-topic",
+        "open-the-wallet",
+        "read-a-posts-license",
+        "retry-a-stance-that-didnt-sign",
+        "sign-back-in-after-the-session-ran-out",
         "sign-in",
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
         "undo-the-narrowing",
         "verify-the-email-as-a-member",
         "vouch-back-for-your-inviter"
@@ -2375,6 +5006,7 @@
     },
     "FeedBare": {
       "flows": [
+        "a-guest-meets-the-join-ask",
         "follow-a-citation",
         "guest-turns-applicant",
         "open-a-posts-pictures",
@@ -2382,11 +5014,14 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "a-guest-meets-the-join-ask"
+      ]
     },
     "FeedCover": {
       "flows": [
         "open-a-posts-pictures",
+        "play-a-clip-that-didnt-autoplay",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -2397,10 +5032,14 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "play-a-clip-that-didnt-autoplay"
+      ]
     },
     "FeedDeleting": {
       "flows": [
+        "cancel-the-deletion-from-the-feed",
+        "confirm-the-account-deletion",
         "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
@@ -2413,7 +5052,10 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "cancel-the-deletion-from-the-feed",
+        "confirm-the-account-deletion"
+      ]
     },
     "FeedEntry": {
       "flows": [
@@ -2432,9 +5074,12 @@
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "read-a-score-whose-paths-moved-on"
       ],
-      "endpoint": []
+      "endpoint": [
+        "read-a-score-whose-paths-moved-on"
+      ]
     },
     "FeedFar": {
       "flows": [
@@ -2457,6 +5102,7 @@
     },
     "FeedGallery": {
       "flows": [
+        "page-through-a-gallery",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -2466,10 +5112,15 @@
         "trace-a-score-to-its-records",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "page-through-a-gallery"
+      ]
     },
     "FeedHidden": {
       "flows": [
+        "hide-a-deleted-account",
+        "hide-someone-from-the-feed",
+        "hide-someone-from-their-profile",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -2481,11 +5132,16 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "hide-a-deleted-account",
+        "hide-someone-from-the-feed",
+        "hide-someone-from-their-profile"
+      ]
     },
     "FeedKinds": {
       "flows": [
         "follow-a-citation",
+        "let-every-kind-into-the-feed",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -2496,7 +5152,9 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "let-every-kind-into-the-feed"
+      ]
     },
     "FeedNarrowed": {
       "flows": [
@@ -2534,6 +5192,7 @@
     "FeedScrolled": {
       "flows": [
         "follow-a-citation",
+        "jump-back-to-the-top",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -2545,6 +5204,14 @@
         "visit-an-author",
         "watch-the-stream"
       ],
+      "endpoint": [
+        "jump-back-to-the-top"
+      ]
+    },
+    "FeedSecurityNotice": {
+      "flows": [
+        "meet-the-security-notice"
+      ],
       "endpoint": []
     },
     "FeedSheet": {
@@ -2552,7 +5219,9 @@
         "close-the-filter-unchanged",
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
-        "narrow-the-feed"
+        "let-every-kind-into-the-feed",
+        "narrow-the-feed",
+        "narrow-the-feed-to-one-topic"
       ],
       "endpoint": [
         "close-the-filter-unchanged"
@@ -2560,6 +5229,7 @@
     },
     "FeedTopic": {
       "flows": [
+        "narrow-the-feed-to-one-topic",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -2569,12 +5239,15 @@
         "trace-a-score-to-its-records",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "narrow-the-feed-to-one-topic"
+      ]
     },
     "FeedUnread": {
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "open-what-is-waiting",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -2585,7 +5258,9 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "open-what-is-waiting"
+      ]
     },
     "FeedWordsSensitive": {
       "flows": [
@@ -2596,45 +5271,75 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "reveal-a-sensitive-words-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reveal-a-sensitive-words-post"
+      ]
     },
     "GuestGate": {
       "flows": [
+        "a-guest-meets-the-join-ask",
         "guest-turns-applicant",
         "join-with-the-link-in-hand"
       ],
       "endpoint": []
     },
+    "HelpDialog": {
+      "flows": [
+        "read-a-help-dialog"
+      ],
+      "endpoint": [
+        "read-a-help-dialog"
+      ]
+    },
     "History": {
       "flows": [
+        "filter-your-history",
+        "filter-your-history-to-nothing",
         "follow-a-citation",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-your-history",
         "reply-to-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "read-your-history"
+      ]
     },
     "HistoryEmpty": {
       "flows": [
+        "find-nothing-read-yet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
+      "endpoint": [
+        "find-nothing-read-yet"
+      ]
+    },
+    "HistoryFilter": {
+      "flows": [
+        "filter-your-history",
+        "filter-your-history-to-nothing"
+      ],
       "endpoint": []
     },
     "HistoryNone": {
       "flows": [
+        "filter-your-history-to-nothing",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -2644,59 +5349,148 @@
     },
     "InviteCreated": {
       "flows": [
-        "send-someone-an-invite"
+        "send-someone-an-invite",
+        "send-your-first-invite",
+        "set-how-long-an-invite-lasts"
       ],
       "endpoint": [
-        "send-someone-an-invite"
+        "send-someone-an-invite",
+        "send-your-first-invite",
+        "set-how-long-an-invite-lasts"
       ]
     },
     "InviteEntry": {
       "flows": [
+        "fix-the-join-forms-errors",
         "guest-turns-applicant",
-        "join-with-an-invite"
+        "join-with-an-invite",
+        "paste-something-that-isnt-a-link"
       ],
       "endpoint": [
-        "join-with-an-invite"
+        "fix-the-join-forms-errors",
+        "join-with-an-invite",
+        "paste-something-that-isnt-a-link"
       ]
+    },
+    "InviteEntryError": {
+      "flows": [
+        "paste-something-that-isnt-a-link"
+      ],
+      "endpoint": []
+    },
+    "InviteExpiry": {
+      "flows": [
+        "set-how-long-an-invite-lasts"
+      ],
+      "endpoint": []
     },
     "InviteNew": {
       "flows": [
-        "send-someone-an-invite"
+        "send-someone-an-invite",
+        "send-your-first-invite",
+        "set-how-long-an-invite-lasts"
       ],
       "endpoint": []
     },
     "Invites": {
       "flows": [
         "answer-someones-ask-link",
+        "close-a-links-applications",
+        "close-an-application",
         "send-someone-an-invite",
+        "set-how-long-an-invite-lasts",
         "vouch-an-applicant-in"
       ],
       "endpoint": [
         "answer-someones-ask-link",
+        "close-a-links-applications",
+        "close-an-application",
+        "set-how-long-an-invite-lasts",
         "vouch-an-applicant-in"
       ]
     },
+    "InvitesEmpty": {
+      "flows": [
+        "send-your-first-invite"
+      ],
+      "endpoint": []
+    },
     "Join": {
       "flows": [
+        "arrive-through-a-dead-invite-link",
+        "arrive-through-an-invite-link",
+        "fix-the-join-forms-errors",
         "guest-turns-applicant",
         "join-with-an-invite",
-        "join-with-the-link-in-hand"
+        "join-with-the-link-in-hand",
+        "paste-something-that-isnt-a-link"
       ],
       "endpoint": [
-        "join-with-the-link-in-hand"
+        "arrive-through-a-dead-invite-link",
+        "join-with-the-link-in-hand",
+        "paste-something-that-isnt-a-link"
+      ]
+    },
+    "JoinErrors": {
+      "flows": [
+        "fix-the-join-forms-errors"
+      ],
+      "endpoint": []
+    },
+    "JoinInvalid": {
+      "flows": [
+        "arrive-through-a-dead-invite-link"
+      ],
+      "endpoint": []
+    },
+    "KeptPicksReview": {
+      "flows": [
+        "sign-the-picks-kept-while-the-key-was-away"
+      ],
+      "endpoint": []
+    },
+    "KeptPicksSeal": {
+      "flows": [
+        "sign-the-picks-kept-while-the-key-was-away"
+      ],
+      "endpoint": [
+        "sign-the-picks-kept-while-the-key-was-away"
       ]
     },
     "KeyCeremony": {
       "flows": [
-        "make-your-key"
+        "make-a-new-key-in-place-of-the-attached-one",
+        "make-your-key",
+        "make-your-key-without-a-backup",
+        "type-the-recovery-code-back-wrong"
       ],
-      "endpoint": []
+      "endpoint": [
+        "make-your-key-without-a-backup"
+      ]
+    },
+    "KeyCeremonyUnsupported": {
+      "flows": [
+        "meet-a-browser-that-cant-hold-a-key"
+      ],
+      "endpoint": [
+        "meet-a-browser-that-cant-hold-a-key"
+      ]
     },
     "KeyConfirm": {
       "flows": [
-        "make-your-key"
+        "make-a-new-key-in-place-of-the-attached-one",
+        "make-your-key",
+        "type-the-recovery-code-back-wrong"
       ],
       "endpoint": []
+    },
+    "KeyDecline": {
+      "flows": [
+        "make-your-key-without-a-backup"
+      ],
+      "endpoint": [
+        "make-your-key-without-a-backup"
+      ]
     },
     "KeyElsewhere": {
       "flows": [
@@ -2707,18 +5501,34 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "restore-after-a-mistyped-code",
         "restore-your-key",
         "sign-in-with-the-key-elsewhere",
+        "sign-the-picks-kept-while-the-key-was-away",
+        "take-a-stance-without-the-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
       "endpoint": [
-        "sign-in-with-the-key-elsewhere"
+        "restore-after-a-mistyped-code",
+        "sign-in-with-the-key-elsewhere",
+        "sign-the-picks-kept-while-the-key-was-away",
+        "take-a-stance-without-the-key"
+      ]
+    },
+    "KeyElsewhereNoBackup": {
+      "flows": [
+        "sign-in-where-no-backup-can-restore"
+      ],
+      "endpoint": [
+        "sign-in-where-no-backup-can-restore"
       ]
     },
     "Main": {
       "flows": [
+        "arrive-through-a-dead-invite-link",
+        "arrive-through-an-invite-link",
         "follow-a-citation",
         "join-with-the-link-in-hand",
         "open-a-posts-pictures",
@@ -2726,43 +5536,136 @@
         "visit-an-author",
         "watch-the-stream"
       ],
+      "endpoint": [
+        "arrive-through-a-dead-invite-link",
+        "arrive-through-an-invite-link"
+      ]
+    },
+    "NetworkError": {
+      "flows": [
+        "retry-a-post-after-the-network-drops"
+      ],
+      "endpoint": []
+    },
+    "NoScreenLock": {
+      "flows": [
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "see-your-key-on-a-phone-without-a-lock"
+      ],
       "endpoint": []
     },
     "Notifications": {
       "flows": [
+        "ask-another-member-to-vouch",
+        "open-what-is-waiting",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "ask-another-member-to-vouch",
+        "open-what-is-waiting"
+      ]
     },
     "NotificationsEmpty": {
       "flows": [
+        "find-no-notifications-yet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
+      "endpoint": [
+        "find-no-notifications-yet"
+      ]
+    },
+    "OnboardingLayers": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
       "endpoint": []
+    },
+    "OnboardingPublic": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": []
+    },
+    "OnboardingShape": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": []
+    },
+    "OnboardingSteps": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": [
+        "watch-the-intro"
+      ]
+    },
+    "OnboardingVouch": {
+      "flows": [
+        "watch-the-intro",
+        "watch-the-intro-again"
+      ],
+      "endpoint": []
+    },
+    "PadFailed": {
+      "flows": [
+        "retry-a-stance-that-didnt-sign"
+      ],
+      "endpoint": [
+        "retry-a-stance-that-didnt-sign"
+      ]
     },
     "PadKeyAbsent": {
       "flows": [
-        "restore-your-key"
+        "restore-your-key",
+        "take-a-stance-without-the-key"
       ],
-      "endpoint": []
+      "endpoint": [
+        "take-a-stance-without-the-key"
+      ]
+    },
+    "PadStanding": {
+      "flows": [
+        "revise-a-standing-opinion",
+        "walk-back-an-opinion"
+      ],
+      "endpoint": [
+        "revise-a-standing-opinion"
+      ]
+    },
+    "PadWriteRule": {
+      "flows": [
+        "meet-the-write-rule-on-the-pad"
+      ],
+      "endpoint": [
+        "meet-the-write-rule-on-the-pad"
+      ]
     },
     "PostDetail": {
       "flows": [
         "follow-a-citation",
+        "follow-the-already-published-marker",
         "open-a-posts-pictures",
+        "open-something-you-saved",
         "open-the-viewer",
+        "page-through-a-gallery",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
         "search-and-open-a-post",
+        "see-what-cites-a-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
@@ -2770,9 +5673,13 @@
       ],
       "endpoint": [
         "follow-a-citation",
+        "follow-the-already-published-marker",
         "open-a-posts-pictures",
+        "open-something-you-saved",
         "open-the-viewer",
+        "page-through-a-gallery",
         "search-and-open-a-post",
+        "see-what-cites-a-post",
         "who-holds-an-opinion-on-this"
       ]
     },
@@ -2784,12 +5691,16 @@
         "publish-words",
         "reel-to-detail",
         "reply-to-a-post",
+        "reveal-a-sensitive-video-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-a-clip-full-screen"
       ],
       "endpoint": [
-        "reel-to-detail"
+        "reel-to-detail",
+        "reveal-a-sensitive-video-post",
+        "watch-a-clip-full-screen"
       ]
     },
     "PostDetailVideoSensitive": {
@@ -2799,20 +5710,34 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "reveal-a-sensitive-video-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reveal-a-sensitive-video-post"
+      ]
+    },
+    "PostLicense": {
+      "flows": [
+        "read-a-posts-license"
+      ],
+      "endpoint": [
+        "read-a-posts-license"
+      ]
     },
     "PostNotFound": {
       "flows": [
+        "meet-a-post-link-that-names-nothing",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-post-link-that-names-nothing"
+      ]
     },
     "PostOpinions": {
       "flows": [
@@ -2824,30 +5749,55 @@
     },
     "Profile": {
       "flows": [
+        "close-a-links-applications",
+        "close-an-application",
         "edit-avatar-standalone",
         "edit-avatar-via-edit-screen",
         "edit-your-profile",
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "find-nothing-read-yet",
+        "find-nothing-saved-yet",
+        "load-more-of-a-chronicle-after-a-fault",
+        "open-something-you-saved",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-your-history",
         "see-who-stands-with-someone",
         "send-someone-an-invite",
+        "send-your-first-invite",
+        "unsave-and-undo",
         "vouch-an-applicant-in"
       ],
       "endpoint": [
+        "close-a-links-applications",
+        "close-an-application",
         "edit-avatar-standalone",
         "edit-avatar-via-edit-screen",
         "edit-your-profile",
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "find-nothing-read-yet",
+        "find-nothing-saved-yet",
+        "load-more-of-a-chronicle-after-a-fault",
+        "open-something-you-saved",
+        "read-your-history",
         "send-someone-an-invite",
+        "send-your-first-invite",
+        "unsave-and-undo",
         "vouch-an-applicant-in"
       ]
     },
     "ProfileApplicant": {
       "flows": [
+        "read-your-own-page-as-an-applicant",
         "see-who-stands-with-someone"
       ],
-      "endpoint": []
+      "endpoint": [
+        "read-your-own-page-as-an-applicant"
+      ]
     },
     "ProfileComments": {
       "flows": [
@@ -2863,12 +5813,21 @@
     },
     "ProfileDeleted": {
       "flows": [
+        "hide-a-deleted-account",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
+      ],
+      "endpoint": [
+        "hide-a-deleted-account"
+      ]
+    },
+    "ProfileDeletedMenu": {
+      "flows": [
+        "hide-a-deleted-account"
       ],
       "endpoint": []
     },
@@ -2891,34 +5850,54 @@
     },
     "ProfileMenu": {
       "flows": [
+        "hide-someone-from-their-profile",
         "mention-someone"
       ],
       "endpoint": []
     },
+    "ProfileMoreFailed": {
+      "flows": [
+        "load-more-of-a-chronicle-after-a-fault"
+      ],
+      "endpoint": [
+        "load-more-of-a-chronicle-after-a-fault"
+      ]
+    },
     "ProfileNotFound": {
       "flows": [
+        "meet-a-profile-link-that-names-nobody",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-profile-link-that-names-nobody"
+      ]
     },
     "ProfileOther": {
       "flows": [
         "find-the-thread-a-comment-answers",
+        "hide-someone-from-their-profile",
+        "meet-a-profile-the-server-didnt-answer",
+        "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-someones-posts",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "visit-an-author"
       ],
       "endpoint": [
         "find-the-thread-a-comment-answers",
+        "hide-someone-from-their-profile",
+        "meet-a-profile-the-server-didnt-answer",
+        "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
+        "read-someones-posts",
         "visit-an-author"
       ]
     },
@@ -2928,7 +5907,24 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "see-who-stands-with-someone"
+        "revise-a-standing-opinion",
+        "see-who-stands-with-someone",
+        "walk-back-an-opinion"
+      ],
+      "endpoint": [
+        "revise-a-standing-opinion",
+        "walk-back-an-opinion"
+      ]
+    },
+    "ProfileOwnMenu": {
+      "flows": [
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "find-nothing-read-yet",
+        "find-nothing-saved-yet",
+        "open-something-you-saved",
+        "read-your-history",
+        "unsave-and-undo"
       ],
       "endpoint": []
     },
@@ -2940,6 +5936,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-someones-posts",
         "reply-to-a-post",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
@@ -2947,7 +5944,9 @@
         "trace-a-score-to-its-records",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "read-someones-posts"
+      ]
     },
     "ProfileStances": {
       "flows": [
@@ -2963,12 +5962,15 @@
     },
     "ProfileUnreachable": {
       "flows": [
+        "meet-a-profile-the-server-didnt-answer",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-profile-the-server-didnt-answer"
+      ]
     },
     "RankHop": {
       "flows": [
@@ -3004,23 +6006,42 @@
     },
     "ReaderPostMenu": {
       "flows": [
-        "cite-a-post"
+        "cite-a-post",
+        "hide-someone-from-the-feed",
+        "read-a-posts-license"
       ],
       "endpoint": []
     },
     "ReaderPostMenuNarrow": {
       "flows": [
-        "cite-a-post"
+        "cite-a-post",
+        "share-from-the-narrow-menu"
       ],
-      "endpoint": []
+      "endpoint": [
+        "share-from-the-narrow-menu"
+      ]
     },
     "RecoveryCode": {
       "flows": [
+        "make-a-new-key-in-place-of-the-attached-one",
         "make-a-recovery-code-later",
-        "make-your-key"
+        "make-your-key",
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "type-the-recovery-code-back-wrong"
       ],
       "endpoint": [
+        "make-a-new-key-in-place-of-the-attached-one",
         "make-your-key"
+      ]
+    },
+    "RecoveryCodeMismatch": {
+      "flows": [
+        "type-the-recovery-code-back-wrong"
+      ],
+      "endpoint": [
+        "type-the-recovery-code-back-wrong"
       ]
     },
     "Reel": {
@@ -3031,12 +6052,14 @@
         "publish-words",
         "reel-to-detail",
         "reply-to-a-post",
+        "reveal-a-sensitive-clip-in-the-stream",
         "take-a-stance-on-a-post",
         "visit-an-author",
         "watch-the-stream"
       ],
       "endpoint": [
         "reel-to-detail",
+        "reveal-a-sensitive-clip-in-the-stream",
         "watch-the-stream"
       ]
     },
@@ -3047,10 +6070,31 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "reveal-a-sensitive-clip-in-the-stream",
         "take-a-stance-on-a-post",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reveal-a-sensitive-clip-in-the-stream"
+      ]
+    },
+    "RefPair": {
+      "flows": [
+        "look-over-many-staged-citations",
+        "pair-a-staged-citation"
+      ],
+      "endpoint": [
+        "look-over-many-staged-citations",
+        "pair-a-staged-citation"
+      ]
+    },
+    "RefPairEdit": {
+      "flows": [
+        "revise-a-standing-citations-pair"
+      ],
+      "endpoint": [
+        "revise-a-standing-citations-pair"
+      ]
     },
     "ReferencePicker": {
       "flows": [
@@ -3067,6 +6111,18 @@
       "endpoint": [
         "follow-a-citation"
       ]
+    },
+    "RejectAllConfirm": {
+      "flows": [
+        "close-a-links-applications"
+      ],
+      "endpoint": []
+    },
+    "RejectConfirm": {
+      "flows": [
+        "close-an-application"
+      ],
+      "endpoint": []
     },
     "RemoveConfirm": {
       "flows": [
@@ -3100,23 +6156,34 @@
     },
     "ReplyCited": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "reply-carrying-a-citation"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reply-carrying-a-citation"
+      ]
     },
     "ReplyCitedMany": {
       "flows": [
-        "cite-something"
+        "cite-something",
+        "reply-carrying-many-citations"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reply-carrying-many-citations"
+      ]
     },
     "ReplyCompose": {
       "flows": [
+        "discard-a-reply",
         "reply-to-a-post",
         "reply-with-a-video",
+        "reply-with-files-refused",
         "reply-with-pictures"
       ],
-      "endpoint": []
+      "endpoint": [
+        "discard-a-reply",
+        "reply-with-files-refused"
+      ]
     },
     "ReplyComposeComment": {
       "flows": [
@@ -3126,24 +6193,37 @@
     },
     "ReplyEntry": {
       "flows": [
+        "discard-a-reply",
         "find-the-thread-a-comment-answers",
+        "read-a-comments-license",
+        "reply-at-the-door-without-the-key",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-with-a-video",
         "reply-with-pictures",
-        "search-into-a-thread"
+        "save-a-comment",
+        "search-into-a-thread",
+        "see-what-cites-a-comment",
+        "see-who-holds-an-opinion-on-a-comment"
       ],
       "endpoint": [
+        "discard-a-reply",
         "find-the-thread-a-comment-answers",
+        "read-a-comments-license",
+        "reply-at-the-door-without-the-key",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-with-a-video",
         "reply-with-pictures",
-        "search-into-a-thread"
+        "save-a-comment",
+        "search-into-a-thread",
+        "see-what-cites-a-comment",
+        "see-who-holds-an-opinion-on-a-comment"
       ]
     },
     "ReplyKeyAbsent": {
       "flows": [
+        "reply-at-the-door-without-the-key",
         "restore-your-key"
       ],
       "endpoint": []
@@ -3160,7 +6240,23 @@
     },
     "ReplyMediaErrors": {
       "flows": [
-        "describe-your-pictures"
+        "describe-your-pictures",
+        "reply-with-files-refused"
+      ],
+      "endpoint": []
+    },
+    "ReplyPad": {
+      "flows": [
+        "adjust-a-replys-stance",
+        "read-the-reply-pads-help"
+      ],
+      "endpoint": [
+        "read-the-reply-pads-help"
+      ]
+    },
+    "ReplyPadHelp": {
+      "flows": [
+        "read-the-reply-pads-help"
       ],
       "endpoint": []
     },
@@ -3185,13 +6281,20 @@
     },
     "ReplySeal": {
       "flows": [
+        "adjust-a-replys-stance",
         "cite-something",
         "reply-from-the-browser",
         "reply-to-a-post",
         "reply-with-a-video",
-        "reply-with-pictures"
+        "reply-with-files-refused",
+        "reply-with-pictures",
+        "reply-with-the-key-elsewhere"
       ],
-      "endpoint": []
+      "endpoint": [
+        "adjust-a-replys-stance",
+        "reply-with-files-refused",
+        "reply-with-the-key-elsewhere"
+      ]
     },
     "ReplySealComment": {
       "flows": [
@@ -3202,34 +6305,52 @@
     },
     "ReplySealKeyAbsent": {
       "flows": [
+        "reply-with-the-key-elsewhere",
         "restore-your-key"
       ],
       "endpoint": []
     },
+    "ReplySealUploadFailed": {
+      "flows": [
+        "sign-a-reply-after-an-upload-failed"
+      ],
+      "endpoint": [
+        "sign-a-reply-after-an-upload-failed"
+      ]
+    },
     "ReplySealUploading": {
       "flows": [
-        "reply-while-the-pictures-upload"
+        "reply-while-the-pictures-upload",
+        "sign-a-reply-after-an-upload-failed"
       ],
       "endpoint": []
     },
     "ReplySettled": {
       "flows": [
+        "edit-a-video-comment",
         "edit-your-comment",
+        "reply-carrying-a-citation",
+        "reply-carrying-many-citations",
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
         "reply-with-a-video",
-        "reply-with-pictures"
+        "reply-with-pictures",
+        "sign-a-reply-after-an-upload-failed"
       ],
       "endpoint": [
+        "edit-a-video-comment",
         "edit-your-comment",
+        "reply-carrying-a-citation",
+        "reply-carrying-many-citations",
         "reply-from-the-browser",
         "reply-to-a-comment",
         "reply-to-a-post",
         "reply-while-the-pictures-upload",
         "reply-with-a-video",
-        "reply-with-pictures"
+        "reply-with-pictures",
+        "sign-a-reply-after-an-upload-failed"
       ]
     },
     "ReplyVideo": {
@@ -3238,53 +6359,229 @@
       ],
       "endpoint": []
     },
-    "Restore": {
+    "ReplyVideoFailed": {
       "flows": [
-        "restore-your-key"
+        "retry-a-clip-that-didnt-upload"
       ],
       "endpoint": [
-        "restore-your-key"
+        "retry-a-clip-that-didnt-upload"
       ]
+    },
+    "ReportProblem": {
+      "flows": [
+        "report-a-problem"
+      ],
+      "endpoint": [
+        "report-a-problem"
+      ]
+    },
+    "ReportProblemEmpty": {
+      "flows": [
+        "report-a-bug-from-the-seal",
+        "report-a-problem"
+      ],
+      "endpoint": [
+        "report-a-bug-from-the-seal"
+      ]
+    },
+    "Reset": {
+      "flows": [
+        "meet-a-spent-reset-link",
+        "request-a-password-reset"
+      ],
+      "endpoint": [
+        "meet-a-spent-reset-link",
+        "request-a-password-reset"
+      ]
+    },
+    "ResetExpired": {
+      "flows": [
+        "meet-a-spent-reset-link"
+      ],
+      "endpoint": [
+        "meet-a-spent-reset-link"
+      ]
+    },
+    "ResetNew": {
+      "flows": [
+        "set-a-new-password"
+      ],
+      "endpoint": [
+        "set-a-new-password"
+      ]
+    },
+    "Restore": {
+      "flows": [
+        "publish-with-the-key-elsewhere",
+        "reply-at-the-door-without-the-key",
+        "reply-with-the-key-elsewhere",
+        "restore-after-a-mistyped-code",
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "restore-your-key",
+        "restore-your-key-as-an-applicant",
+        "sign-the-picks-kept-while-the-key-was-away"
+      ],
+      "endpoint": [
+        "publish-with-the-key-elsewhere",
+        "reply-at-the-door-without-the-key",
+        "reply-with-the-key-elsewhere",
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "restore-your-key",
+        "restore-your-key-as-an-applicant"
+      ]
+    },
+    "RestoreError": {
+      "flows": [
+        "restore-after-a-mistyped-code"
+      ],
+      "endpoint": [
+        "restore-after-a-mistyped-code"
+      ]
+    },
+    "RestoreLength": {
+      "flows": [
+        "restore-after-a-mistyped-code"
+      ],
+      "endpoint": []
     },
     "Saved": {
       "flows": [
+        "open-something-you-saved",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "unsave-and-undo"
       ],
-      "endpoint": []
+      "endpoint": [
+        "unsave-and-undo"
+      ]
     },
     "SavedEmpty": {
       "flows": [
+        "find-nothing-saved-yet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "find-nothing-saved-yet"
+      ]
     },
     "SavedUndo": {
       "flows": [
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "unsave-and-undo"
+      ],
+      "endpoint": []
+    },
+    "SealDiscardConfirm": {
+      "flows": [
+        "discard-the-post-from-the-bug-notice"
+      ],
+      "endpoint": [
+        "discard-the-post-from-the-bug-notice"
+      ]
+    },
+    "SealFaultBug": {
+      "flows": [
+        "discard-the-post-from-the-bug-notice",
+        "report-a-bug-from-the-seal",
+        "try-again-after-a-bug"
+      ],
+      "endpoint": [
+        "discard-the-post-from-the-bug-notice"
+      ]
+    },
+    "SealFaultRow": {
+      "flows": [
+        "publish-past-a-cited-post-that-never-landed"
       ],
       "endpoint": []
     },
     "Settings": {
       "flows": [
+        "call-off-an-email-change",
+        "cancel-the-deletion-from-settings",
+        "change-your-email",
+        "change-your-handle",
+        "change-your-password",
+        "confirm-the-email-change-from-the-new-address",
+        "finish-a-pending-email-change",
         "make-a-recovery-code-later",
-        "request-account-deletion"
+        "meet-the-security-notice",
+        "read-about-cogra",
+        "read-whats-new",
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "report-a-problem",
+        "request-account-deletion",
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock",
+        "set-the-default-license",
+        "set-what-every-feed-opens-with",
+        "sign-out",
+        "sign-out-without-a-backup",
+        "unhide-an-account",
+        "watch-the-intro-again"
       ],
       "endpoint": [
+        "call-off-an-email-change",
+        "cancel-the-deletion-from-settings",
+        "change-your-email",
+        "change-your-handle",
+        "change-your-password",
+        "confirm-the-email-change-from-the-new-address",
+        "finish-a-pending-email-change",
         "make-a-recovery-code-later",
-        "request-account-deletion"
+        "meet-the-security-notice",
+        "read-about-cogra",
+        "read-whats-new",
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock",
+        "report-a-problem",
+        "request-account-deletion",
+        "restore-the-key-from-the-recovery-code-row",
+        "restore-the-key-from-the-your-key-row",
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock",
+        "set-the-default-license",
+        "set-what-every-feed-opens-with",
+        "sign-out",
+        "sign-out-without-a-backup",
+        "unhide-an-account",
+        "watch-the-intro-again"
       ]
+    },
+    "SettingsBackup": {
+      "flows": [
+        "replace-the-recovery-code",
+        "replace-the-recovery-code-after-a-refused-one",
+        "replace-the-recovery-code-on-a-phone-without-a-lock"
+      ],
+      "endpoint": []
+    },
+    "SettingsBackupError": {
+      "flows": [
+        "replace-the-recovery-code-after-a-refused-one"
+      ],
+      "endpoint": []
     },
     "SettingsBackupKeyAbsent": {
       "flows": [
+        "restore-the-key-from-the-recovery-code-row",
         "restore-your-key"
       ],
       "endpoint": []
@@ -3295,16 +6592,123 @@
       ],
       "endpoint": []
     },
-    "SignIn": {
+    "SettingsDeleting": {
       "flows": [
-        "guest-turns-applicant",
-        "sign-in",
-        "sign-in-with-the-key-elsewhere"
+        "cancel-the-deletion-from-settings"
       ],
       "endpoint": [
+        "cancel-the-deletion-from-settings"
+      ]
+    },
+    "SettingsEmailPending": {
+      "flows": [
+        "finish-a-pending-email-change"
+      ],
+      "endpoint": [
+        "finish-a-pending-email-change"
+      ]
+    },
+    "SettingsHidden": {
+      "flows": [
+        "unhide-an-account"
+      ],
+      "endpoint": [
+        "unhide-an-account"
+      ]
+    },
+    "SettingsLicense": {
+      "flows": [
+        "set-the-default-license"
+      ],
+      "endpoint": []
+    },
+    "SettingsReading": {
+      "flows": [
+        "set-what-every-feed-opens-with"
+      ],
+      "endpoint": []
+    },
+    "SeveranceConfirm": {
+      "flows": [
+        "disconnect-from-a-topic",
+        "walk-back-an-opinion"
+      ],
+      "endpoint": [
+        "disconnect-from-a-topic",
+        "walk-back-an-opinion"
+      ]
+    },
+    "SignIn": {
+      "flows": [
+        "a-guest-meets-the-join-ask",
         "guest-turns-applicant",
+        "meet-the-security-notice",
+        "open-the-new-address-link-signed-out",
+        "request-a-password-reset",
+        "set-a-new-password",
         "sign-in",
-        "sign-in-with-the-key-elsewhere"
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
+        "sign-in-where-no-backup-can-restore",
+        "sign-in-with-the-key-elsewhere",
+        "sign-out",
+        "sign-out-without-a-backup"
+      ],
+      "endpoint": [
+        "a-guest-meets-the-join-ask",
+        "guest-turns-applicant",
+        "meet-the-security-notice",
+        "request-a-password-reset",
+        "set-a-new-password",
+        "sign-in",
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
+        "sign-in-where-no-backup-can-restore",
+        "sign-in-with-the-key-elsewhere",
+        "sign-out",
+        "sign-out-without-a-backup"
+      ]
+    },
+    "SignInError": {
+      "flows": [
+        "sign-in-after-a-wrong-password"
+      ],
+      "endpoint": []
+    },
+    "SignInExpired": {
+      "flows": [
+        "sign-back-in-after-the-session-ran-out"
+      ],
+      "endpoint": [
+        "sign-back-in-after-the-session-ran-out"
+      ]
+    },
+    "SignInLimited": {
+      "flows": [
+        "sign-in-after-the-backoff"
+      ],
+      "endpoint": []
+    },
+    "SignOutConfirm": {
+      "flows": [
+        "sign-out-without-a-backup"
+      ],
+      "endpoint": []
+    },
+    "TagPad": {
+      "flows": [
+        "untag-a-post-in-its-edit"
+      ],
+      "endpoint": [
+        "untag-a-post-in-its-edit"
+      ]
+    },
+    "TagPadCompose": {
+      "flows": [
+        "look-over-many-staged-tags"
+      ],
+      "endpoint": [
+        "look-over-many-staged-tags"
       ]
     },
     "TagPage": {
@@ -3319,21 +6723,66 @@
         "open-a-topic"
       ]
     },
+    "TagPageEmpty": {
+      "flows": [
+        "hold-a-topic-nothing-carries"
+      ],
+      "endpoint": [
+        "hold-a-topic-nothing-carries"
+      ]
+    },
     "TagPageHeld": {
       "flows": [
+        "add-to-a-held-topic",
+        "disconnect-from-a-topic",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
-        "visit-an-author"
+        "visit-an-author",
+        "walk-your-topics"
       ],
-      "endpoint": []
+      "endpoint": [
+        "add-to-a-held-topic",
+        "disconnect-from-a-topic"
+      ]
+    },
+    "TagPageHeldPad": {
+      "flows": [
+        "add-to-a-held-topic",
+        "disconnect-from-a-topic",
+        "walk-your-topics"
+      ],
+      "endpoint": [
+        "add-to-a-held-topic",
+        "walk-your-topics"
+      ]
     },
     "TagPicker": {
       "flows": [
-        "add-a-topic"
+        "add-a-topic",
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
       ],
       "endpoint": [
-        "add-a-topic"
+        "add-a-topic",
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
+      ]
+    },
+    "TagPickerRefused": {
+      "flows": [
+        "meet-a-tag-name-it-cant-take"
+      ],
+      "endpoint": []
+    },
+    "TagPickerTyping": {
+      "flows": [
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
+      ],
+      "endpoint": [
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
       ]
     },
     "Verified": {
@@ -3346,12 +6795,44 @@
         "verify-the-email-as-a-member"
       ]
     },
+    "VerifiedApp": {
+      "flows": [
+        "verify-the-email-in-the-app"
+      ],
+      "endpoint": [
+        "verify-the-email-in-the-app"
+      ]
+    },
+    "VerifyExpired": {
+      "flows": [
+        "meet-a-spent-verification-link"
+      ],
+      "endpoint": [
+        "meet-a-spent-verification-link"
+      ]
+    },
+    "ViewerLandscape": {
+      "flows": [
+        "turn-the-viewer"
+      ],
+      "endpoint": [
+        "turn-the-viewer"
+      ]
+    },
     "ViewerPicture": {
       "flows": [
         "open-the-viewer"
       ],
       "endpoint": [
         "open-the-viewer"
+      ]
+    },
+    "ViewerVideo": {
+      "flows": [
+        "watch-a-clip-full-screen"
+      ],
+      "endpoint": [
+        "watch-a-clip-full-screen"
       ]
     },
     "VouchAsk": {
@@ -3376,6 +6857,14 @@
       ],
       "endpoint": []
     },
+    "VouchAskUnusable": {
+      "flows": [
+        "meet-an-ask-link-that-cant-be-taken-up"
+      ],
+      "endpoint": [
+        "meet-an-ask-link-that-cant-be-taken-up"
+      ]
+    },
     "VouchBack": {
       "flows": [
         "follow-a-citation",
@@ -3397,6 +6886,8 @@
     },
     "VouchBackPad": {
       "flows": [
+        "meet-the-write-rule-on-the-pad",
+        "retry-a-stance-that-didnt-sign",
         "take-a-stance-on-a-person",
         "take-a-stance-on-a-post",
         "vouch-back-for-your-inviter"
@@ -3414,16 +6905,68 @@
     },
     "WalletComingSoon": {
       "flows": [
+        "open-the-wallet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "open-the-wallet"
+      ]
+    },
+    "WhatsNew": {
+      "flows": [
+        "read-whats-new"
+      ],
+      "endpoint": [
+        "read-whats-new"
+      ]
+    },
+    "WhatsNewBehind": {
+      "flows": [
+        "update-from-whats-new"
+      ],
+      "endpoint": [
+        "update-from-whats-new"
+      ]
+    },
+    "WriteRuleFailed": {
+      "flows": [
+        "keep-the-draft-when-signing-is-refused"
+      ],
+      "endpoint": [
+        "keep-the-draft-when-signing-is-refused"
+      ]
+    },
+    "YourKey": {
+      "flows": [
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock"
+      ],
+      "endpoint": [
+        "see-your-key",
+        "see-your-key-behind-the-browsers-gate",
+        "see-your-key-on-a-phone-without-a-lock"
+      ]
     },
     "YourKeyAbsent": {
       "flows": [
+        "restore-the-key-from-the-your-key-row",
         "restore-your-key"
+      ],
+      "endpoint": []
+    },
+    "YourKeyGate": {
+      "flows": [
+        "see-your-key-behind-the-browsers-gate"
+      ],
+      "endpoint": []
+    },
+    "YourTopics": {
+      "flows": [
+        "walk-your-topics"
       ],
       "endpoint": []
     }

@@ -496,6 +496,1091 @@
       "name": "who-holds-an-opinion-on-this",
       "description": "The quiet count under a post's tags opens the list of everyone who holds an opinion on it — ungated, the profile's own opinions page mirrored onto content. A reading journey: reaching the list is the whole of it, and a row out of it is a visit to a person, which is its own flow.",
       "start": { "board": "PostDetail", "via": 15 }
+    },
+    {
+      "name": "request-a-password-reset",
+      "description": "Forgot password? on the sign-in screen asks for the address and sends the reset link; the status line confirms the same whether or not an account stands behind it, and the journey leaves the app with the mail.",
+      "start": { "board": "SignIn", "via": 7 },
+      "end": { "board": "Reset", "via": 3, "case": "the status line confirms — always, no account enumeration" }
+    },
+    {
+      "name": "set-a-new-password",
+      "description": "The reset mail's link opens the new-password form; the new password set signs every device out, so signing in again is the next thing.",
+      "start": { "board": "ResetNew" },
+      "end": { "board": "ResetNew", "via": 3, "to": "SignIn" }
+    },
+    {
+      "name": "meet-a-spent-reset-link",
+      "description": "A reset link opened spent or past its fifteen minutes says so, and Reset your password asks for a fresh one, its field empty.",
+      "start": { "board": "ResetExpired" },
+      "end": { "board": "ResetExpired", "via": 1, "to": "Reset" }
+    },
+    {
+      "name": "sign-back-in-after-the-session-ran-out",
+      "description": "A session that ran out mid-use lands on the sign-in form; signing in again returns a member to the feed, the draft and any picks still kept.",
+      "start": { "board": "SignInExpired" },
+      "end": { "board": "SignInExpired", "via": 6, "to": "Feed" }
+    },
+    {
+      "name": "sign-in-after-a-wrong-password",
+      "description": "A pair that doesn't match answers in place on the sign-in form; the corrected pair signs a member with their key on this device into their feed.",
+      "start": { "board": "SignIn" },
+      "waypoints": [
+        { "board": "SignIn", "via": 6, "to": "SignInError" }
+      ],
+      "end": { "board": "SignInError", "via": 6, "to": "Feed" }
+    },
+    {
+      "name": "sign-in-after-the-backoff",
+      "description": "Too many failed tries in a row answer with the backoff in place; once it has passed, Sign in lands wherever app-open lands for the account.",
+      "start": { "board": "SignIn" },
+      "waypoints": [
+        { "board": "SignIn", "via": 6, "to": "SignInLimited" }
+      ],
+      "end": { "board": "SignInLimited", "via": 6, "to": "Feed" }
+    },
+    {
+      "name": "meet-the-security-notice",
+      "description": "A sign-in after a reused sign-in was detected lands with the notice as a card, once; Change password on it opens the credential screen, and the changed password signs every other device out.",
+      "start": { "board": "SignIn" },
+      "waypoints": [
+        { "board": "SignIn", "via": 6, "to": "FeedSecurityNotice" },
+        { "board": "FeedSecurityNotice", "via": 1 }
+      ],
+      "end": { "board": "ChangePassword", "via": 5, "to": "Settings" }
+    },
+    {
+      "name": "sign-in-where-no-backup-can-restore",
+      "description": "A member signing in on a device the key is not on, for an account with no backup, lands wherever app-open lands for that account — the key-elsewhere shell with nothing to restore from.",
+      "start": { "board": "SignIn" },
+      "end": { "board": "SignIn", "via": 6, "to": "KeyElsewhereNoBackup" }
+    },
+    {
+      "name": "arrive-through-an-invite-link",
+      "description": "An invite link opens the issuer's borrowed view, feed first; Sign in or join meets the join form with the link already in hand, and Create account begins the applicant days.",
+      "start": { "board": "Main" },
+      "waypoints": [
+        { "board": "Main", "via": 2, "to": "Join" }
+      ],
+      "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "arrive-through-a-dead-invite-link",
+      "description": "An invite link that no longer works still opens the borrowed view; Sign in or join says the link is unusable and takes another, and a different link that checks out opens the join form.",
+      "start": { "board": "Main" },
+      "waypoints": [
+        { "board": "Main", "via": 2, "to": "JoinInvalid" }
+      ],
+      "end": { "board": "JoinInvalid", "via": 3, "to": "Join" }
+    },
+    {
+      "name": "paste-something-that-isnt-a-link",
+      "description": "Nothing that reads as a link at the door is answered in place on the field; a link that checks out then opens the join form.",
+      "start": { "board": "InviteEntry" },
+      "waypoints": [
+        { "board": "InviteEntry", "via": 3, "to": "InviteEntryError" }
+      ],
+      "end": { "board": "InviteEntryError", "via": 3, "to": "Join" }
+    },
+    {
+      "name": "fix-the-join-forms-errors",
+      "description": "A handle taken or an input refused answers in place on the join form; corrected, Create account makes the account and the applicant days begin.",
+      "start": { "board": "InviteEntry", "via": 3, "to": "Join" },
+      "waypoints": [
+        { "board": "Join", "via": 6, "to": "JoinErrors" }
+      ],
+      "end": { "board": "JoinErrors", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "a-guest-meets-the-join-ask",
+      "description": "A signed act tried in the bare view — the stance face on a post — raises the join prompt over the read; Sign in or join opens the sign-in screen for a reader who holds no link.",
+      "start": { "board": "FeedBare" },
+      "waypoints": [
+        { "board": "FeedBare", "via": 10, "to": "GuestGate" }
+      ],
+      "end": { "board": "GuestGate", "via": 2, "to": "SignIn" }
+    },
+    {
+      "name": "verify-the-email-in-the-app",
+      "description": "The verification mail's link opened where the app takes it lands on the in-app confirmation; Go to the feed returns an applicant to the task cards still left.",
+      "start": { "board": "VerifiedApp" },
+      "end": { "board": "VerifiedApp", "via": 1, "to": "ApplicantFeed" }
+    },
+    {
+      "name": "meet-a-spent-verification-link",
+      "description": "A verification link opened spent or timed out says so; Resend the link sends a fresh one, the status line saying so the same whether or not the account is already verified.",
+      "start": { "board": "VerifyExpired" },
+      "end": { "board": "VerifyExpired", "via": 1, "case": "a fresh link goes out — the same act the applicant feed's card offers; a status line under the pair says so in Reset's construction, the same whether or not the account is already verified" }
+    },
+    {
+      "name": "correct-an-applicants-address",
+      "description": "Wrong address? on the applicant's card changes an address not yet verified with the new one alone; a fresh link goes to it, and the card prints where it went.",
+      "start": { "board": "ApplicantFeed", "via": 21 },
+      "end": { "board": "ApplicantEmail", "via": 5, "to": "ApplicantFeed" }
+    },
+    {
+      "name": "post-while-an-applicant",
+      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
+      "start": { "board": "ApplicantWaiting", "via": 12, "to": "ComposePick" },
+      "waypoints": [
+        { "board": "ComposePick", "via": 4, "to": "ComposeWords" },
+        { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
+        { "board": "ComposeDetailsWords", "via": 8, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "to": "ApplicantWaiting" }
+    },
+    {
+      "name": "watch-the-registration-land",
+      "description": "Once the approval is given the applicant's card flips where the reader stands while the device signs the registration — a machine's step, read rather than tapped; the landing itself opens the vouch-back.",
+      "start": { "board": "ApplicantLanding" }
+    },
+    {
+      "name": "ask-another-member-to-vouch",
+      "description": "The notification that an inviter closed the application opens the turned-down shell, where the ask link stands; copying it hands the reader a link that does not expire, for as many members as they know.",
+      "start": { "board": "Notifications", "via": 15 },
+      "end": { "board": "ApplicantRejected", "via": 17 }
+    },
+    {
+      "name": "read-your-own-page-as-an-applicant",
+      "description": "The Profile tab in the applicant days opens the reader's own page in its applicant state — a reading journey that concludes on arrival.",
+      "start": { "board": "ApplicantFeed", "via": 17 }
+    },
+    {
+      "name": "make-your-key-without-a-backup",
+      "description": "Not now at the ceremony asks once whether to go on without a backup; I accept the risk makes the key alone and returns where the ceremony began, the snackbar saying so.",
+      "start": { "board": "KeyCeremony", "via": 3 },
+      "end": { "board": "KeyDecline", "via": 1, "case": "key without backup — returns where the ceremony began, and the snackbar says so" }
+    },
+    {
+      "name": "meet-a-browser-that-cant-hold-a-key",
+      "description": "Create my key in a browser that cannot hold one says so before minting anything, and offers the app instead.",
+      "start": { "board": "ApplicantFeed", "via": 3, "to": "KeyCeremonyUnsupported" },
+      "end": { "board": "KeyCeremonyUnsupported", "via": 2 }
+    },
+    {
+      "name": "type-the-recovery-code-back-wrong",
+      "description": "A typed-back code that diverges from the one shown is answered at once, on the typing, and the button never enables; typed right, the key is made and backed up and the ceremony returns where it began.",
+      "start": { "board": "ApplicantFeed", "via": 3, "to": "KeyCeremony" },
+      "waypoints": [
+        { "board": "KeyCeremony", "via": 2 },
+        { "board": "KeyConfirm", "via": 2 },
+        { "board": "RecoveryCode", "via": 2, "to": "RecoveryCodeMismatch" }
+      ],
+      "end": { "board": "RecoveryCodeMismatch", "via": 3, "case": "code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so" }
+    },
+    {
+      "name": "restore-your-key-as-an-applicant",
+      "description": "An applicant signed in where their key is not finds the key card on their own shell; Restore the key takes the recovery code and returns to it with the key here.",
+      "start": { "board": "ApplicantKeyElsewhere" },
+      "waypoints": [
+        { "board": "ApplicantKeyElsewhere", "via": 1 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "make-a-new-key-in-place-of-the-attached-one",
+      "description": "Make a new key on the applicant's key card runs the ceremony again; its end replaces the key attached elsewhere.",
+      "start": { "board": "ApplicantKeyElsewhere", "via": 2, "to": "KeyCeremony" },
+      "waypoints": [
+        { "board": "KeyCeremony", "via": 2 },
+        { "board": "KeyConfirm", "via": 2 }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "case": "code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so" }
+    },
+    {
+      "name": "restore-after-a-mistyped-code",
+      "description": "A recovery code of the wrong length is the one shape the reader can fix, and the field says so; the right length that still doesn't check out says that instead, and the code that does restores the key where restore began.",
+      "start": { "board": "KeyElsewhere", "via": 2 },
+      "waypoints": [
+        { "board": "Restore", "via": 4, "to": "RestoreLength" },
+        { "board": "RestoreLength", "via": 4, "to": "RestoreError" }
+      ],
+      "end": { "board": "RestoreError", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "sign-the-picks-kept-while-the-key-was-away",
+      "description": "A key restored with picks kept pending opens their review, every pick in one batch the reader looks over first; Sign them reaches the standard seal, and one signature lands them all, still settling.",
+      "start": { "board": "KeyElsewhere", "via": 2 },
+      "waypoints": [
+        { "board": "Restore", "via": 4, "to": "KeptPicksReview" },
+        { "board": "KeptPicksReview", "via": 3 }
+      ],
+      "end": { "board": "KeptPicksSeal", "via": 4, "case": "signed, all together — back where the review was opened from, with the snackbar Signed 3 things, still settling.; each target's anchor wears Still settling until its record is ordered, and the settings row is gone" }
+    },
+    {
+      "name": "take-a-stance-without-the-key",
+      "description": "The stance face, tapped or held where the key is elsewhere, opens the pad carrying the key notice; Keep it pending keeps the pick on this device, and the post's anchor wears it.",
+      "start": { "board": "KeyElsewhere", "via": 9 },
+      "end": { "board": "PadKeyAbsent", "via": 3 }
+    },
+    {
+      "name": "meet-an-ask-link-that-cant-be-taken-up",
+      "description": "An ask link that can stage nobody right now says so; when the person has already landed, their profile is one tap on, where the member can look and give an opinion.",
+      "start": { "board": "VouchAskUnusable" },
+      "end": { "board": "VouchAskUnusable", "via": 2, "to": "ProfileOther" }
+    },
+    {
+      "name": "watch-the-intro",
+      "description": "The first authenticated feed entry opens the intro over the feed once; its five cards run to Start reading, which ends where Skip ends — the applicant days.",
+      "start": { "board": "OnboardingSteps" },
+      "end": { "board": "OnboardingVouch", "via": 2, "to": "ApplicantFeed" }
+    },
+    {
+      "name": "watch-the-intro-again",
+      "description": "Watch the intro again in settings is the one way back to the intro once it has been seen; it runs from the first card and ends back on settings.",
+      "start": { "board": "Settings", "via": 19 },
+      "end": { "board": "OnboardingVouch", "via": 2, "to": "Settings" }
+    },
+    {
+      "name": "change-your-password",
+      "description": "The Password row asks for the current password and a new one; the change answers with the snackbar, and every other device is signed out.",
+      "start": { "board": "Settings", "via": 12 },
+      "end": { "board": "ChangePassword", "via": 5, "to": "Settings" }
+    },
+    {
+      "name": "change-your-handle",
+      "description": "The Handle row takes the new handle; a well-formed one meets the think-twice dialog naming the cost before anything is sent, and Change it lands the handle on the row.",
+      "start": { "board": "Settings", "via": 13 },
+      "waypoints": [
+        { "board": "ChangeHandle", "via": 3, "to": "ChangeHandleConfirm" }
+      ],
+      "end": { "board": "ChangeHandleConfirm", "via": 1, "to": "Settings" }
+    },
+    {
+      "name": "change-your-email",
+      "description": "The Email row takes the new address and the current password and sends both messages; the code from the current address is typed here, and with the new address's link clicked too the address moves.",
+      "start": { "board": "Settings", "via": 14, "to": "ChangeEmail" },
+      "waypoints": [
+        { "board": "ChangeEmail", "via": 5, "to": "ChangeEmailConfirm" }
+      ],
+      "end": { "board": "ChangeEmailConfirm", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "confirm-the-email-change-from-the-new-address",
+      "description": "The new address's verification link, opened signed in, applies its side; when it is the last side the change lands and settings reads the new address.",
+      "start": { "board": "ChangeEmailLinked" },
+      "end": { "board": "ChangeEmailLinked", "via": 1, "to": "Settings" }
+    },
+    {
+      "name": "open-the-new-address-link-signed-out",
+      "description": "The same link opened where no session is asks for sign-in first, since the proof counts only signed in; signed in, its side applies, and when it was the first side the code from the old address is still owed.",
+      "start": { "board": "ChangeEmailLinkedSignedOut" },
+      "waypoints": [
+        { "board": "ChangeEmailLinkedSignedOut", "via": 1 },
+        { "board": "SignIn", "via": 6, "to": "ChangeEmailLinked" }
+      ],
+      "end": { "board": "ChangeEmailLinked", "via": 1, "to": "ChangeEmailConfirm" }
+    },
+    {
+      "name": "finish-a-pending-email-change",
+      "description": "Settings with an email change in flight leads the Email row back to the side still owed; the code confirmed with the link already clicked moves the address.",
+      "start": { "board": "SettingsEmailPending" },
+      "end": { "board": "ChangeEmailConfirm", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "call-off-an-email-change",
+      "description": "Cancel the change on the confirmation calls a change in flight off without asking first — a change is started again from the row — and settings reads the address alone.",
+      "start": { "board": "Settings", "via": 14, "to": "ChangeEmailConfirm" },
+      "end": { "board": "ChangeEmailConfirm", "via": 5, "to": "Settings" }
+    },
+    {
+      "name": "replace-the-recovery-code",
+      "description": "The Recovery code row, with the key on this browser, takes the current code as proof and makes a new one on the ceremony's own board; typed back, the new backup uploads and settings says so.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackup" },
+      "waypoints": [
+        { "board": "SettingsBackup", "via": 3, "to": "RecoveryCode" }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "replace-the-recovery-code-after-a-refused-one",
+      "description": "A current code that doesn't check out is answered on the replace screen itself; the right one goes on to the new code, typed back the same way.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackup" },
+      "waypoints": [
+        { "board": "SettingsBackup", "via": 3, "to": "SettingsBackupError" },
+        { "board": "SettingsBackupError", "via": 3, "to": "RecoveryCode" }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "replace-the-recovery-code-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the replace warns before the unlock that isn't there; Go on anyway shows the new code, typed back the same way.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackup" },
+      "waypoints": [
+        { "board": "SettingsBackup", "via": 3, "to": "NoScreenLock" },
+        { "board": "NoScreenLock", "via": 1, "to": "RecoveryCode" }
+      ],
+      "end": { "board": "RecoveryCode", "via": 3, "to": "Settings" }
+    },
+    {
+      "name": "restore-the-key-from-the-recovery-code-row",
+      "description": "The Recovery code row with the key elsewhere has nothing to re-encrypt and offers Restore the key, which returns to settings with the key here.",
+      "start": { "board": "Settings", "via": 8, "to": "SettingsBackupKeyAbsent" },
+      "waypoints": [
+        { "board": "SettingsBackupKeyAbsent", "via": 3 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "see-your-key",
+      "description": "The Your key row, after the platform's own unlock, shows the key, and either form of it goes to the clipboard with the snackbar saying Copied.",
+      "start": { "board": "Settings", "via": 9, "to": "YourKey" },
+      "end": { "board": "YourKey", "via": 2 }
+    },
+    {
+      "name": "see-your-key-behind-the-browsers-gate",
+      "description": "A browser whose seed is sealed behind the backup asks for the current recovery code first; the code opens the backup, the key is shown, and nothing is re-persisted.",
+      "start": { "board": "Settings", "via": 9, "to": "YourKeyGate" },
+      "waypoints": [
+        { "board": "YourKeyGate", "via": 3, "to": "YourKey" }
+      ],
+      "end": { "board": "YourKey", "via": 2 }
+    },
+    {
+      "name": "see-your-key-on-a-phone-without-a-lock",
+      "description": "On an Android phone with no screen lock the Your key row warns before the unlock that isn't there; Go on anyway shows the key.",
+      "start": { "board": "Settings", "via": 9, "to": "NoScreenLock" },
+      "waypoints": [
+        { "board": "NoScreenLock", "via": 1, "to": "YourKey" }
+      ],
+      "end": { "board": "YourKey", "via": 2 }
+    },
+    {
+      "name": "restore-the-key-from-the-your-key-row",
+      "description": "The Your key row with the key elsewhere asks for no unlock, since nothing stands behind it to reveal, and offers Restore the key instead.",
+      "start": { "board": "Settings", "via": 9, "to": "YourKeyAbsent" },
+      "waypoints": [
+        { "board": "YourKeyAbsent", "via": 3 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "set-the-default-license",
+      "description": "Default license opens the seal's own license question over settings; Done sets what every new post starts from, never the last one.",
+      "start": { "board": "Settings", "via": 5 },
+      "end": { "board": "SettingsLicense", "via": 4, "to": "Settings" }
+    },
+    {
+      "name": "set-what-every-feed-opens-with",
+      "description": "What your feed shows opens the feed's own filter over settings; Done saves the default every feed opens with, and the row reads it back.",
+      "start": { "board": "Settings", "via": 6 },
+      "end": { "board": "SettingsReading", "via": 7, "to": "Settings" }
+    },
+    {
+      "name": "read-whats-new",
+      "description": "What's new opens the release chronicle, newest first, the version running here marked; a release's own page on GitHub is one tap away.",
+      "start": { "board": "Settings", "via": 23 },
+      "end": { "board": "WhatsNew", "via": 2 }
+    },
+    {
+      "name": "update-from-whats-new",
+      "description": "What's new opened while this version is behind the newest release offers Update now — the app's store listing, or on the web a reload into the new version.",
+      "start": { "board": "WhatsNewBehind" },
+      "end": { "board": "WhatsNewBehind", "via": 2, "case": "the app: CoGra's Play Store listing (a placeholder id until published — https://play.google.com/store/apps/details?id=local.cogra.app)" }
+    },
+    {
+      "name": "report-a-problem",
+      "description": "Report a problem opens an empty field with Send by email live all the same; what is written goes into the reader's own mail with the four facts and the report address filled in, and nothing leaves until it is sent there.",
+      "start": { "board": "Settings", "via": 24, "to": "ReportProblemEmpty" },
+      "waypoints": [
+        { "board": "ReportProblemEmpty", "via": 2 }
+      ],
+      "end": { "board": "ReportProblem", "via": 3 }
+    },
+    {
+      "name": "unhide-an-account",
+      "description": "Hidden accounts opens the hidden list over settings; Unhide takes a row away and their posts return to the feed, the snackbar answering.",
+      "start": { "board": "Settings", "via": 17 },
+      "end": { "board": "SettingsHidden", "via": 1, "case": "the row goes and their posts return to your feed — the snackbar answers" }
+    },
+    {
+      "name": "read-about-cogra",
+      "description": "About CoGra opens the whole page from settings — each topic unfolding on its own; reading it is the whole journey.",
+      "start": { "board": "Settings", "via": 20 }
+    },
+    {
+      "name": "sign-out",
+      "description": "Sign out on a remembered device ends the session and keeps the account offered on the sign-in screen.",
+      "start": { "board": "Settings" },
+      "end": { "board": "Settings", "via": 16, "case": "remembered — the session ends and the account stays offered here" }
+    },
+    {
+      "name": "sign-out-without-a-backup",
+      "description": "Sign out where this device holds the only copy of an unbacked key asks first; Sign out, keep them locked ends the session with the key, the draft and any kept picks sealed on this device until the account signs in here again.",
+      "start": { "board": "Settings", "via": 16, "to": "SignOutConfirm" },
+      "end": { "board": "SignOutConfirm", "via": 2 }
+    },
+    {
+      "name": "confirm-the-account-deletion",
+      "description": "The deletion mail's link is the confirmation, signed in or not; Go to the feed opens the feed under the deletion band, which rides every signed-in surface until the deadline.",
+      "start": { "board": "DeleteAccountConfirmed" },
+      "end": { "board": "DeleteAccountConfirmed", "via": 3, "to": "FeedDeleting" }
+    },
+    {
+      "name": "cancel-the-deletion-from-the-feed",
+      "description": "Cancel on the deletion band abandons the request before the deadline; the band goes and the snackbar answers, nothing having been redacted yet.",
+      "start": { "board": "FeedDeleting" },
+      "end": { "board": "FeedDeleting", "via": 19, "to": "DeleteAccountCanceled" }
+    },
+    {
+      "name": "cancel-the-deletion-from-settings",
+      "description": "Settings during the grace reads the deadline on its Delete account row; the row opens it in full with Cancel, which calls the deletion off and returns to settings with the band gone.",
+      "start": { "board": "SettingsDeleting" },
+      "end": { "board": "DeleteAccountPending", "via": 2, "to": "Settings" }
+    },
+    {
+      "name": "choose-a-posts-license",
+      "description": "Change on the seal's license row opens the license sheet; Done closes it onto the seal, the row reading the pair's name and both tier hints.",
+      "start": { "board": "ComposeSeal", "via": 4 },
+      "end": { "board": "ComposeLicense", "via": 4 }
+    },
+    {
+      "name": "mark-a-post-sensitive",
+      "description": "Mark on the seal's sensitive row opens the sheet, where the switch and its reason are staged; Done closes it onto the seal, the row reading the mark.",
+      "start": { "board": "ComposeSeal", "via": 6 },
+      "end": { "board": "ComposeSensitive", "via": 4 }
+    },
+    {
+      "name": "publish-with-the-key-elsewhere",
+      "description": "Sign and publish where the key is elsewhere reaches the key-absent seal; Restore the key takes the recovery code and returns to the seal it began from, the draft intact.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "ComposeKeyAbsent" },
+      "waypoints": [
+        { "board": "ComposeKeyAbsent", "via": 5 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "write-past-the-details-caps",
+      "description": "A description past the five hundred stops Next and says so on the field; cutting it clears the refusal the moment it fits.",
+      "start": { "board": "ComposeDetails", "via": 5, "to": "ComposeDetailsCaps" },
+      "end": { "board": "ComposeDetailsCaps", "via": 5 }
+    },
+    {
+      "name": "write-past-the-words-cap",
+      "description": "A words body past the five thousand says how far over and stops Next; cutting clears the refusal the moment it fits.",
+      "start": { "board": "ComposeWords", "via": 5, "to": "ComposeWordsCaps" },
+      "end": { "board": "ComposeWordsCaps", "via": 5 }
+    },
+    {
+      "name": "look-over-many-staged-citations",
+      "description": "A seal carrying more than one citation counts them on its References row, and the count opens what it counts; a staged citation's name opens its pair, and Done carries the pair it was given.",
+      "start": { "board": "ComposeSealCited" },
+      "waypoints": [
+        { "board": "ComposeSealCited", "via": 9 },
+        { "board": "ComposeCitations", "via": 1 }
+      ],
+      "end": { "board": "RefPair", "via": 2 }
+    },
+    {
+      "name": "look-over-many-staged-tags",
+      "description": "A seal carrying more tags than its row holds counts them, and the count opens the staged-tags sheet; a tag's name opens its pair, and Done carries the pair it was given.",
+      "start": { "board": "ComposeSealTagged" },
+      "waypoints": [
+        { "board": "ComposeSealTagged", "via": 9 },
+        { "board": "ComposeTags", "via": 1 }
+      ],
+      "end": { "board": "TagPadCompose", "via": 2 }
+    },
+    {
+      "name": "pair-a-staged-citation",
+      "description": "A staged reference row on the details stage opens the citation's pair sheet; the pair moves, nothing signs until the seal, and Done carries it back to the row.",
+      "start": { "board": "ComposeDetails", "via": 13 },
+      "end": { "board": "RefPair", "via": 2 }
+    },
+    {
+      "name": "discard-a-kept-draft",
+      "description": "Reaching past a kept draft to the dimmed roll is asking to discard it, and the dialog asks; Discard it brings the roll live and a fresh pick begins.",
+      "start": { "board": "ComposeDraft", "via": 5 },
+      "end": { "board": "ComposeDraftDiscard", "via": 1 }
+    },
+    {
+      "name": "swap-the-pictures-for-words",
+      "description": "Write words instead with pictures or a clip already in the body asks first; Discard lets them go and opens the words stage empty, the rest of the draft kept.",
+      "start": { "board": "ComposePick", "via": 4, "to": "ComposeBodyDiscard" },
+      "end": { "board": "ComposeBodyDiscard", "via": 2, "to": "ComposeWords" }
+    },
+    {
+      "name": "pick-files-that-are-refused",
+      "description": "Picks over the cap or in a format nothing here reads are named on the pick step with why; what was accepted goes on to the crop.",
+      "start": { "board": "ComposePick", "via": 9, "to": "ComposePickedErrors" },
+      "end": { "board": "ComposePickedErrors", "via": 3 }
+    },
+    {
+      "name": "pick-a-video-from-the-grid",
+      "description": "A video picked from the grid becomes the whole body and the step stops taking picks; a horizontal or square clip goes on to choose its face, and details and the seal follow.",
+      "start": { "board": "ComposePick", "via": 9, "to": "ComposePickVideo" },
+      "waypoints": [
+        { "board": "ComposePickVideo", "via": 3, "to": "ComposeCover" },
+        { "board": "ComposeCover", "via": 6 },
+        { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "to": "ComposeLanded" }
+    },
+    {
+      "name": "go-back-to-a-clip-wearing-its-cover",
+      "description": "Back from the cover step once a face is chosen shows the pick with the clip wearing it; Next returns to the cover step, which holds the choice rather than asking again.",
+      "start": { "board": "ComposeCover", "via": 1, "to": "ComposePickVideoCover" },
+      "end": { "board": "ComposePickVideoCover", "via": 3 }
+    },
+    {
+      "name": "cover-a-clip-with-a-picture-of-your-own",
+      "description": "A picture of your own on the cover step comes back through the crop, locked to the video's shape; Next sets it as the cover on the row that asked.",
+      "start": { "board": "ComposeCover", "via": 5, "to": "CoverCrop" },
+      "end": { "board": "CoverCrop", "via": 3 }
+    },
+    {
+      "name": "preview-the-clip-before-choosing-its-face",
+      "description": "Play on the cover step runs the preview, the transport in place of the cover; the face is still picked from the strip, and Next goes on to details.",
+      "start": { "board": "ComposeCover", "via": 3 },
+      "end": { "board": "ComposeCoverPlaying", "via": 9 }
+    },
+    {
+      "name": "cover-a-clip-the-device-cant-cut",
+      "description": "A horizontal or square clip the device returns no frames for meets the cover step with the gallery alone; with a cover or without one, Next goes on to details — a post never waits on a frame the device could not cut.",
+      "start": { "board": "ComposePickVideo", "via": 3, "to": "ComposeCoverNoFrames" },
+      "end": { "board": "ComposeCoverNoFrames", "via": 4 }
+    },
+    {
+      "name": "describe-a-video",
+      "description": "Describe the video on a clip's details opens the describe sheet's video shape — one description for the whole clip, none for its cover.",
+      "start": { "board": "ComposeDetailsVideo", "via": 3 },
+      "end": { "board": "ComposeDescribeVideo", "via": 3 }
+    },
+    {
+      "name": "name-a-new-tag",
+      "description": "Typing in the tag picker canonicalizes the name as it goes and keeps it the first row; picking it stages it in the composer's tags, and the picker stays open for the next.",
+      "start": { "board": "TagPicker", "via": 3, "to": "TagPickerTyping" },
+      "end": { "board": "TagPickerTyping", "via": 4 }
+    },
+    {
+      "name": "meet-a-tag-name-it-cant-take",
+      "description": "A character no name may carry is refused where it was typed and nothing stages; with the offending characters gone the first row comes back.",
+      "start": { "board": "TagPicker", "via": 3, "to": "TagPickerRefused" },
+      "end": { "board": "TagPickerRefused", "via": 3, "to": "TagPickerTyping" }
+    },
+    {
+      "name": "publish-past-a-cited-post-that-never-landed",
+      "description": "A cited post that never landed is named on its own seal row with Remove it; the refused act removed, Sign and publish lands the post in its detail view, still settling.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "SealFaultRow" },
+      "end": { "board": "SealFaultRow", "via": 7, "to": "ComposeLanded" }
+    },
+    {
+      "name": "keep-the-draft-when-signing-is-refused",
+      "description": "The write rule refusing the seal stages and spends nothing; Keep the draft, sign later leaves with the draft on this device, offered back the next time you compose.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "WriteRuleFailed" },
+      "end": { "board": "WriteRuleFailed", "via": 7, "case": "leaves — the draft stays on this device and is offered back the next time you compose" }
+    },
+    {
+      "name": "try-again-after-a-bug",
+      "description": "Any other refusal of a staged act is a bug the notice owns; Try again that goes through this time lands the post in its detail view, still settling.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "SealFaultBug" },
+      "end": { "board": "SealFaultBug", "via": 7, "to": "ComposeLanded" }
+    },
+    {
+      "name": "report-a-bug-from-the-seal",
+      "description": "Report a problem on the bug notice opens the same report page Settings opens, nothing about the seal attached — the words are the reader's own.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "SealFaultBug" },
+      "end": { "board": "SealFaultBug", "via": 8, "to": "ReportProblemEmpty" }
+    },
+    {
+      "name": "discard-the-post-from-the-bug-notice",
+      "description": "Discard the post on the bug notice asks first, since the draft would be lost; Discard it leaves the flow back where composing began, nothing signed.",
+      "start": { "board": "SealFaultBug", "via": 9, "to": "SealDiscardConfirm" },
+      "end": { "board": "SealDiscardConfirm", "via": 1 }
+    },
+    {
+      "name": "retry-a-post-after-the-network-drops",
+      "description": "Sign and publish offline meets the network-error board; Retry that reaches this time lands the post in its detail view, still settling.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "NetworkError" },
+      "end": { "board": "NetworkError", "via": 1, "to": "ComposeLanded" }
+    },
+    {
+      "name": "read-a-help-dialog",
+      "description": "A ? opens its help dialog — on the seal, the Signed-actions text; Close returns to the screen that asked.",
+      "start": { "board": "ComposeSeal", "via": 3 },
+      "end": { "board": "HelpDialog", "via": 1 }
+    },
+    {
+      "name": "save-a-comment",
+      "description": "Save on a comment's menu keeps the comment in the one Saved list beside posts and people.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 1, "case": "the comment is kept — it joins the one Saved list beside posts and people" }
+    },
+    {
+      "name": "read-a-comments-license",
+      "description": "License terms on a comment's menu closes the menu and brings the comment's terms up in a sheet over the thread — reading them is the whole of it.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 3 }
+    },
+    {
+      "name": "see-who-holds-an-opinion-on-a-comment",
+      "description": "Opinions on this, on a comment's menu, brings the holders up over the thread — drawn in the state a comment nobody has answered leaves it.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 5 }
+    },
+    {
+      "name": "see-what-cites-a-comment",
+      "description": "Cited by, on a comment's menu, brings what cites the comment up over the thread — drawn in the state nothing citing it leaves it, which is the only door that state has.",
+      "start": { "board": "ReplyEntry", "via": 2, "to": "CommentMenu" },
+      "end": { "board": "CommentMenu", "via": 6 }
+    },
+    {
+      "name": "adjust-a-replys-stance",
+      "description": "Adjust on the reply's seal opens the reply pad, the stance toward what the reply answers; Set puts the adjusted stance on the seal.",
+      "start": { "board": "ReplySeal", "via": 6 },
+      "end": { "board": "ReplyPad", "via": 4, "to": "ReplySeal" }
+    },
+    {
+      "name": "read-the-reply-pads-help",
+      "description": "The reply pad's ? opens its own help topic — the post pad's text would say the opposite of what is true here; Close returns to the pad.",
+      "start": { "board": "ReplyPad", "via": 1 },
+      "end": { "board": "ReplyPadHelp", "via": 1 }
+    },
+    {
+      "name": "reply-carrying-a-citation",
+      "description": "A reference picked for a reply comes back staged on the reply's seal; Sign comment settles the reply and its reference on its parent, the thread reopened where it was left.",
+      "start": { "board": "ReplyCited" },
+      "end": { "board": "ReplyCited", "via": 9, "to": "ReplySettled" }
+    },
+    {
+      "name": "reply-carrying-many-citations",
+      "description": "A reply with several references staged counts them on its seal; Sign comment settles the reply and its references on its parent, the thread reopened where it was left.",
+      "start": { "board": "ReplyCitedMany" },
+      "end": { "board": "ReplyCitedMany", "via": 9, "to": "ReplySettled" }
+    },
+    {
+      "name": "reply-with-the-key-elsewhere",
+      "description": "A key that left while the reply was written meets Sign comment with the reply-scale fallback; Restore the key returns to the seal with the reply intact.",
+      "start": { "board": "ReplySeal", "via": 9, "to": "ReplySealKeyAbsent" },
+      "waypoints": [
+        { "board": "ReplySealKeyAbsent", "via": 2 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "reply-at-the-door-without-the-key",
+      "description": "Add a comment where the key is elsewhere meets the notice at the door, before a word is written; Restore the key takes the recovery code and returns where it began.",
+      "start": { "board": "ReplyEntry", "via": 7, "to": "ReplyKeyAbsent" },
+      "waypoints": [
+        { "board": "ReplyKeyAbsent", "via": 2 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "sign-a-reply-after-an-upload-failed",
+      "description": "An upload that doesn't land while the reply's seal waits disables Sign comment and drops any held press; Retry starts it again, and the reply settles once the uploads land.",
+      "start": { "board": "ReplySealUploadFailed" },
+      "waypoints": [
+        { "board": "ReplySealUploadFailed", "via": 1 }
+      ],
+      "end": { "board": "ReplySealUploading", "via": 1, "to": "ReplySettled" }
+    },
+    {
+      "name": "discard-a-reply",
+      "description": "Leaving a reply with something written asks first; Discard returns to the thread, the words gone.",
+      "start": { "board": "ReplyCompose", "via": 2, "to": "DiscardConfirm" },
+      "end": { "board": "DiscardConfirm", "via": 2, "to": "ReplyEntry" }
+    },
+    {
+      "name": "retry-a-clip-that-didnt-upload",
+      "description": "A reply's clip that didn't upload keeps Next disabled until it is retried or removed; Retry starts the upload again.",
+      "start": { "board": "ReplyVideoFailed" },
+      "end": { "board": "ReplyVideoFailed", "via": 5 }
+    },
+    {
+      "name": "reply-with-files-refused",
+      "description": "Picks over the reply's cap or in a format nothing here reads are named in the composer with why; what was accepted goes on with the words to the seal.",
+      "start": { "board": "ReplyCompose", "via": 5, "to": "ReplyMediaErrors" },
+      "end": { "board": "ReplyMediaErrors", "via": 3, "to": "ReplySeal" }
+    },
+    {
+      "name": "edit-a-video-comment",
+      "description": "Editing a comment whose body is a clip offers its description and its cover; the signed edit settles on its card, the thread reopened where it was left.",
+      "start": { "board": "CommentEditVideo" },
+      "end": { "board": "CommentEditVideo", "via": 12, "to": "ReplySettled" }
+    },
+    {
+      "name": "see-what-a-comment-edit-signs",
+      "description": "The count at the foot of a comment edit opens the acts it will sign; Done closes them back onto the edit.",
+      "start": { "board": "CommentEdit", "via": 11 },
+      "end": { "board": "CommentEditActs", "via": 1 }
+    },
+    {
+      "name": "leave-an-edit-unchanged",
+      "description": "An edit opened and left as it was found has nothing staged, so Sign the edit stays disabled and leaving keeps and discards nothing.",
+      "start": { "board": "EditComposeUnchanged" },
+      "end": { "board": "EditComposeUnchanged", "via": 2 }
+    },
+    {
+      "name": "see-what-a-post-edit-signs",
+      "description": "The count at the foot of a post edit opens the acts it will sign; Done closes them back onto the edit.",
+      "start": { "board": "EditCompose", "via": 11 },
+      "end": { "board": "EditActs", "via": 1 }
+    },
+    {
+      "name": "edit-a-video-post",
+      "description": "Editing a post whose body is a clip offers its description and a cover of your own; the signed edit settles on the post, the new cover pointed at.",
+      "start": { "board": "EditComposeVideo" },
+      "end": { "board": "EditComposeVideo", "via": 12, "case": "signed — the post, the edit settling, the new cover pointed at" }
+    },
+    {
+      "name": "reorder-an-edits-pictures",
+      "description": "The picked row on a post edit opens Show all over the edit; dragging sets the order, the first is the cover, and Done closes onto the edit.",
+      "start": { "board": "EditCompose", "via": 4 },
+      "end": { "board": "EditPicked", "via": 4 }
+    },
+    {
+      "name": "edit-a-post-down-to-words",
+      "description": "Removing an edit's last picture makes the body words, the field arriving empty; the signed edit settles on the post, its body now words.",
+      "start": { "board": "EditCompose", "via": 4 },
+      "waypoints": [
+        { "board": "EditPicked", "via": 3, "to": "EditWords" }
+      ],
+      "end": { "board": "EditWords", "via": 10, "case": "signed — the post, the edit settling, its body now words" }
+    },
+    {
+      "name": "untag-a-post-in-its-edit",
+      "description": "A tag chip on a post edit opens the tag's pair sheet; Un-tag closes it, the chip leaving for the body's withdrawn line and the acts counting one more.",
+      "start": { "board": "EditCompose", "via": 14 },
+      "end": { "board": "TagPad", "via": 2 }
+    },
+    {
+      "name": "revise-a-standing-citations-pair",
+      "description": "A standing citation's row on a post edit opens its pair sheet; Done stages the pick as one record added to the citation, and the row reads the resulting pair.",
+      "start": { "board": "EditCompose", "via": 15, "case": "the standing citation's pair sheet — the pick adds one record to what stands" },
+      "end": { "board": "RefPairEdit", "via": 3, "case": "the sheet closes — the pick is staged as one record added to the citation (Citations revised), the row reads the Resulting pair" }
+    },
+    {
+      "name": "narrow-the-feed-to-one-topic",
+      "description": "The filter narrowed to a single topic re-queries the feed once, and the trigger spells the topic out.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 8, "to": "FeedTopic" }
+    },
+    {
+      "name": "let-every-kind-into-the-feed",
+      "description": "All four kinds switched on bring comments, profiles and tags among the posts — the feed re-queries once.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 8, "to": "FeedKinds" }
+    },
+    {
+      "name": "open-what-is-waiting",
+      "description": "A feed with something waiting wears the dot on its bell; the bell opens the notifications list.",
+      "start": { "board": "FeedUnread" },
+      "end": { "board": "FeedUnread", "via": 18, "to": "Notifications" }
+    },
+    {
+      "name": "find-no-notifications-yet",
+      "description": "The bell on a feed where nothing has arrived opens the empty notifications list — a reading journey that concludes on arrival.",
+      "start": { "board": "Feed", "via": 18, "to": "NotificationsEmpty" }
+    },
+    {
+      "name": "jump-back-to-the-top",
+      "description": "Scrolled back up from deep in the list, the band returns with Back to top, and the list jumps to the feed's own top state.",
+      "start": { "board": "FeedScrolled" },
+      "end": { "board": "FeedScrolled", "via": 19 }
+    },
+    {
+      "name": "page-through-a-gallery",
+      "description": "A post carrying several pictures pages between them in place on its card, the dots reading position; a tap opens the post, as on every other card.",
+      "start": { "board": "FeedGallery" },
+      "end": { "board": "FeedGallery", "via": 4, "to": "PostDetail" }
+    },
+    {
+      "name": "play-a-clip-that-didnt-autoplay",
+      "description": "A clip at rest on its cover — before its first play, or on a device that will not autoplay — plays where it stands from its play disc.",
+      "start": { "board": "FeedCover" },
+      "end": { "board": "FeedCover", "via": 11 }
+    },
+    {
+      "name": "reveal-a-sensitive-clip-in-the-stream",
+      "description": "A sensitive clip meets the stream veiled; tapping the veil reveals clip and caption together, and the clip joins the rotation and plays.",
+      "start": { "board": "ReelSensitive" },
+      "end": { "board": "ReelSensitive", "via": 9, "to": "Reel" }
+    },
+    {
+      "name": "reveal-a-sensitive-video-post",
+      "description": "A sensitive video post opens unrevealed; Show on the card unveils the pinned clip and the card together.",
+      "start": { "board": "PostDetailVideoSensitive" },
+      "end": { "board": "PostDetailVideoSensitive", "via": 5 }
+    },
+    {
+      "name": "hide-someone-from-the-feed",
+      "description": "Hide on a post's menu, opened from a card in the feed, asks nothing: that person's rows go, the ones behind them move up, and the snackbar offers Undo.",
+      "start": { "board": "Feed", "via": 3 },
+      "end": { "board": "ReaderPostMenu", "via": 3, "to": "FeedHidden" }
+    },
+    {
+      "name": "read-a-posts-license",
+      "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
+      "start": { "board": "Feed", "via": 3 },
+      "end": { "board": "ReaderPostMenu", "via": 4 }
+    },
+    {
+      "name": "share-from-the-narrow-menu",
+      "description": "On a phone too narrow for the whole action row, share moves into the post's menu and does there exactly what the glyph does on a wider phone.",
+      "start": { "board": "ReaderPostMenuNarrow" },
+      "end": { "board": "ReaderPostMenuNarrow", "via": 1 }
+    },
+    {
+      "name": "watch-a-clip-full-screen",
+      "description": "Full screen on a video post's transport opens the viewer, the clip whole — a reading journey that concludes on arrival.",
+      "start": { "board": "PostDetailVideo", "via": 19 }
+    },
+    {
+      "name": "turn-the-viewer",
+      "description": "The viewer reached by turning the device — rotation, not a tap — closes with the X, as a swipe down does.",
+      "start": { "board": "ViewerLandscape" },
+      "end": { "board": "ViewerLandscape", "via": 1 }
+    },
+    {
+      "name": "open-the-wallet",
+      "description": "The Wallet tab lands on its screen saying the wallet is not here yet — the surface itself is still owed.",
+      "start": { "board": "Feed", "via": 14 }
+    },
+    {
+      "name": "see-what-cites-a-post",
+      "description": "Cited by on a post's own view opens what cites it; a citing post's row opens that post's detail.",
+      "start": { "board": "PostDetail", "via": 16 },
+      "end": { "board": "CitedBy", "via": 1, "to": "PostDetail" }
+    },
+    {
+      "name": "search-for-a-name-nothing-carries",
+      "description": "A search for a name nothing carries says so where the results would stand; a name something carries brings results again.",
+      "start": { "board": "Explore", "via": 1, "to": "ExploreNone" },
+      "end": { "board": "ExploreNone", "via": 1, "to": "ExploreSearch" }
+    },
+    {
+      "name": "search-comments-without-a-scope",
+      "description": "Comments alone in the search filter, with no @handle or #tag in the query, answer with the quiet line where results would stand; a scoped query brings the comments it reaches.",
+      "start": { "board": "ExploreSearch", "via": 1, "to": "ExploreUnscoped" },
+      "end": { "board": "ExploreUnscoped", "via": 1, "to": "ExploreSearch" }
+    },
+    {
+      "name": "meet-a-profile-the-server-didnt-answer",
+      "description": "A profile whose read never reached the server says so in place; Retry that reaches this time loads the profile.",
+      "start": { "board": "ProfileUnreachable" },
+      "end": { "board": "ProfileUnreachable", "via": 2, "to": "ProfileOther" }
+    },
+    {
+      "name": "meet-a-profile-link-that-names-nobody",
+      "description": "A shared profile link whose handle resolves to nothing says so — a reading journey that concludes on arrival.",
+      "start": { "board": "ProfileNotFound" }
+    },
+    {
+      "name": "meet-a-post-link-that-names-nothing",
+      "description": "A shared post link or a notification whose post resolves to nothing says so — a reading journey that concludes on arrival.",
+      "start": { "board": "PostNotFound" }
+    },
+    {
+      "name": "meet-a-comment-link-that-names-nothing",
+      "description": "A shared comment link or a notification whose comment resolves to nothing says so — a reading journey that concludes on arrival.",
+      "start": { "board": "CommentNotFound" }
+    },
+    {
+      "name": "read-a-score-whose-paths-moved-on",
+      "description": "A score opened on a post whose paths have all aged out draws the state the dust floor leaves — a reading journey that concludes on arrival.",
+      "start": { "board": "FeedEntryMoved" }
+    },
+    {
+      "name": "load-more-of-a-chronicle-after-a-fault",
+      "description": "A chronicle's next page that didn't arrive leaves a row where it should stand; Retry that comes this time gives way to rows.",
+      "start": { "board": "ProfileMoreFailed" },
+      "end": { "board": "ProfileMoreFailed", "via": 1, "to": "Profile" }
+    },
+    {
+      "name": "read-someones-posts",
+      "description": "The Posts tab of someone's chronicle shows their posts as cards — a reading journey that concludes on arrival.",
+      "start": { "board": "ProfileOther", "via": 6, "to": "ProfilePosts" }
+    },
+    {
+      "name": "hide-someone-from-their-profile",
+      "description": "Hide on another's profile menu asks nothing; the page stays open, and the feed, the next time it is opened, has their rows gone and the ones behind them moved up.",
+      "start": { "board": "ProfileOther", "via": 2 },
+      "end": { "board": "ProfileMenu", "via": 4, "to": "FeedHidden" }
+    },
+    {
+      "name": "hide-a-deleted-account",
+      "description": "A deleted account's page keeps its menu on the redacted wording; Hide this account clears that actor's rows from the feed the next time it is opened.",
+      "start": { "board": "ProfileDeleted", "via": 11 },
+      "end": { "board": "ProfileDeletedMenu", "via": 3, "to": "FeedHidden" }
+    },
+    {
+      "name": "revise-a-standing-opinion",
+      "description": "The stance anchor on someone already held opens the pad over the opinion standing; Set signs the new pick and the stance lands back where the pad bloomed.",
+      "start": { "board": "ProfileOtherHeld", "via": 4, "to": "PadStanding" },
+      "end": { "board": "PadStanding", "via": 5, "case": "signed — the stance lands, back where the pad bloomed" }
+    },
+    {
+      "name": "walk-back-an-opinion",
+      "description": "Walk it back on a standing opinion's pad raises the severance dialog with its cost; Walk it back signs the bundle to nothing and the pad closes with the dialog.",
+      "start": { "board": "ProfileOtherHeld", "via": 4, "to": "PadStanding" },
+      "waypoints": [
+        { "board": "PadStanding", "via": 3 }
+      ],
+      "end": { "board": "SeveranceConfirm", "via": 1, "case": "signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader" }
+    },
+    {
+      "name": "retry-a-stance-that-didnt-sign",
+      "description": "A stance that didn't go through keeps the pad open at the pick, the fault above its commit row; Retry that signs this time lands the stance back where the pad bloomed.",
+      "start": { "board": "Feed", "via": 8, "to": "VouchBackPad" },
+      "waypoints": [
+        { "board": "VouchBackPad", "via": 4, "to": "PadFailed" }
+      ],
+      "end": { "board": "PadFailed", "via": 5, "case": "signed this time — the stance lands, back where the pad bloomed" }
+    },
+    {
+      "name": "meet-the-write-rule-on-the-pad",
+      "description": "The write rule refusing a stance stages and spends nothing; its notice stands where the landing line and Set were, and Not now closes the pad.",
+      "start": { "board": "Feed", "via": 8, "to": "VouchBackPad" },
+      "waypoints": [
+        { "board": "VouchBackPad", "via": 4, "to": "PadWriteRule" }
+      ],
+      "end": { "board": "PadWriteRule", "via": 4 }
+    },
+    {
+      "name": "walk-your-topics",
+      "description": "Your topics, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
+      "start": { "board": "Explore", "via": 10 },
+      "waypoints": [
+        { "board": "YourTopics", "via": 2 }
+      ],
+      "end": { "board": "TagPageHeld", "via": 15, "to": "TagPageHeldPad" }
+    },
+    {
+      "name": "add-to-a-held-topic",
+      "description": "The pad over a held topic takes a further pick; Set joins the Affinity to the bundle, back on the tag page.",
+      "start": { "board": "TagPageHeld", "via": 15, "to": "TagPageHeldPad" },
+      "end": { "board": "TagPageHeldPad", "via": 5, "case": "signed — the Affinity joins the bundle, back on the tag page" }
+    },
+    {
+      "name": "disconnect-from-a-topic",
+      "description": "Disconnect on a held topic's pad raises the severance dialog in the topic's own words and at its own price; Walk it back signs the bundle to nothing.",
+      "start": { "board": "TagPageHeld", "via": 15, "to": "TagPageHeldPad" },
+      "waypoints": [
+        { "board": "TagPageHeldPad", "via": 3 }
+      ],
+      "end": { "board": "SeveranceConfirm", "via": 1, "case": "signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader" }
+    },
+    {
+      "name": "hold-a-topic-nothing-carries",
+      "description": "A tag everything has been untagged out of keeps its page and its stance face; press-and-hold lands a positive Affinity, and the topic is held.",
+      "start": { "board": "TagPageEmpty" },
+      "end": { "board": "TagPageEmpty", "via": 3, "case": "press-and-hold — a positive Affinity lands, and the topic is held" }
+    },
+    {
+      "name": "open-something-you-saved",
+      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people in one list; a saved post's row opens the post.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 1, "to": "Saved" }
+      ],
+      "end": { "board": "Saved", "via": 2, "to": "PostDetail" }
+    },
+    {
+      "name": "unsave-and-undo",
+      "description": "A row's unsave takes it out of Saved, the list closing over it, and the line offers Undo; Undo puts the row back where it was.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 1, "to": "Saved" },
+        { "board": "Saved", "via": 8, "to": "SavedUndo" }
+      ],
+      "end": { "board": "SavedUndo", "via": 9, "to": "Saved" }
+    },
+    {
+      "name": "find-nothing-saved-yet",
+      "description": "Saved with nothing kept opens the empty list — a reading journey that concludes on arrival.",
+      "start": { "board": "Profile", "via": 2 },
+      "end": { "board": "ProfileOwnMenu", "via": 1, "to": "SavedEmpty" }
+    },
+    {
+      "name": "read-your-history",
+      "description": "History, in your own profile's menu, opens what you have read, first-seen order — a reading journey that concludes on arrival.",
+      "start": { "board": "Profile", "via": 2 },
+      "end": { "board": "ProfileOwnMenu", "via": 2, "to": "History" }
+    },
+    {
+      "name": "filter-your-history",
+      "description": "History's Everything trigger opens its filter; the kind chips stage, and Done re-reads the history once, narrowed.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 2, "to": "History" },
+        { "board": "History", "via": 3 }
+      ],
+      "end": { "board": "HistoryFilter", "via": 3, "to": "History" }
+    },
+    {
+      "name": "filter-your-history-to-nothing",
+      "description": "A filter no seen thing matches leaves History with nothing to show and the cause chip at kinds; Show everything puts the whole history back.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 2, "to": "History" },
+        { "board": "History", "via": 3 },
+        { "board": "HistoryFilter", "via": 3, "to": "HistoryNone" }
+      ],
+      "end": { "board": "HistoryNone", "via": 4, "to": "History" }
+    },
+    {
+      "name": "find-nothing-read-yet",
+      "description": "History on a new account opens the empty list — a reading journey that concludes on arrival.",
+      "start": { "board": "Profile", "via": 2 },
+      "end": { "board": "ProfileOwnMenu", "via": 2, "to": "HistoryEmpty" }
+    },
+    {
+      "name": "send-your-first-invite",
+      "description": "Invites with nothing out yet teaches what an invite is; Create invite opens the create sheet, and the link it makes goes straight to the platform's own share sheet.",
+      "start": { "board": "Profile", "via": 7, "to": "InvitesEmpty" },
+      "waypoints": [
+        { "board": "InvitesEmpty", "via": 2 },
+        { "board": "InviteNew", "via": 3, "to": "InviteCreated" }
+      ],
+      "end": { "board": "InviteCreated", "via": 2, "case": "the platform's own share sheet" }
+    },
+    {
+      "name": "set-how-long-an-invite-lasts",
+      "description": "Expires after on the create sheet opens the length chooser stacked over it; picking a length is the commit, and the invite made carries it.",
+      "start": { "board": "Invites", "via": 2 },
+      "waypoints": [
+        { "board": "InviteNew", "via": 2 },
+        { "board": "InviteExpiry", "via": 1 },
+        { "board": "InviteNew", "via": 3, "to": "InviteCreated" }
+      ],
+      "end": { "board": "InviteCreated", "via": 2, "case": "the platform's own share sheet" }
+    },
+    {
+      "name": "close-an-application",
+      "description": "A waiting row's close in the invites queue asks first, named on the row; Close it takes the row off this inviter's list and tells the applicant, whom any other member can still vouch in.",
+      "start": { "board": "Profile", "via": 7, "to": "Invites" },
+      "waypoints": [
+        { "board": "Invites", "via": 5 }
+      ],
+      "end": { "board": "RejectConfirm", "via": 1, "to": "Invites" }
+    },
+    {
+      "name": "close-a-links-applications",
+      "description": "A group's Close all asks first, naming the count; Close them takes every application still waiting on that link off this list at once, each person told.",
+      "start": { "board": "Profile", "via": 7, "to": "Invites" },
+      "waypoints": [
+        { "board": "Invites", "via": 8 }
+      ],
+      "end": { "board": "RejectAllConfirm", "via": 1, "to": "Invites" }
+    },
+    {
+      "name": "step-back-from-the-gated-seal",
+      "description": "Back from the gated seal returns to details while the uploads still run; Next goes back to the gated seal, which signs once they land.",
+      "start": { "board": "ComposeSealUploading", "via": 1 },
+      "end": { "board": "ComposeUploading", "via": 11, "to": "ComposeSealUploading" }
+    },
+    {
+      "name": "follow-the-already-published-marker",
+      "description": "Media that already stands in one of the author's own published posts puts the marker on the details stage; its door opens the post the line names, with no dialog and no gate.",
+      "start": { "board": "ComposeDetailsReused" },
+      "end": { "board": "ComposeDetailsReused", "via": 14 }
+    },
+    {
+      "name": "reveal-a-sensitive-words-post",
+      "description": "A words-only post its author marked sensitive meets the feed veiled, the source line on the veil plate; Show unveils the words in place for the whole post, for the session.",
+      "start": { "board": "FeedWordsSensitive" },
+      "end": { "board": "FeedWordsSensitive", "via": 19 }
     }
   ]
 }
