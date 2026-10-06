@@ -6,7 +6,7 @@ ALWAYS the profile carries no cover image and no banner
 
 ALWAYS the figures read Posts, Opinions on them and Opinions by them, each labelled, and never one merged figure
 
-ALWAYS the figures are one tap target, spoken as Opinions on and by with the person's handle
+ALWAYS the figures are one tap target, spoken as each figure's number and words — Posts, Opinions on them, Opinions by them — then opinions on and by with the person's handle
 
 ALWAYS the actions row reads the opinion on the person, worn wide, then Message sized by its word, then the ⋮ that closes the row
 
