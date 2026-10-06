@@ -930,6 +930,178 @@
       "description": "Settings during the grace reads the deadline on its Delete account row; the row opens it in full with Cancel, which calls the deletion off and returns to settings with the band gone.",
       "start": { "board": "SettingsDeleting" },
       "end": { "board": "DeleteAccountPending", "via": 2, "to": "Settings" }
+    },
+    {
+      "name": "choose-a-posts-license",
+      "description": "Change on the seal's license row opens the license sheet; Done closes it onto the seal, the row reading the pair's name and both tier hints.",
+      "start": { "board": "ComposeSeal", "via": 4 },
+      "end": { "board": "ComposeLicense", "via": 4 }
+    },
+    {
+      "name": "mark-a-post-sensitive",
+      "description": "Mark on the seal's sensitive row opens the sheet, where the switch and its reason are staged; Done closes it onto the seal, the row reading the mark.",
+      "start": { "board": "ComposeSeal", "via": 6 },
+      "end": { "board": "ComposeSensitive", "via": 4 }
+    },
+    {
+      "name": "publish-with-the-key-elsewhere",
+      "description": "Sign and publish where the key is elsewhere reaches the key-absent seal; Restore the key takes the recovery code and returns to the seal it began from, the draft intact.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "ComposeKeyAbsent" },
+      "waypoints": [
+        { "board": "ComposeKeyAbsent", "via": 5 }
+      ],
+      "end": { "board": "Restore", "via": 4, "case": "key restored — returns where restore began" }
+    },
+    {
+      "name": "write-past-the-details-caps",
+      "description": "A description past the five hundred stops Next and says so on the field; cutting it clears the refusal the moment it fits.",
+      "start": { "board": "ComposeDetails", "via": 5, "to": "ComposeDetailsCaps" },
+      "end": { "board": "ComposeDetailsCaps", "via": 5 }
+    },
+    {
+      "name": "write-past-the-words-cap",
+      "description": "A words body past the five thousand says how far over and stops Next; cutting clears the refusal the moment it fits.",
+      "start": { "board": "ComposeWords", "via": 5, "to": "ComposeWordsCaps" },
+      "end": { "board": "ComposeWordsCaps", "via": 5 }
+    },
+    {
+      "name": "look-over-many-staged-citations",
+      "description": "A seal carrying more than one citation counts them on its References row, and the count opens what it counts; a staged citation's name opens its pair, and Done carries the pair it was given.",
+      "start": { "board": "ComposeSealCited" },
+      "waypoints": [
+        { "board": "ComposeSealCited", "via": 9 },
+        { "board": "ComposeCitations", "via": 1 }
+      ],
+      "end": { "board": "RefPair", "via": 2 }
+    },
+    {
+      "name": "look-over-many-staged-tags",
+      "description": "A seal carrying more tags than its row holds counts them, and the count opens the staged-tags sheet; a tag's name opens its pair, and Done carries the pair it was given.",
+      "start": { "board": "ComposeSealTagged" },
+      "waypoints": [
+        { "board": "ComposeSealTagged", "via": 9 },
+        { "board": "ComposeTags", "via": 1 }
+      ],
+      "end": { "board": "TagPadCompose", "via": 2 }
+    },
+    {
+      "name": "pair-a-staged-citation",
+      "description": "A staged reference row on the details stage opens the citation's pair sheet; the pair moves, nothing signs until the seal, and Done carries it back to the row.",
+      "start": { "board": "ComposeDetails", "via": 13 },
+      "end": { "board": "RefPair", "via": 2 }
+    },
+    {
+      "name": "discard-a-kept-draft",
+      "description": "Reaching past a kept draft to the dimmed roll is asking to discard it, and the dialog asks; Discard it brings the roll live and a fresh pick begins.",
+      "start": { "board": "ComposeDraft", "via": 5 },
+      "end": { "board": "ComposeDraftDiscard", "via": 1 }
+    },
+    {
+      "name": "swap-the-pictures-for-words",
+      "description": "Write words instead with pictures or a clip already in the body asks first; Discard lets them go and opens the words stage empty, the rest of the draft kept.",
+      "start": { "board": "ComposePick", "via": 4, "to": "ComposeBodyDiscard" },
+      "end": { "board": "ComposeBodyDiscard", "via": 2, "to": "ComposeWords" }
+    },
+    {
+      "name": "pick-files-that-are-refused",
+      "description": "Picks over the cap or in a format nothing here reads are named on the pick step with why; what was accepted goes on to the crop.",
+      "start": { "board": "ComposePick", "via": 9, "to": "ComposePickedErrors" },
+      "end": { "board": "ComposePickedErrors", "via": 3 }
+    },
+    {
+      "name": "pick-a-video-from-the-grid",
+      "description": "A video picked from the grid becomes the whole body and the step stops taking picks; a horizontal or square clip goes on to choose its face, and details and the seal follow.",
+      "start": { "board": "ComposePick", "via": 9, "to": "ComposePickVideo" },
+      "waypoints": [
+        { "board": "ComposePickVideo", "via": 3, "to": "ComposeCover" },
+        { "board": "ComposeCover", "via": 6 },
+        { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "to": "ComposeLanded" }
+    },
+    {
+      "name": "go-back-to-a-clip-wearing-its-cover",
+      "description": "Back from the cover step once a face is chosen shows the pick with the clip wearing it; Next returns to the cover step, which holds the choice rather than asking again.",
+      "start": { "board": "ComposeCover", "via": 1, "to": "ComposePickVideoCover" },
+      "end": { "board": "ComposePickVideoCover", "via": 3 }
+    },
+    {
+      "name": "cover-a-clip-with-a-picture-of-your-own",
+      "description": "A picture of your own on the cover step comes back through the crop, locked to the video's shape; Next sets it as the cover on the row that asked.",
+      "start": { "board": "ComposeCover", "via": 5, "to": "CoverCrop" },
+      "end": { "board": "CoverCrop", "via": 3 }
+    },
+    {
+      "name": "preview-the-clip-before-choosing-its-face",
+      "description": "Play on the cover step runs the preview, the transport in place of the cover; the face is still picked from the strip, and Next goes on to details.",
+      "start": { "board": "ComposeCover", "via": 3 },
+      "end": { "board": "ComposeCoverPlaying", "via": 9 }
+    },
+    {
+      "name": "cover-a-clip-the-device-cant-cut",
+      "description": "A horizontal or square clip the device returns no frames for meets the cover step with the gallery alone; with a cover or without one, Next goes on to details — a post never waits on a frame the device could not cut.",
+      "start": { "board": "ComposePickVideo", "via": 3, "to": "ComposeCoverNoFrames" },
+      "end": { "board": "ComposeCoverNoFrames", "via": 4 }
+    },
+    {
+      "name": "describe-a-video",
+      "description": "Describe the video on a clip's details opens the describe sheet's video shape — one description for the whole clip, none for its cover.",
+      "start": { "board": "ComposeDetailsVideo", "via": 3 },
+      "end": { "board": "ComposeDescribeVideo", "via": 3 }
+    },
+    {
+      "name": "name-a-new-tag",
+      "description": "Typing in the tag picker canonicalizes the name as it goes and keeps it the first row; picking it stages it in the composer's tags, and the picker stays open for the next.",
+      "start": { "board": "TagPicker", "via": 3, "to": "TagPickerTyping" },
+      "end": { "board": "TagPickerTyping", "via": 4 }
+    },
+    {
+      "name": "meet-a-tag-name-it-cant-take",
+      "description": "A character no name may carry is refused where it was typed and nothing stages; with the offending characters gone the first row comes back.",
+      "start": { "board": "TagPicker", "via": 3, "to": "TagPickerRefused" },
+      "end": { "board": "TagPickerRefused", "via": 3, "to": "TagPickerTyping" }
+    },
+    {
+      "name": "publish-past-a-cited-post-that-never-landed",
+      "description": "A cited post that never landed is named on its own seal row with Remove it; the refused act removed, Sign and publish lands the post in its detail view, still settling.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "SealFaultRow" },
+      "end": { "board": "SealFaultRow", "via": 7, "to": "ComposeLanded" }
+    },
+    {
+      "name": "keep-the-draft-when-signing-is-refused",
+      "description": "The write rule refusing the seal stages and spends nothing; Keep the draft, sign later leaves with the draft on this device, offered back the next time you compose.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "WriteRuleFailed" },
+      "end": { "board": "WriteRuleFailed", "via": 7, "case": "leaves — the draft stays on this device and is offered back the next time you compose" }
+    },
+    {
+      "name": "try-again-after-a-bug",
+      "description": "Any other refusal of a staged act is a bug the notice owns; Try again that goes through this time lands the post in its detail view, still settling.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "SealFaultBug" },
+      "end": { "board": "SealFaultBug", "via": 7, "to": "ComposeLanded" }
+    },
+    {
+      "name": "report-a-bug-from-the-seal",
+      "description": "Report a problem on the bug notice opens the same report page Settings opens, nothing about the seal attached — the words are the reader's own.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "SealFaultBug" },
+      "end": { "board": "SealFaultBug", "via": 8, "to": "ReportProblemEmpty" }
+    },
+    {
+      "name": "discard-the-post-from-the-bug-notice",
+      "description": "Discard the post on the bug notice asks first, since the draft would be lost; Discard it leaves the flow back where composing began, nothing signed.",
+      "start": { "board": "SealFaultBug", "via": 9, "to": "SealDiscardConfirm" },
+      "end": { "board": "SealDiscardConfirm", "via": 1 }
+    },
+    {
+      "name": "retry-a-post-after-the-network-drops",
+      "description": "Sign and publish offline meets the network-error board; Retry that reaches this time lands the post in its detail view, still settling.",
+      "start": { "board": "ComposeSeal", "via": 7, "to": "NetworkError" },
+      "end": { "board": "NetworkError", "via": 1, "to": "ComposeLanded" }
+    },
+    {
+      "name": "read-a-help-dialog",
+      "description": "A ? opens its help dialog — on the seal, the Signed-actions text; Close returns to the screen that asked.",
+      "start": { "board": "ComposeSeal", "via": 3 },
+      "end": { "board": "HelpDialog", "via": 1 }
     }
   ]
 }

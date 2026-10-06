@@ -2701,6 +2701,369 @@
         "DeleteAccountPending",
         "Settings"
       ]
+    },
+    {
+      "name": "choose-a-posts-license",
+      "description": "Change on the seal's license row opens the license sheet; Done closes it onto the seal, the row reading the pair's name and both tier hints.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 4 «Change (license)» → ComposeLicense",
+        "end · ComposeLicense · 4 «Done» → ComposeSeal — the sheet closes — the row reads the pair's name and both tier hints (licenseSummary)"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "ComposeLicense"
+      ]
+    },
+    {
+      "name": "mark-a-post-sensitive",
+      "description": "Mark on the seal's sensitive row opens the sheet, where the switch and its reason are staged; Done closes it onto the seal, the row reading the mark.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 6 «Mark (sensitive)» → ComposeSensitive",
+        "end · ComposeSensitive · 4 «Done» → ComposeSeal — the sheet closes — the row reads the mark"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "ComposeSensitive"
+      ]
+    },
+    {
+      "name": "publish-with-the-key-elsewhere",
+      "description": "Sign and publish where the key is elsewhere reaches the key-absent seal; Restore the key takes the recovery code and returns to the seal it began from, the draft intact.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → ComposeKeyAbsent — key elsewhere",
+        "ComposeKeyAbsent · 5 «Restore the key» → Restore",
+        "end · Restore · 4 «Restore the key» → back — key restored — returns where restore began"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "ComposeKeyAbsent",
+        "Restore"
+      ]
+    },
+    {
+      "name": "write-past-the-details-caps",
+      "description": "A description past the five hundred stops Next and says so on the field; cutting it clears the refusal the moment it fits.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetails · 5 «Description» → ComposeDetailsCaps — past the five hundred — the field says so and Next stops",
+        "end · ComposeDetailsCaps · 5 «Description» → self — typing — the refusal clears the moment it fits"
+      ],
+      "boards": [
+        "ComposeDetails",
+        "ComposeDetailsCaps"
+      ]
+    },
+    {
+      "name": "write-past-the-words-cap",
+      "description": "A words body past the five thousand says how far over and stops Next; cutting clears the refusal the moment it fits.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeWords · 5 «the body» → ComposeWordsCaps — past the five thousand — the box says how far over and Next stops",
+        "end · ComposeWordsCaps · 5 «the body» → self — cutting — the refusal clears the moment it fits and the count stays a while"
+      ],
+      "boards": [
+        "ComposeWords",
+        "ComposeWordsCaps"
+      ]
+    },
+    {
+      "name": "look-over-many-staged-citations",
+      "description": "A seal carrying more than one citation counts them on its References row, and the count opens what it counts; a staged citation's name opens its pair, and Done carries the pair it was given.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSealCited",
+        "ComposeSealCited · 9 «References row» → ComposeCitations — the count opens what it counts",
+        "ComposeCitations · 1 «staged reference name» → RefPair — the citation's pair sheet (master on the compose page)",
+        "end · RefPair · 2 «Done» → back — the sheet closes — the staged row carries the pair it was given"
+      ],
+      "boards": [
+        "ComposeSealCited",
+        "ComposeCitations",
+        "RefPair"
+      ]
+    },
+    {
+      "name": "look-over-many-staged-tags",
+      "description": "A seal carrying more tags than its row holds counts them, and the count opens the staged-tags sheet; a tag's name opens its pair, and Done carries the pair it was given.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSealTagged",
+        "ComposeSealTagged · 9 «Tags row» → ComposeTags — the count opens what it counts — the staged-tags sheet over the seal, the References row's own kind of door (backlog item 95)",
+        "ComposeTags · 1 «staged tag name» → TagPadCompose — the tag's pair sheet (master on the compose page)",
+        "end · TagPadCompose · 2 «Done» → back — the sheet closes — the chip carries the pair it was given"
+      ],
+      "boards": [
+        "ComposeSealTagged",
+        "ComposeTags",
+        "TagPadCompose"
+      ]
+    },
+    {
+      "name": "pair-a-staged-citation",
+      "description": "A staged reference row on the details stage opens the citation's pair sheet; the pair moves, nothing signs until the seal, and Done carries it back to the row.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetails · 13 «staged reference row» → RefPair",
+        "end · RefPair · 2 «Done» → back — the sheet closes — the staged row carries the pair it was given"
+      ],
+      "boards": [
+        "ComposeDetails",
+        "RefPair"
+      ]
+    },
+    {
+      "name": "discard-a-kept-draft",
+      "description": "Reaching past a kept draft to the dimmed roll is asking to discard it, and the dialog asks; Discard it brings the roll live and a fresh pick begins.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDraft · 5 «the roll, behind its shield» → ComposeDraftDiscard — any tap on the dimmed pictures — reaching past the draft is asking to discard it, and the ask is the answer a blocked surface owes (jakob 2026-09-15)",
+        "end · ComposeDraftDiscard · 1 «Discard it» → ComposePick — the draft discarded — the roll comes live and a fresh pick begins, the card's own Discard said from the dialog"
+      ],
+      "boards": [
+        "ComposeDraft",
+        "ComposeDraftDiscard",
+        "ComposePick"
+      ]
+    },
+    {
+      "name": "swap-the-pictures-for-words",
+      "description": "Write words instead with pictures or a clip already in the body asks first; Discard lets them go and opens the words stage empty, the rest of the draft kept.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePick · 4 «Write words instead» → ComposeBodyDiscard — the body holds pictures or a clip — the ask first",
+        "end · ComposeBodyDiscard · 2 «Discard» → ComposeWords — raised by Write words instead — the pictures or the clip go, and the words stage opens empty; the rest of the draft stays"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposeBodyDiscard",
+        "ComposeWords"
+      ]
+    },
+    {
+      "name": "pick-files-that-are-refused",
+      "description": "Picks over the cap or in a format nothing here reads are named on the pick step with why; what was accepted goes on to the crop.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePick · 9 «grid tiles» → ComposePickedErrors — over its cap, or a format nothing here reads — the step says why",
+        "end · ComposePickedErrors · 3 «Next» → ComposeCrop — what was accepted goes on — the crop"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposePickedErrors",
+        "ComposeCrop"
+      ]
+    },
+    {
+      "name": "pick-a-video-from-the-grid",
+      "description": "A video picked from the grid becomes the whole body and the step stops taking picks; a horizontal or square clip goes on to choose its face, and details and the seal follow.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePick · 9 «grid tiles» → ComposePickVideo — a video — the whole body, the step stops taking picks",
+        "ComposePickVideo · 3 «Next» → ComposeCover — horizontal or square — its face, the crop never enters the video path",
+        "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
+        "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
+        "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposePick",
+        "ComposePickVideo",
+        "ComposeCover",
+        "ComposeDetailsVideo",
+        "ComposeSeal",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "go-back-to-a-clip-wearing-its-cover",
+      "description": "Back from the cover step once a face is chosen shows the pick with the clip wearing it; Next returns to the cover step, which holds the choice rather than asking again.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeCover · 1 «back arrow» → ComposePickVideoCover — a cover was chosen — the pick shows the clip wearing it",
+        "end · ComposePickVideoCover · 3 «Next» → ComposeCover — back to the face the author already chose — the cover step holds the choice, it does not re-ask it"
+      ],
+      "boards": [
+        "ComposeCover",
+        "ComposePickVideoCover"
+      ]
+    },
+    {
+      "name": "cover-a-clip-with-a-picture-of-your-own",
+      "description": "A picture of your own on the cover step comes back through the crop, locked to the video's shape; Next sets it as the cover on the row that asked.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeCover · 5 «A picture (tile)» → CoverCrop — the picture comes back through the crop, locked to the video's shape — both platforms",
+        "end · CoverCrop · 3 «Next» → back — the cover is set — back to the cover row that asked for it"
+      ],
+      "boards": [
+        "ComposeCover",
+        "CoverCrop"
+      ]
+    },
+    {
+      "name": "preview-the-clip-before-choosing-its-face",
+      "description": "Play on the cover step runs the preview, the transport in place of the cover; the face is still picked from the strip, and Next goes on to details.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeCover · 3 «play» → ComposeCoverPlaying — the preview runs — the cover gives way to the transport",
+        "end · ComposeCoverPlaying · 9 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open"
+      ],
+      "boards": [
+        "ComposeCover",
+        "ComposeCoverPlaying",
+        "ComposeDetailsVideo"
+      ]
+    },
+    {
+      "name": "cover-a-clip-the-device-cant-cut",
+      "description": "A horizontal or square clip the device returns no frames for meets the cover step with the gallery alone; with a cover or without one, Next goes on to details — a post never waits on a frame the device could not cut.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposePickVideo · 3 «Next» → ComposeCoverNoFrames — horizontal or square, and the device returned no frames — the gallery alone",
+        "end · ComposeCoverNoFrames · 4 «Next» → ComposeDetailsVideo — with a cover or without one — a post never waits on a frame the device could not cut"
+      ],
+      "boards": [
+        "ComposePickVideo",
+        "ComposeCoverNoFrames",
+        "ComposeDetailsVideo"
+      ]
+    },
+    {
+      "name": "describe-a-video",
+      "description": "Describe the video on a clip's details opens the describe sheet's video shape — one description for the whole clip, none for its cover.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetailsVideo · 3 «Describe the video» → ComposeDescribeVideo — the describe sheet's video shape — one description for the clip, none for the cover",
+        "end · ComposeDescribeVideo · 3 «Done» → back — the sheet closes"
+      ],
+      "boards": [
+        "ComposeDetailsVideo",
+        "ComposeDescribeVideo"
+      ]
+    },
+    {
+      "name": "name-a-new-tag",
+      "description": "Typing in the tag picker canonicalizes the name as it goes and keeps it the first row; picking it stages it in the composer's tags, and the picker stays open for the next.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPicker · 3 «the name field» → TagPickerTyping — typing — the name canonicalized as it goes, always the first row",
+        "end · TagPickerTyping · 4 «rows — the typed name first» → self — the pick stages in the composer's tags — the row leaves the list for the staged section above it, wearing its ×, and the picker stays open for the next"
+      ],
+      "boards": [
+        "TagPicker",
+        "TagPickerTyping"
+      ]
+    },
+    {
+      "name": "meet-a-tag-name-it-cant-take",
+      "description": "A character no name may carry is refused where it was typed and nothing stages; with the offending characters gone the first row comes back.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPicker · 3 «the name field» → TagPickerRefused — a character no name may carry — the field refuses it where it was typed",
+        "end · TagPickerRefused · 3 «the name field» → TagPickerTyping — the offending characters gone — the first row comes back"
+      ],
+      "boards": [
+        "TagPicker",
+        "TagPickerRefused",
+        "TagPickerTyping"
+      ]
+    },
+    {
+      "name": "publish-past-a-cited-post-that-never-landed",
+      "description": "A cited post that never landed is named on its own seal row with Remove it; the refused act removed, Sign and publish lands the post in its detail view, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → SealFaultRow — a cited post that never landed — its row says so, with Remove it (master)",
+        "end · SealFaultRow · 7 «Sign and publish» → ComposeLanded — the refused act removed first — signed, the detail view, still settling"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "SealFaultRow",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "keep-the-draft-when-signing-is-refused",
+      "description": "The write rule refusing the seal stages and spends nothing; Keep the draft, sign later leaves with the draft on this device, offered back the next time you compose.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → WriteRuleFailed — the write rule refuses — nothing staged or spent, the draft kept (master)",
+        "end · WriteRuleFailed · 7 «Keep the draft, sign later» → back — leaves — the draft stays on this device and is offered back the next time you compose"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "WriteRuleFailed"
+      ]
+    },
+    {
+      "name": "try-again-after-a-bug",
+      "description": "Any other refusal of a staged act is a bug the notice owns; Try again that goes through this time lands the post in its detail view, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → SealFaultBug — any other refusal of one staged act — a bug the picker should have blocked: the notice owns it, with Try again, Report a problem and Discard the post (master)",
+        "end · SealFaultBug · 7 «Try again» → ComposeLanded — it goes through this time — the detail view, still settling"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "SealFaultBug",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "report-a-bug-from-the-seal",
+      "description": "Report a problem on the bug notice opens the same report page Settings opens, nothing about the seal attached — the words are the reader's own.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → SealFaultBug — any other refusal of one staged act — a bug the picker should have blocked: the notice owns it, with Try again, Report a problem and Discard the post (master)",
+        "end · SealFaultBug · 8 «Report a problem» → ReportProblemEmpty — the report page Settings opens, nothing written yet — the words are the reader's own, nothing about the seal is attached"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "SealFaultBug",
+        "ReportProblemEmpty"
+      ]
+    },
+    {
+      "name": "discard-the-post-from-the-bug-notice",
+      "description": "Discard the post on the bug notice asks first, since the draft would be lost; Discard it leaves the flow back where composing began, nothing signed.",
+      "status": "resolved",
+      "steps": [
+        "start · SealFaultBug · 9 «Discard the post» → SealDiscardConfirm — losing the draft asks first",
+        "end · SealDiscardConfirm · 1 «Discard it» → back — the draft is gone — leaves the flow, back where composing began; nothing was signed"
+      ],
+      "boards": [
+        "SealFaultBug",
+        "SealDiscardConfirm"
+      ]
+    },
+    {
+      "name": "retry-a-post-after-the-network-drops",
+      "description": "Sign and publish offline meets the network-error board; Retry that reaches this time lands the post in its detail view, still settling.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 7 «Sign and publish» → NetworkError — offline — the network-error board (master)",
+        "end · NetworkError · 1 «Retry» → ComposeLanded — reaches this time — the exemplar's signed landing"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "NetworkError",
+        "ComposeLanded"
+      ]
+    },
+    {
+      "name": "read-a-help-dialog",
+      "description": "A ? opens its help dialog — on the seal, the Signed-actions text; Close returns to the screen that asked.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSeal · 3 «? — Signed actions» → HelpDialog — the Signed-actions text",
+        "end · HelpDialog · 1 «Close» → back — the dialog closes — back to the screen that asked"
+      ],
+      "boards": [
+        "ComposeSeal",
+        "HelpDialog"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -2942,6 +3305,18 @@
         "remove-your-comment"
       ]
     },
+    "ComposeBodyDiscard": {
+      "flows": [
+        "swap-the-pictures-for-words"
+      ],
+      "endpoint": []
+    },
+    "ComposeCitations": {
+      "flows": [
+        "look-over-many-staged-citations"
+      ],
+      "endpoint": []
+    },
     "ComposeCited": {
       "flows": [
         "cite-a-post",
@@ -2955,17 +3330,40 @@
     },
     "ComposeCover": {
       "flows": [
+        "cover-a-clip-with-a-picture-of-your-own",
         "give-a-vertical-clip-a-cover",
+        "go-back-to-a-clip-wearing-its-cover",
+        "pick-a-video-from-the-grid",
+        "preview-the-clip-before-choosing-its-face",
         "publish-a-video"
+      ],
+      "endpoint": [
+        "cover-a-clip-with-a-picture-of-your-own",
+        "go-back-to-a-clip-wearing-its-cover",
+        "preview-the-clip-before-choosing-its-face"
+      ]
+    },
+    "ComposeCoverNoFrames": {
+      "flows": [
+        "cover-a-clip-the-device-cant-cut"
+      ],
+      "endpoint": []
+    },
+    "ComposeCoverPlaying": {
+      "flows": [
+        "preview-the-clip-before-choosing-its-face"
       ],
       "endpoint": []
     },
     "ComposeCrop": {
       "flows": [
+        "pick-files-that-are-refused",
         "publish-a-post",
         "publish-from-the-browser"
       ],
-      "endpoint": []
+      "endpoint": [
+        "pick-files-that-are-refused"
+      ]
     },
     "ComposeDescribe": {
       "flows": [
@@ -2975,37 +3373,59 @@
         "describe-your-pictures"
       ]
     },
+    "ComposeDescribeVideo": {
+      "flows": [
+        "describe-a-video"
+      ],
+      "endpoint": [
+        "describe-a-video"
+      ]
+    },
     "ComposeDetails": {
       "flows": [
         "add-a-topic",
         "cite-something",
         "describe-your-pictures",
+        "pair-a-staged-citation",
         "pick-a-kept-draft-back-up",
         "publish-a-post",
         "publish-from-the-browser",
-        "publish-while-the-uploads-run"
+        "publish-while-the-uploads-run",
+        "write-past-the-details-caps"
       ],
       "endpoint": [
         "add-a-topic",
-        "publish-while-the-uploads-run"
+        "pair-a-staged-citation",
+        "publish-while-the-uploads-run",
+        "write-past-the-details-caps"
       ]
     },
     "ComposeDetailsCaps": {
       "flows": [
         "cite-something",
-        "describe-your-pictures"
+        "describe-your-pictures",
+        "write-past-the-details-caps"
       ],
-      "endpoint": []
+      "endpoint": [
+        "write-past-the-details-caps"
+      ]
     },
     "ComposeDetailsVideo": {
       "flows": [
         "cite-something",
+        "cover-a-clip-the-device-cant-cut",
+        "describe-a-video",
         "give-a-vertical-clip-a-cover",
+        "pick-a-video-from-the-grid",
+        "preview-the-clip-before-choosing-its-face",
         "publish-a-vertical-video",
         "publish-a-video"
       ],
       "endpoint": [
-        "give-a-vertical-clip-a-cover"
+        "cover-a-clip-the-device-cant-cut",
+        "describe-a-video",
+        "give-a-vertical-clip-a-cover",
+        "preview-the-clip-before-choosing-its-face"
       ]
     },
     "ComposeDetailsWords": {
@@ -3018,7 +3438,16 @@
     },
     "ComposeDraft": {
       "flows": [
+        "discard-a-kept-draft",
         "pick-a-kept-draft-back-up"
+      ],
+      "endpoint": [
+        "discard-a-kept-draft"
+      ]
+    },
+    "ComposeDraftDiscard": {
+      "flows": [
+        "discard-a-kept-draft"
       ],
       "endpoint": []
     },
@@ -3039,6 +3468,7 @@
     },
     "ComposeKeyAbsent": {
       "flows": [
+        "publish-with-the-key-elsewhere",
         "restore-your-key"
       ],
       "endpoint": []
@@ -3048,30 +3478,44 @@
         "edit-your-post",
         "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
+        "pick-a-video-from-the-grid",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
+        "publish-past-a-cited-post-that-never-landed",
         "publish-while-the-uploads-run",
         "publish-words",
         "remove-your-post",
         "reply-to-a-post",
+        "retry-a-post-after-the-network-drops",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
+        "try-again-after-a-bug",
         "visit-an-author"
       ],
       "endpoint": [
         "edit-your-post",
         "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
+        "pick-a-video-from-the-grid",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
+        "publish-past-a-cited-post-that-never-landed",
         "publish-while-the-uploads-run",
         "publish-words",
-        "remove-your-post"
+        "remove-your-post",
+        "retry-a-post-after-the-network-drops",
+        "try-again-after-a-bug"
       ]
+    },
+    "ComposeLicense": {
+      "flows": [
+        "choose-a-posts-license"
+      ],
+      "endpoint": []
     },
     "ComposePad": {
       "flows": [
@@ -3082,23 +3526,46 @@
     "ComposePick": {
       "flows": [
         "cite-a-post",
+        "discard-a-kept-draft",
         "mention-someone",
+        "pick-a-video-from-the-grid",
+        "pick-files-that-are-refused",
         "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "set-the-cover-and-order"
+        "set-the-cover-and-order",
+        "swap-the-pictures-for-words"
       ],
       "endpoint": [
         "cite-a-post",
+        "discard-a-kept-draft",
         "mention-someone",
+        "pick-a-video-from-the-grid",
+        "pick-files-that-are-refused",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "set-the-cover-and-order"
+        "set-the-cover-and-order",
+        "swap-the-pictures-for-words"
       ]
+    },
+    "ComposePickVideo": {
+      "flows": [
+        "cover-a-clip-the-device-cant-cut",
+        "pick-a-video-from-the-grid"
+      ],
+      "endpoint": [
+        "cover-a-clip-the-device-cant-cut"
+      ]
+    },
+    "ComposePickVideoCover": {
+      "flows": [
+        "go-back-to-a-clip-wearing-its-cover"
+      ],
+      "endpoint": []
     },
     "ComposePickWeb": {
       "flows": [
@@ -3116,25 +3583,78 @@
         "set-the-cover-and-order"
       ]
     },
+    "ComposePickedErrors": {
+      "flows": [
+        "pick-files-that-are-refused"
+      ],
+      "endpoint": []
+    },
     "ComposeSeal": {
       "flows": [
+        "choose-a-posts-license",
         "give-a-vertical-clip-a-cover",
+        "keep-the-draft-when-signing-is-refused",
+        "mark-a-post-sensitive",
         "pick-a-kept-draft-back-up",
+        "pick-a-video-from-the-grid",
         "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-from-the-browser",
+        "publish-past-a-cited-post-that-never-landed",
+        "publish-with-the-key-elsewhere",
         "publish-words",
-        "set-your-own-stance-on-your-post"
+        "read-a-help-dialog",
+        "report-a-bug-from-the-seal",
+        "retry-a-post-after-the-network-drops",
+        "set-your-own-stance-on-your-post",
+        "try-again-after-a-bug"
       ],
       "endpoint": [
-        "set-your-own-stance-on-your-post"
+        "choose-a-posts-license",
+        "keep-the-draft-when-signing-is-refused",
+        "mark-a-post-sensitive",
+        "publish-past-a-cited-post-that-never-landed",
+        "publish-with-the-key-elsewhere",
+        "read-a-help-dialog",
+        "report-a-bug-from-the-seal",
+        "retry-a-post-after-the-network-drops",
+        "set-your-own-stance-on-your-post",
+        "try-again-after-a-bug"
+      ]
+    },
+    "ComposeSealCited": {
+      "flows": [
+        "look-over-many-staged-citations"
+      ],
+      "endpoint": [
+        "look-over-many-staged-citations"
+      ]
+    },
+    "ComposeSealTagged": {
+      "flows": [
+        "look-over-many-staged-tags"
+      ],
+      "endpoint": [
+        "look-over-many-staged-tags"
       ]
     },
     "ComposeSealUploading": {
       "flows": [
         "publish-while-the-uploads-run"
+      ],
+      "endpoint": []
+    },
+    "ComposeSensitive": {
+      "flows": [
+        "mark-a-post-sensitive"
+      ],
+      "endpoint": []
+    },
+    "ComposeTags": {
+      "flows": [
+        "look-over-many-staged-tags"
       ],
       "endpoint": []
     },
@@ -3150,9 +3670,30 @@
         "cite-a-post",
         "mention-someone",
         "post-while-an-applicant",
-        "publish-words"
+        "publish-words",
+        "swap-the-pictures-for-words",
+        "write-past-the-words-cap"
       ],
-      "endpoint": []
+      "endpoint": [
+        "swap-the-pictures-for-words",
+        "write-past-the-words-cap"
+      ]
+    },
+    "ComposeWordsCaps": {
+      "flows": [
+        "write-past-the-words-cap"
+      ],
+      "endpoint": [
+        "write-past-the-words-cap"
+      ]
+    },
+    "CoverCrop": {
+      "flows": [
+        "cover-a-clip-with-a-picture-of-your-own"
+      ],
+      "endpoint": [
+        "cover-a-clip-with-a-picture-of-your-own"
+      ]
     },
     "DeleteAccount": {
       "flows": [
@@ -3544,6 +4085,14 @@
       ],
       "endpoint": []
     },
+    "HelpDialog": {
+      "flows": [
+        "read-a-help-dialog"
+      ],
+      "endpoint": [
+        "read-a-help-dialog"
+      ]
+    },
     "History": {
       "flows": [
         "follow-a-citation",
@@ -3745,6 +4294,12 @@
         "arrive-through-a-dead-invite-link",
         "arrive-through-an-invite-link"
       ]
+    },
+    "NetworkError": {
+      "flows": [
+        "retry-a-post-after-the-network-drops"
+      ],
+      "endpoint": []
     },
     "NoScreenLock": {
       "flows": [
@@ -4139,6 +4694,16 @@
       ],
       "endpoint": []
     },
+    "RefPair": {
+      "flows": [
+        "look-over-many-staged-citations",
+        "pair-a-staged-citation"
+      ],
+      "endpoint": [
+        "look-over-many-staged-citations",
+        "pair-a-staged-citation"
+      ]
+    },
     "ReferencePicker": {
       "flows": [
         "cite-something"
@@ -4335,9 +4900,12 @@
     },
     "ReportProblemEmpty": {
       "flows": [
+        "report-a-bug-from-the-seal",
         "report-a-problem"
       ],
-      "endpoint": []
+      "endpoint": [
+        "report-a-bug-from-the-seal"
+      ]
     },
     "Reset": {
       "flows": [
@@ -4367,6 +4935,7 @@
     },
     "Restore": {
       "flows": [
+        "publish-with-the-key-elsewhere",
         "restore-after-a-mistyped-code",
         "restore-the-key-from-the-recovery-code-row",
         "restore-the-key-from-the-your-key-row",
@@ -4375,6 +4944,7 @@
         "sign-the-picks-kept-while-the-key-was-away"
       ],
       "endpoint": [
+        "publish-with-the-key-elsewhere",
         "restore-the-key-from-the-recovery-code-row",
         "restore-the-key-from-the-your-key-row",
         "restore-your-key",
@@ -4419,6 +4989,30 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
+      ],
+      "endpoint": []
+    },
+    "SealDiscardConfirm": {
+      "flows": [
+        "discard-the-post-from-the-bug-notice"
+      ],
+      "endpoint": [
+        "discard-the-post-from-the-bug-notice"
+      ]
+    },
+    "SealFaultBug": {
+      "flows": [
+        "discard-the-post-from-the-bug-notice",
+        "report-a-bug-from-the-seal",
+        "try-again-after-a-bug"
+      ],
+      "endpoint": [
+        "discard-the-post-from-the-bug-notice"
+      ]
+    },
+    "SealFaultRow": {
+      "flows": [
+        "publish-past-a-cited-post-that-never-landed"
       ],
       "endpoint": []
     },
@@ -4602,6 +5196,14 @@
       ],
       "endpoint": []
     },
+    "TagPadCompose": {
+      "flows": [
+        "look-over-many-staged-tags"
+      ],
+      "endpoint": [
+        "look-over-many-staged-tags"
+      ]
+    },
     "TagPage": {
       "flows": [
         "open-a-topic",
@@ -4625,10 +5227,30 @@
     },
     "TagPicker": {
       "flows": [
-        "add-a-topic"
+        "add-a-topic",
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
       ],
       "endpoint": [
-        "add-a-topic"
+        "add-a-topic",
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
+      ]
+    },
+    "TagPickerRefused": {
+      "flows": [
+        "meet-a-tag-name-it-cant-take"
+      ],
+      "endpoint": []
+    },
+    "TagPickerTyping": {
+      "flows": [
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
+      ],
+      "endpoint": [
+        "meet-a-tag-name-it-cant-take",
+        "name-a-new-tag"
       ]
     },
     "Verified": {
@@ -4754,6 +5376,14 @@
       ],
       "endpoint": [
         "update-from-whats-new"
+      ]
+    },
+    "WriteRuleFailed": {
+      "flows": [
+        "keep-the-draft-when-signing-is-refused"
+      ],
+      "endpoint": [
+        "keep-the-draft-when-signing-is-refused"
       ]
     },
     "YourKey": {
