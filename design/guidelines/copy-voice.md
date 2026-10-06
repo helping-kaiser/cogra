@@ -570,6 +570,63 @@ not reads `Not marked` with one quiet line under the row:
 - `Also veiled by the platform's verdict` — blessed (jakob 2026-10-02) (jakob
   2026-10-01 ruled the line; the exact wording is the recommendation's).
 
+## The composer's carried-over words
+
+The post wizard's, the reply's and the edits' furniture, as drawn.
+Every line here is **carried over — blessed by use (jakob 2026-10-06)**,
+recorded so the registry is whole.
+
+- **The stages' titles** — `Details`, `Crop`, `The video's face` (its
+  stage label `Video only`), `The cover` (`CoverCrop`), `Edit post`,
+  `Edit comment`.
+- **The words stage** — the field `What do you want to publish?`, and
+  under the pick door `The body is your words.` (`ComposeWords`,
+  `EditWords`).
+- **The draft's card** (`ComposeDraft`) — `Your draft is here`, its
+  media read back as `2 pictures — kept on this device`, `Continue`
+  beside `Discard`, and under the card `Or start fresh —` over the roll.
+- **The pick** — `Pick one picture, several, or one video.`
+  (`ComposePick` and its family), the roll's door `Your photos app`, the
+  tray's `Show all`; on the web `Choose from your files` and `…or drop
+  them here.` (`ComposePickWeb`), the reply's `…or drop pictures or a
+  video here.` (`ReplyPicturesWeb`). A clip that came with its face reads
+  `A video is the whole post. This one has its cover.`
+  (`ComposePickVideoCover`).
+- **The picked sheet** (`ComposePicked`, `EditPicked`) — rows named
+  `Cover — shown first` and `Picture 2`, their acts `Make it the cover`
+  · `Move up` · `Move down`, and the one rule under them, `The first one
+  is the cover.`
+- **The crop's shapes** (`ComposeCrop`) — `Tall 4:5` · `Square 1:1` ·
+  `Wide 1.91:1`.
+- **The frame picker** — `A frame, or a picture of your own.` under the
+  strip (`ComposeCover`, `ComposeCoverPlaying`, `ReplyVideo`).
+- **The details stage** — the field `Title`; the picked row's caption
+  `2 pictures — the body`; the describe counter `· 0 of 2 described`
+  beside its door `Describe the pictures` (`Describe the video` on a
+  clip); the clip's row label `Cover`; the Sensitive row's action `Mark`
+  beside `Not marked`; and while pictures upload, `Pictures upload while
+  you write — signing waits for them.` (`ComposeUploading`).
+- **The describe sheet** — the field `What's in the picture` (`What's in
+  the video` on a clip).
+- **The sensitive sheet** — the `Why?` field's corner, `Optional — shown
+  on the veil`.
+- **The seal's read-back** of a post: its title and body, `Salt maps of
+  the coast road — 2 pictures.` (`ComposeSeal` and its family).
+- **A post that didn't land** (`ComposeExpired`) — under `Your post didn't
+  land`, `"Salt maps of the coast road" couldn't finish settling. Nothing
+  was spent — your draft is saved.` with `Open the draft`.
+- **The reply** — the composer's note `Words first — pictures can join
+  them.`, once a picture is staged `Words first — pictures can join them,
+  and they upload while you write.`, on a clip `Words first — a video can
+  join them, and it uploads while you write.`; the add row `+ Add
+  pictures or a video`; the seal's read-back of a reply to a post, `Reply
+  to "The long way home" — 89 characters.`, its act row labelled `Comment`
+  and reading `Reply to @ada's post` (`ReplySeal` and its family; the
+  comment target's lines are under *Honesty phrasings*).
+- **The comment edit** — `Your comment on "The long way home".` under its
+  title, and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  on `CommentEditVideo`).
+
 ## Accessible names
 
 The words a reader hears where the screen carries none — glyph controls
@@ -1361,6 +1418,57 @@ round*; every one blessed (jakob 2026-10-02).
 - `A password is at most 128 characters.` — `Join`'s and `ResetNew`'s
   password field past auth.md's cap (*Faults by code*,
   `WEAK_PASSWORD`). *Blessed (jakob 2026-10-05).*
+
+### The landing card and the entry screens' carried-over lines — 2026-10-06
+
+**The landing card** (`ApplicantLanding`): its title is `Approved — your
+registration is landing` (*blessed (jakob 2026-10-06)*), over `@mira
+approved your application. Nothing is needed from you while it lands.`
+(carried over — blessed by use, jakob 2026-10-06); the `keyAt` chip's
+other body is under *The key's lifecycle*.
+
+Every other line here is **carried over — blessed by use (jakob
+2026-10-06)**, recorded so the registry is whole:
+
+- **Sign in** (`SignIn`, `SignInError`, `SignInExpired`, `SignInLimited`)
+  — heading `Sign in to CoGra`, lead `Welcome back — your feed is where
+  you left it.` (the expired state puts its own line there), and the
+  link stack `Forgot password?` · `New here? Enter your invite` above
+  the two already recorded.
+- **The invite door** (`InviteEntry`, `InviteEntryError`) — heading
+  `Enter your invite`, lead `CoGra is invite-only. Paste your invite link
+  to get started.`, the field `Invite link` (`JoinInvalid` too), and
+  `Continue`.
+- **Join's lead** (`Join`, `JoinErrors`) — `CoGra is invite-only — a
+  member vouches for you, and @mira's approval brings you in.`
+- **The reset** (`Reset`) — `Enter the email you signed up with and we
+  send a reset link. Resetting the password signs out every device.`;
+  sent, `If that email has an account, a reset link is on its way. The
+  link works once and expires after 15 minutes.`; and on both reset
+  screens (`ResetNew` too), `This restores your sign-in only. Your key
+  stays wherever it is — restoring the key is its own step, with your
+  recovery code.`
+- **The verified landing** (`Verified`, `VerifiedApp`) — heading `Email
+  verified`; on the web, `Your application moved a step. You can go back
+  to the app — it already knows.`
+- **The guest's gate** (`GuestGate`) — the dialog `Join the conversation`
+  · `Posting and profiles need an account.` · `Keep browsing` · `Sign in
+  or join` (the last also the guest band's door, `Main`, `FeedBare`).
+- **The borrowed view's bands** — a guest's `Browsing from @mira's view —
+  join to build your own.` (`Main`, `GuestGate`; `FeedBare` names its own
+  view's handle), an applicant's `Browsing from @mira's view while your
+  application lands.` (`ApplicantFeed`, `ApplicantWaiting`,
+  `ApplicantLanding`, `ApplicantKeyElsewhere`).
+- **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`
+  over `We sent you a verification link — open it to prove this email is
+  yours.`; `Create your key` over `Your application needs a key on this
+  browser before @mira can approve it.` (the app's rendering above), with
+  `Create my key`.
+- **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
+  @mira`, `Their approval brings you in. Nothing else is needed from
+  you.`; its ask link labelled `Your ask link`, captioned `It does not
+  expire. While @mira's answer is open, it can't start a second
+  application.` (`ProfileApplicant` too).
 
 ## The settings page
 
