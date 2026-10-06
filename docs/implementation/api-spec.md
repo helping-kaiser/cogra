@@ -973,7 +973,8 @@ type User implements Node & Actor {
    seen, once each, newest first by first seeing — the list the
    ranked feed filters by, and History's feed. Re-seeing never moves
    an entry. `kinds` narrows (null = every kind History serves: POST,
-   COMMENT, USER, HASHTAG; other kinds join with their slices);
+   COMMENT, USER, HASHTAG; a kind outside the served set is BAD_INPUT,
+   and later slices widen the set);
    `query` matches by the one search rule (\"Search\"), narrowing the
    seen-list instead of searching the graph. A hidden actor's things
    stay out while the actor is hidden; a removed thing keeps its
