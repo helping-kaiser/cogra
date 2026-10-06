@@ -621,9 +621,9 @@ would stand; never a body, a description or a bio. `@handle <text>`
 scopes the query to one person's work, their comments found through the
 titles of what they answer; `#tag <text>` scopes it inside a tag.
 Explore searches the graph, in its ranked tiers (§13, *The search
-rulings*); History searches the reader's seen-list, newest-seen first. A
-query that finds nothing says so in the list's place and offers the way
-back (`ExploreNone`, `HistoryNone`).
+rulings*); History searches the reader's seen-list, newest first by
+first seeing. A query that finds nothing says so in the list's place and
+offers the way back (`ExploreNone`, `HistoryNone`).
 
 ### Orientation
 
@@ -4321,13 +4321,13 @@ Ruled by jakob the same day.
   round disc means here. The chat message is the fourth saveable kind
   and waits for the chat round: it joins this list rather than starting
   a second one.
-- **History is posts only, ordered by the LATEST time you saw one**
+- **History is posts only, ordered by the first time you saw one**
   (jakob). Saving is a deliberate act on anything; being seen is
   something posts do in a feed, and a history that collected every
-  profile a thumb passed would be a log. A post read twice sits where
-  the second reading put it, so the list the apps read is ordered by
-  the most recent seen event — `ViewHistoryEdge` carries `firstSeenAt`
-  alone today, and the contract follows the drawing.
+  profile a thumb passed would be a log. A post read twice keeps the
+  place its first reading gave it — `ViewHistoryEdge` carries
+  `firstSeenAt`. (The History redesign, 2026-10-05, widens the list to
+  every served kind.)
 - **Both lists are drawn empty too**, and each empty state says why it
   is empty rather than that it is. Saving leaves no mark on a card —
   jakob's ruling that nothing outside the ⋮ shows a saved state — so
@@ -8950,8 +8950,8 @@ searchable and filterable, in V1.0.
   exactly that list and defines nothing of its own.
 - **Every served kind, as its own feed card**, unchanged and fully live
   — posts, comments, profiles and tags, and every kind the feed serves
-  later. Newest-seen first, one card per thing, at its latest seeing;
-  the scores do not order it. The row form, its disc and its trailing
+  later. Newest first by first seeing, one card per thing; a re-seen
+  thing never moves, and the scores do not order it. The row form, its disc and its trailing
   age are gone.
 - **Search and a kinds filter ride the top** (a lane call, flagged for
   the canvas pass): the search bar, `Search your history`, and under it
