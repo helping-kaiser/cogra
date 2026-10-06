@@ -20,6 +20,12 @@ ALWAYS every row carries the claim above it, its exact pair painting only in gee
 
 ALWAYS the tag page shows no count of people or of uses
 
+ALWAYS at most one clip plays on the tag page, by the feed's stage law
+
+WHEN scroll settles at the tag page's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the tag page's order
+
+WHEN an overscroll bounce settles back at the tag page's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the tag page's order
+
 ALWAYS the word follow appears nowhere on the tag page
 
 WHEN tap the back arrow -> the reader returns to where they came from AND the arrow's label names that origin

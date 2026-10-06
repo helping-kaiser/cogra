@@ -66,6 +66,10 @@ WHEN the hold's signing is refused by the write rule -> the face stays where it 
 
 ALWAYS at most one clip plays in History, by the feed's stage law
 
+WHEN scroll settles at History's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in History's order
+
+WHEN an overscroll bounce settles back at History's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in History's order
+
 ALWAYS a veiled clip has no playback and no sound-disc presence
 
 ALWAYS the search field reads Search your history at rest

@@ -2,6 +2,12 @@
 
 ALWAYS the posts view lists the person's posts as post cards, never as chronicle entries
 
+ALWAYS at most one clip plays in the posts view, by the feed's stage law
+
+WHEN scroll settles at the posts view's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the posts view's order
+
+WHEN an overscroll bounce settles back at the posts view's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the posts view's order
+
 ALWAYS the header block above the tab row stands unchanged in every tab view, and only the list below the tab row changes
 
 ALWAYS the ⋮ closes the actions row and holds the whole profile menu, as the profile's own page does
