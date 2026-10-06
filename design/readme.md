@@ -9289,6 +9289,33 @@ jakob's rulings on the implementation side's contract-recon gaps (seam
   you're in.`
 - **The release is named CoGra v1.0.0** across the design prose.
 
+### The night rulings executed — 2026-10-06
+
+jakob's late rulings on the calibration questions (seam 067) and the
+untitled post, written as law; no board redrawn.
+
+- **An untitled post** is represented by its first line if it is a words
+  post, and by kind and author if it is a media post (`Pictures by @ada`,
+  `A video by @ada`); a description is never a name. Matching is titles
+  only (§4, *Search*; copy-voice, *The feed cards*), and a Saved row's
+  key slugs the same stand-in.
+- **A guest borrows a viewpoint**, and the feed and every stance shown
+  are the viewpoint's, read-only: the anchor at the member's geometry
+  wears the viewpoint's stance, the hollow face where it holds none, and
+  its tap opens `GuestGate` (stance-control, *A guest's view*). This
+  replaces the guest close's always-unset face (*The tag-page smalls*);
+  the guest boards already draw the hollow face, the borrowed view
+  holding no stance on their posts.
+- **The originating root stays lit on a drill-in**; an arrival with no
+  origin lights the content's home root (`BottomNav`).
+- **A card's header answers at 48dp** through an invisible target
+  centered on the drawn header (§10).
+- **Mute and unmute reach assistive technology** as a custom action on
+  the playing clip's frame (`FeedCover`).
+- **The stream resumes after the pad**, and **the viewer's play state
+  carries on close** (`Reel`, `PostDetailVideo`).
+- **The pre-release fixture pass is jakob's own** (backlog item 137).
+
 ---
 
 ## 14. The canvases
