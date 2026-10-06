@@ -276,6 +276,10 @@ mod tests {
             std::slice::from_ref(&own),
             [&settled.awaits, &repeat.awaits],
         );
-        assert_eq!(deps, vec![own], "a profile awaits nothing; a repeat orders nothing further");
+        assert_eq!(
+            deps,
+            vec![own],
+            "a profile awaits nothing; a repeat orders nothing further"
+        );
     }
 }

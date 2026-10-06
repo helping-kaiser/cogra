@@ -583,7 +583,10 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
 /// artifact (layer1-interface.md §9.3); the classes with an API surface to
 /// cite from are the content nodes this slice carries, exactly as
 /// `taggable_node` narrows Tag.
-async fn citing_node(pool: &PgPool, artifact: Uuid) -> Result<nodes::ResolvedNode, ReferencesError> {
+async fn citing_node(
+    pool: &PgPool,
+    artifact: Uuid,
+) -> Result<nodes::ResolvedNode, ReferencesError> {
     crate::nodes::resolve_content_target(pool, artifact)
         .await
         .map_err(|e| ReferencesError::Internal(e.to_string()))?

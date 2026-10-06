@@ -1293,6 +1293,202 @@ async fn a_reply_lands_only_after_its_pending_parent(pool: PgPool) {
     assert_eq!(rig.staged_state(&replier, &reply).await, json!("LANDED"));
 }
 
+/// A comment on `target`, driven to landed (`land`) or stopped at its
+/// pre-commitment. Returns the comment's id.
+async fn reply(
+    rig: &Rig,
+    token: &str,
+    key: &ActorKey,
+    target: &str,
+    text: &str,
+    land: bool,
+) -> String {
+    let prepared = rig
+        .gql(
+            Some(token),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": target,
+                "content": text,
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+            }}),
+        )
+        .await;
+    let writes = &prepared["prepareComment"]["writes"];
+    if land {
+        rig.land(token, key, writes).await;
+    } else {
+        rig.pre_sign(token, key, writes).await;
+    }
+    prepared["prepareComment"]["node"]
+        .as_str()
+        .expect("node")
+        .to_string()
+}
+
+/// A thread with two top-level comments and, under the first, two landed
+/// replies and one pending one — what the reply-order tests read.
+struct Thread {
+    host: String,
+    top: [String; 2],
+    landed_replies: [String; 2],
+    pending_reply: String,
+}
+
+async fn thread(rig: &Rig, token: &str, key: &ActorKey) -> Thread {
+    let host = rig.landed_post(token, key, "host", "b").await;
+    let first = reply(rig, token, key, &host, "first", true).await;
+    let second = reply(rig, token, key, &host, "second", true).await;
+    let r1 = reply(rig, token, key, &first, "r1", true).await;
+    let r2 = reply(rig, token, key, &first, "r2", true).await;
+    let pending = reply(rig, token, key, &first, "r3", false).await;
+    Thread {
+        host,
+        top: [first, second],
+        landed_replies: [r1, r2],
+        pending_reply: pending,
+    }
+}
+
+fn edge_ids(connection: &Value) -> Vec<String> {
+    connection["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["id"].as_str().expect("id").to_string())
+        .collect()
+}
+
+const THREAD_READ: &str = r#"query($host: UUID!, $branch: UUID!) {
+  post(id: $host) { comments(first: 10) { edges { node { id } } } }
+  comment(id: $branch) {
+    byDefault: replies(first: 10) { edges { node { id landing { state } } } }
+    oldest: replies(order: OLDEST_FIRST, first: 10) { edges { node { id } } }
+    newest: replies(order: NEWEST_FIRST, first: 10) { edges { node { id } } }
+  }
+}"#;
+
+/// K5.1: a branch reads as a conversation does — oldest first — while
+/// the thread's top level keeps reading newest-first.
+///
+/// A branch's replies read oldest-first by default while the thread's top level stays newest-first.
+/// ´claim:pending:a-branch-reads-oldest-first´
+#[sqlx::test(migrations = "../../migrations")]
+async fn replies_read_oldest_first_by_default(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let t = thread(&rig, &token, &key).await;
+    let [r1, r2] = t.landed_replies.clone();
+
+    let read = rig
+        .gql(
+            None,
+            THREAD_READ,
+            json!({ "host": t.host, "branch": t.top[0] }),
+        )
+        .await;
+    assert_eq!(
+        edge_ids(&read["comment"]["byDefault"]),
+        vec![r1, r2, t.pending_reply.clone()]
+    );
+    assert_eq!(
+        edge_ids(&read["comment"]["byDefault"]),
+        edge_ids(&read["comment"]["oldest"]),
+        "OLDEST_FIRST is the default"
+    );
+    let [first, second] = t.top;
+    assert_eq!(
+        edge_ids(&read["post"]["comments"]),
+        vec![second, first],
+        "the top level is unchanged: newest-first"
+    );
+}
+
+/// (´claim:pending:a-branch-reads-oldest-first´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn replies_newest_first_on_request(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let t = thread(&rig, &token, &key).await;
+    let [r1, r2] = t.landed_replies.clone();
+
+    let read = rig
+        .gql(
+            None,
+            THREAD_READ,
+            json!({ "host": t.host, "branch": t.top[0] }),
+        )
+        .await;
+    assert_eq!(
+        edge_ids(&read["comment"]["newest"]),
+        vec![t.pending_reply, r2, r1]
+    );
+}
+
+/// Under oldest-first the pending replies are the newest, so they close
+/// the branch — and paging there by the connection's own cursors reaches
+/// them last, after every landed reply.
+///
+/// (´claim:pending:a-branch-reads-oldest-first´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn pending_replies_close_an_oldest_first_branch(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let t = thread(&rig, &token, &key).await;
+    let [r1, r2] = t.landed_replies.clone();
+
+    let read = rig
+        .gql(
+            None,
+            THREAD_READ,
+            json!({ "host": t.host, "branch": t.top[0] }),
+        )
+        .await;
+    let states: Vec<Value> = read["comment"]["byDefault"]["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["landing"]["state"].clone())
+        .collect();
+    assert_eq!(
+        states,
+        vec![json!("LANDED"), json!("LANDED"), json!("PENDING")]
+    );
+
+    const PAGE: &str = r#"query($branch: UUID!, $after: String) {
+      comment(id: $branch) {
+        replies(first: 2, after: $after) {
+          edges { node { id } } pageInfo { hasNextPage endCursor }
+        }
+      }
+    }"#;
+    let page1 = rig
+        .gql(None, PAGE, json!({ "branch": t.top[0], "after": null }))
+        .await;
+    let replies = &page1["comment"]["replies"];
+    assert_eq!(edge_ids(replies), vec![r1, r2]);
+    assert_eq!(replies["pageInfo"]["hasNextPage"], json!(true));
+    let page2 = rig
+        .gql(
+            None,
+            PAGE,
+            json!({ "branch": t.top[0], "after": replies["pageInfo"]["endCursor"] }),
+        )
+        .await;
+    assert_eq!(
+        edge_ids(&page2["comment"]["replies"]),
+        vec![t.pending_reply],
+        "the pending reply closes the branch"
+    );
+    assert_eq!(
+        page2["comment"]["replies"]["pageInfo"]["hasNextPage"],
+        json!(false)
+    );
+}
+
 /// A standalone tag and a stance on still-pending content declare its
 /// minting act too — every gesture resolves its node through the one
 /// resolver that knows whether the node has landed.
