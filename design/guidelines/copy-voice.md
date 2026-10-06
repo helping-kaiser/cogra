@@ -3,6 +3,19 @@
 The rules of `design.md` §7, with the product's own examples. See
 `readme.md` §3 for the condensed version.
 
+**This file is the complete registry of drawn user-facing strings**
+(jakob 2026-10-06): every word a canonical board puts in front of a
+reader or speaks for one is recorded here, with the board that draws it.
+Lines that predate the registry are marked *carried over — blessed by
+use (jakob 2026-10-06)*. A string recorded as a construction —
+`Share {target}`, `Remove #saltmaps`, `3 comments` — covers every target
+and count the boards fill it with. The boards' fixtures are not copy and
+are not recorded: people's names and handles, the posts', comments' and
+bios' own words, pictures' descriptions and an author's sensitive
+reason, tag names, queries, links, codes, keys, addresses, dates and
+counts, and a release's notes (written when it ships — *The settings
+page*).
+
 ## The two hard rules about numbers
 
 **Numbers are in scope.** CoGra's ranking is not a black box, and the UI
@@ -2948,6 +2961,12 @@ headline, the sentence as its one line (`ComingSoonCard`, the
 drawn-anatomy ruling, jakob 2026-09-25). No coming-soon surface offers
 an action — nothing a reader can do fills any of them yet.
 
+`ChatsComingSoon` conforms to `WalletComingSoon` whole (jakob
+2026-10-06, the check round's 14): reached from the band's chats icon
+and from a profile's `Message`, its arrow names the origin in the blessed
+nouns (*Accessible names*, `Back to feed`, `Back to the profile`) — no
+new words.
+
 ## The intro
 
 The five cards a first open walks through (`OnboardingSteps`,
@@ -3427,8 +3446,12 @@ settling` wear:
   appended only when the post's year differs from the current one:
   `12 September 2025`.
 
-The lines stand in `designs/canonical/behavior/ComposeDetails.md`; the
-board is owed (backlog item 110).
+The lines stand in `designs/canonical/behavior/ComposeDetails.md`, and
+one board draws the marker (jakob 2026-10-06, the check round's 4;
+backlog item 110). It adds no words: the line is the blessed one above.
+**The door's accessible name is its own words**, `Already in your post
+from 12 September.` — a text door is named by what it reads (*Names that
+carry what the eye reads*, the K13 round), so no second name is minted.
 
 ## Change histories
 
