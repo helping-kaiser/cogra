@@ -8183,7 +8183,9 @@ the rest as recommended. Both laws stand in §4.
   aboard"). The reason is his ranker's: every refetch will one day run
   the whole personalized ranking, so five taps must never mean five
   rankings — one re-query per visit. Revisited only if readers turn out
-  to expect collapse-to-submit.
+  to expect collapse-to-submit. (Four editing sheets apply live since,
+  and every way out just closes them — §4, *Sheets*, the editing-sheet
+  exemption, 2026-10-02.)
 - **The post detail's way back names its origin**, by a table built
   from its arriving edges, as the tag page's is (the detail, the clip
   detail, its veiled twin and `Removed`):
