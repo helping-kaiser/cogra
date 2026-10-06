@@ -179,8 +179,9 @@ generic delete on ordinary writes
 Reads need no authentication. When a request *does* carry an auth
 token, the resolved viewer lives in the GraphQL execution context
 — never passed as a field argument. Its only two jobs are the
-field-level authorization above and `me` resolution; it never
-scopes an ordinary read. The same query is valid authenticated or
+field-level authorization above and `me` resolution, plus the one
+viewer-relative value `AskLinkCheck.reason`; it never scopes an
+ordinary read. The same query is valid authenticated or
 anonymous — authentication only changes what the gated fields
 yield. The auth model (staged-applicant admission, JWT access +
 rotating refresh tokens, sessions) is specified in
@@ -483,7 +484,7 @@ enum ErrorCode {
   # Expected business failures — carried in UserError.code
   INVALID_CREDENTIALS          # email / password pair did not match
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
-  ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed or already staged
+  ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed, already staged elsewhere, or already waiting in your own queue
   HANDLE_TAKEN                 # the requested handle is already in use
   WEAK_PASSWORD                # under the length floor or in the breach corpus
   EMAIL_IN_USE                 # the email already belongs to an account
@@ -4187,6 +4188,20 @@ asking (`askLinkCheck`) and stages them into their own queue
 (`stageApplicant`), from where approval is the ordinary path
 ([auth.md "The ask link"](auth.md#the-ask-link-applicant-side)).
 
+Answering an ask (VouchAsk's Set, or its press-and-hold at the
+modest positive +0.10 / +0.10) is `stageApplicant`, then — when the
+returned application is approvable (`emailVerified` and
+`keyAttached`) — `approveApplicants` with the chosen values, and
+the device signs the returned Opinion records. When it is not yet
+approvable, only `stageApplicant` runs: nothing is approved,
+signed or spent, and the client keeps the chosen values on the
+device as a kept approval. The kept approval signs later through
+the ordinary `approveApplicants`, once the application reads
+approvable. Closing the row is the ordinary `rejectApplication`
+and drops the kept values. A key held elsewhere composes the same
+way: `stageApplicant`, values kept on the device until the key is
+back.
+
 ```graphql
 "Register through an invite link. Creates the account — the
  actor row (no key yet) and its credentials, in the applicant
@@ -4249,15 +4264,13 @@ type ApplyWithInvitePayload { application: Application }
  side effect of opening the link (auth.md \"The ask link\"). The
  account already exists, so this writes only the queue entry;
  approving it is the ordinary approveApplicants act, with the
- stance values chosen there. Keep expiresAt at or above the
- 24-hour verification window, as for an invite link (auth.md
- \"Expiry floor\"). ASK_LINK_UNUSABLE when the id is unknown, the
- applicant has already landed, or a live application is already
- waiting on someone else."
+ stance values chosen there. ASK_LINK_UNUSABLE when the id is
+ unknown, the applicant has already landed, or a live application
+ is already waiting, in another member's queue or the viewer's own;
+ the client names the case by re-reading askLinkCheck, whose reason
+ carries it."
 input StageApplicantInput {
   askLink: UUID!
-  "How long the staged application stays approvable."
-  expiresAt: DateTime!
   "Act as this Collective; null = the viewer stages."
   actAs: UUID
 }
@@ -4516,12 +4529,26 @@ type InviteLinkCheck {
 type AskLinkCheck {
   "Whether the link can stage its applicant now — the account is
    still an applicant and has no live application already waiting
-   on someone else (auth.md \"The ask link\"). An ask link itself
+   in any queue (auth.md \"The ask link\"). An ask link itself
    never expires."
   usable: Boolean!
-  "The asking account's handle."
+  "The asking account's handle. The profile door for LANDED
+   resolves by it."
   applicantHandle: String!
+  "Why the link cannot stage right now; null when usable. The
+   asker reading their own link needs no value — the client
+   compares against its own User.askLink."
+  reason: AskLinkUnusableReason
 }
+
+"Why an ask link stages nobody right now (auth.md \"The ask
+ link\"). LANDED: the account is a member — the profile door
+ replaces the ask. WAITING_ELSEWHERE: its one live application
+ waits on another member. WAITING_ON_VIEWER: its one live
+ application already sits in the authenticated viewer's own queue
+ — the client opens that row. WAITING_ON_VIEWER is
+ viewer-relative; an anonymous call never reads it."
+enum AskLinkUnusableReason { LANDED WAITING_ELSEWHERE WAITING_ON_VIEWER }
 
 "Remove the payload of a record the viewer authored — the
  per-content self-service erasure path (erasure.md §1). Immediate
