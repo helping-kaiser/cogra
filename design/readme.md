@@ -370,8 +370,8 @@ them, stay soft and never manufacture urgency.
 Transparency and blur are almost absent by policy: the dialog scrim is
 `scrim` at 50%, and the only other translucency is the resting stance
 face at 40% opacity + grayscale, which means "no opinion yet". Blur is
-reserved for the sensitive-content veil of §9 (gentle, tap to reveal) —
-not yet built. No frosted glass, no protection gradients: type sits on a
+reserved for the sensitive-content veil of §9 (gentle, tap to reveal).
+No frosted glass, no protection gradients: type sits on a
 solid role, so it never needs a gradient to survive.
 
 ### Borders
@@ -801,12 +801,10 @@ Called for by `design.md` §6/§9 and absent from the current product
 code, so absent here too. They are the honest gaps, not omissions to
 paper over:
 
-- **Topic chip**, **Collective** actor variant.
-- **Removed placeholder** and **Sensitive veil** (§9) — specified,
-  unimplemented.
-- **Search** and **Wallet** surfaces — their bar slots exist in
-  `BottomNav` (§7.1), the screens behind them do not.
-- **Bottom sheets**.
+- **Collective** actor variant.
+- **Wallet** surface — its bar slot exists in `BottomNav` (§7.1) and
+  opens the coming-soon door (`WalletComingSoon`); the wallet itself is
+  post-MVP.
 
 ### Intentional additions
 
@@ -894,7 +892,7 @@ paper over:
 - `SettingsGroup` / `SettingsRow` / `Switch` — the settings anatomy, and the
   house switch with it. Both apps ship a settings screen whose sections each
   invented a layout, and the design had drawn none of it; one row shape is
-  what lets a page of eight groups read as a page. A quiet heading above, a
+  what lets a page of eleven groups read as a page. A quiet heading above, a
   filled card of rows, a footnote under — the footnote being what keeps a row
   to one line of status. The trailing edge is the variant (a switch, a value
   and a chevron, a chevron, or a control of the row's own), and the chevron
@@ -1321,13 +1319,19 @@ the profile, the affordances act.
 `chat_bubble` plus the count, the same shape as the score beside it. It
 opens the *same* detail view, scrolled so the comments lead: the post and
 its affordances sit just above the fold, so a short thread still shows
-its post.
+its post. (The affordance opens the comments sheet instead — §13,
+*Comments live in a sheet*.)
 
 **Icons: all inlined, hosted font dropped.** See §5.
 
 **Real photography** for mock material. See §4, *Imagery*.
 
 ### Design-ready, not yet built
+
+Drawn since: the drill-down (§13, *The
+score-and-opinions round*), `RedactedContent` and `SensitiveVeil` (§9),
+search for Explore (§13, *The search rulings*) and the wallet's masters
+in `components/wallet/`.
 
 **The score is "Feed score" to readers**, and its drill-down is
 **four full screens, not nested containers**: FeedEntry → RankPath →
@@ -1355,16 +1359,14 @@ region** — media, text, and
 description together, under a single veil with one reveal. The title
 stays outside it, so a reader can tell what they are choosing to
 reveal. Picture-by-picture blur inside a gallery is the UI this rule
-exists to avoid. Neither state may use `error` colouring. Genuinely
-open inside that: the literal copy, and the blur radius and overlay.
+exists to avoid. Neither state may use `error` colouring.
 
 **Feed, Search, Explore, Wallet, and the marketplace** are product
 surfaces whose decisions are recorded in the product docs rather than
 here — a feed is a list of ranked nodes rather than a list of posts,
-Explore is a 3D view of the graph, Wallet holds balances and earnings,
-and the marketplace is entered from both the feed and a profile. None has
-produced a component yet; when one does, the component lands here and the
-roadmap stays there.
+Wallet holds balances and earnings, and the marketplace is entered from
+both the feed and a profile. A component lands here when one of them
+produces it; the roadmap stays there.
 
 **Both clients follow one design, 1:1.** Neither leads: web (at mobile
 width) and Android render the same design, Material-aligned, differing
@@ -1373,9 +1375,6 @@ only in the browser around the web one.
 ### Still open
 
 - Palette, type, and shape stay as they are until a problem shows up.
-- The sensitive blur *treatment*: radius and overlay. Its granularity is
-  settled (blur only what is marked), and so is its scope — one reveal
-  per post, lasting the session.
 - Nothing on the icon list: the last gap closed with a derived FILL-1
   `graph_3` (§5).
 
@@ -3429,7 +3428,9 @@ it a home. Ruled by jakob the same day (backlog item 20).
   the reader leaves rather than a place they live in, so it carries no
   bottom bar and the back arrow goes where the gear was. The board draws
   the whole scroll: the ruling this round records is an order, and an
-  order cut off at 844px is an order nobody can review.
+  order cut off at 844px is an order nobody can review. (Later rounds
+  add People, About and Delete account — eleven groups; `SettingsBody`
+  draws the current order.)
 - **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
   because eight groups improvising eight layouts is the page the ruling
   asked us to leave behind. A quiet heading above, a filled card of
