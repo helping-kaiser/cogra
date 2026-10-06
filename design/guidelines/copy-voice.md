@@ -681,6 +681,53 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
   handle, named for its picture: the first row is the cover, every other
   row its place (*blessed (jakob 2026-10-05)*).
 
+**Carried over — blessed by use (jakob 2026-10-06).** The names the
+boards already speak, recorded so the registry is whole:
+
+- **The transport's other controls** — `Back ten seconds` · `Forward ten
+  seconds` (`ViewerVideo`, `PostDetailVideo`, `ComposeCoverPlaying`),
+  `Full screen` (`PostDetailVideo`), and the sound toggle's pair, `Turn
+  sound on` · `Turn sound off`.
+- **A password field's eye** — `Show password`, and `Hide password`
+  while the password shows (`PasswordField`; `SignIn`, `Join`,
+  `ChangePassword` and every form with a password).
+- **The wizard's two ends** — `Back a step`, the arrow on every wizard
+  stage; the X says what leaving keeps: `Leave — your
+  draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
+  the edit is discarded` (a comment edit), and a bare `Leave` on the
+  profile's and the picture's seals and the picture's crop.
+- **The overflow doors and their sheets** — `More on this post` · `More
+  on this comment` · `More on your profile` · `More about @ada` (another's
+  profile and a person card; `More about this account` for a deleted
+  one), opening the sheets
+  named `Post actions` · `Comment actions` · `Profile actions`.
+- **Share, completed** — `Share this comment`, `Share @ada`, `Share
+  #saltmaps`, `Share this account`, in `Share this post`'s grammar.
+- **A card's counts and lines** — `3 comments` (`0 comments`, `1
+  comment`), the comment glyph's name; `Tags and references`, the tags
+  line's; `Comments`, the comment sheet's own name.
+- **A comment card's context** — the card names what it answers: `On
+  "The long way home" — @ada`, `On @tobias's comment`, and over a
+  removed post `On @ada's removed post` (`FeedCommentShapes`, `History`).
+- **The composer's rows** — a staged tag's × `Remove #saltmaps` and its
+  row `#saltmaps — set how it relates`, a staged citation's row `The long
+  way home — @ada — set how it relates`; a staged clip's or picture's ×
+  `Remove this video` · `Remove this picture`; the picked sheet's ×
+  `Remove the cover` · `Remove picture 2`; `Manage the 7 tags`, `Manage
+  the N citations`' twin for the tags row (`ComposeTags`); a thumb whose
+  upload failed `Didn't upload`, one still going `Uploading, 65%`; the
+  describe sheet's `Describe this picture` · `Describe this video`; the
+  sensitive sheet and its switch `Mark as sensitive`.
+- **The edit's** — `What the edit signs`, the acts sheet's name
+  (`EditActs`, `CommentEditActs`), and `The license never changes`, the
+  lock beside the License row it cannot change (`EditCompose` and its
+  family).
+- **A profile's** — `Change your picture`, the own avatar's door, and
+  `Which direction`, the opinions page's two tabs (`ProfileStances`).
+- **The score's trace** names its way back by the level it returns to:
+  `Back to the paths` · `Back to the path` · `Back to the step`
+  (`RankPath`, `RankHop`, `RankRecords`).
+
 ## The staged-act snackbar
 
 An applicant's second tap of a kind already staged answers here instead
