@@ -355,6 +355,41 @@ pub enum AdoptionError {
         /// Both rows' paths, the first row's first: `<first> and <second>`.
         regions: String,
     },
+    /// An `[api-contract]` path names a tree where the judgment reads one
+    /// file.
+    ///
+    /// The spec and the exported schema are each one document, so a prefix
+    /// ending in `/` or the empty prefix names no document to reconcile.
+    #[error("api-contract {key} {path} names a tree and not one file")]
+    ContractPathNotAFile {
+        /// The row the path sits in.
+        at: Location,
+        /// Which key wrote it, `spec` or `schema`.
+        key: &'static str,
+        /// The path as written.
+        path: String,
+    },
+    /// An `[api-contract]` allowance row says nothing about what removes it,
+    /// or allows no name at all.
+    ///
+    /// An allowance is a debt with a creditor: a row naming no seam or
+    /// packet is a defect nobody has undertaken to close, which is the
+    /// silent kind the allowance exists to keep out.
+    #[error("api-contract allowance {name} names nothing that removes it")]
+    ContractDriftUnexplained {
+        /// The row.
+        at: Location,
+        /// The drifted name, or the unreadable line.
+        name: String,
+    },
+    /// Two `[api-contract]` allowance rows allow one defect.
+    #[error("api-contract allowance {name} is written by more than one row")]
+    ContractDriftRepeated {
+        /// The row of the second one.
+        at: Location,
+        /// The drifted name, or the unreadable line.
+        name: String,
+    },
     /// The file's schema major version is not the one this build reads.
     #[error(
         "adoption data states schema major version {found}, and this build reads major version {expected}"
@@ -405,6 +440,9 @@ impl AdoptionError {
             | AdoptionError::ReachContradictsManifest { at, .. }
             | AdoptionError::EffectiveCountMismatch { at, .. }
             | AdoptionError::UnregisteredPackage { at, .. }
+            | AdoptionError::ContractPathNotAFile { at, .. }
+            | AdoptionError::ContractDriftUnexplained { at, .. }
+            | AdoptionError::ContractDriftRepeated { at, .. }
             | AdoptionError::UnsupportedSchemaVersion { at, .. } => Some(at),
         }
     }

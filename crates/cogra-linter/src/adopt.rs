@@ -12,9 +12,11 @@
 //! Thirteen sections: the seven data the calculus is parametric in, the
 //! kind registry's own adoption data, the carrier, head recognition, the
 //! banned-token sets, the enforcement partition, and the file's metadata.
-//! A fourteenth is optional and this corpus writes it: `[reach]`, which
+//! Two more are optional and this corpus writes both: `[reach]`, which
 //! says which owners an owner's imports may name
-//! (´dec:lint:reach-declared´).
+//! (´dec:lint:reach-declared´), and `[api-contract]`, which names the API
+//! specification and the exported schema the contract judgment reconciles,
+//! with the drifts the corpus carries knowingly.
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -276,6 +278,9 @@ pub struct Adoption {
     /// Which owners an owner's imports may name, where the corpus declares
     /// it at all (´dec:lint:reach-declared´).
     pub reach: Option<Reach>,
+    /// The API contract the specification and the exported schema are
+    /// reconciled under, where the corpus declares one.
+    pub api_contract: Option<ApiContract>,
     /// Every path the data configures, each with the row it sits in, so
     /// that a spelling check can be located (´sig:lint:adoption-api´).
     pub configured_paths: Vec<ConfiguredPath>,
@@ -1698,6 +1703,134 @@ pub struct ReachRow {
     pub at: Location,
 }
 
+/// The API contract: the specification document and the exported schema
+/// that must declare one surface between them.
+///
+/// The specification declares the surface in fenced code blocks whose info
+/// string is `fence`; the schema is the exported SDL. What the judgment
+/// compares is named by [`ContractSurface`], and the one enum it compares
+/// value by value is named here, because which enum carries the error
+/// vocabulary is this corpus's choice and not GraphQL's.
+#[derive(Clone, Debug)]
+pub struct ApiContract {
+    /// The specification document, corpus-relative.
+    pub spec: PathBuf,
+    /// The exported schema, corpus-relative.
+    pub schema: PathBuf,
+    /// The info string of the specification's declaring fences.
+    pub fence: Box<str>,
+    /// The enum whose values are the error vocabulary.
+    pub error_enum: Box<str>,
+    /// The drifts the corpus carries knowingly, each with what removes it.
+    pub known_drift: Vec<KnownDrift>,
+    /// The places the specification's fences refuse to read that the corpus
+    /// carries knowingly, each with what removes it.
+    pub known_unreadable: Vec<KnownUnreadable>,
+}
+
+/// One place a declaring fence of the specification refuses to read, which
+/// the corpus carries knowingly.
+///
+/// The place is named by the text of the line the reading stopped on,
+/// trimmed, rather than by its number: a line number moves with every edit
+/// above it, and the text moves only when the defect itself is touched. The
+/// row behaves as a [`KnownDrift`] does — the refusal is reported as
+/// advisory, and a row whose refusal is gone is a finding.
+#[derive(Clone, Debug)]
+pub struct KnownUnreadable {
+    /// The trimmed text of the line the reading stopped on.
+    pub line: Box<str>,
+    /// The seam entry or packet that removes it.
+    pub removed_by: Box<str>,
+    /// The row it sits in.
+    pub at: Location,
+}
+
+/// One kind of declaration the contract reconciles.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ContractSurface {
+    /// A field of the query root.
+    Query,
+    /// A field of the mutation root.
+    Mutation,
+    /// A value of the error enum.
+    ErrorCode,
+    /// A union, by its name.
+    Union,
+    /// One member of a union, named `Union.Member`.
+    UnionMember,
+}
+
+impl ContractSurface {
+    /// The token the adoption data spells it with.
+    #[must_use]
+    pub const fn token(self) -> &'static str {
+        match self {
+            ContractSurface::Query => "query",
+            ContractSurface::Mutation => "mutation",
+            ContractSurface::ErrorCode => "error-code",
+            ContractSurface::Union => "union",
+            ContractSurface::UnionMember => "union-member",
+        }
+    }
+}
+
+impl fmt::Display for ContractSurface {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.token())
+    }
+}
+
+/// Which document declares what the other does not.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DriftSide {
+    /// The specification declares it and the schema does not.
+    SpecOnly,
+    /// The schema declares it and the specification does not.
+    SchemaOnly,
+}
+
+impl DriftSide {
+    /// The token the adoption data spells it with.
+    #[must_use]
+    pub const fn token(self) -> &'static str {
+        match self {
+            DriftSide::SpecOnly => "spec-only",
+            DriftSide::SchemaOnly => "schema-only",
+        }
+    }
+}
+
+impl fmt::Display for DriftSide {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.token())
+    }
+}
+
+/// One drift the corpus carries knowingly: one name of a
+/// `[[api-contract.known_drift]]` row, which groups the names one removal
+/// closes.
+///
+/// Each name allows exactly one finding: the drift it names is reported as
+/// advisory rather than failing, and a name whose drift is gone is itself a
+/// finding, so the allowance shrinks as the drifts are closed and never
+/// silently outlives them.
+#[derive(Clone, Debug)]
+pub struct KnownDrift {
+    /// What kind of declaration drifted.
+    pub surface: ContractSurface,
+    /// The declaration's name; `Union.Member` for a union member.
+    pub name: Box<str>,
+    /// Which document carries it alone.
+    pub side: DriftSide,
+    /// The seam entry or packet that removes it.
+    pub removed_by: Box<str>,
+    /// The row it sits in.
+    pub at: Location,
+}
+
 impl Adoption {
     /// No declared reach edge contradicts a dependency the build system
     /// already carries (´dec:lint:reach-declared´).
@@ -1834,9 +1967,142 @@ struct RawAdoption {
     enforcement: RawEnforcement,
     #[serde(default)]
     reach: Option<RawReach>,
+    #[serde(rename = "api-contract", default)]
+    api_contract: Option<RawApiContract>,
 }
 
-/// `[reach]`, the one optional section (´dec:lint:reach-declared´).
+/// `[api-contract]`, optional like `[reach]`.
+#[derive(serde::Deserialize)]
+struct RawApiContract {
+    spec: Spanned<PathPrefix>,
+    schema: Spanned<PathPrefix>,
+    fence: Box<str>,
+    error_enum: Box<str>,
+    #[serde(default)]
+    known_drift: Vec<RawKnownDrift>,
+    #[serde(default)]
+    known_unreadable: Vec<RawKnownUnreadable>,
+}
+
+/// One `[[api-contract.known_unreadable]]` row, its line spanned to locate
+/// it.
+#[derive(serde::Deserialize)]
+struct RawKnownUnreadable {
+    line: Spanned<Box<str>>,
+    removed_by: Box<str>,
+}
+
+/// One `[[api-contract.known_drift]]` row: the names one removal closes,
+/// sharing a surface and a side, each name spanned so that its own
+/// allowance can be located.
+#[derive(serde::Deserialize)]
+struct RawKnownDrift {
+    surface: Spanned<ContractSurface>,
+    side: DriftSide,
+    removed_by: Box<str>,
+    names: Vec<Spanned<Box<str>>>,
+}
+
+impl RawApiContract {
+    /// Both paths name one file, and every allowance names what removes it
+    /// and allows a drift no other row allows.
+    fn validate(
+        self,
+        source: &str,
+        origin: &Path,
+        configured: &mut Vec<ConfiguredPath>,
+    ) -> Result<ApiContract, AdoptionError> {
+        for (key, path) in [("spec", &self.spec), ("schema", &self.schema)] {
+            let written = path.as_ref().as_str();
+            if written.is_empty() || written.ends_with('/') {
+                return Err(AdoptionError::ContractPathNotAFile {
+                    at: row(path, source, origin),
+                    key,
+                    path: written.to_string(),
+                });
+            }
+        }
+        keep(
+            configured,
+            "[api-contract] spec",
+            &self.spec,
+            source,
+            origin,
+        );
+        keep(
+            configured,
+            "[api-contract] schema",
+            &self.schema,
+            source,
+            origin,
+        );
+        let mut known_drift: Vec<KnownDrift> = Vec::with_capacity(self.known_drift.len());
+        for raw in self.known_drift {
+            let surface = *raw.surface.as_ref();
+            if raw.removed_by.trim().is_empty() || raw.names.is_empty() {
+                return Err(AdoptionError::ContractDriftUnexplained {
+                    at: row(&raw.surface, source, origin),
+                    name: raw
+                        .names
+                        .first()
+                        .map_or_else(|| surface.to_string(), |name| name.as_ref().to_string()),
+                });
+            }
+            for name in raw.names {
+                let at = row(&name, source, origin);
+                let name = name.into_inner();
+                if known_drift.iter().any(|kept| {
+                    kept.surface == surface && kept.name == name && kept.side == raw.side
+                }) {
+                    return Err(AdoptionError::ContractDriftRepeated {
+                        at,
+                        name: name.to_string(),
+                    });
+                }
+                known_drift.push(KnownDrift {
+                    surface,
+                    name,
+                    side: raw.side,
+                    removed_by: raw.removed_by.clone(),
+                    at,
+                });
+            }
+        }
+        let mut known_unreadable: Vec<KnownUnreadable> =
+            Vec::with_capacity(self.known_unreadable.len());
+        for raw in self.known_unreadable {
+            let at = row(&raw.line, source, origin);
+            let line = raw.line.into_inner();
+            if raw.removed_by.trim().is_empty() {
+                return Err(AdoptionError::ContractDriftUnexplained {
+                    at,
+                    name: line.to_string(),
+                });
+            }
+            if known_unreadable.iter().any(|kept| kept.line == line) {
+                return Err(AdoptionError::ContractDriftRepeated {
+                    at,
+                    name: line.to_string(),
+                });
+            }
+            known_unreadable.push(KnownUnreadable {
+                line,
+                removed_by: raw.removed_by,
+                at,
+            });
+        }
+        Ok(ApiContract {
+            spec: PathBuf::from(self.spec.as_ref().as_str()),
+            schema: PathBuf::from(self.schema.as_ref().as_str()),
+            fence: self.fence,
+            error_enum: self.error_enum,
+            known_drift,
+            known_unreadable,
+        })
+    }
+}
+
+/// `[reach]`, an optional section (´dec:lint:reach-declared´).
 #[derive(serde::Deserialize)]
 struct RawReach {
     #[serde(rename = "owner", default)]
@@ -2158,6 +2424,10 @@ impl RawAdoption {
             section: "[kinds] registry",
             at: row(&self.kinds.registry, source, origin),
         });
+        let api_contract = self
+            .api_contract
+            .map(|declared| declared.validate(source, origin, &mut configured))
+            .transpose()?;
         Ok(Adoption {
             meta,
             carrier: Carrier {
@@ -2193,6 +2463,7 @@ impl RawAdoption {
                 failing: inner(self.enforcement.failing),
             },
             reach,
+            api_contract,
             configured_paths: configured,
         })
     }

@@ -19,6 +19,7 @@
 #          head recognition per format ........ [head-recognition]
 #          the enforcement partition .......... [enforcement]
 #          the owner reach graph .............. [reach]
+#          the API contract ................... [api-contract]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -2013,5 +2014,113 @@ may_cite = []
 [[reach.owner]]
 owner    = "doc.interchange-conventions"
 may_cite = []
+
+
+####################################################################
+# [api-contract] — the specification and the exported schema agree
+#
+# ADDED 2026-10-06 (MVP superloop, API pipeline rule 2): the API
+# specification declares the surface in its fenced graphql blocks,
+# and schema.graphql is what the API exports. The contract judgment
+# reconciles them in both directions — every query-root field,
+# mutation-root field, error_enum value, union, and member of a
+# union both declare — and a declaration only one carries fails.
+#
+# Every finding sits on the spec: it is the contract's document and
+# docs/ is failing, where schema.graphql at the root is advisory.
+#
+# KNOWN DRIFT is the allowance a fix has not landed for yet. Each row
+# names one drift exactly — surface, name ("Union.Member" for a union
+# member), and side ("spec-only" or "schema-only") — and what removes
+# it. An allowed drift is still reported, as advisory, so it is
+# counted on every run; a row whose drift is gone fails until it is
+# deleted, so the list only shrinks. A new drift is never added here
+# to make a run green: it is fixed, or it goes to the seam first and
+# arrives here naming the entry that will close it.
+####################################################################
+
+[api-contract]
+spec       = "docs/implementation/api-spec.md"
+schema     = "schema.graphql"
+fence      = "graphql"
+error_enum = "ErrorCode"
+
+# THE ALLOWANCE AS FIRST MEASURED (2026-10-06, main 9938d9329): 62
+# spec-only declarations, 0 schema-only, 1 unreadable place. The
+# exported schema declares nothing the spec does not; the spec is
+# ahead of it. Each row is one removal: the names it closes share
+# its surface, side, and removed_by, and each name is its own
+# allowance — a closed one fails until its name is deleted.
+
+# Seam 045.3, the two drifts the morning docs sweep found.
+[[api-contract.known_drift]]
+surface    = "error-code"
+side       = "spec-only"
+removed_by = "seam 045.3, packet contract-recon-ask-link-spec (the code ships with the ask-link surface)"
+names      = ["ASK_LINK_UNUSABLE"]
+
+[[api-contract.known_drift]]
+surface    = "union-member"
+side       = "spec-only"
+removed_by = "seam 045.3, packet contract-recon-citations-threads"
+names      = [
+  "CommentTarget.Chat",
+  "CommentTarget.ChatMessage",
+  "CommentTarget.Collective",
+  "CommentTarget.Item",
+  "CommentTarget.User",
+]
+
+# The unbuilt ask-link and rejection surface (packet verdict: SPEC-ONLY).
+[[api-contract.known_drift]]
+surface    = "query"
+side       = "spec-only"
+removed_by = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
+names      = ["askLinkCheck"]
+
+[[api-contract.known_drift]]
+surface    = "mutation"
+side       = "spec-only"
+removed_by = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
+names      = ["rejectApplication", "rejectLinkApplications", "stageApplicant"]
+
+# UNTRIAGED: the rest of the unbuilt surface the spec already declares.
+# The oracle surfaced these on its first run; no packet names them yet.
+[[api-contract.known_drift]]
+surface    = "query"
+side       = "spec-only"
+removed_by = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
+names      = [
+  "appVersions", "campaign", "chat", "chatMessage", "chatSearch",
+  "collective", "feed", "feedSlice", "honorEntries", "item",
+  "networkParameters", "proposal", "search",
+]
+
+[[api-contract.known_drift]]
+surface    = "mutation"
+side       = "spec-only"
+removed_by = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
+names      = [
+  "cancelAccountDeletion", "confirmAccountDeletion", "hideActor",
+  "markChatRead", "markSeen", "prepareAccept", "prepareBallot",
+  "prepareBid", "prepareCampaign", "prepareCampaignAdjustment",
+  "prepareChat", "prepareChatInvitation", "prepareChatJoin",
+  "prepareChatJoinRequest", "prepareChatLeave", "prepareChatMessage",
+  "prepareCollective", "prepareCollectiveJoin", "prepareCollectiveLeave",
+  "prepareCollectiveRecognition", "prepareDeInvite",
+  "prepareGuidelinesChange", "prepareItem", "prepareItemEdit",
+  "prepareModeratorRoleChange", "prepareParameterChange",
+  "prepareProposal", "prepareRatify", "prepareReport", "prepareRescind",
+  "prepareSettlement", "prepareTip", "prepareWithdraw", "removeBookmark",
+  "removeContent", "requestAccountDeletion", "setBookmark",
+  "setPreferences", "unhideActor",
+]
+
+# A prose paragraph on the profile field caps sits inside a graphql
+# fence of "Content authoring"; the reader refuses at it and resumes
+# at the next definition, so nothing around it goes uncompared.
+[[api-contract.known_unreadable]]
+line       = "Each profile text field answers to its own cap, Unicode scalar"
+removed_by = "UNTRIAGED: a one-line api-spec.md fence fix, surfaced by the oracle 2026-10-06; no packet yet"
 
 
