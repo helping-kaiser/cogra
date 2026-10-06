@@ -44,8 +44,9 @@ screens — it lives on the component rather than in a picture of one.
 
 ## 1. Sources
 
-Everything in this system was read out of one attached codebase and one
-uploaded file. Nothing was invented from memory; nothing was recreated
+Everything in this system was read, at the derivation on 2026-08-27, out
+of one attached codebase and one uploaded file — the table records what
+each gave then. Nothing was invented from memory; nothing was recreated
 from a screenshot.
 
 | Source | What it gave |
