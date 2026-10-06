@@ -28,4 +28,6 @@ WHEN press Un-tag -> the sheet closes AND the tag's withdrawal is staged in the 
 
 WHEN press Done -> the sheet closes AND the chip carries the pair it was given
 
-WHEN tap the scrim -> the sheet closes AND the pair is what it was before the sheet opened
+WHEN tap the scrim -> the sheet closes AND the pair is what it was before the sheet opened AND NEVER anything staged in the sheet applies
+
+WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND the pair is what it was before the sheet opened AND NEVER anything staged in the sheet applies

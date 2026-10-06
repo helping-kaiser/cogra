@@ -62,7 +62,7 @@ function Demo(){
     <p><b>It covers the bottom bar.</b> A sheet is a decision surface; a navigation bar under it offers to leave mid-decision.</p>
     <p><b>Top corners only</b>, at the 28px rung. The bottom edge is the screen's — a rounded bottom flush to the edge draws a gap that is not there.</p>
     <p><b>The grab handle is not a control.</b> It says which edge this came from and which way it goes back.</p>
-    <p><b>It is modal, and dismissal discards.</b> Focus moves in and comes back to what opened it; the scrim, a swipe down, Back and Escape close it and leave everything as it was — a choice applies only on the sheet's commit. If the choice truly cannot be deferred, that is a dialog — <code>DialogSurface</code>.</p>
+    <p><b>It is modal, and a staging sheet's dismissal discards.</b> Focus moves in and comes back to what opened it; the scrim, a swipe down, Back and Escape close it and leave everything as it was — a choice applies only on the sheet's commit. The four editing sheets — the staged tags, the staged citations and the picked pictures, on the composer and on the edit — apply live instead, so every way out, <code>Done</code> included, just closes them. If the choice truly cannot be deferred, that is a dialog — <code>DialogSurface</code>.</p>
     <p><b>Never beside the opinion pad.</b> One parked surface at a time; the pad owns the same corner.</p>
     <span className="lbl">In flow, for a specimen — inline drops the scrim and the animation</span>
     <div style={{borderRadius:"var(--radius-extra-large)",overflow:"hidden",maxWidth:260}}>

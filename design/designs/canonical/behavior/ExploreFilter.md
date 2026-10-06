@@ -22,6 +22,18 @@ ALWAYS the search filter's foot holds Reset in its corner and Done at its end
 
 ALWAYS the search filter's foot carries no reading of the staged filter
 
+WHEN tap a kind chip -> the chip's change is staged AND NEVER the results behind the sheet move before Done
+
+WHEN tap Ranked or Newest -> that order is staged AND NEVER the results behind the sheet move before Done
+
+WHEN tap Show what you've already seen -> the toggle flips, staged AND NEVER the results behind the sheet move before Done
+
 WHEN tap Reset -> the sheet stages the search filter's default AND NEVER the search re-queries
+
+WHEN tap Done -> the sheet closes AND the search re-queries once with the staged filter
+
+WHEN tap the scrim -> the sheet closes AND the staged filter is dropped AND the results are what they were AND NEVER anything staged applies
+
+WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND the staged filter is dropped AND the results are what they were AND NEVER anything staged applies
 
 ALWAYS a result counts as seen once it was fully in the viewport, the first time only, and the seeing joins the reader's History and never becomes a graph record

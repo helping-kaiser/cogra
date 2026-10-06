@@ -40,4 +40,6 @@ WHEN back returns from a screen a control in the sheet opened -> the comments sh
 
 WHEN the post wizard that Cite in a new post opened closes with its X -> the comments sheet stands open over the post as it was left
 
+WHEN tap the scrim, swipe the comments sheet down, press system Back or press Escape -> the comments sheet closes AND what it was opened over stands as it was
+
 WHEN Add a comment is pressed GIVEN the reader is a member -> the reply composer opens AND NEVER a text field takes focus in the comments sheet AND NEVER the keyboard rises over it
