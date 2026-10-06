@@ -318,6 +318,24 @@ Role assignment is fixed (see `tokens/typography.css`). Weight is
 400 for display/headline/body, 500 for title-medium/small and all label
 roles; 600–700 exist in the variable file for emphasis.
 
+**Latin-ext is not optional**: `İ ğ ş` live there, so a latin-only
+subset silently breaks Turkish. The whole type budget is the one
+variable file — about 30 KB as subset woff2 (20 KB latin, 10 KB
+latin-ext), 61 KB as the upstream TTF — smaller than a single static
+weight of most alternatives. **Figtree has no Cyrillic or Greek**, and
+no upstream plan for them: shipping either script reopens the
+typeface, and that is a product-scope decision rather than a
+typographic one.
+
+**One tracking value, each platform's own expression of it** (jakob
+2026-10-06). The design states a role's tracking once
+(`tokens/typography.css`); each platform expresses it in its native
+unit and rounds on its own unit grid, so three roles (`display-large`,
+`body-medium`, `title-medium`) can land up to 0.05px apart. That is a
+capability expression, never a per-client choice — *One design, both
+platforms* (*Spacing and layout*) holds: "the 100% design match is the
+goal and both platforms will need their own way to get there."
+
 **Text scale is honoured and never capped** (the K13 round; WCAG 1.4.4).
 Type is `rem` on the web and `sp` on Android, so it follows the reader's
 size, and **the budgets follow it: a budget is measured at the rendered
