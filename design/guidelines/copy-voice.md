@@ -246,6 +246,24 @@ departs, in lowercase after a `·`:
 seen`, `+ still settling`, `hiding sensitive`, `hiding removed`,
 `All kinds`. The rest are the trigger's words as already drawn.
 
+**Carried over — blessed by use (jakob 2026-10-06).** Where the
+deviations outgrow the pill they collapse to a count after the head,
+`3 kinds · 4 changes` (`FeedFar`). The sheet's own words (`FeedSheet`,
+`SettingsReading`; search's sheet and History's take the parts they
+carry, `ExploreFilter`, `HistoryFilter`):
+
+- `Kinds` — `Everything that can reach your feed. Combine as many as you
+  like.` — with the chips `Posts` · `Comments` · `Profiles` · `Tags`.
+- `Kinds of post` — `Combine them: photos and video with no text posts is
+  a legitimate feed.` — with `Text` · `Photos` · `Video`.
+- `Order` — `Ranked puts what's closest to you first — your view, no one
+  else's. Newest ignores it and lists by time.` — with `Ranked` ·
+  `Newest` and the checkbox `Show what you've already seen`.
+- `Also show` — `Sensitive content stays veiled until you tap it. A
+  removed post keeps its place — author, time, and where it sat in the
+  thread — never the content.` — with `Sensitive` · `Removed` · `Still
+  settling`.
+
 ## Platform nouns
 
 The key lives on a device, and the device is named as the reader sees
@@ -686,11 +704,10 @@ boards already speak, recorded so the registry is whole:
 
 - **The transport's other controls** — `Back ten seconds` · `Forward ten
   seconds` (`ViewerVideo`, `PostDetailVideo`, `ComposeCoverPlaying`),
-  `Full screen` (`PostDetailVideo`), and the sound toggle's pair, `Turn
-  sound on` · `Turn sound off`.
-- **A password field's eye** — `Show password`, and `Hide password`
-  while the password shows (`PasswordField`; `SignIn`, `Join`,
-  `ChangePassword` and every form with a password).
+  `Full screen` (`PostDetailVideo`), and the sound toggle's `Turn sound
+  on` (`ViewerVideo`, `Reel` and every playing clip).
+- **A password field's eye** — `Show password` (`PasswordField`;
+  `SignIn`, `Join`, `ChangePassword` and every form with a password).
 - **The wizard's two ends** — `Back a step`, the arrow on every wizard
   stage; the X says what leaving keeps: `Leave — your
   draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
@@ -2666,6 +2683,28 @@ glyph's accessible name; the person menu's `Mention in a new post` sibling.
 
 **The comment's reply glyph** is spoken `Reply to @tobias`, the seal's own
 read-back of a reply to a comment.
+
+**Carried over — blessed by use (jakob 2026-10-06).** The furniture
+every card and detail already draws:
+
+- **The veil** (`SensitiveVeil`) — `Sensitive — tap to view` on its face,
+  and under it the source line naming whose mark it is, then the
+  author's reason when one was given: `The author's warning — A dead
+  seabird in the second frame.`. Spoken as one name, `Sensitive — tap to
+  view. The author's warning — A dead seabird in the second frame.`. The
+  compact veil over a single clip reveals with `Show`
+  (`PostDetailVideoSensitive`, `ReelSensitive`). The words-only veil
+  carries the same source line on its plate (jakob 2026-10-06, the check
+  round's 5) — no new words.
+- **A folded body** opens with `More` (`Feed` and every card whose body
+  is clamped).
+- **The tags line** (`TopicsLine`) states in words what its chips do not
+  show: the tags that did not fit and the references, `· 13 tags · 3
+  references`, each part alone where the other is nothing — `· 1
+  reference` on most cards, `· 1 tag` (`LadderTopics`).
+- **A comment** — `View 2 replies`, the collapsed branch's line, the count
+  the branch's; the thread's foot reads `Add a comment` (the comment
+  sheet, `CommentMenu` and its family).
 
 ## The coming-soon surfaces
 
