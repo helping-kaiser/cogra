@@ -4852,3 +4852,19 @@ these for jakob's eye, each with the lane's recommendation in its report:
   open micro-contracts (~20, none MVP-blocking); readme §13's check-
   wave record points at no in-repo list, this item is that pointer
   (jakob 2026-10-06).
+
+### 137 · The pre-release fixture pass · *design* · **filed 2026-10-06** · **jakob's own, before the MVP releases**
+
+Ruled by jakob on 2026-10-06: the boards' demo and fixture content stays
+placeholder until this pass, and the pass is jakob's own. Before the MVP
+releases he replaces the onboarding's posts and images with his own
+words and pictures, and changes ALL example posts, names, handles and
+mails across the tree. No lane redraws a fixture ahead of it.
+
+- **Folded in: PR #96's fixture flag.** The email change's applied
+  landing (`ChangeEmailLinked`, `applied`) was blessed naming
+  `mia@rivera.photo`; the board keeps its established fixture pair,
+  `sol@solferreira.art` → `sol@ferreira.studio`, and reads `The change
+  it belonged to already happened. Your email is now
+  sol@ferreira.studio.` The words are blessed; the address settles in
+  this pass.
