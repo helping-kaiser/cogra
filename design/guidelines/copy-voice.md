@@ -2922,6 +2922,90 @@ headline, the sentence as its one line (`ComingSoonCard`, the
 drawn-anatomy ruling, jakob 2026-09-25). No coming-soon surface offers
 an action — nothing a reader can do fills any of them yet.
 
+## The intro
+
+The five cards a first open walks through (`OnboardingSteps`,
+`OnboardingShape`, `OnboardingPublic`, `OnboardingLayers`,
+`OnboardingVouch`), re-opened from settings' `Watch the intro again`.
+Every line here is **carried over — blessed by use (jakob 2026-10-06)**,
+recorded so the registry is whole.
+
+- **The frame** — `Skip` on every card, `Next` under it, and the last
+  card's `Start reading`; the dots are spoken `Step 1 of 5`.
+- **1** — `Your feed follows your own steps` · `Nothing is picked for you.
+  What reaches you comes along the connections you made, one step at a
+  time.`; the drawing's own dot is `you`.
+- **2** — `Your opinions have a shape` · `Give one with the pad: how much
+  you are for it, and how much of it you want reaching you.`; the drawing
+  names its faces by their anchors' words (`Love this`, `Show me more`,
+  `Not for me`, `Good, but not in my world`) and its target `a post`.
+- **3** — `Everything here is public` · `Posts, comments, opinions — and
+  chats. Anything written on CoGra can be read, and cited, by anyone.`
+  The drawing's chat between `@ada and @tobias` is jakob's own pick:
+  `Feels weird chatting where anyone can read it.` · `Nobody here pretends
+  my thumbs have privacy. Meta and TikTok just read quieter.` · `At least
+  our eavesdroppers can say hi.`, and the comment citing it reads `Hi.`
+- **4** — `Nothing is lost` · `Posts and comments keep every layer they
+  were built from. Pictures added, words changed — the whole history
+  stays readable.`
+- **5** — `Someone brings you in` · `You are here because @mira invited
+  you. Her link is your first way in to everyone else, and theirs to
+  you.`, with the quiet note `The friend who sent you this invite has to
+  let you in. Ask them once you have verified your email.`
+
+## About
+
+`About CoGra`, the topics a reader opens one at a time (`About`). Every
+line here is **carried over — blessed by use (jakob 2026-10-06)** save
+those already blessed above (*Platform nouns*, *The reject extension's
+lines*), recorded so the registry is whole:
+
+- `What this is` — `CoGra is a place to read and write in public, where
+  what reaches you is decided by the people and the things you have
+  pointed at — never by a system guessing what will keep you here.`
+- `Your feed is your own steps` — `Posts arrive along the connections you
+  made, one step at a time. Nothing is put in front of you because it
+  performs well, and there is no feed you did not shape.` / `You can
+  change what a feed shows whenever you like, and you can open any post's
+  score to see exactly which steps carried it to you.`
+- `Everything here is public` — `Posts, comments, opinions, tags,
+  citations — and chats, once they arrive. Anything written on CoGra can
+  be read, quoted and cited by anyone.` / `There is no private side to
+  this. If something is not meant to be read by strangers, it is not
+  meant for here.`
+- `An opinion says two things` — `Every opinion you give carries two: how
+  far you are for or against the thing, and how much of it you want
+  reaching you. The pad is where you place both at once.` / `The face
+  beside an opinion is a short reading of that pair, not a separate
+  rating. You can turn the exact numbers on in settings.`
+- `Nothing is lost` — `Posts and comments are built in layers, and a
+  layer is never taken away. An edit adds to the record instead of
+  replacing it, so what you are reading carries its own history.` /
+  `When something does have to go — the law, or the author's own choice
+  — the words are removed and a mark stays where they were. Nothing
+  disappears quietly.`
+- `Money follows the reach you made` — `Reading and writing here can
+  earn, and what you earn is yours.` / `Advertising is pull, not push: a
+  campaign offers to pay for reach, and where that money lands is decided
+  the same way a feed is — by the graph, not by the bid. Nobody buys
+  their way into what you see.` / `Every figure opens onto what produced
+  it, down to the record that paid it.`
+- `Getting in, and being let in` — `CoGra is invite-only. Somebody already
+  here vouches for you, and until they have, you are an applicant: you
+  can read everything, write one post, give one opinion and say how you
+  feel about one topic.` / `These wait with your application and arrive
+  with you. Until then only you can see them, and they are signed
+  together with the vouch that lets you in. If your application is
+  closed, your account stays — anyone can still vouch you in.` / `That is
+  not a waiting period for its own sake. The first link to you is a real
+  one, given by a person who stands behind it — which is the thing that
+  keeps this place small enough to be honest.`
+- `Your key is yours` — `Everything you publish is signed by a key only
+  you hold. We cannot sign for you, and we cannot recover it for you —
+  your recovery code is the only way back.`
+- `This page grows` — `CoGra is being built, and this page describes the
+  product rather than the build. Some of what is written here is already
+  in your hands; some of it is on its way.`
 
 ## Topics
 
