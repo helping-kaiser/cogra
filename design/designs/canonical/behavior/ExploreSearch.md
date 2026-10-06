@@ -14,6 +14,8 @@ ALWAYS a tag result carries the reader's rank and never a use count
 
 ALWAYS the search filter trigger reads Everything GIVEN the search filter is at its default
 
+ALWAYS the search filter trigger's spoken name is its reading followed by what the search shows
+
 ALWAYS a result the reader has already seen stays out GIVEN Show what you've already seen is off
 
 ALWAYS search matches names and titles, an untitled post by its first words, and never a body, a description or a bio

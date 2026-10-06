@@ -14,6 +14,8 @@ ALWAYS no row is marked GIVEN the notice stands
 
 ALWAYS the header's ? is the only ? on the seal GIVEN the notice stands
 
+WHEN the reader goes a stage back and returns, or changes a fact, GIVEN the notice stood on the seal -> the seal shows its plain commit AND NEVER the notice stands again before the next press
+
 WHEN press Try again GIVEN the signing goes through this time -> the post's own detail view opens wearing Still settling
 
 WHEN press Try again GIVEN the same refusal answers -> the notice stays as it was

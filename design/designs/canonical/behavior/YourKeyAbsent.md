@@ -2,9 +2,13 @@
 
 WHEN tap the Your key row in settings GIVEN the key is elsewhere -> YourKeyAbsent opens AND NEVER an unlock or a code is asked for
 
-ALWAYS the notice Your key isn't on this browser leads the page with There is no key on this browser to show. on the web
+ALWAYS the notice Your key isn't on this browser leads the page on the web
 
-ALWAYS the notice Your key isn't in this app leads the page with There is no key in this app to show. in the app
+ALWAYS the notice Your key isn't in this app leads the page in the app
+
+ALWAYS the notice's line reads There is no key on this browser to show. on the web GIVEN the account has a backup
+
+ALWAYS the notice's line reads There is no key in this app to show. in the app GIVEN the account has a backup
 
 ALWAYS no key card is drawn, neither empty nor with a placeholder
 

@@ -16,6 +16,8 @@ WHEN the author's confirmed Remove on their own comment lands -> the comment's w
 
 ALWAYS a removed comment's replies stay under it and readable
 
+WHEN tap a comment's View N replies -> the branch unfolds in place AND it stays unfolded for as long as the sheet stays open
+
 WHEN the sheet reopens after the reader's reply is signed -> the thread scrolls to the new reply's card AND NEVER the new reply's card stands below the sheet's foot
 
 WHEN Add a comment or a comment's Reply is pressed GIVEN the reader is signed out -> the join prompt opens over the comments sheet AND NEVER the composer opens

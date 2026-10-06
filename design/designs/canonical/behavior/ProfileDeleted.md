@@ -32,6 +32,8 @@ WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport A
 
 WHEN a press-and-hold on the wide anchor signs -> the anchor refuses a second press-and-hold until the signing answers AND NEVER the anchor's face moves before the signature is taken
 
+WHEN the hold's signing has not answered 200ms after the hold -> the line under the anchor's face reads Signing… AND NEVER a spinner appears
+
 WHEN the hold's signing is taken -> a modest positive opinion lands on the account AND the anchor's face moves to it AND the snackbar confirms the signature
 
 WHEN the hold's signing does not go through -> the anchor's face stays where it was AND the line under it reads That didn't sign. followed by Retry AND NEVER the snackbar carries the failure

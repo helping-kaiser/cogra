@@ -6,9 +6,13 @@ ALWAYS the failed clip's tile carries no remove control of its own
 
 ALWAYS the footer's uploading line is gone GIVEN the clip's upload failed
 
-WHEN tap Retry -> the upload starts again
+ALWAYS Next is disabled GIVEN the clip's upload failed
 
-WHEN tap Remove it -> the clip leaves AND the composer is words again
+WHEN tap Retry -> the upload starts again AND Next answers again
+
+WHEN tap Remove it -> the clip leaves AND the composer is words again AND Next answers again
+
+WHEN press Next GIVEN the clip's upload failed -> NEVER the seal opens
 
 WHEN tap Describe the video GIVEN the clip's upload failed -> the describe sheet opens AND NEVER describing waits on the upload
 

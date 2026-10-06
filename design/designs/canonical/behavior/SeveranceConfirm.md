@@ -32,6 +32,8 @@ WHEN the signing is taken -> the dialog closes AND the pad beneath it closes AND
 
 WHEN the signing does not go through -> the dialog stays up with its pair AND the line That didn't send. Try again. stands above the pair AND Walk it back reads Retry AND nothing is walked back
 
-WHEN press Keep it -> the dialog closes AND nothing is signed AND the pick is still parked on the pad beneath
+WHEN press Keep it GIVEN Walk it back is not waiting on its signing -> the dialog closes AND nothing is signed AND the pick is still parked on the pad beneath
 
-WHEN tap the scrim, press the system's Back or press Escape -> the dialog closes as Keep it closes it AND nothing is signed AND the pick is still parked on the pad beneath
+WHEN tap the scrim, press the system's Back or press Escape GIVEN Walk it back is not waiting on its signing -> the dialog closes as Keep it closes it AND nothing is signed AND the pick is still parked on the pad beneath
+
+WHEN tap Keep it, tap the scrim, press the system's Back or press Escape GIVEN Walk it back is waiting on its signing -> NEVER the dialog closes AND NEVER Keep it dims

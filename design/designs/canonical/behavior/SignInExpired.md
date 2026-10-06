@@ -26,7 +26,11 @@ WHEN tap On Android? Download the app (APK) -> the browser downloads the app
 
 WHEN tap Forgot password? -> Reset opens
 
-WHEN tap New here? Enter your invite -> InviteEntry opens
+WHEN tap New here? Enter your invite GIVEN no invite link is held -> InviteEntry opens
+
+WHEN tap New here? Enter your invite GIVEN a live invite link is held -> Join opens with the link in hand AND NEVER the invite door is shown
+
+WHEN tap New here? Enter your invite GIVEN the invite link held no longer works -> JoinInvalid opens
 
 WHEN tap Just looking? Browse the feed -> FeedBare opens
 
@@ -36,9 +40,7 @@ WHEN the sign-in has not answered 200ms after the press -> Sign in reads Signing
 
 WHEN the sign-in is taken GIVEN a member whose key is on this device -> Feed opens AND the draft and any picks kept pending are still there
 
-WHEN the sign-in is taken GIVEN a member whose key is not on this device -> KeyElsewhere opens
-
-WHEN the sign-in is taken GIVEN an applicant -> ApplicantFeed opens
+WHEN the sign-in is taken -> the app opens where app-open lands for that account in its state, as SignIn's own sign-in lands
 
 WHEN the sign-in is refused for its email and password -> the line That email and password don't match. stands above Sign in AND the fields keep what was typed
 

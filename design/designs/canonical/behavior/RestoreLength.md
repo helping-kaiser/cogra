@@ -18,6 +18,8 @@ WHEN press the header's back arrow GIVEN an applicant -> ApplicantKeyElsewhere o
 
 WHEN tap Don't remember this account on this device -> the box flips AND nothing else changes
 
+WHEN the key is restored GIVEN Don't remember this account on this device is ticked -> the account's key material on this device is set to be cleared at sign-out
+
 WHEN press Restore the key -> Restore the key refuses a second press until the restore answers AND NEVER Restore the key dims
 
 WHEN the restore has not answered 200ms after the press -> Restore the key reads Restoring the key… AND NEVER a spinner appears
