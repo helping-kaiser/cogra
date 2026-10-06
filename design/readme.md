@@ -1037,6 +1037,13 @@ minimum targets — the platform bar (48dp, 44pt), which the house holds
 over WCAG AA's 24px floor. Every icon-only control is labelled. **Every drag
 gesture has a non-drag equivalent.** Both themes are designed.
 
+**A card's header answers at 48dp** (jakob 2026-10-06). The drawn 28dp
+header — `ActorChip`, the age and the ⋮ — keeps its geometry; platforms
+mount an invisible 48dp touch target centered on it, the back target's
+precedent. Where that target overlaps the card's one open-the-post
+surface, and the dead padding above the header, the header target wins
+inside its strip.
+
 **Focus has four rules** (WCAG 2.4.3; the WAI-ARIA dialog pattern), for
 every sheet, pad and dialog — each modal (§4, *Sheets*):
 
