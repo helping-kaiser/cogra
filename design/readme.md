@@ -5,9 +5,10 @@ between people. What you see is shaped only by the connections you make.
 The design carries that as *tone*, never as on-screen vocabulary.
 
 This folder is the design system both CoGra clients read from: colour,
-type, shape, motion, components, copy, and the stance control. It is a
-recreation for design work — not the production source. Where a value
-here differs from the product source, the product source wins.
+type, shape, motion, components, copy, and the stance control. It is
+the authority the apps conform to: where an app differs from it, the
+app changes, and a problem with the design itself is worked out here
+first.
 
 ---
 
