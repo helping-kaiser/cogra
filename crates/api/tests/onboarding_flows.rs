@@ -442,6 +442,7 @@ async fn the_attach_guards_hold(pool: PgPool) {
         &rig.boundary,
         &rig.standin,
         &rig.cfg,
+        &api::ratelimit::SigningBudget::UNLIMITED,
         inviter,
         &[Approval {
             application: application.id,
@@ -620,6 +621,7 @@ async fn approval_guards_hold(pool: PgPool) {
             &rig.boundary,
             &rig.standin,
             &rig.cfg,
+            &api::ratelimit::SigningBudget::UNLIMITED,
             who,
             &[Approval {
                 application: id,

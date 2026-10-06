@@ -49,7 +49,8 @@ use uuid::Uuid;
 
 use crate::l1::L1Boundary;
 use crate::nodes::{self, NodeError};
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::SigningClass;
 
 /// Citations per creation batch (D7). Each is its own priced act, so a
 /// maximal creation batch is 1 minting record + 10 tags + 10 references =
@@ -459,7 +460,7 @@ async fn live_targets(
 pub async fn prepare_reference<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     artifact: Uuid,
     draft: &ReferenceDraft,
@@ -473,8 +474,17 @@ pub async fn prepare_reference<B: L1Boundary>(
     if let Some(message) = over_the_standing_cap(&live, std::slice::from_ref(&reference)) {
         return Err(ReferenceError::at(vec!["target".to_string()], message).into());
     }
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Claim, 1)],
+    )
+    .await?;
     let gesture = reference_gesture(&author, middle, &reference, vec![]);
-    Ok(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?)
+    Ok(prepare::prepare(boundary, pool, staging.gc_after_epochs, viewer, gesture).await?)
 }
 
 /// Prepares the withdrawal of one citation: the counter-records that net
@@ -492,7 +502,7 @@ pub async fn prepare_reference<B: L1Boundary>(
 pub async fn prepare_reference_withdrawal<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     artifact: Uuid,
     target: Uuid,
@@ -522,7 +532,15 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
         )
         .into());
     }
-    prepare::check_batch_solvency(boundary, &author, batch.len()).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Claim, batch.len())],
+    )
+    .await?;
     let mut prepared = Vec::with_capacity(batch.len());
     for (relevance, support) in batch {
         let counter = PlannedReference {
@@ -532,7 +550,9 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
             support,
         };
         let gesture = reference_gesture(&author, middle.clone(), &counter, vec![]);
-        prepared.push(prepare::prepare(boundary, pool, gc_after_epochs, viewer, gesture).await?);
+        prepared.push(
+            prepare::prepare(boundary, pool, staging.gc_after_epochs, viewer, gesture).await?,
+        );
     }
     Ok(prepared)
 }

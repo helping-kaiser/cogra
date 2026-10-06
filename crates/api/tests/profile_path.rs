@@ -18,6 +18,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 const GC: i64 = 8;
+const STAGING: api::prepare::Staging = api::prepare::Staging::unbudgeted(GC);
 
 struct Rig {
     pool: PgPool,
@@ -132,7 +133,7 @@ impl Rig {
         actor: Uuid,
         draft: ProfileUpdateDraft,
     ) -> Result<api::prepare::Prepared, ProfileError> {
-        profile::prepare_profile_update(&self.pool, &self.boundary, GC, actor, draft).await
+        profile::prepare_profile_update(&self.pool, &self.boundary, STAGING, actor, draft).await
     }
 
     /// Drives one profile update through signatures and confirm.

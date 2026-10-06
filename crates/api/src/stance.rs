@@ -24,7 +24,8 @@ use uuid::Uuid;
 
 use crate::l1::L1Boundary;
 use crate::nodes::{self, NodeError};
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::SigningClass;
 
 #[derive(Debug, thiserror::Error)]
 pub enum StanceError {
@@ -186,7 +187,7 @@ async fn author_address(pool: &PgPool, viewer: Uuid) -> Result<String, StanceErr
 pub async fn prepare_stance<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     target: &TargetRef,
     p_d: f64,
@@ -200,10 +201,19 @@ pub async fn prepare_stance<B: L1Boundary>(
     }
     let author = author_address(pool, viewer).await?;
     let resolved = resolve_target(pool, target).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Stance, 1)],
+    )
+    .await?;
     Ok(prepare::prepare(
         boundary,
         pool,
-        gc_after_epochs,
+        staging.gc_after_epochs,
         viewer,
         stance_gesture(&author, &resolved, p_d, p_i),
     )
@@ -220,7 +230,7 @@ pub async fn prepare_stance<B: L1Boundary>(
 pub async fn prepare_severance<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     target: &TargetRef,
 ) -> Result<Vec<prepare::Prepared>, StanceError> {
@@ -234,14 +244,22 @@ pub async fn prepare_severance<B: L1Boundary>(
             message: "the bundle toward this target already nets to (0, 0)".into(),
         });
     }
-    prepare::check_batch_solvency(boundary, &author, batch.len()).await?;
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &author,
+        &[(SigningClass::Stance, batch.len())],
+    )
+    .await?;
     let mut prepared = Vec::with_capacity(batch.len());
     for (p_d, p_i) in batch {
         prepared.push(
             prepare::prepare(
                 boundary,
                 pool,
-                gc_after_epochs,
+                staging.gc_after_epochs,
                 viewer,
                 stance_gesture(&author, &resolved, p_d, p_i),
             )

@@ -21,7 +21,8 @@ use uuid::Uuid;
 use crate::auth::{self, AuthConfig, IssuedSession};
 use crate::l1::L1Boundary;
 use crate::mailer::{Mail, Mailer};
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::{SigningBudget, SigningClass};
 use crate::relay::RelayError;
 
 /// A never-verified account expires this long after registration
@@ -95,6 +96,10 @@ pub enum OnboardingError {
         theta: f64,
         acts: usize,
     },
+    /// The account's signing budget cannot carry the gesture right now —
+    /// a write-rule refusal the author waits out.
+    #[error("write rule: the signing budget cannot carry this batch right now")]
+    SigningBudget,
     #[error("signature invalid: {0}")]
     SignatureInvalid(String),
     #[error("staged write expired; the flow re-stages on next poll")]
@@ -122,6 +127,7 @@ impl From<PrepareError> for OnboardingError {
                 theta,
                 acts,
             },
+            PrepareError::SigningBudget => OnboardingError::SigningBudget,
             PrepareError::Formation(m) => OnboardingError::BadInput {
                 field: "input",
                 message: m,
@@ -368,16 +374,18 @@ pub struct Approval {
 /// `approveApplicants`).
 ///
 /// Every entry is validated before any is executed, and the whole batch
-/// is priced against the inviter's balance before any of it is staged
-/// (D19) — an inviter who cannot afford five vouches is refused five
-/// rather than discovering it on the third. Failures after that pass are
-/// per-entry: the approvals that already executed stand, and their repair
-/// path is the applicant's own status poll.
+/// is put to the write rule — the inviter's balance and signing budget —
+/// before any of it is staged (D19): an inviter who cannot afford five
+/// vouches is refused five rather than discovering it on the third.
+/// Failures after that pass are per-entry: the approvals that already
+/// executed stand, and their repair path is the applicant's own status
+/// poll.
 pub async fn approve_applicants<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
     funding: &StandIn,
     cfg: &OnboardingConfig,
+    budget: &SigningBudget,
     inviter: Uuid,
     approvals: &[Approval],
 ) -> Result<Vec<prepare::Prepared>, Vec<ApprovalFault>> {
@@ -393,7 +401,11 @@ pub async fn approve_applicants<B: L1Boundary>(
         return Err(errors);
     }
 
-    if let Err(e) = price_batch(pool, boundary, inviter, approvals.len()).await {
+    let staging = Staging {
+        gc_after_epochs: cfg.gc_after_epochs,
+        budget: *budget,
+    };
+    if let Err(e) = price_batch(pool, boundary, &staging, inviter, approvals.len()).await {
         return Err(vec![(None, e)]);
     }
 
@@ -535,15 +547,24 @@ async fn approve_one<B: L1Boundary>(
     Ok(opinion)
 }
 
-/// The inviter's own vouches, priced as one gesture (D19).
+/// The inviter's own vouches, put to the write rule as one gesture (D19).
 async fn price_batch<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
+    staging: &Staging,
     inviter: Uuid,
     acts: usize,
 ) -> Result<(), OnboardingError> {
     let address = actor_address(pool, inviter).await?;
-    Ok(prepare::check_batch_solvency(boundary, &address, acts).await?)
+    Ok(prepare::check_write_rule(
+        boundary,
+        pool,
+        staging,
+        inviter,
+        &address,
+        &[(SigningClass::Approval, acts)],
+    )
+    .await?)
 }
 
 /// The attached address of an actor row; Internal when the actor is

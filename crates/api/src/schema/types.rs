@@ -245,7 +245,8 @@ pub enum ErrorCode {
     NotFound,
     /// Malformed input; `field` names the offender.
     BadInput,
-    /// An auth endpoint's per-IP / per-account backoff.
+    /// An auth or upload endpoint's per-IP / per-account budget — never a
+    /// signing act. The login backoff serves no retry-after figure.
     RateLimited,
     /// Collapsed server fault; detail is logged, not surfaced.
     Internal,
@@ -267,7 +268,8 @@ pub enum ErrorCode {
     ResetTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
     RefreshTokenInvalid,
-    /// The prepare pre-check: W1 solvency or W2 stamps.
+    /// The prepare pre-check: W1 solvency, W2 stamps, or the signing
+    /// budget.
     WriteRuleFailed,
     /// The staged write was garbage-collected unlanded.
     StagedWriteExpired,
@@ -379,7 +381,9 @@ impl UserError {
                 UserError::new(ErrorCode::VerificationTokenInvalid, e.to_string())
             }
             OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
-            OnboardingError::WriteRule { .. } | OnboardingError::BatchWriteRule { .. } => {
+            OnboardingError::WriteRule { .. }
+            | OnboardingError::BatchWriteRule { .. }
+            | OnboardingError::SigningBudget => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
             OnboardingError::SignatureInvalid(_) => {

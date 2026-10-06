@@ -20,7 +20,8 @@ use uuid::Uuid;
 
 use crate::ingest::PromotionFailure;
 use crate::l1::L1Boundary;
-use crate::prepare::{self, Gesture, PrepareError, Target};
+use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::ratelimit::SigningClass;
 
 /// The longest a display name may run (user.md §4), Unicode scalar
 /// values like every character cap on this surface.
@@ -133,7 +134,7 @@ fn checked_profile_len(
 pub async fn prepare_profile_update<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    gc_after_epochs: i64,
+    staging: Staging,
     viewer: Uuid,
     draft: ProfileUpdateDraft,
 ) -> Result<prepare::Prepared, ProfileError> {
@@ -195,10 +196,19 @@ pub async fn prepare_profile_update<B: L1Boundary>(
         avatar,
     }
     .encode_payload();
+    prepare::check_write_rule(
+        boundary,
+        pool,
+        &staging,
+        viewer,
+        &address,
+        &[(SigningClass::Edit, 1)],
+    )
+    .await?;
     let prepared = prepare::prepare(
         boundary,
         pool,
-        gc_after_epochs,
+        staging.gc_after_epochs,
         viewer,
         Gesture {
             author: address,
