@@ -329,7 +329,7 @@ const REASONS = {
  * speaks (ruled 2026-09-09): the minutes/hours/days ladder to 30 days, the
  * date past it.
  */
-export function RedactedContent({ reason = "illegal", when, note }) {
+export function RedactedContent({ reason = "illegal", when, note, node }) {
   const copy = REASONS[reason] ?? REASONS.illegal;
   return (
     <div
@@ -343,12 +343,19 @@ export function RedactedContent({ reason = "illegal", when, note }) {
         background: "var(--surface-container-high)",
         padding: "var(--space-4)",
       }}
+      data-node={node}
     >
-      <span style={{ fontSize: "var(--text-body-medium)", color: "var(--text-body)" }}>{copy.line}</span>
-      <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", textWrap: "pretty" }}>
+      <span style={{ fontSize: "var(--text-body-medium)", color: "var(--text-body)" }} data-node={node && "line"}>
+        {copy.line}
+      </span>
+      <span style={{ fontSize: "var(--text-body-small)", color: "var(--text-secondary)", textWrap: "pretty" }} data-node={node && "detail"}>
         {note ?? copy.detail}
       </span>
-      {when && <span style={{ fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }}>{when}</span>}
+      {when && (
+        <span style={{ fontSize: "var(--text-label-small)", color: "var(--text-secondary)" }} data-node={node && "when"}>
+          {when}
+        </span>
+      )}
     </div>
   );
 }

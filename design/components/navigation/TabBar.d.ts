@@ -19,6 +19,8 @@ export interface TabBarProps {
   ariaLabel?: string;
   onSelect?: (id: string) => void;
   iconSize?: number;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names each cell as `<id>Tab` — `postsTab`, `commentsTab`. */
+  node?: string;
 }
 
 export declare function TabBar(props: TabBarProps): JSX.Element;

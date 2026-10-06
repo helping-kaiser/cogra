@@ -64,7 +64,12 @@
    redacted at execution, so that route is `ProfileNotFound`'s case and its
    entry says so. This is reached by following STRUCTURE that still points at
    the actor — an author chip on a post they wrote, a comment's author, a name
-   in someone's chronicle. Those point at an actor, and the actor is there. */
+   in someone's chronicle. Those point at an actor, and the actor is there.
+
+   REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061), named as
+   `ProfileOther` is: the shells keep their paths, and the mark is
+   `removalMark`. */
+export const NODE = "profile";
 export function Screen() {
   return <ProfileDeletedBody />;
 }

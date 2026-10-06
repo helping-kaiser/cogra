@@ -36,12 +36,13 @@ import React from "react";
    segments stay equal, so spanning divides the width rather than stretching
    one of them. */
 
-export function SegmentedFilter({ options = [], value, onChange, ariaLabel, block = false }) {
+export function SegmentedFilter({ options = [], value, onChange, ariaLabel, block = false, node }) {
   if (options.length === 0) return null;
   return (
     <div
       role="group"
       aria-label={ariaLabel}
+      data-node={node}
       style={{
         display: block ? "flex" : "inline-flex",
         alignItems: "stretch",
@@ -61,6 +62,7 @@ export function SegmentedFilter({ options = [], value, onChange, ariaLabel, bloc
             key={option.value}
             type="button"
             aria-pressed={selected}
+            data-node={node && `${option.value}Option`}
             onClick={() => onChange && onChange(option.value)}
             className="cg-state cg-focus cg-hit"
             style={{

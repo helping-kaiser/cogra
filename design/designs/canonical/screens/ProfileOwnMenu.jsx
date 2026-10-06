@@ -14,15 +14,20 @@
    beside Saved rather than under it — two lists, one shelf.
 
    The page beneath is `ProfileOwnBody`, the same drawing `Profile` frames: a
-   sheet board shows the page it covers, never a hand-made few rows of it. */
+   sheet board shows the page it covers, never a hand-made few rows of it.
+
+   REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): the page
+   is `Profile`'s, and the sheet is `menuSheet`, each row named by its own
+   `node`. */
+export const NODE = "profile";
 export function Screen() {
   return (
     <>
       <ProfileOwnBody />
 
-      <BottomSheet open ariaLabel="More on your profile">
+      <BottomSheet open ariaLabel="More on your profile" node="menuSheet">
         {OWN_PROFILE_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

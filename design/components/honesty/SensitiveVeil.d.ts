@@ -69,6 +69,8 @@ export interface RedactedContentProps {
   when?: string;
   /** Replaces the second line where a case needs its own wording. */
   note?: string;
+  /** The data-node name its placer gives this mark (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `line`, `detail`, `when`. */
+  node?: string;
 }
 
 export declare function RedactedContent(props: RedactedContentProps): JSX.Element;

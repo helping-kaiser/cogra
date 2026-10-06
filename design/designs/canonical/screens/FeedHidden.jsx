@@ -34,17 +34,21 @@
    IT IS `Feed` WITH ONE CARD REPLACED, not a fourth kind of feed board. The
    band, the filter, the cards and the bar are the feed's, drawn once — the
    deletion round's `DeleteAccountCanceled` is the same shape, a read surface
-   with the snackbar the act fired over it. */
+   with the snackbar the act fired over it.
+
+   REGISTERED under the feed's own prefix (design ⇄ impl seam 059/061, the
+   Hide packet), named as `Feed` names it; the snackbar is `snackbar`. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
-        <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} />
+        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
+        <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
-      <Snackbar message="@ada is hidden — their posts stay out of your feed." action="Undo" offset={80} />
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <Snackbar message="@ada is hidden — their posts stay out of your feed." action="Undo" offset={80} node="snackbar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

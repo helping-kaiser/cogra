@@ -49,11 +49,15 @@ const STRIP = / data-node(?:-key)?="[^"]*"/g;
 // node whose segment has no rule here fails the build, so no key ships
 // without its rule written down.
 export const KEY_RULES = {
+  account: "the hidden account's handle, without @ (the hidden-accounts sheet)",
+  act: "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
   card: "the author's handle, without @ (PostCard)",
   commentCard: "the comment author's handle, without @ (CommentCard)",
+  entry: "the saved thing's title, lowercased, each run of other characters one - (Saved)",
   frame: "the picture's position in the post's media, counted from 1 (MediaGallery)",
   tag: "the tag's name, without # (TopicsLine, TopicRemovable)",
   thumb: "the picture's position in the draft's media, counted from 1 (PickedRow)",
+  session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
 };
 

@@ -117,7 +117,7 @@ export function useModalFocus(surfaceRef, active, onEscape) {
    title visible above this one. Its surface takes the next tonal rung,
    `surfaceContainerHighest`: elevation is tonal (`tokens/semantic.css`), and two
    surfaces at one rung claim one elevation. */
-export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height, tallest = false, stacked = false }) {
+export function BottomSheet({ open = false, onClose, ariaLabel, children, inline = false, maxHeight = "62%", height, tallest = false, stacked = false, node }) {
   const [shown, setShown] = React.useState(open);
   const [closing, setClosing] = React.useState(false);
 
@@ -176,8 +176,13 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
                   : { maxHeight: `min(${maxHeight}, ${SHEET_CEILING})`, overflowY: "auto" }),
             }),
       }}
+      data-node={node}
     >
-      <span aria-hidden="true" style={{ alignSelf: "center", height: "4px", width: "32px", flex: "none", borderRadius: "var(--radius-full)", background: "var(--border-hairline)", marginBottom: "var(--space-3)" }} />
+      <span
+        aria-hidden="true"
+        style={{ alignSelf: "center", height: "4px", width: "32px", flex: "none", borderRadius: "var(--radius-full)", background: "var(--border-hairline)", marginBottom: "var(--space-3)" }}
+        data-node={node && "dragHandle"}
+      />
       {children}
     </div>
   );
@@ -201,12 +206,13 @@ export function BottomSheet({ open = false, onClose, ariaLabel, children, inline
 /* One row in a sheet: `label-large`, the 48px minimum, left-aligned, one line.
    No icons in the list — a mixed list of iconned and un-iconned rows is how an
    icon set starts to look accidental (§5). */
-export function SheetItem({ label, onSelect, ariaLabel }) {
+export function SheetItem({ label, onSelect, ariaLabel, node }) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-label={ariaLabel}
+      data-node={node}
       className="cg-state cg-focus"
       style={{
         display: "flex",
@@ -238,17 +244,17 @@ export function SheetItem({ label, onSelect, ariaLabel }) {
    screen's one "?", or the switch the sheet exists for. It is the heading's own
    row, so a sheet that needs one stops assembling a heading by hand; a close
    control is still the one thing it never takes. */
-export function SheetTitle({ children, trailing }) {
+export function SheetTitle({ children, trailing, node }) {
   const heading = { fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" };
   if (!trailing) {
     return (
-      <h2 style={{ margin: 0, padding: "0 var(--space-6) var(--space-2)", ...heading }}>
+      <h2 style={{ margin: 0, padding: "0 var(--space-6) var(--space-2)", ...heading }} data-node={node}>
         {children}
       </h2>
     );
   }
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "0 var(--space-6) var(--space-2)" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", padding: "0 var(--space-6) var(--space-2)" }} data-node={node}>
       <h2 style={{ margin: 0, flex: 1, ...heading }}>{children}</h2>
       {trailing}
     </div>
