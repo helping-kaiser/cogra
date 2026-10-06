@@ -7133,91 +7133,6 @@ transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
   the same detail any non-portrait clip tap opens, in the state
   the record brings, not a different tap.
 
-The canonical tree draws one app and is graded as one thing. The editor
-it is reviewed in holds 200 files per canvas and publishes 16MB, and at
-191 boards the tree stood on both ceilings — so the *review* splits into
-four canvases while the tree itself stays whole. `designs/postmvp/` is
-the second tree and brings the fifth canvas with it (§13, *The post-MVP
-separation*); the four below are the MVP's, and they are what
-implementation reads.
-
-**A tree is the master.** The board files and its own `canvas.json` are
-the graded truth: coordinates, page assignment, annotations, and the
-flow graph beside them. The canvases are review surfaces — claude.ai
-artifacts seeded from that master, each carrying the boards of the pages
-it serves. Nothing is decided on a canvas that is not written back into
-the tree; a canvas is re-seeded from the tree, never the other way
-round.
-
-**Which canvas serves which pages:**
-
-| Canvas | `id` | Pages | Opens on |
-|---|---|---|---|
-| [CoGra · Feed and comments](https://claude.ai/code/artifact/012e4ee6-edd1-4cbe-98ab-b45c58aa4c34) | `feed` | Feed & Search · Comments | Feed & Search |
-| [CoGra · Profile and settings](https://claude.ai/code/artifact/1102bec0-50a9-41b2-84da-a6215afd2d2a) | `profile` | Profile | Profile |
-| [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
-| [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
-
-The fifth is the post-MVP tree's own —
-[CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
-id `postmvp`, serving the Push notifications, Change histories, Chats
-and Money & Wallet pages and opening on the first. It lives in the
-successor canvas tooling (the Design Artifact type): the same seed
-manifests, published as the
-artifact's own board files rather than through the old seeded editor.
-Its predecessor artifact stands frozen with the pre-migration
-versions in its picker.
-
-A canvas title never carries `< > & "` or a backslash — the editor
-refuses them at seed time, which is why the titles say "and". The old
-single-canvas artifact stands as a signpost to all five — the MVP four
-and the post-MVP canvas beneath them; its version picker keeps the
-pre-split monolith.
-
-That map is data, not a habit: each tree's own `canvases.json` holds
-it, hand-maintained — each entry carries its canvas's published `url`,
-the links in the table above — and `_build/gen-canvases.mjs` writes one seed
-manifest per canvas under `<tree>/canvases/<id>/` — the
-artboards and annotations of its pages with coordinates verbatim, the
-page bar in the order above, plus an `images.json` naming the
-photographs its boards actually reference, so seeding a canvas reads
-one directory and scans nothing. The manifests are generated and
-committed the way the maps are; the stage fails on a page no canvas
-claims or two canvases claim, a canvas over its file or byte budget,
-and on a committed manifest that regeneration no longer reproduces.
-
-**A board joins a canvas by its page.** Nothing on a board names a
-canvas — membership is read from the `page` every artboard already
-carries, so a new board lands on the canvas that serves its page the
-moment the manifests regenerate. Moving a page to another canvas is an
-edit to `canvases.json` and nothing else.
-
-**The budgets are per-canvas.** A photograph counts against the canvas
-that carries it rather than one global pool, and an image two canvases
-need is seeded into both — which is what ends the squeeze that made
-every new picture a trade against an old one. The stage prints each
-canvas's boards, images, file count, bytes and headroom, and holds the
-file count at 180, under the 200 so the margin is visible before it is
-a wall.
-
-**Implementation cites board files, never canvas URLs.** A canvas URL
-names a review surface that gets re-seeded and re-published; the board
-file is what holds still and what CI grades. Briefs, hand-test notes
-and PR bodies name `ProfileEdit.dc.html`, not the artifact it happens
-to be visible in today.
-
-**Cross-canvas edges are ordinary; cross-tree edges do not exist.** One
-flow graph spans a tree's canvases — `graph.json` knows boards and
-pages, not canvases — so an edge from a compose board to a feed board is
-normal wiring, drawn with the same `⤴ page` marker the maps already use
-for a cross-page jump. Reachability, entries and gaps are checked over
-that whole graph; no canvas is ever checked alone. A tree's graph stops
-at the tree, though: a post-MVP board cannot point at a canonical one,
-because the round it belongs to has not landed in the app the canonical
-graph describes. It gets its edges when it migrates.
-
----
-
 ### The V1.0 scope cut — 2026-09-25
 
 The verdict round of the V1.0 audit (the full trail, findings and
@@ -9277,6 +9192,95 @@ blessed, every `13X-final` recommendation adopted.
 - **The gate**: 274 screens, 1864 edges, 0 gaps, flows 66, every one
   resolved, 274 sidecars; five boards re-render. What stays open is
   backlog `13X-close-bite`.
+
+---
+
+## 14. The canvases
+
+The canonical tree draws one app and is graded as one thing. The editor
+it is reviewed in holds 200 files per canvas and publishes 16MB, and at
+191 boards the tree stood on both ceilings — so the *review* splits into
+four canvases while the tree itself stays whole. `designs/postmvp/` is
+the second tree and brings the fifth canvas with it (§13, *The post-MVP
+separation*); the four below are the MVP's, and they are what
+implementation reads.
+
+**A tree is the master.** The board files and its own `canvas.json` are
+the graded truth: coordinates, page assignment, annotations, and the
+flow graph beside them. The canvases are review surfaces — claude.ai
+artifacts seeded from that master, each carrying the boards of the pages
+it serves. Nothing is decided on a canvas that is not written back into
+the tree; a canvas is re-seeded from the tree, never the other way
+round.
+
+**Which canvas serves which pages:**
+
+| Canvas | `id` | Pages | Opens on |
+|---|---|---|---|
+| [CoGra · Feed and comments](https://claude.ai/code/artifact/012e4ee6-edd1-4cbe-98ab-b45c58aa4c34) | `feed` | Feed & Search · Comments | Feed & Search |
+| [CoGra · Profile and settings](https://claude.ai/code/artifact/1102bec0-50a9-41b2-84da-a6215afd2d2a) | `profile` | Profile | Profile |
+| [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
+| [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
+
+The fifth is the post-MVP tree's own —
+[CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
+id `postmvp`, serving the Push notifications, Change histories, Chats
+and Money & Wallet pages and opening on the first. It lives in the
+successor canvas tooling (the Design Artifact type): the same seed
+manifests, published as the
+artifact's own board files rather than through the old seeded editor.
+Its predecessor artifact stands frozen with the pre-migration
+versions in its picker.
+
+A canvas title never carries `< > & "` or a backslash — the editor
+refuses them at seed time, which is why the titles say "and". The old
+single-canvas artifact stands as a signpost to all five — the MVP four
+and the post-MVP canvas beneath them; its version picker keeps the
+pre-split monolith.
+
+That map is data, not a habit: each tree's own `canvases.json` holds
+it, hand-maintained — each entry carries its canvas's published `url`,
+the links in the table above — and `_build/gen-canvases.mjs` writes one seed
+manifest per canvas under `<tree>/canvases/<id>/` — the
+artboards and annotations of its pages with coordinates verbatim, the
+page bar in the order above, plus an `images.json` naming the
+photographs its boards actually reference, so seeding a canvas reads
+one directory and scans nothing. The manifests are generated and
+committed the way the maps are; the stage fails on a page no canvas
+claims or two canvases claim, a canvas over its file or byte budget,
+and on a committed manifest that regeneration no longer reproduces.
+
+**A board joins a canvas by its page.** Nothing on a board names a
+canvas — membership is read from the `page` every artboard already
+carries, so a new board lands on the canvas that serves its page the
+moment the manifests regenerate. Moving a page to another canvas is an
+edit to `canvases.json` and nothing else.
+
+**The budgets are per-canvas.** A photograph counts against the canvas
+that carries it rather than one global pool, and an image two canvases
+need is seeded into both — which is what ends the squeeze that made
+every new picture a trade against an old one. The stage prints each
+canvas's boards, images, file count, bytes and headroom, and holds the
+file count at 180, under the 200 so the margin is visible before it is
+a wall.
+
+**Implementation cites board files, never canvas URLs.** A canvas URL
+names a review surface that gets re-seeded and re-published; the board
+file is what holds still and what CI grades. Briefs, hand-test notes
+and PR bodies name `ProfileEdit.dc.html`, not the artifact it happens
+to be visible in today.
+
+**Cross-canvas edges are ordinary; cross-tree edges do not exist.** One
+flow graph spans a tree's canvases — `graph.json` knows boards and
+pages, not canvases — so an edge from a compose board to a feed board is
+normal wiring, drawn with the same `⤴ page` marker the maps already use
+for a cross-page jump. Reachability, entries and gaps are checked over
+that whole graph; no canvas is ever checked alone. A tree's graph stops
+at the tree, though: a post-MVP board cannot point at a canonical one,
+because the round it belongs to has not landed in the app the canonical
+graph describes. It gets its edges when it migrates.
+
+---
 
 ## 15. Index
 
