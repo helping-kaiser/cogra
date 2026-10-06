@@ -16,11 +16,16 @@ import React from "react";
    inside while it is up, and returns to the control that opened it when it
    closes (readme §10). Nothing beneath the scrim takes a tap.
 
-   IT COMMITS ON ITS COMMIT, AND EVERY OTHER WAY OUT DISCARDS (the sheet law).
-   A sheet that holds a choice stages it until its `Done` — or whatever its foot
+   A SHEET THAT HOLDS A CHOICE IS ONE OF TWO KINDS (readme §4, *Sheets*).
+   A STAGING SHEET COMMITS ON ITS COMMIT, AND EVERY OTHER WAY OUT DISCARDS (the
+   sheet law): it stages the choice until its `Done` — or whatever its foot
    names — and the scrim, a swipe down, Back and Escape leave everything as it
-   was. A menu's row is its own commit; a sheet that only lists has nothing to
-   apply.
+   was. AN EDITING SHEET APPLIES LIVE (jakob 2026-10-02, the editing-sheet
+   exemption): each change applies the moment it is made, so every way out,
+   `Done` included, just closes it and what was applied stands. The editing
+   sheets are four — `ComposeTags`, `ComposePicked`, `EditPicked` and
+   `ComposeCitations`; every other sheet that holds a choice stages. A menu's
+   row is its own commit; a sheet that only lists has nothing to apply.
 
    Rules it keeps:
    · `surfaceContainerHigh` at the 28px rung — a rung higher when it is

@@ -8,8 +8,13 @@ import { MediaThumb } from "./MediaThumb.jsx";
    pick step's "Show all" and by the details step's picked row. One home for
    every per-picture concern:
 
+   · IT IS AN EDITING SHEET (readme §4, *Sheets*; jakob 2026-10-02, the
+     editing-sheet exemption): every reorder, removal and cover change applies
+     the moment it is made, so `Done`, the scrim, a swipe down, Back and Escape
+     all just close it and what was applied stands.
    · ORDER — drag by the handle; the FIRST one is the cover and the badge
-     travels with it. No separate cover control exists. When the drag lifts a
+     travels with it. Making a picture the cover moves it to the head of the
+     list — by the drag or by `Make it the cover`, below. When the drag lifts a
      row, Android gives the platform's one lift pulse —
      `HapticFeedbackConstants.DRAG_START` (`LONG_PRESS` below API 34; readme
      §4, *Haptics*) — and nothing else in the reorder vibrates; the web gives
