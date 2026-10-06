@@ -29,8 +29,8 @@ const SR_ONLY = {
    included.
 
    Register: `body-small` on `onSurfaceVariant`. Never a badge, never a colour,
-   never a trend arrow. Growth-dashboard framing is the failure mode §1 names by
-   anti-goal. */
+   never a trend arrow. Growth-dashboard framing is the failure mode readme §2
+   names among its anti-goals. */
 
 /* OVER MEDIA (jakob, review round 1): on the stream this figure sits on the
    clip, where onSurfaceVariant on photography is not quiet but unreadable. It

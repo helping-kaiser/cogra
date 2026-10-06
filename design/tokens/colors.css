@@ -1,15 +1,16 @@
-/* The palette of design.md §2, orange-led from the #EF6C1A seed, generated with
-   material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked. The
-   values here are transcribed from design/tokens/scheme.json, the generator's
+/* The palette of readme §4 *Colour*, orange-led from the #EF6C1A seed, generated
+   with material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked.
+   The values here are transcribed from design/tokens/scheme.json, the generator's
    committed output (`make tokens`).
 
    Screens never name a colour — they read a role. A literal hex in a component is
-   a bug (design.md §2.3).
+   a bug (readme §4 *Colour*).
 
    Both themes are designed, not derived by inversion (§10): the dark neutrals are
    rebuilt at chroma 1.5 / 2.5 and dark `primary` is taken at tone 70, not
    Material's 80. `success` is a CoGra role outside Material's set; `error`
-   departs from Material in hue (5, not 25) and tone (35 / 65). */
+   departs from Material in hue (5, not 25) and tone (35 / 65). Why each departure
+   is made: readme §4 *Colour*. */
 
 :root {
   --seed: #ef6c1a;

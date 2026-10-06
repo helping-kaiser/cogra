@@ -1,4 +1,4 @@
-/* The M3 shape scale (design.md §4) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
+/* The M3 shape scale (readme §4, *Corner radii and cards*) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
    These five rungs are the only radius names that exist; an off-scale corner is a
    bug. The direction is rounded and soft, and a square corner should look like a
    mistake.
