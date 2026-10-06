@@ -4266,15 +4266,15 @@ type AttachActorKeyPayload { user: User }
 
 "Take up an ask link: stage its applicant as an application in the
  caller's own approval queue — the ask direction's answer to
- register, and a deliberate call rather than a
- side effect of opening the link (auth.md \"The ask link\"). The
- account already exists, so this writes only the queue entry;
- approving it is the ordinary approveApplicants act, with the
- stance values chosen there. ASK_LINK_UNUSABLE when the id is
- unknown, the applicant has already landed, or a live application
- is already waiting, in another member's queue or the viewer's own;
- the client names the case by re-reading askLinkCheck, whose reason
- carries it."
+ register, and a deliberate call rather than a side effect of
+ opening the link (auth.md \"The ask link\"). The account already
+ exists, so this writes only the queue entry; approving it is the
+ ordinary approveApplicants act, with the stance values chosen
+ there, and the entry waits with no timer (auth.md \"Expiry\").
+ ASK_LINK_UNUSABLE when the id is unknown, the applicant has
+ already landed, or a live application is already waiting, in
+ another member's queue or the viewer's own; the client names the
+ case by re-reading askLinkCheck, whose reason carries it."
 input StageApplicantInput {
   askLink: UUID!
   "Act as this Collective; null = the viewer stages."
