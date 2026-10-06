@@ -630,9 +630,10 @@ viewer.
 
 **One match rule for every search field** (jakob 2026-10-05, the final
 brief): Explore's and History's. A query matches names and titles — a
-person's handle and display name, a tag's name, a post's title — and an
-untitled post by its first words, the name it wears wherever a title
-would stand; never a body, a description or a bio. `@handle <text>`
+person's handle and display name, a tag's name, a post's title — and
+never a body, a description or a bio. Matching is titles only (jakob
+2026-10-06): an untitled post's stand-in (copy-voice, *The feed
+cards*) is never matched. `@handle <text>`
 scopes the query to one person's work, their comments found through the
 titles of what they answer; `#tag <text>` scopes it inside a tag.
 Explore searches the graph, in its ranked tiers (§13, *The search
