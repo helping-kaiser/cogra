@@ -473,6 +473,13 @@ Two removal marks, never interchangeable: `Removed by its author` —
 every response, remain." — and `Removed under the platform's rules` —
 "A passed proposal removed it. The decision is public."
 
+The post's own confirm (`RemoveConfirm`; *carried over — blessed by use
+(jakob 2026-10-06)*) is titled `Remove this post?` over `The words and
+pictures leave every reader's view, along with every earlier version's.
+A visible mark stays in their place — "Removed by its author" — and the
+post's spot in threads stays with it.`, then `This is immediate and
+permanent.`, `Remove` and `Keep it`.
+
 At comment scale the author's mark swaps its noun and nothing else
 (the comment-removal round; blessed, jakob 2026-10-01). The removed
 comment's second line is `The comment's place in the thread, and every
@@ -1002,6 +1009,14 @@ platform logs, not what kind of record exists. *Record* went because
 it is the graph's own word for the thing every act already is, and a
 tier called `No record` on a system where nothing is ever unrecorded
 said the opposite of the truth.
+
+**The tiers' hints**, under each tier name in the chooser (`ComposeLicense`,
+`SettingsLicense`; *carried over — blessed by use (jakob 2026-10-06)*):
+credit — `Nobody owes you a name.` · `Commercial uses credit you;
+everything else is free.` · `Every use credits you.`; the public record
+of use — `Uses go unlogged.` · `Commercial uses are logged publicly and
+stay open to audit.` · `Every use is logged publicly and stays open to
+audit.` These are the hints the joining rule below lowercases.
 
 **The block's own furniture**:
 
@@ -2175,6 +2190,10 @@ carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
 
+*Carried over — blessed by use (jakob 2026-10-06):* the picker is titled
+`Add a tag` (`TagPicker` and its states), and the details stage's sheet
+of staged tags `Tags · 7`, `Cited · 3`'s shape (`ComposeTags`).
+
 ## The exact-values setting
 
 Drawn on `Settings` (and the two sheet boards that draw the page
@@ -2811,6 +2830,13 @@ for, and it is a fact rather than a boast — the spec binds every
 implementation to compute the sum exactly rather than sample it, which is
 what makes it true.
 
+**Carried over — blessed by use (jakob 2026-10-06)**, the trace's
+furniture: level one's list is labelled `Strongest first` (`FeedEntry`),
+a path's list of steps `The steps`, a step's second line `2 opinions
+behind it` (`RankPath`); one step opens under `Your opinion of @ada — the
+first of this path's two steps.`, its `Behind it` reading `2 opinions`
+(`RankHop`).
+
 **The aged-out line**: `The paths that carried it here have moved on.`
 One line, and no offer of anything to do about it — nothing is owed and
 nothing is broken. It is deliberately not an empty-list line: something
@@ -3152,7 +3178,12 @@ deleted and the person keeps the account they made. The dialog behind
 it opens `Close @imke's application?` and answers in two sentences (*The
 reject extension's lines* below). The buttons are `Close it` and `Keep
 it`, `Keep it` being the house word for *don't*, from `RemoveConfirm`
-and `SeveranceConfirm`.
+and `SeveranceConfirm`. The batch dialog's two sentences are the row's
+in the plural (`RejectAllConfirm`; *carried over — blessed by use (jakob
+2026-10-06)*): `All four leave your list and all four people are told.
+Their accounts stay exactly as they are — signed in, and free to keep
+reading.` and `This is your call and nobody else's. Any member can still
+vouch any of them in, and each gets a link to ask with.`
 
 **A live link's label is what it is, and its caption is when it dies.**
 `Single use · not used yet` and `Many uses`; the slot state rides the
@@ -3521,6 +3552,19 @@ to be opened.
   where a row splits, and the pad's label line becomes `Current opinion ·
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
+
+## Explore's carried-over words
+
+*Carried over — blessed by use (jakob 2026-10-06)*, recorded so the
+registry is whole: the field's placeholder `Search people, posts, tags…`
+and, under it, the past queries' section `Recent` (`Explore`); a tag
+result's second line `tagged by @sol` (`ExploreSearch`,
+`ExploreFilter`); the line that starts what is still out of reach,
+`Beyond your reach — newest first` (`ExploreSearch`); a query nothing
+carries, `Nothing carries that name.` ahead of the blessed `Search reads
+names and titles, never bodies — fewer words reach further.`
+(`ExploreNone`); and the results' "?", named `How searching works`, over
+the *Searching* dialog.
 
 ## The search-scope line
 
