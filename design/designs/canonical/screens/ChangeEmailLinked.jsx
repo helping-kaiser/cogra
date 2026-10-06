@@ -6,20 +6,26 @@
    The mark is the picture, the line centred under it, the way on a text
    button — nothing here is a commitment to make.
 
-   TWO STATES, ONE CHIP. The change applies only once both sides land, in
+   FOUR STATES, ONE CHIP. The change applies only once both sides land, in
    either order, so the link can be the first side or the last. First: the
    new address is confirmed and the code from the old one is still owed, and
    the way on goes where that code is typed. Last: the change has applied,
    and the way on goes back to settings, where the row now reads the new
    address.
 
+   A LINK THAT OUTLIVED ITS CHANGE (jakob 2026-10-06, contract recon EC4).
+   Opened after the change was canceled, or again after it already applied,
+   the link moves nothing and the landing says why in `VerifyExpired`'s
+   heading, `This link doesn't work anymore`, with the address the account
+   has now and `Back to settings` — the chip's `canceled` and `applied`.
+
    IT NEEDS A SESSION. `confirmEmailChange` is a signed-in call, so a link
    opened on a device that is not signed in lands on
    `ChangeEmailLinkedSignedOut` first. An expired change and an address taken
    in the meantime answer here in copy-voice's words. No back arrow: a mail
    link has no previous screen of ours. */
-export const PROPS = { side: { editor: "enum", options: ["first", "last"], default: "first" } };
-export const VALS = `linkedTitle: this.props.side === "last" ? "Email changed" : "New address confirmed", linkedBody: this.props.side === "last" ? "You sign in with sol@ferreira.studio from now on, and resets go there too." : "One side left: the code we sent to sol@solferreira.art. Your email moves once it's typed in.", linkedWay: this.props.side === "last" ? "Back to settings" : "Enter the code"`;
+export const PROPS = { landing: { editor: "enum", options: ["first", "last", "canceled", "applied"], default: "first" } };
+export const VALS = `linkedTitle: this.props.landing === "last" ? "Email changed" : this.props.landing === "canceled" || this.props.landing === "applied" ? "This link doesn't work anymore" : "New address confirmed", linkedBody: this.props.landing === "last" ? "You sign in with sol@ferreira.studio from now on, and resets go there too." : this.props.landing === "canceled" ? "The change it belonged to was canceled. Your email is still sol@solferreira.art." : this.props.landing === "applied" ? "The change it belonged to already happened. Your email is now sol@ferreira.studio." : "One side left: the code we sent to sol@solferreira.art. Your email moves once it's typed in.", linkedWay: this.props.landing === "first" ? "Enter the code" : "Back to settings"`;
 
 export function Screen() {
   return (

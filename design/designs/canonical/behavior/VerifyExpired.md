@@ -1,6 +1,6 @@
 # VerifyExpired · `spec:design:behavior-verify-expired`
 
-WHEN a verification link already used or past its time is opened, in the app or in a browser -> VerifyExpired opens
+WHEN a verification link already used, replaced or past its time is opened, in the app or in a browser -> VerifyExpired opens
 
 ALWAYS one screen answers both a used link and an expired one, and it never says which happened
 

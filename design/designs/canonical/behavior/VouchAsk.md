@@ -24,6 +24,8 @@ WHEN a guest signs in from the gate over the ask -> the ask comes back
 
 WHEN a press-and-hold on the stance affordance reaches 500ms GIVEN a member -> the modest positive +0.10 / +0.10 is signed without the pad AND the affordance refuses a second press-and-hold until the signing answers AND NEVER a value the link carried is signed AND NEVER the face moves before the signature is taken
 
+WHEN a press-and-hold on the stance affordance reaches 500ms GIVEN a member and the asker is not fully registered yet -> the application is staged AND the modest positive +0.10 / +0.10 is kept as a kept approval AND Invites opens where that row is AND the snackbar reads @noor has to finish registering before you can approve AND NEVER anything is signed or spent
+
 WHEN the hold's signing has not answered 200ms after the hold -> the line under the affordance's face reads Signing… AND NEVER a spinner appears
 
 WHEN the hold's signing is taken -> the vouch lands AND Invites opens with the person now this member's to have vouched in AND the snackbar reads Signed, still settling. Current opinion with the pick's face

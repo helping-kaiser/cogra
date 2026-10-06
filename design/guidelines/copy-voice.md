@@ -322,7 +322,7 @@ noun):
   post — the post itself, every tag, every citation — is signed on
   its own, in your name. They sign together: all of them land, or
   none does. / Each signing is paid for — the cost is real, so each
-  one still counts. *(Payer-neutral by the V1.0 scope cut, jakob
+  one still counts. *(Payer-neutral by the v1.0.0 scope cut, jakob
   2026-09-25: no copy names who pays until a pool that pays and
   members who pay past it exist.)*
 - **The license**: Terms for anyone who reuses what you publish —
@@ -366,7 +366,7 @@ noun):
   jakob 2026-10-05); from a comment edit, `Nothing was signed or spent,
   and your edit is still here. Try again in a little while.` (the edit's
   blessed ending in the reply's sentence, jakob 2026-10-05).
-  Payer-neutral by the V1.0 scope cut.)*
+  Payer-neutral by the v1.0.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -403,7 +403,7 @@ noun):
 - **Citing**: A citation is its own signed action and carries an
   opinion of what you cite. You can cite a post, a comment or a
   person. / A comment can also be cited from itself — open its menu
-  and choose "Cite in a new post". *(Trimmed to V1.0's citable kinds,
+  and choose "Cite in a new post". *(Trimmed to v1.0.0's citable kinds,
   jakob 2026-09-25; the end-state wording returns with its kinds. An
   opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
 - **Searching** (the Explore tab's results): Search reads names and
@@ -870,7 +870,7 @@ same grammar (jakob 2026-10-02, **blessed**):
 - `Your topic waits — it arrives when someone vouches you in.`
 
 **Comments are not a kind that stages** (jakob 2026-10-01: applicants do
-not comment in V1.0). A staged comment would wear `Still settling` for a
+not comment in v1.0.0). A staged comment would wear `Still settling` for a
 reply that cannot wait as pending, so the comment sheet's foot answers an
 applicant in place. A guest gets the join prompt there instead.
 
@@ -926,6 +926,17 @@ publishing…` on `ComposeSealUploading`, `Signing comment…` on
 2026-10-02, the fix-fix round's 20; no new words). An edit that took new
 pictures gates `Sign the edit` the same way, swapping to `Signing the
 edit…` (jakob 2026-10-05; the construction's own word).
+
+A held press that drops — an upload failing under it — leaves the commit
+asking again in its own words: `Sign and publish again`
+(`ComposeSealUploading`) and `Sign the edit again` (`EditCompose`,
+`EditComposeVideo`, `CommentEdit`, `CommentEditVideo`). *Carried over —
+blessed by use (jakob 2026-10-06).* An edit whose batch counts
+differently at the signing than the footer read drops its press the same
+way: the footer reads the new count, `Sign the edit` reads `Sign the
+edit again`, and under the acts footer stands `The count changed while
+you were editing — check it, then sign again.` (*new 2026-10-06, blessed
+(jakob 2026-10-06)*).
 
 ## Field errors
 
@@ -1201,8 +1212,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
   backoff says the drawn line, `Too many tries in a row. Wait a moment,
   then try again.` (`SignInLimited`); every other visible one — the
-  registration, the reset, the token confirms — says `Too many tries.
-  Wait a little, then try again.` (jakob 2026-10-05). The submit stays.
+  registration, the reset, the token confirms, and the email change's
+  request and resend once the account's mail budget is spent (jakob
+  2026-10-06) — says `Too many tries. Wait a little, then try again.`
+  (jakob 2026-10-05). The submit stays.
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
@@ -1258,7 +1271,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   which keeps no draft either, the reply's mirror: `Nothing was signed or
   spent — your edit is still here.` and `Not now`, back to the edit with
   the changes as they were (jakob 2026-10-05; the ending *blessed (jakob
-  2026-10-05)*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
+  2026-10-05)*). The words name no payer (the v1.0.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -1790,8 +1803,19 @@ your account keeps the address it has, and a reset still goes there.`
   both inboxes.` And last on the page, `Cancel the change`, with
   `Change canceled — your email stays sol@solferreira.art.` over
   settings.
+- With one side landed, `Resend` mails only the side still owed, and its
+  snackbar names that inbox: `Sent again — the code is on its way to
+  sol@solferreira.art.` or `Sent again — the link is on its way to
+  sol@ferreira.studio.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
 - A wrong code takes `Restore`'s field line, `That code doesn't check
   out.` (blessed).
+- A code disabled after too many wrong tries, on the field in the
+  wrong-code line's place until a fresh one is sent: `Too many tries —
+  for safety we have disabled your current code. Resend sends a fresh
+  one.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
+- A spent mail budget answers the request and `Resend` with
+  `RATE_LIMITED`'s line in place (*Faults by code*), above the
+  commitment; nothing is sent (jakob 2026-10-06).
 - The change that lands answers `Email changed to sol@ferreira.studio.`
   over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 - The change past its window, as the fault line above the commitment:
@@ -1813,7 +1837,13 @@ sol@ferreira.studio from now on, and resets go there too.` · `Back to
 settings`. Past the window it takes `VerifyExpired`'s heading, `This
 link doesn't work anymore` (blessed), with `The change it belonged to
 ran out before both sides landed. Your email is still
-sol@solferreira.art.` and `Back to settings`; with the address taken,
+sol@solferreira.art.` and `Back to settings`. A link that outlived its
+change keeps that heading and way on: after `Cancel the change`, `The
+change it belonged to was canceled. Your email is still
+sol@solferreira.art.`; opened again after the change applied, `The
+change it belonged to already happened. Your email is now
+sol@ferreira.studio.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
+With the address taken,
 `That address is taken now` over the `EMAIL_IN_USE` line above — an
 applicant's fresh link (`ApplicantEmail`) answers a taken address the
 same way on its landing (jakob 2026-10-05). Signed
@@ -2666,7 +2696,11 @@ it be, because the fact a reader needs before tapping is that the tap
 deletes nothing. An applicant's deletion is confirmed in the app and
 nothing is mailed, so their footnote stops at `Nothing is deleted here.
 The next screen says what goes and what stays.` (`Settings`' reader chip;
-**blessed**, jakob 2026-10-05).
+**blessed**, jakob 2026-10-05). An applicant whose application is
+approved but whose registration has not landed meets the row in the
+applicant locked look, and its tap answers `You can delete your account
+once you're in.`, `You can vouch once you're in.`'s construction (*new
+2026-10-06, blessed (jakob 2026-10-06)*).
 
 **The request screen says what goes before what stays, and says both.**
 Heading `Delete account`; then `This takes your name off CoGra. What you
@@ -2681,7 +2715,7 @@ as yours — what goes is everything that says it was you.`
   about you. Your posts still route and still credit their author; what
   is removed leaves a mark saying so.` *(The wallet bullet — "Your
   wallet and its address. They are held by your key, never by CoGra, so
-  nothing here can touch them." — left V1.0 with the wallet, jakob
+  nothing here can touch them." — left v1.0.0 with the wallet, jakob
   2026-09-25: the page names what exists. It returns when the wallet
   does.)*
 
@@ -2963,7 +2997,7 @@ every card and detail already draws:
 
 Three places stand in for something drawn after the MVP: the screen the
 band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
-the bar's wallet slot opens (`WalletComingSoon`, the V1.0 scope cut),
+the bar's wallet slot opens (`WalletComingSoon`, the v1.0.0 scope cut),
 and the hero card on Explore (backlog item 16). **All name the promise
 the same way** — the thing, an em dash, `coming soon`, then one sentence
 of what will be there:
@@ -3622,7 +3656,7 @@ the *Searching* dialog.
 ## The search-scope line
 
 From backlog item 105's ruling (readme §13, the indirect kinds are
-scope-served): with Comments — V1.0's indirect kind; Messages and
+scope-served): with Comments — v1.0.0's indirect kind; Messages and
 Offers rejoin it with their slices — selected and no
 scope in the query, the results region carries one quiet line where
 results would stand — the way, not an apology:
