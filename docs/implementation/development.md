@@ -77,6 +77,13 @@ over file values.
 | `RATE_LIMIT_CONFIRM_PER_IP` | `30` | Token confirmations per IP per 15 min |
 | `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) changes in code, not env |
 | `RATE_LIMIT_UPLOAD_PER_ACCOUNT` | `60` | Media uploads per account per hour — uploading is not an act, so this is the only cost control media has |
+| `RATE_LIMIT_SIGN_POST` | `10` | The signing budget ([api-spec.md "Conventions"](api-spec.md#conventions)), refused as `WRITE_RULE_FAILED`: Post genesis acts per account per hour |
+| `RATE_LIMIT_SIGN_COMMENT` | `60` | Comment genesis acts per account per hour |
+| `RATE_LIMIT_SIGN_EDIT` | `30` | Edit records (Post, Comment, profile) per account per hour |
+| `RATE_LIMIT_SIGN_STANCE` | `300` | Opinion and Affinity acts, severance counter-records included, per account per hour |
+| `RATE_LIMIT_SIGN_CLAIM` | `300` | Tag and Reference acts — withdrawal counter-records and a creation batch's topics and citations included — per account per hour |
+| `RATE_LIMIT_SIGN_APPROVAL` | `50` | Applicant approvals per account per day |
+| `RATE_LIMIT_SIGN_ANY` | `2000` | The backstop: every staged act per account per day |
 | `MEDIA_S3_ENDPOINT` | `http://localhost:9000` | The media service's S3 API endpoint. `stamp-net.sh` stamps it to the machine's LAN address like `DATABASE_URL` — the API and the store can live in separate WSL distros, where cross-distro localhost is dead — while the host firewall keeps the port closed to other devices; a phone reaches media through the web origin's `/media` proxy, never the store itself |
 | `MEDIA_BUCKET` | `cogra-media` | Bucket the media objects live in; created by the `media-init` one-shot |
 | `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |

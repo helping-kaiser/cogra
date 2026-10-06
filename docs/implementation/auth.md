@@ -951,7 +951,12 @@ exists, and on the silent verbs a tripped budget returns the
 same `ok: true` and just stops sending — a visible refusal would
 reopen the enumeration channel those verbs exist to close. The
 login backoff refuses visibly, but arms identically for unknown
-emails.
+emails, and serves no retry-after figure.
+
+Signing acts are not auth endpoints: their per-account budget is
+spent at prepare and refuses as a `WRITE_RULE_FAILED` userError,
+never `RATE_LIMITED` (api-spec.md "Conventions" — the signing
+budget).
 
 The client IP is the socket peer address by default. Behind a
 reverse proxy that is the sole ingress, `CLIENT_IP_SOURCE`
