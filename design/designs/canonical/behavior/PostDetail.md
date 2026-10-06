@@ -37,3 +37,7 @@ WHEN press Enter or Space on postDetail.card.media.frame GIVEN it has focus -> t
 WHEN the fullscreen viewer closes -> focus returns to postDetail.card.media.frame that opened it
 
 ALWAYS postDetail.card.opinions and postDetail.card.citedBy are named by their own words, the count inside them
+
+ALWAYS postDetail.bottomBar keeps lit the slot of the root the post was opened from, postDetail.bottomBar.feedSlot from the feed and postDetail.bottomBar.searchSlot from Explore
+
+ALWAYS postDetail.bottomBar lights postDetail.bottomBar.feedSlot GIVEN the post was opened from a link or a notification
