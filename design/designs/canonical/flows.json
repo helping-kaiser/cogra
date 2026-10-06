@@ -1252,6 +1252,320 @@
       "description": "A standing citation's row on a post edit opens its pair sheet; Done stages the pick as one record added to the citation, and the row reads the resulting pair.",
       "start": { "board": "EditCompose", "via": 15, "case": "the standing citation's pair sheet — the pick adds one record to what stands" },
       "end": { "board": "RefPairEdit", "via": 3, "case": "the sheet closes — the pick is staged as one record added to the citation (Citations revised), the row reads the Resulting pair" }
+    },
+    {
+      "name": "narrow-the-feed-to-one-topic",
+      "description": "The filter narrowed to a single topic re-queries the feed once, and the trigger spells the topic out.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 8, "to": "FeedTopic" }
+    },
+    {
+      "name": "let-every-kind-into-the-feed",
+      "description": "All four kinds switched on bring comments, profiles and tags among the posts — the feed re-queries once.",
+      "start": { "board": "Feed", "via": 1 },
+      "end": { "board": "FeedSheet", "via": 8, "to": "FeedKinds" }
+    },
+    {
+      "name": "open-what-is-waiting",
+      "description": "A feed with something waiting wears the dot on its bell; the bell opens the notifications list.",
+      "start": { "board": "FeedUnread" },
+      "end": { "board": "FeedUnread", "via": 18, "to": "Notifications" }
+    },
+    {
+      "name": "find-no-notifications-yet",
+      "description": "The bell on a feed where nothing has arrived opens the empty notifications list — a reading journey that concludes on arrival.",
+      "start": { "board": "Feed", "via": 18, "to": "NotificationsEmpty" }
+    },
+    {
+      "name": "jump-back-to-the-top",
+      "description": "Scrolled back up from deep in the list, the band returns with Back to top, and the list jumps to the feed's own top state.",
+      "start": { "board": "FeedScrolled" },
+      "end": { "board": "FeedScrolled", "via": 19 }
+    },
+    {
+      "name": "page-through-a-gallery",
+      "description": "A post carrying several pictures pages between them in place on its card, the dots reading position; a tap opens the post, as on every other card.",
+      "start": { "board": "FeedGallery" },
+      "end": { "board": "FeedGallery", "via": 4, "to": "PostDetail" }
+    },
+    {
+      "name": "play-a-clip-that-didnt-autoplay",
+      "description": "A clip at rest on its cover — before its first play, or on a device that will not autoplay — plays where it stands from its play disc.",
+      "start": { "board": "FeedCover" },
+      "end": { "board": "FeedCover", "via": 11 }
+    },
+    {
+      "name": "reveal-a-sensitive-clip-in-the-stream",
+      "description": "A sensitive clip meets the stream veiled; tapping the veil reveals clip and caption together, and the clip joins the rotation and plays.",
+      "start": { "board": "ReelSensitive" },
+      "end": { "board": "ReelSensitive", "via": 9, "to": "Reel" }
+    },
+    {
+      "name": "reveal-a-sensitive-video-post",
+      "description": "A sensitive video post opens unrevealed; Show on the card unveils the pinned clip and the card together.",
+      "start": { "board": "PostDetailVideoSensitive" },
+      "end": { "board": "PostDetailVideoSensitive", "via": 5 }
+    },
+    {
+      "name": "hide-someone-from-the-feed",
+      "description": "Hide on a post's menu, opened from a card in the feed, asks nothing: that person's rows go, the ones behind them move up, and the snackbar offers Undo.",
+      "start": { "board": "Feed", "via": 3 },
+      "end": { "board": "ReaderPostMenu", "via": 3, "to": "FeedHidden" }
+    },
+    {
+      "name": "read-a-posts-license",
+      "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
+      "start": { "board": "Feed", "via": 3 },
+      "end": { "board": "ReaderPostMenu", "via": 4 }
+    },
+    {
+      "name": "share-from-the-narrow-menu",
+      "description": "On a phone too narrow for the whole action row, share moves into the post's menu and does there exactly what the glyph does on a wider phone.",
+      "start": { "board": "ReaderPostMenuNarrow" },
+      "end": { "board": "ReaderPostMenuNarrow", "via": 1 }
+    },
+    {
+      "name": "watch-a-clip-full-screen",
+      "description": "Full screen on a video post's transport opens the viewer, the clip whole — a reading journey that concludes on arrival.",
+      "start": { "board": "PostDetailVideo", "via": 19 }
+    },
+    {
+      "name": "turn-the-viewer",
+      "description": "The viewer reached by turning the device — rotation, not a tap — closes with the X, as a swipe down does.",
+      "start": { "board": "ViewerLandscape" },
+      "end": { "board": "ViewerLandscape", "via": 1 }
+    },
+    {
+      "name": "open-the-wallet",
+      "description": "The Wallet tab lands on its screen saying the wallet is not here yet — the surface itself is still owed.",
+      "start": { "board": "Feed", "via": 14 }
+    },
+    {
+      "name": "see-what-cites-a-post",
+      "description": "Cited by on a post's own view opens what cites it; a citing post's row opens that post's detail.",
+      "start": { "board": "PostDetail", "via": 16 },
+      "end": { "board": "CitedBy", "via": 1, "to": "PostDetail" }
+    },
+    {
+      "name": "search-for-a-name-nothing-carries",
+      "description": "A search for a name nothing carries says so where the results would stand; a name something carries brings results again.",
+      "start": { "board": "Explore", "via": 1, "to": "ExploreNone" },
+      "end": { "board": "ExploreNone", "via": 1, "to": "ExploreSearch" }
+    },
+    {
+      "name": "search-comments-without-a-scope",
+      "description": "Comments alone in the search filter, with no @handle or #tag in the query, answer with the quiet line where results would stand; a scoped query brings the comments it reaches.",
+      "start": { "board": "ExploreSearch", "via": 1, "to": "ExploreUnscoped" },
+      "end": { "board": "ExploreUnscoped", "via": 1, "to": "ExploreSearch" }
+    },
+    {
+      "name": "meet-a-profile-the-server-didnt-answer",
+      "description": "A profile whose read never reached the server says so in place; Retry that reaches this time loads the profile.",
+      "start": { "board": "ProfileUnreachable" },
+      "end": { "board": "ProfileUnreachable", "via": 2, "to": "ProfileOther" }
+    },
+    {
+      "name": "meet-a-profile-link-that-names-nobody",
+      "description": "A shared profile link whose handle resolves to nothing says so — a reading journey that concludes on arrival.",
+      "start": { "board": "ProfileNotFound" }
+    },
+    {
+      "name": "meet-a-post-link-that-names-nothing",
+      "description": "A shared post link or a notification whose post resolves to nothing says so — a reading journey that concludes on arrival.",
+      "start": { "board": "PostNotFound" }
+    },
+    {
+      "name": "meet-a-comment-link-that-names-nothing",
+      "description": "A shared comment link or a notification whose comment resolves to nothing says so — a reading journey that concludes on arrival.",
+      "start": { "board": "CommentNotFound" }
+    },
+    {
+      "name": "read-a-score-whose-paths-moved-on",
+      "description": "A score opened on a post whose paths have all aged out draws the state the dust floor leaves — a reading journey that concludes on arrival.",
+      "start": { "board": "FeedEntryMoved" }
+    },
+    {
+      "name": "load-more-of-a-chronicle-after-a-fault",
+      "description": "A chronicle's next page that didn't arrive leaves a row where it should stand; Retry that comes this time gives way to rows.",
+      "start": { "board": "ProfileMoreFailed" },
+      "end": { "board": "ProfileMoreFailed", "via": 1, "to": "Profile" }
+    },
+    {
+      "name": "read-someones-posts",
+      "description": "The Posts tab of someone's chronicle shows their posts as cards — a reading journey that concludes on arrival.",
+      "start": { "board": "ProfileOther", "via": 6, "to": "ProfilePosts" }
+    },
+    {
+      "name": "hide-someone-from-their-profile",
+      "description": "Hide on another's profile menu asks nothing; the page stays open, and the feed, the next time it is opened, has their rows gone and the ones behind them moved up.",
+      "start": { "board": "ProfileOther", "via": 2 },
+      "end": { "board": "ProfileMenu", "via": 4, "to": "FeedHidden" }
+    },
+    {
+      "name": "hide-a-deleted-account",
+      "description": "A deleted account's page keeps its menu on the redacted wording; Hide this account clears that actor's rows from the feed the next time it is opened.",
+      "start": { "board": "ProfileDeleted", "via": 11 },
+      "end": { "board": "ProfileDeletedMenu", "via": 3, "to": "FeedHidden" }
+    },
+    {
+      "name": "revise-a-standing-opinion",
+      "description": "The stance anchor on someone already held opens the pad over the opinion standing; Set signs the new pick and the stance lands back where the pad bloomed.",
+      "start": { "board": "ProfileOtherHeld", "via": 4, "to": "PadStanding" },
+      "end": { "board": "PadStanding", "via": 5, "case": "signed — the stance lands, back where the pad bloomed" }
+    },
+    {
+      "name": "walk-back-an-opinion",
+      "description": "Walk it back on a standing opinion's pad raises the severance dialog with its cost; Walk it back signs the bundle to nothing and the pad closes with the dialog.",
+      "start": { "board": "ProfileOtherHeld", "via": 4, "to": "PadStanding" },
+      "waypoints": [
+        { "board": "PadStanding", "via": 3 }
+      ],
+      "end": { "board": "SeveranceConfirm", "via": 1, "case": "signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader" }
+    },
+    {
+      "name": "retry-a-stance-that-didnt-sign",
+      "description": "A stance that didn't go through keeps the pad open at the pick, the fault above its commit row; Retry that signs this time lands the stance back where the pad bloomed.",
+      "start": { "board": "Feed", "via": 8, "to": "VouchBackPad" },
+      "waypoints": [
+        { "board": "VouchBackPad", "via": 4, "to": "PadFailed" }
+      ],
+      "end": { "board": "PadFailed", "via": 5, "case": "signed this time — the stance lands, back where the pad bloomed" }
+    },
+    {
+      "name": "meet-the-write-rule-on-the-pad",
+      "description": "The write rule refusing a stance stages and spends nothing; its notice stands where the landing line and Set were, and Not now closes the pad.",
+      "start": { "board": "Feed", "via": 8, "to": "VouchBackPad" },
+      "waypoints": [
+        { "board": "VouchBackPad", "via": 4, "to": "PadWriteRule" }
+      ],
+      "end": { "board": "PadWriteRule", "via": 4 }
+    },
+    {
+      "name": "walk-your-topics",
+      "description": "Your topics, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
+      "start": { "board": "Explore", "via": 10 },
+      "waypoints": [
+        { "board": "YourTopics", "via": 2 }
+      ],
+      "end": { "board": "TagPageHeld", "via": 15, "to": "TagPageHeldPad" }
+    },
+    {
+      "name": "add-to-a-held-topic",
+      "description": "The pad over a held topic takes a further pick; Set joins the Affinity to the bundle, back on the tag page.",
+      "start": { "board": "TagPageHeld", "via": 15, "to": "TagPageHeldPad" },
+      "end": { "board": "TagPageHeldPad", "via": 5, "case": "signed — the Affinity joins the bundle, back on the tag page" }
+    },
+    {
+      "name": "disconnect-from-a-topic",
+      "description": "Disconnect on a held topic's pad raises the severance dialog in the topic's own words and at its own price; Walk it back signs the bundle to nothing.",
+      "start": { "board": "TagPageHeld", "via": 15, "to": "TagPageHeldPad" },
+      "waypoints": [
+        { "board": "TagPageHeldPad", "via": 3 }
+      ],
+      "end": { "board": "SeveranceConfirm", "via": 1, "case": "signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader" }
+    },
+    {
+      "name": "hold-a-topic-nothing-carries",
+      "description": "A tag everything has been untagged out of keeps its page and its stance face; press-and-hold lands a positive Affinity, and the topic is held.",
+      "start": { "board": "TagPageEmpty" },
+      "end": { "board": "TagPageEmpty", "via": 3, "case": "press-and-hold — a positive Affinity lands, and the topic is held" }
+    },
+    {
+      "name": "open-something-you-saved",
+      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people in one list; a saved post's row opens the post.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 1, "to": "Saved" }
+      ],
+      "end": { "board": "Saved", "via": 2, "to": "PostDetail" }
+    },
+    {
+      "name": "unsave-and-undo",
+      "description": "A row's unsave takes it out of Saved, the list closing over it, and the line offers Undo; Undo puts the row back where it was.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 1, "to": "Saved" },
+        { "board": "Saved", "via": 8, "to": "SavedUndo" }
+      ],
+      "end": { "board": "SavedUndo", "via": 9, "to": "Saved" }
+    },
+    {
+      "name": "find-nothing-saved-yet",
+      "description": "Saved with nothing kept opens the empty list — a reading journey that concludes on arrival.",
+      "start": { "board": "Profile", "via": 2 },
+      "end": { "board": "ProfileOwnMenu", "via": 1, "to": "SavedEmpty" }
+    },
+    {
+      "name": "read-your-history",
+      "description": "History, in your own profile's menu, opens what you have read, first-seen order — a reading journey that concludes on arrival.",
+      "start": { "board": "Profile", "via": 2 },
+      "end": { "board": "ProfileOwnMenu", "via": 2, "to": "History" }
+    },
+    {
+      "name": "filter-your-history",
+      "description": "History's Everything trigger opens its filter; the kind chips stage, and Done re-reads the history once, narrowed.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 2, "to": "History" },
+        { "board": "History", "via": 3 }
+      ],
+      "end": { "board": "HistoryFilter", "via": 3, "to": "History" }
+    },
+    {
+      "name": "filter-your-history-to-nothing",
+      "description": "A filter no seen thing matches leaves History with nothing to show and the cause chip at kinds; Show everything puts the whole history back.",
+      "start": { "board": "Profile", "via": 2 },
+      "waypoints": [
+        { "board": "ProfileOwnMenu", "via": 2, "to": "History" },
+        { "board": "History", "via": 3 },
+        { "board": "HistoryFilter", "via": 3, "to": "HistoryNone" }
+      ],
+      "end": { "board": "HistoryNone", "via": 4, "to": "History" }
+    },
+    {
+      "name": "find-nothing-read-yet",
+      "description": "History on a new account opens the empty list — a reading journey that concludes on arrival.",
+      "start": { "board": "Profile", "via": 2 },
+      "end": { "board": "ProfileOwnMenu", "via": 2, "to": "HistoryEmpty" }
+    },
+    {
+      "name": "send-your-first-invite",
+      "description": "Invites with nothing out yet teaches what an invite is; Create invite opens the create sheet, and the link it makes goes straight to the platform's own share sheet.",
+      "start": { "board": "Profile", "via": 7, "to": "InvitesEmpty" },
+      "waypoints": [
+        { "board": "InvitesEmpty", "via": 2 },
+        { "board": "InviteNew", "via": 3, "to": "InviteCreated" }
+      ],
+      "end": { "board": "InviteCreated", "via": 2, "case": "the platform's own share sheet" }
+    },
+    {
+      "name": "set-how-long-an-invite-lasts",
+      "description": "Expires after on the create sheet opens the length chooser stacked over it; picking a length is the commit, and the invite made carries it.",
+      "start": { "board": "Invites", "via": 2 },
+      "waypoints": [
+        { "board": "InviteNew", "via": 2 },
+        { "board": "InviteExpiry", "via": 1 },
+        { "board": "InviteNew", "via": 3, "to": "InviteCreated" }
+      ],
+      "end": { "board": "InviteCreated", "via": 2, "case": "the platform's own share sheet" }
+    },
+    {
+      "name": "close-an-application",
+      "description": "A waiting row's close in the invites queue asks first, named on the row; Close it takes the row off this inviter's list and tells the applicant, whom any other member can still vouch in.",
+      "start": { "board": "Profile", "via": 7, "to": "Invites" },
+      "waypoints": [
+        { "board": "Invites", "via": 5 }
+      ],
+      "end": { "board": "RejectConfirm", "via": 1, "to": "Invites" }
+    },
+    {
+      "name": "close-a-links-applications",
+      "description": "A group's Close all asks first, naming the count; Close them takes every application still waiting on that link off this list at once, each person told.",
+      "start": { "board": "Profile", "via": 7, "to": "Invites" },
+      "waypoints": [
+        { "board": "Invites", "via": 8 }
+      ],
+      "end": { "board": "RejectAllConfirm", "via": 1, "to": "Invites" }
     }
   ]
 }

@@ -3373,6 +3373,647 @@
         "EditCompose",
         "RefPairEdit"
       ]
+    },
+    {
+      "name": "narrow-the-feed-to-one-topic",
+      "description": "The filter narrowed to a single topic re-queries the feed once, and the trigger spells the topic out.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
+        "end · FeedSheet · 8 «Done» → FeedTopic — narrowed to one topic — the feed re-queries once"
+      ],
+      "boards": [
+        "Feed",
+        "FeedSheet",
+        "FeedTopic"
+      ]
+    },
+    {
+      "name": "let-every-kind-into-the-feed",
+      "description": "All four kinds switched on bring comments, profiles and tags among the posts — the feed re-queries once.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 1 «Posts (filter chip)» → FeedSheet",
+        "end · FeedSheet · 8 «Done» → FeedKinds — all four kinds on — comments, profiles and tags among the posts; the feed re-queries once"
+      ],
+      "boards": [
+        "Feed",
+        "FeedSheet",
+        "FeedKinds"
+      ]
+    },
+    {
+      "name": "open-what-is-waiting",
+      "description": "A feed with something waiting wears the dot on its bell; the bell opens the notifications list.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedUnread",
+        "end · FeedUnread · 18 «notifications» → Notifications"
+      ],
+      "boards": [
+        "FeedUnread",
+        "Notifications"
+      ]
+    },
+    {
+      "name": "find-no-notifications-yet",
+      "description": "The bell on a feed where nothing has arrived opens the empty notifications list — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 18 «notifications» → NotificationsEmpty — nothing has arrived yet",
+        "end · arrival at NotificationsEmpty"
+      ],
+      "boards": [
+        "Feed",
+        "NotificationsEmpty"
+      ]
+    },
+    {
+      "name": "jump-back-to-the-top",
+      "description": "Scrolled back up from deep in the list, the band returns with Back to top, and the list jumps to the feed's own top state.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedScrolled",
+        "end · FeedScrolled · 19 «Back to top» → Feed — the list jumps to the top, animated — the feed's own top state, the same place the bar's re-tap lands from here"
+      ],
+      "boards": [
+        "FeedScrolled",
+        "Feed"
+      ]
+    },
+    {
+      "name": "page-through-a-gallery",
+      "description": "A post carrying several pictures pages between them in place on its card, the dots reading position; a tap opens the post, as on every other card.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedGallery",
+        "end · FeedGallery · 4 «the gallery pager» → PostDetail — tap — the post opens, as on every other card"
+      ],
+      "boards": [
+        "FeedGallery",
+        "PostDetail"
+      ]
+    },
+    {
+      "name": "play-a-clip-that-didnt-autoplay",
+      "description": "A clip at rest on its cover — before its first play, or on a device that will not autoplay — plays where it stands from its play disc.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedCover",
+        "end · FeedCover · 11 «play disc» → self — autoplay suppressed — the tap plays it where it stands"
+      ],
+      "boards": [
+        "FeedCover"
+      ]
+    },
+    {
+      "name": "reveal-a-sensitive-clip-in-the-stream",
+      "description": "A sensitive clip meets the stream veiled; tapping the veil reveals clip and caption together, and the clip joins the rotation and plays.",
+      "status": "resolved",
+      "steps": [
+        "start · ReelSensitive",
+        "end · ReelSensitive · 9 «the clip's veil face» → Reel — tap — the reveal: clip and caption unveil together, one SensitiveScope answering for both; the clip joins the rotation and plays"
+      ],
+      "boards": [
+        "ReelSensitive",
+        "Reel"
+      ]
+    },
+    {
+      "name": "reveal-a-sensitive-video-post",
+      "description": "A sensitive video post opens unrevealed; Show on the card unveils the pinned clip and the card together.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetailVideoSensitive",
+        "end · PostDetailVideoSensitive · 5 «the card's veil (Show)» → PostDetailVideo — the reveal — pinned clip and card unveil together, one SensitiveScope answering for both"
+      ],
+      "boards": [
+        "PostDetailVideoSensitive",
+        "PostDetailVideo"
+      ]
+    },
+    {
+      "name": "hide-someone-from-the-feed",
+      "description": "Hide on a post's menu, opened from a card in the feed, asks nothing: that person's rows go, the ones behind them move up, and the snackbar offers Undo.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 3 «post overflow ⋮» → ReaderPostMenu — the reader's sheet (master)",
+        "end · ReaderPostMenu · 3 «Hide @ada» → FeedHidden — opened from a card in the feed — no confirm: her rows go, the ones behind them move up, and the snackbar offers Undo"
+      ],
+      "boards": [
+        "Feed",
+        "ReaderPostMenu",
+        "FeedHidden"
+      ]
+    },
+    {
+      "name": "read-a-posts-license",
+      "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 3 «post overflow ⋮» → ReaderPostMenu — the reader's sheet (master)",
+        "end · ReaderPostMenu · 4 «License terms» → PostLicense — the menu closes and the terms come up in a sheet over the post"
+      ],
+      "boards": [
+        "Feed",
+        "ReaderPostMenu",
+        "PostLicense"
+      ]
+    },
+    {
+      "name": "share-from-the-narrow-menu",
+      "description": "On a phone too narrow for the whole action row, share moves into the post's menu and does there exactly what the glyph does on a wider phone.",
+      "status": "resolved",
+      "steps": [
+        "start · ReaderPostMenuNarrow",
+        "end · ReaderPostMenuNarrow · 1 «Share» → os — the platform's own share sheet — the row the action row could not hold, doing exactly what the glyph does on a wider phone"
+      ],
+      "boards": [
+        "ReaderPostMenuNarrow"
+      ]
+    },
+    {
+      "name": "watch-a-clip-full-screen",
+      "description": "Full screen on a video post's transport opens the viewer, the clip whole — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetailVideo · 19 «full screen» → ViewerVideo — the transport's own way into the viewer — the clip tap is the other",
+        "end · arrival at ViewerVideo"
+      ],
+      "boards": [
+        "PostDetailVideo",
+        "ViewerVideo"
+      ]
+    },
+    {
+      "name": "turn-the-viewer",
+      "description": "The viewer reached by turning the device — rotation, not a tap — closes with the X, as a swipe down does.",
+      "status": "resolved",
+      "steps": [
+        "start · ViewerLandscape",
+        "end · ViewerLandscape · 1 «close the viewer (X)» → back — the X, or a swipe down"
+      ],
+      "boards": [
+        "ViewerLandscape"
+      ]
+    },
+    {
+      "name": "open-the-wallet",
+      "description": "The Wallet tab lands on its screen saying the wallet is not here yet — the surface itself is still owed.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 14 «nav · Wallet» → WalletComingSoon",
+        "end · arrival at WalletComingSoon"
+      ],
+      "boards": [
+        "Feed",
+        "WalletComingSoon"
+      ]
+    },
+    {
+      "name": "see-what-cites-a-post",
+      "description": "Cited by on a post's own view opens what cites it; a citing post's row opens that post's detail.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetail · 16 «Cited by N» → CitedBy",
+        "end · CitedBy · 1 «a citing row» → PostDetail — the citing post opens"
+      ],
+      "boards": [
+        "PostDetail",
+        "CitedBy"
+      ]
+    },
+    {
+      "name": "search-for-a-name-nothing-carries",
+      "description": "A search for a name nothing carries says so where the results would stand; a name something carries brings results again.",
+      "status": "resolved",
+      "steps": [
+        "start · Explore · 1 «search field» → ExploreNone — nothing carries that name",
+        "end · ExploreNone · 1 «search field» → ExploreSearch — a name something carries"
+      ],
+      "boards": [
+        "Explore",
+        "ExploreNone",
+        "ExploreSearch"
+      ]
+    },
+    {
+      "name": "search-comments-without-a-scope",
+      "description": "Comments alone in the search filter, with no @handle or #tag in the query, answer with the quiet line where results would stand; a scoped query brings the comments it reaches.",
+      "status": "resolved",
+      "steps": [
+        "start · ExploreSearch · 1 «search field» → ExploreUnscoped — Comments alone in the filter, and the query names no @handle or #tag — the quiet line where results would stand",
+        "end · ExploreUnscoped · 1 «search field» → ExploreSearch — a query scoped by @handle or #tag — the comments it reaches"
+      ],
+      "boards": [
+        "ExploreSearch",
+        "ExploreUnscoped"
+      ]
+    },
+    {
+      "name": "meet-a-profile-the-server-didnt-answer",
+      "description": "A profile whose read never reached the server says so in place; Retry that reaches this time loads the profile.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileUnreachable",
+        "end · ProfileUnreachable · 2 «Retry» → ProfileOther — reaches this time — the profile loads"
+      ],
+      "boards": [
+        "ProfileUnreachable",
+        "ProfileOther"
+      ]
+    },
+    {
+      "name": "meet-a-profile-link-that-names-nobody",
+      "description": "A shared profile link whose handle resolves to nothing says so — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileNotFound",
+        "end · arrival at ProfileNotFound"
+      ],
+      "boards": [
+        "ProfileNotFound"
+      ]
+    },
+    {
+      "name": "meet-a-post-link-that-names-nothing",
+      "description": "A shared post link or a notification whose post resolves to nothing says so — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · PostNotFound",
+        "end · arrival at PostNotFound"
+      ],
+      "boards": [
+        "PostNotFound"
+      ]
+    },
+    {
+      "name": "meet-a-comment-link-that-names-nothing",
+      "description": "A shared comment link or a notification whose comment resolves to nothing says so — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · CommentNotFound",
+        "end · arrival at CommentNotFound"
+      ],
+      "boards": [
+        "CommentNotFound"
+      ]
+    },
+    {
+      "name": "read-a-score-whose-paths-moved-on",
+      "description": "A score opened on a post whose paths have all aged out draws the state the dust floor leaves — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedEntryMoved",
+        "end · arrival at FeedEntryMoved"
+      ],
+      "boards": [
+        "FeedEntryMoved"
+      ]
+    },
+    {
+      "name": "load-more-of-a-chronicle-after-a-fault",
+      "description": "A chronicle's next page that didn't arrive leaves a row where it should stand; Retry that comes this time gives way to rows.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileMoreFailed",
+        "end · ProfileMoreFailed · 1 «Retry» → Profile — the page comes this time — the row gives way to rows"
+      ],
+      "boards": [
+        "ProfileMoreFailed",
+        "Profile"
+      ]
+    },
+    {
+      "name": "read-someones-posts",
+      "description": "The Posts tab of someone's chronicle shows their posts as cards — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOther · 6 «chronicle tabs» → ProfilePosts — Posts — the cards (master, drawn on @ada's)",
+        "end · arrival at ProfilePosts"
+      ],
+      "boards": [
+        "ProfileOther",
+        "ProfilePosts"
+      ]
+    },
+    {
+      "name": "hide-someone-from-their-profile",
+      "description": "Hide on another's profile menu asks nothing; the page stays open, and the feed, the next time it is opened, has their rows gone and the ones behind them moved up.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOther · 2 «profile overflow ⋮» → ProfileMenu — another's profile sheet (master)",
+        "end · ProfileMenu · 4 «Hide @ada» → FeedHidden — the feed, the next time it is opened — her rows gone, the ones behind them moved up"
+      ],
+      "boards": [
+        "ProfileOther",
+        "ProfileMenu",
+        "FeedHidden"
+      ]
+    },
+    {
+      "name": "hide-a-deleted-account",
+      "description": "A deleted account's page keeps its menu on the redacted wording; Hide this account clears that actor's rows from the feed the next time it is opened.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileDeleted · 11 «profile overflow ⋮» → ProfileDeletedMenu — the husk's sheet — the master's rows minus Mention, the hide row on its redacted wording",
+        "end · ProfileDeletedMenu · 3 «Hide this account» → FeedHidden — the feed, the next time it is opened — this actor's rows gone, the ones behind them moved up"
+      ],
+      "boards": [
+        "ProfileDeleted",
+        "ProfileDeletedMenu",
+        "FeedHidden"
+      ]
+    },
+    {
+      "name": "revise-a-standing-opinion",
+      "description": "The stance anchor on someone already held opens the pad over the opinion standing; Set signs the new pick and the stance lands back where the pad bloomed.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOtherHeld · 4 «the stance anchor» → PadStanding — tap — the pad blooms over the held opinion, the opinion already standing (never the vouch-back's opening: an opinion on the member who vouched the reader in is the vouch-back itself)",
+        "end · PadStanding · 5 «Set» → back — signed — the stance lands, back where the pad bloomed"
+      ],
+      "boards": [
+        "ProfileOtherHeld",
+        "PadStanding"
+      ]
+    },
+    {
+      "name": "walk-back-an-opinion",
+      "description": "Walk it back on a standing opinion's pad raises the severance dialog with its cost; Walk it back signs the bundle to nothing and the pad closes with the dialog.",
+      "status": "resolved",
+      "steps": [
+        "start · ProfileOtherHeld · 4 «the stance anchor» → PadStanding — tap — the pad blooms over the held opinion, the opinion already standing (never the vouch-back's opening: an opinion on the member who vouched the reader in is the vouch-back itself)",
+        "PadStanding · 3 «Walk it back» → SeveranceConfirm — the explicit route — the same dialog the pick route raises, without the pick line, since nothing was picked",
+        "end · SeveranceConfirm · 1 «Walk it back» → back — signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader"
+      ],
+      "boards": [
+        "ProfileOtherHeld",
+        "PadStanding",
+        "SeveranceConfirm"
+      ]
+    },
+    {
+      "name": "retry-a-stance-that-didnt-sign",
+      "description": "A stance that didn't go through keeps the pad open at the pick, the fault above its commit row; Retry that signs this time lands the stance back where the pad bloomed.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 8 «stance face» → VouchBackPad — tap — the pad blooms (master board)",
+        "VouchBackPad · 4 «Set» → PadFailed — not signed — the pad stays open at the pick, the fault above its commit row and Retry in Set's slot (master)",
+        "end · PadFailed · 5 «Retry» → back — signed this time — the stance lands, back where the pad bloomed"
+      ],
+      "boards": [
+        "Feed",
+        "VouchBackPad",
+        "PadFailed"
+      ]
+    },
+    {
+      "name": "meet-the-write-rule-on-the-pad",
+      "description": "The write rule refusing a stance stages and spends nothing; its notice stands where the landing line and Set were, and Not now closes the pad.",
+      "status": "resolved",
+      "steps": [
+        "start · Feed · 8 «stance face» → VouchBackPad — tap — the pad blooms (master board)",
+        "VouchBackPad · 4 «Set» → PadWriteRule — the write rule refuses — nothing staged or spent: the notice stands where the landing line and Set were, with Not now (master)",
+        "end · PadWriteRule · 4 «Not now» → back — the pad closes — nothing signed or spent, the pick not kept, the standing opinion what it was"
+      ],
+      "boards": [
+        "Feed",
+        "VouchBackPad",
+        "PadWriteRule"
+      ]
+    },
+    {
+      "name": "walk-your-topics",
+      "description": "Your topics, Explore's door, lists every topic held; a row opens that topic's page, held, and its stance face opens the pad in the topic family's own words.",
+      "status": "resolved",
+      "steps": [
+        "start · Explore · 10 «Your topics (the door)» → YourTopics",
+        "YourTopics · 2 «topic rows» → TagPageHeld — the topic's own page — held, which every row on this list is",
+        "end · TagPageHeld · 15 «stance face (the topic, held)» → TagPageHeldPad — tap — the pad blooms over the held topic wearing the Affinity family's own words, and held it carries `Disconnect`: the same ceremony every held record has, said in the topic's own vocabulary and at this topic's own price"
+      ],
+      "boards": [
+        "Explore",
+        "YourTopics",
+        "TagPageHeld",
+        "TagPageHeldPad"
+      ]
+    },
+    {
+      "name": "add-to-a-held-topic",
+      "description": "The pad over a held topic takes a further pick; Set joins the Affinity to the bundle, back on the tag page.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPageHeld · 15 «stance face (the topic, held)» → TagPageHeldPad — tap — the pad blooms over the held topic wearing the Affinity family's own words, and held it carries `Disconnect`: the same ceremony every held record has, said in the topic's own vocabulary and at this topic's own price",
+        "end · TagPageHeldPad · 5 «Set» → back — signed — the Affinity joins the bundle, back on the tag page"
+      ],
+      "boards": [
+        "TagPageHeld",
+        "TagPageHeldPad"
+      ]
+    },
+    {
+      "name": "disconnect-from-a-topic",
+      "description": "Disconnect on a held topic's pad raises the severance dialog in the topic's own words and at its own price; Walk it back signs the bundle to nothing.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPageHeld · 15 «stance face (the topic, held)» → TagPageHeldPad — tap — the pad blooms over the held topic wearing the Affinity family's own words, and held it carries `Disconnect`: the same ceremony every held record has, said in the topic's own vocabulary and at this topic's own price",
+        "TagPageHeldPad · 3 «Disconnect» → SeveranceConfirm — the explicit route out of a held topic — the master dialog in the topic family's own words, titled `Disconnect from #saltmaps?`, without the pick line since nothing was picked; the fixture the master board draws is a person's, and the arithmetic is this topic's own",
+        "end · SeveranceConfirm · 1 «Walk it back» → back — signed — the bundle goes to nothing, the pad closes with the dialog, and the signed line names where it left the reader"
+      ],
+      "boards": [
+        "TagPageHeld",
+        "TagPageHeldPad",
+        "SeveranceConfirm"
+      ]
+    },
+    {
+      "name": "hold-a-topic-nothing-carries",
+      "description": "A tag everything has been untagged out of keeps its page and its stance face; press-and-hold lands a positive Affinity, and the topic is held.",
+      "status": "resolved",
+      "steps": [
+        "start · TagPageEmpty",
+        "end · TagPageEmpty · 3 «stance face (the topic)» → self — press-and-hold — a positive Affinity lands, and the topic is held"
+      ],
+      "boards": [
+        "TagPageEmpty"
+      ]
+    },
+    {
+      "name": "open-something-you-saved",
+      "description": "Saved, in your own profile's menu, lists what you kept — posts, comments and people in one list; a saved post's row opens the post.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 1 «Saved» → Saved",
+        "end · Saved · 2 «a saved row» → PostDetail — a post"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "Saved",
+        "PostDetail"
+      ]
+    },
+    {
+      "name": "unsave-and-undo",
+      "description": "A row's unsave takes it out of Saved, the list closing over it, and the line offers Undo; Undo puts the row back where it was.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 1 «Saved» → Saved",
+        "Saved · 8 «a row's unsave» → SavedUndo — the row goes, the list closes over it, and the line offers Undo — the last of them leaves SavedEmpty",
+        "end · SavedUndo · 9 «Undo» → Saved — the row comes back where it was and the list is as it was"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "Saved",
+        "SavedUndo"
+      ]
+    },
+    {
+      "name": "find-nothing-saved-yet",
+      "description": "Saved with nothing kept opens the empty list — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "end · ProfileOwnMenu · 1 «Saved» → SavedEmpty — nothing kept yet"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "SavedEmpty"
+      ]
+    },
+    {
+      "name": "read-your-history",
+      "description": "History, in your own profile's menu, opens what you have read, first-seen order — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "end · ProfileOwnMenu · 2 «History» → History"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "History"
+      ]
+    },
+    {
+      "name": "filter-your-history",
+      "description": "History's Everything trigger opens its filter; the kind chips stage, and Done re-reads the history once, narrowed.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 2 «History» → History",
+        "History · 3 «Everything (filter trigger)» → HistoryFilter",
+        "end · HistoryFilter · 3 «Done» → History — the sheet closes — the history re-reads once, narrowed, newest-seen first still"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "History",
+        "HistoryFilter"
+      ]
+    },
+    {
+      "name": "filter-your-history-to-nothing",
+      "description": "A filter no seen thing matches leaves History with nothing to show and the cause chip at kinds; Show everything puts the whole history back.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "ProfileOwnMenu · 2 «History» → History",
+        "History · 3 «Everything (filter trigger)» → HistoryFilter",
+        "HistoryFilter · 3 «Done» → HistoryNone — nothing seen is of the narrowed kinds (the cause chip at kinds)",
+        "end · HistoryNone · 4 «Show everything» → History — the query cleared and no kind narrowed — the whole history at Everything, newest-seen first"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "History",
+        "HistoryFilter",
+        "HistoryNone"
+      ]
+    },
+    {
+      "name": "find-nothing-read-yet",
+      "description": "History on a new account opens the empty list — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
+        "end · ProfileOwnMenu · 2 «History» → HistoryEmpty — a new account — nothing read yet"
+      ],
+      "boards": [
+        "Profile",
+        "ProfileOwnMenu",
+        "HistoryEmpty"
+      ]
+    },
+    {
+      "name": "send-your-first-invite",
+      "description": "Invites with nothing out yet teaches what an invite is; Create invite opens the create sheet, and the link it makes goes straight to the platform's own share sheet.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → InvitesEmpty — nothing out yet — the teaching state, and the common one",
+        "InvitesEmpty · 2 «Create invite» → InviteNew — the create sheet (master, drawn over the populated list)",
+        "InviteNew · 3 «Create invite» → InviteCreated — the link exists — the same sheet, now holding it",
+        "end · InviteCreated · 2 «Share link» → os — the platform's own share sheet"
+      ],
+      "boards": [
+        "Profile",
+        "InvitesEmpty",
+        "InviteNew",
+        "InviteCreated"
+      ]
+    },
+    {
+      "name": "set-how-long-an-invite-lasts",
+      "description": "Expires after on the create sheet opens the length chooser stacked over it; picking a length is the commit, and the invite made carries it.",
+      "status": "resolved",
+      "steps": [
+        "start · Invites · 2 «New invite» → InviteNew — the create sheet — two decisions and a button",
+        "InviteNew · 2 «Expires after» → InviteExpiry — the chooser, stacked over this sheet",
+        "InviteExpiry · 1 «a length» → InviteNew — the chooser closes — the row reads the new length. Picking is the commit; a three-row chooser needs no Done",
+        "InviteNew · 3 «Create invite» → InviteCreated — the link exists — the same sheet, now holding it",
+        "end · InviteCreated · 2 «Share link» → os — the platform's own share sheet"
+      ],
+      "boards": [
+        "Invites",
+        "InviteNew",
+        "InviteExpiry",
+        "InviteCreated"
+      ]
+    },
+    {
+      "name": "close-an-application",
+      "description": "A waiting row's close in the invites queue asks first, named on the row; Close it takes the row off this inviter's list and tells the applicant, whom any other member can still vouch in.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
+        "Invites · 5 «a row's close» → RejectConfirm — the think-twice dialog, named on the row it was raised from",
+        "end · RejectConfirm · 1 «Close it» → Invites — the row leaves this inviter's list and the applicant is told — their account stays a signed-in reader, and any other member can still vouch them in"
+      ],
+      "boards": [
+        "Profile",
+        "Invites",
+        "RejectConfirm"
+      ]
+    },
+    {
+      "name": "close-a-links-applications",
+      "description": "A group's Close all asks first, naming the count; Close them takes every application still waiting on that link off this list at once, each person told.",
+      "status": "resolved",
+      "steps": [
+        "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
+        "Invites · 8 «a group's Close all» → RejectAllConfirm — the think-twice dialog for the whole group, naming the count it is about to act on",
+        "end · RejectAllConfirm · 1 «Close them» → Invites — every application still waiting on that link leaves this list at once and each person is told — the sweep passes over the ones already closed, and any member can still vouch any of them in"
+      ],
+      "boards": [
+        "Profile",
+        "Invites",
+        "RejectAllConfirm"
+      ]
     }
   ],
   "boardsOnFlows": {
@@ -3564,6 +4205,12 @@
         "message-someone"
       ]
     },
+    "CitedBy": {
+      "flows": [
+        "see-what-cites-a-post"
+      ],
+      "endpoint": []
+    },
     "CommentCitedByEmpty": {
       "flows": [
         "see-what-cites-a-comment"
@@ -3627,12 +4274,15 @@
     },
     "CommentNotFound": {
       "flows": [
+        "meet-a-comment-link-that-names-nothing",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-comment-link-that-names-nothing"
+      ]
     },
     "CommentOpinionsEmpty": {
       "flows": [
@@ -4163,11 +4813,15 @@
         "publish-a-video",
         "publish-words",
         "search-and-open-a-post",
-        "search-into-a-thread"
+        "search-for-a-name-nothing-carries",
+        "search-into-a-thread",
+        "walk-your-topics"
       ],
       "endpoint": [
         "search-and-open-a-post",
-        "search-into-a-thread"
+        "search-for-a-name-nothing-carries",
+        "search-into-a-thread",
+        "walk-your-topics"
       ]
     },
     "ExploreFilter": {
@@ -4181,7 +4835,8 @@
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "search-for-a-name-nothing-carries"
       ],
       "endpoint": []
     },
@@ -4193,10 +4848,14 @@
         "publish-a-video",
         "publish-words",
         "search-and-open-a-post",
+        "search-comments-without-a-scope",
+        "search-for-a-name-nothing-carries",
         "search-into-a-thread"
       ],
       "endpoint": [
-        "narrow-a-search"
+        "narrow-a-search",
+        "search-comments-without-a-scope",
+        "search-for-a-name-nothing-carries"
       ]
     },
     "ExploreUnscoped": {
@@ -4204,7 +4863,8 @@
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "search-comments-without-a-scope"
       ],
       "endpoint": []
     },
@@ -4213,15 +4873,24 @@
         "close-the-filter-unchanged",
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
+        "find-no-notifications-yet",
         "follow-a-citation",
+        "hide-someone-from-the-feed",
+        "jump-back-to-the-top",
+        "let-every-kind-into-the-feed",
+        "meet-the-write-rule-on-the-pad",
         "narrow-the-feed",
+        "narrow-the-feed-to-one-topic",
         "open-a-posts-pictures",
         "open-a-topic",
+        "open-the-wallet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-a-posts-license",
         "reply-to-a-post",
+        "retry-a-stance-that-didnt-sign",
         "sign-back-in-after-the-session-ran-out",
         "sign-in",
         "sign-in-after-a-wrong-password",
@@ -4238,8 +4907,17 @@
         "close-the-filter-unchanged",
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
+        "find-no-notifications-yet",
+        "hide-someone-from-the-feed",
+        "jump-back-to-the-top",
+        "let-every-kind-into-the-feed",
+        "meet-the-write-rule-on-the-pad",
         "narrow-the-feed",
+        "narrow-the-feed-to-one-topic",
         "open-a-topic",
+        "open-the-wallet",
+        "read-a-posts-license",
+        "retry-a-stance-that-didnt-sign",
         "sign-back-in-after-the-session-ran-out",
         "sign-in",
         "sign-in-after-a-wrong-password",
@@ -4266,6 +4944,7 @@
     "FeedCover": {
       "flows": [
         "open-a-posts-pictures",
+        "play-a-clip-that-didnt-autoplay",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4276,7 +4955,9 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "play-a-clip-that-didnt-autoplay"
+      ]
     },
     "FeedDeleting": {
       "flows": [
@@ -4316,9 +4997,12 @@
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "read-a-score-whose-paths-moved-on"
       ],
-      "endpoint": []
+      "endpoint": [
+        "read-a-score-whose-paths-moved-on"
+      ]
     },
     "FeedFar": {
       "flows": [
@@ -4341,6 +5025,7 @@
     },
     "FeedGallery": {
       "flows": [
+        "page-through-a-gallery",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4350,10 +5035,15 @@
         "trace-a-score-to-its-records",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "page-through-a-gallery"
+      ]
     },
     "FeedHidden": {
       "flows": [
+        "hide-a-deleted-account",
+        "hide-someone-from-the-feed",
+        "hide-someone-from-their-profile",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -4365,10 +5055,15 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "hide-a-deleted-account",
+        "hide-someone-from-the-feed",
+        "hide-someone-from-their-profile"
+      ]
     },
     "FeedKinds": {
       "flows": [
+        "let-every-kind-into-the-feed",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -4379,7 +5074,9 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "let-every-kind-into-the-feed"
+      ]
     },
     "FeedNarrowed": {
       "flows": [
@@ -4417,6 +5114,7 @@
     "FeedScrolled": {
       "flows": [
         "follow-a-citation",
+        "jump-back-to-the-top",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
@@ -4428,7 +5126,9 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "jump-back-to-the-top"
+      ]
     },
     "FeedSecurityNotice": {
       "flows": [
@@ -4441,7 +5141,9 @@
         "close-the-filter-unchanged",
         "filter-the-feed-far-from-the-default",
         "filter-the-feed-to-nothing",
-        "narrow-the-feed"
+        "let-every-kind-into-the-feed",
+        "narrow-the-feed",
+        "narrow-the-feed-to-one-topic"
       ],
       "endpoint": [
         "close-the-filter-unchanged"
@@ -4449,6 +5151,7 @@
     },
     "FeedTopic": {
       "flows": [
+        "narrow-the-feed-to-one-topic",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4458,12 +5161,15 @@
         "trace-a-score-to-its-records",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "narrow-the-feed-to-one-topic"
+      ]
     },
     "FeedUnread": {
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "open-what-is-waiting",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4474,7 +5180,9 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "open-what-is-waiting"
+      ]
     },
     "GuestGate": {
       "flows": [
@@ -4494,29 +5202,47 @@
     },
     "History": {
       "flows": [
+        "filter-your-history",
+        "filter-your-history-to-nothing",
         "follow-a-citation",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-your-history",
         "reply-to-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "read-your-history"
+      ]
     },
     "HistoryEmpty": {
       "flows": [
+        "find-nothing-read-yet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
+      "endpoint": [
+        "find-nothing-read-yet"
+      ]
+    },
+    "HistoryFilter": {
+      "flows": [
+        "filter-your-history",
+        "filter-your-history-to-nothing"
+      ],
       "endpoint": []
     },
     "HistoryNone": {
       "flows": [
+        "filter-your-history-to-nothing",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -4526,10 +5252,14 @@
     },
     "InviteCreated": {
       "flows": [
-        "send-someone-an-invite"
+        "send-someone-an-invite",
+        "send-your-first-invite",
+        "set-how-long-an-invite-lasts"
       ],
       "endpoint": [
-        "send-someone-an-invite"
+        "send-someone-an-invite",
+        "send-your-first-invite",
+        "set-how-long-an-invite-lasts"
       ]
     },
     "InviteEntry": {
@@ -4551,22 +5281,42 @@
       ],
       "endpoint": []
     },
+    "InviteExpiry": {
+      "flows": [
+        "set-how-long-an-invite-lasts"
+      ],
+      "endpoint": []
+    },
     "InviteNew": {
       "flows": [
-        "send-someone-an-invite"
+        "send-someone-an-invite",
+        "send-your-first-invite",
+        "set-how-long-an-invite-lasts"
       ],
       "endpoint": []
     },
     "Invites": {
       "flows": [
         "answer-someones-ask-link",
+        "close-a-links-applications",
+        "close-an-application",
         "send-someone-an-invite",
+        "set-how-long-an-invite-lasts",
         "vouch-an-applicant-in"
       ],
       "endpoint": [
         "answer-someones-ask-link",
+        "close-a-links-applications",
+        "close-an-application",
+        "set-how-long-an-invite-lasts",
         "vouch-an-applicant-in"
       ]
+    },
+    "InvitesEmpty": {
+      "flows": [
+        "send-your-first-invite"
+      ],
+      "endpoint": []
     },
     "Join": {
       "flows": [
@@ -4710,23 +5460,28 @@
     "Notifications": {
       "flows": [
         "ask-another-member-to-vouch",
+        "open-what-is-waiting",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
       "endpoint": [
-        "ask-another-member-to-vouch"
+        "ask-another-member-to-vouch",
+        "open-what-is-waiting"
       ]
     },
     "NotificationsEmpty": {
       "flows": [
+        "find-no-notifications-yet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "find-no-notifications-yet"
+      ]
     },
     "OnboardingLayers": {
       "flows": [
@@ -4765,6 +5520,14 @@
       ],
       "endpoint": []
     },
+    "PadFailed": {
+      "flows": [
+        "retry-a-stance-that-didnt-sign"
+      ],
+      "endpoint": [
+        "retry-a-stance-that-didnt-sign"
+      ]
+    },
     "PadKeyAbsent": {
       "flows": [
         "restore-your-key",
@@ -4774,17 +5537,37 @@
         "take-a-stance-without-the-key"
       ]
     },
+    "PadStanding": {
+      "flows": [
+        "revise-a-standing-opinion",
+        "walk-back-an-opinion"
+      ],
+      "endpoint": [
+        "revise-a-standing-opinion"
+      ]
+    },
+    "PadWriteRule": {
+      "flows": [
+        "meet-the-write-rule-on-the-pad"
+      ],
+      "endpoint": [
+        "meet-the-write-rule-on-the-pad"
+      ]
+    },
     "PostDetail": {
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "open-something-you-saved",
         "open-the-viewer",
+        "page-through-a-gallery",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
         "search-and-open-a-post",
+        "see-what-cites-a-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author",
@@ -4793,8 +5576,11 @@
       "endpoint": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "open-something-you-saved",
         "open-the-viewer",
+        "page-through-a-gallery",
         "search-and-open-a-post",
+        "see-what-cites-a-post",
         "who-holds-an-opinion-on-this"
       ]
     },
@@ -4806,12 +5592,16 @@
         "publish-words",
         "reel-to-detail",
         "reply-to-a-post",
+        "reveal-a-sensitive-video-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
-        "visit-an-author"
+        "visit-an-author",
+        "watch-a-clip-full-screen"
       ],
       "endpoint": [
-        "reel-to-detail"
+        "reel-to-detail",
+        "reveal-a-sensitive-video-post",
+        "watch-a-clip-full-screen"
       ]
     },
     "PostDetailVideoSensitive": {
@@ -4821,20 +5611,34 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "reveal-a-sensitive-video-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reveal-a-sensitive-video-post"
+      ]
+    },
+    "PostLicense": {
+      "flows": [
+        "read-a-posts-license"
+      ],
+      "endpoint": [
+        "read-a-posts-license"
+      ]
     },
     "PostNotFound": {
       "flows": [
+        "meet-a-post-link-that-names-nothing",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-post-link-that-names-nothing"
+      ]
     },
     "PostOpinions": {
       "flows": [
@@ -4846,22 +5650,44 @@
     },
     "Profile": {
       "flows": [
+        "close-a-links-applications",
+        "close-an-application",
         "edit-avatar-standalone",
         "edit-avatar-via-edit-screen",
         "edit-your-profile",
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "find-nothing-read-yet",
+        "find-nothing-saved-yet",
+        "load-more-of-a-chronicle-after-a-fault",
+        "open-something-you-saved",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-your-history",
         "see-who-stands-with-someone",
         "send-someone-an-invite",
+        "send-your-first-invite",
+        "unsave-and-undo",
         "vouch-an-applicant-in"
       ],
       "endpoint": [
+        "close-a-links-applications",
+        "close-an-application",
         "edit-avatar-standalone",
         "edit-avatar-via-edit-screen",
         "edit-your-profile",
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "find-nothing-read-yet",
+        "find-nothing-saved-yet",
+        "load-more-of-a-chronicle-after-a-fault",
+        "open-something-you-saved",
+        "read-your-history",
         "send-someone-an-invite",
+        "send-your-first-invite",
+        "unsave-and-undo",
         "vouch-an-applicant-in"
       ]
     },
@@ -4888,12 +5714,21 @@
     },
     "ProfileDeleted": {
       "flows": [
+        "hide-a-deleted-account",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person"
+      ],
+      "endpoint": [
+        "hide-a-deleted-account"
+      ]
+    },
+    "ProfileDeletedMenu": {
+      "flows": [
+        "hide-a-deleted-account"
       ],
       "endpoint": []
     },
@@ -4916,36 +5751,54 @@
     },
     "ProfileMenu": {
       "flows": [
+        "hide-someone-from-their-profile",
         "mention-someone"
       ],
       "endpoint": []
     },
+    "ProfileMoreFailed": {
+      "flows": [
+        "load-more-of-a-chronicle-after-a-fault"
+      ],
+      "endpoint": [
+        "load-more-of-a-chronicle-after-a-fault"
+      ]
+    },
     "ProfileNotFound": {
       "flows": [
+        "meet-a-profile-link-that-names-nobody",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-profile-link-that-names-nobody"
+      ]
     },
     "ProfileOther": {
       "flows": [
         "find-the-thread-a-comment-answers",
+        "hide-someone-from-their-profile",
+        "meet-a-profile-the-server-didnt-answer",
         "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-someones-posts",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "visit-an-author"
       ],
       "endpoint": [
         "find-the-thread-a-comment-answers",
+        "hide-someone-from-their-profile",
+        "meet-a-profile-the-server-didnt-answer",
         "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
+        "read-someones-posts",
         "visit-an-author"
       ]
     },
@@ -4955,7 +5808,24 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
-        "see-who-stands-with-someone"
+        "revise-a-standing-opinion",
+        "see-who-stands-with-someone",
+        "walk-back-an-opinion"
+      ],
+      "endpoint": [
+        "revise-a-standing-opinion",
+        "walk-back-an-opinion"
+      ]
+    },
+    "ProfileOwnMenu": {
+      "flows": [
+        "filter-your-history",
+        "filter-your-history-to-nothing",
+        "find-nothing-read-yet",
+        "find-nothing-saved-yet",
+        "open-something-you-saved",
+        "read-your-history",
+        "unsave-and-undo"
       ],
       "endpoint": []
     },
@@ -4967,6 +5837,7 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "read-someones-posts",
         "reply-to-a-post",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
@@ -4974,7 +5845,9 @@
         "trace-a-score-to-its-records",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "read-someones-posts"
+      ]
     },
     "ProfileStances": {
       "flows": [
@@ -4990,12 +5863,15 @@
     },
     "ProfileUnreachable": {
       "flows": [
+        "meet-a-profile-the-server-didnt-answer",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "meet-a-profile-the-server-didnt-answer"
+      ]
     },
     "RankHop": {
       "flows": [
@@ -5031,15 +5907,20 @@
     },
     "ReaderPostMenu": {
       "flows": [
-        "cite-a-post"
+        "cite-a-post",
+        "hide-someone-from-the-feed",
+        "read-a-posts-license"
       ],
       "endpoint": []
     },
     "ReaderPostMenuNarrow": {
       "flows": [
-        "cite-a-post"
+        "cite-a-post",
+        "share-from-the-narrow-menu"
       ],
-      "endpoint": []
+      "endpoint": [
+        "share-from-the-narrow-menu"
+      ]
     },
     "RecoveryCode": {
       "flows": [
@@ -5072,12 +5953,14 @@
         "publish-words",
         "reel-to-detail",
         "reply-to-a-post",
+        "reveal-a-sensitive-clip-in-the-stream",
         "take-a-stance-on-a-post",
         "visit-an-author",
         "watch-the-stream"
       ],
       "endpoint": [
         "reel-to-detail",
+        "reveal-a-sensitive-clip-in-the-stream",
         "watch-the-stream"
       ]
     },
@@ -5088,10 +5971,13 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "reveal-a-sensitive-clip-in-the-stream",
         "take-a-stance-on-a-post",
         "visit-an-author"
       ],
-      "endpoint": []
+      "endpoint": [
+        "reveal-a-sensitive-clip-in-the-stream"
+      ]
     },
     "RefPair": {
       "flows": [
@@ -5126,6 +6012,18 @@
       "endpoint": [
         "follow-a-citation"
       ]
+    },
+    "RejectAllConfirm": {
+      "flows": [
+        "close-a-links-applications"
+      ],
+      "endpoint": []
+    },
+    "RejectConfirm": {
+      "flows": [
+        "close-an-application"
+      ],
+      "endpoint": []
     },
     "RemoveConfirm": {
       "flows": [
@@ -5451,28 +6349,36 @@
     },
     "Saved": {
       "flows": [
+        "open-something-you-saved",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "unsave-and-undo"
       ],
-      "endpoint": []
+      "endpoint": [
+        "unsave-and-undo"
+      ]
     },
     "SavedEmpty": {
       "flows": [
+        "find-nothing-saved-yet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "find-nothing-saved-yet"
+      ]
     },
     "SavedUndo": {
       "flows": [
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
-        "publish-words"
+        "publish-words",
+        "unsave-and-undo"
       ],
       "endpoint": []
     },
@@ -5623,6 +6529,16 @@
       ],
       "endpoint": []
     },
+    "SeveranceConfirm": {
+      "flows": [
+        "disconnect-from-a-topic",
+        "walk-back-an-opinion"
+      ],
+      "endpoint": [
+        "disconnect-from-a-topic",
+        "walk-back-an-opinion"
+      ]
+    },
     "SignIn": {
       "flows": [
         "a-guest-meets-the-join-ask",
@@ -5708,14 +6624,39 @@
         "open-a-topic"
       ]
     },
+    "TagPageEmpty": {
+      "flows": [
+        "hold-a-topic-nothing-carries"
+      ],
+      "endpoint": [
+        "hold-a-topic-nothing-carries"
+      ]
+    },
     "TagPageHeld": {
       "flows": [
+        "add-to-a-held-topic",
+        "disconnect-from-a-topic",
         "reply-to-a-post",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
-        "visit-an-author"
+        "visit-an-author",
+        "walk-your-topics"
       ],
-      "endpoint": []
+      "endpoint": [
+        "add-to-a-held-topic",
+        "disconnect-from-a-topic"
+      ]
+    },
+    "TagPageHeldPad": {
+      "flows": [
+        "add-to-a-held-topic",
+        "disconnect-from-a-topic",
+        "walk-your-topics"
+      ],
+      "endpoint": [
+        "add-to-a-held-topic",
+        "walk-your-topics"
+      ]
     },
     "TagPicker": {
       "flows": [
@@ -5771,12 +6712,28 @@
         "meet-a-spent-verification-link"
       ]
     },
+    "ViewerLandscape": {
+      "flows": [
+        "turn-the-viewer"
+      ],
+      "endpoint": [
+        "turn-the-viewer"
+      ]
+    },
     "ViewerPicture": {
       "flows": [
         "open-the-viewer"
       ],
       "endpoint": [
         "open-the-viewer"
+      ]
+    },
+    "ViewerVideo": {
+      "flows": [
+        "watch-a-clip-full-screen"
+      ],
+      "endpoint": [
+        "watch-a-clip-full-screen"
       ]
     },
     "VouchAsk": {
@@ -5830,6 +6787,8 @@
     },
     "VouchBackPad": {
       "flows": [
+        "meet-the-write-rule-on-the-pad",
+        "retry-a-stance-that-didnt-sign",
         "take-a-stance-on-a-person",
         "take-a-stance-on-a-post",
         "vouch-back-for-your-inviter"
@@ -5847,12 +6806,15 @@
     },
     "WalletComingSoon": {
       "flows": [
+        "open-the-wallet",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "open-the-wallet"
+      ]
     },
     "WhatsNew": {
       "flows": [
@@ -5900,6 +6862,12 @@
     "YourKeyGate": {
       "flows": [
         "see-your-key-behind-the-browsers-gate"
+      ],
+      "endpoint": []
+    },
+    "YourTopics": {
+      "flows": [
+        "walk-your-topics"
       ],
       "endpoint": []
     }
