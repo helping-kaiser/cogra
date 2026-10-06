@@ -19,7 +19,13 @@
    1 % a press, 10 % with Shift (jakob 2026-10-05). On a device with no touch
    to pinch the first line reads `Drag or use the arrow keys to move, the
    slider to zoom.` (new, flagged for blessing; copy-voice, *The crops' how-to
-   line*). */
+   line*).
+
+   THE X SAYS WHAT LEAVING KEEPS, BY ENTRANCE (copy-voice, *The wizard's two
+   ends*). The board draws the post's entrance, `Leave — your draft is kept`;
+   entered from a reply's video it reads `Leave — the reply is discarded`, and
+   from a comment edit's `Leave — the edit is discarded` — the X of the flow
+   that opened the crop, asking first where that flow's X asks. */
 export function Screen() {
   return (
     <>
