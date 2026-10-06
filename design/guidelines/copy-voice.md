@@ -714,7 +714,7 @@ Added by the post detail's and the profile's tables, each blessed (jakob 2026-10
 Added by Invites' table (the check round's 2, 2026-10-06): `Back to
 Kept picks` — the arrow from the kept picks' review or their seal, the
 named surface by its title, as `Back to Saved` and `Back to History`
-are (*new 2026-10-06, flagged for blessing*). Its other origins take
+are (blessed, jakob 2026-10-06). Its other origins take
 nouns already blessed: `Back to your profile`, `Back to Notifications`.
 
 **The citation's pair** (`RefPair`), where the field and its readout are
