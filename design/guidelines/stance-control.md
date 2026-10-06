@@ -91,6 +91,22 @@ words remain in the accessibility tree on every readout, because an
 emoji's own accessible name is "slightly smiling face" and never "Like
 this" — see readme §11, *The stance control*.
 
+## A guest's view
+
+**A guest borrows a viewpoint on the graph** (jakob 2026-10-06): the
+genesis moderator's for now; an invited guest's inviter's, the issuer of
+the link they came through; later, one the guest picks. The feed and
+every stance shown are the viewpoint's, read-only — as if the guest were
+this user right now, but unable to act as them. The stance anchor is the
+member anchor at its drawn 48px geometry, wearing the viewpoint's
+stance; wherever the viewpoint holds no stance it wears the hollow face,
+the muted 🫥. The tap opens `GuestGate`: nothing is staged and nothing
+signs.
+
+This is one law with the vouch-back's borrowed view (readme §13, *Guest
+and applicant feeds borrow a vantage point*): borrowing a view is seeing
+the lender's feed and the lender's stances.
+
 ## Severance
 
 A bundle netted to `(0, 0)` is severance: deliberate, burn-priced, and
