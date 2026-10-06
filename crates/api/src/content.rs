@@ -884,6 +884,10 @@ pub async fn prepare_post_edit<B: L1Boundary>(
 ///
 /// The same whole-batch discipline as `prepare_post`: everything
 /// refusable is refused before the minting record is staged.
+///
+/// A reply to a still-pending parent declares the parent's minting act
+/// as a dependency, so it lands behind its parent or expires with it —
+/// never as a reply to a parent that never existed.
 pub async fn prepare_comment<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -938,8 +942,6 @@ pub async fn prepare_comment<B: L1Boundary>(
             settlement_ref: None,
             license: Some(draft.license.canonical()),
             asserted_parents: vec![],
-            // A reply to a still-pending parent lands behind it, or
-            // expires with it — never toward a parent that never existed.
             deps: nodes::deps_awaiting(&[], [&parent.awaits]),
             payload,
             node: Some(node),
@@ -975,6 +977,9 @@ pub async fn prepare_comment<B: L1Boundary>(
 /// Prepares a Comment edit: an ordinary-role Review at (0,0) — A leg to
 /// the genesis parent, terminal leg to the existing Comment
 /// (comment.md §4).
+///
+/// An edit awaits no parent mint: it chains behind its landed genesis
+/// (`asserted_parents`), and the genesis already declared the parent's.
 pub async fn prepare_comment_edit<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -995,8 +1000,6 @@ pub async fn prepare_comment_edit<B: L1Boundary>(
     let address = author_address(pool, viewer).await?;
     let node =
         chained_edit_target(pool, viewer, Family::Review, &comment.l1_node_id, &address).await?;
-    // An edit chains behind its landed genesis (`asserted_parents`), and
-    // the genesis already declared the parent's mint: nothing to await.
     let parent = parent_node(pool, comment.target_id).await?.node;
     prepare::check_write_rule(
         boundary,
