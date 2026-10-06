@@ -14,6 +14,8 @@
 // draws on the same clip (`design/designs/canonical/screens/
 // ComposeDetailsVideo.jsx` lines 22-32).
 
+import { instance, part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { MediaThumb } from "./media-thumb";
 import type { Crop } from "../media/crop";
 
@@ -44,6 +46,7 @@ export function PickedRow({
   onRemove,
   removeLabel,
   testId = "picked-row",
+  node,
 }: {
   items: readonly PickedThumb[];
   caption: string;
@@ -54,7 +57,15 @@ export function PickedRow({
   onRemove?: (index: number) => void;
   removeLabel?: string;
   testId?: string;
+  /**
+   * The registered row node on a registered screen (`composeDetails.mediaRow`):
+   * each tile is its `thumb`, keyed by position counted from 1, and the count
+   * line its `caption`.
+   */
+  node?: DataNode;
 }) {
+  const ids = testAttributes(node, testId);
+  const captionIds = testAttributes(part(node, "caption"));
   const thumbs = items.map((item, index) => (
     <MediaThumb
       key={item.id}
@@ -72,17 +83,17 @@ export function PickedRow({
       onRemove={onRemove ? () => onRemove(index) : undefined}
       removeLabel={removeLabel}
       testId={`${testId}-thumb-${index}`}
+      node={instance(node, "thumb", String(index + 1))}
     />
   ));
 
   if (onManage === null) {
     return (
-      <div
-        data-testid={testId}
-        className="flex min-h-12 w-full items-center gap-2 text-left text-on-surface"
-      >
+      <div {...ids} className="flex min-h-12 w-full items-center gap-2 text-left text-on-surface">
         {thumbs}
-        <span className="flex-1 text-label-small text-on-surface-variant">{caption}</span>
+        <span className="flex-1 text-label-small text-on-surface-variant" {...captionIds}>
+          {caption}
+        </span>
       </div>
     );
   }
@@ -90,13 +101,15 @@ export function PickedRow({
   return (
     <button
       type="button"
-      data-testid={testId}
+      {...ids}
       onClick={onManage}
       aria-label={manageLabel}
       className="cg-state cg-focus flex min-h-12 w-full cursor-pointer items-center gap-2 text-left text-on-surface"
     >
       {thumbs}
-      <span className="flex-1 text-label-small text-on-surface-variant">{caption}</span>
+      <span className="flex-1 text-label-small text-on-surface-variant" {...captionIds}>
+        {caption}
+      </span>
     </button>
   );
 }
@@ -128,29 +141,37 @@ export function DescribeCounter({
   subject = "the pictures",
   onDescribe,
   testId = "describe-counter",
+  node,
 }: {
   described: number;
   total: number;
   subject?: string;
   onDescribe: () => void;
+  /** Names the describe control. */
   testId?: string;
+  /**
+   * The registered row node on a registered screen (`composeDetails.describeRow`):
+   * its `describe` control (which then carries the node id instead of
+   * `testId`), its `count` and its `reason`.
+   */
+  node?: DataNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1" {...testAttributes(node)}>
       <p className="m-0 text-label-small">
         <button
           type="button"
-          data-testid={testId}
+          {...testAttributes(part(node, "describe"), testId)}
           onClick={onDescribe}
           className="cg-state cg-focus cursor-pointer border-0 bg-transparent p-0 text-label-small text-primary"
         >
           Describe {subject}
         </button>{" "}
-        <span className="text-on-surface-variant">
+        <span className="text-on-surface-variant" {...testAttributes(part(node, "count"))}>
           · {described} of {total} described
         </span>
       </p>
-      <p className="m-0 text-label-small text-on-surface-variant">
+      <p className="m-0 text-label-small text-on-surface-variant" {...testAttributes(part(node, "reason"))}>
         Read aloud to people who can&apos;t see it.
       </p>
     </div>

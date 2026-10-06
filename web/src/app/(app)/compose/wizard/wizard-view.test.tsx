@@ -16,6 +16,7 @@ import { renderWithProviders } from "@/test/providers";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import type { ComposeDraftStore } from "@/lib/compose/draft-store";
 import { ComposeWizard } from "./wizard-view";
+import { byAnyTestId, byNode } from "@/test/data-node";
 
 const push = vi.fn();
 let searchParams = new URLSearchParams();
@@ -193,11 +194,11 @@ describe("the compose wizard", () => {
     fireEvent.change(screen.getByTestId("wizard-words"), {
       target: { value: "Three weekends at low tide." },
     });
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // Straight to details: there is nothing to crop.
-    expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     fireEvent.click(await screen.findByTestId("wizard-sign"));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
@@ -213,9 +214,9 @@ describe("the compose wizard", () => {
     fireEvent.change(screen.getByTestId("wizard-words"), {
       target: { value: "Three weekends at low tide." },
     });
-    fireEvent.click(screen.getByTestId("wizard-next"));
-    await screen.findByTestId("wizard-title");
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     expect(await screen.findByText("Last step")).toHaveClass("text-label-small");
   });
@@ -234,7 +235,7 @@ describe("the compose wizard", () => {
   it("frames every picked picture, not just the first", async () => {
     render();
     await pick(["one.jpg", "two.jpg", "three.jpg"]);
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // Each picture starts unzoomed and is framed on its own.
     for (const index of [0, 1, 2]) {
@@ -262,7 +263,7 @@ describe("the compose wizard", () => {
   it("re-frames against the original across a shape switch, keeping the zoom", async () => {
     render();
     await pick(["one.jpg", "two.jpg"]);
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
     fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
@@ -279,7 +280,7 @@ describe("the compose wizard", () => {
   it("refuses to leave the pick screen with no body", async () => {
     render();
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     expect(screen.getByTestId("wizard-body-error")).toHaveTextContent("The post needs a body");
     // Still on the pick screen.
     expect(screen.getByTestId("wizard-words")).toBeInTheDocument();
@@ -325,23 +326,23 @@ describe("the compose wizard", () => {
     render();
 
     await pick(["one.jpg", "two.jpg"]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // The crop screen carries no keyboard: a description is written over the
     // details step, never here (design/readme.md §"The media slice").
     expect(screen.queryByTestId("wizard-alt-text")).toBeNull();
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // Uploads run from here; the seal opens only once they are done.
-    expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
 
     // The describe counter is the way in, and it opens the sheet on a picture.
-    fireEvent.click(screen.getByTestId("wizard-describe-counter"));
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.describeRow.describe")));
     fireEvent.change(await screen.findByTestId("wizard-describe-sheet-field"), {
       target: { value: "paper against the salt crust" },
     });
     fireEvent.click(screen.getByTestId("wizard-describe-sheet-done"));
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     await waitFor(() => expect(screen.getByTestId("wizard-sign")).not.toBeDisabled());
 
     fireEvent.click(screen.getByTestId("wizard-sign"));
@@ -410,12 +411,12 @@ describe("the compose wizard", () => {
     render();
 
     await pick(["one.jpg"]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // The server's own words, on the details screen, with the retry beside them.
     expect(await screen.findByText(/Too many attempts/)).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     expect(await screen.findByTestId("wizard-seal-blocked")).toHaveTextContent(
       "One picture didn't upload",
     );
@@ -424,7 +425,7 @@ describe("the compose wizard", () => {
     // Back to the details screen to retry the one that failed.
     fireEvent.click(screen.getByTestId("wizard-back"));
     fireEvent.click(await screen.findByTestId("wizard-upload-error-retry"));
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     await waitFor(() => expect(screen.getByTestId("wizard-sign")).not.toBeDisabled());
     expect(attempts).toBe(2);
   });
@@ -450,8 +451,8 @@ describe("the compose wizard", () => {
 
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
-    fireEvent.click(screen.getByTestId("wizard-next"));
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     fireEvent.click(await screen.findByTestId("wizard-sign"));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed?compose=expired"));
@@ -463,8 +464,8 @@ describe("the compose wizard", () => {
     render(fakeDrafts(), false);
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
-    fireEvent.click(screen.getByTestId("wizard-next"));
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     expect(await screen.findByTestId("wizard-key-absent")).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-sign")).not.toBeInTheDocument();
@@ -479,15 +480,15 @@ describe("the compose wizard", () => {
     render(drafts, false);
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
-    fireEvent.click(screen.getByTestId("wizard-next"));
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     fireEvent.click(await screen.findByTestId("wizard-keep-draft"));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
     expect(drafts.held()?.words).toBe("words");
     // Not a step back: the details screen never reappears underneath.
-    expect(screen.queryByTestId("wizard-title")).not.toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("composeDetails.title.input"))).not.toBeInTheDocument();
   });
 
   it("offers a held draft, and discarding it leaves a clean screen", async () => {
@@ -584,9 +585,9 @@ describe("the compose wizard", () => {
 
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    expect(await screen.findByTestId("wizard-reference-0")).toHaveTextContent(
+    expect(await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent(
       "@carol: On folding",
     );
   });
@@ -605,9 +606,9 @@ describe("the compose wizard", () => {
 
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "words" } });
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    expect(await screen.findByTestId("wizard-reference-0")).toHaveTextContent("p-quoted");
+    expect(await screen.findByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent("p-quoted");
   });
 
   // The draft answers a different question — what the author was writing
@@ -629,8 +630,8 @@ describe("the compose wizard", () => {
     render(fakeDrafts(held));
 
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
-    expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
-    expect(screen.getByTestId("wizard-reference-0")).toHaveTextContent("p-quoted");
+    expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("composeDetails.references.stagedReference", "1"))).toHaveTextContent("p-quoted");
   });
 
   it("restores a held draft on the step it was left on", async () => {
@@ -643,7 +644,7 @@ describe("the compose wizard", () => {
     render(fakeDrafts(held));
 
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
-    expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
   });
 
   // The fix-round-2 ruling: the draft is kept continuously, and the only thing
@@ -679,7 +680,7 @@ describe("the compose wizard", () => {
 
     fireEvent.click(await screen.findByTestId("wizard-to-words"));
     fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: "come back to me" } });
-    fireEvent.click(screen.getByTestId("header-back"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back")));
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/feed"));
     expect(drafts.held()?.words).toBe("come back to me");
@@ -690,8 +691,8 @@ describe("the compose wizard", () => {
   // early and X from Details on; it now means only X, and Next is at the bottom
   // of every stage's own content.
   describe("the forward action, and the corner it is no longer in", () => {
-    const forward = () => screen.getByTestId("wizard-next");
-    const inHeader = () => screen.getByTestId("wizard-header").contains(forward());
+    const forward = () => screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"));
+    const inHeader = () => screen.getByTestId(byAnyTestId("wizard-header", "composeDetails.header")).contains(forward());
 
     it("keeps Next out of the header on the words stage", async () => {
       render();
@@ -709,19 +710,19 @@ describe("the compose wizard", () => {
       expect(inHeader()).toBe(false);
 
       fireEvent.click(forward());
-      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
       expect(inHeader()).toBe(false);
     });
 
     it("leaves the corner holding nothing but the ways out", async () => {
       render();
       await pick(["one.jpg"]);
-      const header = screen.getByTestId("wizard-header");
+      const header = screen.getByTestId(byAnyTestId("wizard-header", "composeDetails.header"));
       // The arrow steps back, the X leaves — and nothing else is up there to
       // be mistaken for either of them.
       expect(header.querySelectorAll("button")).toHaveLength(2);
-      expect(screen.getByTestId("header-back")).toBeInTheDocument();
-      expect(screen.getByTestId("header-leave")).toBeInTheDocument();
+      expect(screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back"))).toBeInTheDocument();
+      expect(screen.getByTestId(byAnyTestId("header-leave", "composeDetails.header.leave"))).toBeInTheDocument();
     });
   });
 
@@ -734,16 +735,16 @@ describe("the compose wizard", () => {
     it("finds the framing waiting, arriving from the stage after it", async () => {
       render();
       await pick(["one.jpg"]);
-      fireEvent.click(screen.getByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
       fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
       fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
       expect(zoomOf()).toBeCloseTo(1.2, 6);
 
       // On to the details, then back a step with the arrow.
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("header-back"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back")));
 
       expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
       expect(zoomOf()).toBeCloseTo(1.2, 6);
@@ -752,14 +753,14 @@ describe("the compose wizard", () => {
     it("finds it waiting again, arriving from the stage before it", async () => {
       render();
       await pick(["one.jpg"]);
-      fireEvent.click(screen.getByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
       fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
       expect(zoomOf()).toBeCloseTo(1.1, 6);
 
       // All the way back to the pick screen, then forward into crop again.
-      fireEvent.click(screen.getByTestId("header-back"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back")));
       expect(await screen.findByTestId("wizard-drop")).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
       expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
       expect(zoomOf()).toBeCloseTo(1.1, 6);
@@ -768,16 +769,16 @@ describe("the compose wizard", () => {
     it("holds each picture's own framing across the round trip", async () => {
       render();
       await pick(["one.jpg", "two.jpg"]);
-      fireEvent.click(screen.getByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
       fireEvent.click(screen.getByTestId("wizard-crop-pick-1"));
       fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
       fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
       fireEvent.keyDown(screen.getByTestId("wizard-crop-frame"), { key: "+" });
 
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
-      fireEvent.click(screen.getByTestId("header-back"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
+      fireEvent.click(screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back")));
 
       // The stage comes back on the picture it was left on, framed as it was,
       // and the one nobody touched is still untouched.
@@ -826,7 +827,7 @@ describe("the compose wizard", () => {
     expect(rowThumb).toHaveAttribute("data-framed", "true");
 
     // …and so does the Show all sheet the row opens.
-    fireEvent.click(screen.getByTestId("wizard-picked-row"));
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.mediaRow")));
     expect(await screen.findByTestId("wizard-picked-sheet-thumb-0-image")).toHaveAttribute(
       "data-framed",
       "true",
@@ -856,16 +857,16 @@ describe("the compose wizard", () => {
     render(drafts);
 
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
-    await screen.findByTestId("wizard-title");
+    await screen.findByTestId(byNode("composeDetails.title.input"));
 
-    fireEvent.click(screen.getByTestId("wizard-picked-row"));
+    fireEvent.click(screen.getByTestId(byNode("composeDetails.mediaRow")));
     await screen.findByTestId("wizard-picked-sheet-remove-0");
 
     // One removed, one left — the manager stays open and the details stage
     // is untouched.
     fireEvent.click(screen.getByTestId("wizard-picked-sheet-remove-0"));
     expect(screen.getByTestId("wizard-picked-sheet-remove-0")).toBeInTheDocument();
-    expect(screen.queryByTestId("wizard-title")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
 
     // The last one leaves: the manager closes, and Details never stands on
     // an empty body — the pick step comes back with the tray empty.
@@ -873,7 +874,7 @@ describe("the compose wizard", () => {
 
     expect(await screen.findByTestId("wizard-drop")).toBeInTheDocument();
     expect(screen.queryByTestId("wizard-picked-count")).toBeNull();
-    expect(screen.queryByTestId("wizard-title")).toBeNull();
+    expect(screen.queryByTestId(byNode("composeDetails.title.input"))).toBeNull();
 
     // The staged title stays in the draft, waiting for a body — the stage
     // never becomes the words path. Checked together in one `waitFor`: the
@@ -900,9 +901,9 @@ describe("the compose wizard", () => {
       fireEvent.change(screen.getByTestId("wizard-words"), {
         target: { value: "Three weekends at low tide." },
       });
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      await screen.findByTestId("wizard-title");
-      fireEvent.click(screen.getByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      await screen.findByTestId(byNode("composeDetails.title.input"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
       await screen.findByText("Last step");
     }
 
@@ -912,12 +913,12 @@ describe("the compose wizard", () => {
       expect(stageDepth()).toBe(2);
 
       window.history.back();
-      expect(await screen.findByTestId("wizard-title")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
       expect(screen.queryByText("Last step")).toBeNull();
 
       window.history.back();
       expect(await screen.findByTestId("wizard-words")).toBeInTheDocument();
-      expect(screen.queryByTestId("wizard-title")).toBeNull();
+      expect(screen.queryByTestId(byNode("composeDetails.title.input"))).toBeNull();
       // The pick is the arrival entry: the next Back is the browser's own, so
       // the wizard pushes no route of its own on the way.
       expect(push).not.toHaveBeenCalled();
@@ -928,33 +929,33 @@ describe("the compose wizard", () => {
       server.use(uploadOk(["m1"]));
       render();
       await pick(["one.jpg"]);
-      fireEvent.click(screen.getByTestId("wizard-next"));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
       await screen.findByTestId("wizard-crop-frame");
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      await screen.findByTestId("wizard-title");
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      await screen.findByTestId(byNode("composeDetails.title.input"));
 
       window.history.back();
       expect(await screen.findByTestId("wizard-crop-frame")).toBeInTheDocument();
-      expect(screen.queryByTestId("wizard-title")).toBeNull();
+      expect(screen.queryByTestId(byNode("composeDetails.title.input"))).toBeNull();
     });
 
     it("keeps the history in step with the arrow", async () => {
       render();
       await toSeal();
 
-      fireEvent.click(screen.getByTestId("header-back"));
-      await screen.findByTestId("wizard-title");
+      fireEvent.click(screen.getByTestId(byAnyTestId("header-back", "composeDetails.header.back")));
+      await screen.findByTestId(byNode("composeDetails.title.input"));
       await waitFor(() => expect(stageDepth()).toBe(1));
       // Settled: the arrow's own traversal stepped nothing further.
       await new Promise((resolve) => setTimeout(resolve, 20));
-      expect(screen.getByTestId("wizard-title")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
     });
 
     it("re-advances on Forward, through the stage's own gate", async () => {
       render();
       await toSeal();
       window.history.back();
-      await screen.findByTestId("wizard-title");
+      await screen.findByTestId(byNode("composeDetails.title.input"));
 
       window.history.forward();
       expect(await screen.findByText("Last step")).toBeInTheDocument();
@@ -974,19 +975,19 @@ describe("the compose wizard", () => {
         }),
       );
       fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
-      await screen.findByTestId("wizard-title");
+      await screen.findByTestId(byNode("composeDetails.title.input"));
       // A draft restored on the details is three stages deep, and Back walks
       // all three of them — the same ladder the arrow walks.
       await waitFor(() => expect(stageDepth()).toBe(2));
 
-      fireEvent.click(screen.getByTestId("wizard-picked-row"));
+      fireEvent.click(screen.getByTestId(byNode("composeDetails.mediaRow")));
       expect(screen.getByTestId("wizard-picked-sheet")).toHaveAttribute("open");
 
       window.history.back();
       await waitFor(() =>
         expect(screen.getByTestId("wizard-picked-sheet")).not.toHaveAttribute("open"),
       );
-      expect(screen.getByTestId("wizard-title")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("composeDetails.title.input"))).toBeInTheDocument();
       await waitFor(() => expect(stageDepth()).toBe(2));
 
       window.history.back();

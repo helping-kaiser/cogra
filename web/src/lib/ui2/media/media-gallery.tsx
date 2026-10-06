@@ -22,6 +22,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { instance, part, type DataNode } from "@/lib/ui/data-node";
+
 import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
 import { PagerDots } from "./pager-dots";
@@ -73,8 +75,15 @@ export function MediaGallery({
   surface = "full",
   testId = "media-gallery",
   onOpen,
+  node,
 }: {
   items: readonly GalleryItem[];
+  /**
+   * The registered media node the gallery draws (`….media`): each frame is
+   * its `frame`, keyed by its position counted from 1, and the pager its
+   * `dots`. Those then carry the node ids instead of the `testId`-derived ones.
+   */
+  node?: DataNode;
   /** `reading` is the comment's form — the sound control and nothing else. */
   surface?: PlayerSurface;
   // The one frame every picture renders at. Omitted, the first picture's shape
@@ -149,6 +158,7 @@ export function MediaGallery({
         preload={preloadLead}
         surface={surface}
         testId={`${testId}-lead`}
+        node={instance(node, "frame", "1")}
         onOpen={onOpen ? () => onOpen(0) : undefined}
       />
     );
@@ -204,6 +214,7 @@ export function MediaGallery({
               preload={index === 0 && preloadLead}
               surface={surface}
               testId={`${testId}-page-${index}`}
+              node={instance(node, "frame", String(index + 1))}
               onOpen={onOpen ? () => onOpen(index) : undefined}
             />
           </div>
@@ -215,7 +226,13 @@ export function MediaGallery({
           the same row the viewer draws, in the card's tone — one marker for one
           position, in both pagers. */}
       <div className="flex justify-center pt-2">
-        <PagerDots count={items.length} current={page} tone="card" testId={`${testId}-dots`} />
+        <PagerDots
+          count={items.length}
+          current={page}
+          tone="card"
+          testId={`${testId}-dots`}
+          node={part(node, "dots")}
+        />
       </div>
     </div>
   );

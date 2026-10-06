@@ -737,6 +737,9 @@ export function ComposeWizard({
           ) : undefined
         }
         testId="wizard-header"
+        // The registered ComposeDetails screen names its band; the other
+        // stages' boards are not registered yet and keep the wizard's ids.
+        node={state.step === "details" ? { path: "composeDetails.header" } : undefined}
       />
 
       {offered !== null && (

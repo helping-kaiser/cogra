@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { byNode } from "@/test/data-node";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { AppShell } from "./shell";
@@ -32,15 +33,51 @@ describe("AppShell", () => {
       </AppShell>,
       { store: signedInStore() },
     );
-    const nav = await screen.findByTestId("bottom-nav");
+    const nav = await screen.findByTestId(byNode("feed.bottomBar"));
     expect(nav).toBeInTheDocument();
-    expect(screen.getByTestId("nav-feed")).toHaveAttribute("href", "/feed");
-    expect(screen.getByTestId("nav-compose")).toHaveAttribute("href", "/compose");
-    expect(screen.getByTestId("nav-profile")).toHaveAttribute("href", "/profile");
+    expect(screen.getByTestId(byNode("feed.bottomBar.feedSlot"))).toHaveAttribute("href", "/feed");
+    expect(screen.getByTestId(byNode("feed.bottomBar.composeSlot"))).toHaveAttribute("href", "/compose");
+    expect(screen.getByTestId(byNode("feed.bottomBar.profileSlot"))).toHaveAttribute("href", "/profile");
     // The active tab is marked for assistive tech.
-    expect(screen.getByTestId("nav-feed")).toHaveAttribute("aria-current", "page");
-    expect(screen.getByTestId("nav-profile")).not.toHaveAttribute("aria-current");
+    expect(screen.getByTestId(byNode("feed.bottomBar.feedSlot"))).toHaveAttribute("aria-current", "page");
+    expect(screen.getByTestId(byNode("feed.bottomBar.profileSlot"))).not.toHaveAttribute("aria-current");
   });
+
+  // The bar is drawn once, by the shell, but its node is the SCREEN's
+  // (`design/designs/canonical/nodes.json`): a registered screen names it by its
+  // own prefix, and a screen not registered yet keeps the bar's own ids.
+  it.each([
+    ["/feed", "feed.bottomBar"],
+    ["/posts/post-1", "postDetail.bottomBar"],
+  ])("names the bar on the registered screen %s after it", async (path, bar) => {
+    pathname = path;
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    expect(await screen.findByTestId(byNode(bar))).toBeInTheDocument();
+    for (const slot of ["feedSlot", "composeSlot", "profileSlot"]) {
+      expect(screen.getByTestId(byNode(`${bar}.${slot}`))).toBeInTheDocument();
+    }
+    expect(screen.queryByTestId("bottom-nav")).not.toBeInTheDocument();
+  });
+
+  it.each(["/posts/post-1/edit", "/u/alice"])(
+    "keeps the bar's own ids on %s, whose screen is not registered",
+    async (path) => {
+      pathname = path;
+      renderWithProviders(
+        <AppShell>
+          <p>content</p>
+        </AppShell>,
+        { store: signedInStore() },
+      );
+      expect(await screen.findByTestId("bottom-nav")).toBeInTheDocument();
+      expect(screen.getByTestId("nav-feed")).toBeInTheDocument();
+    },
+  );
 
   it("marks the profile tab on /profile", async () => {
     pathname = "/profile";
@@ -59,12 +96,12 @@ describe("AppShell", () => {
         <p>content</p>
       </AppShell>,
     );
-    const nav = await screen.findByTestId("bottom-nav");
+    const nav = await screen.findByTestId(byNode("feed.bottomBar"));
     expect(nav).toBeInTheDocument();
-    expect(screen.getByTestId("nav-feed")).toHaveAttribute("href", "/feed");
+    expect(screen.getByTestId(byNode("feed.bottomBar.feedSlot"))).toHaveAttribute("href", "/feed");
 
     // A gated slot opens the prompt in place; the read stays behind it.
-    fireEvent.click(screen.getByTestId("nav-compose"));
+    fireEvent.click(screen.getByTestId(byNode("feed.bottomBar.composeSlot")));
     const prompt = screen.getByTestId("join-prompt") as HTMLDialogElement;
     expect(prompt.open).toBe(true);
     expect(screen.getByTestId("join-prompt-signin")).toHaveAttribute("href", "/login");
@@ -75,26 +112,25 @@ describe("AppShell", () => {
     await waitFor(() => expect(prompt.open).toBe(false));
 
     // The profile slot asks the same way.
-    fireEvent.click(screen.getByTestId("nav-profile"));
+    fireEvent.click(screen.getByTestId(byNode("feed.bottomBar.profileSlot")));
     expect(prompt.open).toBe(true);
   });
 
-  it.each(["/posts/post-1", "/u/alice"])(
-    "keeps the bar on the read drill-in %s",
-    async (path) => {
-      pathname = path;
-      renderWithProviders(
-        <AppShell>
-          <p>content</p>
-        </AppShell>,
-        { store: signedInStore() },
-      );
-      expect(await screen.findByTestId("bottom-nav")).toBeInTheDocument();
-      // A drill-in selects no tab.
-      expect(screen.getByTestId("nav-feed")).not.toHaveAttribute("aria-current");
-      expect(screen.getByTestId("nav-profile")).not.toHaveAttribute("aria-current");
-    },
-  );
+  it.each([
+    ["/posts/post-1", "postDetail.bottomBar.feedSlot", "postDetail.bottomBar.profileSlot"],
+    ["/u/alice", "nav-feed", "nav-profile"],
+  ])("keeps the bar on the read drill-in %s", async (path, feedSlot, profileSlot) => {
+    pathname = path;
+    renderWithProviders(
+      <AppShell>
+        <p>content</p>
+      </AppShell>,
+      { store: signedInStore() },
+    );
+    // A drill-in selects no tab.
+    expect(await screen.findByTestId(feedSlot)).not.toHaveAttribute("aria-current");
+    expect(screen.getByTestId(profileSlot)).not.toHaveAttribute("aria-current");
+  });
 
   // The bar is chrome by structure: a viewport-tall column, a scrolling
   // middle, the band as the column's last child. A `fixed` band is laid out
@@ -115,7 +151,7 @@ describe("AppShell", () => {
     // The content scrolls INSIDE that middle; the band is its sibling, so no
     // amount of content can reach it.
     expect(scroller).toContainElement(screen.getByText("content"));
-    expect(scroller).not.toContainElement(screen.getByTestId("bottom-nav"));
+    expect(scroller).not.toContainElement(screen.getByTestId(byNode("feed.bottomBar")));
   });
 
   it.each(["/compose", "/profile/edit", "/settings", "/settings/key", "/invites", "/key", "/restore"])(

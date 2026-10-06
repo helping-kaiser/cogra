@@ -18,6 +18,7 @@
 
 import { useSyncExternalStore } from "react";
 
+import { testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { canShare, shareLink } from "./share";
 
@@ -44,6 +45,7 @@ export function ShareButton({
   title,
   onCopied,
   testId,
+  node,
 }: {
   /** The post's own route; resolved against the current origin at the tap. */
   href: string;
@@ -54,6 +56,8 @@ export function ShareButton({
   /** Says `Link copied`. Required: a copy nobody is told about is a silent act. */
   onCopied: () => void;
   testId?: string;
+  /** The registered node this button is, which then names it instead of `testId`. */
+  node?: DataNode;
 }) {
   const capable = useShareCapable();
   if (!capable) return null;
@@ -61,7 +65,7 @@ export function ShareButton({
   return (
     <button
       type="button"
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       aria-label={`Share ${targetLabel}`}
       onClick={() => {
         void shareLink(new URL(href, window.location.href).toString(), title).then((outcome) => {

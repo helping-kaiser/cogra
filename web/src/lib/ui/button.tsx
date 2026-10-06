@@ -4,6 +4,8 @@
 
 import type { ReactNode } from "react";
 
+import { testAttributes, type DataNode } from "./data-node";
+
 // primary, not primaryContainer: design.md §2.4 reserves the loudest surface
 // for the compose FAB and a committed stance, one place per screen.
 // Material's three button vocabularies, matching what Compose gives Android:
@@ -70,6 +72,7 @@ export function Button({
   selfStart = false,
   disabled = false,
   onClick,
+  node,
 }: {
   children: ReactNode;
   testId: string;
@@ -79,11 +82,13 @@ export function Button({
   selfStart?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  /** The registered node this button is, which then names it instead of `testId`. */
+  node?: DataNode;
 }) {
   return (
     <button
       type={type}
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       disabled={disabled}
       onClick={onClick}
       className={buttonClassName({ variant, size, selfStart })}

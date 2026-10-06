@@ -18,6 +18,7 @@
 
 import type { ReactNode } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 
 // TWO WAYS OUT, each doing one thing (jakob, round 4): the ARROW steps ONE
@@ -34,6 +35,7 @@ export function HeaderBar({
   action,
   help,
   testId,
+  node,
 }: {
   title: string;
   // A screen with no way back — the recovery-code trap — simply passes none,
@@ -45,16 +47,22 @@ export function HeaderBar({
   action?: ReactNode;
   help?: ReactNode;
   testId?: string;
+  /**
+   * The registered header node on a registered screen
+   * (`composeDetails.header`): the band is the node, and its arrow, title and
+   * X are its `back`, `title` and `leave` parts.
+   */
+  node?: DataNode;
 }) {
   return (
     <div
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       className="flex min-h-12 flex-none items-center gap-1 px-3"
     >
       {onBack && (
         <button
           type="button"
-          data-testid="header-back"
+          {...testAttributes(part(node, "back"), "header-back")}
           aria-label={backLabel}
           onClick={onBack}
           className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
@@ -62,12 +70,14 @@ export function HeaderBar({
           <Icon name="arrow_back" />
         </button>
       )}
-      <h1 className="m-0 min-w-0 truncate text-title-large">{title}</h1>
+      <h1 className="m-0 min-w-0 truncate text-title-large" {...testAttributes(part(node, "title"))}>
+        {title}
+      </h1>
       <span className="flex-1" />
       {onLeave && (
         <button
           type="button"
-          data-testid="header-leave"
+          {...testAttributes(part(node, "leave"), "header-leave")}
           aria-label={leaveLabel}
           onClick={onLeave}
           className="cg-state cg-focus flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"

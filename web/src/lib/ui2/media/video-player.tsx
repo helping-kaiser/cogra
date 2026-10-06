@@ -37,6 +37,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { useVeiled } from "./body-veil";
 import { isMuted, setMuted, useMuted } from "./mute";
 import { formatDuration } from "./video";
@@ -87,8 +89,11 @@ export function VideoPlayer({
   onOpenViewer,
   durationMs,
   safeArea = false,
+  soundNode,
 }: {
   src: string;
+  /** The registered node the sound disc is; it then names the disc instead of `testId`'s. */
+  soundNode?: DataNode;
   /** The video's face. Null when there is none, or when it was redacted. */
   poster?: string | null;
   altText?: string | null;
@@ -409,7 +414,7 @@ export function VideoPlayer({
       {!transport && !veiled && (
         <button
           type="button"
-          data-testid={`${testId}-sound`}
+          {...testAttributes(soundNode, `${testId}-sound`)}
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
           aria-pressed={!muted}
           onClick={() => setMuted(!muted)}
