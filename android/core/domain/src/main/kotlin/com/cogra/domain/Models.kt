@@ -100,7 +100,6 @@ data class ApplicationView(
     val keyAttached: Boolean,
     val approvedAt: Instant?,
     val landedAt: Instant?,
-    val expiresAt: Instant,
 )
 
 /**
@@ -166,9 +165,6 @@ data class PreparedWriteView(
 /** An invite link as its issuer sees it. */
 data class InviteLinkInfo(
     val id: String,
-    /** A suggestion, never a commitment — seeds the approval form. */
-    val prefillPDirected: Double,
-    val prefillPInterest: Double,
     val singleUse: Boolean,
     val createdAt: Instant,
     val expiresAt: Instant,
@@ -190,7 +186,7 @@ data class ApplicationInfo(
 /** Client mirror of the server's minimum handle length (auth.md "Application"). */
 const val MIN_HANDLE_LENGTH = 3
 
-/** The house prefill for a stance dimension — sliders and link prefills start here. */
+/** The house starting point for a stance dimension — sliders start here. */
 const val DEFAULT_STANCE = 0.1
 
 

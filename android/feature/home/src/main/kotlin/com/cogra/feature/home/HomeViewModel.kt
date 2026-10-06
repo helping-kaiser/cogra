@@ -8,7 +8,6 @@ import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserProfile
-import com.cogra.domain.extractInviteId
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.repo.WriteRepository
@@ -49,11 +48,6 @@ data class HomeUiState(
     val resending: Boolean = false,
     /** The resend refusal to render; null when none. */
     val resendError: ErrorCode? = null,
-    /** The re-arm card's fresh-invite input (a dead application). */
-    val rearmInput: String = "",
-    val rearming: Boolean = false,
-    val rearmError: ErrorCode? = null,
-    val rearmMalformed: Boolean = false,
     /** One-shot: the approval just came through in this app run. */
     val approved: Boolean = false,
     /** One-shot: landed in this app run — greet the new member once. */
@@ -243,34 +237,6 @@ class HomeViewModel @Inject constructor(
                 }
                 is Outcome.Failed -> _state.update {
                     it.copy(resending = false, resendError = ErrorCode.INTERNAL)
-                }
-            }
-        }
-    }
-
-    fun onRearmInputChange(v: String) =
-        _state.update { it.copy(rearmInput = v, rearmError = null, rearmMalformed = false) }
-
-    /** A dead application re-arms with a fresh invite (auth.md "Expiry"). */
-    fun onRearm() {
-        if (_state.value.rearming) return
-        val id = extractInviteId(_state.value.rearmInput)
-        if (id == null) {
-            _state.update { it.copy(rearmMalformed = true) }
-            return
-        }
-        _state.update { it.copy(rearming = true, rearmError = null, rearmMalformed = false) }
-        viewModelScope.launch {
-            when (val outcome = onboarding.applyWithInvite(id)) {
-                is Outcome.Success -> {
-                    _state.update { it.copy(rearming = false, rearmInput = "") }
-                    registration.ensureAdvancing()
-                }
-                is Outcome.Refused -> _state.update {
-                    it.copy(rearming = false, rearmError = outcome.errors.first().code)
-                }
-                is Outcome.Failed -> _state.update {
-                    it.copy(rearming = false, rearmError = ErrorCode.INTERNAL)
                 }
             }
         }

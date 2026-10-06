@@ -132,7 +132,6 @@ class CograNavGraphTest {
             keyAttached = keyAttached,
             approvedAt = null,
             landedAt = null,
-            expiresAt = Instant.MAX,
         ),
         stagedRegistration = null,
         actorPubkey = null,

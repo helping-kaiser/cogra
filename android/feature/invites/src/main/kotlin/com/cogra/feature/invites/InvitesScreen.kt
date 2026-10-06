@@ -51,6 +51,7 @@ import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.ApplicationInfo
+import com.cogra.domain.DEFAULT_STANCE
 import com.cogra.domain.InviteLinkInfo
 import com.cogra.domain.ErrorCode
 import kotlinx.coroutines.launch
@@ -66,8 +67,6 @@ fun InvitesRoute(
         state = state,
         onBack = onBack,
         onSingleUseChange = viewModel::onSingleUseChange,
-        onPrefillPDirectedChange = viewModel::onPrefillPDirectedChange,
-        onPrefillPInterestChange = viewModel::onPrefillPInterestChange,
         onCreate = viewModel::onCreate,
         onRevoke = viewModel::onRevoke,
         onApprove = viewModel::onApprove,
@@ -89,8 +88,6 @@ fun InvitesScreen(
     state: InvitesUiState,
     onBack: () -> Unit,
     onSingleUseChange: (Boolean) -> Unit,
-    onPrefillPDirectedChange: (Double) -> Unit,
-    onPrefillPInterestChange: (Double) -> Unit,
     onCreate: () -> Unit,
     onRevoke: (String) -> Unit,
     onApprove: (String, Double, Double) -> Unit,
@@ -170,8 +167,6 @@ fun InvitesScreen(
             CreateCard(
                 state,
                 onSingleUseChange,
-                onPrefillPDirectedChange,
-                onPrefillPInterestChange,
                 onCreate,
             )
             if (state.loading) {
@@ -197,8 +192,6 @@ fun InvitesScreen(
 private fun CreateCard(
     state: InvitesUiState,
     onSingleUseChange: (Boolean) -> Unit,
-    onPrefillPDirectedChange: (Double) -> Unit,
-    onPrefillPInterestChange: (Double) -> Unit,
     onCreate: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -225,18 +218,6 @@ private fun CreateCard(
                     modifier = Modifier.padding(start = 8.dp),
                 )
             }
-            StanceSlider(
-                stringResource(R.string.stance_p_directed),
-                state.prefillPDirected,
-                onPrefillPDirectedChange,
-                "invites_p_directed",
-            )
-            StanceSlider(
-                stringResource(R.string.stance_p_interest),
-                state.prefillPInterest,
-                onPrefillPInterestChange,
-                "invites_p_interest",
-            )
             Button(
                 onClick = onCreate,
                 enabled = !state.creating,
@@ -299,7 +280,7 @@ private fun LinkCard(
                 }
             }
             link.applications.forEach { application ->
-                ApplicationRow(application, link, approvingId, seedOnDevice, onApprove, onHuskHint)
+                ApplicationRow(application, approvingId, seedOnDevice, onApprove, onHuskHint)
             }
         }
     }
@@ -308,16 +289,15 @@ private fun LinkCard(
 @Composable
 private fun ApplicationRow(
     application: ApplicationInfo,
-    link: InviteLinkInfo,
     approvingId: String?,
     seedOnDevice: Boolean,
     onApprove: (String, Double, Double) -> Unit,
     onHuskHint: () -> Unit,
 ) {
-    // The link's prefill seeds the form; the commitment happens at
-    // approval (schema: ApplicationApprovalInput).
-    var pDirected by remember { mutableStateOf(link.prefillPDirected) }
-    var pInterest by remember { mutableStateOf(link.prefillPInterest) }
+    // The stance is chosen here and commits at approval (schema:
+    // ApplicationApprovalInput); the link carries none to seed it from.
+    var pDirected by remember { mutableStateOf(DEFAULT_STANCE) }
+    var pInterest by remember { mutableStateOf(DEFAULT_STANCE) }
     // Approvable = both proofs (auth.md "Application"): email verified
     // and the device key attached; the server enforces both at approval.
     val approvable = application.emailVerified && application.keyAttached

@@ -43,13 +43,6 @@
     <string name="home_key_elsewhere_body">A signing key can only ever back one account, so this account needs its own. Creating a fresh key replaces the stored one — the other account\'s key stays restorable with its recovery code.</string>
     <string name="home_key_elsewhere_button">Create a fresh key</string>
 
-    <string name="home_rearm_title">Your application expired</string>
-    <string name="home_rearm_body">Your login is fine, but the application ran out before approval. Paste a fresh invite link to re-apply.</string>
-    <string name="home_rearm_input">Invite link or code</string>
-    <string name="home_rearm_submit">Re-apply</string>
-    <string name="home_rearm_invalid">That doesn\'t contain an invite code.</string>
-    <string name="home_rearm_unusable">This invite can\'t be used — ask your inviter for a new one.</string>
-    <string name="home_rearm_live">You already have a live application.</string>
 
     <string name="error_generic">Something went wrong. Try again.</string>
     <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>

@@ -66,8 +66,6 @@ fun StatusBannersRoute(
         onVerify = viewModel::onVerify,
         onResendEmailChange = viewModel::onResendEmailChange,
         onResend = viewModel::onResend,
-        onRearmInputChange = viewModel::onRearmInputChange,
-        onRearm = viewModel::onRearm,
         onDismissWaitingHint = viewModel::onDismissWaitingHint,
         onPDirectedChange = viewModel::onPDirectedChange,
         onPInterestChange = viewModel::onPInterestChange,
@@ -172,8 +170,6 @@ fun StatusBanners(
     onVerify: () -> Unit,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
-    onRearmInputChange: (String) -> Unit,
-    onRearm: () -> Unit,
     onDismissWaitingHint: () -> Unit,
     onPDirectedChange: (Double) -> Unit,
     onPInterestChange: (Double) -> Unit,
@@ -196,8 +192,6 @@ fun StatusBanners(
                 onVerify = onVerify,
                 onResendEmailChange = onResendEmailChange,
                 onResend = onResend,
-                onRearmInputChange = onRearmInputChange,
-                onRearm = onRearm,
                 onDismissWaitingHint = onDismissWaitingHint,
                 onStartKeyCeremony = onStartKeyCeremony,
             )
@@ -286,8 +280,6 @@ private fun ApplicantStatus(
     onVerify: () -> Unit,
     onResendEmailChange: (String) -> Unit,
     onResend: () -> Unit,
-    onRearmInputChange: (String) -> Unit,
-    onRearm: () -> Unit,
     onDismissWaitingHint: () -> Unit,
     onStartKeyCeremony: () -> Unit,
 ) {
@@ -319,7 +311,6 @@ private fun ApplicantStatus(
             )
         // The restore ask rides the screen's collapsing top.
         RegistrationProgress.AwaitingSigningKey -> Unit
-        RegistrationProgress.NeedsInvite -> RearmCard(state, onRearmInputChange, onRearm)
         RegistrationProgress.Member ->
             // Momentary: the refresh re-reads the member shape.
             Text(
@@ -420,52 +411,6 @@ private fun RestoreCard(onRestoreActor: () -> Unit) {
             }
         }
     }
-}
-
-/** A dead application re-arms with a fresh invite (auth.md "Expiry"). */
-@Composable
-private fun RearmCard(
-    state: HomeUiState,
-    onRearmInputChange: (String) -> Unit,
-    onRearm: () -> Unit,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = stringResource(R.string.home_rearm_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.testTag("home_rearm"),
-            )
-            Text(stringResource(R.string.home_rearm_body))
-            OutlinedTextField(
-                value = state.rearmInput,
-                onValueChange = onRearmInputChange,
-                label = { Text(stringResource(R.string.home_rearm_input)) },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("rearm_input"),
-            )
-            when {
-                state.rearmMalformed -> ErrorLine(R.string.home_rearm_invalid, testTag = "rearm_error")
-                state.rearmError != null -> ErrorLine(state.rearmError.rearmMessage(), testTag = "rearm_error")
-            }
-            Button(
-                onClick = onRearm,
-                enabled = state.rearmInput.isNotBlank() && !state.rearming,
-                modifier = Modifier.testTag("rearm_submit"),
-            ) {
-                Text(stringResource(R.string.home_rearm_submit))
-            }
-        }
-    }
-}
-
-private fun ErrorCode.rearmMessage(): Int = when (this) {
-    ErrorCode.INVITE_UNUSABLE -> R.string.home_rearm_unusable
-    ErrorCode.BAD_INPUT -> R.string.home_rearm_live
-    ErrorCode.RATE_LIMITED -> R.string.error_rate_limited
-    else -> R.string.error_generic
 }
 
 @Composable

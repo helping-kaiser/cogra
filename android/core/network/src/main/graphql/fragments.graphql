@@ -50,5 +50,4 @@ fragment ApplicationFields on Application {
   approvedAt
   landedAt
   createdAt
-  expiresAt
 }

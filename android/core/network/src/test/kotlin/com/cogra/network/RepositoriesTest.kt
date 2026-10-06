@@ -147,7 +147,7 @@ class RepositoriesTest {
             """{"data":{"me":{"__typename":"User","id":"u1","accountState":"APPLICANT","actorPubkey":"attached-key",
                "application":{"__typename":"Application","id":"app1","handle":"joiner",
                  "emailVerified":true,"keyAttached":false,"approvedAt":null,"landedAt":null,
-                 "createdAt":"2026-08-06T12:00:00+00:00","expiresAt":"2026-08-07T12:00:00+00:00"},
+                 "createdAt":"2026-08-06T12:00:00+00:00"},
                "stagedWrites":{"__typename":"StagedWriteConnection","edges":[
                  {"__typename":"StagedWriteEdge","node":
                   {"__typename":"StagedWrite","id":"old","state":"EXPIRED","family":"REGISTRATION",
