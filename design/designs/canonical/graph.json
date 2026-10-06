@@ -2128,7 +2128,7 @@
     { "from": "NotificationsEmpty", "via": 5, "kind": "nav", "label": "nav · Wallet", "to": [{ "board": "WalletComingSoon" }] },
     { "from": "NotificationsEmpty", "via": 6, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
-    { "from": "ChatsComingSoon", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "the root the chats icon was tapped on" }] },
+    { "from": "ChatsComingSoon", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "to where the door was opened from — the layer law: the state they left, exactly — and the label names it (readme §13, *The nav-noun sweep*): from the band's chats icon the root it was tapped on, `Back to feed`, the state the board draws, `Back to Explore`, `Back to Wallet` or `Back to your profile`; from a profile's Message, `Back to the profile`" }] },
     { "from": "ChatsComingSoon", "via": 2, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
     { "from": "ChatsComingSoon", "via": 3, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "ChatsComingSoon", "via": 4, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },
