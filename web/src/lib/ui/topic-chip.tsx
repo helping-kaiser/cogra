@@ -19,6 +19,8 @@
 
 import Link from "next/link";
 
+import { testAttributes, type DataNode } from "./data-node";
+
 export function TopicChip({
   name,
   href,
@@ -29,6 +31,8 @@ export function TopicChip({
   expanded,
   capped = false,
   testId,
+  node,
+  removeNode,
 }: {
   /** The canonical name (hashtag.md §1) — displayed as `#name`. */
   name: string;
@@ -49,12 +53,17 @@ export function TopicChip({
    * the only thing this shape adds is the promise never to wrap or shrink.
    */
   capped?: boolean;
+  /** Names the chip, and is what its controls' own ids derive from. */
   testId?: string;
+  /** The registered node the chip is; it then names the chip instead of `testId`. */
+  node?: DataNode;
+  /** The registered node the remove control is, likewise. */
+  removeNode?: DataNode;
 }) {
   const label = `#${name}`;
   return (
     <span
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       className={
         capped
           ? "inline-block flex-none whitespace-nowrap rounded-full bg-secondary-container px-3 py-1 align-middle text-label-medium text-on-secondary-container"
@@ -83,7 +92,7 @@ export function TopicChip({
         <button
           type="button"
           aria-label={removeLabel ?? `Remove ${label}`}
-          data-testid={testId !== undefined ? `${testId}-remove` : undefined}
+          {...testAttributes(removeNode, testId !== undefined ? `${testId}-remove` : undefined)}
           onClick={onRemove}
           className="flex min-h-6 min-w-6 items-center justify-center rounded-full text-on-secondary-container"
         >

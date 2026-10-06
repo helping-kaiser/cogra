@@ -19,6 +19,7 @@ import { useState } from "react";
 import { newTagDraft, type TagDraft } from "@/lib/topics/draft";
 import { previewTagName, TAG_BATCH_CAP } from "@/lib/topics/normalize";
 import { Button } from "./button";
+import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { TagParamSliders } from "./tag-param-sliders";
 import { TopicChip } from "./topic-chip";
 
@@ -28,7 +29,14 @@ export function TagEntryField({
   fieldErrors,
   cap = TAG_BATCH_CAP,
   testIdPrefix,
+  node,
 }: {
+  /**
+   * The registered section node on a registered screen (`composeDetails.tags`):
+   * its `label`, each staged chip as its `tag` (keyed by the name) with the
+   * chip's `remove`, and its `add` control.
+   */
+  node?: DataNode;
   tags: readonly TagDraft[];
   onChange: (tags: readonly TagDraft[]) => void;
   /** Per-index refusal, keyed by the server's `["tags", i, "name"]` path. */
@@ -71,8 +79,12 @@ export function TagEntryField({
   };
 
   return (
-    <div className="flex flex-col gap-2" data-testid={`${testIdPrefix}-tag-entry`}>
-      <label htmlFor={`${testIdPrefix}-tag-input`} className="text-label-large">
+    <div className="flex flex-col gap-2" {...testAttributes(node, `${testIdPrefix}-tag-entry`)}>
+      <label
+        htmlFor={`${testIdPrefix}-tag-input`}
+        className="text-label-large"
+        {...testAttributes(part(node, "label"))}
+      >
         Topics
       </label>
       {tags.length > 0 && (
@@ -87,6 +99,8 @@ export function TagEntryField({
                 selectLabel={`Adjust #${tag.name}`}
                 expanded={adjusting === index}
                 testId={`${testIdPrefix}-tag-${index}`}
+                node={instance(node, "tag", tag.name)}
+                removeNode={part(instance(node, "tag", tag.name), "remove")}
               />
               {adjusting === index && (
                 <TagParamSliders
@@ -128,6 +142,7 @@ export function TagEntryField({
         />
         <Button
           testId={`${testIdPrefix}-tag-add`}
+          node={part(node, "add")}
           variant="outline"
           size="sm"
           onClick={add}

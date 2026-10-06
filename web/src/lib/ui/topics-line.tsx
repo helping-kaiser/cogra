@@ -38,6 +38,7 @@
 
 import { useCallback, useRef, useState } from "react";
 
+import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { useMeasureEffect } from "./measure-effect";
 import { TopicChip } from "./topic-chip";
 
@@ -107,11 +108,17 @@ export function TopicsLine({
   testIdPrefix,
   onOpen,
   onOpenReferences,
+  node,
 }: {
   topics: readonly TopicsLineEntry[];
   /** How many citations the node carries — a number on a card, never a row. */
   references: number;
   testIdPrefix: string;
+  /**
+   * The registered line node (`….tagsLine`). Each chip is its `tag`, keyed by
+   * the topic's name, and the counts are its `counts`.
+   */
+  node?: DataNode;
   /** A detail surface: the whole line opens the sheet, the chips inert. */
   onOpen?: () => void;
   /** A summary card: the counts open the sheet, the chips still navigate. */
@@ -190,8 +197,11 @@ export function TopicsLine({
       href={onOpen ? undefined : `/topics/${topic.name}`}
       capped
       testId={`${testIdPrefix}-topic-${topic.name}`}
+      node={instance(node, "tag", topic.name)}
     />
   ));
+  const lineIds = testAttributes(node, `${testIdPrefix}-topics`);
+  const countsIds = testAttributes(part(node, "counts"), `${testIdPrefix}-topics-counts`);
 
   if (onOpen) {
     return (
@@ -200,13 +210,13 @@ export function TopicsLine({
         type="button"
         onClick={onOpen}
         aria-label="Topics and references"
-        data-testid={`${testIdPrefix}-topics`}
+        {...lineIds}
         className={`cg-state cg-focus w-full text-left ${LINE}`}
       >
         {probe}
         {chips}
         {counts !== null && (
-          <span className={COUNTS} data-testid={`${testIdPrefix}-topics-counts`}>
+          <span className={COUNTS} {...countsIds}>
             {counts}
           </span>
         )}
@@ -215,11 +225,7 @@ export function TopicsLine({
   }
 
   return (
-    <div
-      ref={holdLine}
-      className={LINE}
-      data-testid={`${testIdPrefix}-topics`}
-    >
+    <div ref={holdLine} className={LINE} {...lineIds}>
       {probe}
       {chips}
       {counts !== null &&
@@ -227,13 +233,13 @@ export function TopicsLine({
           <button
             type="button"
             onClick={onOpenReferences}
-            data-testid={`${testIdPrefix}-topics-counts`}
+            {...countsIds}
             className={`cg-state cg-focus ${COUNTS}`}
           >
             {counts}
           </button>
         ) : (
-          <span className={COUNTS} data-testid={`${testIdPrefix}-topics-counts`}>
+          <span className={COUNTS} {...countsIds}>
             {counts}
           </span>
         ))}

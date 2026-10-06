@@ -10,6 +10,8 @@
 
 import { useId, type ReactNode } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 /**
  * The box itself, without the label above it.
  *
@@ -206,11 +208,19 @@ export function TextField({
   cap,
   used,
   error,
+  node,
 }: {
   label: string;
   value: string;
   onChange: (next: string) => void;
+  /** Names the box the writer types in. */
   testId: string;
+  /**
+   * The registered field node on a registered screen (`composeDetails.title`):
+   * the field is the node, and its `label`, `corner` and `input` are its
+   * parts — the input then carries the node id instead of `testId`.
+   */
+  node?: DataNode;
   optional?: boolean;
   optionalLabel?: string;
   placeholder?: string;
@@ -235,22 +245,31 @@ export function TextField({
     // `min-h-0` on the field and `flex-none` on the rows around it is the
     // growth law in miniature: when the sheet runs out of room it is the BOX
     // that yields, never the label or the line that says what is wrong.
-    <div className="flex min-h-0 flex-col gap-1">
+    <div className="flex min-h-0 flex-col gap-1" {...testAttributes(node)}>
       <div className="flex flex-none items-baseline gap-2">
-        <label htmlFor={id} className="flex-1 text-label-large text-on-surface">
+        <label
+          htmlFor={id}
+          className="flex-1 text-label-large text-on-surface"
+          {...testAttributes(part(node, "label"))}
+        >
           {label}
         </label>
         {optional && (
           // Some corners say more than "Optional" — where the words land is
           // what makes them worth writing (the sensitive sheet's reason).
-          <span className="text-body-small text-on-surface-variant">{optionalLabel}</span>
+          <span
+            className="text-body-small text-on-surface-variant"
+            {...testAttributes(part(node, "corner"))}
+          >
+            {optionalLabel}
+          </span>
         )}
       </div>
       {multiline ? (
         <GrowingBox value={value} minRows={rows} disabled={disabled}>
           <textarea
             id={id}
-            data-testid={testId}
+            {...testAttributes(part(node, "input"), testId)}
             value={value}
             rows={rows}
             placeholder={placeholder}
@@ -264,7 +283,7 @@ export function TextField({
       ) : (
         <input
           id={id}
-          data-testid={testId}
+          {...testAttributes(part(node, "input"), testId)}
           type="text"
           value={value}
           placeholder={placeholder}
