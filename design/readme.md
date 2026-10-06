@@ -100,7 +100,8 @@ What that means for design work:
 | Android app (Compose, Material 3) | not recreated; its design rules are identical by contract, and the web kit is the faithful surface |
 | Marketing site, docs site | none exist in the source |
 
-**Desktop is out of design scope until the mobile set is complete.** Both
+**Desktop is out of design scope until implementation runs smoothly on
+its own** (jakob 2026-10-06; backlog item 38). Both
 clients render at phone width and that is what this system draws. A
 desktop visitor gets whatever the mobile-derived layout gives — not
 optimized, and accepted as such. The desktop variant is a design round of
