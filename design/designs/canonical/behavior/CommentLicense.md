@@ -6,4 +6,4 @@ ALWAYS the comment's license sheet carries the comment's own terms, never its po
 
 ALWAYS the license caption reads public domain and the rows still spell what it means GIVEN both of the license's axes are zero
 
-WHEN tap the scrim -> the license sheet closes AND the thread stands open beneath it as it was
+WHEN tap the scrim, swipe the license sheet down, press system Back or press Escape -> the license sheet closes AND the thread stands open beneath it as it was

@@ -12,4 +12,4 @@ ALWAYS the acts card carries the line They land together, or none does. GIVEN th
 
 WHEN press Done -> the sheet closes to the edit
 
-WHEN tap the scrim -> the sheet closes to the edit
+WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes to the edit

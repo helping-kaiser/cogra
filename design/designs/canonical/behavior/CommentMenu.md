@@ -22,4 +22,4 @@ ALWAYS Opinions on this and Cited by stand in the comment's menu whatever their 
 
 WHEN tap License terms -> the menu closes AND the comment's terms come up in a sheet over the thread
 
-WHEN tap the scrim -> the menu closes AND the thread stands open beneath it as it was
+WHEN tap the scrim, swipe the menu down, press system Back or press Escape -> the menu closes AND the thread stands open beneath it as it was
