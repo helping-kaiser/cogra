@@ -100,7 +100,8 @@ What that means for design work:
 | Android app (Compose, Material 3) | not recreated; its design rules are identical by contract, and the web kit is the faithful surface |
 | Marketing site, docs site | none exist in the source |
 
-**Desktop is out of design scope until the mobile set is complete.** Both
+**Desktop is out of design scope until implementation runs smoothly on
+its own** (jakob 2026-10-06; backlog item 38). Both
 clients render at phone width and that is what this system draws. A
 desktop visitor gets whatever the mobile-derived layout gives — not
 optimized, and accepted as such. The desktop variant is a design round of
@@ -181,7 +182,6 @@ before it is signed, and anything half-finished says who acts next.
 - `It signs 3 things, each paid separately.`
 - `Your opinion of this post drops to nothing. It stops reaching your feed, you stop earning from it, and nothing passes on through you.`
 - `Signing needs your key, which isn't in this browser — the write waits as pending.`
-- `Nothing was signed just now.` (the first line of the coach mark)
 
 **Empty and waiting states are written, not blank.**
 
@@ -371,8 +371,8 @@ them, stay soft and never manufacture urgency.
 Transparency and blur are almost absent by policy: the dialog scrim is
 `scrim` at 50%, and the only other translucency is the resting stance
 face at 40% opacity + grayscale, which means "no opinion yet". Blur is
-reserved for the sensitive-content veil of §9 (gentle, tap to reveal) —
-not yet built. No frosted glass, no protection gradients: type sits on a
+reserved for the sensitive-content veil of §9 (gentle, tap to reveal).
+No frosted glass, no protection gradients: type sits on a
 solid role, so it never needs a gradient to survive.
 
 ### Borders
@@ -389,7 +389,7 @@ came from; it never performs.** **Reduced motion is a house quality
 bar** (jakob, the key-loss round): WCAG places it at AAA, and the house
 holds every surface to it anyway — on both platforms, under the OS's
 own preference, every motion either stops travelling and fading or
-does not run.
+does not run, save the hold's ring (below).
 
 **Every motion in the product is in this table, and nothing else moves**
 (the K13 round; `tokens/motion.css`, `tokens/transitions.css`, the
@@ -418,7 +418,10 @@ stagger — and one transition is on screen at a time. **The handover and
 the squish are the arrival exceptions**, and they are the transition
 itself: the one frame the reader is following carries over while the
 screen around it arrives whole. Under `prefers-reduced-motion` every row
-above still swaps; it just does not travel or fade.
+above still swaps; it just does not travel or fade. **The hold's ring is
+the one exception**: it still fills, because it is a reading of the
+time left rather than a movement (blessed as drawn, jakob 2026-10-05;
+`StanceControl`).
 
 **Android's predictive back follows the finger** (targetSdk 36): the
 back gesture drives the back motion by its progress — the same geometry
@@ -630,9 +633,9 @@ would stand; never a body, a description or a bio. `@handle <text>`
 scopes the query to one person's work, their comments found through the
 titles of what they answer; `#tag <text>` scopes it inside a tag.
 Explore searches the graph, in its ranked tiers (§13, *The search
-rulings*); History searches the reader's seen-list, newest-seen first. A
-query that finds nothing says so in the list's place and offers the way
-back (`ExploreNone`, `HistoryNone`).
+rulings*); History searches the reader's seen-list, newest first by
+first seeing. A query that finds nothing says so in the list's place and
+offers the way back (`ExploreNone`, `HistoryNone`).
 
 ### Orientation
 
@@ -654,7 +657,7 @@ column at its 42rem.
 where they do not — the *designed* placeholder, not a gap waiting to
 be filled, and where a picture fails to load it is what shows.
 
-**Photography now exists as mock material** (`assets/photos/`, ten real
+**Photography exists as mock material** (`assets/photos/`, ten real
 photographs at true ratios — food, people, animals, scenery). It is
 there so media layouts can be judged at real ratios, and it sets the
 register: the everyday-post register, warm and human per §1 of
@@ -680,42 +683,14 @@ fills is the most common way an icon set starts to look accidental.
   `web/src/lib/ui/icons.tsx`. There is **no icon font and no external
   fetch** in the product.
 
-**The complete set the product uses today** — it is small on purpose:
-
-| Glyph | Where |
-|---|---|
-| `dynamic_feed` | bottom bar, feed slot (one drawing for both selection states; selection shows in colour) |
-| `person` (filled + outlined) | bottom bar, profile slot |
-| `add` | bottom bar, the compose action |
-| `search` | bottom bar, the explore slot |
-| `account_balance_wallet` | bottom bar, the wallet slot |
-| `visibility` / `visibility_off` | password field toggle |
-| `settings` | profile top bar |
-| `arrow_back` | every page header |
-| `more_vert` | every overflow menu — a post's, a comment's, and either profile's actions row |
-| `chat_bubble` | the comments affordance on a card |
-| `volume_up` / `volume_off` | a video's sound toggle |
-| `graph_3` | the Feed score |
-| `bookmark` | the unsave control on a Saved row — the system's own addition (the review-fix round), not yet in the product's set |
-| `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
-| `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
-| `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
-| `lock` / `lock_outline` | a chat message sent encrypted, and the chat foot's lock toggle, whose state is its fill — the post-MVP chats round's; `lock_outline` is the system's own addition, `person`'s two-cut precedent |
-| `add_comment` | the chats list's floating New chat — the post-MVP chats round's, the system's own addition |
-| `mic` | the chat foot's voice note, hold to record, standing where the send arrow stands while the field is empty — the post-MVP chats integration round's, the system's own addition |
-| `delete` | the locked voice recording's discard — the post-MVP chats integration round's, the system's own addition |
-
-**All of them are inlined** — path data in `Icon`, reference copies in
-`assets/icons/`. All but `graph_3` are the classic **filled** 24px
-variant, verbatim from `material-design-icons`, which is the exact set
-and variant the product itself inlines, so web and Android match. **The hosted-font
-substitution is gone** (2026-08-26): no icon font, no external request,
-which is what the product does.
-
-The web client's interim words (`Show`/`Hide`, `Settings`) and its `←`
-character were placeholders for icons it had not inlined. The icons
-exist now, so the glyph is the answer everywhere — with a label in the
-accessibility tree, never a word beside the glyph.
+**The set lives in one place**: `guidelines/iconography.md` lists every
+glyph `Icon` holds, where each is used, and its call. All of them are
+inlined — path data in `Icon`, reference copies in `assets/icons/` — and
+all but `graph_3` are the classic **filled** 24px variant, verbatim from
+`material-design-icons`, which is the exact set and variant the product
+itself inlines, so web and Android match. The glyph is the answer
+everywhere — with a label in the accessibility tree, never a word beside
+the glyph.
 
 **One derived glyph, recorded:** `graph_3` exists only in the newer
 Material *Symbols* set and has no FILL-1 cut, so ours is the official
@@ -767,16 +742,16 @@ is a different thing from a piece the apps have not reached yet.
 | Directory | Components |
 |---|---|
 | `components/core/` | `Button`, `InlineAction`, `Card`, `ContentRow`, `FactRow`, `SettingsGroup`, `SettingsRow`, `Switch`, `SectionLabel`, `QuietNote`, `QuotedRow`, `Snackbar`, `JoinPrompt`, `DialogSurface`, `BottomSheet`, `SheetItem`, `SheetTitle`, `Chip`, `TopicChip`, `HelpDot`, `MoneyFigure`, `CgtMark` |
-| `components/content/` | `PostCard`, `CommentCard`, `OverflowMenu`, `TopicsLine`, `ReferenceRow`, `ShareButton`, `NodeMark` |
-| `components/forms/` | `TextField`, `FieldLabel`, `FieldSupport`, `FieldCount`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
-| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FilterTrigger`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `DeletionBand`, `CograBand`, `BandIcon` |
-| `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `CitedSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `StagedReference`, `TopicRemovable`, `Caret` |
+| `components/content/` | `PostCard`, `CommentCard`, `GlyphAction`, `OverflowMenu`, `TopicsLine`, `TaggedRow`, `ReferenceRow`, `ShareButton`, `NodeMark` |
+| `components/forms/` | `TextField`, `FieldLabel`, `FieldSupport`, `FieldCount`, `PasswordField`, `Checkbox`, `LicenseChooser`, `LicenseSummary`, `LicenseTerms`, `RecoveryCode`, `SearchBar` |
+| `components/navigation/` | `PageHeader`, `BottomNav`, `TabBar`, `CollapsingTop`, `BackToTop`, `Icon`, `SegmentedFilter`, `FeedFilter`, `FeedFilterSheet`, `FilterTrigger`, `FilterFoot`, `OrderSection`, `FilterSection`, `BorrowedViewBand`, `DeletionBand`, `CograBand`, `BandIcon` |
+| `components/compose/` | `WizardHeader`, `WizardFooter`, `SealFooter`, `ActsFooter`, `ActsCard`, `MediaThumb`, `PickPrompt`, `PickTray`, `PickedRow`, `PickedSheet`, `CitedSheet`, `TagsSheet`, `DescribeCounter`, `DescribeSheet`, `UploadStatusLine`, `UploadErrorLine`, `RefusedFile`, `CoverRow`, `CropViewport`, `CropZoom`, `StagedReference`, `TopicRemovable`, `Caret` |
 | `components/wallet/` | `WashCard`, `WalletBalance`, `EarnedChart`, `LedgerRow`, `PayoutAddress`, `PayoutAddressRow` |
 | `components/people/` | `MonogramAvatar`, `ActorChip`, `ProfileHeader`, `StanceRow` |
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
-| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `StanceCoachMark`, `SeveranceConfirm` |
-| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
 The pair a component is documented by is its **module file's**: every
@@ -815,7 +790,6 @@ which is what makes a guess expensive.
 | Piece | Decided, so built | Open, so absent |
 |---|---|---|
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the product's one figure is the score every ranked card wears (the Feed score, on a post, a comment, a person and a tag alike) and its explanation is four screens deep | — |
-| `SensitiveVeil`, `RedactedContent` | §9's two content states: sensitive veiling the whole body (media, text and description) as one, title and tags outside, naming whose mark it is, one tap revealing everything, content kept mounted so revealing moves nothing — a comment's body replaced by one compact block instead; redaction taking the whole record and leaving its skeleton. No `error` colouring in either | where a words-only post names its source, having no wash to carry the line |
 
 The **five-slot bottom bar** is not in this group: `design.md` §6 already
 fixes the slots and their order, so `BottomNav` simply accepts
@@ -840,12 +814,10 @@ Called for by `design.md` §6/§9 and absent from the current product
 code, so absent here too. They are the honest gaps, not omissions to
 paper over:
 
-- **Topic chip**, **Collective** actor variant.
-- **Removed placeholder** and **Sensitive veil** (§9) — specified,
-  unimplemented.
-- **Search** and **Wallet** surfaces — their bar slots exist in
-  `BottomNav` (§7.1), the screens behind them do not.
-- **Bottom sheets**.
+- **Collective** actor variant.
+- **Wallet** surface — its bar slot exists in `BottomNav` (§7.1) and
+  opens the coming-soon door (`WalletComingSoon`); the wallet itself is
+  post-MVP.
 
 ### Intentional additions
 
@@ -933,7 +905,7 @@ paper over:
 - `SettingsGroup` / `SettingsRow` / `Switch` — the settings anatomy, and the
   house switch with it. Both apps ship a settings screen whose sections each
   invented a layout, and the design had drawn none of it; one row shape is
-  what lets a page of eight groups read as a page. A quiet heading above, a
+  what lets a page of eleven groups read as a page. A quiet heading above, a
   filled card of rows, a footnote under — the footnote being what keeps a row
   to one line of status. The trailing edge is the variant (a switch, a value
   and a chevron, a chevron, or a control of the row's own), and the chevron
@@ -960,14 +932,17 @@ own (§3). All four quadrants are legitimate.
   pair. A viewer with no opinion sees a **muted, translucent 🫥** —
   never a bare word.
 - **A plain tap** blooms the pad at the lower centre of the viewport and
-  stages nothing. The **first open ever teaches** — the coach mark rides
-  inside the pad and names the shortcut.
+  stages nothing. The **first open ever teaches**, wherever that pad
+  opens — two coaching lines: how the pad opens and its press-and-hold
+  shortcut, then that nothing is signed until Set and that the input can
+  be swapped in settings. They close with the pad and never show again.
 - **Press and hold 500ms** commits a modest positive `(+0.1, +0.1)`
   outright. The light gesture opens, the held one spends: nobody holds a
   control for half a second by mistake.
 - The pad's drawn field *is* the value space: its corners are
   `(±1, ±1)` and the knob never leaves it. Horizontal runs Against → For,
-  vertical runs Less → More, and those four words are drawn on the field.
+  vertical runs Less → More, and those four words sit outside the field,
+  in gutters around it, so nothing but dead ground stays inside.
 - **Releasing the finger never commits.** Release parks the pick, an
   explicit **Set** signs it, **Cancel** or a press outside stages
   nothing.
@@ -990,9 +965,9 @@ own (§3). All four quadrants are legitimate.
 - **Where the anchors sit is recorded on the anchor-map card**
   (`components/stance/anchor-map.card.html`) — the twenty on the
   two-axis field and the six pure-valence ones on the strip, each at its
-  own coordinate. It is a reference for implementers: the product field
-  draws its four axis words and nothing else, and the anchors' words
-  stay accessibility-only.
+  own coordinate. It is a reference for implementers: the product pad
+  draws its four axis words around the field and nothing else, and the
+  anchors' words stay accessibility-only.
 - Paired sliders and direct entry are the alternate *and* accessible
   path; choosing one replaces the pad everywhere.
 
@@ -1209,8 +1184,8 @@ transient line is read away from the pad, so it *is* the accessible text.
 
 **The axes are renamed and their ends are named.** `How you stand` →
 **For or against**, `In your world` → **How much reaches you**, with
-`Against`/`For` and `Less`/`More` drawn on the pad's field and under the
-sliders. The originals were the repo's own framing rather than words a
+`Against`/`For` and `Less`/`More` drawn in gutters outside the pad's
+field and under the sliders. The originals were the repo's own framing rather than words a
 reader could act on, and a square with no edge labels taught nothing.
 
 **Three labelled readouts, formatted alike.** `Current opinion` ·
@@ -1228,10 +1203,10 @@ alternates' first line instead teaches the thing two sliders cannot —
 would push `Set` away from the thumb, and in the centred dialog it would
 move every button. `Set` is disabled while the pad's help shows.
 
-**The coach mark says less** — two facts (a tap opens the pad; a hold
-signs `+0.10 / +0.10`) instead of five at the moment a reader is least
-willing to read. `Nothing was signed just now.` stays: it is the line
-the mark exists for.
+**The first-open teaching says less** — two coaching lines (how the pad
+opens and that a hold signs `+0.10 / +0.10`; that nothing is signed
+until Set and the input can be swapped) instead of five facts at the
+moment a reader is least willing to read.
 
 **The non-drag route is not drawn, and it is renamed.** `Choose values`
 was a `primary` text button beside every stance, so a feed of twenty
@@ -1298,7 +1273,7 @@ product puts the picture first.
   surface opts in. Found while building the core loop.
 - `StanceControl` re-syncs `taught` when the prop turns true, the way it
   already re-synced `bundle`. Without it a shell that flips "taught" after
-  the first coach mark taught again on the next card down.
+  the first-open teaching showed again on the next card down.
 - `Snackbar` carries the whole `body-medium` role, not just its size —
   mounted under a heading it inherited the wrong weight.
 - `Snackbar`'s bottom offset is a prop. The source hardcodes 80px to
@@ -1357,13 +1332,19 @@ the profile, the affordances act.
 `chat_bubble` plus the count, the same shape as the score beside it. It
 opens the *same* detail view, scrolled so the comments lead: the post and
 its affordances sit just above the fold, so a short thread still shows
-its post.
+its post. (The affordance opens the comments sheet instead — §13,
+*Comments live in a sheet*.)
 
 **Icons: all inlined, hosted font dropped.** See §5.
 
 **Real photography** for mock material. See §4, *Imagery*.
 
 ### Design-ready, not yet built
+
+Drawn since: the drill-down (§13, *The
+score-and-opinions round*), `RedactedContent` and `SensitiveVeil` (§9),
+search for Explore (§13, *The search rulings*) and the wallet's masters
+in `components/wallet/`.
 
 **The score is "Feed score" to readers**, and its drill-down is
 **four full screens, not nested containers**: FeedEntry → RankPath →
@@ -1391,16 +1372,14 @@ region** — media, text, and
 description together, under a single veil with one reveal. The title
 stays outside it, so a reader can tell what they are choosing to
 reveal. Picture-by-picture blur inside a gallery is the UI this rule
-exists to avoid. Neither state may use `error` colouring. Genuinely
-open inside that: the literal copy, and the blur radius and overlay.
+exists to avoid. Neither state may use `error` colouring.
 
 **Feed, Search, Explore, Wallet, and the marketplace** are product
 surfaces whose decisions are recorded in the product docs rather than
 here — a feed is a list of ranked nodes rather than a list of posts,
-Explore is a 3D view of the graph, Wallet holds balances and earnings,
-and the marketplace is entered from both the feed and a profile. None has
-produced a component yet; when one does, the component lands here and the
-roadmap stays there.
+Wallet holds balances and earnings, and the marketplace is entered from
+both the feed and a profile. A component lands here when one of them
+produces it; the roadmap stays there.
 
 **Both clients follow one design, 1:1.** Neither leads: web (at mobile
 width) and Android render the same design, Material-aligned, differing
@@ -1409,9 +1388,6 @@ only in the browser around the web one.
 ### Still open
 
 - Palette, type, and shape stay as they are until a problem shows up.
-- The sensitive blur *treatment*: radius and overlay. Its granularity is
-  settled (blur only what is marked), and so is its scope — one reveal
-  per post, lasting the session.
 - Nothing on the icon list: the last gap closed with a derived FILL-1
   `graph_3` (§5).
 
@@ -1473,9 +1449,10 @@ whatever it parks over — the bottom bar where one exists, a sheet's
 bottom edge otherwise, the keyboard while one is up; one number
 everywhere (ruled 2026-09-10). First-time onboarding is
 per-control, never a tour, and on the entry screens only the pad
-carries it — what it is for, how it opens, that nothing signs until
-Set, and that the input can be swapped in settings. Beside those
-marks stands **one skippable intro** (ruled 2026-09-14): five
+carries it — two coaching lines on the account's first-ever pad open:
+how it opens and its press-and-hold shortcut, then that nothing signs
+until Set and that the input can be swapped in settings. Beside those
+lines stands **one skippable intro** (ruled 2026-09-14): five
 full-screen cards — the feed is your own steps, opinions have a
 shape, everything is public, nothing is lost, someone brings you in
 — fired on the first authenticated feed entry, from applicant on,
@@ -1485,8 +1462,8 @@ leaves for the feed the intro opened over — or for Settings, when
 Settings re-opened it. The buttons are the only movement: no swipe in
 V1.0, and Android's Back walks the cards back, card 1 leaving as Skip
 does (jakob 2026-10-05). It teaches what the product IS rather
-than what a control does, so it neither replaces a coach mark nor
-adds one; the per-control marks are unchanged by it. The last card
+than what a control does, so it neither replaces the pad's coaching
+lines nor adds any; the per-control teaching is unchanged by it. The last card
 carries the applicant's one task — the friend who sent the invite
 still has to let them in — and its inviter face is personalized by
 the client to the actual link-issuer's avatar, the monogram
@@ -2216,11 +2193,14 @@ entry first". What stands:
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad, and the three pattern boards — the guest gate, the
   network error, key-absent acting) rather than duplicated boards.
+  (Every one of those gaps is drawn since; the canonical graph holds
+  none.)
 - **The tag picker's interim entry** (jakob 2026-09-02): until the
   picker board exists, the apps' entry is the existing tag field,
   opened as a sheet from the seal. The gap and the blocked
   `add-a-topic` flow stand — the interim is what the apps ship, not
-  the design owed.
+  the design owed. (`TagPicker` is drawn since 2026-09-09, and the flow
+  resolves.)
 - **The profile round (2026-09-01, item 23 round 1)** drew the
   surface slice 2.1 shipped undesigned — eight boards: your own,
   someone else's, applicant days, the stances page, the posts and
@@ -3433,7 +3413,8 @@ whole canvas rather than a fix to one board.
   door. A guest's band still gates instead: `Main`, `FeedBare` and
   `WalletGuest` send chats to `GuestGate`, because a guest has no chats
   to come back to. The *Message* control on another's profile is a
-  different affordance and still owes its own destination.
+  different affordance and still owes its own destination. (It opens
+  `ChatsComingSoon` too since — §13, *The chats-routing close*.)
 - **The guest and applicant bands ship now; the rank waits.** A band
   that names whose view this is tells the truth the moment it is drawn,
   and the vantage it names — the genesis moderator for a bare arrival,
@@ -3464,7 +3445,9 @@ it a home. Ruled by jakob the same day (backlog item 20).
   the reader leaves rather than a place they live in, so it carries no
   bottom bar and the back arrow goes where the gear was. The board draws
   the whole scroll: the ruling this round records is an order, and an
-  order cut off at 844px is an order nobody can review.
+  order cut off at 844px is an order nobody can review. (Later rounds
+  add People, About and Delete account — eleven groups; `SettingsBody`
+  draws the current order.)
 - **`SettingsGroup` and `SettingsRow` are the anatomy**, minted here
   because eight groups improvising eight layouts is the page the ruling
   asked us to leave behind. A quiet heading above, a filled card of
@@ -3787,7 +3770,8 @@ one sitting.
   post in front of the reader — an edit carries complete state and may
   flip the kind outright, every picture replaced by words or the words
   by a gallery. Web's profile save answers with nothing; a snackbar line
-  is drafted and awaits blessing.
+  is drafted and awaits blessing. (Blessed since, with the small-rulings
+  batch — copy-voice.)
 
 ### The citation's pair, and the settling row — 2026-09-10
 
@@ -3864,7 +3848,8 @@ four-rung ladder.
   one outcome reached two ways — a rung a reader has to be told about,
   and a control that tells them. The pill is the feed's, because the
   feed is the root with a top the reader is trying to get back to —
-  and History's, which is a feed (jakob 2026-10-05); it needs 3 viewport-heights of depth (jakob 2026-10-02), since shallower the
+  and History's, which is a feed (jakob 2026-10-05); it needs 3
+  viewport-heights of depth (jakob 2026-10-02), since shallower the
   returning band has already brought the top within a flick; and it is
   drawn OUTSIDE the collapsing block, because height added to that block
   moves the band's own threshold and re-clamps the list (item 45.3).
@@ -4285,7 +4270,8 @@ row's geometry is identical in both modes.
   `(+0.1, +0.1)` takes a held finger. The price is accepted
   deliberately, because nobody holds a control for half a second by
   mistake. The one-time coach mark moves to the pad's first open,
-  inside the pad, and what it teaches is the shortcut.
+  inside the pad, and what it teaches is the shortcut. (The two coaching
+  lines replace the mark — §8, 2026-10-06.)
 - **The affordance rows spread.** `PostCard`'s and `CommentCard`'s
   controls sit at even intervals across the card's full width — the
   social pattern a thumb already has a habit for — and every control in
@@ -4318,7 +4304,9 @@ Ruled by jakob the same day.
   which is a row there rather than a glyph on the band.
   The dot keeps the slot left of the gear: Material's app bar would put
   an overflow last, and the gear has been the band's right edge since
-  the profile round, where every reader already aims at it.
+  the profile round, where every reader already aims at it. (The band
+  law supersedes the placement: the ⋮ moves to the Edit profile ·
+  Invites row — §13, *The review-fix round*.)
 - **Saved is ONE MIXED LIST** (jakob). Posts, comments and people in
   one column, newest first by when they were saved, because a reader
   looking for the thing they kept on Tuesday is looking for a moment
@@ -4330,13 +4318,13 @@ Ruled by jakob the same day.
   round disc means here. The chat message is the fourth saveable kind
   and waits for the chat round: it joins this list rather than starting
   a second one.
-- **History is posts only, ordered by the LATEST time you saw one**
+- **History is posts only, ordered by the first time you saw one**
   (jakob). Saving is a deliberate act on anything; being seen is
   something posts do in a feed, and a history that collected every
-  profile a thumb passed would be a log. A post read twice sits where
-  the second reading put it, so the list the apps read is ordered by
-  the most recent seen event — `ViewHistoryEdge` carries `firstSeenAt`
-  alone today, and the contract follows the drawing.
+  profile a thumb passed would be a log. A post read twice keeps the
+  place its first reading gave it — `ViewHistoryEdge` carries
+  `firstSeenAt`. (The History redesign, 2026-10-05, widens the list to
+  every served kind.)
 - **Both lists are drawn empty too**, and each empty state says why it
   is empty rather than that it is. Saving leaves no mark on a card —
   jakob's ruling that nothing outside the ⋮ shows a saved state — so
@@ -4476,7 +4464,9 @@ drew against it. Ruled by jakob the same day.
   profile's gear — because one corner everywhere is what makes it
   findable, and a different corner per tab is four things to learn. It
   rides `CograBand` built in, the way chats does, so no board hand-builds
-  it and `bell={false}` is the only way to be without one.
+  it and `bell={false}` is the only way to be without one. (The band
+  law sets the whole cluster since: the screen's own control · chats ·
+  bell — §13, *The review-fix round*.)
 - **Guests have no bell; applicants do.** Nothing can be addressed to an
   account that does not exist, so `Main`, `FeedBare`, `GuestGate` and
   `WalletGuest` opt out. An applicant is an addressee already — the
@@ -4592,7 +4582,9 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   is deleted in 6 days.` — spelled out, because the ladder's compression
   buys room in lists where many ages compete for it and buys nothing in a
   band, while `6d` means *ago* everywhere else in the product. The two
-  alternatives and the reasoning are in `copy-voice.md`.
+  alternatives and the reasoning are in `copy-voice.md`. (Ruled
+  2026-09-14: forward moments read the ladder forward, `in 6 days` —
+  copy-voice, *Ages*.)
 - **The cancel is a snackbar, and it has no Undo.** The band is on every
   surface, so the cancel is pressed anywhere; a confirmation screen would
   move a reader who tapped two words mid-scroll. The settings round
@@ -5295,8 +5287,9 @@ closes a place where the canvas knew a rule and had never drawn it.
   `BackToTop`, a `Back to top` pill that rides in with the returning
   collapsing band, centred under it, doing exactly what the rung does.
   The two are one outcome reached two ways, which is why the graph gives
-  them one destination. **Feed only**, because only the feed has a top
-  the reader is trying to get back to, and only past 3 viewport-heights
+  them one destination. **The feed's and History's** (History is a
+  feed, jakob 2026-10-05), because only a feed has a top the reader is
+  trying to get back to, and only past 3 viewport-heights
   of depth, because shallower the returning band has already brought the
   top within a flick.
 - **AND IT IS DRAWN OUTSIDE THE COLLAPSING BLOCK.** The region hides
@@ -6614,7 +6607,7 @@ on the Chats page. The masters grew in the tree's prelude —
   (`secondary-container`): the bar's compose action keeps the one loud
   surface, and opening a picker commits nothing.
 - **The list collapses; the thread pins (jakob).** The chats list is a
-  surface a reader dwells in, so it moves to §2's Collapses column and
+  surface a reader dwells in, so it moves to §4's Collapses column and
   takes `CollapsingTop`; a chat's thread keeps its pin.
 - **Previews decrypt wherever the reader holds the key (jakob).** Push
   already shows the words, so hiding them on the list is annoyance
@@ -7111,10 +7104,11 @@ search:
 - **All chats, never just the viewer's.** A scoped message result
   reaches any plaintext chat — chats are public reads, so the scope
   is the author, not the viewer's membership.
-- **The default mix carries the seven direct kinds.** Selecting an
-  indirect kind without a scope shows a quiet line pointing at the
-  scope operator instead of results (its string is a copy-voice
-  candidate, awaiting blessing).
+- **The default mix carries the direct kinds** — in V1.0 posts,
+  profiles and tags, with comments indirect (§13, *The V1.0 scope
+  cut*). Selecting an indirect kind without a scope shows a quiet line
+  pointing at the scope operator instead of results (its string is
+  copy-voice's, blessed 2026-10-06).
 - `ExploreSearch` already draws exactly this — its rows are an
   @-scoped query's indirect hits — so no board moves; api-spec gains
   the scoped-join paragraph.
@@ -7141,91 +7135,6 @@ transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
 - The board is a **declared entry** in the graph's own idiom —
   the same detail any non-portrait clip tap opens, in the state
   the record brings, not a different tap.
-
-The canonical tree draws one app and is graded as one thing. The editor
-it is reviewed in holds 200 files per canvas and publishes 16MB, and at
-191 boards the tree stood on both ceilings — so the *review* splits into
-four canvases while the tree itself stays whole. `designs/postmvp/` is
-the second tree and brings the fifth canvas with it (§13, *The post-MVP
-separation*); the four below are the MVP's, and they are what
-implementation reads.
-
-**A tree is the master.** The board files and its own `canvas.json` are
-the graded truth: coordinates, page assignment, annotations, and the
-flow graph beside them. The canvases are review surfaces — claude.ai
-artifacts seeded from that master, each carrying the boards of the pages
-it serves. Nothing is decided on a canvas that is not written back into
-the tree; a canvas is re-seeded from the tree, never the other way
-round.
-
-**Which canvas serves which pages:**
-
-| Canvas | `id` | Pages | Opens on |
-|---|---|---|---|
-| [CoGra · Feed and comments](https://claude.ai/code/artifact/012e4ee6-edd1-4cbe-98ab-b45c58aa4c34) | `feed` | Feed & Search · Comments | Feed & Search |
-| [CoGra · Profile and settings](https://claude.ai/code/artifact/1102bec0-50a9-41b2-84da-a6215afd2d2a) | `profile` | Profile | Profile |
-| [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
-| [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
-
-The fifth is the post-MVP tree's own —
-[CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
-id `postmvp`, serving the Push notifications, Change histories, Chats
-and Money & Wallet pages and opening on the first. It lives in the
-successor canvas tooling (the Design Artifact type): the same seed
-manifests, published as the
-artifact's own board files rather than through the old seeded editor.
-Its predecessor artifact stands frozen with the pre-migration
-versions in its picker.
-
-A canvas title never carries `< > & "` or a backslash — the editor
-refuses them at seed time, which is why the titles say "and". The old
-single-canvas artifact stands as a signpost to all five — the MVP four
-and the post-MVP canvas beneath them; its version picker keeps the
-pre-split monolith.
-
-That map is data, not a habit: each tree's own `canvases.json` holds
-it, hand-maintained — each entry carries its canvas's published `url`,
-the links in the table above — and `_build/gen-canvases.mjs` writes one seed
-manifest per canvas under `<tree>/canvases/<id>/` — the
-artboards and annotations of its pages with coordinates verbatim, the
-page bar in the order above, plus an `images.json` naming the
-photographs its boards actually reference, so seeding a canvas reads
-one directory and scans nothing. The manifests are generated and
-committed the way the maps are; the stage fails on a page no canvas
-claims or two canvases claim, a canvas over its file or byte budget,
-and on a committed manifest that regeneration no longer reproduces.
-
-**A board joins a canvas by its page.** Nothing on a board names a
-canvas — membership is read from the `page` every artboard already
-carries, so a new board lands on the canvas that serves its page the
-moment the manifests regenerate. Moving a page to another canvas is an
-edit to `canvases.json` and nothing else.
-
-**The budgets are per-canvas.** A photograph counts against the canvas
-that carries it rather than one global pool, and an image two canvases
-need is seeded into both — which is what ends the squeeze that made
-every new picture a trade against an old one. The stage prints each
-canvas's boards, images, file count, bytes and headroom, and holds the
-file count at 180, under the 200 so the margin is visible before it is
-a wall.
-
-**Implementation cites board files, never canvas URLs.** A canvas URL
-names a review surface that gets re-seeded and re-published; the board
-file is what holds still and what CI grades. Briefs, hand-test notes
-and PR bodies name `ProfileEdit.dc.html`, not the artifact it happens
-to be visible in today.
-
-**Cross-canvas edges are ordinary; cross-tree edges do not exist.** One
-flow graph spans a tree's canvases — `graph.json` knows boards and
-pages, not canvases — so an edge from a compose board to a feed board is
-normal wiring, drawn with the same `⤴ page` marker the maps already use
-for a cross-page jump. Reachability, entries and gaps are checked over
-that whole graph; no canvas is ever checked alone. A tree's graph stops
-at the tree, though: a post-MVP board cannot point at a canonical one,
-because the round it belongs to has not landed in the app the canonical
-graph describes. It gets its edges when it migrates.
-
----
 
 ### The V1.0 scope cut — 2026-09-25
 
@@ -7398,7 +7307,8 @@ they turn a kind on, on one new board, `FeedKinds`.
   drawn at the filter's default, `Posts` alone, so the kinds arrive the way
   the post-MVP chat and message cards did (`ChatFeedCards`): the kinds
   turned on, the trigger reading `4 kinds`, the new cards leading and a post
-  below them. The filter sheet's way out lands on it.
+  below them. The filter sheet's way out lands on it. (At the full set
+  the trigger reads `All kinds` since — §13, *The pill's full set*.)
 - **Each kind keeps the idiom it already wears** (`_shared.jsx`, the V1.0
   feed kinds). The comment is `CommentCard` in its out-of-thread shape — the
   target pointer leading, as on `ProfileComments` and `TagPage` — with
@@ -7774,11 +7684,13 @@ anatomies.
   card opens the post's comment section scrolled to this comment. The
   reply is the comment glyph, opening that same place with the composer
   already aimed at the comment, and share closes the row.
-- **Replies never appear in the feed** (jakob). A comment's replies live
-  in its thread; the card carries no `View n replies` line, because the
-  feed ranks the comment and the card itself is the door to its branch.
-  `behavior/FeedKinds.md` holds it, with where the card's door and its
-  reply land.
+- **The reply expansion never appears in a feed** (jakob). A reply is a
+  comment targeting a comment, and as standalone content its card may
+  appear in any feed; what lives only in the thread is the expansion
+  under a card — the card carries no `View n replies` line, because in a
+  feed the comment is the content and the card itself is the door to its
+  branch. `behavior/FeedKinds.md` holds it, with where the card's door
+  and its reply land.
 - **The person is the top of their profile**: a 56px picture, the name in
   a title's weight, the handle under it, the bio in the quiet colour,
   folded at two lines. The opinion is the row's standard face, the control
@@ -7857,7 +7769,8 @@ jakob's rulings from his review of the day's rounds.
   `Send by email` is visible and disabled with `Nothing to send yet`
   above it (`ReportProblemEmpty`, the disabled-submit law); leaving with
   Back keeps the words. The page moved into `_shared` as
-  `ReportProblemBody`.
+  `ReportProblemBody`. (Send is live from an empty field since — §13,
+  *The settings and pads rulings executed*.)
 - **Blessed** (jakob): the failure pack's in-flight labels and faults by
   code, the write rule's lines, the failure fixes' lines and the support
   stack's, `settled only`, and the comment-removal strings. The reply
@@ -8987,7 +8900,7 @@ day: the tick is kept, and there are no UI sounds.
   handover and the reel's squish as shared elements and arrival
   exceptions, the collapsing top, in-place changes, `Back to top` and the
   hold's ring; predictive back follows the finger. `motion.css` and the
-  Motion card lose the stale long-press row.
+  Motion card rewrite the stale long-press row.
 - **Haptics only where the platform documents one, Android only** — the
   hold's commit, the reorder's lift, the knob's tick at the zero lines
   and the clamp — **and no UI sounds** (§4). jakob's phone has no
@@ -9044,8 +8957,8 @@ searchable and filterable, in V1.0.
   exactly that list and defines nothing of its own.
 - **Every served kind, as its own feed card**, unchanged and fully live
   — posts, comments, profiles and tags, and every kind the feed serves
-  later. Newest-seen first, one card per thing, at its latest seeing;
-  the scores do not order it. The row form, its disc and its trailing
+  later. Newest first by first seeing, one card per thing; a re-seen
+  thing never moves, and the scores do not order it. The row form, its disc and its trailing
   age are gone.
 - **Search and a kinds filter ride the top** (a lane call, flagged for
   the canvas pass): the search bar, `Search your history`, and under it
@@ -9167,7 +9080,9 @@ quoted wording is blessed unless marked flagged.
   following (flagged).
 - **The kept picks.** The review and its seal carry `An approval waits on
   Invites — it signs on its own there.` with `Open Invites` when a kept
-  approval also waits (the `approval` chip, flagged); the seal's bug
+  approval also waits (the `approval` chip, flagged — reworded since to
+  `An approval waits in your invites — go there to sign it.`, blessed,
+  copy-voice); the seal's bug
   notice leaves by `Not now`, back to the review. The post edit's bug way
   out is `Discard the edit`, the profile and picture seals' `Not now`
   (both flagged); the comment edit's write rule ends `…your edit is still
@@ -9287,6 +9202,95 @@ blessed, every `13X-final` recommendation adopted.
   resolved, 274 sidecars; five boards re-render. What stays open is
   backlog `13X-close-bite`.
 
+---
+
+## 14. The canvases
+
+The canonical tree draws one app and is graded as one thing. The editor
+it is reviewed in holds 200 files per canvas and publishes 16MB, and at
+191 boards the tree stood on both ceilings — so the *review* splits into
+four canvases while the tree itself stays whole. `designs/postmvp/` is
+the second tree and brings the fifth canvas with it (§13, *The post-MVP
+separation*); the four below are the MVP's, and they are what
+implementation reads.
+
+**A tree is the master.** The board files and its own `canvas.json` are
+the graded truth: coordinates, page assignment, annotations, and the
+flow graph beside them. The canvases are review surfaces — claude.ai
+artifacts seeded from that master, each carrying the boards of the pages
+it serves. Nothing is decided on a canvas that is not written back into
+the tree; a canvas is re-seeded from the tree, never the other way
+round.
+
+**Which canvas serves which pages:**
+
+| Canvas | `id` | Pages | Opens on |
+|---|---|---|---|
+| [CoGra · Feed and comments](https://claude.ai/code/artifact/012e4ee6-edd1-4cbe-98ab-b45c58aa4c34) | `feed` | Feed & Search · Comments | Feed & Search |
+| [CoGra · Profile and settings](https://claude.ai/code/artifact/1102bec0-50a9-41b2-84da-a6215afd2d2a) | `profile` | Profile | Profile |
+| [CoGra · Compose and media](https://claude.ai/code/artifact/675688a0-1365-48e0-b56a-511104712f53) | `compose` | Compose · Media | Compose |
+| [CoGra · Entry, money and maps](https://claude.ai/code/artifact/ee0719b1-c7c0-4df9-ae56-74c46a6328c5) | `entry` | Overview · Entry · Money & Wallet · Patterns & reference | Overview |
+
+The fifth is the post-MVP tree's own —
+[CoGra · Post-MVP rounds](https://claude.ai/artifact/LpuftdCAvgkhJaoTXRhAE2),
+id `postmvp`, serving the Push notifications, Change histories, Chats
+and Money & Wallet pages and opening on the first. It lives in the
+successor canvas tooling (the Design Artifact type): the same seed
+manifests, published as the
+artifact's own board files rather than through the old seeded editor.
+Its predecessor artifact stands frozen with the pre-migration
+versions in its picker.
+
+A canvas title never carries `< > & "` or a backslash — the editor
+refuses them at seed time, which is why the titles say "and". The old
+single-canvas artifact stands as a signpost to all five — the MVP four
+and the post-MVP canvas beneath them; its version picker keeps the
+pre-split monolith.
+
+That map is data, not a habit: each tree's own `canvases.json` holds
+it, hand-maintained — each entry carries its canvas's published `url`,
+the links in the table above — and `_build/gen-canvases.mjs` writes one seed
+manifest per canvas under `<tree>/canvases/<id>/` — the
+artboards and annotations of its pages with coordinates verbatim, the
+page bar in the order above, plus an `images.json` naming the
+photographs its boards actually reference, so seeding a canvas reads
+one directory and scans nothing. The manifests are generated and
+committed the way the maps are; the stage fails on a page no canvas
+claims or two canvases claim, a canvas over its file or byte budget,
+and on a committed manifest that regeneration no longer reproduces.
+
+**A board joins a canvas by its page.** Nothing on a board names a
+canvas — membership is read from the `page` every artboard already
+carries, so a new board lands on the canvas that serves its page the
+moment the manifests regenerate. Moving a page to another canvas is an
+edit to `canvases.json` and nothing else.
+
+**The budgets are per-canvas.** A photograph counts against the canvas
+that carries it rather than one global pool, and an image two canvases
+need is seeded into both — which is what ends the squeeze that made
+every new picture a trade against an old one. The stage prints each
+canvas's boards, images, file count, bytes and headroom, and holds the
+file count at 180, under the 200 so the margin is visible before it is
+a wall.
+
+**Implementation cites board files, never canvas URLs.** A canvas URL
+names a review surface that gets re-seeded and re-published; the board
+file is what holds still and what CI grades. Briefs, hand-test notes
+and PR bodies name `ProfileEdit.dc.html`, not the artifact it happens
+to be visible in today.
+
+**Cross-canvas edges are ordinary; cross-tree edges do not exist.** One
+flow graph spans a tree's canvases — `graph.json` knows boards and
+pages, not canvases — so an edge from a compose board to a feed board is
+normal wiring, drawn with the same `⤴ page` marker the maps already use
+for a cross-page jump. Reachability, entries and gaps are checked over
+that whole graph; no canvas is ever checked alone. A tree's graph stops
+at the tree, though: a post-MVP board cannot point at a canonical one,
+because the round it belongs to has not landed in the app the canonical
+graph describes. It gets its edges when it migrates.
+
+---
+
 ## 15. Index
 
 **Root**
@@ -9300,6 +9304,10 @@ blessed, every `13X-final` recommendation adopted.
   `npm install` once in `_build/`, then `node _build/bundle.mjs`.
   `_ds_manifest.json` is the claude.ai Design app's own metadata and is
   refreshed only by that app, on an explicit sync-back.
+- `_build/export-tokens.mjs` — the pipeline's second stage: exports
+  every custom property in `tokens/*.css`, raw and resolved, per theme
+  context, as `tokens.json` — the token contract implementation lints
+  both platform themes against. Token names are append-only.
 - `_build/trees.mjs` — the generated trees, named once (§13, *The
   post-MVP separation*). The stages below read this list; the ideation
   canvases are deliberately not on it.

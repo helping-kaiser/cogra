@@ -4,7 +4,7 @@ ALWAYS every feed card's row reads the opinion, then the score, then the kind's 
 
 ALWAYS a person's feed card's row reads the opinion, then the score, then the share, its act's slot waiting for chats
 
-ALWAYS a comment's replies appear only in its thread, never in the feed
+ALWAYS a reply is a comment targeting a comment: as standalone content a reply card may appear in any feed, and the under-card reply expansion never appears in a feed
 
 ALWAYS a comment card carries no view-replies line
 

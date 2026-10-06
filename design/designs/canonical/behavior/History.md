@@ -24,7 +24,7 @@ ALWAYS a card in History carries no age of the seeing, only the age the feed car
 
 ALWAYS every card's row reads the opinion, then the score, then the kind's own act, then the share
 
-ALWAYS a comment's replies appear only in its thread, never in History
+ALWAYS a reply is a comment targeting a comment: as standalone content a reply card may appear in any feed, History included, and the under-card reply expansion never appears in a feed
 
 ALWAYS a comment card carries no view-replies line
 
