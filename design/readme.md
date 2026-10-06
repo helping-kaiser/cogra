@@ -9230,8 +9230,14 @@ blessings bite closed it (#89).
   blessed.
 - **The editing-sheet exemption is law** (§4, *Sheets*), and every sheet
   sidecar transcribes its kind.
-- **The offline convention is drawn** (the round's Q9) on 25 form-submit
-  edges.
+- **The offline convention is drawn** (the round's Q9). A form's submit
+  that gets no answer says `That didn't send. Try again.` in its own
+  error slot above the submit, keeps what was typed, and the submit is
+  the retry — the answer the graph's case strings label **E5**, after
+  the entry lane's fifth filed question (backlog `13X-passc-entry-a`,
+  *Forms*; ruled 2026-10-05), on 25 form-submit edges. Every other write
+  that gets no answer lands on `NetworkError` (copy-voice, *No answer at
+  all*).
 - **Two boards**: `ComposeDetailsReused` (the already-published marker,
   backlog 110) and `FeedWordsSensitive` (the words-only veil's source
   line, backlog 25). Invites' arrow returns to its origin,
