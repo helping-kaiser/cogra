@@ -711,6 +711,12 @@ Added by the post detail's and the profile's tables, each blessed (jakob 2026-10
   in the accessibility tree tells a listener the verb but not the
   object.
 
+Added by Invites' table (the check round's 2, 2026-10-06): `Back to
+Kept picks` — the arrow from the kept picks' review or their seal, the
+named surface by its title, as `Back to Saved` and `Back to History`
+are (*new 2026-10-06, flagged for blessing*). Its other origins take
+nouns already blessed: `Back to your profile`, `Back to Notifications`.
+
 **The citation's pair** (`RefPair`), where the field and its readout are
 `aria-hidden` and these words are what is said in their place:
 
@@ -780,6 +786,14 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
 - `Reorder the cover` · `Reorder picture 2` — `PickedSheet`'s focusable
   handle, named for its picture: the first row is the cover, every other
   row its place (*blessed (jakob 2026-10-05)*).
+
+**The profile's figures, spoken** — K13.11 executed (the check round,
+2026-10-06): the figures' one door says its visible words and numbers,
+then its purpose — `{n} Posts, {n} Opinions on them, {n} Opinions by
+them, opinions on and by @handle`. One's own reads `{n} Posts, {n}
+Opinions on you, {n} Opinions by you, your opinions, both directions`;
+a deleted account's ends `opinions on and by this account`
+(`ProfileHeader`; `Profile`, `ProfileOther`, `ProfileDeleted`).
 
 **Carried over — blessed by use (jakob 2026-10-06).** The names the
 boards already speak, recorded so the registry is whole:
@@ -2937,7 +2951,10 @@ every card and detail already draws:
 - **The tags line** (`TopicsLine`) states in words what its chips do not
   show: the tags that did not fit and the references, `· 13 tags · 3
   references`, each part alone where the other is nothing — `· 1
-  reference` on most cards, `· 1 tag` (`LadderTopics`).
+  reference` on most cards, `· 1 tag` (`LadderTopics`). Where the count
+  is its own door (every feed card, K13.3), its accessible name is its
+  own visible words — `· 3 references`, `· 13 tags · 3 references` — and
+  no name is laid over them.
 - **A comment** — `View 2 replies`, the collapsed branch's line, the count
   the branch's; the thread's foot reads `Add a comment` (the comment
   sheet, `CommentMenu` and its family).
