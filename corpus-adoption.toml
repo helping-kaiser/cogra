@@ -2043,8 +2043,8 @@ may_cite = []
 #
 # STAGED rows name a surface, the names ("Union.Member" for a union
 # member), and what builds them. KNOWN UNREADABLE rows name a fence
-# line the reader refuses at and what removes it; that refusal is
-# still reported, as advisory, and a row whose refusal is gone fails.
+# line the reader refuses at and what removes it; a listed refusal is
+# silent like a staged name, and a row whose refusal is gone fails.
 ####################################################################
 
 [api-contract]

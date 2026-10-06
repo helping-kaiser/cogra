@@ -1756,9 +1756,9 @@ pub struct StagedName {
 ///
 /// The place is named by the text of the line the reading stopped on,
 /// trimmed, rather than by its number: a line number moves with every edit
-/// above it, and the text moves only when the defect itself is touched. The
-/// refusal is reported as advisory, and a row whose refusal is gone is a
-/// finding.
+/// above it, and the text moves only when the defect itself is touched. A
+/// listed refusal produces no finding, as a staged name produces none, and
+/// a row whose refusal is gone is a finding.
 #[derive(Clone, Debug)]
 pub struct KnownUnreadable {
     /// The trimmed text of the line the reading stopped on.

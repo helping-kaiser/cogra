@@ -320,9 +320,23 @@ fn an_unreadable_fence_fails_and_the_reading_resumes() {
         removed_by: Box::from("the packet that fixes it"),
         at: somewhere(),
     };
-    let found = contract::reconcile(&adoption(Vec::new(), vec![known]), &sources(&spec, SCHEMA));
-    assert_eq!(found[0].rule, UNREADABLE);
-    assert_eq!(found[0].enforcement, Enforcement::Advisory);
+    let found = contract::reconcile(
+        &adoption(Vec::new(), vec![known.clone()]),
+        &sources(&spec, SCHEMA),
+    );
+    let rules: Vec<_> = found.iter().map(|one| one.rule).collect();
+    assert_eq!(
+        rules,
+        vec![SPEC_ONLY],
+        "a listed refusal is silent: {found:#?}"
+    );
+
+    let found = contract::reconcile(&adoption(Vec::new(), vec![known]), &sources(SPEC, SCHEMA));
+    assert_eq!(
+        only(&found).rule,
+        STALE_ENTRY,
+        "a fixed refusal leaves its row stale"
+    );
 }
 
 /// A fence that does not open with a definition is an excerpt, quoted for
@@ -355,10 +369,12 @@ fn an_unparsable_schema_stops_the_reconciliation() {
     assert_eq!(one.enforcement, Enforcement::Failing);
 }
 
-/// A document the run does not hold leaves the reconciliation suppressed
-/// and says so, as advisory, rather than reporting a contract it never read.
+/// One document the run does not hold leaves the reconciliation suppressed
+/// and says so, as advisory, rather than reporting a contract it never read;
+/// a run holding neither is not the corpus the contract describes, and is
+/// told nothing.
 ///
-/// A contract document missing from the run suppresses the reconciliation, and says so.
+/// A contract half missing from the run suppresses the reconciliation, and says so.
 /// ´claim:contract:a-missing-document-suppresses´
 #[test]
 fn a_missing_document_suppresses_the_reconciliation() {
@@ -369,4 +385,8 @@ fn a_missing_document_suppresses_the_reconciliation() {
     assert_eq!(one.rule, SUPPRESSED);
     assert_eq!(one.enforcement, Enforcement::Advisory);
     assert_eq!(one.primary.path, PathBuf::from(SCHEMA_PATH));
+
+    held.remove(&PathBuf::from(SPEC_PATH));
+    let found = contract::reconcile(&adoption(Vec::new(), Vec::new()), &held);
+    assert!(found.is_empty(), "{found:#?}");
 }

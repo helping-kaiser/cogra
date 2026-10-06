@@ -60,8 +60,9 @@
 //! is the specification being ahead, said out loud in the adoption data.
 //!
 //! A place a fence refuses to read that `[api-contract] known_unreadable`
-//! lists is reported all the same, as advisory, its message naming what
-//! removes it; a row whose refusal is gone is a finding.
+//! lists is carried the same way: it produces no finding while the
+//! specification still refuses there, and its row is a finding once the
+//! refusal is gone.
 //!
 //! # A departure from the ruled signature, named
 //!
@@ -71,8 +72,9 @@
 //! which no node of the graph carries, and reading them a second time would
 //! judge bytes the run did not lint. For that reason it is called beside
 //! [`super::judge_all`] rather than from it, and it sets each finding's
-//! enforcement itself, because a known unreadable line is advisory wherever
-//! it sits.
+//! enforcement itself: every finding takes the enforcement the partition
+//! gives the specification, wherever its location sits, because the
+//! contract's document is the specification.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -80,9 +82,7 @@ use std::path::{Path, PathBuf};
 use async_graphql_parser::types::{TypeKind, TypeSystemDefinition};
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 
-use crate::adopt::{
-    Adoption, ApiContract, ContractSurface, DriftSide, KnownUnreadable, relative_str,
-};
+use crate::adopt::{Adoption, ApiContract, ContractSurface, DriftSide, relative_str};
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Severity};
 
 /// The specification declares what the exported schema does not.
@@ -112,11 +112,14 @@ const DEPTH: usize = 64;
 /// names.
 ///
 /// `sources` maps each carrier path to its bytes, as the harvest read them.
-/// An adoption with no `[api-contract]` reconciles nothing. A document the
-/// run does not hold leaves one advisory finding naming the reconciliation
-/// as suppressed — the same shape a missing registry document leaves for
-/// kind validation, because a fixture corpus of two files holds neither and
-/// is no broken contract.
+/// An adoption with no `[api-contract]` reconciles nothing, and neither does
+/// a run holding neither document: a fixture corpus of two files is not the
+/// corpus the contract describes, and reporting on it would put a finding
+/// in every fixture. A run holding one document and not the other leaves
+/// one advisory finding naming the reconciliation as suppressed — the shape
+/// a missing registry document leaves for kind validation — because a
+/// contract half-present is a renamed or deleted document, and the
+/// acceptance suite pins the real corpus to a reconciliation that ran.
 ///
 /// ```
 /// use cogra_linter::judge::contract;
@@ -128,7 +131,7 @@ const DEPTH: usize = 64;
 /// #     &toml, std::path::Path::new("corpus-adoption.toml"))?;
 ///
 /// let found = contract::reconcile(&adoption, &BTreeMap::new());
-/// assert!(found.iter().all(|one| one.rule == contract::SUPPRESSED));
+/// assert!(found.is_empty(), "a run holding neither document reconciles nothing");
 /// # Ok(())
 /// # }
 /// ```
@@ -140,6 +143,9 @@ pub fn reconcile(a: &Adoption, sources: &BTreeMap<PathBuf, Vec<u8>>) -> Vec<Diag
     let enforcement = a.enforcement.enforcement_for(&contract.spec);
     let spec = held(sources, &contract.spec);
     let schema = held(sources, &contract.schema);
+    if spec.is_none() && schema.is_none() {
+        return Vec::new();
+    }
     let (Some(spec), Some(schema)) = (spec, schema) else {
         return [(&contract.spec, spec), (&contract.schema, schema)]
             .into_iter()
@@ -194,11 +200,12 @@ pub fn reconcile(a: &Adoption, sources: &BTreeMap<PathBuf, Vec<u8>>) -> Vec<Diag
             .known_unreadable
             .iter()
             .position(|row| *row.line == *line);
-        if let Some(index) = allowance {
-            unread_allowed.insert(index);
+        match allowance {
+            Some(index) => {
+                unread_allowed.insert(index);
+            }
+            None => found.push(refused(contract, spec_text, refusal, enforcement)),
         }
-        let row = allowance.and_then(|index| contract.known_unreadable.get(index));
-        found.push(refused(contract, spec_text, refusal, row, enforcement));
     }
     let spec_side = surface_of(contract, &spec_definitions);
 
@@ -1264,27 +1271,12 @@ fn refused(
     contract: &ApiContract,
     text: &str,
     refusal: &Refusal,
-    row: Option<&KnownUnreadable>,
     enforcement: Enforcement,
 ) -> Diagnostic {
     let message = format!(
         "this GraphQL fence stops reading here, wanting {}, and what the definition it falls in declares is not compared",
         refusal.expected
     );
-    let (enforcement, message, related) = match row {
-        Some(row) => (
-            Enforcement::Advisory,
-            format!(
-                "{message}; a known defect, allowed until {}",
-                row.removed_by
-            ),
-            vec![Related {
-                at: row.at.clone(),
-                note: String::from("the allowance that carries it"),
-            }],
-        ),
-        None => (enforcement, message, Vec::new()),
-    };
     Diagnostic {
         rule: UNREADABLE,
         severity: Severity::Error,
@@ -1294,7 +1286,7 @@ fn refused(
             ByteSpan::new(refusal.at, refusal.at),
             text,
         ),
-        related,
+        related: Vec::new(),
         message,
     }
 }

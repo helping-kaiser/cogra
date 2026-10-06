@@ -86,12 +86,12 @@ fn counted() -> BTreeMap<&'static str, usize> {
     by_rule
 }
 
-/// The API contract over the real tree reports nothing but its known
-/// unreadable lines: no drift outside the staged list, no stale entry, no
-/// suppression, and one advisory refusal per known unreadable line. An
-/// unstaged drift would fail, a built staged name would leave a stale entry,
-/// and a renamed document would leave the reconciliation suppressed, so
-/// together these pin the run to the lists.
+/// The API contract over the real tree reports nothing: the specification's
+/// whole lead over the schema is the staged list, the schema has no lead,
+/// and every refusal is listed. An unstaged drift or an unlisted refusal
+/// would be a finding, a built staged name would leave a stale entry, and a
+/// renamed document would leave the reconciliation suppressed, so an empty
+/// answer here pins the run to the lists.
 ///
 /// The real contract reports zero findings outside its staged and known-unreadable lists.
 /// ´claim:corpus:the-api-contract-reports-only-its-lists´
@@ -103,30 +103,14 @@ fn the_api_contract_reports_only_its_lists() {
         .api_contract
         .as_ref()
         .expect("this corpus declares its API contract");
-    let found: Vec<&Diagnostic> = run()
+    assert!(!declared.staged.is_empty(), "the specification runs ahead");
+    let found: Vec<String> = run()
         .findings
         .iter()
         .filter(|one| contract::RULES.contains(&one.rule))
+        .map(spell)
         .collect();
-    let spelled: Vec<String> = found.iter().map(|one| spell(one)).collect();
-    assert!(
-        found
-            .iter()
-            .all(|one| one.enforcement == Enforcement::Advisory),
-        "a contract finding fails:\n{}",
-        spelled.join("\n")
-    );
-    assert!(
-        found.iter().all(|one| one.rule == contract::UNREADABLE),
-        "{}",
-        spelled.join("\n")
-    );
-    assert_eq!(
-        found.len(),
-        declared.known_unreadable.len(),
-        "{}",
-        spelled.join("\n")
-    );
+    assert!(found.is_empty(), "{}", found.join("\n"));
 }
 
 /// (´rep:lint:first-corpus´): the milestone. The four discipline documents
