@@ -8,7 +8,11 @@ ALWAYS the form opens at rest, nothing marked
 
 WHEN typing in either field GIVEN the field is not marked -> NEVER the field is marked before the next press of Change password
 
-WHEN typing in a field GIVEN the field carries an error -> the field re-checks as it is typed
+WHEN typing in New password GIVEN the field reads A password is at most 128 characters. or A password is at least 12 characters. -> the line re-checks as the reader types and goes once the password is 12 to 128 characters
+
+WHEN typing in Current password GIVEN the field reads That password isn't right. -> the line stands until the next press of Change password
+
+WHEN typing in New password GIVEN the field reads That password has turned up in a data breach — pick another one. -> the line stands until the next press of Change password
 
 WHEN tap reveal password on a field -> that field's password shows
 
