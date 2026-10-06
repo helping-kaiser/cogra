@@ -353,11 +353,11 @@ class ComposeWizardScreenTest {
         // wired to leaving, not to the stage-stepping arrow.
         compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
 
-        compose.onNodeWithTag("wizard_header_leave").performClick()
+        compose.onNodeWithTag("composeDetails.header.leave").performClick()
         assertThat(leaves).isEqualTo(1)
         assertThat(backs).isEqualTo(0)
 
-        compose.onNodeWithTag("wizard_header_back").performClick()
+        compose.onNodeWithTag("composeDetails.header.back").performClick()
         assertThat(backs).isEqualTo(1)
         assertThat(leaves).isEqualTo(1)
     }
@@ -461,7 +461,7 @@ class ComposeWizardScreenTest {
         )
         compose.setContent { Wizard(withVideoCover) }
 
-        compose.onNodeWithTag("wizard_picked_row").assertIsDisplayed()
+        compose.onNodeWithTag("composeDetails.mediaRow").assertIsDisplayed()
         compose.onNodeWithTag("media_thumb_cover_mark", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("wizard_cover_door").assertDoesNotExist()
         compose.onNodeWithTag("wizard_cover_face", useUnmergedTree = true).assertDoesNotExist()
@@ -724,9 +724,31 @@ class ComposeWizardScreenTest {
         compose.onNodeWithTag("wizard_details_crop").assertDoesNotExist()
         compose.onNodeWithTag("wizard_details_edit").assertDoesNotExist()
 
-        compose.onNodeWithTag("wizard_picked_row").performScrollTo().performClick()
+        compose.onNodeWithTag("composeDetails.mediaRow").performScrollTo().performClick()
         assertThat(manages).isEqualTo(1)
         assertThat(backs).isEqualTo(0)
+    }
+
+    @Test
+    fun theDetailsStageWearsTheRegisteredDataNodePaths() {
+        // The conformance harness finds the `ComposeDetails` board's elements on
+        // this stage by exactly these paths (design/designs/canonical/nodes.json).
+        compose.setContent { Wizard(withPicks.copy(step = WizardStep.Details)) }
+
+        listOf(
+            "composeDetails.header", "composeDetails.header.back", "composeDetails.header.title",
+            "composeDetails.header.leave", "composeDetails.mediaRow", "composeDetails.mediaRow.thumb:1",
+            "composeDetails.mediaRow.thumb:2", "composeDetails.mediaRow.caption", "composeDetails.describeRow",
+            "composeDetails.describeRow.describe", "composeDetails.describeRow.count",
+            "composeDetails.describeRow.reason", "composeDetails.title", "composeDetails.title.label",
+            "composeDetails.title.corner", "composeDetails.title.input", "composeDetails.description",
+            "composeDetails.description.label", "composeDetails.description.corner",
+            "composeDetails.description.input", "composeDetails.tags", "composeDetails.tags.label",
+            "composeDetails.tags.add", "composeDetails.references", "composeDetails.references.label",
+            "composeDetails.references.add", "composeDetails.next",
+        ).forEach { compose.onNodeWithTag(it, useUnmergedTree = true).assertExists() }
+        // Only the details stage is registered: the header's wizard tags are gone here.
+        compose.onNodeWithTag("wizard_header").assertDoesNotExist()
     }
 
     @Test
@@ -737,7 +759,7 @@ class ComposeWizardScreenTest {
         compose.setContent { Wizard(state) }
 
         compose.onNodeWithText("· 1 of 2 described").performScrollTo().assertExists()
-        compose.onNodeWithTag("wizard_describe_counter").performScrollTo().performClick()
+        compose.onNodeWithTag("composeDetails.describeRow.describe").performScrollTo().performClick()
         assertThat(describes).isEqualTo(1)
     }
 

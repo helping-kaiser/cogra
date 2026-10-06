@@ -131,7 +131,7 @@ class FeedScrollCostTest {
                 onOpenPost = {},
                 onOpenActor = {},
                 onOpenTopic = {},
-                stanceControl = { target, _ ->
+                stanceControl = { target, _, _ ->
                     compositions[target] = (compositions[target] ?: 0) + 1
                 },
             )

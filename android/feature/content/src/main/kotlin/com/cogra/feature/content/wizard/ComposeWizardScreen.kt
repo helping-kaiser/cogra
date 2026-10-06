@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetHost
 import com.cogra.core.designsystem.v2.atom.HelpDialog
@@ -279,7 +280,7 @@ internal fun ComposeWizardScreen(
     BackHandler(onBack = onBack)
 
     Box(modifier = modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize().testTag("compose_wizard")) {
+        Column(modifier = Modifier.fillMaxSize().testTag("compose_wizard").dataNodeSurface()) {
             WizardHeader(
                 title = state.headerTitle(),
                 onBack = onBack,
@@ -302,6 +303,9 @@ internal fun ComposeWizardScreen(
                 },
                 helpContentDescription = HelpTopic.SignedActions.title,
                 testTag = "wizard_header",
+                // Only the details stage is a registered board; the other
+                // stages' header keeps its wizard tags.
+                node = (COMPOSE_DETAILS / "header").takeIf { state.step == WizardStep.Details },
             )
 
             keyBanner()
@@ -401,6 +405,7 @@ internal fun ComposeWizardScreen(
                                     onDoneTuningTag = onDoneTuningTag,
                                     onTagRelevanceChange = onTagRelevanceChange,
                                     onTagConfidenceChange = onTagConfidenceChange,
+                                    node = COMPOSE_DETAILS / "tags",
                                 )
                             },
                             references = {
@@ -416,6 +421,7 @@ internal fun ComposeWizardScreen(
                                     onDoneTuningReference = onDoneTuningReference,
                                     onReferenceRelevanceChange = onReferenceRelevanceChange,
                                     onReferenceSupportChange = onReferenceSupportChange,
+                                    node = COMPOSE_DETAILS / "references",
                                 )
                             },
                         )
@@ -424,7 +430,7 @@ internal fun ComposeWizardScreen(
                             onClick = onNext,
                             enabled = !state.titleTooLong && !state.descriptionTooLong,
                             modifier = Modifier.fillMaxWidth(),
-                            testTag = "wizard_details_next",
+                            testTag = (COMPOSE_DETAILS / "next").tag,
                         )
                     }
 

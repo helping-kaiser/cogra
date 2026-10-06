@@ -59,6 +59,13 @@ fun TopicChip(
     onRemove: (() -> Unit)? = null,
     testTag: String? = null,
     values: TagChipValues? = null,
+    /**
+     * The chip's data-node on a registered screen, already keyed by its
+     * name (`composeDetails.tags.tag:rust`): the chip then wears it and its
+     * remove button the `remove` part, in place of [testTag]'s. The open
+     * target beside the remove is not registered and keeps `<testTag>_open`.
+     */
+    node: DataNode? = null,
 ) {
     val label = "#$name"
     val reading = values?.let {
@@ -72,7 +79,9 @@ fun TopicChip(
             plain(it.confidence),
         )
     }
-    val chipModifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+    val chipTag = node?.tag ?: testTag
+    val removeTag = node?.div("remove")?.tag ?: testTag?.let { "${it}_remove" }
+    val chipModifier = modifier.then(if (chipTag != null) Modifier.testTag(chipTag) else Modifier)
     val chipLabel: @Composable () -> Unit = {
         if (reading == null) {
             // A chip label is one line by Material's own spec, so a caller
@@ -116,7 +125,7 @@ fun TopicChip(
             )
             IconButton(
                 onClick = onRemove,
-                modifier = if (testTag != null) Modifier.testTag("${testTag}_remove") else Modifier,
+                modifier = if (removeTag != null) Modifier.testTag(removeTag) else Modifier,
             ) {
                 Icon(
                     Icons.Filled.Close,

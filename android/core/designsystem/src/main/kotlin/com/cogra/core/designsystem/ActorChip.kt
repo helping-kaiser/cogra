@@ -72,21 +72,29 @@ fun ActorChip(
      */
     avatarUrl: Any? = null,
     testTag: String? = null,
+    /**
+     * The chip's data-node on a registered screen (`feed.card.authorChip`):
+     * it then wears that tag, and its avatar, name and handle wear their
+     * parts — in place of [testTag].
+     */
+    node: DataNode? = null,
 ) {
     val name = displayName?.takeIf { it.isNotBlank() } ?: handle
+    val tag = node?.tag ?: testTag
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
             .then(if (onOpen != null) Modifier.heightIn(min = 48.dp).clickable(onClick = onOpen) else Modifier)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(if (tag != null) Modifier.testTag(tag) else Modifier),
     ) {
-        CograAvatar(name = name, size = 24.dp, url = avatarUrl)
+        CograAvatar(name = name, size = 24.dp, url = avatarUrl, testTag = node?.div("avatar")?.tag)
         Text(
             text = name,
             style = MaterialTheme.typography.labelLarge,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.dataNode(node?.div("name")),
         )
         Text(
             text = "@$handle",
@@ -94,6 +102,7 @@ fun ActorChip(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.dataNode(node?.div("handle")),
         )
     }
 }

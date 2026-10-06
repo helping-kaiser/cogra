@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.CograTextField
 import com.cogra.core.designsystem.v2.compose.DescribeCounter
 import com.cogra.core.designsystem.v2.compose.DescribeSubject
@@ -86,6 +87,7 @@ internal fun ColumnScope.DetailsStepBody(
                     null
                 },
                 testTag = "wizard_picked_row",
+                node = COMPOSE_DETAILS / "mediaRow",
             )
             UploadFailures(state, onRetryUpload, onRemovePick)
             DescribeCounter(
@@ -96,6 +98,7 @@ internal fun ColumnScope.DetailsStepBody(
                 // (CW-17, web's `details-step.tsx:235` conforms already).
                 subject = if (state.isVideoPost) DescribeSubject.Video else DescribeSubject.Pictures,
                 testTag = "wizard_describe_counter",
+                node = COMPOSE_DETAILS / "describeRow",
             )
         }
 
@@ -161,6 +164,7 @@ private fun TitleField(value: String, tooLong: Boolean, onValueChange: (String) 
             null
         },
         testTag = "wizard_title",
+        node = COMPOSE_DETAILS / "title",
     )
 }
 
@@ -184,8 +188,16 @@ private fun DescriptionField(value: String, tooLong: Boolean, onValueChange: (St
             null
         },
         testTag = "wizard_description",
+        node = COMPOSE_DETAILS / "description",
     )
 }
+
+/**
+ * The details stage's registered prefix (`ComposeDetails` in
+ * `design/designs/canonical/nodes.json`): every element the board names
+ * wears its `composeDetails.…` path.
+ */
+internal val COMPOSE_DETAILS = DataNode("composeDetails")
 
 /**
  * The failure's words, one line per picture that did not upload.

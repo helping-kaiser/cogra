@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.cogra.app.HiltTestActivity
 import com.cogra.app.ui.theme.CograTheme
+import com.cogra.core.designsystem.DataNode
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -84,5 +85,32 @@ class CograBottomBarTest {
 
         assertThat(explore).isEqualTo(1)
         assertThat(wallet).isEqualTo(1)
+    }
+
+    @Test
+    fun underARegisteredScreenTheBarWearsThatScreensDataNodes() {
+        // The registry names the bar per screen (`feed.bottomBar`,
+        // `postDetail.bottomBar` in design/designs/canonical/nodes.json), and
+        // the conformance harness finds it by exactly those paths.
+        compose.setContent {
+            CograTheme {
+                CograBottomBar(
+                    feedSelected = true,
+                    profileSelected = false,
+                    onFeed = {},
+                    onCompose = {},
+                    onProfile = {},
+                    slots = NavSlot.entries,
+                    node = DataNode("feed") / "bottomBar",
+                )
+            }
+        }
+
+        compose.onNodeWithTag("feed.bottomBar").assertExists()
+        listOf("feedSlot", "searchSlot", "composeSlot", "walletSlot", "profileSlot").forEach {
+            compose.onNodeWithTag("feed.bottomBar.$it").assertExists()
+        }
+        compose.onNodeWithTag("bottom_bar").assertDoesNotExist()
+        compose.onNodeWithTag("bar_feed").assertDoesNotExist()
     }
 }

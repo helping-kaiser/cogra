@@ -34,6 +34,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.domain.ReferenceClaimView
@@ -78,6 +79,12 @@ internal fun TopicsLine(
     onOpen: (() -> Unit)? = null,
     /** A summary card: the counts open the sheet, the chips still navigate. */
     onOpenReferences: (() -> Unit)? = null,
+    /**
+     * The line's data-node on a registered screen (`feed.card.tagsLine`):
+     * the line, each chip (keyed by its name, without `#`) and the counts
+     * then wear the registered paths in place of the [testTagPrefix] tags.
+     */
+    node: DataNode? = null,
 ) {
     if (topics.isEmpty() && references.isEmpty()) return
     val measurer = rememberTextMeasurer()
@@ -91,7 +98,7 @@ internal fun TopicsLine(
     Row(
         modifier = modifier
             .then(if (onOpen != null) Modifier.clickable(onClick = onOpen) else Modifier)
-            .testTag("${testTagPrefix}_topics_line"),
+            .testTag(node?.tag ?: "${testTagPrefix}_topics_line"),
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -106,7 +113,7 @@ internal fun TopicsLine(
                 // opens.
                 onClick = onOpen ?: { onOpenTopic(name) },
                 modifier = Modifier.widthIn(max = CHIP_CAP),
-                testTag = "${testTagPrefix}_topic_$name",
+                testTag = node?.div("tag")?.keyed(name)?.tag ?: "${testTagPrefix}_topic_$name",
             )
         }
         counts?.let {
@@ -124,7 +131,7 @@ internal fun TopicsLine(
                             Modifier
                         },
                     )
-                    .testTag("${testTagPrefix}_topics_counts"),
+                    .testTag(node?.div("counts")?.tag ?: "${testTagPrefix}_topics_counts"),
             )
         }
     }

@@ -124,7 +124,7 @@ class FeedSheetStageTest {
 
     /** Through the card's own count, the way a reader raises it. */
     private fun openThread() {
-        compose.onNodeWithTag("feed_post_${POST}_comments").performClick()
+        compose.onNodeIn(feedCard(POST), "feed.card.actionRow.comments").performClick()
         compose.waitForIdle()
     }
 

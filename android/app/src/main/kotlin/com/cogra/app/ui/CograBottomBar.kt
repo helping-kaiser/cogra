@@ -40,6 +40,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cogra.app.R
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNodeSurface
 
 @Composable
 fun CograBottomBar(
@@ -54,6 +56,12 @@ fun CograBottomBar(
     onWallet: () -> Unit = {},
     searchSelected: Boolean = false,
     walletSelected: Boolean = false,
+    /**
+     * The bar's data-node under a registered screen (`feed.bottomBar`): the
+     * bar and its slots then wear the registered paths in place of their
+     * shell tags, and expose them to the conformance harness.
+     */
+    node: DataNode? = null,
 ) {
     // The hairline the master draws on top of the bar
     // (`BottomNav.jsx:72`, `design.md` §4): M3's navigation bars carry no
@@ -70,7 +78,8 @@ fun CograBottomBar(
                     strokeWidth = 1.dp.toPx(),
                 )
             }
-            .testTag("bottom_bar"),
+            .then(if (node != null) Modifier.dataNodeSurface() else Modifier)
+            .testTag(node?.tag ?: "bottom_bar"),
     ) {
         slots.forEach { slot ->
             when (slot) {
@@ -80,7 +89,7 @@ fun CograBottomBar(
                     onClick = onFeed,
                     filled = Icons.Filled.DynamicFeed,
                     outlined = Icons.Outlined.DynamicFeed,
-                    testTag = "bar_feed",
+                    testTag = node?.div("feedSlot")?.tag ?: "bar_feed",
                 )
                 NavSlot.Search -> DestinationSlot(
                     slot = slot,
@@ -88,16 +97,16 @@ fun CograBottomBar(
                     onClick = onSearch,
                     filled = Icons.Filled.Search,
                     outlined = Icons.Outlined.Search,
-                    testTag = "bar_explore",
+                    testTag = node?.div("searchSlot")?.tag ?: "bar_explore",
                 )
-                NavSlot.Compose -> ComposeSlot(onCompose)
+                NavSlot.Compose -> ComposeSlot(onCompose, node?.div("composeSlot")?.tag ?: "bar_compose")
                 NavSlot.Wallet -> DestinationSlot(
                     slot = slot,
                     selected = walletSelected,
                     onClick = onWallet,
                     filled = Icons.Filled.Wallet,
                     outlined = Icons.Outlined.Wallet,
-                    testTag = "bar_wallet",
+                    testTag = node?.div("walletSlot")?.tag ?: "bar_wallet",
                 )
                 NavSlot.Profile -> DestinationSlot(
                     slot = slot,
@@ -105,7 +114,7 @@ fun CograBottomBar(
                     onClick = onProfile,
                     filled = Icons.Filled.Person,
                     outlined = Icons.Outlined.Person,
-                    testTag = "bar_profile",
+                    testTag = node?.div("profileSlot")?.tag ?: "bar_profile",
                 )
             }
         }
@@ -137,7 +146,7 @@ private fun DestinationSlot(
 
 /** The centre slot: the compose ACTION, wearing the one loud surface. */
 @Composable
-private fun ComposeSlot(onCompose: () -> Unit) {
+private fun ComposeSlot(onCompose: () -> Unit, testTag: String) {
     ShortNavigationBarItem(
         selected = false,
         onClick = onCompose,
@@ -158,6 +167,6 @@ private fun ComposeSlot(onCompose: () -> Unit) {
         },
         // The compose action is icon-only: the badge is its label.
         label = null,
-        modifier = Modifier.testTag("bar_compose"),
+        modifier = Modifier.testTag(testTag),
     )
 }

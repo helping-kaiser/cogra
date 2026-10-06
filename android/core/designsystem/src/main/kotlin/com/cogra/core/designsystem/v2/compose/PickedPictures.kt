@@ -28,6 +28,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.atom.ButtonKind
 import com.cogra.core.designsystem.v2.atom.CograButton
 import com.cogra.core.designsystem.v2.atom.CograSheetSurface
@@ -102,7 +104,14 @@ fun PickedRow(
     manageLabel: String = "Manage the pictures",
     onRemove: ((Int) -> Unit)? = null,
     testTag: String? = null,
+    /**
+     * The row's data-node on a registered screen (`composeDetails.mediaRow`):
+     * the row, each thumbnail (keyed by its position, counted from 1) and the
+     * caption then wear the registered paths in place of [testTag]'s.
+     */
+    node: DataNode? = null,
 ) {
+    val tag = node?.tag ?: testTag
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -114,7 +123,7 @@ fun PickedRow(
                     Modifier
                 },
             )
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(if (tag != null) Modifier.testTag(tag) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
@@ -131,14 +140,14 @@ fun PickedRow(
                 // separate thing to find — true with a remove badge too:
                 // it is the one clip's own ×, not a second target.
                 contentDescription = null,
-                testTag = testTag?.let { "${it}_thumb_$index" },
+                testTag = node?.div("thumb")?.keyed("${index + 1}")?.tag ?: testTag?.let { "${it}_thumb_$index" },
             )
         }
         Text(
             text = caption,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).dataNode(node?.div("caption")),
         )
     }
 }
@@ -178,9 +187,17 @@ fun DescribeCounter(
     modifier: Modifier = Modifier,
     subject: DescribeSubject = DescribeSubject.Pictures,
     testTag: String? = null,
+    /**
+     * The counter's data-node on a registered screen
+     * (`composeDetails.describeRow`): the block, its describe action, count
+     * and reason then wear the registered paths; the action's tag replaces
+     * [testTag].
+     */
+    node: DataNode? = null,
 ) {
+    val describeTag = node?.div("describe")?.tag ?: testTag
     Column(
-        modifier = modifier,
+        modifier = modifier.dataNode(node),
         verticalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
         Row(
@@ -195,18 +212,20 @@ fun DescribeCounter(
                     .minimumInteractiveComponentSize()
                     .defaultMinSize(minHeight = 0.dp)
                     .clickable(role = Role.Button, onClick = onDescribe)
-                    .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+                    .then(if (describeTag != null) Modifier.testTag(describeTag) else Modifier),
             )
             Text(
                 text = "· $described of $total described",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.dataNode(node?.div("count")),
             )
         }
         Text(
             text = "Read aloud to people who can't see it.",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.dataNode(node?.div("reason")),
         )
     }
 }

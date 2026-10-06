@@ -26,6 +26,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
@@ -140,15 +142,23 @@ fun CograTextField(
     /** The field's one refusal, worded by the caller — replaces the hint were there one. */
     error: String? = null,
     testTag: String? = null,
+    /**
+     * The field's data-node on a registered screen (`composeDetails.title`):
+     * the field, its label, its `Optional` corner and its box then wear the
+     * registered paths; the box's replaces [testTag], which still names the
+     * supporting row's message and counter (no board registers those).
+     */
+    node: DataNode? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val reading = fieldCountReading(value, cap, used)
     val hasError = error != null
+    val inputTag = node?.div("input")?.tag ?: testTag
     Column(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().dataNode(node),
         verticalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
-        FieldLabelRow(label, optional, optionalLabel, fieldLabelColor(colors, hasError, enabled))
+        FieldLabelRow(label, optional, optionalLabel, fieldLabelColor(colors, hasError, enabled), node)
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
@@ -181,7 +191,7 @@ fun CograTextField(
                         if (optional) "$label, ${optionalLabel.lowercase()}" else label
                     if (error != null) markError(error)
                 }
-                .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+                .then(if (inputTag != null) Modifier.testTag(inputTag) else Modifier),
         )
         FieldSupportRow(error, reading, testTag)
     }
@@ -202,7 +212,13 @@ private fun fieldLabelColor(colors: ColorScheme, hasError: Boolean, enabled: Boo
 }
 
 @Composable
-private fun FieldLabelRow(label: String, optional: Boolean, optionalLabel: String, labelColor: Color) {
+private fun FieldLabelRow(
+    label: String,
+    optional: Boolean,
+    optionalLabel: String,
+    labelColor: Color,
+    node: DataNode?,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,
@@ -212,13 +228,14 @@ private fun FieldLabelRow(label: String, optional: Boolean, optionalLabel: Strin
             text = label,
             style = MaterialTheme.typography.labelLarge,
             color = labelColor,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).dataNode(node?.div("label")),
         )
         if (optional) {
             Text(
                 text = optionalLabel,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.dataNode(node?.div("corner")),
             )
         }
     }

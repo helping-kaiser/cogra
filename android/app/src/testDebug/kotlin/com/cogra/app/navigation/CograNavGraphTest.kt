@@ -8,7 +8,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
@@ -156,6 +158,28 @@ class CograNavGraphTest {
         }
     }
 
+    private fun waitFor(matcher: SemanticsMatcher) {
+        compose.waitUntil(timeoutMillis = 30_000) {
+            compose.onAllNodes(matcher).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /**
+     * The shell's bar under whichever screen it stands. A registered screen
+     * names it with its own data-node (`feed.bottomBar`,
+     * `postDetail.bottomBar`); every other surface keeps `bottom_bar`.
+     */
+    private fun isBottomBar() = SemanticsMatcher("is the shell's bottom bar") { node ->
+        node.config.getOrNull(SemanticsProperties.TestTag)
+            ?.let { it == "bottom_bar" || it.endsWith(".bottomBar") } == true
+    }
+
+    /** One of the bar's slots, by the same two namings ([isBottomBar]). */
+    private fun barSlot(slot: String) = SemanticsMatcher("is the bar's $slot slot") { node ->
+        node.config.getOrNull(SemanticsProperties.TestTag)
+            ?.let { it == "bar_$slot" || it.endsWith(".bottomBar.${slot}Slot") } == true
+    }
+
     @Test
     fun aSignedOutUserLandsOnTheLoginScreen() {
         render()
@@ -204,21 +228,24 @@ class CograNavGraphTest {
         )
         render()
         // The signed-in root IS the feed tab (design.md §6).
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
 
-        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.onNodeWithTag("feed.card:p1").performClick()
         // The thread stands in its own sheet, which the affordance row's
         // count raises (`ReplyEntry`).
-        waitForTag("detail_post_comments")
-        compose.onNodeWithTag("detail_post_comments").performClick()
+        waitForTag("postDetail.card.actionRow.comments")
+        compose.onNodeWithTag("postDetail.card.actionRow.comments").performClick()
         waitForTag("detail_comment_c1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
 
         // A read drill-in keeps the frame and carries its own back arrow
-        // (design.md §6); no tab is selected.
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
-        assertThat(compose.onAllNodesWithTag("detail_back").fetchSemanticsNodes()).isNotEmpty()
+        // (design.md §6); no tab is selected. The bar wears the detail's
+        // own registered name there, not the feed's.
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodesWithTag("postDetail.bottomBar").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodesWithTag("feed.bottomBar").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodesWithTag("postDetail.header.back").fetchSemanticsNodes()).isNotEmpty()
     }
 
     // A topic chip reaches its own screen from wherever it renders — the
@@ -234,14 +261,14 @@ class CograNavGraphTest {
             ),
         )
         render()
-        waitForTag("feed_post_p1_topic_rust")
+        waitForTag("feed.card.tagsLine.tag:rust")
 
-        compose.onNodeWithTag("feed_post_p1_topic_rust").performClick()
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
         waitForTag("topic_title")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Topic>()).isTrue()
 
         compose.onNodeWithTag("topic_back").performClick()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
@@ -263,8 +290,8 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_post_p1_topic_rust")
-        compose.onNodeWithTag("feed_post_p1_topic_rust").performClick()
+        waitForTag("feed.card.tagsLine.tag:rust")
+        compose.onNodeWithTag("feed.card.tagsLine.tag:rust").performClick()
         waitForTag("topic_stance_row")
 
         compose.onNodeWithTag("topic_affinity_stance").performClick()
@@ -285,9 +312,9 @@ class CograNavGraphTest {
         account.profile = member()
         content.listing = listOf(com.cogra.domain.testing.testPost("p1"))
         render()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
 
-        compose.onNodeWithTag("feed_band_chats").performClick()
+        compose.onNodeWithTag("feed.band.chats").performClick()
         waitForTag("chats_empty")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ChatsComingSoon>())
             .isTrue()
@@ -302,10 +329,10 @@ class CograNavGraphTest {
 
         // A read drill-in keeps the shell frame with no tab selected
         // (design.md §6), same as a post detail's own drill-in.
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
 
         compose.onNodeWithTag("chats_back").performClick()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
@@ -317,9 +344,9 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
 
-        compose.onNodeWithTag("feed_band_chats").performClick()
+        compose.onNodeWithTag("feed.band.chats").performClick()
         waitForTag("join_prompt")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ChatsComingSoon>())
             .isFalse()
@@ -340,13 +367,13 @@ class CograNavGraphTest {
             comments = com.cogra.domain.Page(emptyList(), null, hasNextPage = false),
         )
         render()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
 
-        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.onNodeWithTag("feed.card:p1").performClick()
         // Citing rides the ⋮ now (`_shared.jsx:165-175`), not a button on the
         // affordance row.
-        waitForTag("detail_menu")
-        compose.onNodeWithTag("detail_menu").performClick()
+        waitForTag("postDetail.header.menu")
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_cite").performClick()
         compose.waitForIdle()
 
@@ -377,13 +404,13 @@ class CograNavGraphTest {
             comments = com.cogra.domain.Page(emptyList(), endCursor = null, hasNextPage = false),
         )
         render()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
         compose.onNodeWithTag("feed_post_pending_p1", useUnmergedTree = true).assertExists()
 
-        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.onNodeWithTag("feed.card:p1").performClick()
         waitForTag("detail_body")
-        compose.onNodeWithTag("detail_back").performClick()
-        waitForTag("feed_post_p1")
+        compose.onNodeWithTag("postDetail.header.back").performClick()
+        waitForTag("feed.card:p1")
 
         assertThat(
             compose.onAllNodesWithTag("feed_post_pending_p1", useUnmergedTree = true)
@@ -432,7 +459,7 @@ class CograNavGraphTest {
             ),
         )
         render()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
         // Already revealed on arrival — the choice was made before this
         // screen existed, so nothing here asks again.
         assertThat(
@@ -441,7 +468,7 @@ class CograNavGraphTest {
 
         // Off the feed and onto the detail — a fresh destination, a fresh
         // ViewModel, the same singleton underneath it.
-        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.onNodeWithTag("feed.card:p1").performClick()
         waitForTag("detail_body")
         assertThat(
             compose.onAllNodesWithTag("detail_veil_reveal").fetchSemanticsNodes(),
@@ -449,8 +476,8 @@ class CograNavGraphTest {
 
         // And back — the feed's own ViewModel was recreated on the way
         // out and in; only the singleton could carry the reveal across.
-        compose.onNodeWithTag("detail_back").performClick()
-        waitForTag("feed_post_p1")
+        compose.onNodeWithTag("postDetail.header.back").performClick()
+        waitForTag("feed.card:p1")
         assertThat(
             compose.onAllNodesWithTag("feed_post_p1_veil_reveal").fetchSemanticsNodes(),
         ).isEmpty()
@@ -462,15 +489,15 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("bar_compose")
-        compose.onNodeWithTag("bar_compose").performClick()
+        waitFor(barSlot("compose"))
+        compose.onNode(barSlot("compose")).performClick()
         // Creating a post is the wizard now (D19); the shipped composer
         // is reached only by editing one. It opens images-first, so the
         // picker grid is the stage that greets the author.
         waitForTag("wizard_pick_grid")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>()).isTrue()
         // A task flow owns the screen: the bar leaves (design.md §6).
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isEmpty()
     }
 
     // `ComposeLanded` lands the author on the post they just made. The
@@ -488,8 +515,8 @@ class CograNavGraphTest {
             landing = com.cogra.domain.Landing.Pending,
         )
         render()
-        waitForTag("bar_compose")
-        compose.onNodeWithTag("bar_compose").performClick()
+        waitFor(barSlot("compose"))
+        compose.onNode(barSlot("compose")).performClick()
         // The wizard's words path: the composer opens on the pictures, so
         // the words half is reached by the caption's own branch.
         waitForTag("wizard_switch_words")
@@ -499,10 +526,10 @@ class CograNavGraphTest {
         // Every stage's forward action sits at the bottom, never in the
         // header — the corner means "leave" for the whole flow.
         compose.onNodeWithTag("wizard_words_next").performClick()
-        waitForTag("wizard_details_next")
+        waitForTag("composeDetails.next")
         // The details pill is pinned below the scrolling fields, as the
         // canonical board draws it, so there is nothing to scroll to.
-        compose.onNodeWithTag("wizard_details_next").performClick()
+        compose.onNodeWithTag("composeDetails.next").performClick()
         waitForTag("wizard_sign")
         compose.onNodeWithTag("wizard_sign").performClick()
 
@@ -537,18 +564,18 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("bar_profile")
-        compose.onNodeWithTag("bar_profile").performClick()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("profile_display_name")
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
         assertThat(entry?.toRoute<Profile>()?.handle).isNull()
         // The own-profile tab carries no back arrow; the bar stays.
         assertThat(compose.onAllNodesWithTag("profile_back").fetchSemanticsNodes()).isEmpty()
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
 
         // Back to the feed tab by the bar.
-        compose.onNodeWithTag("bar_feed").performClick()
+        compose.onNode(barSlot("feed")).performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
@@ -562,8 +589,8 @@ class CograNavGraphTest {
         profiles.others["author"] =
             com.cogra.domain.testing.testProfile(id = "author-1", handle = "author")
         render()
-        waitForTag("feed_p1_author")
-        compose.onNodeWithTag("feed_p1_author").performClick()
+        waitForTag("feed.card.authorChip")
+        compose.onNodeWithTag("feed.card.authorChip").performClick()
         waitForTag("profile_display_name")
         val entry = navController.currentBackStackEntry
         assertThat(entry?.destination?.hasRoute<Profile>()).isTrue()
@@ -572,7 +599,7 @@ class CograNavGraphTest {
         // edit, and the frame stays with no tab selected.
         assertThat(compose.onAllNodesWithTag("profile_back").fetchSemanticsNodes()).isNotEmpty()
         assertThat(compose.onAllNodesWithTag("profile_edit").fetchSemanticsNodes()).isEmpty()
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
     }
 
     @Test
@@ -581,13 +608,13 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("bar_profile")
-        compose.onNodeWithTag("bar_profile").performClick()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("profile_edit")
         compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<ProfileEdit>()).isTrue()
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isEmpty()
 
         compose.onNodeWithTag("profile_edit_bio").performTextInput("Hello from the hand test.")
         compose.onNodeWithTag("profile_edit_save").performScrollTo().performClick()
@@ -621,8 +648,8 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("bar_profile")
-        compose.onNodeWithTag("bar_profile").performClick()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("profile_edit")
         compose.onNodeWithTag("profile_edit").performScrollTo().performClick()
         waitForTag("profile_edit_bio")
@@ -647,10 +674,10 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
         // One shell for every viewer: the guest keeps the bar.
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
         // The band is the guest's one sign-in-or-join entry, and it says
         // whose view they are reading from.
         assertThat(
@@ -672,14 +699,14 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_post_p1")
-        compose.onNodeWithTag("feed_post_p1").performClick()
-        waitForTag("detail_post_comments")
+        waitForTag("feed.card:p1")
+        compose.onNodeWithTag("feed.card:p1").performClick()
+        waitForTag("postDetail.card.actionRow.comments")
 
         // The frame rides the drill-in for the guest too, its gated
         // slots still asking in place rather than bouncing the read.
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
-        compose.onNodeWithTag("bar_compose").performClick()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
+        compose.onNode(barSlot("compose")).performClick()
         waitForTag("join_prompt")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>()).isTrue()
         compose.onNodeWithTag("join_prompt_dismiss").performClick()
@@ -689,7 +716,7 @@ class CograNavGraphTest {
 
         // The prompt rides the foot of the comments sheet, so it arrives with
         // the thread the count raises.
-        compose.onNodeWithTag("detail_post_comments").performClick()
+        compose.onNodeWithTag("postDetail.card.actionRow.comments").performClick()
         waitForTag("detail_comment_signin")
         // The composer is absent for the anonymous reader, swapped —
         // never merely disabled.
@@ -709,10 +736,10 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
 
         // The gated slot asks in place — the feed stays underneath.
-        compose.onNodeWithTag("bar_compose").performClick()
+        compose.onNode(barSlot("compose")).performClick()
         waitForTag("join_prompt")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
 
@@ -729,9 +756,9 @@ class CograNavGraphTest {
         render()
         waitForTag("login_browse")
         compose.onNodeWithTag("login_browse").performScrollTo().performClick()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
 
-        compose.onNodeWithTag("bar_profile").performClick()
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("join_prompt")
 
         // Keep browsing dismisses; nothing navigated.
@@ -765,7 +792,7 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("bottom_bar")
+        waitFor(isBottomBar())
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
     }
 
@@ -810,16 +837,16 @@ class CograNavGraphTest {
         account.profile = member()
         render()
 
-        waitForTag("bar_compose")
-        compose.onNodeWithTag("bar_compose").performClick()
+        waitFor(barSlot("compose"))
+        compose.onNode(barSlot("compose")).performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<ComposePost>() == true
         }
         waitForTag("home_restore")
 
         compose.onNodeWithTag("wizard_header_back").performClick()
-        waitForTag("bar_profile")
-        compose.onNodeWithTag("bar_profile").performClick()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("profile_settings")
         compose.onNodeWithTag("profile_settings").performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
@@ -835,8 +862,8 @@ class CograNavGraphTest {
         account.profile = member()
         render()
 
-        waitForTag("bar_profile")
-        compose.onNodeWithTag("bar_profile").performClick()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("profile_settings")
         compose.onNodeWithTag("profile_settings").performClick()
         compose.waitForIdle()
@@ -870,12 +897,12 @@ class CograNavGraphTest {
         account.profile = member()
         render()
 
-        waitForTag("bar_profile")
-        compose.onNodeWithTag("bar_profile").performClick()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("profile_settings")
         compose.onNodeWithTag("profile_settings").performClick()
         compose.waitForIdle()
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isEmpty()
 
         compose.onNodeWithTag("settings_export_key").performScrollTo().performClick()
         compose.waitForIdle()
@@ -903,7 +930,7 @@ class CograNavGraphTest {
         waitForTag("home_waiting")
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Feed>()).isTrue()
         // Only acting is gated: the bar stays, the shell stays open.
-        assertThat(compose.onAllNodesWithTag("bottom_bar").fetchSemanticsNodes()).isNotEmpty()
+        assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isNotEmpty()
     }
 
     @Test
@@ -916,8 +943,8 @@ class CograNavGraphTest {
         onboarding.status = applicantStatus(keyAttached = true)
         render()
 
-        waitForTag("bar_profile")
-        compose.onNodeWithTag("bar_profile").performClick()
+        waitFor(barSlot("profile"))
+        compose.onNode(barSlot("profile")).performClick()
         waitForTag("profile_settings")
         compose.onNodeWithTag("profile_settings").performClick()
         compose.waitForIdle()
@@ -1013,7 +1040,7 @@ class CograNavGraphTest {
         identity.seed = ActorKey.generate().seed()
         account.profile = member()
         render()
-        waitForTag("bottom_bar")
+        waitFor(isBottomBar())
 
         compose.activity.dispatchNewIntent(joinIntent("/join/$inviteId"))
         compose.waitForIdle()
@@ -1068,11 +1095,11 @@ class CograNavGraphTest {
             comments = com.cogra.domain.Page(emptyList(), endCursor = null, hasNextPage = false),
         )
         render()
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
     }
 
     private fun stanceTarget() =
-        compose.onNodeWithTag("feed_post_p1_stance", useUnmergedTree = true)
+        compose.onNodeWithTag("feed.card.actionRow.stance.anchor", useUnmergedTree = true)
 
     @Test
     fun aSignedStanceConfirmsOnTheShellsOwnSnackbar() {
@@ -1108,7 +1135,7 @@ class CograNavGraphTest {
         stanceTarget().performTouchInput { longClick() }
         waitForTag("feed_post_p1_stance_pad")
 
-        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.onNodeWithTag("feed.card:p1").performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<PostDetail>() == true
         }
@@ -1123,7 +1150,7 @@ class CograNavGraphTest {
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Feed>() == true
         }
-        waitForTag("feed_post_p1")
+        waitForTag("feed.card:p1")
         assertThat(
             compose.onAllNodesWithTag("feed_post_p1_stance_pad").fetchSemanticsNodes(),
         ).isEmpty()
@@ -1133,7 +1160,7 @@ class CograNavGraphTest {
     fun anUnauthoredTargetWearsAMutedFaceRatherThanTheWordStance() {
         feedWithAPost()
 
-        compose.onNodeWithTag("feed_post_p1_stance_empty_face", useUnmergedTree = true)
+        compose.onNodeWithTag("feed.card.actionRow.stance.anchor.face", useUnmergedTree = true)
             .assertExists()
         assertThat(
             compose.onAllNodesWithText("Stance", useUnmergedTree = true).fetchSemanticsNodes(),

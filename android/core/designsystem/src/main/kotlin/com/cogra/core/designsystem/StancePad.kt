@@ -307,6 +307,14 @@ fun StanceControl(
      * same surface wherever it was opened from.
      */
     wide: Boolean = false,
+    /**
+     * The control's data-node on a registered screen
+     * (`feed.card.actionRow.stance`): the control, its resting target and
+     * the target's face and pair then wear the registered paths. The pad,
+     * the coach mark and the severance confirmation are not drawn on any
+     * registered board, so they keep their [testTagPrefix] tags.
+     */
+    node: DataNode? = null,
 ) {
     val extentPx = with(LocalDensity.current) { FIELD_EXTENT.toPx() }
     val gapPx = with(LocalDensity.current) { PAD_GAP.roundToPx() }
@@ -335,8 +343,9 @@ fun StanceControl(
     val severable = state.standing != null
 
     StanceConfirmation(state.confirmation, standingLabel, axes, onConfirmationShown)
+    val anchor = node?.div("anchor")
 
-    Column(modifier) {
+    Column(modifier.dataNode(node)) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -388,9 +397,9 @@ fun StanceControl(
                         }.takeIf { severable },
                     )
                 }
-                .testTag("${testTagPrefix}_stance"),
+                .testTag(anchor?.tag ?: "${testTagPrefix}_stance"),
         ) {
-            StanceRestingFace(state.standing, testTagPrefix)
+            StanceRestingFace(state.standing, testTagPrefix, anchor)
 
             // Both overlays are children of the TARGET, not siblings of
             // it: that is what ties their lifetime to the control's, so
@@ -833,7 +842,7 @@ private fun StancePadHelp(onBack: () -> Unit, testTagPrefix: String) {
  * emoji's own name.
  */
 @Composable
-private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String) {
+private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String, anchor: DataNode?) {
     if (standing == null) {
         Text(
             text = RESTING_FACE,
@@ -841,7 +850,7 @@ private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String) {
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .alpha(RESTING_FACE_ALPHA)
-                .testTag("${testTagPrefix}_stance_empty_face"),
+                .testTag(anchor?.div("face")?.tag ?: "${testTagPrefix}_stance_empty_face"),
         )
         return
     }
@@ -850,16 +859,20 @@ private fun StanceRestingFace(standing: StancePoint?, testTagPrefix: String) {
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier
             .padding(horizontal = 12.dp, vertical = 8.dp)
-            .testTag("${testTagPrefix}_stance_standing_face"),
+            // The registered boards name the face and the pair, not the row
+            // that holds them.
+            .then(if (anchor == null) Modifier.testTag("${testTagPrefix}_stance_standing_face") else Modifier),
     ) {
         Text(
             text = standingReadout(standing).emoji,
             style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.dataNode(anchor?.div("face")),
         )
         Text(
             text = standing.pair(),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.dataNode(anchor?.div("exact")),
         )
     }
 }

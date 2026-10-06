@@ -12,6 +12,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.SeverancePrompt
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceControl
@@ -52,6 +53,8 @@ fun StanceControlRoute(
     targetLabel: String? = null,
     wide: Boolean = false,
     onRequireAccount: (() -> Unit)? = null,
+    /** The control's data-node on a registered screen; see [StanceControl]. */
+    node: DataNode? = null,
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -105,6 +108,7 @@ fun StanceControlRoute(
         zeroWords = zeroWords,
         targetLabel = targetLabel,
         wide = wide,
+        node = node,
     )
 }
 
