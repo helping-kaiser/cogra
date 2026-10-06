@@ -1431,7 +1431,7 @@
     { "from": "SavedEmpty", "via": 6, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
     { "from": "History", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
-    { "from": "History", "via": 2, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing narrows the history to what matches, newest-seen first still" }, { "board": "HistoryNone", "case": "nothing seen carries the query (the cause chip at search)" }] },
+    { "from": "History", "via": 2, "kind": "advance", "label": "search field", "to": [{ "terminal": "self", "case": "typing narrows the history to what matches, by the time the reader first saw each thing, newest first still" }, { "board": "HistoryNone", "case": "nothing seen carries the query (the cause chip at search)" }] },
     { "from": "History", "via": 3, "kind": "advance", "label": "Everything (filter trigger)", "to": [{ "board": "HistoryFilter" }] },
     { "from": "History", "via": 4, "kind": "advance", "label": "the comment card's head row — the post it answers", "to": [{ "board": "PostDetail", "case": "the post the comment answers — its detail, the arrow reading Back to History" }] },
     { "from": "History", "via": 5, "kind": "advance", "label": "author chip", "to": [{ "board": "ProfileOther" }] },
@@ -1460,7 +1460,7 @@
 
     { "from": "HistoryFilter", "via": 1, "kind": "advance", "label": "kind chips", "to": [{ "terminal": "self", "case": "stages what the history shows — the feed behind the sheet does not move until Done" }] },
     { "from": "HistoryFilter", "via": 2, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "History", "case": "the sheet closes and the staged filter is dropped — the history is what it was; swipe down, Back and Escape the same — the sheet law: nothing staged applies" }] },
-    { "from": "HistoryFilter", "via": 3, "kind": "advance", "label": "Done", "to": [{ "board": "History", "case": "the sheet closes — the history re-reads once, narrowed, newest-seen first still" }, { "board": "HistoryNone", "case": "nothing seen is of the narrowed kinds (the cause chip at kinds)" }] },
+    { "from": "HistoryFilter", "via": 3, "kind": "advance", "label": "Done", "to": [{ "board": "History", "case": "the sheet closes — the history re-reads once, narrowed, by the time the reader first saw each thing, newest first still" }, { "board": "HistoryNone", "case": "nothing seen is of the narrowed kinds (the cause chip at kinds)" }] },
     { "from": "HistoryFilter", "via": 4, "kind": "advance", "label": "Reset (the foot's corner)", "to": [{ "terminal": "self", "case": "stages the history's default — no kind narrowed, what the trigger reads as Everything; nothing applies until Done" }] },
 
     { "from": "HistoryEmpty", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
@@ -1471,9 +1471,9 @@
     { "from": "HistoryEmpty", "via": 6, "kind": "nav", "label": "nav · Profile", "to": [{ "board": "Profile" }] },
 
     { "from": "HistoryNone", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "Profile", "case": "back where the menu was" }, { "board": "ProfileApplicant", "case": "applicant days" }] },
-    { "from": "HistoryNone", "via": 2, "kind": "advance", "label": "search field", "to": [{ "board": "History", "case": "a query something seen carries — the matches, newest-seen first" }, { "terminal": "self", "case": "typing on, and still nothing seen matches" }] },
+    { "from": "HistoryNone", "via": 2, "kind": "advance", "label": "search field", "to": [{ "board": "History", "case": "a query something seen carries — the matches, by the time the reader first saw each thing, newest first" }, { "terminal": "self", "case": "typing on, and still nothing seen matches" }] },
     { "from": "HistoryNone", "via": 3, "kind": "advance", "label": "the filter trigger", "to": [{ "board": "HistoryFilter" }] },
-    { "from": "HistoryNone", "via": 4, "kind": "advance", "label": "Show everything", "to": [{ "board": "History", "case": "the query cleared and no kind narrowed — the whole history at Everything, newest-seen first" }] },
+    { "from": "HistoryNone", "via": 4, "kind": "advance", "label": "Show everything", "to": [{ "board": "History", "case": "the query cleared and no kind narrowed — the whole history at Everything, by the time the reader first saw each thing, newest first" }] },
     { "from": "HistoryNone", "via": 5, "kind": "nav", "label": "nav · Feed", "to": [{ "board": "Feed" }] },
     { "from": "HistoryNone", "via": 6, "kind": "nav", "label": "nav · Explore", "to": [{ "board": "Explore" }] },
     { "from": "HistoryNone", "via": 7, "kind": "nav", "label": "nav · New post", "to": [{ "board": "ComposePick" }] },

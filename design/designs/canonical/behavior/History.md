@@ -70,7 +70,7 @@ ALWAYS a veiled clip has no playback and no sound-disc presence
 
 ALWAYS the search field reads Search your history at rest
 
-WHEN the reader types in the search field -> History narrows to what matches AND the matches stand newest-seen first
+WHEN the reader types in the search field -> History narrows to what matches AND the matches stand ordered by the time the reader first saw each thing, newest first
 
 ALWAYS the search field matches by the one search rule Explore uses: names and titles, an untitled post by its first words, and never a body, a description or a bio
 
