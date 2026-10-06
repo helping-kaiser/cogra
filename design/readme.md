@@ -7680,11 +7680,13 @@ anatomies.
   card opens the post's comment section scrolled to this comment. The
   reply is the comment glyph, opening that same place with the composer
   already aimed at the comment, and share closes the row.
-- **Replies never appear in the feed** (jakob). A comment's replies live
-  in its thread; the card carries no `View n replies` line, because the
-  feed ranks the comment and the card itself is the door to its branch.
-  `behavior/FeedKinds.md` holds it, with where the card's door and its
-  reply land.
+- **The reply expansion never appears in a feed** (jakob). A reply is a
+  comment targeting a comment, and as standalone content its card may
+  appear in any feed; what lives only in the thread is the expansion
+  under a card — the card carries no `View n replies` line, because in a
+  feed the comment is the content and the card itself is the door to its
+  branch. `behavior/FeedKinds.md` holds it, with where the card's door
+  and its reply land.
 - **The person is the top of their profile**: a 56px picture, the name in
   a title's weight, the handle under it, the bio in the quiet colour,
   folded at two lines. The opinion is the row's standard face, the control
