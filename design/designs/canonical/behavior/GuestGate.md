@@ -6,6 +6,8 @@ WHEN a guest taps Save, Cite in a new post, Mention in a new post or Hide on a m
 
 ALWAYS Share and License terms open for a guest without the ask
 
+ALWAYS a stance face a guest reaches for wears the borrowed view's own stance, read-only, at the member's anchor geometry, and the hollow face wherever the borrowed view holds none
+
 ALWAYS the read beneath the ask stays exactly where it was
 
 ALWAYS only the ask and its scrim take a press while it is up

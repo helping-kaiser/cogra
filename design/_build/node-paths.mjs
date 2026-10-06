@@ -54,7 +54,7 @@ export const KEY_RULES = {
   card: "the author's handle, without @ (PostCard)",
   commentCard: "the comment author's handle, without @ (CommentCard)",
   day: "the divider's words, lowercased, each run of other characters one - (History's day dividers)",
-  entry: "the saved thing's title, lowercased, each run of other characters one - (Saved)",
+  entry: "the saved thing's title, or an untitled post's stand-in (a words post's first line, a media post's kind and author's handle: Pictures by @ada, A video by @ada), lowercased, each run of other characters one - (Saved)",
   frame: "the picture's position in the post's media, counted from 1 (MediaGallery)",
   profileCard: "the person's handle, without @ (the profile feed card)",
   recent: "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)",

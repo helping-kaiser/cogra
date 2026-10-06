@@ -26,6 +26,8 @@ WHEN tap the score -> the clip squishes to the top of the screen still playing A
 
 WHEN tap the opinion face -> the same pad opens over the clip AND the clip pauses
 
+WHEN the pad over the clip closes GIVEN the clip was playing when the pad opened -> the stream resumes the same clip at its position
+
 WHEN tap the comment count -> the same comments sheet opens over the clip AND the clip stops
 
 WHEN tap the opinion face GIVEN the reader is signed out -> the join prompt opens over the paused clip
