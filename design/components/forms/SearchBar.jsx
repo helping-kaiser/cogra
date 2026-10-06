@@ -38,7 +38,7 @@ import { Icon } from "../navigation/Icon.jsx";
    because a border on a control whose height is fixed would push its own content
    over by a pixel the moment the state arrived. */
 
-export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Search", onChange, error = false, describedBy }) {
+export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Search", onChange, error = false, describedBy, node }) {
   return (
     <div style={{ padding: "4px 16px 12px 16px" }}>
       <div
@@ -55,8 +55,9 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
           color: query ? "var(--on-surface)" : "var(--text-secondary)",
           boxSizing: "border-box",
         }}
+        data-node={node}
       >
-        <span style={{ display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
+        <span style={{ display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true" data-node={node && "glyph"}>
           <Icon name="search" size={20} />
         </span>
         {onChange ? (
@@ -73,6 +74,7 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
             aria-label={ariaLabel}
             aria-invalid={error ? "true" : undefined}
             aria-describedby={describedBy}
+            data-node={node && "input"}
             className="cg-focus"
             style={{
               flex: 1,
@@ -92,6 +94,7 @@ export function SearchBar({ query = "", placeholder = "Search", ariaLabel = "Sea
             <span
               role="searchbox"
               aria-label={ariaLabel}
+              data-node={node && "input"}
               style={{
                 fontSize: "var(--text-body-large)",
                 lineHeight: "var(--text-body-large--line-height)",
