@@ -14,6 +14,7 @@ import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import type { RegistrationFlow } from "@/lib/signing/registration-flow";
 import type { RegistrationProgress } from "@/lib/signing/registration-signer";
+import { byNode } from "@/test/data-node";
 
 // The feed reads `?compose=` to say that the last post did not land, and
 // rewrites the URL when the notice is dismissed.
@@ -160,7 +161,7 @@ describe("FeedView", () => {
     );
     server.use(meHandler());
     renderWithProviders(<FeedView />, { store: signedInStore() });
-    expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
+    expect(await screen.findByTestId(byNode("feed.card", "p1"))).toHaveTextContent("First");
     expect(screen.queryByTestId("feed-borrowed-view-action")).not.toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1-link")).toHaveAttribute("href", "/posts/p1");
     expect(screen.queryByTestId("feed-empty")).not.toBeInTheDocument();
@@ -189,7 +190,7 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    const stamp = await screen.findByTestId("feed-post-p1-timestamp");
+    const stamp = await screen.findByTestId(byNode("feed.card.timestamp", "p1"));
     expect(stamp).toHaveAttribute("datetime", "2026-08-12T10:00:00Z");
     expect(stamp.textContent).toMatch(/^(now|\d+[mhd])$/);
   });
@@ -223,7 +224,7 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    const comments = await screen.findByTestId("feed-post-p1-comments");
+    const comments = await screen.findByTestId(byNode("feed.card.actionRow.comments", "p1"));
     expect(comments).toHaveAccessibleName("2 comments");
     expect(comments).toHaveTextContent("2");
     // A control, not a link: its destination is a layer over this surface.
@@ -233,7 +234,7 @@ describe("FeedView", () => {
     expect(sheet).toBeVisible();
     expect(sheet).toHaveAccessibleName("Comments");
     // ...and the feed is still underneath it, pages and all.
-    expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
   });
 
   // THE SHEET IS A LAYER, NOT A DESTINATION. The feed is never left, so its
@@ -271,12 +272,12 @@ describe("FeedView", () => {
       </ScrollHostProvider>,
       { store: signedInStore() },
     );
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     scroller.scrollTop = 1240;
     fireEvent.scroll(scroller);
     await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
 
-    fireEvent.click(screen.getByTestId("feed-post-p1-comments"));
+    fireEvent.click(screen.getByTestId(byNode("feed.card.actionRow.comments", "p1")));
     const sheet = await screen.findByTestId("comments-sheet");
     // The same full-function thread the detail raises: its own composer door.
     fireEvent.click(await screen.findByTestId("comment-add"));
@@ -298,7 +299,7 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    const comments = await screen.findByTestId("feed-post-p1-comments");
+    const comments = await screen.findByTestId(byNode("feed.card.actionRow.comments", "p1"));
     expect(comments).toHaveAccessibleName("0 comments");
     expect(comments).toHaveTextContent("");
   });
@@ -314,9 +315,9 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     expect(screen.queryByTestId("feed-post-p1-score")).not.toBeInTheDocument();
-    expect(screen.getByTestId("feed-post-p1-menu")).toHaveAccessibleName("More on this post");
+    expect(screen.getByTestId(byNode("feed.card.menu", "p1"))).toHaveAccessibleName("More on this post");
   });
 
   it("carries the post's topics on one line, each chip navigating to its topic route", async () => {
@@ -328,7 +329,7 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    expect(await screen.findByTestId("feed-post-p1-topic-rust")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("feed.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1-topic-rust-link")).toHaveAttribute(
       "href",
       "/topics/rust",
@@ -345,10 +346,10 @@ describe("FeedView", () => {
     renderWithProviders(<FeedView />, { store: signedInStore() });
     // Part of the post card's inventory (design.md §6) — and outside the
     // link, since it acts rather than navigates.
-    expect(await screen.findByTestId("feed-stance-p1")).toBeInTheDocument();
-    expect(screen.getByTestId("feed-stance-p2")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("feed.card.actionRow.stance.anchor", "p1"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).toBeInTheDocument();
     expect(screen.getByTestId("feed-post-p1-link")).not.toContainElement(
-      screen.getByTestId("feed-stance-p1"),
+      screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p1")),
     );
   });
 
@@ -366,16 +367,16 @@ describe("FeedView", () => {
     );
     renderWithProviders(<FeedView />, { store: signedInStore() });
     await waitFor(() =>
-      expect(screen.getByTestId("feed-stance-p1")).toHaveTextContent("Like this"),
+      expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p1"))).toHaveTextContent("Like this"),
     );
-    expect(screen.getByTestId("feed-stance-p1")).toHaveTextContent("😊");
-    expect(screen.getByTestId("feed-stance-p1-resting-exact")).toHaveTextContent("+0.55 / +0.20");
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p1"))).toHaveTextContent("😊");
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor.exact", "p1"))).toHaveTextContent("+0.55 / +0.20");
     // A card the viewer has no bundle toward keeps the affordance — a
     // muted face outside the table, never a bare word and never the
     // shrug a zero standing owns (design.md §8.3, §8.4).
-    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("🫥");
-    expect(screen.getByTestId("feed-stance-p2")).not.toHaveTextContent("🤷");
-    expect(screen.getByTestId("feed-stance-p2")).toHaveTextContent("No stance yet");
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).toHaveTextContent("🫥");
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).not.toHaveTextContent("🤷");
+    expect(screen.getByTestId(byNode("feed.card.actionRow.stance.anchor", "p2"))).toHaveTextContent("No stance yet");
   });
 
   it("offers a guest the stance control, which asks them to join", async () => {
@@ -383,7 +384,7 @@ describe("FeedView", () => {
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("feed-stance-p1"));
+    fireEvent.click(await screen.findByTestId(byNode("feed.card.actionRow.stance.anchor", "p1")));
     expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
   });
 
@@ -395,7 +396,7 @@ describe("FeedView", () => {
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([], null, false) })),
     );
     renderWithProviders(<FeedView />);
-    fireEvent.click(await screen.findByTestId("band-chats"));
+    fireEvent.click(await screen.findByTestId(byNode("feed.band.chats")));
     expect(await screen.findByTestId("join-prompt")).toBeInTheDocument();
     expect(push).not.toHaveBeenCalledWith("/chats");
   });
@@ -408,7 +409,7 @@ describe("FeedView", () => {
     );
     server.use(meHandler(), borrowedViewHandler(null));
     renderWithProviders(<FeedView />, { store: signedInStore() });
-    fireEvent.click(await screen.findByTestId("band-chats"));
+    fireEvent.click(await screen.findByTestId(byNode("feed.band.chats")));
     expect(push).toHaveBeenCalledWith("/chats");
   });
 
@@ -429,7 +430,7 @@ describe("FeedView", () => {
       graphql.query("Posts", () => HttpResponse.json({ data: postsPage([post("p1", "First")], null, false) })),
     );
     renderWithProviders(<FeedView />);
-    expect(await screen.findByTestId("feed-post-p1")).toHaveTextContent("First");
+    expect(await screen.findByTestId(byNode("feed.card", "p1"))).toHaveTextContent("First");
 
     // The band subsumes the guest notice: it says whose view this is and
     // carries the one sign-in-or-join entry, riding the collapsing top.
@@ -524,12 +525,12 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     expect(screen.queryByTestId("feed-load-more")).not.toBeInTheDocument();
 
     intersect(true);
-    expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
-    expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
     expect(afters).toEqual([null, "c1"]);
   });
 
@@ -547,9 +548,9 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     intersect(true);
-    await screen.findByTestId("feed-post-p2");
+    await screen.findByTestId(byNode("feed.card", "p2"));
 
     intersect(true);
     await waitFor(() => expect(afters).toEqual([null, "c1"]));
@@ -568,7 +569,7 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     intersect(true);
     expect(await screen.findByTestId("feed-load-more-error")).toBeInTheDocument();
 
@@ -610,7 +611,7 @@ describe("FeedView", () => {
         keyAttached: false,
         keyOnDevice: false,
       });
-      expect(await screen.findByTestId("feed-post-p1")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
       await waitFor(() =>
         expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument(),
       );
@@ -655,15 +656,15 @@ describe("FeedView", () => {
       const afters: (string | null)[] = [];
       server.use(pagedPosts(afters));
       const first = renderWithProviders(<FeedView />);
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
       intersect(true);
-      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
       first.unmount();
 
       renderWithProviders(<FeedView />);
       // Synchronously, on the first render: no `find`, no await.
-      expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
-      expect(screen.getByTestId("feed-post-p2")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
       // And nothing was re-fetched — a cursorless refresh would have answered
       // with page one and dropped page two.
       await waitFor(() => expect(afters).toEqual([null, "c1"]));
@@ -681,7 +682,7 @@ describe("FeedView", () => {
           <FeedView />
         </ScrollHostProvider>,
       );
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
       scroller.scrollTop = 1240;
       fireEvent.scroll(scroller);
       await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
@@ -716,7 +717,7 @@ describe("FeedView", () => {
           <FeedView />
         </ScrollHostProvider>,
       );
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
       scroller.scrollTop = 1240;
       fireEvent.scroll(scroller);
       await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
@@ -738,7 +739,7 @@ describe("FeedView", () => {
       const afters: (string | null)[] = [];
       server.use(pagedPosts(afters));
       renderWithProviders(<FeedView />);
-      expect(await screen.findByTestId("feed-post-p1")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
       expect(afters).toEqual([null]);
     });
   });
@@ -807,10 +808,10 @@ describe("FeedView", () => {
       servePosts(calls);
       server.use(meHandler());
       const scroller = feedIn({ store: signedInStore() });
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
 
       pull(scroller);
-      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
       scroller.remove();
     });
 
@@ -819,10 +820,10 @@ describe("FeedView", () => {
       servePosts(calls);
       server.use(meHandler());
       const scroller = feedIn({ store: signedInStore(), flow: applicantFlow });
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
 
       pull(scroller);
-      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
       scroller.remove();
     });
 
@@ -830,10 +831,10 @@ describe("FeedView", () => {
       const calls = { n: 0 };
       servePosts(calls);
       const scroller = feedIn(undefined);
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
 
       pull(scroller);
-      expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
       scroller.remove();
     });
 
@@ -841,11 +842,11 @@ describe("FeedView", () => {
       const calls = { n: 0 };
       servePosts(calls);
       const scroller = feedIn(undefined);
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
 
       pull(scroller);
       expect(screen.getByTestId("feed-loading")).toHaveTextContent("Loading…");
-      await screen.findByTestId("feed-post-p2");
+      await screen.findByTestId(byNode("feed.card", "p2"));
       expect(screen.queryByTestId("feed-loading")).not.toBeInTheDocument();
       scroller.remove();
     });
@@ -854,7 +855,7 @@ describe("FeedView", () => {
       const calls = { n: 0 };
       servePosts(calls);
       const scroller = feedIn(undefined);
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
 
       pull(scroller, PULL_THRESHOLD - 1);
       await waitFor(() => expect(calls.n).toBe(1));
@@ -865,7 +866,7 @@ describe("FeedView", () => {
       const calls = { n: 0 };
       servePosts(calls);
       const scroller = feedIn(undefined);
-      await screen.findByTestId("feed-post-p1");
+      await screen.findByTestId(byNode("feed.card", "p1"));
 
       scroller.scrollTop = 900;
       pull(scroller);
@@ -886,7 +887,7 @@ describe("FeedView", () => {
     expect(await screen.findByTestId("feed-post-p1-pending")).toHaveTextContent("Still settling");
     expect(screen.queryByTestId("feed-post-p2-pending")).not.toBeInTheDocument();
     // Shown in full, never held back (design.md §9).
-    expect(screen.getByTestId("feed-post-p1")).toHaveTextContent("Settling");
+    expect(screen.getByTestId(byNode("feed.card", "p1"))).toHaveTextContent("Settling");
   });
 
   // A pending entry sorts above every landed one until it lands, when
@@ -904,10 +905,10 @@ describe("FeedView", () => {
       ),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     intersect(true);
-    expect(await screen.findByTestId("feed-post-p3")).toBeInTheDocument();
-    expect(screen.getAllByTestId("feed-post-p1")).toHaveLength(1);
+    expect(await screen.findByTestId(byNode("feed.card", "p3"))).toBeInTheDocument();
+    expect(screen.getAllByTestId(byNode("feed.card", "p1"))).toHaveLength(1);
     // The held copy stays as it was read — no reconciliation.
     expect(screen.getByTestId("feed-post-p1-pending")).toBeInTheDocument();
   });
@@ -929,13 +930,13 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     intersect(true);
     expect(await screen.findByTestId("feed-load-more-error")).toBeInTheDocument();
     // The fault surfaces where the failed fetch was requested — where the page
     // would have been, not the top-of-page banner.
     expect(screen.queryByTestId("feed-transport-error")).not.toBeInTheDocument();
-    expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
   });
 
   it("holds the load-more error through a failed retry instead of flashing", async () => {
@@ -949,7 +950,7 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     intersect(true);
     await screen.findByTestId("feed-load-more-error");
     fireEvent.click(screen.getByTestId("feed-load-more-retry"));
@@ -985,12 +986,12 @@ describe("FeedView", () => {
       }),
     );
     renderWithProviders(<FeedView />);
-    await screen.findByTestId("feed-post-p1");
+    await screen.findByTestId(byNode("feed.card", "p1"));
     intersect(true);
     await screen.findByTestId("feed-load-more-error");
     fireEvent.click(screen.getByTestId("feed-load-more-retry"));
-    expect(await screen.findByTestId("feed-post-p2")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("feed.card", "p2"))).toBeInTheDocument();
     expect(screen.queryByTestId("feed-load-more-error")).not.toBeInTheDocument();
-    expect(screen.getByTestId("feed-post-p1")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
   });
 });
