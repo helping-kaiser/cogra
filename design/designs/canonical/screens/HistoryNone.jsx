@@ -19,7 +19,7 @@
 
    THE WAY BACK IS `Show everything`, the empty state's own action
    (`EmptyState`'s outline button): it clears the query and the kinds at
-   once, and History stands whole again at `Everything`, newest-seen first.
+   once, and History stands whole again at `Everything`, newest first by first seeing.
    Typing on, or narrowing again from the trigger, are the other ways on.
 
    Its words are new and blessed (jakob 2026-10-05; copy-voice, *Saved,

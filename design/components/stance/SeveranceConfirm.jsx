@@ -80,7 +80,7 @@ export function SeveranceConfirm({
        The scrim, Escape and Back take `Keep it`, the safe answer. */
     <DialogSurface
       inline={inline}
-      onScrimPress={onCancel}
+      onScrimPress={busy ? undefined : onCancel}
       title={title}
       body={[
         pickAnchor !== null && (
@@ -133,7 +133,17 @@ export function SeveranceConfirm({
           >
             {busy ? sever.busy ?? "Signing…" : failed ? "Retry" : sever.control}
           </button>
-          <button type="button" onClick={onCancel} className={BUTTON_CLASS} style={buttonStyle({ variant: "primary" })}>
+          {/* THE WAYS OUT ARE LOCKED WHILE IT SIGNS (the precedent
+              `ChangeHandleConfirm` cites): the act was sent from this dialog,
+              so `Keep it`, the scrim, Escape and Back wait for the answer —
+              locked, never dimmed. */}
+          <button
+            type="button"
+            onClick={busy ? undefined : onCancel}
+            aria-disabled={busy || undefined}
+            className={BUTTON_CLASS}
+            style={buttonStyle({ variant: "primary", busy })}
+          >
             Keep it
           </button>
         </>

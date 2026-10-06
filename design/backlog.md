@@ -731,7 +731,7 @@ reachable there before it earns a slot, per the action-row priority
 rule (readme §13, the reel round); it is deliberately undrawn until the
 chats round.
 
-### 25 · Media-slice close-out designs · *design*
+### 25 · Media-slice close-out designs · *design* · **closed 2026-10-06**
 
 Filed by the feature loop 2026-09-01 (jakob: designs shipped later,
 bundled). Three small pieces the 2.5.1 close needs:
@@ -742,8 +742,10 @@ bundled). Three small pieces the 2.5.1 close needs:
    as the same veil, so an unnamed source reads as the other.
    `SensitiveVeil` takes `source`, `PostCard` and `CommentCard` carry
    it, and the *Sensitive & removed* card draws both. Until slice 8
-   every live veil is an author mark. Open: where a words-only post
-   names its source, having no wash to carry the line.
+   every live veil is an author mark. A words-only post names it on
+   the text veil's own plate, under the blurred words and their `Show`
+   (`SensitiveVeil`'s `named`) — **drawn 2026-10-06** as
+   `FeedWordsSensitive` (the check round's Q5).
 2. **The sensitive mark rides on both edit surfaces** — ruled and
    drawn 2026-09-02 (readme §13 *The compose flow*): EditCompose and
    CommentEdit each carry the seal's Sensitive row, opening the same
@@ -3637,7 +3639,14 @@ sections against copy-voice would end the drift class for good.
    pipeline beside `check-behavior`, the behavior sidecars' grammar
    lint.
 
-### 110 · The already-published marker has no board · *design* · **filed 2026-09-30** · **deprioritized 2026-09-30**
+### 110 · The already-published marker has no board · *design* · **filed 2026-09-30** · **deprioritized 2026-09-30** · **drawn 2026-10-06**
+
+**Drawn 2026-10-06** (the check round's Q4: one board) as
+`ComposeDetailsReused` (canvas "Compose · details, media already
+published", page Compose): the line under `PickedRow` in
+`EditedMarker`'s tappable form, opening the earliest matching post, its
+accessible name its own words (K13.11), on the picture path's details
+stage.
 
 **Deprioritized** (jakob 2026-09-30, ruled on the implementation
 side): the marker is a late quality-of-life feature, so this drawing

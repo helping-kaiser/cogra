@@ -3,8 +3,8 @@
    search), what else is admitted, the one topic that does not combine, and the
    foot — `Reset` in its corner, `Done` at its end. It stages: the feed behind
    the sheet is visual only and does not move until Done commits, when it
-   re-queries once; the scrim, a swipe down and Back discard (the sheet law,
-   readme §4, *Sheets*).
+   re-queries once; the scrim, a swipe down, system Back and Escape discard
+   (the sheet law, readme §4, *Sheets*).
 
    THE TOPICS CLOSE THE BODY (jakob 2026-10-02). They are the section that
    grows with the reader's own tags, so they sit last and never push a fixed

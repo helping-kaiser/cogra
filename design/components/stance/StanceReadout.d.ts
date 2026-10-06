@@ -231,3 +231,36 @@ export declare const STANCE_RANGES: PadRanges;
 export declare const TAG_RELEVANCE_FLOOR: number;
 /** What a tag's pair fills: confidence 0 to 1, relevance from the floor to 1. */
 export declare const TAG_RANGES: PadRanges;
+
+/** A help sentence: a plain string, or a face-first line whose digits ride a `cg-exact` tail. */
+export type HelpSentence =
+  | string
+  | { text: string; face: string; exact: string; tail: string; spoken: string };
+
+/** Renders one help sentence — the face painted, the whole fact spoken. */
+export declare function HelpLine(props: { line: HelpSentence }): JSX.Element;
+/** The key a list needs, whichever shape the line takes. */
+export declare function helpKey(line: HelpSentence): string;
+
+/**
+ * What the pad's `?` opens: what the field means, what commits, why the pick and
+ * the resulting opinion are different numbers, and what severing costs. It replaces
+ * the pad's body rather than growing below it — the pad is parked, and a panel
+ * that pushes Set away from the thumb defeats the parking.
+ */
+export declare const STANCE_PAD_HELP: readonly string[];
+
+/**
+ * The same help, for the alternates — which have no field, so the first line
+ * teaches the thing the pad teaches by being a square: that the interaction
+ * carries two values, not one.
+ */
+export declare const STANCE_ALTERNATES_HELP: readonly string[];
+
+/**
+ * The same four lines with the last one in the record family's own words — the
+ * only line that names the way out. A family that names no severance of its own
+ * gets the two constants above unchanged.
+ */
+export declare function padHelp(names?: AxisNames): readonly string[];
+export declare function alternatesHelp(names?: AxisNames): readonly string[];

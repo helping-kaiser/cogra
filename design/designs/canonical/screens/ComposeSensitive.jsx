@@ -39,7 +39,7 @@
 
    IT COMMITS ON `Done` (the sheet law, readme §4, *Sheets*). The switch and the
    reason stage; Done carries them to the seal's row (`Marked`); the scrim, a
-   swipe down and Back discard, and the row is what it was.
+   swipe down, system Back and Escape discard, and the row is what it was.
 
    AT EDIT, A POST THE PLATFORM VEILED. The switch binds only the author's own
    mark (`sensitiveSelfMark`), never the moderator's verdict, so on a post the

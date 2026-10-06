@@ -21,7 +21,7 @@
 
    IT COMMITS ON DONE, LIKE EVERY SHEET (the sheet law, readme §4, *Sheets*).
    Chips stage; `Done` saves the default and the row reads it back; the scrim,
-   a swipe down and Back discard, and the default is what it was — the way
+   a swipe down, system Back and Escape discard, and the default is what it was — the way
    `SettingsLicense` leaves it. The foot is `FilterFoot`, every filter sheet's
    one row: a hairline, `Reset` in the corner, `Done` at the end, inside the
    sheet's own inset. The row that opened this sheet reads the default back in

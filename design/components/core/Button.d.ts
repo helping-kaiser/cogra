@@ -57,6 +57,10 @@ export interface InlineActionProps {
   /** Layout, not look: the word stacked in a flex column doesn't stretch. */
   selfStart?: boolean;
   disabled?: boolean;
+  /** In flight past 200ms: the word swaps to `busyLabel` and goes inert, never dimmed (`Button`'s law). */
+  busy?: boolean;
+  /** The present participle the word reads while busy, closed by `…` (`Revoking…`). */
+  busyLabel?: string;
   type?: "button" | "submit";
   /** When the word alone does not say what it changes. */
   ariaLabel?: string;

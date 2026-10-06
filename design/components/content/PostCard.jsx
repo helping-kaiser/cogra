@@ -229,12 +229,21 @@ export function PostCard({
   // THE VEIL WRAPS THE PARAGRAPH, never the text inside it: the clamp's
   // `overflow: hidden` then clips the TEXT before the blur applies, so the halo
   // stays soft on every side instead of being cut at the box's edge.
-  const veiledParagraph = (node) => (veil ? <SensitiveVeil kind="text">{node}</SensitiveVeil> : node);
+  // A words-only post has no media face, so its body's veil names the source
+  // itself (`named`); a media post's caption leaves that to the media face.
+  const veiledParagraph = (node, named = false) =>
+    veil ? (
+      <SensitiveVeil kind="text" named={named} reason={veil.reason} source={veil.source}>
+        {node}
+      </SensitiveVeil>
+    ) : (
+      node
+    );
   // BODY FIRST, DESCRIPTION UNDER IT, on both kinds. The 4px seam between them
   // is the card's own gap: two fields, one visible join.
   const caption = (
     <>
-      {words && veiledParagraph(<p style={contentStyle} data-node={node && "body"}>{words}</p>)}
+      {words && veiledParagraph(<p style={contentStyle} data-node={node && "body"}>{words}</p>, true)}
       {description && veiledParagraph(<p style={descriptionStyle} data-node={node && "description"}>{description}</p>)}
     </>
   );

@@ -58,7 +58,7 @@ export function Screen() {
             <TopicRemovable topic="saltmaps" onEdit={() => {}} />
           </div>
           <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
-          <QuietNote>Withdrawn: #coastroad</QuietNote>
+          <WithdrawnLine name="#coastroad" />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>

@@ -3,9 +3,11 @@
    that email has an account, so the screen never enumerates accounts. The
    quiet note under it draws the line the whole entry round rests on — this
    restores the SIGN-IN, never the key; the key comes back with its recovery
-   code, on its own screen. The board draws the status line as it reads
-   after a press; at rest, before the first press, it is absent (jakob
-   2026-10-05). A spent or expired link opens `ResetExpired`. */
+   code, on its own screen. The board draws the rest state honestly: before
+   the first press the status line is absent (jakob 2026-10-05), and only a
+   press's answer puts `If that email has an account, a reset link is on
+   its way. …` under the commit. A spent or expired link opens
+   `ResetExpired`. */
 export function Screen() {
   return (
     <>
@@ -41,20 +43,7 @@ export function Screen() {
           <WaitingCommit id="reset" label="Send reset link" reason="Waiting for your email" />
         </div>
 
-        <p
-          role="status"
-          style={{
-            margin: "24px 0 0",
-            fontSize: "var(--text-body-medium)",
-            lineHeight: "var(--text-body-medium--line-height)",
-            letterSpacing: "var(--text-body-medium--letter-spacing)",
-            color: "var(--text-secondary)",
-          }}
-        >
-          If that email has an account, a reset link is on its way. The link works once and expires after 15 minutes.
-        </p>
-
-        <div style={{ marginTop: 16 }}>
+        <div style={{ marginTop: 24 }}>
           <QuietNote>
             This restores your sign-in only. Your key stays wherever it is — restoring the key is its own step, with your
             recovery code.

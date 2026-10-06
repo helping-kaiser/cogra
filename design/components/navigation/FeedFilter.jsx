@@ -43,7 +43,7 @@ import { HelpDot } from "../core/HelpDot.jsx";
    the sheet and nothing else: the feed behind it is visual only and does not
    move.
    `Done` commits the staged filter and the feed re-queries ONCE; the scrim, a
-   swipe down and Back discard it, and the feed is what it was. The reason is
+   swipe down, system Back and Escape discard it, and the feed is what it was. The reason is
    the ranker's: once it ships, every refetch runs the whole personalized
    ranking, so five taps must never mean five rankings.
 

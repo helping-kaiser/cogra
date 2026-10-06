@@ -488,6 +488,15 @@
       "page": "compose"
     },
     {
+      "file": "ComposeDetailsReused.dc.html",
+      "title": "Compose · details, media already published",
+      "x": 1920,
+      "y": 5300,
+      "w": 390,
+      "h": 844,
+      "page": "compose"
+    },
+    {
       "file": "ComposeSeal.dc.html",
       "title": "Compose · what you sign",
       "x": 1920,
@@ -1172,6 +1181,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedWordsSensitive.dc.html",
+      "title": "Feed · a words-only post, veiled",
+      "x": 8160,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,
@@ -1536,7 +1554,7 @@
       "x": -3610,
       "y": 0,
       "w": 3190,
-      "h": 4499,
+      "h": 4762,
       "page": "compose",
       "title": "Compose · flow map"
     },
@@ -1545,16 +1563,16 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 3303,
+      "h": 3359,
       "page": "comments",
       "title": "Comments · flow map"
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5350,
+      "x": -5640,
       "y": 0,
-      "w": 4930,
-      "h": 5097,
+      "w": 5220,
+      "h": 5140,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1572,7 +1590,7 @@
       "x": -2450,
       "y": 0,
       "w": 2030,
-      "h": 4417,
+      "h": 4473,
       "page": "media",
       "title": "Media · flow map"
     },
@@ -1617,7 +1635,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 7691,
+      "h": 7704,
       "page": "profile",
       "title": "Profile · flow map"
     },
