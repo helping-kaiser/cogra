@@ -32,6 +32,7 @@ within a phase, order is flexible.
 | 4. Federation phase | 1 | **Q15** | Federation between independently-bootstrapped L1 networks — same-person claims, cross-network references, two-Charter reconciliation. Within one network, identity is shared by construction. Deferred until federation becomes concrete. |
 | 5. When a community wants its own pot | 1 | **Q55** | Community pool splitting — how a community leaves the global admission fund, where the `admission_fund` carve routes once pools multiply, and who governs each pool. One network splitting, not federation (Q15). |
 | 6. If Layer 1 cannot land a batch whole | 1 | **Q57** | Batch atomicity — how the seals' land-together guarantee holds if Layer 1 never backs it, without breaking the mirror. Deferred: the product builds to the guarantee. |
+| 7. At the L1 swap | 1 | **Q58** | The write rule's second gate on the surface — whether a W2a stamp-wall refusal needs its own reading once real stamps exist. On the stand-in W2a cannot fire, so one `WRITE_RULE_FAILED` reads the solvency words. Deferred to the swap. |
 
 As questions resolve, their blocks disappear from below and their
 rows disappear from this table. The table stays in place until all
@@ -586,3 +587,43 @@ when Layer 1's batching is known.
 
 Q43 (resolved — a batch is priced whole before any of it is staged;
 a pre-check, never a reservation).
+
+## Q58 — The write rule's second gate on the surface
+
+**Where it shows up:**
+[api-spec.md "Errors are tiered"](implementation/api-spec.md#errors-are-tiered--transport-faults-vs-expected-outcomes)
+(one `WRITE_RULE_FAILED` for the W1 solvency gate, the W2a stamp
+wall, and the signing budget)
+**Status:** open (deferred — until the real Layer 1 swap)
+
+### Context
+
+The write-rule pre-check refuses on W1 (solvency) or W2a (the wall
+under which an actor's standing cannot write), and the signing
+budget rides the same refusal. All three surface as the one
+`WRITE_RULE_FAILED` code with one copy family. On the stand-in every
+act's stamp is taken as 1, so W2a passes trivially
+([roadmap.md "The stand-in and the swap"](implementation/roadmap.md#the-stand-in-and-the-swap),
+`crates/api/src/prepare.rs`): no MVP surface can show a W2a refusal,
+and no test can provoke one. Every write-rule refusal reads the
+solvency words (or the budget's wait).
+
+### The question
+
+When real stamps arrive at the swap, does a W2a refusal need its own
+reading on the surface — and if so, by what carrier?
+
+- **Split the code.** A separate error code for the stamp wall —
+  against "one code, one surface".
+- **A gate field.** A typed value on the refusal naming which gate
+  fired (solvency, stamps, budget), read by the product surface to
+  pick its copy.
+- **Keep one reading.** The wall's words are close enough to the
+  solvency words that one copy family stays honest.
+
+Whichever carrier is chosen lands with its first provoking test,
+which the real substrate makes possible.
+
+### Related
+
+Q56 (the other swap-time seam question).

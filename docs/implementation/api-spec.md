@@ -386,7 +386,13 @@ product surface
 The per-account signing budget is the third such refusal and rides
 the same `WRITE_RULE_FAILED`: there is only so much to sign at a
 time, and the person acts on it by waiting (see "The signing
-budget" under the mutation conventions).
+budget" under the mutation conventions). W1 and W2a share the one
+code, and W2a passes trivially until the real substrate's stamps
+arrive at the swap
+([roadmap.md "The stand-in and the swap"](roadmap.md#the-stand-in-and-the-swap)),
+so until then every write-rule refusal reads the solvency words;
+telling the two gates apart on the surface is Q58 in
+[open-questions.md](../open-questions.md).
 
 A single `ErrorCode` enum is the one vocabulary across both tiers — the
 `extensions.code` on a transport fault and the `code` on a `UserError`
