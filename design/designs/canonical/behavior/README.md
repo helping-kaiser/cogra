@@ -60,7 +60,7 @@ Where each sidecar's words come from:
   comment-removal round*); the signed reply's landing, scrolled to its
   new card (readme §13, *The curate rulings*); the foot's gates — the
   join prompt for a guest, and for an applicant the locked foot and
-  `Reply` and their line, since applicants do not comment in V1.0 (readme
+  `Reply` and their line, since applicants do not comment in v1.0.0 (readme
   §13, *The applicant's life round*, *The applicant fix round* and *The
   applicant residue, ruled*); and the
   landing on a deep-linked comment and the sheet's return from a

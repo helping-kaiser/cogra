@@ -14,6 +14,8 @@ WHEN press Change email GIVEN the change has not answered 200ms after the press 
 
 WHEN press Change email GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change email AND Change email stays, the retry AND the address on file stands AND NEVER a link is sent
 
+WHEN press Change email GIVEN the account's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Change email AND Change email stays AND the address on file stands AND NEVER a link is sent
+
 WHEN the address changes -> NEVER the seven days restart AND NEVER the screen speaks of them
 
 WHEN tap the back arrow -> the applicant's feed comes back at the verify card AND nothing is sent AND the address on file stands

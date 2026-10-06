@@ -759,7 +759,7 @@
       "name": "confirm-the-email-change-from-the-new-address",
       "description": "The new address's verification link, opened signed in, applies its side; when it is the last side the change lands and settings reads the new address.",
       "start": { "board": "ChangeEmailLinked" },
-      "end": { "board": "ChangeEmailLinked", "via": 1, "to": "Settings" }
+      "end": { "board": "ChangeEmailLinked", "via": 1, "to": "Settings", "case": "the link was the last side — the change applied, and the row reads the new address" }
     },
     {
       "name": "open-the-new-address-link-signed-out",

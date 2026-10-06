@@ -12,9 +12,13 @@ ALWAYS the band reads Browsing from @mira's view — your first opinion starts y
 
 ALWAYS the band carries no Vouch back and asks for nothing
 
-WHEN the member's first opinion is signed, toward anyone -> the borrowed view ends AND the feed hands over to the member's own view
+WHEN the member's first opinion is signed, toward any target -> the borrowed view ends AND the feed hands over to the member's own view
 
-WHEN the member's first opinion, toward anyone, expires instead of landing GIVEN no other opinion of theirs has landed -> the borrowed view returns AND the ordinary did-not-land notice answers alongside it
+WHEN the member's first opinion, toward any target, expires instead of landing GIVEN no other opinion of theirs has landed -> the borrowed view returns AND the ordinary did-not-land notice answers alongside it
+
+WHEN the member signs an Affinity GIVEN no opinion of theirs is signed -> NEVER the borrowed view ends
+
+WHEN the registration lands GIVEN an opinion staged during the application signs with it -> NEVER the band stands AND NEVER the feed reloads at the flip AND the feed reads the member's own view from its next refresh
 
 WHEN tap Vouch back -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
 

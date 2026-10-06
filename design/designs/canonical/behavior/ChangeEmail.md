@@ -22,6 +22,8 @@ WHEN the request has not answered 200ms after the press -> Change email reads Ch
 
 WHEN press Change email GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change email AND Change email stays, the retry AND NEVER a message is sent
 
+WHEN press Change email GIVEN the account's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Change email AND Change email stays AND NEVER a message is sent
+
 WHEN press the header back arrow -> settings returns AND NEVER a message is sent
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
