@@ -146,6 +146,8 @@ export function ContentRow({
   unread = false,
   action,
   onOpen,
+  node,
+  nodeKey,
 }) {
   const shape = VARIANTS[variant] ?? VARIANTS.ledger;
   /* A row is a control unless it is declared not to be. `inert` is the
@@ -161,6 +163,7 @@ export function ContentRow({
         fontWeight: "var(--text-label-large--font-weight)",
         ...ellipsis,
       }}
+      data-node={node && "title"}
     >
       {title}
     </span>
@@ -191,8 +194,10 @@ export function ContentRow({
       onClick={inert ? undefined : onOpen}
       className={inert ? undefined : "cg-state cg-focus"}
       style={action ? { ...box, width: "auto", flex: 1, minWidth: 0, background: "none", paddingRight: 0 } : box}
+      data-node={action ? undefined : node}
+      data-node-key={action ? undefined : node && nodeKey}
     >
-      <span style={{ position: "relative", flex: "none", width: "40px", height: "40px" }}>
+      <span style={{ position: "relative", flex: "none", width: "40px", height: "40px" }} data-node={node && "disc"}>
         <Disc image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
         {direction && (
           <span
@@ -226,6 +231,7 @@ export function ContentRow({
             {heading}
             <span
               style={{ ...TYPE["label-small"], color: "var(--text-secondary)", flex: "none" }}
+              data-node={node && "aside"}
             >
               {titleAside}
             </span>
@@ -234,7 +240,9 @@ export function ContentRow({
           heading
         )}
         {second && (
-          <span style={{ ...TYPE[shape.second], color: "var(--text-secondary)", ...ellipsis }}>{second}</span>
+          <span style={{ ...TYPE[shape.second], color: "var(--text-secondary)", ...ellipsis }} data-node={node && "second"}>
+            {second}
+          </span>
         )}
       </span>
       {(trailing || pending || unread) && (
@@ -244,6 +252,7 @@ export function ContentRow({
               ...TYPE[shape.trailing],
               color: pending || !shape.loud ? "var(--text-secondary)" : "var(--on-surface)",
             }}
+            data-node={node && "trailing"}
           >
             {trailing}
           </span>
@@ -262,15 +271,21 @@ export function ContentRow({
         </span>
       )}
       {chevron && !action && (
-        <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true">
+        <span style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} aria-hidden="true" data-node={node && "chevron"}>
           <Icon name="chevron_right" size={18} />
         </span>
       )}
     </Tag>
   );
   if (!action) return body;
+  /* Given an `action`, the node is the row's own box, so the parts keep one
+     path whichever box holds them; the action is named by whoever placed it. */
   return (
-    <div style={{ ...box, padding: 0, paddingRight: "var(--space-3)", cursor: "default", background: "var(--surface-card)" }}>
+    <div
+      style={{ ...box, padding: 0, paddingRight: "var(--space-3)", cursor: "default", background: "var(--surface-card)" }}
+      data-node={node}
+      data-node-key={node && nodeKey}
+    >
       {body}
       <span style={{ flex: "none", display: "inline-flex" }}>{action}</span>
     </div>

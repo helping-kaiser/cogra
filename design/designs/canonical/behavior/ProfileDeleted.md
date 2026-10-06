@@ -8,7 +8,7 @@ ALWAYS the name slot reads Deleted account in the system's quiet voice
 
 ALWAYS no handle stands anywhere on the page, the header bar's title included
 
-ALWAYS the removal mark stands in the bio's place, reading Deleted by the person whose account it was over Their name and profile are gone. What they signed stays on the graph and still credits them. with the moment of the deletion
+ALWAYS profile.identity.removalMark stands in the bio's place, reading Deleted by the person whose account it was over Their name and profile are gone. What they signed stays on the graph and still credits them. with the moment of the deletion
 
 ALWAYS the mark never reads like a moderation verdict and never like a dead link
 
@@ -22,11 +22,11 @@ ALWAYS the figures are one tap target, spoken as each figure's number and words 
 
 ALWAYS the wide anchor's accessible name says this account and never a handle
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS profile.bottomBar rides with no slot lit
 
 ALWAYS the page is reached by structure that still points at the account, an author chip or a name in a chronicle, and never by a shared handle link
 
-WHEN a deleted account's profile opens -> the removal mark stands in the bio's place AND the header, the real counts, the tabs and the chronicle stand around it AND NEVER the page is stripped to a notice AND NEVER the page stands without the mark AND NEVER a handle is printed or invented
+WHEN a deleted account's profile opens -> profile.identity.removalMark stands in the bio's place AND the header, the real counts, the tabs and the chronicle stand around it AND NEVER the page is stripped to a notice AND NEVER the page stands without the mark AND NEVER a handle is printed or invented
 
 WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport AND nothing is staged
 
@@ -46,13 +46,13 @@ WHEN tap the ⋮ in the actions row -> the deleted account's menu opens over the
 
 WHEN tap the figures -> the opinions page opens on this account
 
-WHEN tap the Posts tab -> the account's posts stand below the tab row as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab -> the account's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
-WHEN tap the Comments tab -> the account's comments stand below the tab row as comment cards AND the header above stays as it was
+WHEN tap profile.tabRow.commentsTab -> the account's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
 
-WHEN tap the Profile slot -> the reader's own profile opens
+WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 

@@ -7,7 +7,12 @@
    Ada's page, not one of the viewer's tabs.
 
    The body is a `_shared.jsx` helper: the menu's own board draws this same page
-   with the sheet raised over it. */
+   with the sheet raised over it.
+
+   REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): another
+   person's page is the same surface as your own, named by the same body
+   names. */
+export const NODE = "profile";
 export function Screen() {
   return <ProfileOtherBody />;
 }

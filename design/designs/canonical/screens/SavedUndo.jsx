@@ -34,12 +34,16 @@
    `FeedHidden` is the same shape one surface over, a read surface with the
    snackbar the act fired over it. Three rows are left and all three kinds are
    still in them — a comment, a person, a post — so the list goes on reading as
-   the one mixed list it is. */
+   the one mixed list it is.
+
+   REGISTERED under the `saved` prefix, named as `Saved` names it (seam 059/061,
+   the Saved packet); the snackbar is `snackbar`. */
+export const NODE = "saved";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" />
-      <ChronicleList>
+      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" node="header" />
+      <ChronicleList node="list">
         <ContentRow
           variant="chronicle"
           chevron={false}
@@ -48,8 +52,10 @@ export function Screen() {
           titleAside="@tobias"
           second="on The long way home"
           trailing="3d"
-          action={<Unsave name="The third headland light is real" />}
+          action={<Unsave name="The third headland light is real" node="unsave" />}
           onOpen={() => {}}
+          node="entry"
+          nodeKey="the-third-headland-light-is-real"
         />
         <ContentRow
           variant="chronicle"
@@ -59,8 +65,10 @@ export function Screen() {
           titleAside="@mira"
           second="Runs the stand by the sea wall — honey from the headland hives."
           trailing="5d"
-          action={<Unsave name="Mira Voss" />}
+          action={<Unsave name="Mira Voss" node="unsave" />}
           onOpen={() => {}}
+          node="entry"
+          nodeKey="mira-voss"
         />
         <ContentRow
           variant="chronicle"
@@ -70,12 +78,14 @@ export function Screen() {
           titleAside="@mira"
           second="Everything the flats give up in one morning."
           trailing="7d"
-          action={<Unsave name="Sunday at the tide market" />}
+          action={<Unsave name="Sunday at the tide market" node="unsave" />}
           onOpen={() => {}}
+          node="entry"
+          nodeKey="sunday-at-the-tide-market"
         />
       </ChronicleList>
-      <Snackbar message="Removed from Saved." action="Undo" offset={80} />
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <Snackbar message="Removed from Saved." action="Undo" offset={80} node="snackbar" />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

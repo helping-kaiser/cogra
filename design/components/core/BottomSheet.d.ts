@@ -36,6 +36,8 @@ export interface BottomSheetProps {
    * the next tonal rung — `surfaceContainerHighest`.
    */
   stacked?: boolean;
+  /** The data-node name its placer gives this sheet's surface (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `dragHandle`. */
+  node?: string;
 }
 
 export declare function BottomSheet(props: BottomSheetProps): JSX.Element | null;
@@ -45,6 +47,8 @@ export interface SheetItemProps {
   label: string;
   onSelect?: () => void;
   ariaLabel?: string;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function SheetItem(props: SheetItemProps): JSX.Element;
@@ -57,4 +61,6 @@ export declare function SheetItem(props: SheetItemProps): JSX.Element;
 export declare function SheetTitle(props: {
   children?: React.ReactNode;
   trailing?: React.ReactNode;
+  /** The data-node name its placer gives this heading (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }): JSX.Element;

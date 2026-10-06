@@ -17,6 +17,8 @@ export interface SwitchProps {
    * row's own label is the switch's label.
    */
   decorative?: boolean;
+  /** The data-node name its placer gives this switch (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function Switch(props: SwitchProps): JSX.Element;
@@ -53,6 +55,10 @@ export interface SettingsRowProps {
   inert?: boolean;
   /** Where the row goes, or what it toggles. */
   onOpen?: () => void;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `choice`, `label`, `status`, `value`, `switch`, `chevron`. A `trailing` control is named by its own placer. */
+  node?: string;
+  /** The row's content key when it is a repeated instance — the placer's rule. */
+  nodeKey?: string;
 }
 
 export declare function SettingsRow(props: SettingsRowProps): JSX.Element;
@@ -77,6 +83,8 @@ export interface SettingsGroupProps {
    */
   bare?: boolean;
   children?: React.ReactNode;
+  /** The data-node name its placer gives this group (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `footnote`. Its rows are named by their own placer. */
+  node?: string;
 }
 
 export declare function SettingsGroup(props: SettingsGroupProps): JSX.Element;

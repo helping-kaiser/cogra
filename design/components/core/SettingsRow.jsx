@@ -87,10 +87,11 @@ const VALUE_TYPE = {
    52×32 track carries a 2px outline, and §4 rules that nothing in this system
    does. Off is the hairline `outline` a pressable control wears; on is
    `primary`, and the knob travels, so the state is never colour alone. */
-export function Switch({ checked = false, ariaLabel, onChange, decorative = false }) {
+export function Switch({ checked = false, ariaLabel, onChange, decorative = false, node }) {
   const Tag = decorative ? "span" : "button";
   return (
     <Tag
+      data-node={node}
       type={decorative ? undefined : "button"}
       role={decorative ? undefined : "switch"}
       aria-checked={decorative ? undefined : checked ? "true" : "false"}
@@ -133,10 +134,11 @@ export function Switch({ checked = false, ariaLabel, onChange, decorative = fals
 
 /* The choice dot — `ComposeLicense`'s radio, drawn from the same values so the
    two surfaces cannot drift. */
-function ChoiceDot({ selected }) {
+function ChoiceDot({ selected, node }) {
   return (
     <span
       aria-hidden="true"
+      data-node={node}
       style={{
         width: 18,
         height: 18,
@@ -176,25 +178,36 @@ export function SettingsRow({
   chevron,
   inert = false,
   onOpen,
+  node,
+  nodeKey,
 }) {
   const isSwitch = checked !== undefined;
   const isChoice = selected !== undefined;
   const showChevron = chevron ?? (!isSwitch && !isChoice && !action && !trailing && !inert);
+  const named = { "data-node": node, "data-node-key": node && nodeKey };
   const words = (
     <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-      <span style={{ ...LABEL_TYPE, color: action ? "var(--primary)" : undefined }}>{label}</span>
+      <span style={{ ...LABEL_TYPE, color: action ? "var(--primary)" : undefined }} data-node={node && "label"}>
+        {label}
+      </span>
       {status && (
-        <span style={{ ...STATUS_TYPE, overflow: "hidden", textOverflow: "ellipsis" }}>{status}</span>
+        <span style={{ ...STATUS_TYPE, overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "status"}>
+          {status}
+        </span>
       )}
     </span>
   );
   const tail = (
     <>
-      {value !== undefined && <span style={{ ...VALUE_TYPE, flex: "none" }}>{value}</span>}
+      {value !== undefined && (
+        <span style={{ ...VALUE_TYPE, flex: "none" }} data-node={node && "value"}>
+          {value}
+        </span>
+      )}
       {trailing}
-      {isSwitch && <Switch checked={checked} decorative />}
+      {isSwitch && <Switch checked={checked} decorative node={node && "switch"} />}
       {showChevron && (
-        <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}>
+        <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} data-node={node && "chevron"}>
           <Icon name="chevron_right" size={18} />
         </span>
       )}
@@ -206,14 +219,14 @@ export function SettingsRow({
      semantics and the group, the label carries the words and the target. */
   if (isChoice) {
     return (
-      <label className="cg-state cg-focus" style={{ ...ROW_BOX, position: "relative", cursor: "pointer" }}>
+      <label className="cg-state cg-focus" style={{ ...ROW_BOX, position: "relative", cursor: "pointer" }} {...named}>
         <input
           type="radio"
           name={name}
           defaultChecked={selected}
           style={{ position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 }}
         />
-        <ChoiceDot selected={selected} />
+        <ChoiceDot selected={selected} node={node && "choice"} />
         {words}
       </label>
     );
@@ -228,6 +241,7 @@ export function SettingsRow({
         onClick={onOpen}
         className="cg-state cg-focus"
         style={{ ...ROW_BOX, position: "relative", cursor: "pointer" }}
+        {...named}
       >
         {words}
         {tail}
@@ -237,7 +251,7 @@ export function SettingsRow({
 
   if (inert) {
     return (
-      <div style={{ ...ROW_BOX, position: "relative" }}>
+      <div style={{ ...ROW_BOX, position: "relative" }} {...named}>
         {words}
         {tail}
       </div>
@@ -250,6 +264,7 @@ export function SettingsRow({
       onClick={onOpen}
       className="cg-state cg-focus"
       style={{ ...ROW_BOX, position: "relative", cursor: "pointer" }}
+      {...named}
     >
       {words}
       {tail}
@@ -257,12 +272,13 @@ export function SettingsRow({
   );
 }
 
-export function SettingsGroup({ label, footnote, children, ariaLabel, bare = false }) {
+export function SettingsGroup({ label, footnote, children, ariaLabel, bare = false, node }) {
   const rows = React.Children.toArray(children).filter(Boolean);
   return (
-    <section aria-label={label ? undefined : ariaLabel} style={{ display: "flex", flexDirection: "column" }}>
+    <section aria-label={label ? undefined : ariaLabel} style={{ display: "flex", flexDirection: "column" }} data-node={node}>
       {label && (
         <h2
+          data-node={node && "label"}
           style={{
             margin: "0 0 8px",
             padding: "0 var(--space-4)",
@@ -303,7 +319,7 @@ export function SettingsGroup({ label, footnote, children, ariaLabel, bare = fal
         ))}
       </div>
       {footnote && (
-        <div style={{ padding: "8px var(--space-4) 0" }}>
+        <div style={{ padding: "8px var(--space-4) 0" }} data-node={node && "footnote"}>
           <QuietNote>{footnote}</QuietNote>
         </div>
       )}
