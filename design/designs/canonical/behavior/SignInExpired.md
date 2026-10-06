@@ -30,6 +30,8 @@ WHEN tap New here? Enter your invite GIVEN no invite link is held -> InviteEntry
 
 WHEN tap New here? Enter your invite GIVEN a live invite link is held -> Join opens with the link in hand AND NEVER the invite door is shown
 
+WHEN tap New here? Enter your invite GIVEN the invite link held no longer works -> JoinInvalid opens
+
 WHEN tap Just looking? Browse the feed -> FeedBare opens
 
 WHEN press Sign in -> Sign in refuses a second press until the sign-in answers AND NEVER Sign in dims

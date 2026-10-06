@@ -40,9 +40,9 @@ ALWAYS Sign the edit is enabled GIVEN an upload is running
 
 WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a second press AND NEVER anything is signed before the last upload lands AND NEVER Sign the edit dims
 
-WHEN the signing has not answered 200ms after the press GIVEN Sign the edit was pressed while the uploads ran -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
+WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
 
-ALWAYS each picture the edit took that is still uploading wears its progress as a ring on its thumbnail
+ALWAYS each picture the edit took that is still uploading wears its progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state
 
 WHEN the signing has not answered 5s after the press -> the line Still signing — the network is slow right now. stands under the acts footer AND NEVER a progress indicator appears
 

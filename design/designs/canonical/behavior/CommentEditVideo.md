@@ -22,7 +22,7 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
 
-ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail GIVEN it is still uploading
+ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state GIVEN it is still uploading
 
 ALWAYS a failed cover's line reads One picture didn't upload., the cover being one picture
 
