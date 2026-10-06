@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { DetailsStep } from "./details-step";
 import type { PickedAsset } from "@/lib/compose/wizard";
+import { byNode } from "@/test/data-node";
 
 const VIDEO_ASSET: PickedAsset = {
   id: "v0",
@@ -64,7 +65,7 @@ describe("DetailsStep", () => {
     expect(screen.getByText("5 over")).toBeInTheDocument();
     // De-truncation: the field carries no native maxLength to make this state
     // unreachable, and typing further is still reported to the caller.
-    const input = screen.getByTestId("wizard-title") as HTMLInputElement;
+    const input = screen.getByTestId(byNode("composeDetails.title.input")) as HTMLInputElement;
     expect(input.value).toHaveLength(105);
     expect(input).not.toHaveAttribute("maxLength");
   });
@@ -93,12 +94,12 @@ describe("DetailsStep", () => {
   // ComposeDetailsCaps.jsx:21-24 — Next goes inert while a field is over.
   it("disables Next while a field is over its cap, per the drawn board", () => {
     renderStep({ description: "a".repeat(507), blocked: true });
-    expect(screen.getByTestId("wizard-next")).toBeDisabled();
+    expect(screen.getByTestId(byNode("composeDetails.next"))).toBeDisabled();
   });
 
   it("leaves Next enabled while nothing is over its cap", () => {
     renderStep({ title: "Salt maps", description: "Three weekends of rubbings.", blocked: false });
-    expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
+    expect(screen.getByTestId(byNode("composeDetails.next"))).not.toBeDisabled();
   });
 
   // The Cover field (`ComposeDetailsVideo.jsx:19-21`, design/readme.md §13
@@ -181,7 +182,7 @@ describe("DetailsStep", () => {
       const onManage = vi.fn();
       renderStep({ mode: "media", assets: [VIDEO_ASSET], onManage });
 
-      const row = screen.getByTestId("wizard-picked-row");
+      const row = screen.getByTestId(byNode("composeDetails.mediaRow"));
       expect(row.tagName).not.toBe("BUTTON");
       row.click();
       expect(onManage).not.toHaveBeenCalled();

@@ -27,22 +27,36 @@
    (§13's scope operators: "the names of their acts' targets"). Whether an
    @-scope returns the Type itself or only the content tagged with it is not
    settled anywhere, so the second line says the route out loud rather than
-   letting the row imply an answer. */
+   letting the row imply an answer.
+
+   REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063), named
+   as `Explore` names the field. Each row is a `result`, keyed by its position
+   in the results — two results can share a name, and the order is the
+   search's own claim — counting on past the `seam`. */
+export const NODE = "explore";
 export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="@sol salt" />
+        <SearchBar query="@sol salt" node="searchField" />
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} />
-        <ReferenceRow kind="comment" name="The wax-stick ones read like weather charts…" sub="on Salt flats at first light" rank="2.10" onOpen={() => {}} />
-        <Seam />
-        <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} />
+        <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="1" />
+        <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="2" />
+        <ReferenceRow
+          kind="comment"
+          name="The wax-stick ones read like weather charts…"
+          sub="on Salt flats at first light"
+          rank="2.10"
+          onOpen={() => {}}
+          node="result"
+          nodeKey="3"
+        />
+        <Seam node="seam" />
+        <ReferenceRow kind="post" name="First try at a rubbing" value="06.09.2024" onOpen={() => {}} node="result" nodeKey="4" />
       </div>
-      <BottomNav active="search" slots={ALL_SLOTS} inline />
+      <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

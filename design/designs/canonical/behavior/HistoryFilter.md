@@ -1,6 +1,6 @@
 # HistoryFilter · `spec:design:behavior-history-filter`
 
-ALWAYS the history's filter sheet is titled What your history shows
+ALWAYS history.filterSheet is titled What your history shows
 
 ALWAYS the history's filter kinds are the feed filter's own list: Posts, Comments, Profiles and Tags
 
@@ -8,9 +8,9 @@ ALWAYS the history's filter kind chips combine
 
 ALWAYS no kind chip is on and History shows every kind GIVEN the history's filter is at its default
 
-ALWAYS the history's filter sheet carries no order section, no seen toggle, no forms, no also-show and no topic
+ALWAYS history.filterSheet carries no order section, no seen toggle, no forms, no also-show and no topic
 
-ALWAYS the history's filter sheet carries no "?"
+ALWAYS history.filterSheet carries no "?"
 
 WHEN tap a kind chip -> the chip stages AND NEVER History moves behind the sheet
 
@@ -28,4 +28,4 @@ ALWAYS the history's filter foot carries no reading of the staged filter
 
 WHEN tap Reset -> the sheet stages the history's default, no kind narrowed AND NEVER History re-reads
 
-ALWAYS the filter trigger speaks the narrowed kinds by the filter pill's state words GIVEN a kind is narrowed
+ALWAYS history.filterTrigger speaks the narrowed kinds by the filter pill's state words GIVEN a kind is narrowed

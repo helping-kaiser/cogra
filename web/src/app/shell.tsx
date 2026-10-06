@@ -44,6 +44,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const showBar = phase !== "resolving" && readSurface;
   const active =
     pathname === "/feed" ? "feed" : pathname === "/profile" ? "profile" : null;
+  // The bar is drawn once, here, but its node belongs to the SCREEN it rides
+  // (`design/designs/canonical/nodes.json` registers `feed.bottomBar` and
+  // `postDetail.bottomBar`), so the registered screens name it by route.
+  const screen =
+    pathname === "/feed" ? "feed" : /^\/posts\/[^/]+$/.test(pathname) ? "postDetail" : null;
   const scroller = useRef<HTMLDivElement>(null);
   return (
     <div className="flex h-full flex-col">
@@ -55,7 +60,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </div>
-        {showBar && <BottomNav active={active} signedIn={signedIn} />}
+        {showBar && (
+          <BottomNav
+            active={active}
+            signedIn={signedIn}
+            node={screen === null ? undefined : { path: `${screen}.bottomBar` }}
+          />
+        )}
       </ScrollHostProvider>
     </div>
   );

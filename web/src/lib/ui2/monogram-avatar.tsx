@@ -14,6 +14,8 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 // The first character of the display name, uppercased. Grapheme-aware via the
 // spread rather than `charAt`, so an emoji or a non-BMP letter is not cut in
 // half into a replacement character.
@@ -28,18 +30,21 @@ export function MonogramAvatar({
   src,
   size = 40,
   testId,
+  node,
 }: {
   name: string;
   src?: string | null;
   size?: number;
   testId?: string;
+  /** The registered node this avatar is, which then names it instead of `testId`. */
+  node?: DataNode;
 }) {
   const [failed, setFailed] = useState(false);
   const showPhoto = Boolean(src) && !failed;
 
   return (
     <span
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       style={{ width: size, height: size }}
       className="relative flex flex-none items-center justify-center overflow-hidden rounded-full bg-secondary-container text-on-secondary-container select-none"
     >

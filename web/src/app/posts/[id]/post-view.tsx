@@ -239,9 +239,15 @@ export function PostView({
       backScroll={false}
       backLabel="Back to feed"
       backTestId="post-back"
+      node={{ path: "postDetail.header" }}
       action={
         menu === null || menu.length === 0 ? undefined : (
-          <OverflowMenu items={menu} ariaLabel="More on this post" testId="post-menu" />
+          <OverflowMenu
+            items={menu}
+            ariaLabel="More on this post"
+            testId="post-menu"
+            node={{ path: "postDetail.header.menu" }}
+          />
         )
       }
     />
@@ -382,6 +388,9 @@ export function PostView({
           // handed the route.
           onOpenMedia={(at) => setViewerAt(at)}
           href={`/posts/${postId}`}
+          // The registered PostDetail screen's card, keyed by the post's id
+          // (`design/designs/canonical/nodes.json`).
+          node={{ path: "postDetail.card", key: post.id }}
           testId="post"
           authorTestId="post-author"
           stanceTestId="post-stance"

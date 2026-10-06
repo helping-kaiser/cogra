@@ -272,6 +272,7 @@ export function FeedView({
         {/* A tab root wears the mark, not a page title: the reader knows which
             tab they are on from the bar, and the band's other half works. */}
         <CograBand
+          node={{ path: "feed.band" }}
           // The chats affordance (jakob 2026-09-01). A signed-out tap
           // opens the guest gate, the edge the canvas draws
           // (`graph.json` "FeedBare" → `GuestGate`); a signed-in tap
@@ -367,6 +368,10 @@ export function FeedView({
           >
             <PostCard
               post={post}
+              // The registered Feed screen's card, keyed by the post's id —
+              // the record's own identity, where the board keys its sample
+              // cards by author (`design/designs/canonical/nodes.json`).
+              node={{ path: "feed.card", key: post.id }}
               href={`/posts/${post.id}`}
               testId={`feed-post-${post.id}`}
               authorTestId={`feed-author-${post.id}`}

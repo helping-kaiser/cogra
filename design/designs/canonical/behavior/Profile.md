@@ -14,11 +14,11 @@ ALWAYS the figures are one tap target, spoken as each figure's number and words 
 
 ALWAYS Invites wears the bell's dot, never a count, and is spoken as Invites — someone is waiting GIVEN an application of the reader's is ready for their approval
 
-ALWAYS the bottom bar's Profile slot is lit
+ALWAYS profile.bottomBar.profileSlot is lit
 
 ALWAYS the header collapses on the way down and returns on the way up
 
-ALWAYS the chronicle's tab row reads Posts, Comments and Everything, by glyph, each named in the accessibility tree
+ALWAYS profile.tabRow reads Posts, Comments and Everything, by glyph, each named in the accessibility tree
 
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
@@ -42,7 +42,7 @@ WHEN tap the bell -> Notifications opens
 
 WHEN tap the ⋮ -> the sheet holding Saved, History and Share your profile opens over the profile
 
-WHEN tap the avatar's change badge -> the picture's crop opens AND its Next leads to the picture's own seal
+WHEN tap profile.identity.changeBadge -> the picture's crop opens AND its Next leads to the picture's own seal
 
 WHEN tap the figures -> the opinions page opens on this profile
 
@@ -52,17 +52,17 @@ WHEN tap Invites GIVEN an application waits or a link is live -> Invites opens
 
 WHEN tap Invites GIVEN no application waits and no link is live -> Invites opens on its empty state
 
-WHEN tap the Posts tab -> the reader's posts stand below the tab row as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab -> the reader's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
-WHEN tap the Comments tab -> the reader's comments stand below the tab row as comment cards AND the header above stays as it was
+WHEN tap profile.tabRow.commentsTab -> the reader's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to your profile
 
-WHEN tap the Profile slot GIVEN the profile is scrolled -> the profile travels back to its top AND NEVER the profile reloads
+WHEN tap profile.bottomBar.profileSlot GIVEN the profile is scrolled -> the profile travels back to its top AND NEVER the profile reloads
 
-WHEN tap the Profile slot GIVEN the profile stands at its top -> NEVER anything happens
+WHEN tap profile.bottomBar.profileSlot GIVEN the profile stands at its top -> NEVER anything happens
 
-WHEN tap the Profile slot GIVEN a screen deeper in the Profile tab's stack is showing -> the profile comes back at the scroll it was left AND NEVER the profile reloads
+WHEN tap profile.bottomBar.profileSlot GIVEN a screen deeper in the Profile tab's stack is showing -> the profile comes back at the scroll it was left AND NEVER the profile reloads
 
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 

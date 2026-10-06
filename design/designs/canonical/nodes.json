@@ -72,6 +72,203 @@
         "composeDetails.title.label": []
       }
     },
+    "Explore": {
+      "prefix": "explore",
+      "keys": {
+        "explore.recent": "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)"
+      },
+      "nodes": {
+        "explore.band": [],
+        "explore.band.bell": [],
+        "explore.band.chats": [],
+        "explore.band.mark": [],
+        "explore.band.wordmark": [],
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.recent": [
+          "sol-salt",
+          "saltmaps",
+          "coast-road"
+        ],
+        "explore.recent.glyph": [
+          "sol-salt",
+          "saltmaps",
+          "coast-road"
+        ],
+        "explore.recent.query": [
+          "sol-salt",
+          "saltmaps",
+          "coast-road"
+        ],
+        "explore.recentLabel": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": [],
+        "explore.skyCard": [],
+        "explore.skyCard.description": [],
+        "explore.skyCard.field": [],
+        "explore.skyCard.title": [],
+        "explore.topics": [],
+        "explore.topics.chevron": [],
+        "explore.topics.disc": [],
+        "explore.topics.second": [],
+        "explore.topics.title": []
+      }
+    },
+    "ExploreFilter": {
+      "prefix": "explore",
+      "keys": {
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+      },
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.filterSheet": [],
+        "explore.filterSheet.dragHandle": [],
+        "explore.filterSheet.foot": [],
+        "explore.filterSheet.foot.done": [],
+        "explore.filterSheet.foot.reset": [],
+        "explore.filterSheet.help": [],
+        "explore.filterSheet.kinds": [],
+        "explore.filterSheet.kinds.commentsChip": [],
+        "explore.filterSheet.kinds.hint": [],
+        "explore.filterSheet.kinds.label": [],
+        "explore.filterSheet.kinds.postsChip": [],
+        "explore.filterSheet.kinds.profilesChip": [],
+        "explore.filterSheet.kinds.topicsChip": [],
+        "explore.filterSheet.order": [],
+        "explore.filterSheet.order.hint": [],
+        "explore.filterSheet.order.label": [],
+        "explore.filterSheet.order.picker": [],
+        "explore.filterSheet.order.picker.newestOption": [],
+        "explore.filterSheet.order.picker.rankedOption": [],
+        "explore.filterSheet.order.seen": [],
+        "explore.filterSheet.order.seen.box": [],
+        "explore.filterSheet.order.seen.label": [],
+        "explore.filterSheet.title": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.result": [
+          "1",
+          "2"
+        ],
+        "explore.result.mark": [
+          "1",
+          "2"
+        ],
+        "explore.result.name": [
+          "1",
+          "2"
+        ],
+        "explore.result.rank": [
+          "1",
+          "2"
+        ],
+        "explore.result.sub": [
+          "2"
+        ],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
+    "ExploreNone": {
+      "prefix": "explore",
+      "keys": {},
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.empty": [],
+        "explore.empty.title": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
+    "ExploreSearch": {
+      "prefix": "explore",
+      "keys": {
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+      },
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.result": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "explore.result.mark": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "explore.result.name": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "explore.result.rank": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.sub": [
+          "2",
+          "3"
+        ],
+        "explore.result.value": [
+          "4"
+        ],
+        "explore.seam": [],
+        "explore.seam.label": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
+    "ExploreUnscoped": {
+      "prefix": "explore",
+      "keys": {},
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.empty": [],
+        "explore.empty.title": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
     "Feed": {
       "prefix": "feed",
       "keys": {
@@ -330,6 +527,494 @@
         ]
       }
     },
+    "FeedHidden": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.comments": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.score": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.score.value": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.share": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.avatar": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.handle": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.name": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "sol"
+        ],
+        "feed.card.media": [
+          "sol"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "feed.card.menu": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.opener": [
+          "sol"
+        ],
+        "feed.card.tagsLine": [
+          "sol"
+        ],
+        "feed.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.title": [
+          "sol"
+        ],
+        "feed.snackbar": [],
+        "feed.snackbar.action": [],
+        "feed.snackbar.message": []
+      }
+    },
+    "History": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the author's handle, without @ (PostCard)",
+        "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "history.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)",
+        "history.profileCard": "the person's handle, without @ (the profile feed card)",
+        "history.tagCard": "the tag's name, without # (the tag feed card)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.body": [
+          "tobias"
+        ],
+        "history.card.description": [
+          "ada"
+        ],
+        "history.card.media": [
+          "ada"
+        ],
+        "history.card.media.frame": [
+          "ada/1"
+        ],
+        "history.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.opener": [
+          "ada"
+        ],
+        "history.card.tagsLine": [
+          "ada"
+        ],
+        "history.card.tagsLine.counts": [
+          "ada"
+        ],
+        "history.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "history.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "history.card.title": [
+          "ada"
+        ],
+        "history.commentCard": [
+          "tobias"
+        ],
+        "history.day": [
+          "today",
+          "yesterday",
+          "2-october"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.profileCard": [
+          "mira"
+        ],
+        "history.profileCard.actionRow": [
+          "mira"
+        ],
+        "history.profileCard.actionRow.score": [
+          "mira"
+        ],
+        "history.profileCard.actionRow.score.value": [
+          "mira"
+        ],
+        "history.profileCard.actionRow.share": [
+          "mira"
+        ],
+        "history.profileCard.actionRow.stance": [
+          "mira"
+        ],
+        "history.profileCard.actionRow.stance.anchor": [
+          "mira"
+        ],
+        "history.profileCard.actionRow.stance.anchor.face": [
+          "mira"
+        ],
+        "history.profileCard.avatar": [
+          "mira"
+        ],
+        "history.profileCard.bio": [
+          "mira"
+        ],
+        "history.profileCard.handle": [
+          "mira"
+        ],
+        "history.profileCard.menu": [
+          "mira"
+        ],
+        "history.profileCard.name": [
+          "mira"
+        ],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": [],
+        "history.tagCard": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow.compose": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow.score": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow.score.value": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow.share": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow.stance": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow.stance.anchor": [
+          "saltmaps"
+        ],
+        "history.tagCard.actionRow.stance.anchor.face": [
+          "saltmaps"
+        ],
+        "history.tagCard.glimpse": [
+          "saltmaps"
+        ],
+        "history.tagCard.glimpse.by": [
+          "saltmaps"
+        ],
+        "history.tagCard.glimpse.newest": [
+          "saltmaps"
+        ],
+        "history.tagCard.mark": [
+          "saltmaps"
+        ],
+        "history.tagCard.name": [
+          "saltmaps"
+        ],
+        "history.tagCard.through": [
+          "saltmaps"
+        ],
+        "history.tagCard.timestamp": [
+          "saltmaps"
+        ]
+      }
+    },
+    "HistoryEmpty": {
+      "prefix": "history",
+      "keys": {},
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.empty": [],
+        "history.empty.title": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": []
+      }
+    },
+    "HistoryFilter": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the author's handle, without @ (PostCard)",
+        "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "history.commentCard": "the comment author's handle, without @ (CommentCard)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "ada"
+        ],
+        "history.card.actionRow": [
+          "ada"
+        ],
+        "history.card.actionRow.comments": [
+          "ada"
+        ],
+        "history.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "history.card.actionRow.score": [
+          "ada"
+        ],
+        "history.card.actionRow.score.value": [
+          "ada"
+        ],
+        "history.card.actionRow.share": [
+          "ada"
+        ],
+        "history.card.actionRow.stance": [
+          "ada"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "history.card.authorChip": [
+          "ada"
+        ],
+        "history.card.authorChip.avatar": [
+          "ada"
+        ],
+        "history.card.authorChip.handle": [
+          "ada"
+        ],
+        "history.card.authorChip.name": [
+          "ada"
+        ],
+        "history.card.description": [
+          "ada"
+        ],
+        "history.card.media": [
+          "ada"
+        ],
+        "history.card.media.frame": [
+          "ada/1"
+        ],
+        "history.card.menu": [
+          "ada"
+        ],
+        "history.card.opener": [
+          "ada"
+        ],
+        "history.card.tagsLine": [
+          "ada"
+        ],
+        "history.card.tagsLine.counts": [
+          "ada"
+        ],
+        "history.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "history.card.timestamp": [
+          "ada"
+        ],
+        "history.card.title": [
+          "ada"
+        ],
+        "history.commentCard": [
+          "tobias"
+        ],
+        "history.filterSheet": [],
+        "history.filterSheet.dragHandle": [],
+        "history.filterSheet.foot": [],
+        "history.filterSheet.foot.done": [],
+        "history.filterSheet.foot.reset": [],
+        "history.filterSheet.kinds": [],
+        "history.filterSheet.kinds.commentsChip": [],
+        "history.filterSheet.kinds.hint": [],
+        "history.filterSheet.kinds.label": [],
+        "history.filterSheet.kinds.postsChip": [],
+        "history.filterSheet.kinds.profilesChip": [],
+        "history.filterSheet.kinds.topicsChip": [],
+        "history.filterSheet.title": [],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": []
+      }
+    },
+    "HistoryNone": {
+      "prefix": "history",
+      "keys": {},
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": []
+      }
+    },
     "PostDetail": {
       "prefix": "postDetail",
       "keys": {
@@ -423,6 +1108,1061 @@
         "postDetail.header": [],
         "postDetail.header.back": [],
         "postDetail.header.menu": []
+      }
+    },
+    "Profile": {
+      "prefix": "profile",
+      "keys": {
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+      },
+      "nodes": {
+        "profile.band": [],
+        "profile.band.bell": [],
+        "profile.band.chats": [],
+        "profile.band.gear": [],
+        "profile.band.mark": [],
+        "profile.band.wordmark": [],
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.chronicle": [],
+        "profile.chronicle.act": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.aside": [
+          "3"
+        ],
+        "profile.chronicle.act.disc": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.second": [
+          "1",
+          "2",
+          "4"
+        ],
+        "profile.chronicle.act.title": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.trailing": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.edit": [],
+        "profile.identity.actionRow.invites": [],
+        "profile.identity.actionRow.invites.dot": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.changeBadge": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.handle": [],
+        "profile.identity.name": [],
+        "profile.identity.website": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileDeleted": {
+      "prefix": "profile",
+      "keys": {
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.chronicle": [],
+        "profile.chronicle.act": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.chronicle.act.aside": [
+          "3"
+        ],
+        "profile.chronicle.act.disc": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.chronicle.act.second": [
+          "1",
+          "2",
+          "4"
+        ],
+        "profile.chronicle.act.title": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.chronicle.act.trailing": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.identity.removalMark": [],
+        "profile.identity.removalMark.detail": [],
+        "profile.identity.removalMark.line": [],
+        "profile.identity.removalMark.when": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileDeletedMenu": {
+      "prefix": "profile",
+      "keys": {
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.chronicle": [],
+        "profile.chronicle.act": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.chronicle.act.aside": [
+          "3"
+        ],
+        "profile.chronicle.act.disc": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.chronicle.act.second": [
+          "1",
+          "2",
+          "4"
+        ],
+        "profile.chronicle.act.title": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.chronicle.act.trailing": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.identity.removalMark": [],
+        "profile.identity.removalMark.detail": [],
+        "profile.identity.removalMark.line": [],
+        "profile.identity.removalMark.when": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
+        "profile.menuSheet.save": [],
+        "profile.menuSheet.share": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileMenu": {
+      "prefix": "profile",
+      "keys": {
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.chronicle": [],
+        "profile.chronicle.act": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.aside": [
+          "3"
+        ],
+        "profile.chronicle.act.disc": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.second": [
+          "1",
+          "2",
+          "4"
+        ],
+        "profile.chronicle.act.title": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.trailing": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.header.title": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.message": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.hide": [],
+        "profile.menuSheet.mention": [],
+        "profile.menuSheet.save": [],
+        "profile.menuSheet.share": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileOther": {
+      "prefix": "profile",
+      "keys": {
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.chronicle": [],
+        "profile.chronicle.act": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.aside": [
+          "3"
+        ],
+        "profile.chronicle.act.disc": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.second": [
+          "1",
+          "2",
+          "4"
+        ],
+        "profile.chronicle.act.title": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.trailing": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.header.title": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.message": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileOwnMenu": {
+      "prefix": "profile",
+      "keys": {
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+      },
+      "nodes": {
+        "profile.band": [],
+        "profile.band.bell": [],
+        "profile.band.chats": [],
+        "profile.band.gear": [],
+        "profile.band.mark": [],
+        "profile.band.wordmark": [],
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.chronicle": [],
+        "profile.chronicle.act": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.aside": [
+          "3"
+        ],
+        "profile.chronicle.act.disc": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.second": [
+          "1",
+          "2",
+          "4"
+        ],
+        "profile.chronicle.act.title": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.trailing": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.edit": [],
+        "profile.identity.actionRow.invites": [],
+        "profile.identity.actionRow.invites.dot": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.changeBadge": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.handle": [],
+        "profile.identity.name": [],
+        "profile.identity.website": [],
+        "profile.menuSheet": [],
+        "profile.menuSheet.dragHandle": [],
+        "profile.menuSheet.history": [],
+        "profile.menuSheet.saved": [],
+        "profile.menuSheet.share": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ReaderPostMenu": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.menuSheet": [],
+        "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.hide": [],
+        "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.save": []
+      }
+    },
+    "Saved": {
+      "prefix": "saved",
+      "keys": {
+        "saved.list.entry": "the saved thing's title, lowercased, each run of other characters one - (Saved)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.list": [],
+        "saved.list.entry": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.aside": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.disc": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.second": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.title": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.trailing": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.unsave": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ]
+      }
+    },
+    "SavedEmpty": {
+      "prefix": "saved",
+      "keys": {},
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.empty": [],
+        "saved.empty.title": [],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": []
+      }
+    },
+    "SavedUndo": {
+      "prefix": "saved",
+      "keys": {
+        "saved.list.entry": "the saved thing's title, lowercased, each run of other characters one - (Saved)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.list": [],
+        "saved.list.entry": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.aside": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.disc": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.second": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.title": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.trailing": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.unsave": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.snackbar": [],
+        "saved.snackbar.action": [],
+        "saved.snackbar.message": []
+      }
+    },
+    "Settings": {
+      "prefix": "settings",
+      "keys": {
+        "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
+      },
+      "nodes": {
+        "settings.about": [],
+        "settings.about.aboutCogra": [],
+        "settings.about.aboutCogra.chevron": [],
+        "settings.about.aboutCogra.label": [],
+        "settings.about.contact": [],
+        "settings.about.contact.chevron": [],
+        "settings.about.contact.label": [],
+        "settings.about.contact.value": [],
+        "settings.about.intro": [],
+        "settings.about.intro.chevron": [],
+        "settings.about.intro.label": [],
+        "settings.about.label": [],
+        "settings.about.privacy": [],
+        "settings.about.privacy.chevron": [],
+        "settings.about.privacy.label": [],
+        "settings.about.report": [],
+        "settings.about.report.chevron": [],
+        "settings.about.report.label": [],
+        "settings.about.terms": [],
+        "settings.about.terms.chevron": [],
+        "settings.about.terms.label": [],
+        "settings.about.whatsNew": [],
+        "settings.about.whatsNew.chevron": [],
+        "settings.about.whatsNew.label": [],
+        "settings.about.whatsNew.value": [],
+        "settings.backup": [],
+        "settings.backup.footnote": [],
+        "settings.backup.kept": [],
+        "settings.backup.kept.chevron": [],
+        "settings.backup.kept.label": [],
+        "settings.backup.key": [],
+        "settings.backup.key.chevron": [],
+        "settings.backup.key.label": [],
+        "settings.backup.label": [],
+        "settings.backup.recovery": [],
+        "settings.backup.recovery.chevron": [],
+        "settings.backup.recovery.label": [],
+        "settings.backup.recovery.status": [],
+        "settings.credentials": [],
+        "settings.credentials.email": [],
+        "settings.credentials.email.chevron": [],
+        "settings.credentials.email.label": [],
+        "settings.credentials.email.value": [],
+        "settings.credentials.footnote": [],
+        "settings.credentials.handle": [],
+        "settings.credentials.handle.chevron": [],
+        "settings.credentials.handle.label": [],
+        "settings.credentials.handle.value": [],
+        "settings.credentials.label": [],
+        "settings.credentials.password": [],
+        "settings.credentials.password.chevron": [],
+        "settings.credentials.password.label": [],
+        "settings.credentials.password.status": [],
+        "settings.ending": [],
+        "settings.ending.delete": [],
+        "settings.ending.delete.chevron": [],
+        "settings.ending.delete.label": [],
+        "settings.ending.footnote": [],
+        "settings.header": [],
+        "settings.header.back": [],
+        "settings.header.title": [],
+        "settings.leaving": [],
+        "settings.leaving.forget": [],
+        "settings.leaving.forget.label": [],
+        "settings.leaving.forget.status": [],
+        "settings.leaving.forget.switch": [],
+        "settings.leaving.leave": [],
+        "settings.leaving.leave.label": [],
+        "settings.people": [],
+        "settings.people.footnote": [],
+        "settings.people.hidden": [],
+        "settings.people.hidden.chevron": [],
+        "settings.people.hidden.label": [],
+        "settings.people.hidden.value": [],
+        "settings.people.label": [],
+        "settings.reading": [],
+        "settings.reading.exact": [],
+        "settings.reading.exact.label": [],
+        "settings.reading.exact.status": [],
+        "settings.reading.exact.switch": [],
+        "settings.reading.feed": [],
+        "settings.reading.feed.chevron": [],
+        "settings.reading.feed.label": [],
+        "settings.reading.feed.value": [],
+        "settings.reading.footnote": [],
+        "settings.reading.label": [],
+        "settings.sessions": [],
+        "settings.sessions.elsewhere": [],
+        "settings.sessions.elsewhere.label": [],
+        "settings.sessions.footnote": [],
+        "settings.sessions.label": [],
+        "settings.sessions.session": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.label": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.revoke": [
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.status": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.stance": [],
+        "settings.stance.footnote": [],
+        "settings.stance.label": [],
+        "settings.stance.pad": [],
+        "settings.stance.pad.choice": [],
+        "settings.stance.pad.label": [],
+        "settings.stance.pad.status": [],
+        "settings.stance.sliders": [],
+        "settings.stance.sliders.choice": [],
+        "settings.stance.sliders.label": [],
+        "settings.stance.sliders.status": [],
+        "settings.stance.typed": [],
+        "settings.stance.typed.choice": [],
+        "settings.stance.typed.label": [],
+        "settings.stance.typed.status": [],
+        "settings.theme": [],
+        "settings.theme.footnote": [],
+        "settings.theme.label": [],
+        "settings.theme.picker": [],
+        "settings.theme.picker.autoOption": [],
+        "settings.theme.picker.darkOption": [],
+        "settings.theme.picker.lightOption": [],
+        "settings.writing": [],
+        "settings.writing.confirm": [],
+        "settings.writing.confirm.label": [],
+        "settings.writing.confirm.status": [],
+        "settings.writing.confirm.switch": [],
+        "settings.writing.footnote": [],
+        "settings.writing.label": [],
+        "settings.writing.license": [],
+        "settings.writing.license.chevron": [],
+        "settings.writing.license.label": [],
+        "settings.writing.license.value": []
+      }
+    },
+    "SettingsHidden": {
+      "prefix": "settings",
+      "keys": {
+        "settings.hiddenSheet.list.account": "the hidden account's handle, without @ (the hidden-accounts sheet)",
+        "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
+      },
+      "nodes": {
+        "settings.about": [],
+        "settings.about.aboutCogra": [],
+        "settings.about.aboutCogra.chevron": [],
+        "settings.about.aboutCogra.label": [],
+        "settings.about.contact": [],
+        "settings.about.contact.chevron": [],
+        "settings.about.contact.label": [],
+        "settings.about.contact.value": [],
+        "settings.about.intro": [],
+        "settings.about.intro.chevron": [],
+        "settings.about.intro.label": [],
+        "settings.about.label": [],
+        "settings.about.privacy": [],
+        "settings.about.privacy.chevron": [],
+        "settings.about.privacy.label": [],
+        "settings.about.report": [],
+        "settings.about.report.chevron": [],
+        "settings.about.report.label": [],
+        "settings.about.terms": [],
+        "settings.about.terms.chevron": [],
+        "settings.about.terms.label": [],
+        "settings.about.whatsNew": [],
+        "settings.about.whatsNew.chevron": [],
+        "settings.about.whatsNew.label": [],
+        "settings.about.whatsNew.value": [],
+        "settings.backup": [],
+        "settings.backup.footnote": [],
+        "settings.backup.key": [],
+        "settings.backup.key.chevron": [],
+        "settings.backup.key.label": [],
+        "settings.backup.label": [],
+        "settings.backup.recovery": [],
+        "settings.backup.recovery.chevron": [],
+        "settings.backup.recovery.label": [],
+        "settings.backup.recovery.status": [],
+        "settings.credentials": [],
+        "settings.credentials.email": [],
+        "settings.credentials.email.chevron": [],
+        "settings.credentials.email.label": [],
+        "settings.credentials.email.value": [],
+        "settings.credentials.footnote": [],
+        "settings.credentials.handle": [],
+        "settings.credentials.handle.chevron": [],
+        "settings.credentials.handle.label": [],
+        "settings.credentials.handle.value": [],
+        "settings.credentials.label": [],
+        "settings.credentials.password": [],
+        "settings.credentials.password.chevron": [],
+        "settings.credentials.password.label": [],
+        "settings.credentials.password.status": [],
+        "settings.ending": [],
+        "settings.ending.delete": [],
+        "settings.ending.delete.chevron": [],
+        "settings.ending.delete.label": [],
+        "settings.ending.footnote": [],
+        "settings.header": [],
+        "settings.header.back": [],
+        "settings.header.title": [],
+        "settings.hiddenSheet": [],
+        "settings.hiddenSheet.dragHandle": [],
+        "settings.hiddenSheet.list": [],
+        "settings.hiddenSheet.list.account": [
+          "juno",
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.aside": [
+          "juno",
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.disc": [
+          "juno",
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.second": [
+          "juno",
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.title": [
+          "juno",
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.trailing": [
+          "juno",
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.trailing.unhide": [
+          "juno",
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.title": [],
+        "settings.leaving": [],
+        "settings.leaving.forget": [],
+        "settings.leaving.forget.label": [],
+        "settings.leaving.forget.status": [],
+        "settings.leaving.forget.switch": [],
+        "settings.leaving.leave": [],
+        "settings.leaving.leave.label": [],
+        "settings.people": [],
+        "settings.people.footnote": [],
+        "settings.people.hidden": [],
+        "settings.people.hidden.chevron": [],
+        "settings.people.hidden.label": [],
+        "settings.people.hidden.value": [],
+        "settings.people.label": [],
+        "settings.reading": [],
+        "settings.reading.exact": [],
+        "settings.reading.exact.label": [],
+        "settings.reading.exact.status": [],
+        "settings.reading.exact.switch": [],
+        "settings.reading.feed": [],
+        "settings.reading.feed.chevron": [],
+        "settings.reading.feed.label": [],
+        "settings.reading.feed.value": [],
+        "settings.reading.footnote": [],
+        "settings.reading.label": [],
+        "settings.sessions": [],
+        "settings.sessions.elsewhere": [],
+        "settings.sessions.elsewhere.label": [],
+        "settings.sessions.footnote": [],
+        "settings.sessions.label": [],
+        "settings.sessions.session": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.label": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.revoke": [
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.status": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.stance": [],
+        "settings.stance.footnote": [],
+        "settings.stance.label": [],
+        "settings.stance.pad": [],
+        "settings.stance.pad.choice": [],
+        "settings.stance.pad.label": [],
+        "settings.stance.pad.status": [],
+        "settings.stance.sliders": [],
+        "settings.stance.sliders.choice": [],
+        "settings.stance.sliders.label": [],
+        "settings.stance.sliders.status": [],
+        "settings.stance.typed": [],
+        "settings.stance.typed.choice": [],
+        "settings.stance.typed.label": [],
+        "settings.stance.typed.status": [],
+        "settings.theme": [],
+        "settings.theme.footnote": [],
+        "settings.theme.label": [],
+        "settings.theme.picker": [],
+        "settings.theme.picker.autoOption": [],
+        "settings.theme.picker.darkOption": [],
+        "settings.theme.picker.lightOption": [],
+        "settings.writing": [],
+        "settings.writing.confirm": [],
+        "settings.writing.confirm.label": [],
+        "settings.writing.confirm.status": [],
+        "settings.writing.confirm.switch": [],
+        "settings.writing.footnote": [],
+        "settings.writing.label": [],
+        "settings.writing.license": [],
+        "settings.writing.license.chevron": [],
+        "settings.writing.license.label": [],
+        "settings.writing.license.value": []
       }
     }
   }

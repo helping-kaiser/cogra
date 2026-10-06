@@ -95,26 +95,24 @@ one show-sensitive threshold (readme §13, *The veil's scope*).
 ## Unresolved
 
 Rows whose on-screen state needs a ruling before they can gate.
+(None open. The first three arrived with the registry and were ruled
+the same day; they stay as the record of what was asked.)
 
-1. **The order swap before the ranker.** The build serves `Newest`, but
-   every filter sheet draws the two-option `Ranked` / `Newest` swap
-   (`OrderSection`; `FeedSheet.md`, `ExploreFilter.md`,
-   `SettingsReading.md`), and the feed's and search's sidecars still
-   state `Ranked` as the default. Nothing rules whether `Ranked` stands
-   selectable, disabled with a reason, or absent while no ranker
-   answers it — and a selectable `Ranked` that sorts newest is a lying
-   label.
-2. **The Feed score before the ranker.** Every post card carries
-   `Feed score` and its number, and `FeedEntry` → `RankPath` →
-   `RankHop` → `RankRecords` walk the paths behind it — a slice-3
-   remainder (readme §13, *The score-and-opinions round*). Nothing rules
-   what a release without the ranker shows in the score's place, or
-   whether the drill-down ships.
-3. **Topic holding before the topic feed.** The tag round records the
-   roadmap's "topic follow is client-hidden until the topic feed lands";
-   the V1.0 scope cut rules that topic follow ships whole, as slice-3
-   sequencing inside V1.0; the topic round draws it as the stance
-   gesture with no hiding condition. Whether a build without the topic
-   feed hides the tag page's stance row, Explore's `Your topics` door,
-   `YourTopics` and the filter's topic section — or shows them with the
-   topic section alone held back — is unruled.
+1. **The order swap before the ranker — ruled (jakob 2026-10-06).**
+   Ranking ships inside V1.0: the swap and its `Ranked` default are
+   slice sequencing, not release staging, so no row gates here. The
+   interim while the ranker slice is unbuilt is implementation's
+   choice — serve `Newest` with the swap arriving alongside the
+   ranker, or draw the swap early over a frozen rank — both inside
+   the MVP, neither a dead control at the cut.
+2. **The Feed score before the ranker — ruled (jakob 2026-10-06).**
+   Same ruling: the score and its drill-down ship with V1.0. Until
+   the ranker slice lands the build may show the drawn score reading
+   `0` or add the figure with the slice, implementation's choice;
+   nothing is staged at the release cut.
+3. **Topic holding before the topic feed — ruled (jakob 2026-10-06).**
+   Topic holding ships whole inside V1.0. The tag round's roadmap
+   note ("client-hidden until the topic feed lands") is superseded
+   (readme §13 carries the ruled-since mark); the tag page's stance
+   row, Explore's `Your topics` door, `YourTopics` and the filter's
+   topic section all show, as drawn.

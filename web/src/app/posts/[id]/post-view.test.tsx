@@ -15,6 +15,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
+import { byNode } from "@/test/data-node";
 
 // The menu rows that go somewhere navigate rather than link, because a sheet
 // row is a button — so the router is what a citing or editing row is measured
@@ -271,7 +272,7 @@ function thread(...args: Parameters<typeof detail>) {
  * opens it the way a reader does — through the affordance row's count.
  */
 async function openComments() {
-  fireEvent.click(await screen.findByTestId("post-comments"));
+  fireEvent.click(await screen.findByTestId(byNode("postDetail.card.actionRow.comments")));
   const sheet = await screen.findByTestId("comments-sheet");
   // THE THREAD READS WHEN IT IS RAISED — it is the sheet's own read now, not
   // a slice of the post's — so opening it means waiting for that read, the
@@ -313,8 +314,8 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
-    expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
+    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.getByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("post-no-comments")).not.toBeInTheDocument();
   });
@@ -347,7 +348,7 @@ describe("PostView", () => {
     await openComments();
     // Opinion toward any passive node — a post, a comment, a reply
     // (design.md §6; roadmap slice 2.2).
-    expect(await screen.findByTestId("post-stance")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toBeInTheDocument();
     expect(screen.getByTestId("comment-stance-c1")).toBeInTheDocument();
     // The reply arrives unfolded, and wears the control like anything else.
     fireEvent.click(screen.getByTestId("replies-more-c1"));
@@ -369,8 +370,8 @@ describe("PostView", () => {
       writeSigner: fakeWriteSigner(),
     });
     await openComments();
-    await waitFor(() => expect(screen.getByTestId("post-stance")).toHaveTextContent("Love this"));
-    expect(screen.getByTestId("post-stance-resting-exact")).toHaveTextContent("+0.90 / +0.25");
+    await waitFor(() => expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toHaveTextContent("Love this"));
+    expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor.exact"))).toHaveTextContent("+0.90 / +0.25");
     expect(screen.getByTestId("comment-stance-c1")).toHaveTextContent("Don't like this");
     expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
       "-0.55 / +0.25",
@@ -396,7 +397,7 @@ describe("PostView", () => {
     expect(await screen.findByTestId("post-pending")).toHaveTextContent("Still settling");
     expect(screen.getByTestId("comment-pending-c1")).toHaveTextContent("Still settling");
     expect(screen.queryByTestId("comment-pending-c2")).not.toBeInTheDocument();
-    expect(screen.getByTestId("post-body")).toHaveTextContent("The body");
+    expect(screen.getByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("Just signed");
   });
 
@@ -405,7 +406,7 @@ describe("PostView", () => {
       ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("post-title")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toBeInTheDocument();
     expect(screen.queryByTestId("post-pending")).not.toBeInTheDocument();
   });
 
@@ -421,11 +422,11 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    await screen.findByTestId("post-body");
+    await screen.findByTestId(byNode("postDetail.card.body"));
     expect(screen.queryByTestId("post-license-terms")).not.toBeInTheDocument();
     expect(screen.queryByTestId("comment-license-terms-c1")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("post-menu-license"));
     expect(screen.getByTestId("license-sheet-terms")).toHaveTextContent("Public domain");
     // Raised from the post's own menu, over the page — never stacked
@@ -441,7 +442,7 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    await screen.findByTestId("post-body");
+    await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
     // The comment's own menu is a sheet over the comments thread's sheet,
     // and takes the next tonal rung (`CommentMenu.jsx`, design/readme.md:2364).
@@ -469,7 +470,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
     expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
     expect(screen.getByTestId("post-menu-edit")).toHaveTextContent("Edit");
@@ -504,7 +505,7 @@ describe("PostView", () => {
     });
     await openComments();
     expect(await screen.findByTestId("post-no-comments")).toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     expect(screen.getByTestId("post-menu-save")).toHaveTextContent("Save");
     expect(screen.getByTestId("post-menu-cite")).toHaveTextContent("Cite in a new post");
     // `Hide @ada`, never "Hide this author" (`ActorChip.jsx:67`).
@@ -529,7 +530,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     expect(screen.getByTestId("post-menu-share")).toHaveTextContent("Share");
     const order = Array.from(
       screen.getByTestId("post-menu-sheet-body").querySelectorAll("[data-testid]"),
@@ -550,7 +551,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     expect(screen.queryByTestId("post-menu-share")).not.toBeInTheDocument();
   });
 
@@ -566,7 +567,7 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    await screen.findByTestId("post-body");
+    await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
     expect(screen.getByTestId("comment-menu-save-c1")).toHaveTextContent("Save");
     expect(screen.getByTestId("comment-menu-cite-c1")).toHaveTextContent("Cite in a new post");
@@ -597,7 +598,7 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    await screen.findByTestId("post-body");
+    await screen.findByTestId(byNode("postDetail.card.body"));
     fireEvent.click(screen.getByTestId("comment-menu-c1"));
     fireEvent.click(screen.getByTestId("comment-menu-cited-by-c1"));
     expect(await screen.findByTestId("cited-by-sheet-empty")).toHaveTextContent(
@@ -619,7 +620,7 @@ describe("PostView", () => {
       ),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("post-cited-by")).toHaveTextContent("Cited by 4");
+    expect(await screen.findByTestId(byNode("postDetail.card.citedBy"))).toHaveTextContent("Cited by 4");
   });
 
   // THE INTRODUCED-BUT-INERT LAW (jakob 2026-09-14): a row whose destination is
@@ -633,13 +634,13 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("post-menu-save"));
-    expect(screen.getByTestId("post-body")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
 
-    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("post-menu-hide"));
-    expect(screen.getByTestId("post-body")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
   });
 
   // The dialog ships; the removal does not (jakob 2026-09-14 — erasure is
@@ -652,7 +653,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("post-menu-remove"));
     const dialog = screen.getByTestId("post-remove-confirm") as HTMLDialogElement;
     expect(dialog.open).toBe(true);
@@ -661,7 +662,7 @@ describe("PostView", () => {
     fireEvent.click(screen.getByTestId("post-remove-confirm-remove"));
     expect(dialog.open).toBe(false);
     // The post is still on the page: nothing was removed.
-    expect(screen.getByTestId("post-body")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.body"))).toBeInTheDocument();
   });
 
   it("serves not-found for an unknown id", async () => {
@@ -676,7 +677,7 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
     expect(screen.queryByTestId("comment-draft")).not.toBeInTheDocument();
     expect(screen.queryByTestId("comment-submit")).not.toBeInTheDocument();
@@ -706,7 +707,7 @@ describe("PostView", () => {
     // load-more slot, not the banner above the thread.
     expect(screen.queryByTestId("post-thread-transport-error")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-more-comments")).not.toBeInTheDocument();
-    expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
     expect(screen.getByTestId("post-comment-c1")).toHaveTextContent("First!");
   });
 
@@ -748,7 +749,7 @@ describe("PostView", () => {
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     expect(await screen.findByTestId("post-transport-error")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("post-retry"));
-    expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
     expect(screen.queryByTestId("post-transport-error")).not.toBeInTheDocument();
   });
 
@@ -1017,13 +1018,13 @@ describe("PostView", () => {
 
     // Both controls, because both are viewer-scoped reads on this surface
     // and the defect took the whole class, not the post alone.
-    expect(await screen.findByTestId("post-stance-resting-exact")).toHaveTextContent("+1.00 / +0.20");
+    expect(await screen.findByTestId(byNode("postDetail.card.actionRow.stance.anchor.exact"))).toHaveTextContent("+1.00 / +0.20");
     await waitFor(() =>
       expect(screen.getByTestId("comment-stance-c1-resting-exact")).toHaveTextContent(
         "-0.55 / +0.25",
       ),
     );
-    expect(screen.getByTestId("post-stance")).toHaveAccessibleName(/Love this/);
+    expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toHaveAccessibleName(/Love this/);
     // And no read went out without one: the tab settled its session before
     // it sent anything, so the standing is right on the first answer rather
     // than on a replay of it.
@@ -1057,13 +1058,13 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
     // TWO TAP MODELS, NEVER MIXED (`TopicsLine.jsx:22-24`): on a detail
     // surface the WHOLE LINE is one control opening the tags-and-references
     // sheet, the chips inert inside it. The chip's own link belongs to the
     // summary card, where the counts are the opener instead.
     expect(screen.queryByTestId("post-topic-rust-link")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-topics"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.card.tagsLine")));
     expect(screen.getByTestId("post-refs-sheet-topic-rust")).toBeInTheDocument();
     // Not the viewer's own post — no add/remove affordance.
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
@@ -1092,18 +1093,18 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(await screen.findByTestId(byNode("postDetail.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
     // THE REVEAL HAS NO OWNERSHIP CASE: `graph.json:1197` carries one
     // `tags and references` edge off `PostDetail`, where the edge that does
     // split by ownership says so (`:1194`, the ⋮'s "the reader's sheet").
     // So an own post's line reads exactly like anyone else's — one control,
     // the chips inert, the sheet behind it.
     expect(screen.queryByTestId("post-topic-rust-link")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-topics"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.card.tagsLine")));
     expect(screen.getByTestId("post-refs-sheet-topic-rust")).toBeInTheDocument();
     expect(screen.queryByTestId("post-tag-input")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-topic-rust-remove")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("post-menu-edit"));
     expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
@@ -1120,7 +1121,7 @@ describe("PostView", () => {
       store: storeFor("acct-1"),
       writeSigner: fakeWriteSigner(),
     });
-    fireEvent.click(await screen.findByTestId("post-menu"));
+    fireEvent.click(await screen.findByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("post-menu-sensitive"));
     expect(routerPush).toHaveBeenCalledWith("/compose?post=p1");
   });
@@ -1172,18 +1173,23 @@ describe("PostView", () => {
     const { container } = renderWithProviders(<PostView postId="p1" />, {
       writeSigner: fakeWriteSigner(),
     });
-    const card = await screen.findByTestId("post");
+    const card = await screen.findByTestId(byNode("postDetail.card"));
     expect(card.tagName).toBe("SECTION");
     expect(card.className).toContain("bg-surface-container-highest");
-    expect(card).toContainElement(screen.getByTestId("post-author"));
-    expect(card).toContainElement(screen.getByTestId("post-title"));
-    expect(card).toContainElement(screen.getByTestId("post-stance"));
+    expect(card).toContainElement(screen.getByTestId(byNode("postDetail.card.authorChip")));
+    expect(card).toContainElement(screen.getByTestId(byNode("postDetail.card.title")));
+    expect(card).toContainElement(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor")));
     const order = Array.from(
       container.querySelectorAll("[data-testid]"),
       (node) => node.getAttribute("data-testid"),
     );
-    expect(order.indexOf("post-author")).toBeLessThan(order.indexOf("post-title"));
-    expect(order.indexOf("post-author")).toBeLessThan(order.indexOf("post-body"));
+    expect(order.indexOf("postDetail.card.authorChip")).toBeGreaterThan(-1);
+    expect(order.indexOf("postDetail.card.authorChip")).toBeLessThan(
+      order.indexOf("postDetail.card.title"),
+    );
+    expect(order.indexOf("postDetail.card.authorChip")).toBeLessThan(
+      order.indexOf("postDetail.card.body"),
+    );
   });
 
   // The count states the thread's size and raises it (graph.json: every
@@ -1193,7 +1199,7 @@ describe("PostView", () => {
       ...thread("u1", [{ id: "c1", body: "First!" }]),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    const comments = await screen.findByTestId("post-comments");
+    const comments = await screen.findByTestId(byNode("postDetail.card.actionRow.comments"));
     expect(comments).toHaveAccessibleName("1 comment");
     const sheet = screen.getByTestId("comments-sheet");
     expect(sheet).not.toBeVisible();
@@ -1219,7 +1225,7 @@ describe("PostView", () => {
     fireEvent.keyDown(sheet, { key: "Escape" });
     fireEvent(sheet, new Event("close"));
     await waitFor(() => expect(sheet).not.toBeVisible());
-    expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
   });
 
   // ReplyEntry 7 → ReplyCompose, and every way out of the composer comes back
@@ -1465,7 +1471,7 @@ describe("PostView", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
-    expect(await screen.findByTestId("post-author")).toHaveAttribute("href", "/u/alice");
+    expect(await screen.findByTestId(byNode("postDetail.card.authorChip"))).toHaveAttribute("href", "/u/alice");
     expect(screen.getByTestId("comment-author-c1")).toHaveAttribute("href", "/u/bob");
   });
 
@@ -1483,10 +1489,10 @@ describe("PostView", () => {
           ])),
     );
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
-    expect(await screen.findByTestId("post-topic-rust")).toBeInTheDocument();
-    expect(screen.getByTestId("post-topic-wasm")).toBeInTheDocument();
-    expect(screen.queryByTestId("post-topic-axum")).not.toBeInTheDocument();
-    expect(screen.getByTestId("post-topics-counts")).toHaveTextContent("· 1 topic");
+    expect(await screen.findByTestId(byNode("postDetail.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.tag", "p1/wasm"))).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card.tagsLine.tag", "p1/axum"))).not.toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.counts"))).toHaveTextContent("· 1 topic");
     expect(screen.queryByTestId("post-topics-reveal")).not.toBeInTheDocument();
   });
 
@@ -1503,7 +1509,7 @@ describe("PostView", () => {
     renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
     await openComments();
     expect(await screen.findByTestId("comment-c1-topic-wasm")).toBeInTheDocument();
-    expect(screen.getByTestId("post-topic-rust")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.tagsLine.tag", "p1/rust"))).toBeInTheDocument();
     expect(screen.queryByTestId("comment-c1-topics-reveal")).not.toBeInTheDocument();
   });
 
@@ -1984,14 +1990,14 @@ describe("PostView", () => {
         }),
       );
       const scroller = postIn();
-      await screen.findByTestId("post-title");
+      await screen.findByTestId(byNode("postDetail.card.title"));
       expect(reads).toBe(1);
 
       pull(scroller);
       await waitFor(() => expect(reads).toBe(2));
       // The already-drawn post stays — the pull is an indicator, not a
       // blank page (the shared HT-10 rule).
-      expect(screen.getByTestId("post-title")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.title"))).toBeInTheDocument();
       scroller.remove();
     });
 
@@ -2004,7 +2010,7 @@ describe("PostView", () => {
         }),
       );
       const scroller = postIn();
-      await screen.findByTestId("post-title");
+      await screen.findByTestId(byNode("postDetail.card.title"));
 
       pull(scroller);
       expect(screen.getByTestId("post-refreshing")).toHaveTextContent("Loading…");
@@ -2022,7 +2028,7 @@ describe("PostView", () => {
         }),
       );
       const scroller = postIn();
-      await screen.findByTestId("post-title");
+      await screen.findByTestId(byNode("postDetail.card.title"));
 
       pull(scroller, PULL_THRESHOLD - 1);
       await waitFor(() => expect(reads).toBe(1));
@@ -2038,7 +2044,7 @@ describe("PostView", () => {
         }),
       );
       const scroller = postIn();
-      await screen.findByTestId("post-title");
+      await screen.findByTestId(byNode("postDetail.card.title"));
 
       scroller.scrollTop = 900;
       pull(scroller);
@@ -2087,7 +2093,7 @@ describe("PostView — references", () => {
     );
     renderWithProviders(<PostView postId="p1" />);
 
-    expect(await screen.findByTestId("post-topics-counts")).toHaveTextContent("· 2 references");
+    expect(await screen.findByTestId(byNode("postDetail.card.tagsLine.counts"))).toHaveTextContent("· 2 references");
     expect(screen.queryByTestId("post-reference-l1-u-ada-link")).not.toBeInTheDocument();
     expect(screen.queryByTestId("post-references-reveal")).not.toBeInTheDocument();
   });
@@ -2119,9 +2125,9 @@ describe("PostView — references", () => {
     );
     renderWithProviders(<PostView postId="p1" />, { store: storeFor("u1") });
     await openComments();
-    await screen.findByTestId("post-body");
+    await screen.findByTestId(byNode("postDetail.card.body"));
 
-    fireEvent.click(screen.getByTestId("post-menu"));
+    fireEvent.click(screen.getByTestId(byNode("postDetail.header.menu")));
     fireEvent.click(screen.getByTestId("post-menu-cite"));
     expect(routerPush).toHaveBeenCalledWith("/compose?reference=p1");
 
@@ -2236,16 +2242,16 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         const pinned = await screen.findByTestId("post-pinned-clip");
-        const card = screen.getByTestId("post");
+        const card = screen.getByTestId(byNode("postDetail.card"));
         expect(card).not.toContainElement(pinned);
         // ABOVE it, which is the whole of why the author chip leads the card
         // rather than the screen.
         expect(pinned.compareDocumentPosition(card)).toBe(
           Node.DOCUMENT_POSITION_FOLLOWING,
         );
-        expect(screen.queryByTestId("post-media")).not.toBeInTheDocument();
+        expect(screen.queryByTestId(byNode("postDetail.card.media"))).not.toBeInTheDocument();
         // The title still leads the card: it titles the thing.
-        expect(screen.getByTestId("post-title")).toHaveTextContent("The title");
+        expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
       });
 
       it("gives the pinned clip the transport, not the disc", async () => {
@@ -2302,7 +2308,7 @@ describe("PostView — references", () => {
         // The one tap on the clip's own face lifted the card's veil too.
         expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
         expect(screen.queryByTestId("post-veil")).toBeNull();
-        expect(screen.getByTestId("post-description")).toHaveTextContent(
+        expect(screen.getByTestId(byNode("postDetail.card.description"))).toHaveTextContent(
           "One rubbing includes a dead seabird.",
         );
         // Revealed, the clip stands with its ladder's second rung back.
@@ -2313,7 +2319,7 @@ describe("PostView — references", () => {
         server.use(...withBody({ content: null, attachments: [picture("m1", null)] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        expect(await screen.findByTestId("post-media")).toBeInTheDocument();
+        expect(await screen.findByTestId(byNode("postDetail.card.media"))).toBeInTheDocument();
         expect(screen.queryByTestId("post-pinned-clip")).toBeNull();
       });
 
@@ -2343,10 +2349,10 @@ describe("PostView — references", () => {
       );
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-      expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
-      expect(screen.getByTestId("post-media")).toBeInTheDocument();
+      expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+      expect(screen.getByTestId(byNode("postDetail.card.media"))).toBeInTheDocument();
       // The XOR: a media post has no words half at all.
-      expect(screen.queryByTestId("post-body")).not.toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.card.body"))).not.toBeInTheDocument();
       // The described picture reads as its description; the undescribed one is
       // decorative rather than announced as "image".
       expect(screen.getByAltText("paper against the salt crust")).toBeInTheDocument();
@@ -2368,19 +2374,19 @@ describe("PostView — references", () => {
       const mark = await screen.findByTestId("post-removed");
       expect(mark).toHaveTextContent("Removed by its author");
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("post-title")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("post-media")).not.toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.card.title"))).not.toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.card.media"))).not.toBeInTheDocument();
       // The license rode the payload, so a redacted record has none to show.
       expect(screen.queryByTestId("post-license-terms")).not.toBeInTheDocument();
       // A REMOVED POST HAS NO MENU LEFT — back is the whole header
       // (`Removed.jsx:5-6`): no ⋮, and so none of its rows.
-      expect(screen.queryByTestId("post-menu")).not.toBeInTheDocument();
+      expect(screen.queryByTestId(byNode("postDetail.header.menu"))).not.toBeInTheDocument();
       // What survives: the author, the timestamp, and the stance a reader can
       // still take, beside the count that proves nothing was quietly deleted.
-      expect(screen.getByTestId("post-author")).toBeInTheDocument();
-      expect(screen.getByTestId("post-timestamp")).toBeInTheDocument();
-      expect(screen.getByTestId("post-stance")).toBeInTheDocument();
-      expect(screen.getByTestId("post-comments")).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.authorChip"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.timestamp"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.stance.anchor"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toBeInTheDocument();
     });
 
     it("names a platform removal differently from an author's own", async () => {
@@ -2410,14 +2416,14 @@ describe("PostView — references", () => {
       renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
       // The title is outside the veil, so the choice to look is informed.
-      expect(await screen.findByTestId("post-title")).toHaveTextContent("The title");
+      expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
       const veil = screen.getByTestId("post-veil");
       expect(veil).toBeInTheDocument();
       // One reveal answers for the whole body — the media and the words
       // beside it, which on a media post are the description (the XOR).
       fireEvent.click(within(veil).getByRole("button"));
-      expect(screen.getByTestId("post-media")).toBeInTheDocument();
-      expect(screen.getByTestId("post-description")).toHaveTextContent(
+      expect(screen.getByTestId(byNode("postDetail.card.media"))).toBeInTheDocument();
+      expect(screen.getByTestId(byNode("postDetail.card.description"))).toHaveTextContent(
         "Rubbings from three weekends.",
       );
     });

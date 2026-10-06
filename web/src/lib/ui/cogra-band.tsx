@@ -19,6 +19,7 @@
 
 import type { ReactNode } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 
 export function CograBand({
@@ -26,27 +27,36 @@ export function CograBand({
   onChats,
   chatsLabel = "Chats",
   children,
+  node,
 }: {
   trailing?: ReactNode;
   /** Omitted until the chat surface exists. */
   onChats?: () => void;
   chatsLabel?: string;
   children?: ReactNode;
+  /**
+   * The registered band node on a registered screen (`feed.band`): the 48px
+   * line is the node, and its mark, wordmark and chats control are its parts.
+   * The block around it — the band plus what rides below — keeps `cogra-band`.
+   */
+  node?: DataNode;
 }) {
   return (
     <div className="flex-none" data-testid="cogra-band">
-      <div className="flex h-12 items-center gap-2 px-4">
-        <span aria-hidden className="inline-flex text-primary">
+      <div className="flex h-12 items-center gap-2 px-4" {...testAttributes(node)}>
+        <span aria-hidden className="inline-flex text-primary" {...testAttributes(part(node, "mark"))}>
           <Icon name="mark" pickColor="var(--primary-container)" />
         </span>
         {/* The wordmark, not a page title: §6 governs the mark, and its weight
             is the mark's own rather than a rung of the type ramp. */}
-        <span className="text-title-large font-semibold">cogra</span>
+        <span className="text-title-large font-semibold" {...testAttributes(part(node, "wordmark"))}>
+          cogra
+        </span>
         <div className="ml-auto flex min-w-0 items-center">
           {onChats !== undefined && (
             <button
               type="button"
-              data-testid="band-chats"
+              {...testAttributes(part(node, "chats"), "band-chats")}
               aria-label={chatsLabel}
               onClick={onChats}
               className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"

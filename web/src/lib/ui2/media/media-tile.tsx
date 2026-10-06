@@ -19,6 +19,8 @@
 
 import Image from "next/image";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { cssRatio, fitFor, PORTRAIT_CAP, tileRatio } from "./aspect";
 import { VideoPlayer, type PlayerSurface } from "./video-player";
 
@@ -73,6 +75,11 @@ export type MediaTileProps = {
   // favour of `preload`.
   preload?: boolean;
   testId?: string;
+  /**
+   * The registered frame node (`….media.frame`): it names the frame instead of
+   * `testId`, and a clip's sound control is its `soundDisc`.
+   */
+  node?: DataNode;
   onOpen?: () => void;
 };
 
@@ -95,6 +102,7 @@ export function MediaTile({
   sizes = "(max-width: 42rem) 100vw, 42rem",
   preload = false,
   testId,
+  node,
   onOpen,
 }: MediaTileProps) {
   const probedRatio =
@@ -164,11 +172,12 @@ export function MediaTile({
         // every press aimed at play or seek.
         onOpenViewer={onOpen}
         testId={testId}
+        soundNode={part(node, "soundDisc")}
       />
     );
     return (
       <span
-        data-testid={testId ? `${testId}-frame` : undefined}
+        {...testAttributes(node, testId ? `${testId}-frame` : undefined)}
         style={frameStyle}
         className="relative block w-full min-h-0 overflow-hidden bg-surface-container-high"
       >
@@ -179,7 +188,7 @@ export function MediaTile({
 
   const frame = (
     <span
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       style={frameStyle}
       className="relative block w-full min-h-0 overflow-hidden bg-surface-container-high"
     >
