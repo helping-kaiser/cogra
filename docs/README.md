@@ -162,7 +162,7 @@ an `instances/` doc is a sign the mechanism belongs in
   surfacing channel: the nine addressed acts that notify, the
   in-app list, per-viewer rows and their two-level read state,
   the bell's dot.
-- [design](implementation/design.md) — the design system both
+- [design](../design/readme.md) — the design system both
   clients implement: the orange-led Material 3 palette and how
   it is generated, Figtree and the type scale, shape, motion,
   the shared component inventory, copy rules, the stance

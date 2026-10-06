@@ -459,5 +459,5 @@ are reached:
   Opinion families the kinds resolve to.
 - [auth.md](auth.md) — the application lifecycle behind the four
   invite-flow kinds.
-- [design.md](design.md) — the band the bell sits in and the list
+- [design/readme.md](../../design/readme.md) — the band the bell sits in and the list
   conventions the surface follows.
