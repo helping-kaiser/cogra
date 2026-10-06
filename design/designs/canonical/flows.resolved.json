@@ -1857,28 +1857,327 @@
         "PostDetail",
         "PostOpinions"
       ]
+    },
+    {
+      "name": "request-a-password-reset",
+      "description": "Forgot password? on the sign-in screen asks for the address and sends the reset link; the status line confirms the same whether or not an account stands behind it, and the journey leaves the app with the mail.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn · 7 «Forgot password?» → Reset",
+        "end · Reset · 3 «Send reset link» → self — the status line confirms — always, no account enumeration"
+      ],
+      "boards": [
+        "SignIn",
+        "Reset"
+      ]
+    },
+    {
+      "name": "set-a-new-password",
+      "description": "The reset mail's link opens the new-password form; the new password set signs every device out, so signing in again is the next thing.",
+      "status": "resolved",
+      "steps": [
+        "start · ResetNew",
+        "end · ResetNew · 3 «Set the new password» → SignIn — set — every device is signed out, so signing in again is the next thing"
+      ],
+      "boards": [
+        "ResetNew",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "meet-a-spent-reset-link",
+      "description": "A reset link opened spent or past its fifteen minutes says so, and Reset your password asks for a fresh one, its field empty.",
+      "status": "resolved",
+      "steps": [
+        "start · ResetExpired",
+        "end · ResetExpired · 1 «Reset your password» → Reset — the request again, its field empty — a spent token says nothing about whose it was"
+      ],
+      "boards": [
+        "ResetExpired",
+        "Reset"
+      ]
+    },
+    {
+      "name": "sign-back-in-after-the-session-ran-out",
+      "description": "A session that ran out mid-use lands on the sign-in form; signing in again returns a member to the feed, the draft and any picks still kept.",
+      "status": "resolved",
+      "steps": [
+        "start · SignInExpired",
+        "end · SignInExpired · 6 «Sign in» → Feed — member, key on this device — the draft and any picks still kept"
+      ],
+      "boards": [
+        "SignInExpired",
+        "Feed"
+      ]
+    },
+    {
+      "name": "sign-in-after-a-wrong-password",
+      "description": "A pair that doesn't match answers in place on the sign-in form; the corrected pair signs a member with their key on this device into their feed.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "SignIn · 6 «Sign in» → SignInError — bad email or password",
+        "end · SignInError · 6 «Sign in» → Feed — member, key on this device"
+      ],
+      "boards": [
+        "SignIn",
+        "SignInError",
+        "Feed"
+      ]
+    },
+    {
+      "name": "sign-in-after-the-backoff",
+      "description": "Too many failed tries in a row answer with the backoff in place; once it has passed, Sign in lands wherever app-open lands for the account.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "SignIn · 6 «Sign in» → SignInLimited — too many failed tries in a row — the backoff answers in place",
+        "end · SignInLimited · 6 «Sign in» → Feed — the backoff has passed — sign-in lands wherever app-open lands for the account, as SignIn's own Sign in lists"
+      ],
+      "boards": [
+        "SignIn",
+        "SignInLimited",
+        "Feed"
+      ]
+    },
+    {
+      "name": "meet-the-security-notice",
+      "description": "A sign-in after a reused sign-in was detected lands with the notice as a card, once; Change password on it opens the credential screen, and the changed password signs every other device out.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "SignIn · 6 «Sign in» → FeedSecurityNotice — a reused sign-in was detected since the last one — the notice rides the landing as a card, once",
+        "FeedSecurityNotice · 1 «Change password» → ChangePassword — the credential screen — the reader decides; nothing about the notice depends on it",
+        "end · ChangePassword · 5 «Change password» → Settings — changed — the snackbar answers, and every other device is signed out"
+      ],
+      "boards": [
+        "SignIn",
+        "FeedSecurityNotice",
+        "ChangePassword",
+        "Settings"
+      ]
+    },
+    {
+      "name": "sign-in-where-no-backup-can-restore",
+      "description": "A member signing in on a device the key is not on, for an account with no backup, lands wherever app-open lands for that account — the key-elsewhere shell with nothing to restore from.",
+      "status": "resolved",
+      "steps": [
+        "start · SignIn",
+        "end · SignIn · 6 «Sign in» → KeyElsewhereNoBackup — member, key not here and no backup — sign-in lands wherever app-open lands for the account"
+      ],
+      "boards": [
+        "SignIn",
+        "KeyElsewhereNoBackup"
+      ]
+    },
+    {
+      "name": "arrive-through-an-invite-link",
+      "description": "An invite link opens the issuer's borrowed view, feed first; Sign in or join meets the join form with the link already in hand, and Create account begins the applicant days.",
+      "status": "resolved",
+      "steps": [
+        "start · Main",
+        "Main · 2 «Sign in or join» → Join — the invite link held is live — the join form opens with it in hand, never the door; Join's own Sign in serves a returning reader",
+        "end · Join · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "Main",
+        "Join",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "arrive-through-a-dead-invite-link",
+      "description": "An invite link that no longer works still opens the borrowed view; Sign in or join says the link is unusable and takes another, and a different link that checks out opens the join form.",
+      "status": "resolved",
+      "steps": [
+        "start · Main",
+        "Main · 2 «Sign in or join» → JoinInvalid — the link held no longer works — it says so, and takes another",
+        "end · JoinInvalid · 3 «Continue» → Join — a different link checks out"
+      ],
+      "boards": [
+        "Main",
+        "JoinInvalid",
+        "Join"
+      ]
+    },
+    {
+      "name": "paste-something-that-isnt-a-link",
+      "description": "Nothing that reads as a link at the door is answered in place on the field; a link that checks out then opens the join form.",
+      "status": "resolved",
+      "steps": [
+        "start · InviteEntry",
+        "InviteEntry · 3 «Continue» → InviteEntryError — nothing that reads as a link — the field says so in place",
+        "end · InviteEntryError · 3 «Continue» → Join — the link checks out"
+      ],
+      "boards": [
+        "InviteEntry",
+        "InviteEntryError",
+        "Join"
+      ]
+    },
+    {
+      "name": "fix-the-join-forms-errors",
+      "description": "A handle taken or an input refused answers in place on the join form; corrected, Create account makes the account and the applicant days begin.",
+      "status": "resolved",
+      "steps": [
+        "start · InviteEntry · 3 «Continue» → Join — the link checks out",
+        "Join · 6 «Create account» → JoinErrors — handle taken / invalid input",
+        "end · JoinErrors · 6 «Create account» → ApplicantFeed — account created — applicant days begin"
+      ],
+      "boards": [
+        "InviteEntry",
+        "Join",
+        "JoinErrors",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "a-guest-meets-the-join-ask",
+      "description": "A signed act tried in the bare view — the stance face on a post — raises the join prompt over the read; Sign in or join opens the sign-in screen for a reader who holds no link.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedBare",
+        "FeedBare · 10 «stance face» → GuestGate — signed out",
+        "end · GuestGate · 2 «Sign in or join» → SignIn — no invite link held — the bare view's reader"
+      ],
+      "boards": [
+        "FeedBare",
+        "GuestGate",
+        "SignIn"
+      ]
+    },
+    {
+      "name": "verify-the-email-in-the-app",
+      "description": "The verification mail's link opened where the app takes it lands on the in-app confirmation; Go to the feed returns an applicant to the task cards still left.",
+      "status": "resolved",
+      "steps": [
+        "start · VerifiedApp",
+        "end · VerifiedApp · 1 «Go to the feed» → ApplicantFeed — application still running — the remaining task cards"
+      ],
+      "boards": [
+        "VerifiedApp",
+        "ApplicantFeed"
+      ]
+    },
+    {
+      "name": "meet-a-spent-verification-link",
+      "description": "A verification link opened spent or timed out says so; Resend the link sends a fresh one, the status line saying so the same whether or not the account is already verified.",
+      "status": "resolved",
+      "steps": [
+        "start · VerifyExpired",
+        "end · VerifyExpired · 1 «Resend the link» → self — a fresh link goes out — the same act the applicant feed's card offers; a status line under the pair says so in Reset's construction, the same whether or not the account is already verified"
+      ],
+      "boards": [
+        "VerifyExpired"
+      ]
+    },
+    {
+      "name": "correct-an-applicants-address",
+      "description": "Wrong address? on the applicant's card changes an address not yet verified with the new one alone; a fresh link goes to it, and the card prints where it went.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 21 «Wrong address?» → ApplicantEmail — the address is still unverified, so the new one alone changes it — no code goes to the old one (auth.md, the unverified carve-out)",
+        "end · ApplicantEmail · 5 «Change email» → ApplicantFeed — a fresh link is on its way to the new address — the card prints it, the snackbar says where it went, and the link sent to the old one stops working"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "ApplicantEmail"
+      ]
+    },
+    {
+      "name": "post-while-an-applicant",
+      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantWaiting · 12 «nav · New post» → ComposePick — first post — the wizard opens, the act stages",
+        "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
+        "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
+        "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
+        "end · ComposeSeal · 7 «Sign and publish» → ApplicantWaiting — an applicant — the post stages, signed only at approval: the wizard closes onto the applicant's own feed, its snackbar saying Your post waits with your application — it arrives with you., and the post waits in their chronicle, seen by them alone (drawn on the waiting shell; the first-steps shell answers the same, and the turned-down shell, with no application live, says Your post waits — it arrives when someone vouches you in.)"
+      ],
+      "boards": [
+        "ApplicantWaiting",
+        "ComposePick",
+        "ComposeWords",
+        "ComposeDetailsWords",
+        "ComposeSeal"
+      ]
+    },
+    {
+      "name": "watch-the-registration-land",
+      "description": "Once the approval is given the applicant's card flips where the reader stands while the device signs the registration — a machine's step, read rather than tapped; the landing itself opens the vouch-back.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantLanding",
+        "end · arrival at ApplicantLanding"
+      ],
+      "boards": [
+        "ApplicantLanding"
+      ]
+    },
+    {
+      "name": "ask-another-member-to-vouch",
+      "description": "The notification that an inviter closed the application opens the turned-down shell, where the ask link stands; copying it hands the reader a link that does not expire, for as many members as they know.",
+      "status": "resolved",
+      "steps": [
+        "start · Notifications · 15 «an inviter closed your application» → ApplicantRejected — the shell it happened in, where the ask link stands",
+        "end · ApplicantRejected · 17 «copy your ask link» → self — the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows"
+      ],
+      "boards": [
+        "Notifications",
+        "ApplicantRejected"
+      ]
+    },
+    {
+      "name": "read-your-own-page-as-an-applicant",
+      "description": "The Profile tab in the applicant days opens the reader's own page in its applicant state — a reading journey that concludes on arrival.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFeed · 17 «nav · Profile» → ProfileApplicant",
+        "end · arrival at ProfileApplicant"
+      ],
+      "boards": [
+        "ApplicantFeed",
+        "ProfileApplicant"
+      ]
     }
   ],
   "boardsOnFlows": {
+    "ApplicantEmail": {
+      "flows": [
+        "correct-an-applicants-address"
+      ],
+      "endpoint": []
+    },
     "ApplicantFeed": {
       "flows": [
+        "arrive-through-an-invite-link",
+        "correct-an-applicants-address",
+        "fix-the-join-forms-errors",
         "follow-a-citation",
         "guest-turns-applicant",
         "join-with-an-invite",
         "join-with-the-link-in-hand",
         "make-your-key",
         "open-a-posts-pictures",
+        "read-your-own-page-as-an-applicant",
         "trace-a-score-to-its-records",
         "verify-the-email",
+        "verify-the-email-in-the-app",
         "visit-an-author",
         "watch-the-stream"
       ],
       "endpoint": [
+        "arrive-through-an-invite-link",
+        "correct-an-applicants-address",
+        "fix-the-join-forms-errors",
         "guest-turns-applicant",
         "join-with-an-invite",
         "join-with-the-link-in-hand",
         "make-your-key",
-        "verify-the-email"
+        "read-your-own-page-as-an-applicant",
+        "verify-the-email",
+        "verify-the-email-in-the-app"
       ]
     },
     "ApplicantKeyElsewhere": {
@@ -1894,29 +2193,38 @@
         "restore-your-key",
         "trace-a-score-to-its-records",
         "visit-an-author",
+        "watch-the-registration-land",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "watch-the-registration-land"
+      ]
     },
     "ApplicantRejected": {
       "flows": [
+        "ask-another-member-to-vouch",
         "follow-a-citation",
         "open-a-posts-pictures",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "ask-another-member-to-vouch"
+      ]
     },
     "ApplicantWaiting": {
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
+        "post-while-an-applicant",
         "trace-a-score-to-its-records",
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "post-while-an-applicant"
+      ]
     },
     "ApprovePad": {
       "flows": [
@@ -1938,6 +2246,12 @@
       "endpoint": [
         "edit-avatar-standalone"
       ]
+    },
+    "ChangePassword": {
+      "flows": [
+        "meet-the-security-notice"
+      ],
+      "endpoint": []
     },
     "ChatsComingSoon": {
       "flows": [
@@ -2070,6 +2384,7 @@
     "ComposeDetailsWords": {
       "flows": [
         "cite-something",
+        "post-while-an-applicant",
         "publish-words"
       ],
       "endpoint": []
@@ -2141,6 +2456,7 @@
       "flows": [
         "cite-a-post",
         "mention-someone",
+        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -2177,6 +2493,7 @@
       "flows": [
         "give-a-vertical-clip-a-cover",
         "pick-a-kept-draft-back-up",
+        "post-while-an-applicant",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
@@ -2205,6 +2522,7 @@
       "flows": [
         "cite-a-post",
         "mention-someone",
+        "post-while-an-applicant",
         "publish-words"
       ],
       "endpoint": []
@@ -2320,7 +2638,10 @@
         "publish-a-video",
         "publish-words",
         "reply-to-a-post",
+        "sign-back-in-after-the-session-ran-out",
         "sign-in",
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
         "take-a-stance-on-a-post",
         "trace-a-score-to-its-records",
         "undo-the-narrowing",
@@ -2335,7 +2656,10 @@
         "filter-the-feed-to-nothing",
         "narrow-the-feed",
         "open-a-topic",
+        "sign-back-in-after-the-session-ran-out",
         "sign-in",
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
         "undo-the-narrowing",
         "verify-the-email-as-a-member",
         "vouch-back-for-your-inviter"
@@ -2343,6 +2667,7 @@
     },
     "FeedBare": {
       "flows": [
+        "a-guest-meets-the-join-ask",
         "follow-a-citation",
         "guest-turns-applicant",
         "open-a-posts-pictures",
@@ -2350,7 +2675,9 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "a-guest-meets-the-join-ask"
+      ]
     },
     "FeedCover": {
       "flows": [
@@ -2514,6 +2841,12 @@
       ],
       "endpoint": []
     },
+    "FeedSecurityNotice": {
+      "flows": [
+        "meet-the-security-notice"
+      ],
+      "endpoint": []
+    },
     "FeedSheet": {
       "flows": [
         "close-the-filter-unchanged",
@@ -2556,6 +2889,7 @@
     },
     "GuestGate": {
       "flows": [
+        "a-guest-meets-the-join-ask",
         "guest-turns-applicant",
         "join-with-the-link-in-hand"
       ],
@@ -2603,12 +2937,22 @@
     },
     "InviteEntry": {
       "flows": [
+        "fix-the-join-forms-errors",
         "guest-turns-applicant",
-        "join-with-an-invite"
+        "join-with-an-invite",
+        "paste-something-that-isnt-a-link"
       ],
       "endpoint": [
-        "join-with-an-invite"
+        "fix-the-join-forms-errors",
+        "join-with-an-invite",
+        "paste-something-that-isnt-a-link"
       ]
+    },
+    "InviteEntryError": {
+      "flows": [
+        "paste-something-that-isnt-a-link"
+      ],
+      "endpoint": []
     },
     "InviteNew": {
       "flows": [
@@ -2629,13 +2973,31 @@
     },
     "Join": {
       "flows": [
+        "arrive-through-a-dead-invite-link",
+        "arrive-through-an-invite-link",
+        "fix-the-join-forms-errors",
         "guest-turns-applicant",
         "join-with-an-invite",
-        "join-with-the-link-in-hand"
+        "join-with-the-link-in-hand",
+        "paste-something-that-isnt-a-link"
       ],
       "endpoint": [
-        "join-with-the-link-in-hand"
+        "arrive-through-a-dead-invite-link",
+        "join-with-the-link-in-hand",
+        "paste-something-that-isnt-a-link"
       ]
+    },
+    "JoinErrors": {
+      "flows": [
+        "fix-the-join-forms-errors"
+      ],
+      "endpoint": []
+    },
+    "JoinInvalid": {
+      "flows": [
+        "arrive-through-a-dead-invite-link"
+      ],
+      "endpoint": []
     },
     "KeyCeremony": {
       "flows": [
@@ -2668,8 +3030,18 @@
         "sign-in-with-the-key-elsewhere"
       ]
     },
+    "KeyElsewhereNoBackup": {
+      "flows": [
+        "sign-in-where-no-backup-can-restore"
+      ],
+      "endpoint": [
+        "sign-in-where-no-backup-can-restore"
+      ]
+    },
     "Main": {
       "flows": [
+        "arrive-through-a-dead-invite-link",
+        "arrive-through-an-invite-link",
         "follow-a-citation",
         "join-with-the-link-in-hand",
         "open-a-posts-pictures",
@@ -2677,16 +3049,22 @@
         "visit-an-author",
         "watch-the-stream"
       ],
-      "endpoint": []
+      "endpoint": [
+        "arrive-through-a-dead-invite-link",
+        "arrive-through-an-invite-link"
+      ]
     },
     "Notifications": {
       "flows": [
+        "ask-another-member-to-vouch",
         "publish-a-post",
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words"
       ],
-      "endpoint": []
+      "endpoint": [
+        "ask-another-member-to-vouch"
+      ]
     },
     "NotificationsEmpty": {
       "flows": [
@@ -2796,9 +3174,12 @@
     },
     "ProfileApplicant": {
       "flows": [
+        "read-your-own-page-as-an-applicant",
         "see-who-stands-with-someone"
       ],
-      "endpoint": []
+      "endpoint": [
+        "read-your-own-page-as-an-applicant"
+      ]
     },
     "ProfileComments": {
       "flows": [
@@ -3189,6 +3570,32 @@
       ],
       "endpoint": []
     },
+    "Reset": {
+      "flows": [
+        "meet-a-spent-reset-link",
+        "request-a-password-reset"
+      ],
+      "endpoint": [
+        "meet-a-spent-reset-link",
+        "request-a-password-reset"
+      ]
+    },
+    "ResetExpired": {
+      "flows": [
+        "meet-a-spent-reset-link"
+      ],
+      "endpoint": [
+        "meet-a-spent-reset-link"
+      ]
+    },
+    "ResetNew": {
+      "flows": [
+        "set-a-new-password"
+      ],
+      "endpoint": [
+        "set-a-new-password"
+      ]
+    },
     "Restore": {
       "flows": [
         "restore-your-key"
@@ -3227,10 +3634,12 @@
     "Settings": {
       "flows": [
         "make-a-recovery-code-later",
+        "meet-the-security-notice",
         "request-account-deletion"
       ],
       "endpoint": [
         "make-a-recovery-code-later",
+        "meet-the-security-notice",
         "request-account-deletion"
       ]
     },
@@ -3248,15 +3657,49 @@
     },
     "SignIn": {
       "flows": [
+        "a-guest-meets-the-join-ask",
         "guest-turns-applicant",
+        "meet-the-security-notice",
+        "request-a-password-reset",
+        "set-a-new-password",
         "sign-in",
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
+        "sign-in-where-no-backup-can-restore",
         "sign-in-with-the-key-elsewhere"
       ],
       "endpoint": [
+        "a-guest-meets-the-join-ask",
         "guest-turns-applicant",
+        "meet-the-security-notice",
+        "request-a-password-reset",
+        "set-a-new-password",
         "sign-in",
+        "sign-in-after-a-wrong-password",
+        "sign-in-after-the-backoff",
+        "sign-in-where-no-backup-can-restore",
         "sign-in-with-the-key-elsewhere"
       ]
+    },
+    "SignInError": {
+      "flows": [
+        "sign-in-after-a-wrong-password"
+      ],
+      "endpoint": []
+    },
+    "SignInExpired": {
+      "flows": [
+        "sign-back-in-after-the-session-ran-out"
+      ],
+      "endpoint": [
+        "sign-back-in-after-the-session-ran-out"
+      ]
+    },
+    "SignInLimited": {
+      "flows": [
+        "sign-in-after-the-backoff"
+      ],
+      "endpoint": []
     },
     "TagPage": {
       "flows": [
@@ -3295,6 +3738,22 @@
       "endpoint": [
         "verify-the-email",
         "verify-the-email-as-a-member"
+      ]
+    },
+    "VerifiedApp": {
+      "flows": [
+        "verify-the-email-in-the-app"
+      ],
+      "endpoint": [
+        "verify-the-email-in-the-app"
+      ]
+    },
+    "VerifyExpired": {
+      "flows": [
+        "meet-a-spent-verification-link"
+      ],
+      "endpoint": [
+        "meet-a-spent-verification-link"
       ]
     },
     "ViewerPicture": {

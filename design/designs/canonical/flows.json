@@ -499,6 +499,154 @@
       "name": "who-holds-an-opinion-on-this",
       "description": "The quiet count under a post's tags opens the list of everyone who holds an opinion on it — ungated, the profile's own opinions page mirrored onto content. A reading journey: reaching the list is the whole of it, and a row out of it is a visit to a person, which is its own flow.",
       "start": { "board": "PostDetail", "via": 15 }
+    },
+    {
+      "name": "request-a-password-reset",
+      "description": "Forgot password? on the sign-in screen asks for the address and sends the reset link; the status line confirms the same whether or not an account stands behind it, and the journey leaves the app with the mail.",
+      "start": { "board": "SignIn", "via": 7 },
+      "end": { "board": "Reset", "via": 3, "case": "the status line confirms — always, no account enumeration" }
+    },
+    {
+      "name": "set-a-new-password",
+      "description": "The reset mail's link opens the new-password form; the new password set signs every device out, so signing in again is the next thing.",
+      "start": { "board": "ResetNew" },
+      "end": { "board": "ResetNew", "via": 3, "to": "SignIn" }
+    },
+    {
+      "name": "meet-a-spent-reset-link",
+      "description": "A reset link opened spent or past its fifteen minutes says so, and Reset your password asks for a fresh one, its field empty.",
+      "start": { "board": "ResetExpired" },
+      "end": { "board": "ResetExpired", "via": 1, "to": "Reset" }
+    },
+    {
+      "name": "sign-back-in-after-the-session-ran-out",
+      "description": "A session that ran out mid-use lands on the sign-in form; signing in again returns a member to the feed, the draft and any picks still kept.",
+      "start": { "board": "SignInExpired" },
+      "end": { "board": "SignInExpired", "via": 6, "to": "Feed" }
+    },
+    {
+      "name": "sign-in-after-a-wrong-password",
+      "description": "A pair that doesn't match answers in place on the sign-in form; the corrected pair signs a member with their key on this device into their feed.",
+      "start": { "board": "SignIn" },
+      "waypoints": [
+        { "board": "SignIn", "via": 6, "to": "SignInError" }
+      ],
+      "end": { "board": "SignInError", "via": 6, "to": "Feed" }
+    },
+    {
+      "name": "sign-in-after-the-backoff",
+      "description": "Too many failed tries in a row answer with the backoff in place; once it has passed, Sign in lands wherever app-open lands for the account.",
+      "start": { "board": "SignIn" },
+      "waypoints": [
+        { "board": "SignIn", "via": 6, "to": "SignInLimited" }
+      ],
+      "end": { "board": "SignInLimited", "via": 6, "to": "Feed" }
+    },
+    {
+      "name": "meet-the-security-notice",
+      "description": "A sign-in after a reused sign-in was detected lands with the notice as a card, once; Change password on it opens the credential screen, and the changed password signs every other device out.",
+      "start": { "board": "SignIn" },
+      "waypoints": [
+        { "board": "SignIn", "via": 6, "to": "FeedSecurityNotice" },
+        { "board": "FeedSecurityNotice", "via": 1 }
+      ],
+      "end": { "board": "ChangePassword", "via": 5, "to": "Settings" }
+    },
+    {
+      "name": "sign-in-where-no-backup-can-restore",
+      "description": "A member signing in on a device the key is not on, for an account with no backup, lands wherever app-open lands for that account — the key-elsewhere shell with nothing to restore from.",
+      "start": { "board": "SignIn" },
+      "end": { "board": "SignIn", "via": 6, "to": "KeyElsewhereNoBackup" }
+    },
+    {
+      "name": "arrive-through-an-invite-link",
+      "description": "An invite link opens the issuer's borrowed view, feed first; Sign in or join meets the join form with the link already in hand, and Create account begins the applicant days.",
+      "start": { "board": "Main" },
+      "waypoints": [
+        { "board": "Main", "via": 2, "to": "Join" }
+      ],
+      "end": { "board": "Join", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "arrive-through-a-dead-invite-link",
+      "description": "An invite link that no longer works still opens the borrowed view; Sign in or join says the link is unusable and takes another, and a different link that checks out opens the join form.",
+      "start": { "board": "Main" },
+      "waypoints": [
+        { "board": "Main", "via": 2, "to": "JoinInvalid" }
+      ],
+      "end": { "board": "JoinInvalid", "via": 3, "to": "Join" }
+    },
+    {
+      "name": "paste-something-that-isnt-a-link",
+      "description": "Nothing that reads as a link at the door is answered in place on the field; a link that checks out then opens the join form.",
+      "start": { "board": "InviteEntry" },
+      "waypoints": [
+        { "board": "InviteEntry", "via": 3, "to": "InviteEntryError" }
+      ],
+      "end": { "board": "InviteEntryError", "via": 3, "to": "Join" }
+    },
+    {
+      "name": "fix-the-join-forms-errors",
+      "description": "A handle taken or an input refused answers in place on the join form; corrected, Create account makes the account and the applicant days begin.",
+      "start": { "board": "InviteEntry", "via": 3, "to": "Join" },
+      "waypoints": [
+        { "board": "Join", "via": 6, "to": "JoinErrors" }
+      ],
+      "end": { "board": "JoinErrors", "via": 6, "case": "account created — applicant days begin" }
+    },
+    {
+      "name": "a-guest-meets-the-join-ask",
+      "description": "A signed act tried in the bare view — the stance face on a post — raises the join prompt over the read; Sign in or join opens the sign-in screen for a reader who holds no link.",
+      "start": { "board": "FeedBare" },
+      "waypoints": [
+        { "board": "FeedBare", "via": 10, "to": "GuestGate" }
+      ],
+      "end": { "board": "GuestGate", "via": 2, "to": "SignIn" }
+    },
+    {
+      "name": "verify-the-email-in-the-app",
+      "description": "The verification mail's link opened where the app takes it lands on the in-app confirmation; Go to the feed returns an applicant to the task cards still left.",
+      "start": { "board": "VerifiedApp" },
+      "end": { "board": "VerifiedApp", "via": 1, "to": "ApplicantFeed" }
+    },
+    {
+      "name": "meet-a-spent-verification-link",
+      "description": "A verification link opened spent or timed out says so; Resend the link sends a fresh one, the status line saying so the same whether or not the account is already verified.",
+      "start": { "board": "VerifyExpired" },
+      "end": { "board": "VerifyExpired", "via": 1, "case": "a fresh link goes out — the same act the applicant feed's card offers; a status line under the pair says so in Reset's construction, the same whether or not the account is already verified" }
+    },
+    {
+      "name": "correct-an-applicants-address",
+      "description": "Wrong address? on the applicant's card changes an address not yet verified with the new one alone; a fresh link goes to it, and the card prints where it went.",
+      "start": { "board": "ApplicantFeed", "via": 21 },
+      "end": { "board": "ApplicantEmail", "via": 5, "to": "ApplicantFeed" }
+    },
+    {
+      "name": "post-while-an-applicant",
+      "description": "An applicant's first post runs the same wizard and the same seal; signing stages it with the application, the wizard closing onto the applicant's own feed, and the post waits in their chronicle, seen by them alone.",
+      "start": { "board": "ApplicantWaiting", "via": 12, "to": "ComposePick" },
+      "waypoints": [
+        { "board": "ComposePick", "via": 4, "to": "ComposeWords" },
+        { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
+        { "board": "ComposeDetailsWords", "via": 8, "to": "ComposeSeal" }
+      ],
+      "end": { "board": "ComposeSeal", "via": 7, "to": "ApplicantWaiting" }
+    },
+    {
+      "name": "watch-the-registration-land",
+      "description": "Once the approval is given the applicant's card flips where the reader stands while the device signs the registration — a machine's step, read rather than tapped; the landing itself opens the vouch-back.",
+      "start": { "board": "ApplicantLanding" }
+    },
+    {
+      "name": "ask-another-member-to-vouch",
+      "description": "The notification that an inviter closed the application opens the turned-down shell, where the ask link stands; copying it hands the reader a link that does not expire, for as many members as they know.",
+      "start": { "board": "Notifications", "via": 15 },
+      "end": { "board": "ApplicantRejected", "via": 17 }
+    },
+    {
+      "name": "read-your-own-page-as-an-applicant",
+      "description": "The Profile tab in the applicant days opens the reader's own page in its applicant state — a reading journey that concludes on arrival.",
+      "start": { "board": "ApplicantFeed", "via": 17 }
     }
   ]
 }
