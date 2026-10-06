@@ -16,7 +16,7 @@
 
    THE RADIOS STAGE, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*).
    A pick changes the sheet and nothing else; `Done` carries the pair to the
-   seal's row; the scrim, a swipe down and Back discard it, and the post's
+   seal's row; the scrim, a swipe down, system Back and Escape discard it, and the post's
    terms are what they were.
 
    THE FOOT AND THE ROW READ ONE SENTENCE. `licenseSummary` joins the pair's

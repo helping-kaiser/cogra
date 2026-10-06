@@ -28,7 +28,7 @@
    accessible name.
 
    `Done` COMMITS IT, the way the seal's does and the Reading row's sheet does —
-   every sheet carries a commit, and the scrim, a swipe down and Back discard
+   every sheet carries a commit, and the scrim, a swipe down, system Back and Escape discard
    (the sheet law, readme §4, *Sheets*). The foot reads `licenseSummary`, the
    one joining rule the seal's row reads too. */
 export function Screen() {

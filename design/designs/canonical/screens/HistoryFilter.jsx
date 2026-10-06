@@ -18,7 +18,7 @@
 
    IT STAGES, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*). The
    feed beneath is visual only and does not move until Done, when the
-   history re-reads once; the scrim, a swipe down and Back discard. The foot
+   history re-reads once; the scrim, a swipe down, system Back and Escape discard. The foot
    is every filter sheet's `FilterFoot`, and its `Reset` stages the history's
    own default — nothing narrowed. Settings holds no default for this list,
    so there is no reader's default to restore and nothing to say about one.
