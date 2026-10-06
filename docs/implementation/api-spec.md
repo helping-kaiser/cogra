@@ -401,6 +401,25 @@ is the idiomatic-typed-schema principle applied to failure: an expected
 outcome belongs in the typed contract introspection exposes, not in a
 stringly-typed side channel.
 
+### The spec is the target contract; the schema is what is built
+
+This document declares the whole target API; `schema.graphql` holds
+the part built so far. Every query root field, mutation root field,
+error code, and union (with its members) in the schema appears here
+— the schema is a subset of the spec, and a schema name this
+document lacks is a defect. The reverse gap is declared, never
+silent: the checked names specified here that the schema does not yet
+carry form the **staged list**, kept machine-readably in the
+`[api-contract]` table of
+[corpus-adoption.toml](../../corpus-adoption.toml), each row naming
+the slice or packet that builds it. The corpus linter checks both
+sides: a schema name missing from the spec fails; a spec-only name
+missing from the staged list fails; a staged name that has reached
+the schema without being struck from the list fails. Types and
+fields are not compared; they ride the build of the surface that
+carries them. A surface leaves the list in the change that lands
+its first emitter.
+
 ---
 
 ## Type system — foundations
