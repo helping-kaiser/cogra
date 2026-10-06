@@ -1,4 +1,4 @@
-<!-- @dsCard group="Components" viewport="700x680" name="Stance control" subtitle="The resting target, the coach mark, and the bloomed pad — the signature interaction" -->
+<!-- @dsCard group="Components" viewport="700x680" name="Stance control" subtitle="The resting target and the bloomed pad — the signature interaction" -->
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><link rel="stylesheet" href="../../styles.css">
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
@@ -12,7 +12,7 @@
 </head><body><div id="root"></div>
 <script type="text/babel">
 const NS = window.CoGraDesignSystem_9084ba;
-const { StanceControl, StanceCoachMark } = NS;
+const { StanceControl } = NS;
 const standing={current:{pDirected:0.55,pInterest:0.2},rawSum:{pDirected:0.55,pInterest:0.2},records:2,severed:false,severance:{records:2}};
 function Demo(){
   return (
@@ -22,8 +22,6 @@ function Demo(){
       <StanceControl targetLabel="this post" taught/>
       <span className="lbl">At rest — with an opinion</span>
       <StanceControl targetLabel="this post" bundle={standing} taught/>
-      <span className="lbl">The coach mark — it rides the first open, and what it teaches is the hold</span>
-      <StanceCoachMark/>
     </div>
     <div className="col">
       <span className="lbl">The bloomed pad — the master's own open state</span>

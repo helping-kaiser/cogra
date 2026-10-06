@@ -704,3 +704,81 @@ export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, style })
     </div>
   );
 }
+
+/* THE PAD'S HELP — what its `?` opens, and the alternates' twin. The words
+   live beside the readout's because they speak the readout's vocabulary: the
+   faces, the pairs, and the family's way out (`severanceWords`).
+
+   A HELP SENTENCE SPEAKS THE FACE AND CARRIES THE DIGITS BEHIND IT (jakob's
+   ruling, the geek round). Every line that names a pair is emoji-first: the
+   face is the reading, and the numbers ride a trailing `cg-exact` span that
+   paints only when the reader has asked for them (readme §13). The painted
+   tail is `aria-hidden` and `spoken` says the whole fact in both modes —
+   prose follows the mode exactly as a readout does, and neither redacts.
+
+   A line with nothing to hide is a plain string and stays one. */
+export function HelpLine({ line }) {
+  if (typeof line === "string") return line;
+  return (
+    <>
+      <span aria-hidden="true">
+        {line.text}
+        {line.face}
+        <span className="cg-exact">{line.exact}</span>
+        {line.tail}
+      </span>
+      <span style={SR_ONLY}>{line.spoken}</span>
+    </>
+  );
+}
+
+/** The key a list needs, whichever shape the line takes. */
+export function helpKey(line) {
+  return typeof line === "string" ? line : line.spoken;
+}
+
+/* What the pad's `?` opens (design.md §8.7: "a small `?` on the pad opens the
+   explanation on demand").
+
+   It REPLACES the pad's body rather than growing below it. The pad is parked at a
+   fixed spot and operated by muscle memory; a panel that pushes Set and Cancel
+   further from the thumb every time it opens breaks the one thing the parking
+   exists to guarantee.
+
+   Four lines, in the order a reader needs them: what the field means, what commits,
+   why the three readouts differ, and what the way out costs. The third is the one
+   nobody can guess — that a pick ADDS to what they already said — and it is the
+   reason the pick and the result wear two different faces. IT SPEAKS FACES, not
+   numbers (jakob's ruling, the geek round): the explanation has to hold for a
+   reader who has never turned the digits on, and "the two faces can differ" is
+   the same fact said in what they can see. */
+export const STANCE_PAD_HELP = [
+  "Drag the knob. Left to right is against to for; bottom to top is how much more of it you want reaching you.",
+  "Letting go changes nothing. Set signs it, Cancel leaves without signing.",
+  "Your pick adds to what you've said before — that's why the two faces can differ.",
+  STANCE_SEVERANCE_WORDS.help,
+];
+
+/* The same help, for the alternates — which have no field, so the first line has
+   to teach the thing the pad teaches by being a square: that an interaction here
+   carries TWO values, not one. That is the genuinely new idea in this control, and
+   a reader meeting it as two sliders has nothing to infer it from. */
+export const STANCE_ALTERNATES_HELP = [
+  "Two values, not one. The first is whether you're for or against it; the second is how much more of it you want reaching you.",
+  "Nothing is signed until you press Sign it.",
+  "Your pick adds to what you've said before — that's why the two faces can differ.",
+  STANCE_SEVERANCE_WORDS.helpAlternates,
+];
+
+/* THE FOURTH LINE IS THE FAMILY'S (jakob 2026-09-15). The first three teach the
+   control and hold for every record family; the last one names the way out, and
+   a topic's way out is not a person's. So it is swapped rather than the whole
+   list forked — the teaching is one teaching, and only the word it ends on
+   changes. A family that names no severance of its own gets these unchanged. */
+export function padHelp(names) {
+  return [...STANCE_PAD_HELP.slice(0, 3), severanceWords(names).help];
+}
+
+export function alternatesHelp(names) {
+  return [...STANCE_ALTERNATES_HELP.slice(0, 3), severanceWords(names).helpAlternates];
+}

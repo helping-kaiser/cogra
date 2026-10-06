@@ -203,10 +203,6 @@
         "message": "<StanceAlternates> mode must be one of 'pad' | 'sliders' | 'entry'."
       },
       {
-        "selector": "JSXOpeningElement[name.name='StanceCoachMark'] > JSXAttribute > JSXIdentifier[name!=/^(?:onDismiss|style|key|ref|className|style|children)$/]",
-        "message": "<StanceCoachMark> doesn't accept that prop. Declared props: onDismiss, style."
-      },
-      {
         "selector": "JSXOpeningElement[name.name='StanceControl'] > JSXAttribute > JSXIdentifier[name!=/^(?:targetLabel|bundle|signedIn|taught|onCommit|key|ref|className|style|children)$/]",
         "message": "<StanceControl> doesn't accept that prop. Declared props: targetLabel, bundle, signedIn, taught, onCommit."
       },
@@ -330,9 +326,6 @@
         "replaces": []
       },
       "StanceAlternates": {
-        "replaces": []
-      },
-      "StanceCoachMark": {
         "replaces": []
       },
       "StanceControl": {

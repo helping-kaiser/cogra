@@ -20,7 +20,7 @@ export interface StanceControlProps {
   bundle?: StanceBundle;
   /** An anonymous tap opens the join prompt rather than signing anything. */
   signedIn?: boolean;
-  /** Whether this reader has already met the gesture. False shows the coach mark. */
+  /** Whether this reader has already met the gesture — the first open ever is the coaching lines' moment (`padNote`). */
   taught?: boolean;
   /** Fires with the picked pair and the new bundle once a gesture completes. */
   onCommit?: (pick: StancePair, bundle: StanceBundle) => void;
