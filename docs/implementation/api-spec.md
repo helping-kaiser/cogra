@@ -496,6 +496,7 @@ enum ErrorCode {
   ACTOR_KEY_IN_USE             # the actor key is bound to a different account
   VERIFICATION_TOKEN_INVALID   # email verification token invalid or expired
   RESET_TOKEN_INVALID          # password-reset token invalid, expired, or used
+  DELETION_TOKEN_INVALID       # the account-deletion link is unknown, superseded, cancelled, expired, or spent
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
   WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency, W2 stamps, or the signing budget
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
@@ -1046,6 +1047,11 @@ type User implements Node & Actor {
    and for any viewer but the account's own: the field exists only
    to drive the viewer's own prompt."
   hasReciprocated: Boolean!
+  "The account's confirmed deletion in its grace period — the
+   Settings band and the pending screen read it. Viewer-only; null
+   when none is confirmed (a requested-not-confirmed deletion has no
+   status) and once cancelled."
+  accountDeletion: AccountDeletion
 }
 
 "A group acting through one graph identity (household, band, co-op,
@@ -1099,6 +1105,10 @@ type Post implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "The node's payload removal, if any — the visible mark removal
+   leaves (never erase silently); null while the payload is
+   carried."
+  removal: Removal
   "The qualifiers the minting Publish record carried."
   license: License!
   "This post's direct comments — genesis Reviews whose actor leg
@@ -1142,6 +1152,9 @@ type Comment implements Node {
   "Moderation status for the attachment gallery as a whole."
   attachmentsStatus: FieldModerationStatus!
   moderationStatus: ModerationStatus!
+  "The node's payload removal, if any — the same mark a post's
+   carries."
+  removal: Removal
   "The qualifiers the minting Review record carried."
   license: License!
   "This comment's direct replies, oldest-first by default: landed
@@ -1160,6 +1173,22 @@ type Comment implements Node {
 "Reply order within one branch (design: replies read oldest first,
  the thread's top level newest first)."
 enum ReplyOrder { OLDEST_FIRST NEWEST_FIRST }
+
+"A content node's payload removal, read off the node itself —
+ `Post.removal` and `Comment.removal`. Nodes are never deleted, so
+ a removed node still resolves and wears this mark wherever it
+ appears: as a citation's target, a History entry, a feed card, a
+ kept pick. `at` is when the payload went REDUCED."
+type Removal {
+  at: DateTime!
+  by: RemovalAgent!
+}
+
+"Who removed the payload. AUTHOR: `removeContent`. ACCOUNT: the
+ author's account deletion with the content sweep. MODERATION: a
+ passed moderation verdict (the moderation half, post-MVP). The MVP
+ draws only AUTHOR's wording, `Removed by its author`."
+enum RemovalAgent { AUTHOR ACCOUNT MODERATION }
 
 "What a Review can respond to — root content, another Comment, a
  conversation, a good, or a person's profile (edges.md §3)."
@@ -4603,26 +4632,69 @@ type RemoveContentPayload { records: [Record!]! }
  content-level redaction with includeContent). What remains after
  execution is the L1 husk: structural records, standing, and title
  persist; identity association, display content, and payloads go
- (erasure.md)."
+ (erasure.md). Members only — an applicant account refuses
+ FORBIDDEN and deletes through deleteApplicantAccount. The request
+ records its includeContent and mails the confirmation link to the
+ verified address; nothing is scheduled until the link is opened.
+ A second request supersedes the first: the earlier link dies and
+ the new request carries its own includeContent. The mail screen's
+ \"Resend the link\" is exactly this re-call with the recorded
+ choice. Requests spend a per-account mail budget, and a tripped
+ budget answers a transport-tier RATE_LIMITED, never a silent
+ drop — the mail screen claims a message goes, so a silent trip
+ would falsify it (auth.md \"Rate limiting\")."
 input RequestAccountDeletionInput {
   includeContent: Boolean
 }
 "Confirming opens the 7-day grace period and fixes the execution
- deadline ([erasure.md §5](../instances/erasure.md#5-the-self-service-triggers))."
+ deadline ([erasure.md §5](../instances/erasure.md#5-the-self-service-triggers)).
+ Token-bearing, no session — opening the link confirms. The first
+ call fixes scheduledFor at now plus 7 days. A re-call with the
+ same token inside the grace is idempotent: it never moves
+ scheduledFor, and is how the landing offers the content sweep
+ after the confirm. A token that is unknown, superseded,
+ cancelled, executed, or an unopened link past its 7-day lifetime
+ is a DELETION_TOKEN_INVALID userError pinned to deletionToken —
+ the landing reads \"This link doesn't work anymore\". Once
+ confirmed, the token stays valid through the grace."
 input ConfirmAccountDeletionInput {
   deletionToken: String!
-  "Opt into content-level redaction at confirmation — the second of
-   the two moments canon allows. The election is opt-in only: true
-   upgrades an identity-only request; null and false leave the
-   request-time choice unchanged."
+  "Opt into content-level redaction at or after confirmation — the
+   second of the two moments canon allows. The election is opt-in
+   only: true upgrades an identity-only request, including on a
+   re-call inside the grace; null and false never downgrade and
+   leave the standing choice unchanged."
   includeContent: Boolean
 }
-"The pending deletion's state. scheduledFor is the grace-period
- deadline — set at confirmation, null before it and once cancelled."
+"The result of request, confirm and cancel. accountDeletion is the
+ confirmed deletion; null after a request (nothing is confirmed
+ until the link is opened) and after a cancel."
 type AccountDeletionPayload {
-  scheduledFor: DateTime
+  accountDeletion: AccountDeletion
+}
+
+"A confirmed deletion in its grace period — what the Settings band
+ and the pending screen read (`User.accountDeletion`). scheduledFor
+ is the grace-period deadline, fixed at confirmation."
+type AccountDeletion {
+  scheduledFor: DateTime!
   includesContent: Boolean!
 }
+
+"Delete an applicant account at once — DeleteAccount's applicant
+ case. Nothing has landed, so nothing waits: account, credentials,
+ application, staged acts and any key backup go immediately, like
+ the reaper's sweep, every session is revoked, and no mail is sent.
+ FORBIDDEN for a member (members go through requestAccountDeletion),
+ and FORBIDDEN for an applicant whose application is approved and
+ whose registration has not landed — approval already funded the
+ burn and staged the Registration, so nothing may vanish under it.
+ DeleteAccount is locked in that window (design Settings.md), the
+ client answers the tap itself, and this refusal is the backstop;
+ the member path applies once the account lands. A dedicated verb,
+ not a mode of requestAccountDeletion: mail-and-wait and immediate
+ hard delete, chosen by account state, would be a hidden mode."
+type DeleteApplicantAccountPayload { ok: Boolean }
 
 extend type Mutation {
   register(input: RegisterInput!): RegisterPayload!
@@ -4653,6 +4725,7 @@ extend type Mutation {
   requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
   confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
   cancelAccountDeletion: AccountDeletionPayload!
+  deleteApplicantAccount: DeleteApplicantAccountPayload!
 }
 ```
 
