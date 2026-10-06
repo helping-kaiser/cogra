@@ -33,7 +33,7 @@
    IT SITS BETWEEN THE HERO AND THE RECENTS, which is the page's own order —
    the Sky is everyone's graph, Your topics is the reader's own shelf, Recent
    is the device's scratch. `ContentRow`'s `door` variant is the master for
-   exactly this (the wallet's Campaigns row), and its disc carries the `#` every
+   exactly this, and its disc carries the `#` every
    topic in this system wears, because no icon set has a topic glyph and §5
    forbids drawing one.
 
