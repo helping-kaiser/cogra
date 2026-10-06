@@ -39,34 +39,51 @@
 
    THE SECOND LINE COUNTS WHAT IS BEHIND THE DOOR, and the count is the list's
    length — `RefsSheet`'s discipline, because the subpage is the only place that
-   number can be checked. */
+   number can be checked.
+
+   REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063, the
+   Search packet), with the four searching boards. The prefix names the
+   surface, as every prefix does — the bar's slot is keyed `search` and the
+   surface is Explore, the way `compose` opens `composeDetails`. The band is
+   `band`, the field `searchField`, the Sky's card `skyCard` (its `field`,
+   `title`, `description`), the door `topics`, the recents' `recentLabel` and
+   each row a `recent`, keyed by its query's words. */
+export const NODE = "explore";
 export function Screen() {
   return (
     <>
-      <CograBand>
-        <SearchBar query="" placeholder="Search people, posts, tags…" />
+      <CograBand node="band">
+        <SearchBar query="" placeholder="Search people, posts, tags…" node="searchField" />
       </CograBand>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ padding: "0 0 8px 0" }}>
-          <Card style={{ flex: "none" }}>
-            <div style={{ margin: "0 calc(-1 * var(--card-padding))", marginTop: "calc(-1 * var(--card-padding))" }}>
+          <Card style={{ flex: "none" }} node="skyCard">
+            <div style={{ margin: "0 calc(-1 * var(--card-padding))", marginTop: "calc(-1 * var(--card-padding))" }} data-node="field">
               <SkyField height={180} />
             </div>
-            <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>The Sky — coming soon</h2>
-            <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+            <h2
+              style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}
+              data-node="title"
+            >
+              The Sky — coming soon
+            </h2>
+            <p
+              style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}
+              data-node="description"
+            >
               Your sky — every account a star, sized by your own paths to it.
             </p>
           </Card>
         </div>
         <div style={{ padding: "0 var(--space-6) var(--space-2)" }}>
-          <ContentRow variant="door" title="Your topics" second="5 held" letter="#" onOpen={() => {}} />
+          <ContentRow variant="door" title="Your topics" second="5 held" letter="#" onOpen={() => {}} node="topics" />
         </div>
-        <SectionLabel>Recent</SectionLabel>
-        <RecentRow text="@sol salt" />
-        <RecentRow text="#saltmaps" />
-        <RecentRow text="coast road" />
+        <SectionLabel node="recentLabel">Recent</SectionLabel>
+        <RecentRow text="@sol salt" node="recent" nodeKey="sol-salt" />
+        <RecentRow text="#saltmaps" node="recent" nodeKey="saltmaps" />
+        <RecentRow text="coast road" node="recent" nodeKey="coast-road" />
       </div>
-      <BottomNav active="search" slots={ALL_SLOTS} inline />
+      <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

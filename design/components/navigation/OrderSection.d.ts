@@ -14,6 +14,8 @@ export interface OrderSectionProps {
    *  ranker. */
   seen?: boolean;
   onSeen?: (seen: boolean) => void;
+  /** The data-node name its placer gives this section (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `hint`, the order as `picker` (`rankedOption`, `newestOption`), and the seen toggle as `seen` (`box`, `label`). */
+  node?: string;
 }
 
 export declare function OrderSection(props: OrderSectionProps): JSX.Element;
@@ -24,6 +26,8 @@ export interface FilterSectionProps {
   label: string;
   hint?: string;
   children?: React.ReactNode;
+  /** The data-node name its placer gives this section (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `hint`. Its controls are named by their own placer; the row holding them is never named. */
+  node?: string;
 }
 
 export declare function FilterSection(props: FilterSectionProps): JSX.Element;

@@ -16,18 +16,22 @@
    says honestly what is missing and the way to it.
 
    THE TRIGGER READS THE FILTER BACK: one kind on, so the pill says that kind's
-   name — the filter's own reading rule (`feedFilterSummary`). */
+   name — the filter's own reading rule (`feedFilterSummary`).
+
+   REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063), named
+   as `ExploreNone` is: the line stands in the same place, as `empty`. */
+export const NODE = "explore";
 export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="salt flats" />
+        <SearchBar query="salt flats" node="searchField" />
         <SearchTriggerRow reading="Comments" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
-        <EmptyState title="Found through people and tags — start with @handle or #tag." />
+        <EmptyState title="Found through people and tags — start with @handle or #tag." node="empty" />
       </div>
-      <BottomNav active="search" slots={ALL_SLOTS} inline />
+      <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

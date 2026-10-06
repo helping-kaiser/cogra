@@ -122,6 +122,8 @@ export interface FilterFootProps {
   onReset?: () => void;
   /** Commits the staged filter — the one re-query. */
   onDone?: () => void;
+  /** The data-node name its placer gives this foot's drawn row, the one over the hairline (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `reset`, `done`. */
+  node?: string;
 }
 
 export declare function FilterFoot(props: FilterFootProps): JSX.Element;

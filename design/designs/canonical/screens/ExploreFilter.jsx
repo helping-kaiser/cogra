@@ -30,32 +30,38 @@
    THE TRIGGER SPEAKS DEVIATIONS FROM THAT DEFAULT (ruling 10), a deviation
    back toward the app's included, and the "?" — the feed's own dialog —
    says what `Reset` does: `Reset brings back your defaults, to change them
-   go to settings.` (ruling 11). */
+   go to settings.` (ruling 11).
+
+   REGISTERED under the `explore` prefix (design ⇄ impl seam 062/063): the
+   results named as `ExploreSearch` names them, and the sheet named as
+   `HistoryFilter` names its own — `filterSheet`, its `help`, `title`, the
+   `kinds` with each chip as `<value>Chip`, then the `order` and the `foot`. */
+export const NODE = "explore";
 export function Screen() {
   return (
     <>
       <div style={{ flex: "none", paddingTop: 12 }}>
-        <SearchBar query="@sol salt" />
+        <SearchBar query="@sol salt" node="searchField" />
         <SearchTriggerRow reading="Everything" />
       </div>
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} />
-        <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} />
+        <ReferenceRow kind="post" name="Salt maps of the coast road" src="post-photo.jpg" rank="9.10" onOpen={() => {}} node="result" nodeKey="1" />
+        <ReferenceRow kind="topic" name="saltmaps" sub="tagged by @sol" rank="3.40" onOpen={() => {}} node="result" nodeKey="2" />
       </div>
-      <BottomNav active="search" slots={ALL_SLOTS} inline />
+      <BottomNav active="search" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="What the search shows">
+      <BottomSheet open ariaLabel="What the search shows" node="filterSheet">
         <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
-          <HelpDot ariaLabel="How the filter works" />
+          <HelpDot ariaLabel="How the filter works" node="help" />
         </div>
-        <SheetTitle>What the search shows</SheetTitle>
-        <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it.">
+        <SheetTitle node="title">What the search shows</SheetTitle>
+        <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
           {FEED_KINDS.map((kind) => (
-            <Chip key={kind.value} label={kind.label} selected={false} />
+            <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
           ))}
         </FilterSection>
-        <OrderSection order="ranked" />
-        <FilterFoot />
+        <OrderSection order="ranked" node="order" />
+        <FilterFoot node="foot" />
       </BottomSheet>
     </>
   );

@@ -1,6 +1,6 @@
 # ExploreSearch · `spec:design:behavior-explore-search`
 
-WHEN the reader types in the search field -> the results refine as the reader types
+WHEN the reader types in explore.searchField -> the results refine as the reader types
 
 ALWAYS full matches stand before partial matches, each tier ordered by the reader's ranker and never newest by default
 
@@ -12,9 +12,9 @@ ALWAYS a ranked row carries its viewer-relative rank on its right edge beside th
 
 ALWAYS a tag result carries the reader's rank and never a use count
 
-ALWAYS the search filter trigger reads Everything GIVEN the search filter is at its default
+ALWAYS explore.filterTrigger reads Everything GIVEN the search filter is at its default
 
-ALWAYS the search filter trigger's spoken name is its reading followed by what the search shows
+ALWAYS explore.filterTrigger's spoken name is its reading followed by what the search shows
 
 ALWAYS a result the reader has already seen stays out GIVEN Show what you've already seen is off
 

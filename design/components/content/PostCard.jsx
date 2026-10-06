@@ -145,6 +145,7 @@ export function PostCard({
      as before. */
   act,
   node,
+  nodeKey,
 }) {
   const detail = variant === "detail";
   // THE SENSITIVE MARK (readme §13): one flag veils the BODY and the
@@ -591,7 +592,7 @@ export function PostCard({
      the card instead of floating beside its curve (jakob's review, the tag
      round). */
   return (
-    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={door} node={node} nodeKey={node && author?.handle}>
+    <Card style={attach ? { borderTopLeftRadius: 0 } : undefined} door={door} node={node} nodeKey={node && (nodeKey ?? author?.handle)}>
       {veil ? <SensitiveScope>{body}</SensitiveScope> : body}
     </Card>
   );

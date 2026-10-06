@@ -96,6 +96,10 @@ export interface ReferenceRowProps {
   pending?: boolean;
   /** The row navigates to the node it names. */
   onOpen?: () => void;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `mark`, `name`, `sub`, and its edge as `rank` (the drawn rank and its glyph), `value` (the plain value, the pair, the pending marker) or `trailing`. */
+  node?: string;
+  /** The row's content key when it is a repeated instance — the placer's rule. */
+  nodeKey?: string;
 }
 
 export declare function ReferenceRow(props: ReferenceRowProps): JSX.Element;

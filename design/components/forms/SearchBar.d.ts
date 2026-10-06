@@ -15,6 +15,8 @@ export interface SearchBarProps {
   error?: boolean;
   /** The id of the line carrying that refusal, named by the bound input. */
   describedBy?: string;
+  /** The data-node name its placer gives this field's pill (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `glyph`, and the query's text as `input` — the bound input in the product, the static board's searchbox. The static caret is never named. */
+  node?: string;
 }
 
 export declare function SearchBar(props: SearchBarProps): JSX.Element;
