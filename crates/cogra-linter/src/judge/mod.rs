@@ -23,6 +23,7 @@
 //! (´[ARCH-req:linter:diagnostics-not-panics]´).
 
 pub mod claims;
+pub mod contract;
 pub mod freshness;
 pub mod kinds;
 pub mod labels;

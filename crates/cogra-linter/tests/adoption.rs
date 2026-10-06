@@ -2092,3 +2092,142 @@ fn every_ruled_profile_is_activated_over_every_owner() {
         assert!(profile.collision.equivalence.contains("derived label"));
     }
 }
+
+/// A minimal adoption carrying an `[api-contract]` section.
+fn contract_document(contract: &str) -> String {
+    format!(
+        "{}{contract}",
+        document(ONE_PREFIX, TOTAL_PARTITION, NO_PROFILES, EMPTY_K)
+    )
+}
+
+/// The contract's two paths and the rows planted around them.
+fn contract_with(spec: &str, rows: &str) -> String {
+    contract_document(&format!(
+        "
+[api-contract]
+spec = \"{spec}\"
+schema = \"schema.graphql\"
+fence = \"graphql\"
+error_enum = \"ErrorCode\"
+{rows}"
+    ))
+}
+
+/// A list entry is a debt with a creditor, so a staged row naming nothing
+/// that builds it is refused at load, at its own row.
+///
+/// A staged row naming nothing that builds it is refused at its row.
+/// ´claim:adoption:an-unexplained-staged-row-is-refused´
+#[test]
+fn a_staged_row_naming_no_build_is_refused() {
+    let source = contract_with(
+        "docs/spec.md",
+        "
+[[api-contract.staged]]
+surface = \"mutation\"
+built_by = \"  \"
+names = [\"logOut\"]
+",
+    );
+    let error = load(&source).expect_err("the row names no build");
+    assert!(
+        matches!(error, AdoptionError::ContractRowUnexplained { .. }),
+        "{error:?}"
+    );
+    assert!(row(&source, &error).contains("surface"));
+}
+
+/// Each name is its own entry, so one name staged twice — in one row or
+/// across two — is refused at the second.
+///
+/// A name staged twice is refused at the second.
+/// ´claim:adoption:a-name-staged-twice-is-refused´
+#[test]
+fn a_name_staged_twice_is_refused() {
+    let source = contract_with(
+        "docs/spec.md",
+        "
+[[api-contract.staged]]
+surface = \"mutation\"
+built_by = \"a packet\"
+names = [\"logOut\"]
+
+[[api-contract.staged]]
+surface = \"mutation\"
+built_by = \"another packet\"
+names = [\"logIn\", \"logOut\"]
+",
+    );
+    let error = load(&source).expect_err("logOut is staged twice");
+    let AdoptionError::ContractRowRepeated { ref name, .. } = error else {
+        panic!("expected ContractRowRepeated, got {error:?}");
+    };
+    assert_eq!(name, "logOut");
+    assert!(row(&source, &error).contains("\"logIn\", \"logOut\""));
+}
+
+/// The specification and the schema are each one document, so a path naming
+/// a tree is refused rather than reconciling nothing.
+///
+/// A contract path naming a tree rather than one file is refused.
+/// ´claim:adoption:a-contract-path-names-one-file´
+#[test]
+fn a_contract_path_naming_a_tree_is_refused() {
+    let error = load(&contract_with("docs/", "")).expect_err("docs/ is a tree");
+    let AdoptionError::ContractPathNotAFile { key, ref path, .. } = error else {
+        panic!("expected ContractPathNotAFile, got {error:?}");
+    };
+    assert_eq!(key, "spec");
+    assert_eq!(path, "docs/");
+}
+
+/// The corpus's own contract names its two documents, and every entry it
+/// lists names what builds or removes it.
+///
+/// The ruled contract names its documents, and every entry names what closes it.
+/// ´claim:adoption:the-ruled-contract-names-what-closes-its-entries´
+#[test]
+fn the_ruled_contract_names_its_documents_and_removals() {
+    let ruled = ruled();
+    let contract = ruled.api_contract.as_ref().expect("the corpus declares it");
+    assert_eq!(
+        contract.spec,
+        PathBuf::from("docs/implementation/api-spec.md")
+    );
+    assert_eq!(contract.schema, PathBuf::from("schema.graphql"));
+    assert!(
+        contract
+            .staged
+            .iter()
+            .all(|row| !row.built_by.trim().is_empty())
+    );
+    assert!(
+        contract
+            .known_unreadable
+            .iter()
+            .all(|row| !row.removed_by.trim().is_empty())
+    );
+}
+
+/// Nothing is ever staged on the schema's side, and the section has no way
+/// to say otherwise: a staged row carrying a side is refused at load.
+///
+/// A staged row cannot name a side, so the schema's side can never be staged.
+/// ´claim:adoption:a-staged-row-has-no-side´
+#[test]
+fn a_staged_row_naming_a_side_is_refused() {
+    let source = contract_with(
+        "docs/spec.md",
+        "
+[[api-contract.staged]]
+surface = \"mutation\"
+side = \"schema-only\"
+built_by = \"a packet\"
+names = [\"logOut\"]
+",
+    );
+    let error = load(&source).expect_err("a staged row has no side");
+    assert!(matches!(error, AdoptionError::Syntax(_)), "{error:?}");
+    assert!(error.to_string().contains("side") || format!("{error:?}").contains("side"));
+}

@@ -64,13 +64,14 @@ pub mod scan;
 pub mod timing;
 
 pub use adopt::{
-    Activation, Adoption, Area, BannedToken, BannedTokens, BuildDirExclusion, Carrier, Census,
-    CitationIndexes, Claims, Classification, Collision, ConfiguredPath, EnforcementPartition,
-    HeadForm, HeadMatching, HeadRecognition, HeadlessLanguages, IgnoreRow, Kind, KindEvidence,
-    KindExtensions, KindGenerator, KindRegister, KindStatuses, KindsAdoption, Language, Matrix,
-    Meta, NameTransformation, OwnerId, Partition, PartitionRule, PathPrefix, Place, PrefixFamily,
-    Profile, ProfileId, ProfileStatus, Profiles, Reach, ReachRow, ReservedKinds, ScannedLanguage,
-    ScannedRegions, Signature, Statement, TypedData, Universe, UnscannedLanguages,
+    Activation, Adoption, ApiContract, Area, BannedToken, BannedTokens, BuildDirExclusion, Carrier,
+    Census, CitationIndexes, Claims, Classification, Collision, ConfiguredPath, ContractSurface,
+    DriftSide, EnforcementPartition, HeadForm, HeadMatching, HeadRecognition, HeadlessLanguages,
+    IgnoreRow, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister, KindStatuses,
+    KindsAdoption, KnownUnreadable, Language, Matrix, Meta, NameTransformation, OwnerId, Partition,
+    PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
+    Reach, ReachRow, ReservedKinds, ScannedLanguage, ScannedRegions, Signature, StagedName,
+    Statement, TypedData, Universe, UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
@@ -355,6 +356,7 @@ pub fn check_sources(a: &Adoption, mut sources: Vec<SourceFile>) -> Run {
             &held,
         ));
         judge::stamp(&mut judged, &held, a);
+        judged.extend(judge::contract::reconcile(a, &held));
         findings.extend(judged);
     });
     findings.sort();
