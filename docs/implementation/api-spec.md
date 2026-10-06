@@ -2186,17 +2186,22 @@ type Query {
   ): NodeConnection!
 
   "Global search across nodes; returns mixed node types. Recall is
-   lexical over the indexed name-class fields and post titles; order
-   is exact-match tier first, then newest first — viewer-independent,
-   the backend never graph-ranks (feed-ranking.md §11). A ranker may
-   re-order fetched results by the viewer's feed metric. Valid kinds:
-   USER, COLLECTIVE, POST, CHAT, ITEM, HASHTAG; any other kind is a
-   validation error — comments carry no indexed field, and chat
-   messages are searchable only through chatSearch. Full semantics in
-   the Search section."
+   lexical over the indexed name-class fields and post titles — an
+   untitled post is never matched by its words; order is exact-match
+   tier first, then newest first — viewer-independent, the backend
+   never graph-ranks (feed-ranking.md §11). A ranker may re-order
+   fetched results by the viewer's feed metric. Served kinds grow
+   with the slices: USER, POST, HASHTAG unscoped; COMMENT is always a
+   valid kind but is served only under a scope operator (`@handle`,
+   `#tag`) — unscoped, it contributes no rows, never an error.
+   COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with their
+   slices and read empty until then. `includeSeen: false` drops nodes
+   on the viewer's seen-list (`User.viewHistory`); it needs a session
+   and is ignored without one. Full semantics in the Search section."
   search(
     query: String!
     kinds: [NodeKind!]
+    includeSeen: Boolean = true
     first: Int, after: String, last: Int, before: String
   ): SearchConnection!
 
@@ -2291,7 +2296,11 @@ the name-class fields and post titles: actor `handle` +
 `displayName`, Hashtag `name` (served by the naming-service
 registry — [hashtag.md §1](../instances/hashtag.md#1-identity-and-the-naming-service)),
 Chat `name`, Item `name`, and Post `title`. Bodies, descriptions,
-bios, and attachments are not indexed. A comment, a chat message
+bios, and attachments are not indexed. An untitled post has no
+indexed field: it is never matched by its words, and the name it
+wears in place of a title (its first line, or its kind and author
+for a media post) is display only, never indexed — so a comment
+answering it cannot be found through it either. A comment, a chat message
 and an offer carry no indexed field of their own and never appear
 in an unscoped result — casual conversation doesn't surface to
 strangers by keyword; per-chat body search is `chatSearch`'s, and
@@ -2309,7 +2318,14 @@ its item's name — joined through authorship. No body index exists;
 the join runs against the same global index above. A scoped
 message result reaches any plaintext chat regardless of the
 viewer's membership — chats are public reads (the design record:
-readme §13, "The indirect kinds are scope-served").
+readme §13, "The indirect kinds are scope-served"). An indirect
+result carries no extra field: it is a Comment (in the MVP's kind
+set), and the target it was found through is its own
+`Comment.target`; the scope is the caller's own query.
+
+`includeSeen` defaults to `true`, which keeps the anonymous read
+stable; the client passes the reader's "Show what you've already
+seen" filter, which is off by default.
 
 **Match semantics.** Name-class fields match case-insensitively
 by prefix and substring; Post titles and chat-message bodies
