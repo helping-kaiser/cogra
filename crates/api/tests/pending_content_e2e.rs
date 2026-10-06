@@ -13,6 +13,8 @@ use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::client::ActorKey;
+use common::l1::handshake::Proposal;
+use common::l1::identifier::ActId;
 use common::l1::wire;
 use http_body_util::BodyExt;
 use l1_standin::StandIn;
@@ -280,6 +282,35 @@ impl Rig {
         (node, staged[0].id.clone())
     }
 
+    /// A pending post whose signed write the test keeps, to land it later
+    /// — plus the act that mints it, the dependency a gesture on it owes.
+    async fn pending_post_held(
+        &self,
+        token: &str,
+        key: &ActorKey,
+        title: &str,
+    ) -> (String, ActId, Vec<Signed>) {
+        let prepared = self.prepare_post(token, title, "body").await;
+        let writes = &prepared["preparePost"]["writes"];
+        let mint = proposals(writes)[0].body.act_id();
+        let signed = self.pre_sign(token, key, writes).await;
+        let node = prepared["preparePost"]["node"]
+            .as_str()
+            .expect("node")
+            .to_string();
+        (node, mint, signed)
+    }
+
+    async fn staged_state(&self, token: &str, id: &str) -> Value {
+        self.gql(
+            Some(token),
+            r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#,
+            json!({ "id": id }),
+        )
+        .await["stagedWrite"]["state"]
+            .clone()
+    }
+
     /// Prepares a post and drives it all the way to landed.
     async fn landed_post(&self, token: &str, key: &ActorKey, title: &str, body: &str) -> String {
         let prepared = self.prepare_post(token, title, body).await;
@@ -371,6 +402,22 @@ impl Rig {
     }
 }
 
+/// The proposals a prepare handed back, decoded as the device decodes them.
+fn proposals(writes: &Value) -> Vec<Proposal> {
+    writes
+        .as_array()
+        .expect("writes array")
+        .iter()
+        .map(|w| {
+            wire::decode_proposal(
+                &B64.decode(w["canonicalProposal"].as_str().expect("proposal"))
+                    .expect("b64"),
+            )
+            .expect("decodes")
+        })
+        .collect()
+}
+
 const CHRONICLE: &str = r#"query($a: UUID!) {
   records(author: $a, first: 10) {
     edges { node {
@@ -391,6 +438,13 @@ const PREPARE_POST: &str = r#"mutation($input: PreparePostInput!) {
 const PREPARE_COMMENT: &str = r#"mutation($input: PrepareCommentInput!) {
   prepareComment(input: $input) {
     node
+    writes { id canonicalProposal }
+    userErrors { code message field }
+  }
+}"#;
+
+const PREPARE_REFERENCE: &str = r#"mutation($input: PrepareReferenceInput!) {
+  prepareReference(input: $input) {
     writes { id canonicalProposal }
     userErrors { code message field }
   }
@@ -1137,4 +1191,347 @@ async fn an_expired_edit_leaves_the_previous_version_rendered(pool: PgPool) {
     );
     assert_eq!(after["post"]["landing"]["state"], "LANDED");
     assert!(after["post"]["landing"]["epoch"].is_i64());
+}
+
+/// Seam 045.2, end to end: a citation of someone else's pending post is
+/// signed, approved and offered to an epoch close — and the close holds it
+/// back, because its target has not landed. It lands in the close that
+/// lands its target, ordered behind it.
+///
+/// A gesture on still-pending content is never ordered ahead of the record that mints it.
+/// ´claim:pending:a-gesture-waits-for-the-node-it-names´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_citation_lands_only_after_its_pending_target(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, author_key) = rig.seed_member("author", "author@example.com").await;
+    let author = rig.log_in("author@example.com").await;
+    let (citer_id, citer_key) = rig.seed_member("citer", "citer@example.com").await;
+    let citer = rig.log_in("citer@example.com").await;
+    let carrier = rig.landed_post(&citer, &citer_key, "carrier", "b").await;
+    let (target, mint, held) = rig
+        .pending_post_held(&author, &author_key, "still settling")
+        .await;
+
+    let prepared = rig
+        .gql(
+            Some(&citer),
+            PREPARE_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": target }}),
+        )
+        .await;
+    let writes = &prepared["prepareReference"]["writes"];
+    assert_eq!(proposals(writes)[0].deps, vec![mint]);
+    let citation = writes[0]["id"].as_str().expect("id").to_string();
+    rig.land(&citer, &citer_key, writes).await;
+    assert_ne!(
+        rig.staged_state(&citer, &citation).await,
+        json!("LANDED"),
+        "the close holds the citation back while its target is pending"
+    );
+
+    rig.approve_and_close(&author, &author_key, &held).await;
+    assert_eq!(rig.staged_state(&citer, &citation).await, json!("LANDED"));
+    let records = rig
+        .gql(
+            None,
+            r#"query($a: UUID!, $t: UUID!) {
+                 citation: records(author: $a, first: 10) {
+                   edges { node { family landingEpoch } }
+                 }
+                 post(id: $t) { landing { epoch } }
+               }"#,
+            json!({ "a": citer_id.to_string(), "t": target }),
+        )
+        .await;
+    let citing = records["citation"]["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .find(|e| e["node"]["family"] == "REFERENCE")
+        .expect("the citation landed")
+        .clone();
+    assert_eq!(
+        citing["node"]["landingEpoch"], records["post"]["landing"]["epoch"],
+        "it lands in the close that lands its target"
+    );
+}
+
+/// The same defect one site over (seam 045.2 fold-in): a reply to a
+/// still-pending post waits for the post, rather than landing as a
+/// comment on a parent that may never exist.
+///
+/// (´claim:pending:a-gesture-waits-for-the-node-it-names´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_reply_lands_only_after_its_pending_parent(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, author_key) = rig.seed_member("author", "author@example.com").await;
+    let author = rig.log_in("author@example.com").await;
+    let (_, replier_key) = rig.seed_member("replier", "replier@example.com").await;
+    let replier = rig.log_in("replier@example.com").await;
+    let (parent, mint, held) = rig
+        .pending_post_held(&author, &author_key, "still settling")
+        .await;
+
+    let prepared = rig
+        .gql(
+            Some(&replier),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": parent,
+                "content": "Early reply.",
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+            }}),
+        )
+        .await;
+    let writes = &prepared["prepareComment"]["writes"];
+    assert_eq!(proposals(writes)[0].deps, vec![mint]);
+    let reply = writes[0]["id"].as_str().expect("id").to_string();
+    rig.land(&replier, &replier_key, writes).await;
+    assert_ne!(rig.staged_state(&replier, &reply).await, json!("LANDED"));
+
+    rig.approve_and_close(&author, &author_key, &held).await;
+    assert_eq!(rig.staged_state(&replier, &reply).await, json!("LANDED"));
+}
+
+/// A comment on `target`, driven to landed (`land`) or stopped at its
+/// pre-commitment. Returns the comment's id.
+async fn reply(
+    rig: &Rig,
+    token: &str,
+    key: &ActorKey,
+    target: &str,
+    text: &str,
+    land: bool,
+) -> String {
+    let prepared = rig
+        .gql(
+            Some(token),
+            PREPARE_COMMENT,
+            json!({ "input": {
+                "target": target,
+                "content": text,
+                "license": { "attribution": 0.0, "provenance": 0.0 },
+            }}),
+        )
+        .await;
+    let writes = &prepared["prepareComment"]["writes"];
+    if land {
+        rig.land(token, key, writes).await;
+    } else {
+        rig.pre_sign(token, key, writes).await;
+    }
+    prepared["prepareComment"]["node"]
+        .as_str()
+        .expect("node")
+        .to_string()
+}
+
+/// A thread with two top-level comments and, under the first, two landed
+/// replies and one pending one — what the reply-order tests read.
+struct Thread {
+    host: String,
+    top: [String; 2],
+    landed_replies: [String; 2],
+    pending_reply: String,
+}
+
+async fn thread(rig: &Rig, token: &str, key: &ActorKey) -> Thread {
+    let host = rig.landed_post(token, key, "host", "b").await;
+    let first = reply(rig, token, key, &host, "first", true).await;
+    let second = reply(rig, token, key, &host, "second", true).await;
+    let r1 = reply(rig, token, key, &first, "r1", true).await;
+    let r2 = reply(rig, token, key, &first, "r2", true).await;
+    let pending = reply(rig, token, key, &first, "r3", false).await;
+    Thread {
+        host,
+        top: [first, second],
+        landed_replies: [r1, r2],
+        pending_reply: pending,
+    }
+}
+
+fn edge_ids(connection: &Value) -> Vec<String> {
+    connection["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["id"].as_str().expect("id").to_string())
+        .collect()
+}
+
+const THREAD_READ: &str = r#"query($host: UUID!, $branch: UUID!) {
+  post(id: $host) { comments(first: 10) { edges { node { id } } } }
+  comment(id: $branch) {
+    byDefault: replies(first: 10) { edges { node { id landing { state } } } }
+    oldest: replies(order: OLDEST_FIRST, first: 10) { edges { node { id } } }
+    newest: replies(order: NEWEST_FIRST, first: 10) { edges { node { id } } }
+  }
+}"#;
+
+/// K5.1: a branch reads as a conversation does — oldest first — while
+/// the thread's top level keeps reading newest-first.
+///
+/// A branch's replies read oldest-first by default while the thread's top level stays newest-first.
+/// ´claim:pending:a-branch-reads-oldest-first´
+#[sqlx::test(migrations = "../../migrations")]
+async fn replies_read_oldest_first_by_default(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let t = thread(&rig, &token, &key).await;
+    let [r1, r2] = t.landed_replies.clone();
+
+    let read = rig
+        .gql(
+            None,
+            THREAD_READ,
+            json!({ "host": t.host, "branch": t.top[0] }),
+        )
+        .await;
+    assert_eq!(
+        edge_ids(&read["comment"]["byDefault"]),
+        vec![r1, r2, t.pending_reply.clone()]
+    );
+    assert_eq!(
+        edge_ids(&read["comment"]["byDefault"]),
+        edge_ids(&read["comment"]["oldest"]),
+        "OLDEST_FIRST is the default"
+    );
+    let [first, second] = t.top;
+    assert_eq!(
+        edge_ids(&read["post"]["comments"]),
+        vec![second, first],
+        "the top level is unchanged: newest-first"
+    );
+}
+
+/// (´claim:pending:a-branch-reads-oldest-first´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn replies_newest_first_on_request(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let t = thread(&rig, &token, &key).await;
+    let [r1, r2] = t.landed_replies.clone();
+
+    let read = rig
+        .gql(
+            None,
+            THREAD_READ,
+            json!({ "host": t.host, "branch": t.top[0] }),
+        )
+        .await;
+    assert_eq!(
+        edge_ids(&read["comment"]["newest"]),
+        vec![t.pending_reply, r2, r1]
+    );
+}
+
+/// Under oldest-first the pending replies are the newest, so they close
+/// the branch — and paging there by the connection's own cursors reaches
+/// them last, after every landed reply.
+///
+/// (´claim:pending:a-branch-reads-oldest-first´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn pending_replies_close_an_oldest_first_branch(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, key) = rig.seed_member("author", "author@example.com").await;
+    let token = rig.log_in("author@example.com").await;
+    let t = thread(&rig, &token, &key).await;
+    let [r1, r2] = t.landed_replies.clone();
+
+    let read = rig
+        .gql(
+            None,
+            THREAD_READ,
+            json!({ "host": t.host, "branch": t.top[0] }),
+        )
+        .await;
+    let states: Vec<Value> = read["comment"]["byDefault"]["edges"]
+        .as_array()
+        .expect("edges")
+        .iter()
+        .map(|e| e["node"]["landing"]["state"].clone())
+        .collect();
+    assert_eq!(
+        states,
+        vec![json!("LANDED"), json!("LANDED"), json!("PENDING")]
+    );
+
+    const PAGE: &str = r#"query($branch: UUID!, $after: String) {
+      comment(id: $branch) {
+        replies(first: 2, after: $after) {
+          edges { node { id } } pageInfo { hasNextPage endCursor }
+        }
+      }
+    }"#;
+    let page1 = rig
+        .gql(None, PAGE, json!({ "branch": t.top[0], "after": null }))
+        .await;
+    let replies = &page1["comment"]["replies"];
+    assert_eq!(edge_ids(replies), vec![r1, r2]);
+    assert_eq!(replies["pageInfo"]["hasNextPage"], json!(true));
+    let page2 = rig
+        .gql(
+            None,
+            PAGE,
+            json!({ "branch": t.top[0], "after": replies["pageInfo"]["endCursor"] }),
+        )
+        .await;
+    assert_eq!(
+        edge_ids(&page2["comment"]["replies"]),
+        vec![t.pending_reply],
+        "the pending reply closes the branch"
+    );
+    assert_eq!(
+        page2["comment"]["replies"]["pageInfo"]["hasNextPage"],
+        json!(false)
+    );
+}
+
+/// A standalone tag and a stance on still-pending content declare its
+/// minting act too — every gesture resolves its node through the one
+/// resolver that knows whether the node has landed.
+///
+/// (´claim:pending:a-gesture-waits-for-the-node-it-names´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_tag_or_stance_on_pending_content_declares_its_mint(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (_, author_key) = rig.seed_member("author", "author@example.com").await;
+    let author = rig.log_in("author@example.com").await;
+    rig.seed_member("reader", "reader@example.com").await;
+    let reader = rig.log_in("reader@example.com").await;
+    let (post, mint, _) = rig
+        .pending_post_held(&author, &author_key, "still settling")
+        .await;
+
+    let tag = rig
+        .gql(
+            Some(&reader),
+            r#"mutation($input: PrepareTagInput!) {
+                 prepareTag(input: $input) { writes { canonicalProposal } userErrors { message } }
+               }"#,
+            json!({ "input": { "target": post, "name": "rust" }}),
+        )
+        .await;
+    assert_eq!(
+        proposals(&tag["prepareTag"]["writes"])[0].deps,
+        vec![mint.clone()],
+        "{tag}"
+    );
+
+    let stance = rig
+        .gql(
+            Some(&reader),
+            r#"mutation($input: PrepareStanceInput!) {
+                 prepareStance(input: $input) { writes { canonicalProposal } userErrors { message } }
+               }"#,
+            json!({ "input": { "target": post, "pDirected": 0.2, "pInterest": 0.2 }}),
+        )
+        .await;
+    assert_eq!(
+        proposals(&stance["prepareStance"]["writes"])[0].deps,
+        vec![mint],
+        "{stance}"
+    );
 }

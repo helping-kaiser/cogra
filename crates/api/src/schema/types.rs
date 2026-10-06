@@ -18,6 +18,7 @@ use common::hashtag_uuid;
 use common::l1::census::Family;
 use common::l1::identifier::NodeId;
 use common::l1::{crypto, wire};
+use postgres_store::content::ThreadOrder;
 use postgres_store::references::ReferenceView;
 use postgres_store::topics::{TagChannel, TopicView};
 use postgres_store::{
@@ -1975,7 +1976,12 @@ impl PostType {
         last: Option<i32>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<CommentConnection> {
-        comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
+        let page = ThreadPage {
+            target: self.0.id,
+            order: ThreadOrder::NewestFirst,
+            include_pending,
+        };
+        comments_connection(ctx, page, after, before, first, last).await
     }
 
     /// This post's current topics — the author's own declarations, as
@@ -2222,20 +2228,33 @@ impl CommentType {
         node_moderation_status(SensitiveMarks::of(self.0.sensitive))
     }
 
-    /// This comment's direct replies, newest-first: pending entries,
-    /// then landed entries in landing order. `includePending: false`
-    /// serves only what has landed on L1.
+    /// This comment's direct replies, in `order` — oldest-first by
+    /// default: landed entries in landing order, then pending entries,
+    /// which are the newest and so close the branch. `NEWEST_FIRST`
+    /// reads the same sequence the other way, pending entries leading.
+    /// Cursors are shared between the two orders. `includePending:
+    /// false` serves only what has landed on L1.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument of `replies`; grouping them into a struct would change the published contract"
+    )]
     async fn replies(
         &self,
         ctx: &Context<'_>,
+        #[graphql(default)] order: ReplyOrder,
         after: Option<String>,
         before: Option<String>,
         first: Option<i32>,
         last: Option<i32>,
         #[graphql(default = true)] include_pending: bool,
     ) -> async_graphql::Result<CommentConnection> {
-        comments_connection(ctx, self.0.id, after, before, first, last, include_pending).await
+        let page = ThreadPage {
+            target: self.0.id,
+            order: order.into(),
+            include_pending,
+        };
+        comments_connection(ctx, page, after, before, first, last).await
     }
 
     /// This comment's current topics — the same fold and the same
@@ -3394,26 +3413,63 @@ where
     connection
 }
 
-/// The shared comments/replies read: a target's direct children,
-/// newest-first in landing order.
+/// Reply order within one branch of a thread (comment.md §2).
+///
+/// A branch reads oldest-first, as a conversation does; a thread's top
+/// level reads newest-first and takes no order argument
+/// (`Post.comments`).
+#[derive(Enum, Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum ReplyOrder {
+    /// Landed replies in landing order, then pending ones — the newest —
+    /// closing the branch.
+    #[default]
+    OldestFirst,
+    /// The same sequence read the other way: pending replies lead.
+    NewestFirst,
+}
+
+impl From<ReplyOrder> for ThreadOrder {
+    fn from(order: ReplyOrder) -> Self {
+        match order {
+            ReplyOrder::OldestFirst => Self::OldestFirst,
+            ReplyOrder::NewestFirst => Self::NewestFirst,
+        }
+    }
+}
+
+/// What a thread read is over: whose children, in which order, and
+/// whether the unlanded ones are served.
+struct ThreadPage {
+    target: Uuid,
+    order: ThreadOrder,
+    include_pending: bool,
+}
+
+/// The shared comments/replies read: a target's direct children, in the
+/// requested order over the landing keys.
+///
+/// The connection's paging bookkeeping (`hasNextPage`, the overfetched
+/// row's trim) reads the page's own direction; the store returns rows in
+/// the requested order, so the same bookkeeping holds for either order.
 async fn comments_connection(
     ctx: &Context<'_>,
-    target: Uuid,
+    thread: ThreadPage,
     after: Option<String>,
     before: Option<String>,
     first: Option<i32>,
     last: Option<i32>,
-    include_pending: bool,
 ) -> async_graphql::Result<CommentConnection> {
     let pool = ctx.data::<PgPool>()?;
     let page = keyset_page(first, after, last, before)?;
     let rows = postgres_store::content::comments_for_target(
         pool,
-        target,
+        thread.target,
         content_cursor(page.cursor),
         page.backward,
         page.limit + 1,
-        include_pending,
+        thread.include_pending,
+        thread.order,
     )
     .await
     .map_err(|e| async_graphql::Error::new(e.to_string()))?;
@@ -3423,8 +3479,8 @@ async fn comments_connection(
         |c| content_cursor_key(c.sort_key(), c.id),
         CommentType,
         CommentConnectionFields {
-            target,
-            include_pending,
+            target: thread.target,
+            include_pending: thread.include_pending,
         },
     ))
 }

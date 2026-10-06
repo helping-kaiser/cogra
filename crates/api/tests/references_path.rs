@@ -372,7 +372,7 @@ async fn a_mention_resolves_its_target_to_a_profile(pool: PgPool) {
 
     let alice_address = rig.address(alice).await;
     let middle = common::l1::identifier::NodeId::parse("mint:act:alice:0:publish").expect("node");
-    let g = references::reference_gesture(&alice_address, middle, &planned, vec![]);
+    let g = references::reference_gesture(&alice_address, middle, &planned, &[]);
     let target = match &g.target {
         api::prepare::Target::Node(n) => n.clone(),
         api::prepare::Target::OwnMint => panic!("never an own mint"),

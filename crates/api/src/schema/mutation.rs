@@ -421,10 +421,13 @@ fn tag_drafts(tags: &Option<Vec<TagInput>>) -> Vec<crate::topics::TagDraft> {
 /// never through the author's netted bundle — so a note would silently
 /// remove the citation from the very fold that renders it.
 ///
-/// The target may still be in flight when it is the viewer's own: a
-/// citation toward a pending node declares that node's act as a
-/// dependency, so the epoch close cannot order the citation ahead of what
-/// it cites.
+/// The target may still be in flight — the viewer's own or anyone's:
+/// reads serve pending content to every viewer, and a citation toward a
+/// pending node declares that node's minting act as a dependency, so the
+/// epoch close cannot order the citation ahead of what it cites. A target
+/// that never lands takes the citation with it: the citation's staged
+/// write expires (`STAGED_WRITE_EXPIRED`), which the seal reads as
+/// did-not-land.
 #[derive(InputObject)]
 struct ReferenceInput {
     /// The cited node — a post, a comment, or a person's profile.
@@ -694,6 +697,12 @@ impl PrepareReferenceInput {
 /// is newest-wins at relevance 0 only because a tag's confidence cannot
 /// be netted. Both citation parameters are signed, so a withdrawal is the
 /// severance shape: counter-records until the bundle reaches `(0, 0)`.
+///
+/// A count read earlier can differ from the batch prepared here — the
+/// bundle may have moved in between (another device's act staging or
+/// landing). The prepared `writes` are the truth; a client whose shown
+/// count differs re-states it before signing. A bundle that netted to
+/// `(0, 0)` meanwhile refuses at `target`.
 #[derive(InputObject)]
 struct PrepareReferenceWithdrawalInput {
     /// The citing artifact the citation hangs off.
