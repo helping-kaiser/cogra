@@ -9374,6 +9374,31 @@ untitled post, written as law; no board redrawn.
   carries on close** (`Reel`, `PostDetailVideo`).
 - **The pre-release fixture pass is jakob's own** (backlog item 137).
 
+### The docs adoption — 2026-10-06
+
+jakob's rulings on the adoption audit (seam 073): each passage
+`docs/implementation/design.md` still kept under its own section number
+either comes into this readme or dies from the pointer.
+
+- **Came over.** The anti-goals (§2), the monospace clause deferring to
+  *Type*'s identifier class, a payout address in it, and geek mode told
+  apart from the developer-tool look; the palette's departures from
+  stock Material with the error and success derivations (§4,
+  *Colour*); Latin-ext, the font budget, and the missing Cyrillic and
+  Greek (§4, *Type*). The token headers cite this readme, not the
+  pointer that leads back to it, and `typography.css`'s recovery-code
+  row now reads `body-large`, as §11 already ruled.
+- **Died, in the pointer.** The palette recipe and its pipeline — the
+  generator is the recipe; the collapsing top's platform mechanics —
+  `CollapsingTop` and *Spacing and layout* hold the behaviour; the
+  `success` usage rule, which the snackbar ruling contradicts (the
+  orphaned role is backlog item 138); and the per-family slot table,
+  whose words stance-control and the rounds here already hold and whose
+  paired sliders `RefPair` contradicts.
+- **Tracking is one value** (§4, *Type*): each platform expresses it
+  in its native unit and rounds on its own grid — a capability
+  expression, never a per-client choice.
+
 ---
 
 ## 14. The canvases
