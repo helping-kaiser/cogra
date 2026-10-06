@@ -23,3 +23,5 @@ WHEN press Done GIVEN the pick moved off the origin -> the sheet closes AND the 
 WHEN press Done GIVEN the pick never moved off the origin -> the sheet closes AND NEVER anything is staged
 
 WHEN tap the scrim -> the sheet closes AND NEVER anything is staged
+
+WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND NEVER anything is staged

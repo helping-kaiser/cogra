@@ -18,6 +18,12 @@ WHEN tap a topic chip GIVEN it is off -> it turns on AND every other topic chip 
 
 WHEN tap a topic chip GIVEN it is on -> it turns off AND NEVER another topic chip turns on
 
+WHEN tap a kind, form, topic or also-show chip -> the chip's change is staged AND NEVER the feed behind the sheet moves before Done
+
+WHEN tap Ranked or Newest -> that order is staged AND NEVER the feed behind the sheet moves before Done
+
+WHEN tap Show what you've already seen -> the toggle flips, staged AND NEVER the feed behind the sheet moves before Done
+
 ALWAYS Posts is the one kind on, Ranked is the order, Show what you've already seen is off, Still settling is on and Sensitive and Removed are off GIVEN the filter is at its default and the reader has set no default of their own in Settings
 
 ALWAYS the feed admits content not yet landed, wearing Still settling GIVEN the feed's filter has Still settling on
@@ -51,3 +57,7 @@ WHEN pull down inside the filter sheet -> NEVER the feed refreshes
 ALWAYS the trigger's spoken name is its reading followed by what your feed shows
 
 WHEN tap Done -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
+
+WHEN tap the scrim -> the sheet closes AND the staged filter is dropped AND the feed is what it was AND NEVER the feed re-queries
+
+WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND the staged filter is dropped AND the feed is what it was AND NEVER the feed re-queries

@@ -9,3 +9,5 @@ WHEN a signed comment edit returns the reader -> the comments sheet reopens AND 
 ALWAYS the return is a property of the comments sheet, the same whether it was raised from the feed or from the post's detail
 
 ALWAYS the reader's just-signed reply wears Edit beside Reply
+
+WHEN tap the scrim, swipe the comments sheet down, press system Back or press Escape -> the comments sheet closes AND what it was opened over stands as it was

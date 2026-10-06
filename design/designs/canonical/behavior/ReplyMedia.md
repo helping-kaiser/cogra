@@ -13,3 +13,5 @@ WHEN tap a comment clip's sound disc -> sound turns on or off for every clip on 
 ALWAYS the reader's own comment wears Edit
 
 ALWAYS a comment wears the Edited marker GIVEN it has been edited
+
+WHEN tap the scrim, swipe the comments sheet down, press system Back or press Escape -> the comments sheet closes AND what it was opened over stands as it was
