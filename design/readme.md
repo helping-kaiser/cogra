@@ -2246,7 +2246,9 @@ The rulings the layer rests on:
   is how a sheet's journey concludes, not a way back. A scrim exit is
   always `back`, and it discards (§4, *Sheets*); a flow about leaving a
   sheet unchanged declares that scrim edge as its given end rather than
-  walking it. A sheet's journey ends at its Done: the signing that may follow is the publishing flow's
+  walking it. (The four editing sheets discard nothing since — their
+  scrim exit stays `back` and closes with every change already applied;
+  §4, *Sheets*, the editing-sheet exemption.) A sheet's journey ends at its Done: the signing that may follow is the publishing flow's
   conclusion, never the sheet's.
 - **An `advance` must reach something.** A control whose every outcome
   merely informs — the applicant's locked rows answering with a
