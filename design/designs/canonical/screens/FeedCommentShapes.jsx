@@ -10,6 +10,13 @@
      its thread (`ReplyMedia`): muted autoplay in the comment scale's square,
      the sound disc and nothing else. It competes for the feed's one stage
      with every post's clip, by the stage law (`behavior/Feed.md`).
+   · ITS CLIP, AUTOPLAY SUPPRESSED (jakob 2026-10-06, the stage-law rulings'
+     A4). Where the device asked for no motion — reduced motion, data saver —
+     nothing starts on its own, so the clip rests on its still and the PLAY
+     DISC takes the sound disc's place, exactly as on a post's card
+     (`FeedCover`): the same disc at the same size, since every disc a media
+     surface draws is one. A tap plays it where it stands; once it plays it
+     wears the sound disc, and the play disc returns when it stops.
    · ANSWERING A COMMENT. A reply reaches the feed like any comment, and its
      head row names a comment — which has no title — by its author's handle
      over its first words, `QuotedRow`'s rule, with the comment's own mark.
@@ -37,12 +44,13 @@
    tall `FRAME` — a comparison cut off at 844px is one nobody can make.
 
    REGISTERED under the feed's own prefix (jakob 2026-10-02), as `FeedCover`
-   is for a post's clip: the clip card alone is named, `commentCard`, so the
-   stage law's lines name a comment's clip by `feed.commentCard.media.frame`
-   beside a post's `feed.card.media.frame`. */
+   is for a post's clip: the two clip cards alone are named, `commentCard`,
+   keyed by their authors, so the stage law's lines name a comment's clip by
+   `feed.commentCard.media.frame` beside a post's `feed.card.media.frame`, and
+   its discs by `soundDisc` and `playDisc`. */
 export const NODE = "feed";
 
-export const FRAME = { width: 390, height: 2740 };
+export const FRAME = { width: 390, height: 3200 };
 
 const LONG_COMMENT =
   "Drove it twice this summer, once in each direction, and the second time I stopped at every lay-by between the tunnel mouth and the third headland. The light does something different on the way back — lower, warmer, and it catches the salt crust on the flats so the whole shore looks drawn in chalk. Worth the four hours, and worth doing backwards.";
@@ -77,6 +85,15 @@ export function Screen() {
             },
           ]}
           score="9.10"
+          node="commentCard"
+        />
+        <CommentFeedCard
+          author={SOL}
+          content="Turned them to the window before they went in the bowl."
+          timestamp="1h"
+          parent={MIRA_GALLERY_POST}
+          media={[{ ...CLIP_GRAPES, resting: true, controls: "play" }]}
+          score="8.70"
           node="commentCard"
         />
         <CommentFeedCard

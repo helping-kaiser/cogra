@@ -4,7 +4,13 @@ ALWAYS feed.commentCard's own pictures join its words inset, capped at a comment
 
 WHEN tap feed.commentCard's own pictures -> the post's comment section opens scrolled to that comment
 
-ALWAYS feed.commentCard.media.frame plays a comment's clip muted in the comment scale's square, carrying feed.commentCard.media.frame.soundDisc and no other control
+ALWAYS feed.commentCard.media.frame plays a comment's clip muted in the comment scale's square, carrying feed.commentCard.media.frame.soundDisc and no other control GIVEN the device allows autoplay
+
+ALWAYS feed.commentCard.media.frame carries feed.commentCard.media.frame.playDisc in the place of feed.commentCard.media.frame.soundDisc GIVEN the device suppresses autoplay and its clip is not playing
+
+ALWAYS feed.commentCard.media.frame carries feed.commentCard.media.frame.soundDisc and no other control GIVEN the device suppresses autoplay and its clip is playing
+
+WHEN tap feed.commentCard.media.frame.playDisc -> feed.commentCard.media.frame's clip plays where it stands in the feed AND it becomes the stage's incumbent AND NEVER the post's comment section opens
 
 WHEN tap feed.commentCard.media.frame.soundDisc -> sound turns on or off for every clip on every surface together
 
