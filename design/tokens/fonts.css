@@ -3,7 +3,7 @@
    request. The hosted Material Symbols import that used to head this file is gone
    — the exports landed 2026-08-26. See guidelines/iconography.md.
 
-   Figtree, variable, weight axis 300–900, subset latin + latin-ext (design.md §3).
+   Figtree, variable, weight axis 300–900, subset latin + latin-ext (readme §4 *Type*).
    The binary is the same TTF the Android client ships in app/res/font/figtree.ttf —
    copied verbatim into assets/fonts/. SIL OFL 1.1; the licence travels with it
    (assets/fonts/figtree-ofl.txt).
@@ -23,7 +23,7 @@
   --font-figtree: "Figtree";  /* One family for the whole UI. */
   --font-sans: var(--font-figtree), sans-serif;
   /* The platform's own monospace, shipping no bytes. Codes and identifiers only —
-     recovery codes, key ids, seed entry — where 0/O and l/1 must separate.
-     It is never UI chrome (design.md §1, §3). */
+     recovery codes, key ids, seed entry, a payout address — where 0/O and l/1
+     must separate. It is never UI chrome (readme §2's anti-goals; §4 *Type*). */
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }

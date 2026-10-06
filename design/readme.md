@@ -94,6 +94,16 @@ What that means for design work:
   show what something scored — provided every number shown is
   explainable and the detail is layered.
 
+**The anti-goals**, named because they are the failure modes this
+product is most likely to drift into: nothing that reads as crypto,
+fintech, trading, enterprise, or a developer tool. No dense
+dashboards, no dark "hacker" aesthetic, and no monospace as UI — the
+platform monospace is kept to codes and identifiers read character by
+character, a payout address among them (§4, *Type*). Geek mode is not
+the developer-tool look: it is opt-in numeric detail, the exact pair
+painted beside the glyph it already stood behind, in the same type,
+colour and row (*Geek mode*, §13).
+
 ### Surfaces represented here
 
 | Surface | Where |
@@ -268,6 +278,32 @@ designed, not derived by inversion.
 - **Material You dynamic colour is off.** The brand hue carries identity
   a wallpaper-derived palette would erase.
 
+**Where the palette departs from stock Material, and why** — written
+down because each departure is one a future reader would otherwise
+"correct". The scheme is `Content`, not the usual `TonalSpot`:
+TonalSpot cuts the seed's chroma until the orange turns a muted brown
+(`#8D4E2C`) and the brand hue is gone, where `Content` keeps it —
+`primaryContainer` is the seed itself. In dark, `Content` takes the
+neutrals from the seed at chroma 8.6 (12.6 for `neutralVariant`), which
+tints every surface cocoa; they are rebuilt at 1.5 / 2.5, a warm grey
+with a trace of the brand. Dark `primary` sits at tone 70, because at
+Material's 80 an orange cannot pass chroma 30.8 and reads as peach;
+tone 70 measures 8.08:1 against the dark surface, and `surfaceTint`
+follows `primary`, so elevation cannot bring the peach back. `error`
+moves for the same underlying reason — Material places it for an accent
+less saturated and further from red than this one. At Material's hue 25
+it sat 19.6° from `primary` (hue 44.6) at the same weight (6.16:1
+against 6.19:1 on `surface`) and read as a second brand colour; hue 5
+doubles the separation and stays unmistakably a warning. Its tones are
+35 / 65, not 40 / 80: tone 80 holds only chroma 32.6 of the palette's
+84, a pastel brighter than `primary` on the dark surface, and the deeper
+tones make the error heavier than the brand colour in both themes.
+`success` is made the way Material Theme Builder makes a custom colour,
+`#00897B` harmonised toward the seed, and read at Material's stock error
+tones — 40 light, 80 dark — the weight Material gives an alarm. The
+generator, `web/src/lib/ui/design-tokens.test.ts`, carries all of this
+as code and writes `tokens/scheme.json`.
+
 ### Type
 
 **Figtree** (variable, 300–900, latin + latin-ext), one family for
@@ -275,11 +311,31 @@ everything — headers included, with weight doing the work a second face
 would. **Material 3's fifteen type roles, unmodified**: only the family
 is swapped. There is no italic axis; italics are for emphasis in user
 text, never a display device. The platform monospace appears on exactly
-one class of content: recovery codes, key ids, seed entry.
+one class of content, codes and identifiers read character by
+character: recovery codes, key ids, seed entry, a payout address.
 
 Role assignment is fixed (see `tokens/typography.css`). Weight is
 400 for display/headline/body, 500 for title-medium/small and all label
 roles; 600–700 exist in the variable file for emphasis.
+
+**Latin-ext is not optional**: `İ ğ ş` live there, so a latin-only
+subset silently breaks Turkish. The whole type budget is the one
+variable file — about 30 KB as subset woff2 (20 KB latin, 10 KB
+latin-ext), 61 KB as the upstream TTF — smaller than a single static
+weight of most alternatives. **Figtree has no Cyrillic or Greek**, and
+no upstream plan for them: shipping either script reopens the
+typeface, and that is a product-scope decision rather than a
+typographic one.
+
+**One tracking value, each platform's own expression of it** (jakob
+2026-10-06). The design states a role's tracking once
+(`tokens/typography.css`); each platform expresses it in its native
+unit and rounds on its own unit grid, so three roles (`display-large`,
+`body-medium`, `title-medium`) can land up to 0.05px apart. That is a
+capability expression, never a per-client choice, so *One design, both
+platforms* (*Spacing and layout*) holds; in jakob's words, "the 100%
+design match is the goal and both platforms will need their own way to
+get there."
 
 **Text scale is honoured and never capped** (the K13 round; WCAG 1.4.4).
 Type is `rem` on the web and `sp` on Android, so it follows the reader's
@@ -2177,8 +2233,11 @@ entry first". What stands:
   instance carries `data-node-key`, a content key (the author's
   handle, the tag's name; a position only where content has none),
   and so does every node inside it: the implementation side diffs
-  (path, key), never DOM order. Every other board renders the
-  annotations stripped, so a name reaches a built board only once it
+  (path, key), never DOM order. A copy a board's tweak chip draws once
+  per value is one element in several states: it keeps one path and
+  carries the chip's value as its key (`history.searchField` under
+  `search` and under `kinds`; jakob 2026-10-06, seam 069). Every
+  other board renders the annotations stripped, so a name reaches a built board only once it
   is registered in `designs/canonical/nodes.json`, which the render
   writes. **Registered paths are append-only**: a collision fails the
   render, and so does a registered path that stops rendering — a
@@ -9315,6 +9374,31 @@ untitled post, written as law; no board redrawn.
 - **The stream resumes after the pad**, and **the viewer's play state
   carries on close** (`Reel`, `PostDetailVideo`).
 - **The pre-release fixture pass is jakob's own** (backlog item 137).
+
+### The docs adoption — 2026-10-06
+
+jakob's rulings on the adoption audit (seam 073): each passage
+`docs/implementation/design.md` still kept under its own section number
+either comes into this readme or dies from the pointer.
+
+- **Came over.** The anti-goals (§2), the monospace clause deferring to
+  *Type*'s identifier class, a payout address in it, and geek mode told
+  apart from the developer-tool look; the palette's departures from
+  stock Material with the error and success derivations (§4,
+  *Colour*); Latin-ext, the font budget, and the missing Cyrillic and
+  Greek (§4, *Type*). The token headers cite this readme, not the
+  pointer that leads back to it, and `typography.css`'s recovery-code
+  row now reads `body-large`, as §11 already ruled.
+- **Died, in the pointer.** The palette recipe and its pipeline — the
+  generator is the recipe; the collapsing top's platform mechanics —
+  `CollapsingTop` and *Spacing and layout* hold the behaviour; the
+  `success` usage rule, which the snackbar ruling contradicts (the
+  orphaned role is backlog item 138); and the per-family slot table,
+  whose words stance-control and the rounds here already hold and whose
+  paired sliders `RefPair` contradicts.
+- **Tracking is one value** (§4, *Type*): each platform expresses it
+  in its native unit and rounds on its own grid — a capability
+  expression, never a per-client choice.
 
 ---
 

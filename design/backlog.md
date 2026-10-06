@@ -4898,3 +4898,24 @@ The night rulings executed (readme §13) left these for jakob's eye:
 - **The comment clip's custom action.** The mute action is written on
   the post card's frame (`FeedCover`); the comment card's frame
   (`FeedCommentShapes`) carries the same disc and no line yet.
+
+### 138 · The `success` role is generated and spent nowhere · *system* · **filed 2026-10-06** · **retire or re-purpose**
+
+Filed by the docs adoption (jakob 2026-10-06, item 7b; the adoption
+audit, seam 073, its item 5). The one spend the role ever had — a
+completed action's line turned `success` — went with the snackbar
+ruling (readme §3, *A completed action is confirmed by a snackbar*; the
+audit answers, 2026-09-09), and the docs passage that still named it dies with
+the pointer. What is left is a role with no consumer: `scheme.json`
+generates it, the AA check passes it, `semantic.css` aliases it as
+`--text-landed`, and no component, board or guideline spends it — nor
+does either client (`Theme.kt` and `globals.css` define it, nothing reads
+it).
+
+- **The question for jakob:** retire the role (the generator, the
+  scheme, both clients' theme slots and the alias go together), or
+  re-purpose it — name its one spend site, held to readme §10's rule that
+  colour never carries a meaning alone. Either way it is a palette
+  change, so a decision rather than a tweak (readme §11).
+- **Until ruled,** the role stays generated and unspent; no lane spends
+  it to give it a home.

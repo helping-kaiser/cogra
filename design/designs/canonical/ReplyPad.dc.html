@@ -11,18 +11,19 @@
   <style>
     body { margin: 0; }
 :root { --font-figtree: "Figtree"; --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif; --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-/* The palette of design.md §2, orange-led from the #EF6C1A seed, generated with
-   material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked. The
-   values here are transcribed from design/tokens/scheme.json, the generator's
+/* The palette of readme §4 *Colour*, orange-led from the #EF6C1A seed, generated
+   with material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked.
+   The values here are transcribed from design/tokens/scheme.json, the generator's
    committed output (`make tokens`).
 
    Screens never name a colour — they read a role. A literal hex in a component is
-   a bug (design.md §2.3).
+   a bug (readme §4 *Colour*).
 
    Both themes are designed, not derived by inversion (§10): the dark neutrals are
    rebuilt at chroma 1.5 / 2.5 and dark `primary` is taken at tone 70, not
    Material's 80. `success` is a CoGra role outside Material's set; `error`
-   departs from Material in hue (5, not 25) and tone (35 / 65). */
+   departs from Material in hue (5, not 25) and tone (35 / 65). Why each departure
+   is made: readme §4 *Colour*. */
 
 :root {
   --seed: #ef6c1a;
@@ -138,16 +139,16 @@
   --shadow: #000000;
 }
 
-/* Material 3's fifteen type roles, unmodified (design.md §3) — sizes, line heights,
-   tracking, and weight are Material's; only the family is CoGra's. Values are
-   @material/web's generated typescale tokens, transcribed from the web client's
+/* Material 3's fifteen type roles, unmodified (readme §4 *Type*) — sizes, line
+   heights, tracking, and weight are Material's; only the family is CoGra's. Values
+   are @material/web's generated typescale tokens, transcribed from the web client's
    globals.css. Deviating from the scale is a decision to raise, not a per-screen
    liberty.
 
    Each role carries its whole style, so a surface reads a role once and gets size,
    leading, tracking, and weight together. Unclassed text lands on body-large.
 
-   Which role a surface takes (design.md §3):
+   Which role a surface takes (readme §4 *Type*; §11 *Small fixes*):
      page titles          title-large
      dialog headings      headline-small
      card/section heads   title-medium
@@ -155,7 +156,7 @@
      body and status      body-medium
      captions, bylines    body-small
      reading content      body-large
-     a recovery code      title-large, in the platform monospace, wider tracking */
+     a recovery code      body-large, in the platform monospace, wider tracking */
 
 :root {
   --text-display-large: 3.5625rem;
@@ -242,7 +243,7 @@
 .text-label-medium { font-size: var(--text-label-medium); line-height: var(--text-label-medium--line-height); letter-spacing: var(--text-label-medium--letter-spacing); font-weight: var(--text-label-medium--font-weight) }
 .text-label-small { font-size: var(--text-label-small); line-height: var(--text-label-small--line-height); letter-spacing: var(--text-label-small--letter-spacing); font-weight: var(--text-label-small--font-weight) }
 
-/* The M3 shape scale (design.md §4) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
+/* The M3 shape scale (readme §4, *Corner radii and cards*) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
    These five rungs are the only radius names that exist; an off-scale corner is a
    bug. The direction is rounded and soft, and a square corner should look like a
    mistake.
@@ -264,7 +265,7 @@
   --radius-full: 9999px;
 }
 
-/* A 4dp/4px base grid (design.md §4). Screen gutters and list spacing follow M3
+/* A 4dp/4px base grid (readme §4, *Spacing and layout*). Screen gutters and list spacing follow M3
    defaults; the values below are the ones the two clients actually use.
 
    Observed in the web client: screen gutter 24px (px-6), card padding 16px (p-4),
@@ -296,7 +297,7 @@
   --top-bar-height: 48px;
 }
 
-/* M3 motion, standard easing and durations (design.md §4). Motion clarifies where
+/* M3 motion, standard easing and durations (readme §4, *Motion*). Motion clarifies where
    something came from; it never performs. Reduced-motion preferences are honoured
    on both platforms.
 
@@ -394,7 +395,7 @@
 }
 
 /* Semantic aliases over the Material roles. These name where a role is spent
-   (design.md §2.4) rather than introducing a second vocabulary — every one of them
+   (readme §4 *Colour*) rather than introducing a second vocabulary — every one of them
    resolves to a role above, and a screen may read either.
 
    `primaryContainer` is the loudest surface in the app: the bar's compose action
@@ -605,18 +606,19 @@ a:hover { color: color-mix(in srgb, var(--primary) 84%, var(--on-surface)); text
 
 code, kbd, samp, pre { font-family: var(--font-mono) }
 
-/* The palette of design.md §2, orange-led from the #EF6C1A seed, generated with
-   material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked. The
-   values here are transcribed from design/tokens/scheme.json, the generator's
+/* The palette of readme §4 *Colour*, orange-led from the #EF6C1A seed, generated
+   with material-color-utilities (SchemeContent, contrast 0.0) — never hand-picked.
+   The values here are transcribed from design/tokens/scheme.json, the generator's
    committed output (`make tokens`).
 
    Screens never name a colour — they read a role. A literal hex in a component is
-   a bug (design.md §2.3).
+   a bug (readme §4 *Colour*).
 
    Both themes are designed, not derived by inversion (§10): the dark neutrals are
    rebuilt at chroma 1.5 / 2.5 and dark `primary` is taken at tone 70, not
    Material's 80. `success` is a CoGra role outside Material's set; `error`
-   departs from Material in hue (5, not 25) and tone (35 / 65). */
+   departs from Material in hue (5, not 25) and tone (35 / 65). Why each departure
+   is made: readme §4 *Colour*. */
 
 [data-theme="dark"] {
   --seed: #ef6c1a;
@@ -732,16 +734,16 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --shadow: #000000;
 }
 
-/* Material 3's fifteen type roles, unmodified (design.md §3) — sizes, line heights,
-   tracking, and weight are Material's; only the family is CoGra's. Values are
-   @material/web's generated typescale tokens, transcribed from the web client's
+/* Material 3's fifteen type roles, unmodified (readme §4 *Type*) — sizes, line
+   heights, tracking, and weight are Material's; only the family is CoGra's. Values
+   are @material/web's generated typescale tokens, transcribed from the web client's
    globals.css. Deviating from the scale is a decision to raise, not a per-screen
    liberty.
 
    Each role carries its whole style, so a surface reads a role once and gets size,
    leading, tracking, and weight together. Unclassed text lands on body-large.
 
-   Which role a surface takes (design.md §3):
+   Which role a surface takes (readme §4 *Type*; §11 *Small fixes*):
      page titles          title-large
      dialog headings      headline-small
      card/section heads   title-medium
@@ -749,7 +751,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
      body and status      body-medium
      captions, bylines    body-small
      reading content      body-large
-     a recovery code      title-large, in the platform monospace, wider tracking */
+     a recovery code      body-large, in the platform monospace, wider tracking */
 
 [data-theme="dark"] {
   --text-display-large: 3.5625rem;
@@ -836,7 +838,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 .text-label-medium { font-size: var(--text-label-medium); line-height: var(--text-label-medium--line-height); letter-spacing: var(--text-label-medium--letter-spacing); font-weight: var(--text-label-medium--font-weight) }
 .text-label-small { font-size: var(--text-label-small); line-height: var(--text-label-small--line-height); letter-spacing: var(--text-label-small--letter-spacing); font-weight: var(--text-label-small--font-weight) }
 
-/* The M3 shape scale (design.md §4) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
+/* The M3 shape scale (readme §4, *Corner radii and cards*) — 4 / 8 / 12 / 16 / 28dp, plus the full pill.
    These five rungs are the only radius names that exist; an off-scale corner is a
    bug. The direction is rounded and soft, and a square corner should look like a
    mistake.
@@ -858,7 +860,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --radius-full: 9999px;
 }
 
-/* A 4dp/4px base grid (design.md §4). Screen gutters and list spacing follow M3
+/* A 4dp/4px base grid (readme §4, *Spacing and layout*). Screen gutters and list spacing follow M3
    defaults; the values below are the ones the two clients actually use.
 
    Observed in the web client: screen gutter 24px (px-6), card padding 16px (p-4),
@@ -890,7 +892,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
   --top-bar-height: 48px;
 }
 
-/* M3 motion, standard easing and durations (design.md §4). Motion clarifies where
+/* M3 motion, standard easing and durations (readme §4, *Motion*). Motion clarifies where
    something came from; it never performs. Reduced-motion preferences are honoured
    on both platforms.
 
@@ -988,7 +990,7 @@ code, kbd, samp, pre { font-family: var(--font-mono) }
 }
 
 /* Semantic aliases over the Material roles. These name where a role is spent
-   (design.md §2.4) rather than introducing a second vocabulary — every one of them
+   (readme §4 *Colour*) rather than introducing a second vocabulary — every one of them
    resolves to a role above, and a screen may read either.
 
    `primaryContainer` is the loudest surface in the app: the bar's compose action
