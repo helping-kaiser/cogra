@@ -1,6 +1,6 @@
 # YourKey · `spec:design:behavior-your-key`
 
-WHEN tap the Your key row in settings GIVEN Android -> the phone's own unlock is asked first AND YourKey opens once it passes
+WHEN tap the Your key row in settings GIVEN Android and a key exists on this device and the phone holds a biometric or a screen lock -> the phone's own unlock is asked first AND YourKey opens once it passes
 
 WHEN the phone's own unlock is cancelled -> the settings page stays AND NEVER the key is shown
 

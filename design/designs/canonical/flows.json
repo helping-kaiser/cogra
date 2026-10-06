@@ -121,7 +121,7 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair and, as the member's first opinion, ends the borrowed view; the ceremony says so, and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair; the ceremony says so, and the member's own feed opens.",
       "start": { "board": "VouchBack", "via": 3 },
       "waypoints": [
         { "board": "VouchBackPad", "via": 4, "case": "the vouch-back — signed, the ceremony opens" }
@@ -145,7 +145,7 @@
       "waypoints": [
         { "board": "Invites", "via": 4 }
       ],
-      "end": { "board": "ApprovePad", "via": 4, "case": "signed — the vouch lands, the row leaves the queue, and the approval notifies them" }
+      "end": { "board": "ApprovePad", "via": 4, "to": "Invites" }
     },
     {
       "name": "answer-someones-ask-link",
@@ -170,7 +170,7 @@
     },
     {
       "name": "take-a-stance-on-a-post",
-      "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
+      "description": "Tap the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
       "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
@@ -357,10 +357,7 @@
     {
       "name": "publish-while-the-uploads-run",
       "description": "Details written while the pictures are still climbing reach the gated seal; signing waits for them, then the post lands in its detail view, still settling.",
-      "start": { "board": "ComposeDetails", "via": 10, "to": "ComposeUploading" },
-      "waypoints": [
-        { "board": "ComposeUploading", "via": 11, "case": "uploads still running — the gated seal" }
-      ],
+      "start": { "board": "ComposeDetails", "via": 10, "to": "ComposeSealUploading" },
       "end": { "board": "ComposeSealUploading", "via": 7, "case": "uploads land — signing proceeds to the detail view, still settling" }
     },
     {
@@ -385,7 +382,7 @@
     },
     {
       "name": "take-a-stance-on-a-person",
-      "description": "Press and hold the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
+      "description": "Tap the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
       "start": { "control": "the stance anchor", "to": "VouchBackPad" },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
@@ -662,12 +659,12 @@
     },
     {
       "name": "type-the-recovery-code-back-wrong",
-      "description": "A typed-back code that diverges from the one shown keeps the button from enabling and says where; typed right, the key is made and backed up and the ceremony returns where it began.",
+      "description": "A typed-back code that diverges from the one shown is answered at once, on the typing, and the button never enables; typed right, the key is made and backed up and the ceremony returns where it began.",
       "start": { "board": "ApplicantFeed", "via": 3, "to": "KeyCeremony" },
       "waypoints": [
         { "board": "KeyCeremony", "via": 2 },
         { "board": "KeyConfirm", "via": 2 },
-        { "board": "RecoveryCode", "via": 3, "to": "RecoveryCodeMismatch" }
+        { "board": "RecoveryCode", "via": 2, "to": "RecoveryCodeMismatch" }
       ],
       "end": { "board": "RecoveryCodeMismatch", "via": 3, "case": "code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so" }
     },
@@ -1566,6 +1563,24 @@
         { "board": "Invites", "via": 8 }
       ],
       "end": { "board": "RejectAllConfirm", "via": 1, "to": "Invites" }
+    },
+    {
+      "name": "step-back-from-the-gated-seal",
+      "description": "Back from the gated seal returns to details while the uploads still run; Next goes back to the gated seal, which signs once they land.",
+      "start": { "board": "ComposeSealUploading", "via": 1 },
+      "end": { "board": "ComposeUploading", "via": 11, "to": "ComposeSealUploading" }
+    },
+    {
+      "name": "follow-the-already-published-marker",
+      "description": "Media that already stands in one of the author's own published posts puts the marker on the details stage; its door opens the post the line names, with no dialog and no gate.",
+      "start": { "board": "ComposeDetailsReused" },
+      "end": { "board": "ComposeDetailsReused", "via": 14 }
+    },
+    {
+      "name": "reveal-a-sensitive-words-post",
+      "description": "A words-only post its author marked sensitive meets the feed veiled, the source line on the veil plate; Show unveils the words in place for the whole post, for the session.",
+      "start": { "board": "FeedWordsSensitive" },
+      "end": { "board": "FeedWordsSensitive", "via": 19 }
     }
   ]
 }

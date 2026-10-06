@@ -2,7 +2,7 @@
 
 ALWAYS the header's arrow reads Back and is a link to the bare view, never history GIVEN SignIn did not open from the join layer over the signed-in state
 
-WHEN press the header's back arrow -> FeedBare opens
+WHEN press the header's back arrow GIVEN SignIn did not open from the join layer over the signed-in state -> FeedBare opens
 
 WHEN tap Already have an account? Sign in on Join GIVEN Join opened over the signed-in state -> SignIn opens over the join layer
 
@@ -27,6 +27,8 @@ WHEN tap Forgot password? -> Reset opens
 WHEN tap New here? Enter your invite GIVEN no invite link is held -> InviteEntry opens
 
 WHEN tap New here? Enter your invite GIVEN a live invite link is held -> Join opens with the link in hand AND NEVER the invite door is shown
+
+WHEN tap New here? Enter your invite GIVEN the invite link held no longer works -> JoinInvalid opens
 
 WHEN tap Just looking? Browse the feed -> FeedBare opens
 
@@ -80,4 +82,6 @@ ALWAYS Sign in stands disabled with Waiting for your email and password right ab
 
 WHEN both fields hold a character -> Sign in wakes AND the line Waiting for your email and password goes
 
-WHEN press system Back -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
+WHEN press system Back GIVEN SignIn did not open from the join layer over the signed-in state -> the screen the header's back arrow links to opens, exactly as the arrow's press opens it AND NEVER Back walks the history instead
+
+WHEN press system Back GIVEN SignIn opened from the join layer over the signed-in state -> the join layer comes back, exactly as the arrow's press brings it back AND NEVER FeedBare opens

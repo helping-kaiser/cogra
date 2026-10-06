@@ -66,11 +66,12 @@ export function BottomNav({ active = "feed", slots = DEFAULT_SLOTS, onSelect, in
     letterSpacing: "var(--text-label-medium--letter-spacing)",
     fontWeight: "var(--text-label-medium--font-weight)",
     textDecoration: "none",
-    // Five labelled slots on a narrow phone: the label shortens rather than
-    // wrapping to a second line, which would push the bar past 64px.
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
+    // Text scale is never capped (readme §4 *Type*, K13.4): above 1.3× a
+    // label may wrap to a second line, and the bar grows past its 64px
+    // minimum to hold it — a label is never shortened to an ellipsis.
+    whiteSpace: "normal",
+    overflowWrap: "break-word",
+    textAlign: "center",
   };
   const tone = (selected) => (selected ? "var(--on-surface)" : "var(--text-secondary)");
   return (

@@ -24,10 +24,20 @@
    `Waiting for your key` (`KeptApprovalRow`). Once the key is back it reads
    `Ready for your approval`, and it is the row the kept picks' line `An
    approval waits in your invites — go there to sign it.` sends the reader
-   to. */
-export const PROPS = { kept: { editor: "enum", options: ["none", "waiting"], default: "none" } };
-export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none"`;
+   to.
+
+   THE `revoke` CHIP DRAWS A REVOKE IN FLIGHT (the check round's Q10, jakob
+   2026-10-06): `waiting` is the first link's card past 200ms after its
+   Revoke — the card holds and the word reads `Revoking…`, inert and never
+   dimmed, because a revoke is a consequential write and waits like one. When
+   it lands the card leaves with `Invite revoked`; a failure keeps the card
+   with the standard failure answer. */
+export const PROPS = {
+  kept: { editor: "enum", options: ["none", "waiting"], default: "none" },
+  revoke: { editor: "enum", options: ["rest", "waiting"], default: "rest" },
+};
+export const VALS = `keptShown: this.props.kept === "waiting" ? "block" : "none", revokeRestShown: this.props.revoke === "waiting" ? "none" : "block", revokeBusyShown: this.props.revoke === "waiting" ? "block" : "none"`;
 
 export function Screen() {
-  return <InvitesBody kept="{{keptShown}}" />;
+  return <InvitesBody kept="{{keptShown}}" revoke={{ rest: "{{revokeRestShown}}", busy: "{{revokeBusyShown}}" }} />;
 }

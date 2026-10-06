@@ -1,6 +1,6 @@
 # ResetNew · `spec:design:behavior-reset-new`
 
-WHEN the reset mail's link is opened -> ResetNew opens AND NEVER a field asks for the link's own secret
+WHEN the reset mail's link is opened GIVEN the link is live -> ResetNew opens AND NEVER a field asks for the link's own secret
 
 ALWAYS the screen carries no header and no back arrow
 

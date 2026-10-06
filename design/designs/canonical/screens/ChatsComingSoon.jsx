@@ -35,11 +35,20 @@
    an em dash, the promise — and the line under it is one sentence of what will
    be here. The words are the blessed ones in copy-voice under "The coming-soon
    surfaces", split at the full stop between headline and line; nothing else on
-   this board is new words. */
+   this board is new words.
+
+   IT CONFORMS TO `WalletComingSoon` WHOLE (the check round's Q14, jakob
+   2026-10-06): the same door, read from its two kinds of arrival. THE ARROW
+   NAMES WHERE IT GOES (readme §4, *Navigation*; the nav-noun sweep's
+   Notifications table, the band's other icon): from the band's chats icon it
+   reads the root it was tapped on — `Back to feed`, the state this board
+   draws, `Back to Explore`, `Back to Wallet` or `Back to your profile` — and
+   from a profile's `Message` it reads `Back to the profile`. Every label is
+   already blessed. */
 export function Screen() {
   return (
     <>
-      <PageHeader title="Chats" backHref="#" backLabel="Back" />
+      <PageHeader title="Chats" backHref="#" backLabel="Back to feed" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 0 0" }}>
         <ComingSoonCard thing="Chats" line="Your conversations will be here." />
         <div style={{ flex: 1 }} />

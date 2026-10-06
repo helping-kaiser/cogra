@@ -19,3 +19,5 @@ WHEN tap Hide with the author's handle GIVEN the hide does not go through -> the
 WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the post rides along unseen until the details stage
 
 WHEN tap License terms -> the menu closes AND the post's terms come up in a sheet over the surface the menu was opened from
+
+WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

@@ -30,6 +30,10 @@ WHEN the signing is refused by the write rule -> the notice You can't sign right
 
 WHEN tap the write-rule notice's Not now -> the seal comes back as it stood before the press AND nothing is signed or spent
 
+WHEN the signing is refused for any other reason, a bug -> the notice This shouldn't have happened takes the place of Sign the change with Try again, Report a problem and Not now, as SealFaultBug draws it AND nothing is signed or spent
+
+WHEN tap the bug notice's Not now -> the crop returns with the picture as it was AND NEVER anything is signed
+
 WHEN Sign the change is pressed GIVEN the signing key is not on this device -> the key-absent notice and Restore the key take the place of Sign the change AND Not now stands under the notice AND nothing is signed AND NEVER the notice takes the error colour AND NEVER Keep the draft, restore later appears
 
 WHEN tap the key-absent notice's Not now -> the seal comes back as it stood before the press AND nothing is kept or signed

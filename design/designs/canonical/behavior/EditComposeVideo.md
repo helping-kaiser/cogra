@@ -20,9 +20,11 @@ WHEN tap the clip's remove control -> the clip leaves whole AND the words edit s
 
 WHEN tap Describe the video -> the describe sheet opens on one description for the clip, none for its cover
 
-WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the footer counts one more AND NEVER a dialog asks
+WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
 
 WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
+WHEN tap Undo on a Withdrawn: line -> the withdrawal is unstaged AND the chip returns as it stood AND the line goes AND the footer counts the withdrawal's record off
 
 WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the edit settling AND the clip points at the cover the edit set, if it set one
 
@@ -34,7 +36,7 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
 
-ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail GIVEN it is still uploading
+ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state GIVEN it is still uploading
 
 ALWAYS a failed cover's line reads One picture didn't upload., the cover being one picture
 

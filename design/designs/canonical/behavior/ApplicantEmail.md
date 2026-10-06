@@ -4,13 +4,15 @@ ALWAYS the change asks for the new address and the current password and nothing 
 
 ALWAYS the paragraph names the address the standing link was sent to
 
+WHEN tap reveal password -> the current password shows
+
 WHEN press Change email -> a fresh verification link goes to the new address AND the link sent to the old address stops working AND the applicant's feed comes back with the verify card printing the new address AND the snackbar reads Sent — the link is on its way to noor@fieldnotes.org. AND NEVER a code goes to the old address
 
 WHEN the fresh link is opened -> the address moves to the new one AND the account is verified in the same step
 
 WHEN press Change email GIVEN the change has not answered 200ms after the press -> the commitment reads Changing email… AND NEVER a spinner appears
 
-WHEN press Change email GIVEN the reader is offline -> the network error answers AND the address on file stands
+WHEN press Change email GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change email AND Change email stays, the retry AND the address on file stands AND NEVER a link is sent
 
 WHEN the address changes -> NEVER the seven days restart AND NEVER the screen speaks of them
 

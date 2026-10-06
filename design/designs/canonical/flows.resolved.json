@@ -28,6 +28,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -60,7 +61,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -93,6 +94,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -204,6 +206,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "PostDetail",
@@ -218,7 +221,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 26 boards → ReplyEntry",
+        "start · «comment count» on 27 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -242,6 +245,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "PostDetail",
@@ -399,7 +403,7 @@
     },
     {
       "name": "vouch-back-for-your-inviter",
-      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair and, as the member's first opinion, ends the borrowed view; the ceremony says so, and the member's own feed opens.",
+      "description": "Vouch back on the approval landing opens the stance pad; the signed stance completes the pair; the ceremony says so, and the member's own feed opens.",
       "status": "resolved",
       "steps": [
         "start · VouchBack · 3 «Vouch back» → VouchBackPad",
@@ -437,7 +441,7 @@
       "steps": [
         "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
         "Invites · 4 «an application ready for you» → ApprovePad — the pad blooms on them — approving is the vouch",
-        "end · ApprovePad · 4 «Set» → Invites — signed — the vouch lands, the row leaves the queue, and the approval notifies them"
+        "end · ApprovePad · 4 «Set» → Invites — signed — the vouch lands, the row leaves the queue, and the approval notifies them; the standard signed-opinion snackbar answers"
       ],
       "boards": [
         "Profile",
@@ -506,7 +510,7 @@
     },
     {
       "name": "take-a-stance-on-a-post",
-      "description": "Press and hold the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
+      "description": "Tap the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
       "status": "resolved",
       "startsOn": [
         "ComposeExpired",
@@ -522,6 +526,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
@@ -534,7 +539,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 23 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 24 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -552,6 +557,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
@@ -752,6 +758,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -784,7 +791,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -817,6 +824,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -876,6 +884,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -908,7 +917,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -941,6 +950,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -1000,6 +1010,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -1032,7 +1043,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1063,6 +1074,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -1122,6 +1134,7 @@
         "ComposeCited",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeDetailsVideo",
         "ComposeDetailsWords",
         "EditCompose",
@@ -1132,7 +1145,7 @@
         "ReplySealComment"
       ],
       "steps": [
-        "start · «+ Cite something» on 13 boards → ReferencePicker",
+        "start · «+ Cite something» on 14 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row leaves the results for the staged section above them, wearing its ×, and the picker stays open for the next"
       ],
       "boards": [
@@ -1142,6 +1155,7 @@
         "ComposeCited",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeDetailsVideo",
         "ComposeDetailsWords",
         "EditCompose",
@@ -1251,13 +1265,14 @@
         "CommentEdit",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeUploading",
         "ReplyMediaErrors",
         "ReplyPictures",
         "ReplyPicturesWeb"
       ],
       "steps": [
-        "start · «Describe the pictures» on 7 boards → ComposeDescribe",
+        "start · «Describe the pictures» on 8 boards → ComposeDescribe",
         "end · ComposeDescribe · 3 «Done» → back — the sheet closes"
       ],
       "boards": [
@@ -1265,6 +1280,7 @@
         "CommentEdit",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeUploading",
         "ReplyMediaErrors",
         "ReplyPictures",
@@ -1276,13 +1292,11 @@
       "description": "Details written while the pictures are still climbing reach the gated seal; signing waits for them, then the post lands in its detail view, still settling.",
       "status": "resolved",
       "steps": [
-        "start · ComposeDetails · 10 «Next» → ComposeUploading — uploads still running — details keep writing (drawn on the media page)",
-        "ComposeUploading · 11 «Next» → ComposeSealUploading — uploads still running — the gated seal",
+        "start · ComposeDetails · 10 «Next» → ComposeSealUploading — uploads still running — the gated seal",
         "end · ComposeSealUploading · 7 «Sign and publish» → ComposeLanded — uploads land — signing proceeds to the detail view, still settling"
       ],
       "boards": [
         "ComposeDetails",
-        "ComposeUploading",
         "ComposeSealUploading",
         "ComposeLanded"
       ]
@@ -1346,7 +1360,7 @@
     },
     {
       "name": "take-a-stance-on-a-person",
-      "description": "Press and hold the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
+      "description": "Tap the stance anchor on a profile and the same pad blooms; the stance concludes where it was taken.",
       "status": "resolved",
       "startsOn": [
         "ProfileComments",
@@ -1437,6 +1451,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1451,7 +1466,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 31 boards → ProfileOther",
+        "start · «author chip» on 32 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1475,6 +1490,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1510,13 +1526,14 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 20 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 21 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
@@ -1537,6 +1554,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
@@ -1564,6 +1582,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1571,7 +1590,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 21 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 22 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -1592,6 +1611,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1640,9 +1660,11 @@
         "FeedBare",
         "FeedDeleting",
         "FeedFar",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1650,7 +1672,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 18 boards → RefsSheet",
+        "start · «reference count» on 20 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
@@ -1666,9 +1688,11 @@
         "FeedBare",
         "FeedDeleting",
         "FeedFar",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1789,6 +1813,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1802,7 +1827,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 30 boards → FeedEntry",
+        "start · «Feed score» on 31 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1832,6 +1857,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -2169,13 +2195,13 @@
     },
     {
       "name": "type-the-recovery-code-back-wrong",
-      "description": "A typed-back code that diverges from the one shown keeps the button from enabling and says where; typed right, the key is made and backed up and the ceremony returns where it began.",
+      "description": "A typed-back code that diverges from the one shown is answered at once, on the typing, and the button never enables; typed right, the key is made and backed up and the ceremony returns where it began.",
       "status": "resolved",
       "steps": [
         "start · ApplicantFeed · 3 «Create my key» → KeyCeremony",
         "KeyCeremony · 2 «Create my recovery code» → KeyConfirm",
         "KeyConfirm · 2 «Show my code» → RecoveryCode",
-        "RecoveryCode · 3 «I've written it down» → RecoveryCodeMismatch — the typed prefix diverges from the code — the button never enables",
+        "RecoveryCode · 2 «confirm field» → RecoveryCodeMismatch — the typed prefix diverges from the code — the line answers at once, on the typing, and the button never enables",
         "end · RecoveryCodeMismatch · 3 «I've written it down» → back — code confirmed — returns where the ceremony began, the snackbar Key made and backed up. saying so"
       ],
       "boards": [
@@ -3908,7 +3934,7 @@
         "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
         "ProfileOwnMenu · 2 «History» → History",
         "History · 3 «Everything (filter trigger)» → HistoryFilter",
-        "end · HistoryFilter · 3 «Done» → History — the sheet closes — the history re-reads once, narrowed, newest-seen first still"
+        "end · HistoryFilter · 3 «Done» → History — the sheet closes — the history re-reads once, narrowed, by the time the reader first saw each thing, newest first still"
       ],
       "boards": [
         "Profile",
@@ -3926,7 +3952,7 @@
         "ProfileOwnMenu · 2 «History» → History",
         "History · 3 «Everything (filter trigger)» → HistoryFilter",
         "HistoryFilter · 3 «Done» → HistoryNone — nothing seen is of the narrowed kinds (the cause chip at kinds)",
-        "end · HistoryNone · 4 «Show everything» → History — the query cleared and no kind narrowed — the whole history at Everything, newest-seen first"
+        "end · HistoryNone · 4 «Show everything» → History — the query cleared and no kind narrowed — the whole history at Everything, by the time the reader first saw each thing, newest first"
       ],
       "boards": [
         "Profile",
@@ -4013,6 +4039,44 @@
         "Profile",
         "Invites",
         "RejectAllConfirm"
+      ]
+    },
+    {
+      "name": "step-back-from-the-gated-seal",
+      "description": "Back from the gated seal returns to details while the uploads still run; Next goes back to the gated seal, which signs once they land.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeSealUploading · 1 «back arrow» → ComposeUploading — one stage back — details, uploads running",
+        "end · ComposeUploading · 11 «Next» → ComposeSealUploading — uploads still running — the gated seal"
+      ],
+      "boards": [
+        "ComposeSealUploading",
+        "ComposeUploading"
+      ]
+    },
+    {
+      "name": "follow-the-already-published-marker",
+      "description": "Media that already stands in one of the author's own published posts puts the marker on the details stage; its door opens the post the line names, with no dialog and no gate.",
+      "status": "resolved",
+      "steps": [
+        "start · ComposeDetailsReused",
+        "end · ComposeDetailsReused · 14 «Already in your post from 12 September. (the marker's door)» → PostDetail — the post the line names — the earliest of the author's published posts the media stands in; no dialog, no confirm step, no gate"
+      ],
+      "boards": [
+        "ComposeDetailsReused",
+        "PostDetail"
+      ]
+    },
+    {
+      "name": "reveal-a-sensitive-words-post",
+      "description": "A words-only post its author marked sensitive meets the feed veiled, the source line on the veil plate; Show unveils the words in place for the whole post, for the session.",
+      "status": "resolved",
+      "steps": [
+        "start · FeedWordsSensitive",
+        "end · FeedWordsSensitive · 19 «Show (the words-only veil)» → self — the words unveil in place, the source line under them goes, and the reveal answers for the whole post for the session"
+      ],
+      "boards": [
+        "FeedWordsSensitive"
       ]
     }
   ],
@@ -4411,6 +4475,16 @@
         "write-past-the-details-caps"
       ]
     },
+    "ComposeDetailsReused": {
+      "flows": [
+        "cite-something",
+        "describe-your-pictures",
+        "follow-the-already-published-marker"
+      ],
+      "endpoint": [
+        "follow-the-already-published-marker"
+      ]
+    },
     "ComposeDetailsVideo": {
       "flows": [
         "cite-something",
@@ -4643,9 +4717,12 @@
     },
     "ComposeSealUploading": {
       "flows": [
-        "publish-while-the-uploads-run"
+        "publish-while-the-uploads-run",
+        "step-back-from-the-gated-seal"
       ],
-      "endpoint": []
+      "endpoint": [
+        "step-back-from-the-gated-seal"
+      ]
     },
     "ComposeSensitive": {
       "flows": [
@@ -4662,7 +4739,7 @@
     "ComposeUploading": {
       "flows": [
         "describe-your-pictures",
-        "publish-while-the-uploads-run"
+        "step-back-from-the-gated-seal"
       ],
       "endpoint": []
     },
@@ -5063,6 +5140,7 @@
     },
     "FeedKinds": {
       "flows": [
+        "follow-a-citation",
         "let-every-kind-into-the-feed",
         "open-a-posts-pictures",
         "publish-a-post",
@@ -5182,6 +5260,25 @@
       ],
       "endpoint": [
         "open-what-is-waiting"
+      ]
+    },
+    "FeedWordsSensitive": {
+      "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "reveal-a-sensitive-words-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": [
+        "reveal-a-sensitive-words-post"
       ]
     },
     "GuestGate": {
@@ -5557,6 +5654,7 @@
     "PostDetail": {
       "flows": [
         "follow-a-citation",
+        "follow-the-already-published-marker",
         "open-a-posts-pictures",
         "open-something-you-saved",
         "open-the-viewer",
@@ -5575,6 +5673,7 @@
       ],
       "endpoint": [
         "follow-a-citation",
+        "follow-the-already-published-marker",
         "open-a-posts-pictures",
         "open-something-you-saved",
         "open-the-viewer",

@@ -16,4 +16,4 @@ WHEN tap a post's reference row -> the cited post opens
 
 WHEN tap a comment's reference row -> the comment opens in its thread
 
-WHEN tap the scrim -> the sheet closes
+WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

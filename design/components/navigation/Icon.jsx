@@ -16,9 +16,11 @@ import React from "react";
    filled set. Derived, not redrawn: the geometry is Google's, only the counters
    are gone. It now sits in a row with other glyphs without reading lighter.
 
-   `person` is the one glyph with two cuts, because the bar's selected slot takes
-   the filled one. Otherwise: one weight, one fill style throughout — mixing fills
-   is the most common way an icon set starts to look accidental.
+   TWO GLYPHS HAVE TWO CUTS, each on a control whose STATE is its fill: `person`,
+   because the bar's selected slot takes the filled one, and `lock` /
+   `lock_outline`, the chat foot's encryption toggle (post-MVP). Otherwise: one
+   weight, one fill style throughout — mixing fills is the most common way an
+   icon set starts to look accidental.
 
    An icon never carries meaning alone: every icon-only control has a label. */
 

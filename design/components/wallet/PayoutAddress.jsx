@@ -70,7 +70,7 @@ export function PayoutAddressRow({ address, onOpen }) {
    and the caption are unchanged, because the reason they are shaped that way
    does not depend on what is behind them. */
 
-export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", caption, bare = false }) {
+export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", changeBusy = false, changeBusyLabel, caption, bare = false }) {
   return (
     <div
       style={{
@@ -122,7 +122,11 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
             <Icon name="content_copy" size={18} />
           </button>
         )}
-        {onChange && <InlineAction onClick={onChange}>{changeLabel}</InlineAction>}
+        {onChange && (
+          <InlineAction onClick={onChange} busy={changeBusy} busyLabel={changeBusyLabel}>
+            {changeLabel}
+          </InlineAction>
+        )}
       </div>
       <code
         style={{

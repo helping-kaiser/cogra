@@ -113,13 +113,20 @@ const INLINE_SIZES = {
    name. There is no row there to give, and a flex declaration on an inline
    word in a paragraph is noise. `selfStart` is the column case's one layout
    word, matching `Button`'s prop of the same name — it leads the style object
-   because that is where the sheet writes it. */
+   because that is where the sheet writes it.
+
+   A CONSEQUENTIAL INLINE WORD WAITS AS THE PILL DOES (`Button`'s in-flight
+   law, below): `busy` swaps the word for its `busyLabel` — `Revoke` →
+   `Revoking…` — and the word goes inert, never dimmed, `aria-busy` and
+   `aria-disabled` riding along. */
 export function InlineAction({
   children,
   onClick,
   size = "lg",
   selfStart = false,
   disabled = false,
+  busy = false,
+  busyLabel,
   type = "button",
   ariaLabel,
   className,
@@ -131,15 +138,17 @@ export function InlineAction({
     <button
       type={type}
       disabled={disabled}
-      onClick={onClick}
+      onClick={busy ? undefined : onClick}
       aria-label={ariaLabel}
+      aria-busy={busy || undefined}
+      aria-disabled={busy || undefined}
       className={className ? `${BUTTON_CLASS} ${className}` : BUTTON_CLASS}
       style={{
         alignSelf: selfStart ? "flex-start" : undefined,
         border: 0,
         background: "none",
         padding: 0,
-        cursor: disabled ? "default" : "pointer",
+        cursor: disabled || busy ? "default" : "pointer",
         fontFamily: "var(--font-sans)",
         fontSize: rung.fontSize,
         lineHeight: rung.lineHeight,
@@ -152,7 +161,7 @@ export function InlineAction({
       }}
       data-node={node}
     >
-      {children}
+      {busy && busyLabel ? busyLabel : children}
     </button>
   );
 }

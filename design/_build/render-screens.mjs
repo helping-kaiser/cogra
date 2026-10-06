@@ -1,7 +1,8 @@
-// Renders the canonical screens from the design system's ACTUAL components
-// (backlog item 17): each `designs/canonical/screens/<Name>.jsx` is compiled,
-// rendered with ReactDOMServer against the live `_ds_bundle.js`, and written
-// out as `designs/canonical/<Name>.dc.html`. Update a component, re-run
+// Renders every tree's screens (`trees.mjs`: canonical and postmvp) from the
+// design system's ACTUAL components (backlog item 17): each
+// `designs/<tree>/screens/<Name>.jsx` is compiled, rendered with
+// ReactDOMServer against the live `_ds_bundle.js`, and written out as
+// `designs/<tree>/<Name>.dc.html`. Update a component, re-run
 // `node bundle.mjs && node render-screens.mjs`, and every screen that uses it
 // updates with it. Screens may drop to raw markup (the `Raw` helper) where no
 // component exists yet — that markup lives in exactly one place, the screen.

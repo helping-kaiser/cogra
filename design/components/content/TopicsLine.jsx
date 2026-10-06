@@ -189,22 +189,20 @@ export function TopicsLine({ topics = [], references = 0, onOpen, onOpenReferenc
           ))}
         </span>
       )}
-      {counts &&
-        (onOpenReferences ? (
-          <button
-            type="button"
-            onClick={onOpenReferences}
-            className="cg-state cg-focus"
-            style={{ flex: "none", border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)" }}
-            data-node={countsNode}
-          >
-            <span style={COUNT_STYLE}>{counts}</span>
-          </button>
-        ) : (
-          <span style={COUNT_STYLE} data-node={countsNode}>
-            {counts}
-          </span>
-        ))}
+      {/* THE COUNT IS A DOOR on every feed card (K13.3): it opens the tags
+          and references sheet, focusable and grown to 48px by `cg-hit` — never
+          a dead span, whether or not a board wires its handler. */}
+      {counts && (
+        <button
+          type="button"
+          onClick={onOpenReferences}
+          className="cg-state cg-focus cg-hit"
+          style={{ ...COUNT_STYLE, border: 0, background: "none", padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)" }}
+          data-node={countsNode}
+        >
+          {counts}
+        </button>
+      )}
     </div>
   );
 }

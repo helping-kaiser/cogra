@@ -20,6 +20,8 @@ WHEN press + Add pictures or a video -> the device's own picker opens AND NEVER 
 
 WHEN pictures are picked from + Add pictures or a video -> they pass the crop AND the words they replace are gone from the body
 
+WHEN pictures picked from + Add pictures or a video break the cap of ten or come in a format nothing here reads -> the refusal says why on the media row AND NEVER a dialog opens AND NEVER a pick stage opens
+
 WHEN a video is picked from + Add pictures or a video -> its face is chosen on the cover step before the edit takes it
 
 WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the footer counts one more AND NEVER a dialog asks

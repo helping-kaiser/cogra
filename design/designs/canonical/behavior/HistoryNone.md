@@ -10,9 +10,9 @@ ALWAYS Show everything stands under the line as the empty state's one action
 
 ALWAYS the empty state wears no error colour
 
-WHEN tap Show everything -> the query clears AND no kind is narrowed AND History stands whole, reading Everything, newest-seen first
+WHEN tap Show everything -> the query clears AND no kind is narrowed AND History stands whole, reading Everything, ordered by the time the reader first saw each thing, newest first
 
-WHEN the reader types a query something in History carries -> the matches replace the empty state, newest-seen first
+WHEN the reader types a query something in History carries -> the matches replace the empty state, ordered by the time the reader first saw each thing, newest first
 
 WHEN tap the filter trigger -> the history's filter sheet opens over History
 

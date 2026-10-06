@@ -222,7 +222,10 @@ Balances, earnings, campaign amounts: how a figure is formatted, when it
 carries a unit, and what it does at zero and negative. `payoutAddress`
 moves off the profile in item 12, so settle the figure first.
 
-### 12 · Wallet · *design + system* · **built**
+### 12 · Wallet · *design + system* · **built** · **post-MVP since 2026-09-25**
+The V1.0 scope cut (readme §13) moved the eleven wallet boards to
+`designs/postmvp/`; in V1.0 the wallet slot opens `WalletComingSoon`.
+
 Eight boards (Wallet rows on the canonical canvas: at rest, the
 zero state, first-open set-up, the address-publish seal, the
 address-change seal, key elsewhere, guest, applicant) and
@@ -304,16 +307,19 @@ carrying a small cover of the post it came from. The register is graph,
 paths, connections; never statistics, never a chart. Its five parts
 (`ScoreOrigin`, `PathTrace`, `PathSummary`, `StepSummary`, `ActionLog`)
 were removed from the system on purpose: they serve one flow, so they
-belong to the design. Rebuild them there. Still open: whether level one
-pages past a handful of paths, and the empty state for a post whose paths
-all moved long ago.
+belong to the design. Rebuild them there. Level one shows the strongest
+handful with a quiet row past it, and a post whose paths all moved long
+ago reads a quiet line (`FeedEntryMoved`) — readme §13, *The
+score-and-opinions round*.
 
-### 14 · Marketplace · *design*
+### 14 · Marketplace · *design* · **post-MVP**
+V1.0 serves no items or offers (readme §13, *The V1.0 scope cut*).
 Two entrances — your items on a profile, and the marketplace from the
 feed or the wallet. Search by item name, ranked results, offers. The
 profile is also a gate into it, so item 5 should be done first.
 
-### 15 · Collective actor variant · *system*
+### 15 · Collective actor variant · *system* · **post-MVP**
+Stamped with the 2026-10-06 check round's backlog hygiene.
 Specified in the source, unimplemented, and a fair amount of work: an
 actor that is a group changes the actor chip, the profile header, and
 attribution on every card. Deliberately late.
@@ -380,11 +386,9 @@ one control serves the feed and the default; `api-spec.md`'s
 `UserPreferences.defaultLicense`; the round's copy in
 `copy-voice.md`, blessed 2026-09-10.
 
-**Not drawn**: the marked states of the four task screens
-(validation is on submit, so the resting form is the one state that
-always exists), and the half-confirmed email, which the graph carries
-as an outcome of the confirm rather than a board. Both are their own
-items when they are wanted.
+**Drawn since**: the task screens' marked states (`ChangeEmail`'s
+fault chip among them) and the half-confirmed email
+(`SettingsEmailPending`).
 
 **What implementation owes** — the boards are ahead of both apps on
 every line below:
@@ -727,7 +731,7 @@ reachable there before it earns a slot, per the action-row priority
 rule (readme §13, the reel round); it is deliberately undrawn until the
 chats round.
 
-### 25 · Media-slice close-out designs · *design*
+### 25 · Media-slice close-out designs · *design* · **closed 2026-10-06**
 
 Filed by the feature loop 2026-09-01 (jakob: designs shipped later,
 bundled). Three small pieces the 2.5.1 close needs:
@@ -738,8 +742,10 @@ bundled). Three small pieces the 2.5.1 close needs:
    as the same veil, so an unnamed source reads as the other.
    `SensitiveVeil` takes `source`, `PostCard` and `CommentCard` carry
    it, and the *Sensitive & removed* card draws both. Until slice 8
-   every live veil is an author mark. Open: where a words-only post
-   names its source, having no wash to carry the line.
+   every live veil is an author mark. A words-only post names it on
+   the text veil's own plate, under the blurred words and their `Show`
+   (`SensitiveVeil`'s `named`) — **drawn 2026-10-06** as
+   `FeedWordsSensitive` (the check round's Q5).
 2. **The sensitive mark rides on both edit surfaces** — ruled and
    drawn 2026-09-02 (readme §13 *The compose flow*): EditCompose and
    CommentEdit each carry the seal's Sensitive row, opening the same
@@ -980,7 +986,11 @@ the bench exhausted: `retry-an-unusable-invite`,
 `check-what-the-edit-signs`, which first needs a ruling on whether a
 detour may start a flow.
 
-### 29 · design.md is removed in favour of the design directory · *system*
+### 29 · design.md is removed in favour of the design directory · *system* · **closed 2026-10-06**
+
+Closed by the check round (jakob 2026-10-06): `docs/implementation/design.md`
+shrinks to a pointer at `design/`; implementation executes it, relayed
+through the design ⇄ impl seam (entry 055).
 
 Jakob's direction 2026-09-02: this folder is the design home, and
 `docs/implementation/design.md` is a second copy of the same rules that
@@ -1357,7 +1367,7 @@ for the feature session, not design work still owed:
    swapping.
 3. **A video post's card description says the clip**, never
    "1 picture" — `1 clip · 0:24`, the kind and its duration
-   (`guidelines/copy-voice.md`, awaiting blessing). A clip announced
+   (`guidelines/copy-voice.md`, blessed). A clip announced
    as a picture is the card saying something untrue to the one reader
    who cannot see the difference.
 
@@ -1406,9 +1416,11 @@ the fields, or the client staging the three prepares and sealing the
 batch. The boards and the contract are both satisfied by the second,
 which is why the contract is not moving to meet the first.
 
-### 38 · The desktop round · *design*
+### 38 · The desktop round · *design* · **parked until implementation runs smoothly on its own**
 
-Held open by the scope ruling of 2026-09-09 (readme §2): the mobile set
+Parked (jakob 2026-10-06): implementation comes first, and the round
+waits until it runs smoothly on its own — perhaps a web design round
+after that. Held open by the scope ruling of 2026-09-09 (readme §2): the mobile set
 is what this system draws, and a desktop visitor gets the mobile-derived
 layout unoptimized until this round runs. What parked into it:
 
@@ -1695,22 +1707,18 @@ settle, each named where it was found rather than folded into the round.
    pair, and the settling row* holds the ruling, and *The batch's
    review* the same day gives the sheet the anchor face every
    pair-setting readout now wears.
-3. **The picker's refused-name state is undrawn.** What an illegal
-   character does at the field is the input-error round's shape and
-   belongs to a validation pass. `TagPickerTyping` states the gate and
-   previews the canonical name; it does not draw the refusal.
+3. ~~**The picker's refused-name state is undrawn.**~~ Drawn:
+   `TagPickerRefused` draws the refusal; `TagPickerTyping` states the
+   gate and previews the canonical name.
 4. ~~**Whether an @-scoped search returns a tag is not settled anywhere.**~~
    Ruled 2026-09-10, and the round's drawing stands: an **@-scope hit is
    indirect**, and its second line says the route out loud ("tagged by
    @sol"). The scope never returns the tag itself as a direct hit — what
    a person's scope holds is their acts, and the tag is what one of them
    points at.
-5. **The follow gesture has no surface.** The round drew it as the
-   stance anchor on the tag page's header and jakob's review removed
-   it: beside the entrance post's context it read as that post's
-   stance readout, not a gesture toward the tag. An Affinity toward a
-   Type stays real and pad-shaped; slice 3's round — the first that
-   may ship a follow at all — owes it a home that cannot be misread.
+5. ~~**The follow gesture has no surface.**~~ Drawn as `TopicStanceRow`
+   on `TagPage`, `TagPageEmpty` and `TagPageHeld` (items 78 and 90);
+   topic follow ships whole in V1.0 (readme §13, *The V1.0 scope cut*).
 
 ### 47 · The bottom bar's re-tap ladder · *design* · **ruled + recorded**
 
@@ -1779,7 +1787,7 @@ descriptions when the pictures it described are replaced, and whether a
 words body that flips to media keeps its text anywhere recoverable. The
 boards say only that the field goes; neither question is a drawing.
 
-### 49 · The video-cover round · *design* · **built**
+### 49 · The video-cover round · *design* · **built** · **closed 2026-10-06**
 
 Filed from the implementation session's media handoff; jakob ruled all
 three questions in the design session the same day (the full record:
@@ -1832,14 +1840,14 @@ both apps key the cover step on the clip's shape and ship the door on
 details and at edit; both draw the no-frames state. The five
 mis-measured dev rows were backfilled 2026-09-10, before the round.
 
-**Candidate copy awaiting blessing** — the door's label *"Add a
-cover"*; the line under it, on all four surfaces that draw the door,
-*"It plays the moment it is on screen, so it starts on its own first
-frame."*; the no-frames caption *"This clip gave no frames — choose a
-picture of your own, or leave it without one."*; and the neutral tile's
-*"No frame."*
+**The copy is blessed** (jakob 2026-10-06, the check round) — the
+door's label *"Add a cover"*; the line under it, on all four surfaces
+that draw the door, *"It plays the moment it is on screen, so it starts
+on its own first frame."*; the no-frames caption *"This clip gave no
+frames — choose a picture of your own, or leave it without one."*; and
+the neutral tile's *"No frame"*.
 
-### 50 · The tag pad · *design + implementation* · **drawn 2026-09-10**
+### 50 · The tag pad · *design + implementation* · **drawn 2026-09-10** · **closed 2026-10-06, but for the default's reading**
 
 Ruled by jakob 2026-09-10, drawn the same day, and revised by his
 review 2026-09-11: a staged tag's pair is set on the pad over a field
@@ -1860,15 +1868,15 @@ thirteen-anchor lookup, none of which the stance pad can supply, the two
 tables being deliberately disjoint. Both owe the two contexts as well:
 the composer's pad carries no un-tag control, the edit's does.
 
-**The anchors have not been through `copy-voice.md`.** The table's
-thirteen glosses are the words the boards draw and speak, and they are
-ruled, but a copy pass has not read them as a set against the guide's
-register. `Un-tag`, the edit pad's foot control, goes with them — the
-reader's word for the act (api-spec's own noun for the r-0 record),
-ruled 2026-09-11; the `Withdrawn:` line and the acts card's "Tags
-withdrawn" keep the register's record-speak for the result.
+**The anchors are blessed** (jakob 2026-10-06, the check round): the
+table's thirteen glosses as drawn, the words the boards draw and speak.
+`Un-tag`, the edit pad's foot control — the reader's word for the act
+(api-spec's own noun for the r-0 record), ruled 2026-09-11 — is blessed
+with the `Withdrawn:` line and the acts card's "Tags withdrawn", which
+keep the register's record-speak for the result.
 
-**The contract's default reads oddly through the table.** A tag opens
+**Still open, not ruled: the contract's default reads oddly through the
+table.** A tag opens
 at relevance +0.1, whose nearest anchor is 🔍 "had to look, but it's in
 there" — a fair reading of the number and a strange thing for an author
 to say about their own post's tag. Either the low-defaults value is
@@ -2042,7 +2050,7 @@ canvas slot un-clipped. What is left:
    filter's first section, whose ruled name duplicated the reading
    sheet's own title, is `Kinds`.
 
-### 54 · What the numbers census left standing · *design*
+### 54 · What the numbers census left standing · *design* · **closed**
 
 Side findings of the 2026-09-11 numbers census that the small-fix
 batch could not settle:
@@ -2052,8 +2060,9 @@ batch could not settle:
    hours` — read the same ladder forward, and a far date spells
    `dd.mm.yyyy`. `copy-voice.md`'s Ages section carries it blessed;
    `WalletCampaign` and `WalletCampaigns` are conformed.
-2. **Pair-string format has no drift guard where a pair is still
-   hand-written.** The list masters no longer take one: `TaggedRow`,
+2. ~~**Pair-string format has no drift guard where a pair is still
+   hand-written.**~~ Shipped as `_build/check-readouts.mjs`, the
+   gate's fifth stage. The list masters no longer take one: `TaggedRow`,
    `ReferenceRow` and `StagedReference` take `{ pDirected, pInterest }`
    and format it themselves (item 53), which closed the drift on every
    list surface and is what surfaced the `+0.4 · 0.1` in
@@ -3630,7 +3639,14 @@ sections against copy-voice would end the drift class for good.
    pipeline beside `check-behavior`, the behavior sidecars' grammar
    lint.
 
-### 110 · The already-published marker has no board · *design* · **filed 2026-09-30** · **deprioritized 2026-09-30**
+### 110 · The already-published marker has no board · *design* · **filed 2026-09-30** · **deprioritized 2026-09-30** · **drawn 2026-10-06**
+
+**Drawn 2026-10-06** (the check round's Q4: one board) as
+`ComposeDetailsReused` (canvas "Compose · details, media already
+published", page Compose): the line under `PickedRow` in
+`EditedMarker`'s tappable form, opening the earliest matching post, its
+accessible name its own words (K13.11), on the picture path's details
+stage.
 
 **Deprioritized** (jakob 2026-09-30, ruled on the implementation
 side): the marker is a late quality-of-life feature, so this drawing
@@ -3857,7 +3873,10 @@ stack*) drew the three rows and two boards. Still unruled:
   defaults): empty, `Send by email` is visible and disabled with
   `Nothing to send yet` above it (`ReportProblemEmpty`), and leaving
   with Back keeps the words (readme §13, *The review fixes*). What a
-  sent report does to the kept words is not ruled.
+  sent report does to the kept words is not ruled. The empty state's
+  disabled Send is superseded: `Send by email` is live from an empty
+  field and the board draws no line (readme §13, *The settings and pads
+  rulings executed*).
 - ~~**A running version behind the newest.**~~ — closed 2026-10-01
   (jakob, with a deviation): a quiet line atop the chronicle
   (`WhatsNewBehind`) and one snackbar per release on a cold open
@@ -3869,8 +3888,13 @@ stack*) drew the three rows and two boards. Still unruled:
   listing `Update now` opens (`STORE_LISTING_URL`, the placeholder id
   `local.cogra.app`; readme §13, *The filter-and-olive round*) swaps for
   CoGra's real Play Store listing once the app is published.
+- **The APK line's retirement.** The web's dev-phase `On Android?
+  Download the app (APK)` (readme §13, *The entry flow*; on `Main`,
+  `FeedBare`, `GuestGate`, the `SignIn` family and
+  `KeyCeremonyUnsupported`) retires once the Play Store listing is
+  live, in the same swap.
 
-### 119 · The dateline sweep, when the histories migrate · *design* · **filed 2026-10-01** · **future**
+### 119 · The dateline sweep, when the histories migrate · *design* · **filed 2026-10-01** · **future** · **the marker's half closed 2026-10-06**
 
 The chronicle's version datelines — `Current version · signed 12
 September`, `Earlier version · signed 8 September` on the post-MVP
@@ -3887,9 +3911,9 @@ dateline form's owners.
 The already-published marker keeps the `12 September` form (`Already
 in your post from 12 September.`, *The already-published marker*): item
 112's resolution names it a dateline owner in copy-voice's *Ages*. It is
-a V1.0 line, not post-MVP, so the sweep leaves it standing, and item 110
-draws it in that form; the rewritten dateline paragraph keeps it as the
-form's owner.
+a V1.0 line, not post-MVP, so the sweep leaves it standing; its board
+is drawn in that form (jakob 2026-10-06, the check round; item 110), and
+the rewritten dateline paragraph keeps it as the form's owner.
 
 ### 120 · What the closing batch left for rulings · *design* · **closed 2026-10-01**
 
@@ -3920,12 +3944,10 @@ rulings and left these calls for his eye. Every one is settled:
 The pads and edits round (readme §13, *The pads and the edit's
 withdrawals*) executed jakob's D1–D3 and left these for his eye:
 
-- **Strings flagged for blessing** (copy-voice, *The pads and the
-  edit's withdrawals*): `Set exact values for …`, `Current` /
-  `Resulting`, `Remove citation` and its two cost lines, `Undo` and its
-  spoken `Undo withdrawing …`, the five new acts labels, and `Signing
-  waits for it.` — with the carried-over `Un-tag`, `Withdrawn:` and
-  `Tags withdrawn`.
+- ~~**Strings flagged for blessing**~~ (copy-voice, *The pads and the
+  edit's withdrawals*) — blessed: the round's lines 2026-10-02, and the
+  carried-over `Un-tag`, `Withdrawn:` and `Tags withdrawn` 2026-10-06
+  (the check round).
 - **The lane's calls.** The edit-time pick opens at the origin; the
   removal's cost is a sentence over the foot, describing the control;
   a records row is heard as `N things`; the failed gate is its own board
@@ -3986,7 +4008,9 @@ correction*. Still open:
   yet made.
 - **The email change's failure landings** — the expired link and the
   taken address — are copy on `ChangeEmailLinked`, not boards.
-- **`VerifiedApp` opened signed out** has no stated way on.
+- ~~**`VerifiedApp` opened signed out**~~ — closed 2026-10-05 (E20):
+  the way on reads `Sign in` given the app holds no session
+  (`behavior/VerifiedApp.md`).
 
 Closed 2026-10-02 (jakob, as recommended; readme §13, *The no-expiry
 correction*):
@@ -4047,7 +4071,14 @@ carries it today, and this item stays open for the vehicle itself.
 The navigation-and-sheets round (readme §13) executed jakob's two laws
 and the K11 recommendations, and left these for his eye:
 
-- **The sheet law's reach into the editing sheets.** The law says no
+- ~~**The sheet law's reach into the editing sheets.**~~ — closed
+  2026-10-06 (the check round's rulings, item 1): readme §4, *Sheets*,
+  writes the editing-sheet exemption jakob ruled 2026-10-02 —
+  `ComposeTags`, `ComposePicked`, `EditPicked` and `ComposeCitations`
+  apply live and every way out just closes them; the describe sheets,
+  `ComposeLicense` and `ComposeSensitive` stage, and dismissal discards.
+  The BottomSheet master and every sheet sidecar state the two kinds.
+  The law says no
   sheet applies live, but five sheets carrying a `Done` still edit in
   place: the staged-tags and staged-citations sheets' × (`ComposeTags`,
   `ComposeCitations`), the Show-all sheet's reorder and × (`ComposePicked`,
@@ -4057,10 +4088,11 @@ and the K11 recommendations, and left these for his eye:
   sheet's last-picture ×, which closes the manager on the spot (*The
   compose last-picture ruling*), has no staged reading. Their edges and
   docblocks are untouched until ruled.
-- **Which sheets the law governs.** The round read menu sheets (a row
-  is an act and its own commit) and read-only sheets (references,
-  opinions, Cited by, license terms, the comments thread) as keeping
-  the law by their shape. Confirm the reading.
+- ~~**Which sheets the law governs.**~~ — closed (jakob 2026-10-02,
+  written 2026-10-06 by the check round's digest item 1, readme §4,
+  *Sheets*): menu sheets (a row is an act and its own commit) and
+  read-only sheets (references, opinions, Cited by, license terms, the
+  comments thread) keep the law by their shape.
 - ~~**Two dialogs keep their own layout.**~~ — closed 2026-10-02
   (jakob: the two off-slot dialogs are fine). `StanceAlternates` (a
   chooser with its "?" and three actions) and `ReplyKeyAbsent` (the key
@@ -4068,9 +4100,10 @@ and the K11 recommendations, and left these for his eye:
   keep them (readme §13, *The nav-noun sweep*).
 - ~~**The drill-ins the tables do not reach yet.**~~ — closed 2026-10-02
   for `FeedEntry`, `ProfileStances`, `Notifications`, `About` and the
-  stream (readme §13, *The nav-noun sweep*). Open: `ChatsComingSoon`
-  still reads a bare `Back`; Wallet's and the join form's nouns, filed
-  as 125 below.
+  stream (readme §13, *The nav-noun sweep*). `ChatsComingSoon` closed
+  2026-10-06 (the check round): it conforms to `WalletComingSoon`
+  whole, its back arrow returning by origin noun. Wallet's and the join
+  form's nouns, filed as 125 below.
 - **The derived details.** The deep-link highlight's rung (one up the
   surface ladder from the sheet) and its one second; the license
   joining rule's name for a non-zero pair (its two tier names, ` · `);

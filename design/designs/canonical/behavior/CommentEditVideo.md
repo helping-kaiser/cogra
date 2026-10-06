@@ -4,6 +4,12 @@ ALWAYS the comment's clip is never swapped in an edit
 
 WHEN tap the clip's remove control -> the clip leaves whole, taking the comment's media with it AND the comment is its words
 
+WHEN tap the × of a tag the comment already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
+
+WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
+WHEN tap Undo on a Withdrawn: line -> the withdrawal is unstaged AND the chip returns as it stood AND the line goes AND the footer counts the withdrawal's record off
+
 ALWAYS the cover row shows the cover and Change the cover GIVEN the comment's clip has a cover
 
 ALWAYS the cover row shows Add a cover and no picture GIVEN the comment's clip has no cover
@@ -22,7 +28,7 @@ WHEN press Sign the edit GIVEN an upload is running -> Sign the edit refuses a s
 
 WHEN the signing has not answered 200ms after a press of Sign the edit, held at the upload gate or not -> Sign the edit reads Signing the edit… in its own place AND the header back arrow and the header X refuse a press AND NEVER a spinner appears
 
-ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail GIVEN it is still uploading
+ALWAYS the cover the edit set wears its upload's progress as a ring on its thumbnail, the ring drawn once on EditCompose's board at its uploading state GIVEN it is still uploading
 
 ALWAYS a failed cover's line reads One picture didn't upload., the cover being one picture
 

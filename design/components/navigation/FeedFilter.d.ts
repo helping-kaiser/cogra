@@ -26,8 +26,8 @@ export interface FeedFilterValue {
  * The feed's filter: one chip-shaped trigger that reads back the current view,
  * and a sheet holding the whole thing. The trigger sits on the right edge of
  * the `CograBand` and scrolls with it. The sheet stages: `Done` commits and the
- * feed re-queries once; the scrim, a swipe down and Back discard (the sheet law,
- * readme §4, *Sheets*). `onChange` fires on Done only, with the staged filter.
+ * feed re-queries once; the scrim, a swipe down, system Back and Escape discard
+ * (the sheet law, readme §4, *Sheets*). `onChange` fires on Done only, with the staged filter.
  *
  * Turning every kind off is allowed: the feed then shows its empty state, which
  * says what is switched off. The control never prevents a choice.

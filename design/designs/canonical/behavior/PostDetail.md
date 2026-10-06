@@ -16,7 +16,7 @@ ALWAYS postDetail.card.citedBy is absent GIVEN nothing cites the post
 
 ALWAYS postDetail.card.citedBy counts what cites the post, apart from postDetail.card.tagsLine's count
 
-ALWAYS postDetail.card.tagsLine's count is the length of the tags-and-references sheet
+ALWAYS postDetail.card.tagsLine's count counts the post's references only, as many as the References section's rows in the tags-and-references sheet
 
 WHEN tap postDetail.card.media.frame -> the fullscreen viewer opens on that frame AND NEVER the post reopens
 

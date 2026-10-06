@@ -2,9 +2,8 @@ import React from "react";
 import { DialogSurface } from "../core/JoinPrompt.jsx";
 import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
 import { StanceSlider } from "./StanceSlider.jsx";
-import { alternatesHelp, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { STANCE_AXES } from "./StancePad.jsx";
-import { clampDimension, severanceWords, STANCE_RANGES } from "./StanceReadout.jsx";
+import { alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STANCE_RANGES } from "./StanceReadout.jsx";
 
 /* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
    machinery as the pad, different surface: they write the same two values, and the

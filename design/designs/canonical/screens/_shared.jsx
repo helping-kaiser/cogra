@@ -1576,8 +1576,10 @@ function ReplyPadBody() {
 
         {/* The pick's readout, above the field where a thumb cannot cover it:
             what the pick is toward, then the face and the pair under it. The
-            readout clears the corner the "?" sits in. */}
-        <div style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
+            readout clears the corner the "?" sits in. It is the master's
+            polite live region (`StanceStanding`; P6, K13.17): the pick
+            speaks once it rests, never at every step. */}
+        <div aria-live="polite" style={{ display: "flex", flexDirection: "column", paddingRight: 40 }}>
           <span aria-hidden="true" style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
             Toward what you answer
           </span>
@@ -1851,10 +1853,14 @@ function ComposeDetailsBody({
   descriptionError,
   nextDisabled = false,
   words = false,
+  publishedOn,
 }) {
   /* The element names are `ComposeDetails`'s calibration IDs (seam 002). They
      reach a built board only where the screen is registered (`NODE`); every
-     other board this body stands on renders them stripped. */
+     other board this body stands on renders them stripped.
+
+     `publishedOn` draws the already-published marker under the media row
+     (copy-voice, *The already-published marker*; `ComposeDetailsReused`). */
   return (
     <>
       <WizardHeader title="Details" node="header" />
@@ -1867,6 +1873,7 @@ function ComposeDetailsBody({
               onManage={() => {}}
               node="mediaRow"
             />
+            {publishedOn && <EditedMarker label={`Already in your post from ${publishedOn}.`} onInspect={() => {}} />}
             <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
           </>
         )}
@@ -4535,7 +4542,7 @@ function KeptApprovalRow({ shown }) {
   );
 }
 
-function InvitesBody({ approving = false, kept = "none" }) {
+function InvitesBody({ approving = false, kept = "none", revoke }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
@@ -4629,15 +4636,38 @@ function InvitesBody({ approving = false, kept = "none" }) {
 
         <SectionLabel>Live links</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
-          <PayoutAddress
-            label="Single use · not used yet"
-            address={SOL_INVITE_LINK}
-            onCopy={() => {}}
-            copyLabel="Copy the link"
-            onChange={() => {}}
-            changeLabel="Revoke"
-            caption="Expires in 7 days · 22.09.2026"
-          />
+          {/* REVOKE WAITS (the check round's Q10, jakob 2026-10-06): a revoke is
+              a consequential write, so the card holds while it is in flight and,
+              past 200ms, its word reads `Revoking…`, inert and never dimmed. The
+              `revoke` chip draws that moment on the first link; a failure
+              keeps the card with the standard failure answer. The two
+              readings are toggled by the board's chip values. */}
+          <div style={{ display: revoke ? revoke.rest : "block" }}>
+            <PayoutAddress
+              label="Single use · not used yet"
+              address={SOL_INVITE_LINK}
+              onCopy={() => {}}
+              copyLabel="Copy the link"
+              onChange={() => {}}
+              changeLabel="Revoke"
+              caption="Expires in 7 days · 22.09.2026"
+            />
+          </div>
+          {revoke && (
+            <div style={{ display: revoke.busy }}>
+              <PayoutAddress
+                label="Single use · not used yet"
+                address={SOL_INVITE_LINK}
+                onCopy={() => {}}
+                copyLabel="Copy the link"
+                onChange={() => {}}
+                changeLabel="Revoke"
+                changeBusy
+                changeBusyLabel="Revoking…"
+                caption="Expires in 7 days · 22.09.2026"
+              />
+            </div>
+          )}
           <PayoutAddress
             label="Many uses"
             address={SOL_INVITE_LINK_OPEN}

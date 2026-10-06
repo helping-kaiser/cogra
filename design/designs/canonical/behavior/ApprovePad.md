@@ -1,6 +1,6 @@
 # ApprovePad · `spec:design:behavior-approve-pad`
 
-WHEN tap the stance anchor on an application ready for your approval -> the pad blooms over Invites on that applicant AND NEVER anything is staged
+WHEN tap an application's row on Invites GIVEN it reads Ready for your approval -> the pad blooms over Invites on that applicant AND NEVER anything is staged
 
 ALWAYS approving is vouching: the pad is the opinion pad, the same anchor and the same acts, never a button labelled Approve
 
@@ -34,7 +34,7 @@ WHEN tap Set -> Set refuses a second press until the signing answers AND the pad
 
 WHEN the signing has not answered 200ms after Set -> Set reads Setting… AND NEVER a spinner appears
 
-WHEN the signing is taken -> the vouch lands AND the row leaves the queue AND the approval notifies the applicant AND the pad closes onto Invites
+WHEN the signing is taken -> the vouch lands AND the row leaves the queue AND the approval notifies the applicant AND the pad closes onto Invites AND the snackbar reads Signed, still settling. Current opinion with the pick's face
 
 WHEN tap Set GIVEN the signing key is not on this device -> the pad's key notice stands where the landing line and the actions were AND the write waits as pending AND NEVER anything is signed
 

@@ -14,13 +14,13 @@ ALWAYS the history's filter sheet carries no "?"
 
 WHEN tap a kind chip -> the chip stages AND NEVER History moves behind the sheet
 
-WHEN tap Done -> the sheet closes AND History re-reads once with the staged kinds, newest-seen first
+WHEN tap Done -> the sheet closes AND History re-reads once with the staged kinds, ordered by the time the reader first saw each thing, newest first
 
 WHEN tap Done GIVEN nothing seen is of the staged kinds -> the sheet closes AND History stands narrowed to nothing, with Show everything
 
 WHEN tap the scrim -> the sheet closes AND the staged kinds are dropped AND History stands as it was
 
-WHEN swipe down or press Back -> the sheet closes AND the staged kinds are dropped AND History stands as it was
+WHEN swipe down, press Back or press Escape -> the sheet closes AND the staged kinds are dropped AND History stands as it was
 
 ALWAYS the history's filter foot holds Reset in its corner and Done at its end
 

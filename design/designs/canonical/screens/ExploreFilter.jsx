@@ -12,11 +12,11 @@
 
    IT STAGES, AND `Done` COMMITS (the sheet law, readme §4, *Sheets*). The
    results beneath are visual only and do not move until Done, when the search
-   re-queries once; the scrim, a swipe down and Back discard. The foot is the
-   feed filter's own `FilterFoot` — `Reset` in the corner, `Done` at the end;
-   every filter sheet's foot is the same row. The sheet is short enough that
-   its content sizes it, so the foot ends the content rather than being pinned
-   under a scroll.
+   re-queries once; the scrim, a swipe down, system Back and Escape discard.
+   The foot is the feed filter's own `FilterFoot` — `Reset` in the corner,
+   `Done` at the end; every filter sheet's foot is the same row. The sheet is
+   short enough that its content sizes it, so the foot ends the content rather
+   than being pinned under a scroll.
 
    `Reset` STAGES THE SEARCH'S DEFAULT: no kind narrowed, and the shared axes
    — the order and the seen toggle — at the reader's default, what the

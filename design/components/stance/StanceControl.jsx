@@ -5,7 +5,6 @@ import { Snackbar } from "../core/Snackbar.jsx";
 import { JoinPrompt } from "../core/JoinPrompt.jsx";
 import { StancePad, STANCE_AXES } from "./StancePad.jsx";
 import { StanceAlternates } from "./StanceAlternates.jsx";
-import { StanceCoachMark, padHelp, HelpLine, helpKey } from "./StanceCoachMark.jsx";
 import { SeveranceConfirm } from "./SeveranceConfirm.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { SigningPending, TransportError } from "../honesty/TransportError.jsx";
@@ -14,8 +13,11 @@ import {
   bundleReadout,
   clampPair,
   formatStancePair,
+  helpKey,
+  HelpLine,
   localLanding,
   ORIGIN,
+  padHelp,
   RESTING_FACE_EMOJI,
   severanceWords,
   signedLine,
@@ -66,10 +68,12 @@ import {
    above the commit row and `Retry`, outlined, in Set's slot — a failed signed
    act re-raises its own surface, and here the surface never went away.
 
-   THE PAD IS THE TEACHER. The one-time coach mark rides the FIRST OPEN, inside
-   the pad it explains, and what it teaches is the shortcut — a reader who has
-   found the pad has already found everything they need, and the only thing left
-   to say is that the hold is faster.
+   THE PAD IS THE TEACHER (the check round's Q6, jakob 2026-10-06). The
+   account's first-ever pad open carries the two coaching lines in the shell's
+   `padNote` slot — the press-and-hold shortcut, and `Nothing is signed until
+   Set.` — wherever that pad opens (B8). That is the one teaching: a reader who
+   has found the pad has already found everything they need, and the only
+   thing left to say is that the hold is faster.
 
    RELEASING THE FINGER NEVER COMMITS. Release parks the pick and leaves the pad
    open; an explicit SET commits; CANCEL or a press outside stages nothing. An
@@ -309,7 +313,6 @@ export function StanceControl({
   }, [taughtProp]);
   const [open, setOpen] = React.useState(defaultOpen);
   const [alternates, setAlternates] = React.useState(false);
-  const [coach, setCoach] = React.useState(false);
   const [explaining, setExplaining] = React.useState(false);
   const [pick, setPick] = React.useState(defaultPick ?? TAP_DEFAULT);
   const [confirming, setConfirming] = React.useState(null);
@@ -335,7 +338,6 @@ export function StanceControl({
     setOpen(false);
     setAlternates(false);
     setExplaining(false);
-    setCoach(false);
   };
 
   React.useEffect(() => {
@@ -389,9 +391,9 @@ export function StanceControl({
     });
   };
 
-  /* THE TAP OPENS. It teaches on the first open ever and never again — the
-     coach rides inside the pad, so opening it is both the answer and the
-     lesson, and a feed of twenty cannot teach twenty times. */
+  /* THE TAP OPENS. The first open ever is the teaching moment — the shell's
+     two coaching lines ride it in `padNote` — and never again, so a feed of
+     twenty cannot teach twenty times. */
   const onTap = () => {
     if (suppressClick.current) {
       suppressClick.current = false;
@@ -404,12 +406,7 @@ export function StanceControl({
     setPick(TAP_DEFAULT);
     setSigned(null);
     setOpen(true);
-    if (taught) {
-      setCoach(false);
-    } else {
-      setTaught(true);
-      setCoach(true);
-    }
+    if (!taught) setTaught(true);
   };
 
   /* THE HOLD SIGNS. It fires under the finger, so the click that follows the
@@ -680,23 +677,6 @@ export function StanceControl({
               </span>
             </button>
             <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} onOpenHistory={onOpenHistory} style={{ paddingRight: "40px" }} />
-            {/* THE COACH RIDES THE FIRST OPEN, INSIDE THE PAD. It is a note on
-                the surface it explains rather than a card floating beside the
-                anchor — the anchor may be anywhere on the screen and the pad is
-                always parked at the same spot, so a mark attached to the anchor
-                would point at nothing the reader is looking at.
-
-                IT GROWS UPWARD, not down: the pad is parked by its bottom edge,
-                so a note above the field leaves Set and Cancel exactly where the
-                thumb expects them. It wears the pad's own container tone rather
-                than the dialog surface — a second dialog-coloured card inside a
-                dialog reads as a second dialog. */}
-            {coach && (
-              <StanceCoachMark
-                onDismiss={() => setCoach(false)}
-                style={{ width: "auto", background: "var(--surface-container-highest)", padding: "var(--space-3)" }}
-              />
-            )}
             {/* The help panel REPLACES the field and the readouts rather than
                 growing below them: the pad is parked, and a panel that pushes Set
                 and Cancel away from the thumb defeats the parking. */}

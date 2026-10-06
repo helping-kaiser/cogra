@@ -3,6 +3,19 @@
 The rules of `design.md` §7, with the product's own examples. See
 `readme.md` §3 for the condensed version.
 
+**This file is the complete registry of drawn user-facing strings**
+(jakob 2026-10-06): every word a canonical board puts in front of a
+reader or speaks for one is recorded here, with the board that draws it.
+Lines that predate the registry are marked *carried over — blessed by
+use (jakob 2026-10-06)*. A string recorded as a construction —
+`Share {target}`, `Remove #saltmaps`, `3 comments` — covers every target
+and count the boards fill it with. The boards' fixtures are not copy and
+are not recorded: people's names and handles, the posts', comments' and
+bios' own words, pictures' descriptions and an author's sensitive
+reason, tag names, queries, links, codes, keys, addresses, dates and
+counts, and a release's notes (written when it ships — *The settings
+page*).
+
 ## The two hard rules about numbers
 
 **Numbers are in scope.** CoGra's ranking is not a black box, and the UI
@@ -99,9 +112,10 @@ happen; the confirmation says what happened.**
 | `You can invite once you're in.` | `Feature locked` |
 
 Sentence case everywhere. No title case, no all-caps, no exclamation
-marks outside a genuine welcome (`Approved! Your registration is
-landing`). Em dashes carry asides; `…` marks work in progress (*In-flight
-labels*).
+marks outside a genuine welcome — and the one welcome drawn,
+`ApplicantLanding`'s `Approved — your registration is landing`, carries
+its warmth in an em dash instead. Em dashes carry asides; `…` marks work
+in progress (*In-flight labels*).
 
 ## Emoji
 
@@ -168,6 +182,10 @@ nothing. `FEED_KINDS` is where the two meet — value `topics`, label
 
 One word keeps its ordinary sense throughout: a help dialog's *topic*
 is its subject, not a `#name`.
+
+**The bottom bar's labels** (`BottomNav`; *carried over — blessed by use
+(jakob 2026-10-06)*): `Feed` · `Explore` · `New post` · `Wallet` ·
+`Profile`.
 
 **What a reader gives is an OPINION; the record is a stance** (jakob's
 ruling, 2026-09-11). *Opinion* is the word people already have for
@@ -244,6 +262,24 @@ departs, in lowercase after a `·`:
 *New 2026-10-02, blessed (jakob 2026-10-02):* `all forms`, `hiding
 seen`, `+ still settling`, `hiding sensitive`, `hiding removed`,
 `All kinds`. The rest are the trigger's words as already drawn.
+
+**Carried over — blessed by use (jakob 2026-10-06).** Where the
+deviations outgrow the pill they collapse to a count after the head,
+`3 kinds · 4 changes` (`FeedFar`). The sheet's own words (`FeedSheet`,
+`SettingsReading`; search's sheet and History's take the parts they
+carry, `ExploreFilter`, `HistoryFilter`):
+
+- `Kinds` — `Everything that can reach your feed. Combine as many as you
+  like.` — with the chips `Posts` · `Comments` · `Profiles` · `Tags`.
+- `Kinds of post` — `Combine them: photos and video with no text posts is
+  a legitimate feed.` — with `Text` · `Photos` · `Video`.
+- `Order` — `Ranked puts what's closest to you first — your view, no one
+  else's. Newest ignores it and lists by time.` — with `Ranked` ·
+  `Newest` and the checkbox `Show what you've already seen`.
+- `Also show` — `Sensitive content stays veiled until you tap it. A
+  removed post keeps its place — author, time, and where it sat in the
+  thread — never the content.` — with `Sensitive` · `Removed` · `Still
+  settling`.
 
 ## Platform nouns
 
@@ -454,6 +490,13 @@ Two removal marks, never interchangeable: `Removed by its author` —
 every response, remain." — and `Removed under the platform's rules` —
 "A passed proposal removed it. The decision is public."
 
+The post's own confirm (`RemoveConfirm`; *carried over — blessed by use
+(jakob 2026-10-06)*) is titled `Remove this post?` over `The words and
+pictures leave every reader's view, along with every earlier version's.
+A visible mark stays in their place — "Removed by its author" — and the
+post's spot in threads stays with it.`, then `This is immediate and
+permanent.`, `Remove` and `Keep it`.
+
 At comment scale the author's mark swaps its noun and nothing else
 (the comment-removal round; blessed, jakob 2026-10-01). The removed
 comment's second line is `The comment's place in the thread, and every
@@ -507,11 +550,27 @@ and the way back to it from an edit:
   "thumbnail": the cover is the video's own face, and naming it twice
   would make it a second picture.
 
+**The video-cover round's lines** (backlog item 49; *blessed (jakob
+2026-10-06)*):
+
+- `It plays the moment it is on screen, so it starts on its own first
+  frame.` — the quiet line under the `Cover` row's door where a clip has
+  no cover (`ComposeDetailsVideo`, `EditComposeVideo`,
+  `ReplyVideoFailed`).
+- `This clip gave no frames — choose a picture of your own, or leave it
+  without one.` — the frame strip's caption when the device cut no frames
+  from the clip (`ComposeCoverNoFrames`).
+- `No frame` — the neutral tile's label in that state
+  (`ComposeCoverNoFrames`).
+
 ## The crops' how-to line
 
 The three crops (`ComposeCrop`, `AvatarCrop`, `CoverCrop`) say how the
 picture moves in one quiet line under the zoom: `Drag to move, pinch to
-zoom.` A device with no touch to pinch — a desktop browser — reads
+zoom.` On `ComposeCrop` the line opens with what the crop decides, `One
+shape for the whole post.` — the prefix *blessed (jakob 2026-10-06)*, so
+the post crop's line reads `One shape for the whole post. Drag to move,
+pinch to zoom.`. A device with no touch to pinch — a desktop browser — reads
 `Drag or use the arrow keys to move, the slider to zoom.` in its place,
 naming the two ways the crop offers there (jakob 2026-10-05; *new
 2026-10-05, flagged for blessing*). The arrow keys move the picture 1 %
@@ -534,6 +593,63 @@ not reads `Not marked` with one quiet line under the row:
 
 - `Also veiled by the platform's verdict` — blessed (jakob 2026-10-02) (jakob
   2026-10-01 ruled the line; the exact wording is the recommendation's).
+
+## The composer's carried-over words
+
+The post wizard's, the reply's and the edits' furniture, as drawn.
+Every line here is **carried over — blessed by use (jakob 2026-10-06)**,
+recorded so the registry is whole.
+
+- **The stages' titles** — `Details`, `Crop`, `The video's face` (its
+  stage label `Video only`), `The cover` (`CoverCrop`), `Edit post`,
+  `Edit comment`.
+- **The words stage** — the field `What do you want to publish?`, and
+  under the pick door `The body is your words.` (`ComposeWords`,
+  `EditWords`).
+- **The draft's card** (`ComposeDraft`) — `Your draft is here`, its
+  media read back as `2 pictures — kept on this device`, `Continue`
+  beside `Discard`, and under the card `Or start fresh —` over the roll.
+- **The pick** — `Pick one picture, several, or one video.`
+  (`ComposePick` and its family), the roll's door `Your photos app`, the
+  tray's `Show all`; on the web `Choose from your files` and `…or drop
+  them here.` (`ComposePickWeb`), the reply's `…or drop pictures or a
+  video here.` (`ReplyPicturesWeb`). A clip that came with its face reads
+  `A video is the whole post. This one has its cover.`
+  (`ComposePickVideoCover`).
+- **The picked sheet** (`ComposePicked`, `EditPicked`) — rows named
+  `Cover — shown first` and `Picture 2`, their acts `Make it the cover`
+  · `Move up` · `Move down`, and the one rule under them, `The first one
+  is the cover.`
+- **The crop's shapes** (`ComposeCrop`) — `Tall 4:5` · `Square 1:1` ·
+  `Wide 1.91:1`.
+- **The frame picker** — `A frame, or a picture of your own.` under the
+  strip (`ComposeCover`, `ComposeCoverPlaying`, `ReplyVideo`).
+- **The details stage** — the field `Title`; the picked row's caption
+  `2 pictures — the body`; the describe counter `· 0 of 2 described`
+  beside its door `Describe the pictures` (`Describe the video` on a
+  clip); the clip's row label `Cover`; the Sensitive row's action `Mark`
+  beside `Not marked`; and while pictures upload, `Pictures upload while
+  you write — signing waits for them.` (`ComposeUploading`).
+- **The describe sheet** — the field `What's in the picture` (`What's in
+  the video` on a clip).
+- **The sensitive sheet** — the `Why?` field's corner, `Optional — shown
+  on the veil`.
+- **The seal's read-back** of a post: its title and body, `Salt maps of
+  the coast road — 2 pictures.` (`ComposeSeal` and its family).
+- **A post that didn't land** (`ComposeExpired`) — under `Your post didn't
+  land`, `"Salt maps of the coast road" couldn't finish settling. Nothing
+  was spent — your draft is saved.` with `Open the draft`.
+- **The reply** — the composer's note `Words first — pictures can join
+  them.`, once a picture is staged `Words first — pictures can join them,
+  and they upload while you write.`, on a clip `Words first — a video can
+  join them, and it uploads while you write.`; the add row `+ Add
+  pictures or a video`; the seal's read-back of a reply to a post, `Reply
+  to "The long way home" — 89 characters.`, its act row labelled `Comment`
+  and reading `Reply to @ada's post` (`ReplySeal` and its family; the
+  comment target's lines are under *Honesty phrasings*).
+- **The comment edit** — `Your comment on "The long way home".` under its
+  title, and its sections `Words` and `Pictures` (`CommentEdit`; `Cover`
+  on `CommentEditVideo`).
 
 ## Accessible names
 
@@ -664,6 +780,52 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
   handle, named for its picture: the first row is the cover, every other
   row its place (*blessed (jakob 2026-10-05)*).
 
+**Carried over — blessed by use (jakob 2026-10-06).** The names the
+boards already speak, recorded so the registry is whole:
+
+- **The transport's other controls** — `Back ten seconds` · `Forward ten
+  seconds` (`ViewerVideo`, `PostDetailVideo`, `ComposeCoverPlaying`),
+  `Full screen` (`PostDetailVideo`), and the sound toggle's `Turn sound
+  on` (`ViewerVideo`, `Reel` and every playing clip).
+- **A password field's eye** — `Show password` (`PasswordField`;
+  `SignIn`, `Join`, `ChangePassword` and every form with a password).
+- **The wizard's two ends** — `Back a step`, the arrow on every wizard
+  stage; the X says what leaving keeps: `Leave — your
+  draft is kept` (the post), `Leave — the reply is discarded`, `Leave —
+  the edit is discarded` (a comment edit), and a bare `Leave` on the
+  profile's and the picture's seals and the picture's crop.
+- **The overflow doors and their sheets** — `More on this post` · `More
+  on this comment` · `More on your profile` · `More about @ada` (another's
+  profile and a person card; `More about this account` for a deleted
+  one), opening the sheets
+  named `Post actions` · `Comment actions` · `Profile actions`.
+- **Share, completed** — `Share this comment`, `Share @ada`, `Share
+  #saltmaps`, `Share this account`, in `Share this post`'s grammar.
+- **A card's counts and lines** — `3 comments` (`0 comments`, `1
+  comment`), the comment glyph's name; `Tags and references`, the tags
+  line's; `Comments`, the comment sheet's own name.
+- **A comment card's context** — the card names what it answers: `On
+  "The long way home" — @ada`, `On @tobias's comment`, and over a
+  removed post `On @ada's removed post` (`FeedCommentShapes`, `History`).
+- **The composer's rows** — a staged tag's × `Remove #saltmaps` and its
+  row `#saltmaps — set how it relates`, a staged citation's row `The long
+  way home — @ada — set how it relates`; a staged clip's or picture's ×
+  `Remove this video` · `Remove this picture`; the picked sheet's ×
+  `Remove the cover` · `Remove picture 2`; `Manage the 7 tags`, `Manage
+  the N citations`' twin for the tags row (`ComposeTags`); a thumb whose
+  upload failed `Didn't upload`, one still going `Uploading, 65%`; the
+  describe sheet's `Describe this picture` · `Describe this video`; the
+  sensitive sheet and its switch `Mark as sensitive`.
+- **The edit's** — `What the edit signs`, the acts sheet's name
+  (`EditActs`, `CommentEditActs`), and `The license never changes`, the
+  lock beside the License row it cannot change (`EditCompose` and its
+  family).
+- **A profile's** — `Change your picture`, the own avatar's door, and
+  `Which direction`, the opinions page's two tabs (`ProfileStances`).
+- **The score's trace** names its way back by the level it returns to:
+  `Back to the paths` · `Back to the path` · `Back to the step`
+  (`RankPath`, `RankHop`, `RankRecords`).
+
 ## The staged-act snackbar
 
 An applicant's second tap of a kind already staged answers here instead
@@ -734,7 +896,8 @@ entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
 `Signing in…`, and `Create account` becomes `Creating account…`. *(All
 of these arrived with the failure pack; blessed, jakob 2026-10-01.)* The
 settings commits' labels are the construction's, confirmed as a set
-(jakob 2026-10-05, blessed): `Revoking…`, `Signing out…`, `Changing
+(jakob 2026-10-05, blessed): `Revoking…` (also `Invites`' `Revoke`,
+jakob 2026-10-06, *Invites*), `Signing out…`, `Changing
 password…`, `Changing handle…`, `Changing email…`, `Confirming the
 code…`, `Creating a new recovery code…`, `Resending the link…`, `Adding
 it to the deletion…`, `Canceling…` — and `Sending the confirmation
@@ -771,19 +934,20 @@ doesn't know which field is wrong.
 - `That doesn't match the code above.` — the key ceremony's confirm
   field, on RecoveryCodeMismatch.
 
-**Copy-only** — named, not yet drawn on a board (no client-side format
-validation exists yet to trigger them):
+**Local format failures** — each answers on the press, under its own
+field:
 
-- `A handle is 3–30 characters: a–z, 0–9, _.` — Join's Handle field,
-  a local format failure; `ChangeHandle`'s New handle answers with it on
-  the press, and its dialog never opens (jakob 2026-10-05).
-- `That doesn't look like an email address.` — Join's Email field, a
-  local format failure; the email change's New email takes it too, and
-  that one is **drawn**: `ChangeEmail`'s `fault` chip at `malformed`
-  (jakob 2026-10-05).
-- `That doesn't look like an invite link.` — the invite field's local
-  format failure, in the email line's shape; it names the link because
-  the field asks for a link. Drawn on `InviteEntryError`.
+- `A handle is 3–30 characters: a–z, 0–9, _.` — Join's Handle field;
+  `ChangeHandle`'s New handle answers with it on the press, and its
+  dialog never opens (jakob 2026-10-05). No board draws it; the `Join`
+  and `ChangeHandle` sidecars carry it.
+- `That doesn't look like an email address.` — Join's Email field; the
+  email change's New email takes it too, **drawn** on `ChangeEmail`'s
+  `fault` chip at `malformed` (jakob 2026-10-05), and `ApplicantEmail`'s
+  sidecar carries it.
+- `That doesn't look like an invite link.` — the invite field's, in the
+  email line's shape; it names the link because the field asks for a
+  link. **Drawn** on `InviteEntryError`.
 
 ## Commits that wait
 
@@ -825,6 +989,11 @@ spelling — one `License terms` everywhere, never the British spelling:
 - `Share this profile` — another's profile.
 - `Share your profile` — your own, the row that closes the profile's ⋮
   under the two private lists.
+- `Share` — the row a narrow phone's post menu gains when the card drops
+  its share glyph (`ReaderPostMenuNarrow`; *carried over — blessed by use
+  (jakob 2026-10-06)*). It stands against *Accessible names*' `Share this
+  post` "everywhere it appears, never a bare Share" — an open question
+  for jakob; the row stays as drawn meanwhile.
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
@@ -862,6 +1031,14 @@ platform logs, not what kind of record exists. *Record* went because
 it is the graph's own word for the thing every act already is, and a
 tier called `No record` on a system where nothing is ever unrecorded
 said the opposite of the truth.
+
+**The tiers' hints**, under each tier name in the chooser (`ComposeLicense`,
+`SettingsLicense`; *carried over — blessed by use (jakob 2026-10-06)*):
+credit — `Nobody owes you a name.` · `Commercial uses credit you;
+everything else is free.` · `Every use credits you.`; the public record
+of use — `Uses go unlogged.` · `Commercial uses are logged publicly and
+stay open to audit.` · `Every use is logged publicly and stays open to
+audit.` These are the hints the joining rule below lowercases.
 
 **The block's own furniture**:
 
@@ -1279,6 +1456,57 @@ round*; every one blessed (jakob 2026-10-02).
   password field past auth.md's cap (*Faults by code*,
   `WEAK_PASSWORD`). *Blessed (jakob 2026-10-05).*
 
+### The landing card and the entry screens' carried-over lines — 2026-10-06
+
+**The landing card** (`ApplicantLanding`): its title is `Approved — your
+registration is landing` (*blessed (jakob 2026-10-06)*), over `@mira
+approved your application. Nothing is needed from you while it lands.`
+(carried over — blessed by use, jakob 2026-10-06); the `keyAt` chip's
+other body is under *The key's lifecycle*.
+
+Every other line here is **carried over — blessed by use (jakob
+2026-10-06)**, recorded so the registry is whole:
+
+- **Sign in** (`SignIn`, `SignInError`, `SignInExpired`, `SignInLimited`)
+  — heading `Sign in to CoGra`, lead `Welcome back — your feed is where
+  you left it.` (the expired state puts its own line there), and the
+  link stack `Forgot password?` · `New here? Enter your invite` above
+  the two already recorded.
+- **The invite door** (`InviteEntry`, `InviteEntryError`) — heading
+  `Enter your invite`, lead `CoGra is invite-only. Paste your invite link
+  to get started.`, the field `Invite link` (`JoinInvalid` too), and
+  `Continue`.
+- **Join's lead** (`Join`, `JoinErrors`) — `CoGra is invite-only — a
+  member vouches for you, and @mira's approval brings you in.`
+- **The reset** (`Reset`) — `Enter the email you signed up with and we
+  send a reset link. Resetting the password signs out every device.`;
+  sent, `If that email has an account, a reset link is on its way. The
+  link works once and expires after 15 minutes.`; and on both reset
+  screens (`ResetNew` too), `This restores your sign-in only. Your key
+  stays wherever it is — restoring the key is its own step, with your
+  recovery code.`
+- **The verified landing** (`Verified`, `VerifiedApp`) — heading `Email
+  verified`; on the web, `Your application moved a step. You can go back
+  to the app — it already knows.`
+- **The guest's gate** (`GuestGate`) — the dialog `Join the conversation`
+  · `Posting and profiles need an account.` · `Keep browsing` · `Sign in
+  or join` (the last also the guest band's door, `Main`, `FeedBare`).
+- **The borrowed view's bands** — a guest's `Browsing from @mira's view —
+  join to build your own.` (`Main`, `GuestGate`; `FeedBare` names its own
+  view's handle), an applicant's `Browsing from @mira's view while your
+  application lands.` (`ApplicantFeed`, `ApplicantWaiting`,
+  `ApplicantLanding`, `ApplicantKeyElsewhere`).
+- **The applicant's task cards** (`ApplicantFeed`) — `Verify your email`
+  over `We sent you a verification link — open it to prove this email is
+  yours.`; `Create your key` over `Your application needs a key on this
+  browser before @mira can approve it.` (the app's rendering above), with
+  `Create my key`.
+- **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
+  @mira`, `Their approval brings you in. Nothing else is needed from
+  you.`; its ask link labelled `Your ask link`, captioned `It does not
+  expire. While @mira's answer is open, it can't start a second
+  application.` (`ProfileApplicant` too).
+
 ## The settings page
 
 Drawn on `Settings`, `SettingsBackup` and `YourKey`, blessed with the
@@ -1409,6 +1637,11 @@ and before `Privacy` and `Terms`, each one string for app and web:
 
 Both addresses (`reports@cogra.local`, `hello@cogra.local`) are
 placeholders until CoGra is on a server, and swap then.
+
+*Carried over — blessed by use (jakob 2026-10-06):* the About group opens
+on `Watch the intro again`, which re-opens the intro (*The intro*,
+below), and a session whose device gave no name reads `Unnamed device`
+(`Settings`).
 
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
@@ -1724,6 +1957,50 @@ ruling) — and the answers name them as one plural. The app renders the platfor
 key or replace your recovery code. You can go on, or set a screen lock
 first.` — `Go on anyway` · `Cancel`.
 
+**Carried over — blessed by use (jakob 2026-10-06).** The key boards'
+remaining lines, recorded so the registry is whole (browser wording; the
+app's renderings are above):
+
+- **The ceremony** (`KeyCeremony`) — heading `Your key`, the pledge
+  `Everything you publish is signed with a key that is created on this
+  browser and stays in your hands — CoGra never holds it and can never
+  reissue it.`, then `A recovery code is the one way to bring your key to
+  another device, or back after a loss. It is shown once; you keep it
+  somewhere safe.`, with `Create my recovery code` and `Not now`.
+- **Its confirm** (`KeyConfirm`) — `Ready to record your code?` · `The
+  next screen shows your recovery code — 26 characters, shown once, meant
+  only for your eyes. Have somewhere safe ready to keep it, and you stay
+  on that screen until the code is confirmed.` · `Cancel` · `Show my
+  code`.
+- **Its decline** (`KeyDecline`) — `Continue without a backup?` ·
+  `Without a recovery code, losing this device means losing your key.
+  Your sign-in survives, but no one — including CoGra — can bring the key
+  back. You can still create a code later, from settings, while the key
+  exists.` · `I accept the risk` · `Go back`. `SettingsBackupNone` draws
+  its first two sentences.
+- **The code** (`RecoveryCode`, `RecoveryCodeMismatch`) — heading `Your
+  recovery code`, `This is the only way to restore your key. It is shown
+  once and never stored — keep it offline, written down, somewhere
+  safe.`, `Copy`, the field `Type or paste the code to confirm`, and `I've
+  written it down`.
+- **The restore** (`Restore`, `RestoreError`, `RestoreLength`) — heading
+  `Restore your key`, `Enter your recovery code to bring your signing key
+  onto this browser.` (`…into this app.`), and `This is the only way to
+  restore your key. If the code is gone too, the key can't be brought
+  back — your sign-in still works.`; every recovery-code field shows the
+  code's shape as its placeholder, `XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX`.
+- **The key elsewhere** — the notice's body `Restore it with your
+  recovery code to post, vouch, and act. Until then, anything you sign
+  waits as pending.` (`KeyElsewhere`, `PadKeyAbsent`, `PadPending`); on
+  the pad, `Restore the key with your recovery code to finish.` and the
+  way out `Keep it pending, restore later` (`PadKeyAbsent`); a new code
+  without the key, `Making a new code needs the key itself. Your current
+  recovery code keeps working.` (`SettingsBackupKeyAbsent`).
+- **Your key's paragraph** goes on after its first sentence: `Store a copy
+  somewhere safe and you keep it whatever happens to CoGra. Anyone who
+  has a copy can act as you.` (`YourKey`, `YourKeyAbsent`); and with no
+  key here, `There is no key on this browser to show.` (`YourKeyAbsent`).
+
 ## The profile save
 
 Blessed with the small-rulings batch. A profile edit is a signed act
@@ -1739,6 +2016,33 @@ feedback the surface draws:
   is kept` or `Keep the draft, sign later`. Their key-absent notice takes
   the same way out: `Not now` back to the seal, nothing kept — never `Keep
   the draft, restore later` (jakob 2026-10-05).
+
+**Carried over — blessed by use (jakob 2026-10-06).** The profile's own
+words, recorded so the registry is whole:
+
+- **The page** — the figures `Posts` · `Opinions on you` · `Opinions by
+  you` on one's own, `Opinions on them` · `Opinions by them` on
+  another's; the own page's `Edit profile`. The chronicle's tabs `Posts` ·
+  `Comments` · `Everything`, named `What the chronicle shows`; its rows
+  `Published a post` (the post's title under it), `Commented` (the
+  comment's words), `Gave an opinion` (`on @mira`), and `Updated your
+  profile` · `Updated their profile`.
+- **The opinions page** (`ProfileStances`) — its tabs `On them` · `By
+  them`.
+- **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
+  `Display name` · `Bio` · `Website`, and `Your handle changes in
+  Settings.`
+- **The profile's seal** (`ProfileEditSeal`) — `Your profile` over
+  `Picture, name, bio, and website — one signed change.`; the acts row
+  `Profile` reading `A new picture, bio and website`, its count spoken
+  `1 profile change`; under the card `Every change to your profile is
+  signed in your name and stays in your public record.`; its "?" is named
+  `Changing your profile`.
+- **The picture** — the crop titled `Your picture` with `One picture,
+  shown everywhere you appear.` under the how-to line (`AvatarCrop`); its
+  seal's `Your profile picture` over `Shown everywhere you appear.`, the
+  acts row `Picture` reading `A new profile picture`, and the same
+  signed-change line (`AvatarSeal`).
 
 ## The vouch-back ceremony
 
@@ -1778,7 +2082,11 @@ opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
 `Vouching opens the opinion control, set to a gentle default.`). The
 pad's title and its "?" read `Your vouch back`, and its first coaching
 line opens on the title: `Your vouch back. The pad is how you shape what
-reaches you — for or against, and how much.` The band's line keeps
+reaches you — for or against, and how much.` *Carried over — blessed by
+use (jakob 2026-10-06):* the card's title `@mira vouched you in`
+(`VouchBack`, `VouchBackPad`), and the pad's second coaching line, `Later,
+tap the small face under a post to open this — press and hold it instead
+and a gentle 🙂 *(+0.10 / +0.10)* is signed on the spot.` The band's line keeps
 *first opinion*: the borrowed view does end on the first opinion,
 whoever it's toward.
 
@@ -1873,6 +2181,24 @@ is the contract's default, and the poles say why that is not
 overconfidence: an author is *certain* of a declaration they are making
 about their own post.
 
+**The tag pad's thirteen words** (`TAG_ANCHORS`, readme §11) — each
+anchor's gloss, the words the spoken reading carries with the pair and
+never drawn beside the face. As drawn, *blessed (jakob 2026-10-06)*:
+
+- Certain, from `Barely` to `Entirely`: 🔍 `had to look, but it's in
+  there` · 🔗 `definitely linked` · 🔒 `locked on` · 🎯 `exactly this`.
+- Fairly sure: 💧 `a drop of it, I think` · 🧩 `a piece of the picture`
+  · 🧲 `pulled toward it` · 🗝️ `likely the key to it`.
+- Guessing: ❔ `faint maybe` · 🎲 `could go either way` · 🎣 `fishing
+  for it` · 🔮 `big claim, divined`.
+- The floating thirteenth: 💯 `all of it, full stop`.
+
+The boards speak them in three constructions: `Your pick: had to look, but it's in there. How much it is about
+this +0.10, How sure you are 1.00` on the pad (`TagPad`,
+`TagPadCompose`), `Tagged: definitely linked, +0.40 / 0.90` on the tag
+page's flag (`TagPage`), and the bare `definitely linked, +0.40 / 0.90`
+on a references sheet's row (`RefsSheet`).
+
 **And it says when it costs.** `Signed with the post, as its own
 action.` The sheet stages; the seal signs. A slider that moved a number
 with no word about it would read as free.
@@ -1885,6 +2211,10 @@ before takes no extra step. Tagging is its own signed action, and it
 carries how much the post is about that tag. / Names are lowercased,
 and a name can hold letters, digits, dot, dash and underscore. Tap a
 tag you have added to set how it relates.`
+
+*Carried over — blessed by use (jakob 2026-10-06):* the picker is titled
+`Add a tag` (`TagPicker` and its states), and the details stage's sheet
+of staged tags `Tags · 7`, `Cited · 3`'s shape (`ComposeTags`).
 
 ## The exact-values setting
 
@@ -1971,14 +2301,68 @@ default) · `When it settles`.
 
 **The straight fixes.** `What your feed shows` as the filter's first
 section · `Your feed is showing nothing — everything is switched off.`
+(its action, `Show posts again`, carried over — blessed by use, jakob
+2026-10-06; `FeedNothing`)
 · `Your sky — every account a star, sized by your own paths to it.` ·
 `These wait with your application and arrive with you.` ·
 `What you post now arrives with you.`
 
-**Carried over unchanged, and still unblessed** — drawn by the tag
-round, named here so the review pass has them in one place: `Un-tag`,
-the edit body's `Withdrawn: #coastroad`, and the acts card's
-`Tags withdrawn` row label.
+**Carried over unchanged, blessed (jakob 2026-10-06)** — drawn by the
+tag round: `Un-tag`, the edit body's `Withdrawn: #coastroad`, and the
+acts card's `Tags withdrawn` row label.
+
+**Carried over — blessed by use (jakob 2026-10-06).** The control's own
+words, drawn on every board that carries a face and recorded here so
+the registry is whole:
+
+- **The twenty faces' words** (`STANCE_ANCHORS`) — the anchor's word,
+  spoken with the pair and printed beside a readout's face: 🙂 `Nice` ·
+  😊 `Like this` · 😍 `Love this` · 👀 `Show me more` · 🤩 `Really into
+  this` · 🍿 `Tell me everything` · 🔥 `All in` · 😕 `Not for me` · 🙁
+  `Don't like this` · 😠 `Really against this` · 😤 `Against, but keep
+  me posted` · 🤬 `Against, and I want all of it` · 😶 `Fine, just not
+  for me` · 😌 `Good, but not in my world` · 🙈 `Rather not see this` ·
+  🤐 `Good, keep it away` · 😑 `Meh` · 😖 `Dislike, keep away` · 🚫
+  `Keep this away` · 💀 `Absolutely not`.
+- **At rest and at zero.** 🫥 `Your opinion` — the face's printed
+  word at rest where the control has room for one (`ProfileOther`,
+  `TagPage`; the spoken name stays the one below), and the seals' label
+  for the opinion row (`ComposeSeal` and its family). 🤷 `No opinion on
+  @rafa yet.` — a pad's current line with nothing signed toward its
+  target (`ApprovePad`, `VouchAskPad`, `VouchBackPad`); on a post it
+  reads `No opinion on this post yet.` (`PadKeyAbsent`).
+- **The face's names.** `Give your opinion on this post` at rest, then
+  `Your opinion on this post: Like this, +0.55 / +0.20. Press and hold to
+  add a positive one.` once one is given; a pick kept pending reads
+  `Your opinion on this post, waiting for your key: Nice, +0.10 /
+  +0.10.` (`PadPending`) and `…waiting for your review: …`
+  (`PadPendingReview`). The target is the card's: `this post`, `this
+  comment`, `this account`, `@ada`, `#saltmaps`.
+- **The non-drag door** — `Choose your opinion on this post`, the
+  hidden-until-focused control beside every face, its target the face's
+  own.
+- **The pad's name** — `Opinion pad for this post`; the targets read
+  `this comment`, `@mira`, `#saltmaps`, and on the seal-scale pads `your
+  own post` (`ComposePad`) and `what you answer` (`ReplyPad`).
+- **The pad's poles** — `Against` · `For` across, `Less` · `More` up;
+  the Affinity pad's `Dislike` · `Like` and `Far away` · `Close to me`
+  (*Topics*).
+- **The readouts, spoken.** `Current opinion: All in, For or against
+  +1.00, How much reaches you +1.00`, `Your pick: Dislike, keep away,
+  For or against −0.55, How much reaches you −0.15` and `Resulting
+  opinion: Tell me everything, For or against +0.45, How much reaches
+  you +0.85` (`PadStanding`, `PadFailed`, `PadWriteRule`); the Affinity
+  pad names its own axes, `Current opinion: Like this, How much you like
+  it +0.60, How close you want to be +0.35` (`TagPageHeldPad`). A list
+  row's readout is spoken as the word and the pair, `Like this, +0.55 /
+  +0.20` (`PostOpinions`, `ProfileStances`, `YourTopics`, the trace's
+  boards).
+- `Your own post always reaches you in full.` — the post's one-axis
+  pad, under its one track (`ComposePad`).
+- `Everything you've said about this post adds up to +1.00 / +1.00, and
+  that is what this walks back.` — the walk-back's total, the person
+  family's twin of the topic's (`SeveranceConfirm`), over `Your pick:` and
+  the readout.
 
 ## The pads and the edit's withdrawals
 
@@ -2470,6 +2854,13 @@ for, and it is a fact rather than a boast — the spec binds every
 implementation to compute the sum exactly rather than sample it, which is
 what makes it true.
 
+**Carried over — blessed by use (jakob 2026-10-06)**, the trace's
+furniture: level one's list is labelled `Strongest first` (`FeedEntry`),
+a path's list of steps `The steps`, a step's second line `2 opinions
+behind it` (`RankPath`); one step opens under `Your opinion of @ada — the
+first of this path's two steps.`, its `Behind it` reading `2 opinions`
+(`RankHop`).
+
 **The aged-out line**: `The paths that carried it here have moved on.`
 One line, and no offer of anything to do about it — nothing is owed and
 nothing is broken. It is deliberately not an empty-list line: something
@@ -2527,6 +2918,28 @@ glyph's accessible name; the person menu's `Mention in a new post` sibling.
 **The comment's reply glyph** is spoken `Reply to @tobias`, the seal's own
 read-back of a reply to a comment.
 
+**Carried over — blessed by use (jakob 2026-10-06).** The furniture
+every card and detail already draws:
+
+- **The veil** (`SensitiveVeil`) — `Sensitive — tap to view` on its face,
+  and under it the source line naming whose mark it is, then the
+  author's reason when one was given: `The author's warning — A dead
+  seabird in the second frame.`. Spoken as one name, `Sensitive — tap to
+  view. The author's warning — A dead seabird in the second frame.`. The
+  compact veil over a single clip reveals with `Show`
+  (`PostDetailVideoSensitive`, `ReelSensitive`). The words-only veil
+  carries the same source line on its plate (jakob 2026-10-06, the check
+  round's 5) — no new words.
+- **A folded body** opens with `More` (`Feed` and every card whose body
+  is clamped).
+- **The tags line** (`TopicsLine`) states in words what its chips do not
+  show: the tags that did not fit and the references, `· 13 tags · 3
+  references`, each part alone where the other is nothing — `· 1
+  reference` on most cards, `· 1 tag` (`LadderTopics`).
+- **A comment** — `View 2 replies`, the collapsed branch's line, the count
+  the branch's; the thread's foot reads `Add a comment` (the comment
+  sheet, `CommentMenu` and its family).
+
 ## The coming-soon surfaces
 
 Three places stand in for something drawn after the MVP: the screen the
@@ -2559,6 +2972,96 @@ headline, the sentence as its one line (`ComingSoonCard`, the
 drawn-anatomy ruling, jakob 2026-09-25). No coming-soon surface offers
 an action — nothing a reader can do fills any of them yet.
 
+`ChatsComingSoon` conforms to `WalletComingSoon` whole (jakob
+2026-10-06, the check round's 14): reached from the band's chats icon
+and from a profile's `Message`, its arrow names the origin in the blessed
+nouns (*Accessible names*, `Back to feed`, `Back to the profile`) — no
+new words.
+
+## The intro
+
+The five cards a first open walks through (`OnboardingSteps`,
+`OnboardingShape`, `OnboardingPublic`, `OnboardingLayers`,
+`OnboardingVouch`), re-opened from settings' `Watch the intro again`.
+Every line here is **carried over — blessed by use (jakob 2026-10-06)**,
+recorded so the registry is whole.
+
+- **The frame** — `Skip` on every card, `Next` under it, and the last
+  card's `Start reading`; the dots are spoken `Step 1 of 5`.
+- **1** — `Your feed follows your own steps` · `Nothing is picked for you.
+  What reaches you comes along the connections you made, one step at a
+  time.`; the drawing's own dot is `you`.
+- **2** — `Your opinions have a shape` · `Give one with the pad: how much
+  you are for it, and how much of it you want reaching you.`; the drawing
+  names its faces by their anchors' words (`Love this`, `Show me more`,
+  `Not for me`, `Good, but not in my world`) and its target `a post`.
+- **3** — `Everything here is public` · `Posts, comments, opinions — and
+  chats. Anything written on CoGra can be read, and cited, by anyone.`
+  The drawing's chat between `@ada and @tobias` is jakob's own pick:
+  `Feels weird chatting where anyone can read it.` · `Nobody here pretends
+  my thumbs have privacy. Meta and TikTok just read quieter.` · `At least
+  our eavesdroppers can say hi.`, and the comment citing it reads `Hi.`
+- **4** — `Nothing is lost` · `Posts and comments keep every layer they
+  were built from. Pictures added, words changed — the whole history
+  stays readable.`
+- **5** — `Someone brings you in` · `You are here because @mira invited
+  you. Her link is your first way in to everyone else, and theirs to
+  you.`, with the quiet note `The friend who sent you this invite has to
+  let you in. Ask them once you have verified your email.`
+
+## About
+
+`About CoGra`, the topics a reader opens one at a time (`About`). Every
+line here is **carried over — blessed by use (jakob 2026-10-06)** save
+those already blessed above (*Platform nouns*, *The reject extension's
+lines*), recorded so the registry is whole:
+
+- `What this is` — `CoGra is a place to read and write in public, where
+  what reaches you is decided by the people and the things you have
+  pointed at — never by a system guessing what will keep you here.`
+- `Your feed is your own steps` — `Posts arrive along the connections you
+  made, one step at a time. Nothing is put in front of you because it
+  performs well, and there is no feed you did not shape.` / `You can
+  change what a feed shows whenever you like, and you can open any post's
+  score to see exactly which steps carried it to you.`
+- `Everything here is public` — `Posts, comments, opinions, tags,
+  citations — and chats, once they arrive. Anything written on CoGra can
+  be read, quoted and cited by anyone.` / `There is no private side to
+  this. If something is not meant to be read by strangers, it is not
+  meant for here.`
+- `An opinion says two things` — `Every opinion you give carries two: how
+  far you are for or against the thing, and how much of it you want
+  reaching you. The pad is where you place both at once.` / `The face
+  beside an opinion is a short reading of that pair, not a separate
+  rating. You can turn the exact numbers on in settings.`
+- `Nothing is lost` — `Posts and comments are built in layers, and a
+  layer is never taken away. An edit adds to the record instead of
+  replacing it, so what you are reading carries its own history.` /
+  `When something does have to go — the law, or the author's own choice
+  — the words are removed and a mark stays where they were. Nothing
+  disappears quietly.`
+- `Money follows the reach you made` — `Reading and writing here can
+  earn, and what you earn is yours.` / `Advertising is pull, not push: a
+  campaign offers to pay for reach, and where that money lands is decided
+  the same way a feed is — by the graph, not by the bid. Nobody buys
+  their way into what you see.` / `Every figure opens onto what produced
+  it, down to the record that paid it.`
+- `Getting in, and being let in` — `CoGra is invite-only. Somebody already
+  here vouches for you, and until they have, you are an applicant: you
+  can read everything, write one post, give one opinion and say how you
+  feel about one topic.` / `These wait with your application and arrive
+  with you. Until then only you can see them, and they are signed
+  together with the vouch that lets you in. If your application is
+  closed, your account stays — anyone can still vouch you in.` / `That is
+  not a waiting period for its own sake. The first link to you is a real
+  one, given by a person who stands behind it — which is the thing that
+  keeps this place small enough to be honest.`
+- `Your key is yours` — `Everything you publish is signed by a key only
+  you hold. We cannot sign for you, and we cannot recover it for you —
+  your recovery code is the only way back.`
+- `This page grows` — `CoGra is being built, and this page describes the
+  product rather than the build. Some of what is written here is already
+  in your hands; some of it is on its way.`
 
 ## Topics
 
@@ -2705,7 +3208,12 @@ deleted and the person keeps the account they made. The dialog behind
 it opens `Close @imke's application?` and answers in two sentences (*The
 reject extension's lines* below). The buttons are `Close it` and `Keep
 it`, `Keep it` being the house word for *don't*, from `RemoveConfirm`
-and `SeveranceConfirm`.
+and `SeveranceConfirm`. The batch dialog's two sentences are the row's
+in the plural (`RejectAllConfirm`; *carried over — blessed by use (jakob
+2026-10-06)*): `All four leave your list and all four people are told.
+Their accounts stay exactly as they are — signed in, and free to keep
+reading.` and `This is your call and nobody else's. Any member can still
+vouch any of them in, and each gets a link to ask with.`
 
 **A live link's label is what it is, and its caption is when it dies.**
 `Single use · not used yet` and `Many uses`; the slot state rides the
@@ -2756,6 +3264,12 @@ a state rather than an act, and the one row in that list that is. What
 happened is that a second proof landed, which is nothing a reader can
 picture; what they need is the errand and the name, in that order. The
 profile row's mark speaks as `Invites — someone is waiting`.
+
+**Revoke waits for its answer** (jakob 2026-10-06): the card holds while
+the revoke is in flight and `Revoke` reads `Revoking…` — the settings
+sessions' in-flight word (*In-flight labels*), placed on `Invites`'
+live-link card, *blessed (jakob 2026-10-06)*. A revoke that fails keeps
+the card, with the standard failure answer.
 
 **Two snackbars the list owes, drawn nowhere and named in the graph**:
 `Invite revoked` when a card leaves, and `@imke has to finish
@@ -2943,8 +3457,12 @@ settling` wear:
   appended only when the post's year differs from the current one:
   `12 September 2025`.
 
-The lines stand in `designs/canonical/behavior/ComposeDetails.md`; the
-board is owed (backlog item 110).
+The lines stand in `designs/canonical/behavior/ComposeDetails.md`, and
+one board draws the marker (jakob 2026-10-06, the check round's 4;
+backlog item 110). It adds no words: the line is the blessed one above.
+**The door's accessible name is its own words**, `Already in your post
+from 12 September.` — a text door is named by what it reads (*Names that
+carry what the eye reads*, the K13 round), so no second name is minted.
 
 ## Change histories
 
@@ -3069,6 +3587,19 @@ to be opened.
   see how it built`. Authoring doors are faces and fields; a history
   door is a readout.
 
+## Explore's carried-over words
+
+*Carried over — blessed by use (jakob 2026-10-06)*, recorded so the
+registry is whole: the field's placeholder `Search people, posts, tags…`
+and, under it, the past queries' section `Recent` (`Explore`); a tag
+result's second line `tagged by @sol` (`ExploreSearch`,
+`ExploreFilter`); the line that starts what is still out of reach,
+`Beyond your reach — newest first` (`ExploreSearch`); a query nothing
+carries, `Nothing carries that name.` ahead of the blessed `Search reads
+names and titles, never bodies — fewer words reach further.`
+(`ExploreNone`); and the results' "?", named `How searching works`, over
+the *Searching* dialog.
+
 ## The search-scope line
 
 From backlog item 105's ruling (readme §13, the indirect kinds are
@@ -3079,6 +3610,7 @@ results would stand — the way, not an apology:
 
 - `Found through people and tags — start with @handle or #tag.`
   **Drawn** on `ExploreUnscoped`, as the results region's empty state.
+  *Blessed (jakob 2026-10-06).*
 
 ## Chats
 

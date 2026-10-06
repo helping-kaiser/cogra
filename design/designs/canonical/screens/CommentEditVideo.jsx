@@ -73,6 +73,9 @@ export function Screen() {
             <TopicRemovable topic="glovebox" onEdit={() => {}} />
           </div>
           <InlineAction size="sm" selfStart>+ Add a tag</InlineAction>
+          {/* The tag withdrawn in this edit, read back with its Undo, as
+              `CommentEdit` reads its own (`WithdrawnLine`). */}
+          <WithdrawnLine name="#coastroad" />
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -99,10 +102,10 @@ export function Screen() {
           <UploadStatusLine done={0} total={1} media="cover" />
         </div>
         <div style={{ display: "{{restShown}}", flexDirection: "column" }}>
-          <ActsFooter count={2} />
+          <ActsFooter count={3} />
         </div>
         <div style={{ display: "{{gateShown}}", flexDirection: "column" }}>
-          <ActsFooter count={3} />
+          <ActsFooter count={4} />
         </div>
         <Button style={{ width: "100%" }}>Sign the edit</Button>
       </div>

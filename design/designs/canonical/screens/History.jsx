@@ -34,7 +34,7 @@
    SEARCH AND FILTER ON TOP. The search field is the system's one search bar,
    its placeholder naming the list it searches, and it matches by the one
    search rule Explore uses (readme §4, *Search*) — over the seen-list alone,
-   newest-seen first. Under it the feed's worded trigger, in search's position
+   newest first by first seeing. Under it the feed's worded trigger, in search's position
    and search's kind semantics — nothing narrowed reads `Everything`, and a
    chip narrows. Its sheet is `HistoryFilter`. The bar and the trigger ride
    the collapsing top with the header (readme §4: history collapses). A search
@@ -84,7 +84,9 @@ export function Screen() {
         <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" />
         <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" />
         <HistoryDayDivider>2 October</HistoryDayDivider>
-        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        {/* First seen three days ago, so it is at least that old: its own age
+            reads 3d, never younger than the day it was seen. */}
+        <PostCard {...TOBIAS_POST} timestamp="3d" bundle={mkBundle(0.1, 0.1)} />
       </FeedList>
       <BottomNav active={null} slots={ALL_SLOTS} inline />
     </>

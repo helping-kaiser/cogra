@@ -26,7 +26,7 @@ const post = (at) => [
   { n: at.media, find: "aspect-ratio:1.91 / 1", tag: "div" },
   { n: at.more, find: ">More</button>", tag: "button" },
   { n: at.topic, find: '<a href="/t/', tag: "a", all: true },
-  { n: at.refs, find: ">· 1 reference<", tag: "span" },
+  { n: at.refs, find: ">· 1 reference<", tag: "button" },
   { n: at.stance, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
   { n: at.score, find: ">Feed score</span>", tag: "button", all: true },
   { n: at.comments, find: 'aria-label="3 comments"', tag: "button" },
@@ -230,7 +230,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(11),
@@ -265,7 +265,7 @@ Object.assign(FLOW_MARKERS, {
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(11),
@@ -278,7 +278,7 @@ Object.assign(FLOW_MARKERS, {
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
     { n: 19, find: ">Back to top</button>", tag: "button" },
@@ -306,7 +306,7 @@ Object.assign(FLOW_MARKERS, {
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
     { n: 4, find: "scroll-snap-type:x mandatory", tag: "div" },
-    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="2 comments"', tag: "button" },
     ...nav(11),
@@ -352,6 +352,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 24, find: 'aria-label="Chats"', tag: "button" },
     { n: 25, find: 'aria-label="Notifications"', tag: "button" },
     { n: 26, find: 'aria-label="Tag a new post with it"', tag: "button" },
+    // The comment card's reference count, a door since the master's K13.3
+    // conform — the next free number, so no via renumbers.
+    { n: 27, find: ">· 1 reference<", tag: "button" },
   ],
 });
 
@@ -617,6 +620,12 @@ Object.assign(FLOW_MARKERS, {
   ],
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
+  // The stage with its media already published: the stage's own numbers, and
+  // the marker's door under the media row as the next free one.
+  ComposeDetailsReused: [
+    ...composeDetails,
+    { n: 14, find: ">Already in your post from 12 September.</button>", tag: "button" },
+  ],
   // The words path's details: the picture stage's controls minus the media
   // row, the describe row and the Description, numbered in reading order.
   ComposeDetailsWords: [
@@ -676,7 +685,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'src="post-photo.jpg"', tag: "div" },
     { n: 7, find: ">More</button>", tag: "button" },
     { n: 8, find: '<a href="/t/', tag: "a", all: true },
-    { n: 9, find: ">· 1 reference<", tag: "span" },
+    { n: 9, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 10, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
     { n: 11, find: ">Feed score</span>", tag: "button", all: true },
@@ -971,11 +980,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'aria-label="Remove #glovebox"', tag: "button" },
     { n: 9, find: "+ Add a tag", tag: "button" },
     { n: 10, find: "+ Cite something", tag: "button" },
-    { n: 11, find: "signing 2 things", tag: "button" },
-    // The `upload` chip's footer, counting the new cover's record.
     { n: 11, find: "signing 3 things", tag: "button" },
+    // The `upload` chip's footer, counting the new cover's record.
+    { n: 11, find: "signing 4 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
+    // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on CommentEdit.
+    { n: 15, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
   ],
   EditComposeVideo: [
     { n: 14, find: "aria-label=\"#coastroad — set how it relates\"", tag: "button" },
@@ -991,11 +1002,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 8, find: 'data-field="Description"', tag: "div" },
     { n: 9, find: 'aria-label="Remove #coastroad"', tag: "button" },
     { n: 10, find: "+ Add a tag", tag: "button" },
-    { n: 11, find: "signing 3 things", tag: "button" },
-    // The `upload` chip's footer, counting the new cover's record.
     { n: 11, find: "signing 4 things", tag: "button" },
+    // The `upload` chip's footer, counting the new cover's record.
+    { n: 11, find: "signing 5 things", tag: "button" },
     { n: 12, find: ">Sign the edit</button>", tag: "button" },
     { n: 13, find: ">Mark</button>", tag: "button" },
+    // The withdrawn tag's Undo (the readme's edit-withdrawal law), as on EditCompose.
+    { n: 15, find: 'aria-label="Undo withdrawing #photography"', tag: "button" },
   ],
   ComposeUploading: [
     { n: 12, find: "aria-label=\"#tidemarket — set how it relates\"", tag: "button" },
@@ -1207,7 +1220,7 @@ const ownProfile = () => [
   { n: 2, find: 'aria-label="More on your profile"', tag: "button" },
   { n: 3, find: 'aria-label="Settings"', tag: "button" },
   { n: 4, find: 'aria-label="Change your picture"', tag: "button" },
-  { n: 5, find: 'aria-label="Your opinions, both directions"', tag: "button" },
+  { n: 5, find: ', your opinions, both directions"', tag: "button" },
   { n: 6, find: ">Edit profile</button>", tag: "button" },
   // The waiting dot rides inside the button (the invites round), so the label
   // is no longer the last thing before the closing tag: the find stops at the
@@ -1248,7 +1261,7 @@ Object.assign(FLOW_MARKERS, {
   ProfileOther: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1263,7 +1276,7 @@ Object.assign(FLOW_MARKERS, {
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Your opinion on @ada', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
@@ -1288,7 +1301,7 @@ Object.assign(FLOW_MARKERS, {
   ProfilePosts: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
     { n: 4, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
@@ -1304,7 +1317,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 12, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
     { n: 12, find: 'aria-label="Give your opinion on this post"', tag: "button", all: true },
     { n: 13, find: ">Feed score</span>", tag: "button", all: true },
-    { n: 14, find: ">· 1 reference<", tag: "span" },
+    { n: 14, find: ">· 1 reference<", tag: "button" },
     { n: 15, find: 'aria-label="3 comments"', tag: "button" },
     { n: 15, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(16),
@@ -1312,7 +1325,7 @@ Object.assign(FLOW_MARKERS, {
   ProfileComments: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
-    { n: 3, find: 'aria-label="Opinions on and by @ada"', tag: "button" },
+    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
     { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
     { n: 5, find: ">Message</button>", tag: "button" },
     { n: 6, find: 'aria-label="Posts"', tag: "button" },
@@ -1482,7 +1495,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 13, find: 'aria-label="More on this post"', tag: "button", all: true },
     { n: 14, find: ">More</button>", tag: "button" },
     { n: 15, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 16, find: ">· 1 reference<", tag: "span" },
+    { n: 16, find: ">· 1 reference<", tag: "button" },
     { n: 17, find: 'aria-label="3 comments"', tag: "button" },
     { n: 17, find: 'aria-label="1 comment"', tag: "button" },
     { n: 18, find: 'aria-label="More about @mira"', tag: "button" },
@@ -2014,6 +2027,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 9, find: "signing 3 things", tag: "button" },
     { n: 10, find: ">Sign the edit</button>", tag: "button" },
     { n: 11, find: ">Mark</button>", tag: "button" },
+    { n: 13, find: 'aria-label="Undo withdrawing #coastroad"', tag: "button" },
   ],
   EditActs: [
     { n: 1, find: ">Done</button>", tag: "button" },
@@ -2196,12 +2210,12 @@ Object.assign(FLOW_MARKERS, {
   /* The chats coming-soon screen (item 68) numbers like the bell's empty list:
      the same back-plus-nav anatomy, because it is the same list surface with
      nothing in it. */
-  ChatsComingSoon: [{ n: 1, find: 'aria-label="Back"', tag: "a" }, ...nav(2)],
+  ChatsComingSoon: [{ n: 1, find: 'aria-label="Back to feed"', tag: "a" }, ...nav(2)],
   FeedUnread: [
     { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(11),
@@ -2232,7 +2246,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(11),
@@ -2242,7 +2256,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 1, find: 'what your feed shows"', tag: "button" },
     ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
     { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
-    { n: 7, find: ">· 1 reference<", tag: "span" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
     { n: 10, find: 'aria-label="3 comments"', tag: "button" },
     { n: 10, find: 'aria-label="1 comment"', tag: "button" },
     ...nav(11),
@@ -2253,7 +2267,7 @@ Object.assign(FLOW_MARKERS, {
   // via on this board renumbers behind it.
   ProfileDeleted: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
-    { n: 2, find: 'aria-label="Opinions on and by this account"', tag: "button" },
+    { n: 2, find: ', opinions on and by this account"', tag: "button" },
     { n: 3, find: 'aria-label="Give your opinion on this account"', tag: "button" },
     { n: 3, find: ">Choose your opinion on this account</button>", tag: "button" },
     { n: 4, find: 'aria-label="Posts"', tag: "button" },
@@ -2309,6 +2323,23 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE WORDS-ONLY VEIL (the check round's Q5, 2026-10-06): `Feed`'s anatomy and
+   `Feed`'s numbers — the band sweeps below name it at Feed's own — and the
+   veil's `Show` as the next free number. Declared above the sweeps for the
+   reject extension's reason. */
+Object.assign(FLOW_MARKERS, {
+  FeedWordsSensitive: [
+    { n: 1, find: 'what your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+    { n: 19, find: ">Show</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
@@ -2319,7 +2350,7 @@ const BAND_CHATS = {
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
-  FeedGallery: 15, FeedCover: 17,
+  FeedGallery: 15, FeedCover: 17, FeedWordsSensitive: 16,
   WalletComingSoon: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
@@ -2338,7 +2369,7 @@ const BAND_BELL = {
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
-  FeedCover: 19,
+  FeedCover: 19, FeedWordsSensitive: 18,
   WalletComingSoon: 7,
   Profile: 15, ProfileApplicant: 15,
 };
@@ -2355,7 +2386,7 @@ const CARD_SHARE = {
   ApplicantRejected: 16, ApplicantLanding: 16,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
   FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
-  FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
+  FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21, FeedWordsSensitive: 17,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Share this post"', tag: "button", all: true });
@@ -2550,6 +2581,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Close @rafa&#x27;s application"', tag: "button" },
     { n: 6, find: 'aria-label="Copy the link"', tag: "button", all: true },
     { n: 7, find: ">Revoke</button>", tag: "button", all: true },
+    // The `revoke` chip's in-flight reading of the same control.
+    { n: 7, find: ">Revoking…</button>", tag: "button" },
     { n: 8, find: ">Close all</button>", tag: "button" },
     // The kept approval's row (the `kept` chip), head of Applications.
     { n: 9, find: ">@noor<", tag: "button" },
