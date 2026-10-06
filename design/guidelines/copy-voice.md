@@ -1837,7 +1837,13 @@ sol@ferreira.studio from now on, and resets go there too.` · `Back to
 settings`. Past the window it takes `VerifyExpired`'s heading, `This
 link doesn't work anymore` (blessed), with `The change it belonged to
 ran out before both sides landed. Your email is still
-sol@solferreira.art.` and `Back to settings`; with the address taken,
+sol@solferreira.art.` and `Back to settings`. A link that outlived its
+change keeps that heading and way on: after `Cancel the change`, `The
+change it belonged to was canceled. Your email is still
+sol@solferreira.art.`; opened again after the change applied, `The
+change it belonged to already happened. Your email is now
+sol@ferreira.studio.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
+With the address taken,
 `That address is taken now` over the `EMAIL_IN_USE` line above — an
 applicant's fresh link (`ApplicantEmail`) answers a taken address the
 same way on its landing (jakob 2026-10-05). Signed
