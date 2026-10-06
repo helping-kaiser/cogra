@@ -241,6 +241,15 @@ fn relay_error(e: RelayError, index: usize) -> UserError {
         RelayError::Staged(staged::StagedError::NotFound(_)) => {
             UserError::at(ErrorCode::NotFound, "unknown staged write", path)
         }
+        RelayError::Staged(staged::StagedError::WrongState { actual, .. })
+            if actual == staged::StagedState::Expired.as_str() =>
+        {
+            UserError::at(
+                ErrorCode::StagedWriteExpired,
+                "the staged write was garbage-collected unlanded; re-prepare",
+                path,
+            )
+        }
         RelayError::Staged(staged::StagedError::WrongState { actual, .. }) => UserError::at(
             ErrorCode::BadInput,
             format!("staged write is {actual}"),
