@@ -67,9 +67,10 @@ Where each sidecar's words come from:
   forward navigation, the X of a cite included (readme §4,
   *Navigation*).
 - `FeedKinds.md` — the feed cards (readme §13, *The feed cards,
-  ruled*): the unified row's order, the law that a comment's replies live
-  in its thread and never in the feed, where the comment card's door and
-  its comment glyph land in the thread, and the tag's staged new post.
+  ruled*): the unified row's order, the law that a reply card may appear
+  in any feed while the reply expansion under a card never does, where
+  the comment card's door and its comment glyph land in the thread, and
+  the tag's staged new post.
 - `ComposeDetails.md` — the already-published marker (copy-voice, *The
   already-published marker*), on the Details step's media row.
 - `TagPicker.md` — the typed-name row (readme §13, *The typed-name
