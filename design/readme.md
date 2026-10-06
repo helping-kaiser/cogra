@@ -845,7 +845,7 @@ paper over:
 - `FeedFilter` (+ `FilterTrigger`, `OrderSection`, `FilterSection`) —
   **what the feed actually needs**, and the reason the
   segmented row was the wrong control. Kinds of ranked content that
-  combine (the four V1.0 serves — posts, comments, profiles, tags, §13's
+  combine (the four CoGra v1.0.0 serves — posts, comments, profiles, tags, §13's
   scope cut — `FEED_KINDS`, one list shared with search),
   forms of post that combine (photos and video with no text posts is a
   legitimate feed), an order that does not (ranked, the default, or
@@ -1464,7 +1464,7 @@ shown once against a server-side seen flag set on the first show, and
 re-opened from Settings' About group. Skip stands on every card and
 leaves for the feed the intro opened over — or for Settings, when
 Settings re-opened it. The buttons are the only movement: no swipe in
-V1.0, and Android's Back walks the cards back, card 1 leaving as Skip
+v1.0.0, and Android's Back walks the cards back, card 1 leaving as Skip
 does (jakob 2026-10-05). It teaches what the product IS rather
 than what a control does, so it neither replaces the pad's coaching
 lines nor adds any; the per-control teaching is unchanged by it. The last card
@@ -3661,7 +3661,7 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   gesture gets its surface in slice 3's round, which is also when the
   roadmap first lets it ship (topic follow is client-hidden until the
   topic feed lands). (Ruled since: topic holding ships whole inside
-  V1.0 — slice sequencing, never a hidden surface at the release cut;
+  v1.0.0 — slice sequencing, never a hidden surface at the release cut;
   jakob 2026-10-06, `staged-surfaces.md`.)
 - **Every row carries its claim, plainly.** A signed act is public
   record, so `TaggedRow` simply shows it: the nearest of the thirteen
@@ -7113,8 +7113,8 @@ search:
 - **All chats, never just the viewer's.** A scoped message result
   reaches any plaintext chat — chats are public reads, so the scope
   is the author, not the viewer's membership.
-- **The default mix carries the direct kinds** — in V1.0 posts,
-  profiles and tags, with comments indirect (§13, *The V1.0 scope
+- **The default mix carries the direct kinds** — in v1.0.0 posts,
+  profiles and tags, with comments indirect (§13, *The v1.0.0 scope
   cut*). Selecting an indirect kind without a scope shows a quiet line
   pointing at the scope operator instead of results (its string is
   copy-voice's, blessed 2026-10-06).
@@ -7145,9 +7145,9 @@ transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
   the same detail any non-portrait clip tap opens, in the state
   the record brings, not a different tap.
 
-### The V1.0 scope cut — 2026-09-25
+### The v1.0.0 scope cut — 2026-09-25
 
-The verdict round of the V1.0 audit (the full trail, findings and
+The verdict round of the v1.0.0 audit (the full trail, findings and
 candidates list live in the dev-state audit directory,
 `2026-09-24-mvp-audit/`): every affordance canonical drew beyond what
 the first release serves got a ruling, and the two precedents that used
@@ -7169,35 +7169,35 @@ list since — `staged-surfaces.md`, the release cut's checklist.)
   door reads intentional rather than broken. One master; both the chats
   door and the wallet door wear it, and it serves every reader state
   with one face.
-- **The wallet slot opens the door in V1.0** (jakob 2026-09-24/25). The
+- **The wallet slot opens the door in v1.0.0** (jakob 2026-09-24/25). The
   eleven wallet boards move to the post-MVP domain; the slot stays.
 - **The feed and search filters show four kinds: Posts, Comments,
-  Profiles, Tags** — the kinds V1.0 serves. The six chips beyond them
+  Profiles, Tags** — the kinds CoGra v1.0.0 serves. The six chips beyond them
   (chats, messages, proposals, items, campaigns, offers) leave both
   filters. The comment-in-feed, profile-in-feed and tag-in-feed cards
-  are V1.0 surfaces, drawn in *The three feed cards*.
-- **Search returns no item, offer or message rows in V1.0**; those rows
+  are v1.0.0 surfaces, drawn in *The three feed cards*.
+- **Search returns no item, offer or message rows in v1.0.0**; those rows
   leave `ExploreSearch` with their kinds.
-- **A V1.0 reference points at a person, a post or a comment** — the
+- **A v1.0.0 reference points at a person, a post or a comment** — the
   contract's union, read as the ruling. `RefsSheet` and
   `ReferencePicker` carry those three kinds only, each row wired to its
   own board; the picker's footnote drops `#tag` and messages.
-- **V1.0 passes no history door** (jakob 2026-09-25): the `Edited`
+- **CoGra v1.0.0 passes no history door** (jakob 2026-09-25): the `Edited`
   marker is a plain marker, the stance readout carries no built-tail,
   and a `StanceRow` value opens nothing — a control that answers
   nothing reads buggy. The masters' door anatomies leave canonical with
   the change-histories round and return when it ships.
 - **Money words are payer-neutral** (jakob 2026-09-25): copy may say a
-  signed thing is paid for, and no V1.0 copy names who pays — neither
+  signed thing is paid for, and no v1.0.0 copy names who pays — neither
   the member nor a pool — until a pool that pays and members who pay
   past it exist. The signing help's pool sentence gets its payer-neutral
   rewording in the copy round.
 - **The deletion page names what exists**: no "cover" (the profile has
-  none), no "messages" (chats are not in V1.0).
-- **The editing help promises no version removal**: V1.0 removal
+  none), no "messages" (chats are not in v1.0.0).
+- **The editing help promises no version removal**: v1.0.0 removal
   targets the whole post, and the removal clause returns with the
   histories round.
-- **Removing your own comment is V1.0** (jakob 2026-09-25): the comment
+- **Removing your own comment is v1.0.0** (jakob 2026-09-25): the comment
   menu carries Remove, the confirm speaks at comment scale, and a
   thread draws the removed comment's mark — the erasure half of the
   roadmap's slice 8, mandated at launch. Drawn in *The comment-removal
@@ -7205,7 +7205,7 @@ list since — `staged-surfaces.md`, the release cut's checklist.)
 - **`Still settling` joins the filter's "Also show", default on** — the
   landed-only control the slice-3 rework promises.
 - **Topic follow ships whole** — the tag page's row, `YourTopics` and
-  Explore's door are slice-3 sequencing inside V1.0, not scope.
+  Explore's door are slice-3 sequencing inside v1.0.0, not scope.
 - **The applicant's once-each staging stands** (jakob 2026-09-25). The
   drawn mechanism — a post, an opinion, a topic staged before approval,
   waiting with the application — is the product's ruling; About,
@@ -7222,7 +7222,7 @@ list since — `staged-surfaces.md`, the release cut's checklist.)
 
 ### The key-loss round — 2026-09-30
 
-The V1.0 audit's K2 cluster (key loss and the key's lifecycle), ruled
+The v1.0.0 audit's K2 cluster (key loss and the key's lifecycle), ruled
 by jakob in one sitting: eleven entries adopted as recommended, and four
 rulings. The drawn boards assumed a recovery code always exists and
 never said when a key is made; together the findings showed several
@@ -7319,7 +7319,7 @@ they turn a kind on, on one new board, `FeedKinds`.
   turned on, the trigger reading `4 kinds`, the new cards leading and a post
   below them. The filter sheet's way out lands on it. (At the full set
   the trigger reads `All kinds` since — §13, *The pill's full set*.)
-- **Each kind keeps the idiom it already wears** (`_shared.jsx`, the V1.0
+- **Each kind keeps the idiom it already wears** (`_shared.jsx`, the v1.0.0
   feed kinds). The comment is `CommentCard` in its out-of-thread shape — the
   target pointer leading, as on `ProfileComments` and `TagPage` — with
   `Reply` and its replies line. The profile and the tag ride `PostCard`'s
@@ -7349,7 +7349,7 @@ they turn a kind on, on one new board, `FeedKinds`.
   deliberately: nine control-selector censuses each grew by the one board.
 ### The typed-name row — 2026-09-30
 
-The V1.0 audit's K14.1 (E22), a blocker: the tag picker had no
+The v1.0.0 audit's K14.1 (E22), a blocker: the tag picker had no
 creation row by ruling, its rows came only from slice 2.7's index, and
 nothing staged what was typed — so before the index, and for any name
 nobody had used, no tag could be added. jakob's ruling: **"yes — the
@@ -7376,7 +7376,7 @@ stages it."**
 
 ### The veiled reel — 2026-09-30
 
-The V1.0 audit's K7.1: the stream drew no sensitive state, so a
+The v1.0.0 audit's K7.1: the stream drew no sensitive state, so a
 veiled clip's shape there was undesigned. jakob's amended ruling:
 **"the veiled reel is FULL SCREEN, looking exactly like any other
 reel in the scroller, blurred and not playing, with the standard
@@ -7404,7 +7404,7 @@ ReelSensitive."**
 
 ### The reply pack — 2026-09-30
 
-Three rulings from the V1.0 audit's K5 and K6 clusters (jakob, the
+Three rulings from the v1.0.0 audit's K5 and K6 clusters (jakob, the
 fifteen-first round). The reply surfaces were worded and wired for a
 post; a reply answers a post or a comment.
 
@@ -7443,7 +7443,7 @@ post; a reply answers a post or a comment.
 
 ### The failure pack — 2026-09-30
 
-The V1.0 audit's first three K4 entries (failure, in-flight and the
+The v1.0.0 audit's first three K4 entries (failure, in-flight and the
 refusal map), ruled by jakob in the fifteen-first round. The network
 fault was drawn only for the seals and the entry forms. Everywhere
 else a write had no failure outcome, no commit button had an
@@ -7492,14 +7492,14 @@ in-flight state, and the only fault the seal knew was "offline".
   support stack*). Each code's vehicle and words live in copy-voice,
   *Faults by code*.
 - **The write rule's refusal is a restoration surface, not a fault**
-  (jakob; `WriteRuleFailed`, the V1.0 home of the pool-exhaustion
+  (jakob; `WriteRuleFailed`, the v1.0.0 home of the pool-exhaustion
   fact). A refused pre-check stages nothing and spends nothing, so the
   state is a notice rather than a failure. It is drawn the way the
   missing key is (`ComposeKeyAbsent`): a tertiary panel in place of the
   commit, then the way out that keeps the draft. It offers no `Retry`,
   because an immediate retry meets the same answer, and a control that
   fails the same way twice is not a way out (`RefusedFile`'s rule). Its
-  words follow the payer-neutral rule (*The V1.0 scope cut*): signing
+  words follow the payer-neutral rule (*The v1.0.0 scope cut*): signing
   is paid for, and there is only so much to go around at a time. The
   panel is `NoticePanel`, the first master of the tertiary notice that
   the key-absent boards still draw by hand.
@@ -7523,8 +7523,8 @@ in-flight state, and the only fault the seal knew was "offline".
 
 ### The comment-removal round — 2026-10-01
 
-Removing your own comment is V1.0 (jakob 2026-10-01, the audit's R-1,
-option (a); *The V1.0 scope cut*). It is the erasure half at comment
+Removing your own comment is v1.0.0 (jakob 2026-10-01, the audit's R-1,
+option (a); *The v1.0.0 scope cut*). It is the erasure half at comment
 scale, drawn in the post's idiom, three boards in a row on the comments
 page.
 
@@ -8130,7 +8130,7 @@ vouch-back (the audit's K3.9–K3.19, as recommended unless named).
   application finds it (the mechanism's drafts-on-close ruling).
 - **A topic has its own staged-act line**: `Your topic waits with your
   application — it arrives with you.`, on the tag page's topic face.
-- **Applicants do not comment in V1.0** (jakob's ruling). A comment
+- **Applicants do not comment in v1.0.0** (jakob's ruling). A comment
   cannot wait as pending, so it is not a kind that stages: the sheet's
   foot and `Reply` stay drawn and answer an applicant in place with
   `You can comment once you're in.`
@@ -8961,7 +8961,7 @@ day: the tick is kept, and there are no UI sounds.
 
 jakob's direction on the collected brief's D10 and its clarification:
 History is "a fully normal feed" of everything the reader has seen,
-searchable and filterable, in V1.0.
+searchable and filterable, in v1.0.0.
 
 - **History is the seen-list.** The list slice-3 ranking filters the
   feed by, so that seeing a thing twice is a deliberate choice; a

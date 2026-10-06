@@ -322,7 +322,7 @@ noun):
   post — the post itself, every tag, every citation — is signed on
   its own, in your name. They sign together: all of them land, or
   none does. / Each signing is paid for — the cost is real, so each
-  one still counts. *(Payer-neutral by the V1.0 scope cut, jakob
+  one still counts. *(Payer-neutral by the v1.0.0 scope cut, jakob
   2026-09-25: no copy names who pays until a pool that pays and
   members who pay past it exist.)*
 - **The license**: Terms for anyone who reuses what you publish —
@@ -366,7 +366,7 @@ noun):
   jakob 2026-10-05); from a comment edit, `Nothing was signed or spent,
   and your edit is still here. Try again in a little while.` (the edit's
   blessed ending in the reply's sentence, jakob 2026-10-05).
-  Payer-neutral by the V1.0 scope cut.)*
+  Payer-neutral by the v1.0.0 scope cut.)*
 - **Your opinion on your post** (the post's one-axis pad): Publishing
   also signs your opinion on your own post — for or against, from a
   gentle 🙂 *(+0.10)* by default. / Your own post always reaches you in
@@ -403,7 +403,7 @@ noun):
 - **Citing**: A citation is its own signed action and carries an
   opinion of what you cite. You can cite a post, a comment or a
   person. / A comment can also be cited from itself — open its menu
-  and choose "Cite in a new post". *(Trimmed to V1.0's citable kinds,
+  and choose "Cite in a new post". *(Trimmed to v1.0.0's citable kinds,
   jakob 2026-09-25; the end-state wording returns with its kinds. An
   opinion, never "your opinion" — jakob 2026-09-30, see Naming.)*
 - **Searching** (the Explore tab's results): Search reads names and
@@ -870,7 +870,7 @@ same grammar (jakob 2026-10-02, **blessed**):
 - `Your topic waits — it arrives when someone vouches you in.`
 
 **Comments are not a kind that stages** (jakob 2026-10-01: applicants do
-not comment in V1.0). A staged comment would wear `Still settling` for a
+not comment in v1.0.0). A staged comment would wear `Still settling` for a
 reply that cannot wait as pending, so the comment sheet's foot answers an
 applicant in place. A guest gets the join prompt there instead.
 
@@ -1271,7 +1271,7 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
   which keeps no draft either, the reply's mirror: `Nothing was signed or
   spent — your edit is still here.` and `Not now`, back to the edit with
   the changes as they were (jakob 2026-10-05; the ending *blessed (jakob
-  2026-10-05)*). The words name no payer (the V1.0 scope cut). On a pad the same panel stands where the
+  2026-10-05)*). The words name no payer (the v1.0.0 scope cut). On a pad the same panel stands where the
   landing line and Set were, in `PadKeyAbsent`'s shape: `You can't sign
   right now` over `Each signing is paid for, and there's only so much
   to go around at a time. Nothing was signed or spent.` — a pad has no
@@ -2715,7 +2715,7 @@ as yours — what goes is everything that says it was you.`
   about you. Your posts still route and still credit their author; what
   is removed leaves a mark saying so.` *(The wallet bullet — "Your
   wallet and its address. They are held by your key, never by CoGra, so
-  nothing here can touch them." — left V1.0 with the wallet, jakob
+  nothing here can touch them." — left v1.0.0 with the wallet, jakob
   2026-09-25: the page names what exists. It returns when the wallet
   does.)*
 
@@ -2997,7 +2997,7 @@ every card and detail already draws:
 
 Three places stand in for something drawn after the MVP: the screen the
 band's chats icon opens (`ChatsComingSoon`, backlog item 68), the door
-the bar's wallet slot opens (`WalletComingSoon`, the V1.0 scope cut),
+the bar's wallet slot opens (`WalletComingSoon`, the v1.0.0 scope cut),
 and the hero card on Explore (backlog item 16). **All name the promise
 the same way** — the thing, an em dash, `coming soon`, then one sentence
 of what will be there:
@@ -3656,7 +3656,7 @@ the *Searching* dialog.
 ## The search-scope line
 
 From backlog item 105's ruling (readme §13, the indirect kinds are
-scope-served): with Comments — V1.0's indirect kind; Messages and
+scope-served): with Comments — v1.0.0's indirect kind; Messages and
 Offers rejoin it with their slices — selected and no
 scope in the query, the results region carries one quiet line where
 results would stand — the way, not an apology:
