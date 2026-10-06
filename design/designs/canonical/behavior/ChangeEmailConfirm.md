@@ -28,7 +28,17 @@ WHEN the confirm has not answered 200ms after the press -> Confirm the code read
 
 WHEN press Confirm the code GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Confirm the code AND Confirm the code stays, the retry AND NEVER the change moves
 
-WHEN tap Resend -> both messages go out again AND the snackbar reads Sent again — check both inboxes. AND NEVER a dialog asks
+WHEN tap Resend GIVEN both sides still wait -> both messages go out again AND the snackbar reads Sent again — check both inboxes. AND NEVER a dialog asks
+
+WHEN tap Resend GIVEN the link's side is confirmed -> only the code goes out again, to the current address AND the snackbar reads Sent again — the code is on its way to sol@solferreira.art. AND NEVER the link's side is reset AND NEVER a dialog asks
+
+WHEN tap Resend GIVEN the code's side is confirmed -> only the link goes out again, to the new address AND the snackbar reads Sent again — the link is on its way to sol@ferreira.studio. AND NEVER the code's side is reset AND NEVER a dialog asks
+
+WHEN press Confirm the code GIVEN the code was disabled after too many wrong tries -> the field reads Too many tries — for safety we have disabled your current code. Resend sends a fresh one. AND NEVER the change moves
+
+WHEN typing in Confirmation code GIVEN the field reads Too many tries — for safety we have disabled your current code. Resend sends a fresh one. -> the line stands until a fresh code is sent
+
+WHEN tap Resend GIVEN the account's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Confirm the code AND NEVER a message is sent AND NEVER the snackbar reads Sent again
 
 WHEN tap Resend GIVEN the reader is offline -> the network error answers
 

@@ -1201,8 +1201,10 @@ measure its steps (jakob 2026-10-01). **Drawn** on `SealSigningSlow`. *New
 - `RATE_LIMITED` — in place, in SignInError's slot. Sign-in's login
   backoff says the drawn line, `Too many tries in a row. Wait a moment,
   then try again.` (`SignInLimited`); every other visible one — the
-  registration, the reset, the token confirms — says `Too many tries.
-  Wait a little, then try again.` (jakob 2026-10-05). The submit stays.
+  registration, the reset, the token confirms, and the email change's
+  request and resend once the account's mail budget is spent (jakob
+  2026-10-06) — says `Too many tries. Wait a little, then try again.`
+  (jakob 2026-10-05). The submit stays.
 - `NOT_FOUND` — the surface. For a profile: `This profile doesn't
   exist.` **Drawn** on `ProfileNotFound`. Posts and comments take the
   same construction: `This post doesn't exist.` and `This comment
@@ -1790,8 +1792,19 @@ your account keeps the address it has, and a reset still goes there.`
   both inboxes.` And last on the page, `Cancel the change`, with
   `Change canceled — your email stays sol@solferreira.art.` over
   settings.
+- With one side landed, `Resend` mails only the side still owed, and its
+  snackbar names that inbox: `Sent again — the code is on its way to
+  sol@solferreira.art.` or `Sent again — the link is on its way to
+  sol@ferreira.studio.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
 - A wrong code takes `Restore`'s field line, `That code doesn't check
   out.` (blessed).
+- A code disabled after too many wrong tries, on the field in the
+  wrong-code line's place until a fresh one is sent: `Too many tries —
+  for safety we have disabled your current code. Resend sends a fresh
+  one.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
+- A spent mail budget answers the request and `Resend` with
+  `RATE_LIMITED`'s line in place (*Faults by code*), above the
+  commitment; nothing is sent (jakob 2026-10-06).
 - The change that lands answers `Email changed to sol@ferreira.studio.`
   over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
 - The change past its window, as the fault line above the commitment:
