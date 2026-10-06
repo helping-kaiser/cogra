@@ -14,7 +14,7 @@ ALWAYS the request answers the same way whether or not the email has an account,
 
 ALWAYS the quiet note under the status line says the reset restores the sign-in only, never the key
 
-WHEN the reset mail's link is opened -> ResetNew opens
+WHEN the reset mail's link is opened GIVEN the link is live -> ResetNew opens
 
 WHEN press Send reset link GIVEN no answer reaches the device -> the field keeps what was typed AND the line That didn't send. Try again. stands above Send reset link AND Send reset link stays, the retry
 

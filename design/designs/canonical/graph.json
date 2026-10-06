@@ -425,9 +425,9 @@
     { "from": "SignInExpired", "via": 3, "kind": "advance", "label": "Password field", "to": [{ "terminal": "self", "case": "typing" }] },
     { "from": "SignInExpired", "via": 4, "kind": "advance", "label": "reveal password", "to": [{ "terminal": "self", "case": "the password shows" }] },
     { "from": "SignInExpired", "via": 5, "kind": "advance", "label": "Don't remember this account here", "to": [{ "terminal": "self", "case": "the checkbox flips" }] },
-    { "from": "SignInExpired", "via": 6, "kind": "advance", "label": "Sign in", "to": [{ "board": "Feed", "case": "member, key on this device — the draft and any picks still kept" }, { "board": "KeyElsewhere", "case": "member, key not here" }, { "board": "ApplicantFeed", "case": "applicant" }, { "board": "SignInError", "case": "bad email or password" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
+    { "from": "SignInExpired", "via": 6, "kind": "advance", "label": "Sign in", "to": [{ "board": "Feed", "case": "member, key on this device — the draft and any picks still kept" }, { "board": "KeyElsewhere", "case": "member, key not here" }, { "board": "ApplicantFeed", "case": "applicant, tasks left — and every other account state lands wherever app-open lands for it, as SignIn's own Sign in lists" }, { "board": "SignInError", "case": "bad email or password" }, { "board": "NetworkError", "case": "offline — the network-error board (master)" }] },
     { "from": "SignInExpired", "via": 7, "kind": "advance", "label": "Forgot password?", "to": [{ "board": "Reset" }] },
-    { "from": "SignInExpired", "via": 8, "kind": "advance", "label": "New here? Enter your invite", "to": [{ "board": "InviteEntry" }] },
+    { "from": "SignInExpired", "via": 8, "kind": "advance", "label": "New here? Enter your invite", "to": [{ "board": "InviteEntry" }, { "board": "Join", "case": "a live invite link is already held — the join form opens with it, and the door is never shown" }] },
     { "from": "SignInExpired", "via": 9, "kind": "cancel", "label": "Just looking? Browse the feed", "to": [{ "board": "FeedBare" }] },
     { "from": "SignInExpired", "via": 10, "kind": "advance", "label": "Download the app (APK)", "to": [{ "terminal": "os", "case": "the browser downloads the APK" }] },
 
