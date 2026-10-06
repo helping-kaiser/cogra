@@ -12,6 +12,10 @@
 // thumbnails, one failure with its words and ways out, and the describe counter
 // — and no Crop or Edit links anywhere. The row IS the affordance and it opens
 // Show all; the crop step is one Back away (jakob: "none").
+//
+// THE SCREEN IS REGISTERED (`design/designs/canonical/nodes.json`,
+// `composeDetails`), so every drawn part carries its node id — see
+// `lib/ui/data-node.ts`.
 
 import { PillButton } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
@@ -117,6 +121,7 @@ export function DetailsStep({
         value={title}
         onChange={onTitle}
         testId="wizard-title"
+        node={{ path: "composeDetails.title" }}
         cap={TITLE_MAX_CHARS}
         error={titleProblem(title) ?? undefined}
       />
@@ -128,6 +133,7 @@ export function DetailsStep({
         value={description}
         onChange={onDescription}
         testId="wizard-description"
+        node={{ path: "composeDetails.description" }}
         cap={DESCRIPTION_MAX_CHARS}
         error={descriptionProblem(description) ?? undefined}
       />
@@ -138,6 +144,7 @@ export function DetailsStep({
         fieldErrors={tagErrors}
         cap={TAG_BATCH_CAP}
         testIdPrefix="wizard"
+        node={{ path: "composeDetails.tags" }}
       />
       <ReferenceEntryField
         references={references}
@@ -145,6 +152,7 @@ export function DetailsStep({
         fieldErrors={referenceErrors}
         cap={REFERENCE_BATCH_CAP}
         testIdPrefix="wizard"
+        node={{ path: "composeDetails.references" }}
       />
 
       <div className="flex-1" />
@@ -158,7 +166,13 @@ export function DetailsStep({
           Pictures upload while you write — signing waits for them.
         </p>
       )}
-      <PillButton testId="wizard-next" full disabled={blocked} onClick={onNext}>
+      <PillButton
+        testId="wizard-next"
+        node={{ path: "composeDetails.next" }}
+        full
+        disabled={blocked}
+        onClick={onNext}
+      >
         Next
       </PillButton>
     </div>
@@ -277,6 +291,7 @@ function BodyStrip({
         onRemove={isVideo ? (index) => onRemove(assets[index]!.id) : undefined}
         removeLabel={isVideo ? "Remove this video" : undefined}
         testId="wizard-picked-row"
+        node={{ path: "composeDetails.mediaRow" }}
       />
 
       {/* One line for the failure, whatever its count — the tiles already say
@@ -310,6 +325,7 @@ function BodyStrip({
         subject={isVideo ? "the video" : "the pictures"}
         onDescribe={onDescribe}
         testId="wizard-describe-counter"
+        node={{ path: "composeDetails.describeRow" }}
       />
     </div>
   );

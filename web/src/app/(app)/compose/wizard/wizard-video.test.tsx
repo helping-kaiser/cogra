@@ -20,6 +20,7 @@ import { renderWithProviders } from "@/test/providers";
 import type { ComposeDraftStore } from "@/lib/compose/draft-store";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
 import { ComposeWizard } from "./wizard-view";
+import { byAnyTestId, byNode } from "@/test/data-node";
 
 const FRAME = new Blob([new Uint8Array([9]) as BlobPart], { type: "image/png" });
 // A frame distinct from `FRAME` above, so a test can tell "the tray's frames"
@@ -144,7 +145,7 @@ describe("picking a video", () => {
     render();
     await pickFiles([aVideo()]);
 
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     expect(await screen.findByText("The video's face")).toBeInTheDocument();
     // The crop screen belongs to pictures and must not appear on this path.
@@ -157,7 +158,7 @@ describe("picking a video", () => {
   it("offers the frames it took, and none of them is the face yet", async () => {
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     const first = await screen.findByTestId("wizard-cover-frame-0");
     expect(first).toHaveAttribute("aria-pressed", "false");
@@ -173,12 +174,12 @@ describe("picking a video", () => {
   it("leaves the clip faceless when the stage is walked without a tap", async () => {
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // The offers are on screen — this is not the race that used to pass.
     expect(await screen.findByTestId("wizard-cover-frame-3")).toBeInTheDocument();
-    expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    expect(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"))).not.toBeDisabled();
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // Details: the clip is the body and the cover field is still its door.
     expect(await screen.findByTestId("wizard-cover-door")).toBeInTheDocument();
@@ -190,7 +191,7 @@ describe("picking a video", () => {
   it("offers four frames, not three", async () => {
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     expect(await screen.findByTestId("wizard-cover-frame-3")).toBeInTheDocument();
   });
@@ -200,7 +201,7 @@ describe("picking a video", () => {
   it("labels the cover stage 'Video only' in the header's trailing note", async () => {
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     expect(await screen.findByText("Video only")).toHaveClass("text-label-small");
   });
@@ -221,7 +222,7 @@ describe("picking a video", () => {
       // The harness's own clip is 1080x1920.
       render();
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
       // Taller than the cap, so it shows AT the cap — which is what the post
       // will be, and what the feed tile reserves for it.
@@ -236,7 +237,7 @@ describe("picking a video", () => {
       });
       render();
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
       expect(await previewRatio()).toBe(`${1920 / 1080} / 1`);
     });
@@ -249,7 +250,7 @@ describe("picking a video", () => {
       });
       render();
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
       expect(await previewRatio()).toBe("1 / 1");
     });
@@ -258,7 +259,7 @@ describe("picking a video", () => {
       vi.mocked(probeVideo).mockResolvedValueOnce({ durationMs: 8_000, width: 0, height: 0 });
       render();
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
       // Shape unknown is the one case a square is the honest answer, rather
       // than a collapsed box or a shape nobody stated.
@@ -269,7 +270,7 @@ describe("picking a video", () => {
   it("shows the clip's length where the board draws it", async () => {
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     expect(await screen.findByTestId("wizard-cover-duration")).toHaveTextContent("0:42");
   });
@@ -277,7 +278,7 @@ describe("picking a video", () => {
   it("moves the face to another offer when one is pressed", async () => {
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
 
@@ -425,11 +426,11 @@ describe("picking a video", () => {
     vi.mocked(captureFrames).mockResolvedValueOnce(frames);
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     // A frame OTHER than the first, so the face and the cover can never be
     // the same URL by coincidence.
     fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     const tileImage = await screen.findByTestId("wizard-picked-row-thumb-0-image");
     const coverMarkImage = screen
@@ -451,13 +452,13 @@ describe("picking a video", () => {
     vi.mocked(captureFrames).mockResolvedValueOnce(frames);
     render();
     await pickFiles([clip]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     // A tray frame OTHER than frame 0, so the sheet's face and the tray's
     // opening offer can never be the same URL by coincidence (item 106).
     fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    fireEvent.click(await screen.findByTestId("wizard-describe-counter"));
+    fireEvent.click(await screen.findByTestId(byNode("composeDetails.describeRow.describe")));
 
     const strip = await screen.findByTestId("wizard-describe-sheet-strip");
     const image = strip.querySelector("img");
@@ -475,11 +476,11 @@ describe("picking a video", () => {
   it("asks for one description of the video, and none of its cover", async () => {
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
-    const counter = await screen.findByTestId("wizard-describe-counter");
+    const counter = await screen.findByTestId(byNode("composeDetails.describeRow.describe"));
     expect(counter).toHaveTextContent("Describe the video");
     // One, not two: the cover is the video's face, never a second attachment.
     expect(counter.parentElement).toHaveTextContent("0 of 1 described");
@@ -493,9 +494,9 @@ describe("picking a video", () => {
     const clip = aVideo();
     render();
     await pickFiles([clip]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
     fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
-    fireEvent.click(screen.getByTestId("wizard-next"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     const thumb = await screen.findByTestId("wizard-picked-row-thumb-0-image");
     // The same clip, run through the same (now-idempotent) mock, resolves to
@@ -515,7 +516,7 @@ describe("picking a video", () => {
     vi.mocked(captureFrames).mockRejectedValueOnce(new Error("this browser couldn't read that video"));
     render();
     await pickFiles([aVideo()]);
-    fireEvent.click(await screen.findByTestId("wizard-next"));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
 
     // No offers to select from once the capture failed, and no stall either —
     // the escape hatch is what the screen falls back to.
@@ -534,7 +535,7 @@ describe("picking a video", () => {
     // longer a wall (jakob, 2026-09-10, "going without a cover is always
     // possible"), so a capture failure that leaves no offers still has to
     // let the author move on rather than trap them on this screen.
-    expect(screen.getByTestId("wizard-next")).not.toBeDisabled();
+    expect(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next"))).not.toBeDisabled();
   });
 
   // ONE TILE, NEVER TWO, AND NO MANAGER (jakob's ruling mirrored from
@@ -546,10 +547,10 @@ describe("picking a video", () => {
     async function reachDetailsWithCover() {
       render();
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
       fireEvent.click(await screen.findByTestId("wizard-cover-frame-0"));
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      await screen.findByTestId("wizard-title");
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      await screen.findByTestId(byNode("composeDetails.title.input"));
     }
 
     it("draws one tile, the cover riding it as the inset mark", async () => {
@@ -564,7 +565,7 @@ describe("picking a video", () => {
     it("opens no manager when the tile is clicked", async () => {
       await reachDetailsWithCover();
 
-      const row = screen.getByTestId("wizard-picked-row");
+      const row = screen.getByTestId(byNode("composeDetails.mediaRow"));
       expect(row.tagName).not.toBe("BUTTON");
       fireEvent.click(row);
 
@@ -601,13 +602,13 @@ describe("picking a video", () => {
       );
 
       fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
-      await screen.findByTestId("wizard-title");
+      await screen.findByTestId(byNode("composeDetails.title.input"));
 
       fireEvent.click(screen.getByLabelText("Remove this video"));
 
       expect(await screen.findByTestId("wizard-drop")).toBeInTheDocument();
       expect(screen.queryByTestId("wizard-picked-count")).toBeNull();
-      expect(screen.queryByTestId("wizard-title")).toBeNull();
+      expect(screen.queryByTestId(byNode("composeDetails.title.input"))).toBeNull();
     });
   });
 
@@ -636,10 +637,10 @@ describe("picking a video", () => {
         { store: signedInStore(), writeSigner: fakeWriteSigner() },
       );
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
       // Straight through the cover screen — no tap on any offer.
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      await screen.findByTestId("wizard-title");
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      await screen.findByTestId(byNode("composeDetails.title.input"));
       await settle();
 
       const saved = await drafts.load();
@@ -666,9 +667,9 @@ describe("picking a video", () => {
         { store: signedInStore(), writeSigner: fakeWriteSigner() },
       );
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      await screen.findByTestId("wizard-title");
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      await screen.findByTestId(byNode("composeDetails.title.input"));
       await settle();
 
       const saved = await drafts.load();
@@ -685,10 +686,10 @@ describe("picking a video", () => {
         { store: signedInStore(), writeSigner: fakeWriteSigner() },
       );
       await pickFiles([aVideo()]);
-      fireEvent.click(await screen.findByTestId("wizard-next"));
+      fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
       fireEvent.click(await screen.findByTestId("wizard-cover-frame-2"));
-      fireEvent.click(screen.getByTestId("wizard-next"));
-      await screen.findByTestId("wizard-title");
+      fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+      await screen.findByTestId(byNode("composeDetails.title.input"));
       await settle();
 
       const saved = await drafts.load();

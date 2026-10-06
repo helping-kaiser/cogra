@@ -21,6 +21,7 @@
 
 import type React from "react";
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { parseAspectRatio, tileRatio } from "@/lib/ui2/media/aspect";
 import { BodyVeil } from "@/lib/ui2/media/body-veil";
 import { MediaGallery, type GalleryItem, type PlayerSurface } from "@/lib/ui2/media/media-gallery";
@@ -168,8 +169,14 @@ export function PostMedia({
   preloadLead = false,
   surface = "full",
   onOpen,
+  dataNode,
 }: {
   node: Bearer;
+  /**
+   * The registered media node (`….media`): it names the wrapper instead of
+   * `testId`, and each picture is its `frame`, keyed by its position from 1.
+   */
+  dataNode?: DataNode;
   /** `reading` is the comment's form — one sound control, no transport bar. */
   surface?: PlayerSurface;
   testId?: string;
@@ -191,11 +198,12 @@ export function PostMedia({
   // caller asking "is there media here" would find nothing for exactly the
   // commonest case.
   return (
-    <div data-testid={testId} className={BLEED[bleed]}>
+    <div {...testAttributes(dataNode, testId)} className={BLEED[bleed]}>
       {galleryIsRedacted(node) ? (
         <RemovedPlaceholder reason={removalReason(node)} />
       ) : (
         <MediaGallery
+          node={dataNode}
           items={galleryItems(node)}
           radius={radius ?? "0px"}
           ratio={ratio}

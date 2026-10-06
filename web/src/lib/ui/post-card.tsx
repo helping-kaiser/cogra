@@ -48,6 +48,7 @@ import { RefsSheet } from "@/lib/ui2/refs-sheet";
 import { RemoveConfirm } from "@/lib/ui2/remove-confirm";
 import { ActorChip } from "./actor-chip";
 import { Card } from "./card";
+import { part, testAttributes, type DataNode } from "./data-node";
 import { Icon } from "./icons";
 import { useNarrowShare } from "./narrow-share";
 import { PendingMarker } from "./pending-marker";
@@ -111,30 +112,38 @@ function CommentCount({
   href,
   onOpen,
   testId,
+  node,
 }: {
   count: number;
   href?: string;
   onOpen?: () => void;
   testId: string;
+  /** The registered node (`….actionRow.comments`); the number is its `count`. */
+  node?: DataNode;
 }) {
   const label = count === 1 ? "1 comment" : `${count} comments`;
   const className =
     "cg-state cg-focus cg-hit flex flex-none items-center gap-1.5 rounded-full px-2 py-1.5 text-label-large text-on-surface-variant";
+  const ids = testAttributes(node, testId);
   const inside = (
     <>
       <Icon name="chat_bubble" size={18} />
-      {count > 0 && <span aria-hidden="true">{count}</span>}
+      {count > 0 && (
+        <span aria-hidden="true" {...testAttributes(part(node, "count"))}>
+          {count}
+        </span>
+      )}
     </>
   );
   if (href !== undefined) {
     return (
-      <Link href={href} aria-label={label} data-testid={testId} className={className}>
+      <Link href={href} aria-label={label} {...ids} className={className}>
         {inside}
       </Link>
     );
   }
   return (
-    <button type="button" aria-label={label} data-testid={testId} onClick={onOpen} className={className}>
+    <button type="button" aria-label={label} {...ids} onClick={onOpen} className={className}>
       {inside}
     </button>
   );
@@ -155,8 +164,17 @@ export function PostCard({
   onOpenCitedBy,
   mediaPinned = false,
   onOpenMedia,
+  node,
 }: {
   post: PostView;
+  /**
+   * The registered card node on a registered screen (`feed.card`,
+   * `postDetail.card`), keyed by the post's id. The card's drawn parts then
+   * carry the design's node ids (`data-node.ts`) instead of the ones derived
+   * from `testId`, `authorTestId` and `stanceTestId`; everything that is not
+   * a registered node — the sheets, the menu's rows, the veil — keeps those.
+   */
+  node?: DataNode;
   /** `detail` is the read surface: nothing clamps, and the title leads at `headline-small`. */
   variant?: "summary" | "detail";
   /** The post's own route — the summary card's link, and what share hands over. */
@@ -275,11 +293,14 @@ export function PostCard({
   // title never clamps and stands at `headline-small`.
   const heading =
     title === null ? null : detail ? (
-      <h1 className="text-headline-small" data-testid={`${testId}-title`}>
+      <h1 className="text-headline-small" {...testAttributes(part(node, "title"), `${testId}-title`)}>
         {title}
       </h1>
     ) : (
-      <h2 className="line-clamp-1 break-words text-title-medium" data-testid={`${testId}-title`}>
+      <h2
+        className="line-clamp-1 break-words text-title-medium"
+        {...testAttributes(part(node, "title"), `${testId}-title`)}
+      >
         {title}
       </h2>
     );
@@ -289,7 +310,7 @@ export function PostCard({
       {!media && heading}
       {words !== null && words !== "" && (
         <p
-          data-testid={`${testId}-body`}
+          {...testAttributes(part(node, "body"), `${testId}-body`)}
           className={
             detail
               ? "whitespace-pre-wrap text-body-large"
@@ -301,7 +322,7 @@ export function PostCard({
       )}
       {description !== null && description !== "" && (
         <p
-          data-testid={`${testId}-description`}
+          {...testAttributes(part(node, "description"), `${testId}-description`)}
           className={`text-body-medium text-on-surface-variant ${
             detail || open ? "" : "line-clamp-2"
           }`}
@@ -313,7 +334,7 @@ export function PostCard({
   );
 
   return (
-    <Card testId={testId}>
+    <Card testId={testId} node={node}>
       {/* AUTHOR, TIMESTAMP, AND THE ⋮ — the card's header line. ON A DETAIL
           SURFACE THE PAGE HEADER OWNS THE ONE OVERFLOW (`_shared.jsx:341-346`
           — the master hides the card's dot in `detail`): two dots would be two
@@ -326,13 +347,14 @@ export function PostCard({
             displayName={post.author.displayName.value}
             avatarUrl={post.author.avatar?.url}
             testId={authorTestId}
+            node={part(node, "authorChip")}
           />
         )}
         <div className="flex flex-none items-center gap-3">
           {stamp !== "" && (
             <time
               dateTime={post.createdAt}
-              data-testid={`${testId}-timestamp`}
+              {...testAttributes(part(node, "timestamp"), `${testId}-timestamp`)}
               className="flex-none text-body-small text-on-surface-variant"
             >
               {stamp}
@@ -350,6 +372,7 @@ export function PostCard({
               items={menuItems}
               ariaLabel="More on this post"
               testId={`${testId}-menu`}
+              node={part(node, "menu")}
               trailing={
                 <>
                   {licenseShown !== null && (
@@ -395,6 +418,7 @@ export function PostCard({
                 <PostMedia
                   node={post}
                   testId={`${testId}-media`}
+                  dataNode={part(node, "media")}
                   preloadLead
                   // THE POST'S TAP OPENS THE FRAME (`ViewerPicture.jsx:2-3`).
                   onOpen={onOpenMedia}
@@ -408,7 +432,9 @@ export function PostCard({
                same destination. Anything with its own meaning (the author chip,
                the affordance row, the opener) stands outside it. */
             <Link href={href} data-testid={`${testId}-link`} className="flex flex-col gap-2">
-              {drawsMedia && <PostMedia node={post} testId={`${testId}-media`} />}
+              {drawsMedia && (
+                <PostMedia node={post} testId={`${testId}-media`} dataNode={part(node, "media")} />
+              )}
               {bodyText}
             </Link>
           )}
@@ -420,7 +446,7 @@ export function PostCard({
         <button
           type="button"
           aria-expanded={open}
-          data-testid={`${testId}-opener`}
+          {...testAttributes(part(node, "opener"), `${testId}-opener`)}
           onClick={() => setOpen((shown) => !shown)}
           className="cg-state cg-focus self-start border-0 bg-transparent px-0 py-1 text-label-medium text-on-surface-variant"
         >
@@ -441,6 +467,7 @@ export function PostCard({
             }))}
             references={post.references.length}
             testIdPrefix={testId}
+            node={part(node, "tagsLine")}
             onOpen={detail ? () => setRefsOpen(true) : undefined}
             onOpenReferences={detail ? undefined : () => setRefsOpen(true)}
           />
@@ -473,7 +500,7 @@ export function PostCard({
         <button
           type="button"
           className="w-full text-left text-body-small text-on-surface-variant"
-          data-testid={`${testId}-cited-by`}
+          {...testAttributes(part(node, "citedBy"), `${testId}-cited-by`)}
           aria-label="Cited by"
           onClick={onOpenCitedBy}
         >
@@ -487,12 +514,13 @@ export function PostCard({
           on — then the Post Score, then comments, then share. ONE LINE, NEVER
           WRAPPING. */}
       <div
-        data-testid={`${testId}-affordances`}
+        {...testAttributes(part(node, "actionRow"), `${testId}-affordances`)}
         className="flex min-w-0 flex-nowrap items-center gap-2"
       >
         <StanceControl
           target={{ id: post.id, kind: "post", label: "this post" }}
           testIdPrefix={stanceTestId}
+          node={part(node, "actionRow.stance")}
         />
         <CommentCount
           count={comments}
@@ -505,12 +533,20 @@ export function PostCard({
           }
           onOpen={onOpenComments}
           testId={`${testId}-comments`}
+          node={part(node, "actionRow.comments")}
         />
         {/* SHARE LEAVES THE ROW STRICTLY BELOW 360px — the fold queue's first
             move (design/readme.md, jakob 2026-09-17, sharpened 2026-09-22 —
             PR #794). The reader's overflow menu holds it instead, leading
             the sheet. */}
-        {!narrow && <ShareButton href={href} onCopied={onLinkCopied} testId={`${testId}-share`} />}
+        {!narrow && (
+          <ShareButton
+            href={href}
+            onCopied={onLinkCopied}
+            testId={`${testId}-share`}
+            node={part(node, "actionRow.share")}
+          />
+        )}
       </div>
     </Card>
   );

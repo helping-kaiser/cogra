@@ -24,6 +24,8 @@ import Link from "next/link";
 
 import type { ReferenceTargetView } from "@/lib/references/draft";
 
+import { part, testAttributes, type DataNode } from "./data-node";
+
 export function ReferenceChip({
   target,
   pending = false,
@@ -33,7 +35,14 @@ export function ReferenceChip({
   selectLabel,
   expanded,
   testId,
+  node,
 }: {
+  /**
+   * The registered node the chip is (`composeDetails.references.stagedReference`):
+   * it then names the chip instead of `testId`, and the label and the remove
+   * control are its `name` and `remove` parts.
+   */
+  node?: DataNode;
   target: ReferenceTargetView;
   /** Some record in the bundle is still in flight (`ReferenceClaim.pending`). */
   pending?: boolean;
@@ -53,13 +62,13 @@ export function ReferenceChip({
   const navigable = onSelect === undefined && target.href !== null;
   return (
     <span
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       className="inline-flex max-w-full items-center gap-1 rounded-full bg-secondary-container px-3 py-1 text-label-medium text-on-secondary-container"
     >
       {navigable ? (
         <Link
           href={target.href as string}
-          data-testid={testId !== undefined ? `${testId}-link` : undefined}
+          {...testAttributes(part(node, "name"), testId !== undefined ? `${testId}-link` : undefined)}
           className="truncate"
         >
           {label}
@@ -69,14 +78,16 @@ export function ReferenceChip({
           type="button"
           aria-label={selectLabel ?? `Adjust the reference to ${label}`}
           aria-expanded={expanded}
-          data-testid={testId !== undefined ? `${testId}-select` : undefined}
+          {...testAttributes(part(node, "name"), testId !== undefined ? `${testId}-select` : undefined)}
           onClick={onSelect}
           className="truncate text-on-secondary-container"
         >
           {label}
         </button>
       ) : (
-        <span className="truncate">{label}</span>
+        <span className="truncate" {...testAttributes(part(node, "name"))}>
+          {label}
+        </span>
       )}
       {pending && (
         <span
@@ -91,7 +102,7 @@ export function ReferenceChip({
         <button
           type="button"
           aria-label={removeLabel ?? `Remove the reference to ${label}`}
-          data-testid={testId !== undefined ? `${testId}-remove` : undefined}
+          {...testAttributes(part(node, "remove"), testId !== undefined ? `${testId}-remove` : undefined)}
           onClick={onRemove}
           className="flex min-h-6 min-w-6 shrink-0 items-center justify-center rounded-full text-on-secondary-container"
         >

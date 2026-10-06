@@ -30,6 +30,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon, type GlyphName } from "@/lib/ui/icons";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 
@@ -82,11 +83,18 @@ export function BottomNav({
   active,
   signedIn,
   slots = SHIPPED_SLOTS,
+  node,
 }: {
   active: NavSlot | null;
   signedIn: boolean;
   /** Defaults to the shipped three; pass more as their surfaces land. */
   slots?: readonly NavSlot[];
+  /**
+   * The registered bar node of the screen it rides (`feed.bottomBar`); each
+   * slot is then its `<slot>Slot` part. A screen not registered yet passes
+   * none and the bar keeps its own ids.
+   */
+  node?: DataNode;
 }) {
   const [prompting, setPrompting] = useState(false);
   const tone = (selected: boolean) =>
@@ -94,7 +102,7 @@ export function BottomNav({
 
   return (
     <nav
-      data-testid="bottom-nav"
+      {...testAttributes(node, "bottom-nav")}
       aria-label="Main"
       className="z-10 flex min-h-[var(--bottom-bar-height)] flex-none border-t border-outline-variant bg-surface-container pb-[env(safe-area-inset-bottom)]"
     >
@@ -102,7 +110,7 @@ export function BottomNav({
         const href = DESTINATIONS[slot];
         if (href === undefined) return null;
         const selected = active === slot;
-        const testId = `nav-${slot}`;
+        const ids = testAttributes(part(node, `${slot}Slot`), `nav-${slot}`);
 
         const body =
           slot === "compose" ? (
@@ -134,7 +142,7 @@ export function BottomNav({
             <button
               key={slot}
               type="button"
-              data-testid={testId}
+              {...ids}
               aria-label={slot === "compose" ? LABELS.compose : undefined}
               onClick={() => setPrompting(true)}
               className={`${ITEM} ${slot === "compose" ? "" : tone(false)}`}
@@ -153,7 +161,7 @@ export function BottomNav({
             // element would land on top of the restore (Next `link.md`,
             // "scroll"). The tabs that remember nothing yet keep the default.
             scroll={slot === "feed" ? false : undefined}
-            data-testid={testId}
+            {...ids}
             aria-label={slot === "compose" ? LABELS.compose : undefined}
             aria-current={selected ? "page" : undefined}
             className={`${ITEM} ${slot === "compose" ? "" : tone(selected)}`}
