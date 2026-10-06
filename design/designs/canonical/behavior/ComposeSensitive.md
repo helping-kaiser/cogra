@@ -22,4 +22,6 @@ WHEN typing passes Why?'s 140 characters -> the count reads N over in the error 
 
 WHEN press Done -> the sheet closes AND the seal's Sensitive row reads the mark
 
-WHEN tap the scrim -> the sheet closes
+WHEN tap the scrim -> the sheet closes AND the mark and its reason are what they were before the sheet opened AND what was typed in Why? is dropped AND NEVER anything staged in the sheet applies
+
+WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND the mark and its reason are what they were before the sheet opened AND what was typed in Why? is dropped AND NEVER anything staged in the sheet applies
