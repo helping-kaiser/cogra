@@ -137,6 +137,11 @@ async fn confirm_password_reset_with_an_expired_token_is_reset_token_invalid(poo
 /// code the contract names for exactly this, rather than a generic
 /// refusal.
 ///
+/// Epochs advance only when something lands, so a second member lands a
+/// post per epoch. They close one at a time under a GC bound of one, so
+/// the pass that expires the write cannot also reap it — reaping waits a
+/// further bound.
+///
 /// A staged write collected before it was signed refuses its late signature as expired.
 /// ´claim:relay:a-collected-staged-write-refuses-as-expired´
 #[sqlx::test(migrations = "../../migrations")]
@@ -159,10 +164,6 @@ async fn a_staged_write_past_gc_is_staged_write_expired(pool: PgPool) {
     let write = &prepared["preparePost"]["writes"][0];
     let id = write["id"].as_str().expect("id");
 
-    // Epochs advance only when something lands, so a second member lands a
-    // post per epoch. They close one at a time under a GC bound of one, so
-    // the pass that expires the write cannot also reap it (reaping waits a
-    // further bound).
     let (_, walker_key) = rig.seed_member("walker", "walker@example.com").await;
     let walker = rig.log_in("walker@example.com").await;
     let mut state = Value::Null;
