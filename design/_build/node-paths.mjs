@@ -49,6 +49,7 @@ const STRIP = / data-node(?:-key)?="[^"]*"/g;
 // node whose segment has no rule here fails the build, so no key ships
 // without its rule written down.
 export const KEY_RULES = {
+  act: "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)",
   card: "the author's handle, without @ (PostCard)",
   commentCard: "the comment author's handle, without @ (CommentCard)",
   entry: "the saved thing's title, lowercased, each run of other characters one - (Saved)",

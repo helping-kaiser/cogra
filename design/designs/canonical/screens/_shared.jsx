@@ -199,9 +199,13 @@ const TOBIAS_COMMENT = "That stretch after the second bend is the reason I keep 
 
    THE HIDE ROW IS NOT HERE, and that is the difference between a card's menu
    and a menu board: hiding names the author, so it is spelled where the author
-   is known rather than handed to every card as one string. */
-const CITE_ROW = { label: "Cite in a new post", onSelect: () => {} };
-const SAVE_ROW = { label: "Save", onSelect: () => {} };
+   is known rather than handed to every card as one string.
+
+   A row's `node` is its data-node name (design ⇄ impl seam 059): a menu board
+   that registers hands it to the row's `SheetItem`, so a row keeps one name on
+   every menu it stands in, whatever its label reads in the state drawn. */
+const CITE_ROW = { label: "Cite in a new post", onSelect: () => {}, node: "cite" };
+const SAVE_ROW = { label: "Save", onSelect: () => {}, node: "save" };
 const CARD_MENU = [SAVE_ROW, CITE_ROW];
 
 /* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
@@ -508,7 +512,7 @@ function DetailHeader({ items, node }) {
    has it, post, comment and profile alike: the thumb learns one position, and
    the one menu that also holds Remove is the last place to move the rows
    around. The license closes this menu as it closes the others. */
-const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
+const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "license" };
 /* CITING RIDES THIS MENU TOO (backlog item 100, ruled the batch-rulings
    round). `CARD_MENU`'s own note says citing acts on the thing itself,
    whoever wrote it — the argument Save was already given — and self-citation
@@ -529,7 +533,7 @@ const OWN_POST_MENU = [
   REMOVE_ROW,
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} }, LICENSE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW];
 /* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
    both doors, and this is the comment's). A post's door is a count row on its
    detail surface; a comment has no detail surface of its own — it lives inside a
@@ -649,9 +653,9 @@ function LicenseSheet({ license, stacked = false }) {
    Hide sits last: it is the rarest row and the one that takes something away. */
 const PROFILE_MENU = [
   SAVE_ROW,
-  { label: "Mention in a new post", onSelect: () => {} },
-  { label: "Share this profile", onSelect: () => {} },
-  { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} },
+  { label: "Mention in a new post", onSelect: () => {}, node: "mention" },
+  { label: "Share this profile", onSelect: () => {}, node: "share" },
+  { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" },
 ];
 
 /* A DELETED ACCOUNT'S MENU (jakob 2026-09-12): the three rows that work on a
@@ -664,17 +668,17 @@ const PROFILE_MENU = [
    answers the same question. */
 const PROFILE_DELETED_MENU = [
   SAVE_ROW,
-  { label: "Share this profile", onSelect: () => {} },
-  { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {} },
+  { label: "Share this profile", onSelect: () => {}, node: "share" },
+  { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {}, node: "hide" },
 ];
 
 /* Your own profile's menu (the private-viewer-state round): the two private
    lists, then share. Saved and History are the only surfaces in the product
    nobody but the reader can see, and the band's ⋮ is where they hang. */
 const OWN_PROFILE_MENU = [
-  { label: "Saved", onSelect: () => {} },
-  { label: "History", onSelect: () => {} },
-  { label: "Share your profile", onSelect: () => {} },
+  { label: "Saved", onSelect: () => {}, node: "saved" },
+  { label: "History", onSelect: () => {}, node: "history" },
+  { label: "Share your profile", onSelect: () => {}, node: "share" },
 ];
 
 /* A device-local recent query — a quiet row, never a record (readme §13). */
@@ -787,9 +791,9 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
    What the dot holds did not change — Saved, History, Share your profile, the
    private state's one door (readme §13, the private-viewer-state round) — only
    where the reader reaches for it. */
-function ProfileBand({ unread = false, children }) {
+function ProfileBand({ unread = false, children, node }) {
   return (
-    <CograBand unread={unread} trailing={<BandIcon name="settings" label="Settings" />}>
+    <CograBand unread={unread} trailing={<BandIcon name="settings" label="Settings" node={node && "gear"} />} node={node}>
       {children}
     </CograBand>
   );
@@ -798,17 +802,17 @@ function ProfileBand({ unread = false, children }) {
 /* Your own profile's ⋮, in the one place it now stands: closing the actions
    row, after Edit profile and Invites. Written once, so the three boards that
    draw your own header cannot disagree about what the dot holds. */
-const ownProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More on your profile" items={OWN_PROFILE_MENU} />;
+const ownProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More on your profile" items={OWN_PROFILE_MENU} node="menu" />;
 
 /* Another person's ⋮, likewise: closing their actions row after Message. */
-const otherProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More about @ada" items={PROFILE_MENU} />;
+const otherProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More about @ada" items={PROFILE_MENU} node="menu" />;
 
 /* A deleted account's ⋮, closing a row that has no Message to stand after. Its
    name says `this account` for `StanceControl`'s reason on the same row: the
    handle went with the rest of the identity, and naming it back in the one
    string a screen reader reads aloud would undo the redaction. */
 const deletedProfileMenu = () => (
-  <OverflowMenu placement="row" ariaLabel="More about this account" items={PROFILE_DELETED_MENU} />
+  <OverflowMenu placement="row" ariaLabel="More about this account" items={PROFILE_DELETED_MENU} node="menu" />
 );
 
 /* The chronicle's tab row (profile round, 2026-09-01): the `TabBar` master
@@ -922,14 +926,21 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    what your own profile holds.
 
    `tail` is the chronicle's last slot: the row a page-failure puts where the
-   next page would have been. Given none, the list simply ends. */
+   next page would have been. Given none, the list simply ends.
+
+   The element names are the `profile` prefix's (design ⇄ impl seam 059/061):
+   `Profile` and `ProfileOwnMenu` register them, and every other board this
+   page stands on renders them stripped. The chronicle's acts are keyed by their
+   position, newest first — two acts can read alike, and an act shows nothing
+   else that is its own. */
 function ProfileOwnBody({ tail = null }) {
   return (
     <>
-      <ProfileBand />
+      <ProfileBand node="band" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
+            node="identity"
             handle="sol"
             displayName="Sol Ferreira"
             bio="Field notes from the flats — salt, paper, and whatever the wind allows."
@@ -951,17 +962,17 @@ function ProfileOwnBody({ tail = null }) {
             menu={ownProfileMenu()}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        <ChronicleList node="chronicle">
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
           {tail}
         </ChronicleList>
       </div>
-      <BottomNav active="profile" slots={ALL_SLOTS} inline />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -976,14 +987,18 @@ function ProfileOwnBody({ tail = null }) {
 
    THE WAY BACK NAMES WHERE IT GOES — the profile's origin-noun table (readme
    §13, the navigation-and-sheets round). The board draws `Back to feed`, the
-   cold entry's label and the feed's alike. */
+   cold entry's label and the feed's alike.
+
+   Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
+   `ProfileOther` and `ProfileMenu` register it. */
 function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
+            node="identity"
             handle="ada"
             displayName="Ada Okonkwo"
             avatarSrc="comment-camera.jpg"
@@ -999,16 +1014,16 @@ function ProfileOtherBody({ bundle } = {}) {
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        <ChronicleList node="chronicle">
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} node="act" nodeKey="4" />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -1017,17 +1032,19 @@ function ProfileOtherBody({ bundle } = {}) {
    `ProfileOtherBody` is: its own ⋮ needs this page with a sheet over it, and a
    husk drawn twice would drift. The page's reasoning lives on `ProfileDeleted`;
    what matters here is that the sheet board gets the identical husk, so the two
-   boards differ by the sheet alone. */
+   boards differ by the sheet alone. Named as `ProfileOtherBody` names its
+   page; the mark in the bio's place is `removalMark`. */
 function ProfileDeletedBody() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to feed" />
+      <PageHeader backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
+            node="identity"
             handle="marlow"
             redacted
-            bio={<RedactedContent reason="account" when="3d" />}
+            bio={<RedactedContent reason="account" when="3d" node="removalMark" />}
             posts={7}
             stancesOn={22}
             stancesTaken={19}
@@ -1037,15 +1054,15 @@ function ProfileDeletedBody() {
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        <ChronicleList node="chronicle">
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} node="act" nodeKey="1" />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} node="act" nodeKey="2" />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert node="act" nodeKey="3" />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} node="act" nodeKey="4" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

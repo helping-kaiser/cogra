@@ -14,7 +14,7 @@ ALWAYS the wide anchor wears the muted no-opinion face GIVEN the reader holds no
 
 ALWAYS the header collapses on the way down and returns on the way up
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS profile.bottomBar rides with no slot lit
 
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 
@@ -50,9 +50,9 @@ WHEN tap the ⋮ in the actions row -> the profile's menu opens over the page
 
 WHEN tap the figures -> the opinions page opens on this profile
 
-WHEN tap the Posts tab -> the person's posts stand below the tab row as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab -> the person's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
-WHEN tap the Comments tab -> the person's comments stand below the tab row as comment cards AND the header above stays as it was
+WHEN tap profile.tabRow.commentsTab -> the person's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
 WHEN tap a chronicle card for a published post -> the post's detail opens AND its back arrow reads Back to the profile
 
@@ -60,7 +60,7 @@ WHEN the chronicle is scrolled toward its end GIVEN more acts exist -> the next 
 
 WHEN the next page does not arrive -> Couldn't load more with Retry stands where the next page would have AND NEVER the line takes the error colour
 
-WHEN tap the Profile slot -> the reader's own profile opens
+WHEN tap profile.bottomBar.profileSlot -> the reader's own profile opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 

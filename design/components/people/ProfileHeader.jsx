@@ -85,11 +85,21 @@ import { StanceControl } from "../stance/StanceControl.jsx";
 const UNDER = `{ .cg-profile-grid { grid-template-areas: "avatar name" "figures figures" !important } .cg-profile-name { align-self: center !important } .cg-profile-figures { margin-top: var(--space-3) !important } }`;
 const PROFILE_TOP_CSS = `@container cg-profile-other (width < calc(96px + 15.5rem)) ${UNDER} @container cg-profile-own (width < calc(96px + 14.5rem)) ${UNDER}`;
 
-function Figure({ value, label }) {
+function Figure({ value, label, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-      <span style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>{value}</span>
-      <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: 500, color: "var(--text-secondary)", whiteSpace: "nowrap" }}>{label}</span>
+    <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }} data-node={node}>
+      <span
+        style={{ fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}
+        data-node={node && "value"}
+      >
+        {value}
+      </span>
+      <span
+        style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: 500, color: "var(--text-secondary)", whiteSpace: "nowrap" }}
+        data-node={node && "label"}
+      >
+        {label}
+      </span>
     </div>
   );
 }
@@ -123,14 +133,17 @@ export function ProfileHeader({
   invitesOpacity,
   redacted = false,
   showHandle = true,
+  node,
 }) {
   const name = redacted ? REDACTED_ACTOR_NAME : displayName && displayName.trim() ? displayName : handle;
   const hasFigures = posts !== undefined || stancesOn !== undefined || stancesTaken !== undefined;
   const figures = (
     <>
-      {posts !== undefined && <Figure value={posts} label="Posts" />}
-      {stancesOn !== undefined && <Figure value={stancesOn} label={own ? "Opinions on you" : "Opinions on them"} />}
-      {stancesTaken !== undefined && <Figure value={stancesTaken} label={own ? "Opinions by you" : "Opinions by them"} />}
+      {posts !== undefined && <Figure value={posts} label="Posts" node={node && "posts"} />}
+      {stancesOn !== undefined && <Figure value={stancesOn} label={own ? "Opinions on you" : "Opinions on them"} node={node && "stancesOn"} />}
+      {stancesTaken !== undefined && (
+        <Figure value={stancesTaken} label={own ? "Opinions by you" : "Opinions by them"} node={node && "stancesTaken"} />
+      )}
     </>
   );
   /* THE FIGURES MOVE UNDER WHEN THEY DO NOT FIT (the K13 round; readme §4,
@@ -163,24 +176,30 @@ export function ProfileHeader({
           onClick={onCounts}
           className="cg-state cg-focus cg-hit cg-profile-figures"
           style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 6, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
+          data-node={node && "figures"}
         >
           {figures}
         </button>
       )
-      : <div className="cg-profile-figures" style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", marginTop: 6 }}>{figures}</div>
+      : (
+        <div className="cg-profile-figures" style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", marginTop: 6 }} data-node={node && "figures"}>
+          {figures}
+        </div>
+      )
     : null;
   return (
-    <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", padding: "var(--space-3) 0 var(--space-1)" }}>
+    <header style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", padding: "var(--space-3) 0 var(--space-1)" }} data-node={node}>
       <style dangerouslySetInnerHTML={{ __html: PROFILE_TOP_CSS }} />
       <div style={{ containerType: "inline-size", containerName: container }}>
       <div className="cg-profile-grid" style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", gridTemplateAreas: '"avatar name" "avatar figures"', columnGap: "var(--space-4)", alignItems: "center" }}>
         <div style={{ gridArea: "avatar", position: "relative", flex: "none" }}>
-          <MonogramAvatar name={name} size={80} src={avatarSrc} redacted={redacted} />
+          <MonogramAvatar name={name} size={80} src={avatarSrc} redacted={redacted} node={node && "avatar"} />
           {own && onAvatarChange && (
             <button
               type="button"
               aria-label="Change your picture"
               onClick={onAvatarChange}
+              data-node={node && "changeBadge"}
               className="cg-state cg-focus cg-hit"
               style={{
                 position: "absolute",
@@ -203,11 +222,20 @@ export function ProfileHeader({
           )}
         </div>
         <div className="cg-profile-name" style={{ gridArea: "name", alignSelf: "end", display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-          <h1 style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}>{name}</h1>
+          <h1
+            style={{ margin: 0, fontSize: "var(--text-title-large)", lineHeight: "var(--text-title-large--line-height)", fontWeight: "var(--text-title-large--font-weight)", overflowWrap: "anywhere", color: redacted ? "var(--text-secondary)" : undefined }}
+            data-node={node && "name"}
+          >
+            {name}
+          </h1>
           {/* The handle repeats only where the screen's top bar does not already
               carry it — a drill-in is titled @handle, so it passes showHandle
               false (jakob 2026-09-01). A redacted actor has none to repeat. */}
-          {showHandle && !redacted && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>@{handle}</span>}
+          {showHandle && !redacted && (
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "handle"}>
+              @{handle}
+            </span>
+          )}
         </div>
         {figuresCell}
       </div>
@@ -215,8 +243,19 @@ export function ProfileHeader({
       {/* The bio slot takes a node as readily as a string: where the words were
           removed, the redaction mark stands in their place rather than the slot
           collapsing — a space kept, not a space lost. */}
-      {bio && (typeof bio === "string" ? <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{bio}</p> : bio)}
-      {website && <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }}>{website}</span>}
+      {bio &&
+        (typeof bio === "string" ? (
+          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "bio"}>
+            {bio}
+          </p>
+        ) : (
+          bio
+        ))}
+      {website && (
+        <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--primary)", overflowWrap: "anywhere" }} data-node={node && "website"}>
+          {website}
+        </span>
+      )}
       {/* The actions row. On someone else's profile the opinion leads and
           Message stands beside it, the pair every social profile puts here
           (jakob 2026-09-01) — the opinion where Follow goes, the chat one tap
@@ -224,10 +263,14 @@ export function ProfileHeader({
           things you do to your own record. The page's ⋮ closes the row in
           either case. The widths: the opinion takes what is left, Message takes
           its word, and your own two buttons share what the dot leaves. */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }} data-node={node && "actionRow"}>
         {own ? (
           <>
-            {onEdit && <Button variant="outline" size="sm" onClick={onEdit} style={{ flex: 1 }}>Edit profile</Button>}
+            {onEdit && (
+              <Button variant="outline" size="sm" onClick={onEdit} style={{ flex: 1 }} node={node && "edit"}>
+                Edit profile
+              </Button>
+            )}
             {onInvites && (
               <Button
                 variant="outline"
@@ -235,6 +278,7 @@ export function ProfileHeader({
                 onClick={onInvites}
                 ariaLabel={invitesWaiting ? "Invites — someone is waiting" : undefined}
                 style={invitesOpacity !== undefined ? { flex: 1, opacity: invitesOpacity } : { flex: 1 }}
+                node={node && "invites"}
               >
                 Invites
                 {/* THE WAITING MARK IS THE BELL'S DOT (the invites round,
@@ -252,6 +296,7 @@ export function ProfileHeader({
                   <span
                     aria-hidden="true"
                     style={{ width: 8, height: 8, flex: "none", borderRadius: "var(--radius-full)", background: "var(--primary)" }}
+                    data-node={node && "dot"}
                   />
                 )}
               </Button>
@@ -264,10 +309,18 @@ export function ProfileHeader({
                   a redacted actor's handle went with the rest of its identity,
                   and naming it back here would undo the redaction in the one
                   string a screen reader reads aloud. */}
-              <StanceControl wide targetLabel={redacted ? "this account" : "@" + handle} bundle={bundle ?? undefined} signedIn={signedIn} taught={taught} onCommit={onCommit} />
+              <StanceControl
+                wide
+                targetLabel={redacted ? "this account" : "@" + handle}
+                bundle={bundle ?? undefined}
+                signedIn={signedIn}
+                taught={taught}
+                onCommit={onCommit}
+                node={node && "stance"}
+              />
             </div>
             {onMessage && (
-              <Button variant="outline" onClick={onMessage} style={{ flex: "none" }}>
+              <Button variant="outline" onClick={onMessage} style={{ flex: "none" }} node={node && "message"}>
                 Message
               </Button>
             )}
