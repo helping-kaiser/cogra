@@ -1640,6 +1640,7 @@
         "FeedBare",
         "FeedDeleting",
         "FeedFar",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
@@ -1650,7 +1651,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 18 boards → RefsSheet",
+        "start · «reference count» on 19 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
@@ -1666,6 +1667,7 @@
         "FeedBare",
         "FeedDeleting",
         "FeedFar",
+        "FeedKinds",
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
@@ -2453,6 +2455,7 @@
     },
     "FeedKinds": {
       "flows": [
+        "follow-a-citation",
         "open-a-posts-pictures",
         "publish-a-post",
         "publish-a-vertical-video",
