@@ -424,6 +424,139 @@
         "postDetail.header.back": [],
         "postDetail.header.menu": []
       }
+    },
+    "Saved": {
+      "prefix": "saved",
+      "keys": {
+        "saved.list.entry": "the saved thing's title, lowercased, each run of other characters one - (Saved)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.list": [],
+        "saved.list.entry": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.aside": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.disc": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.second": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.title": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.trailing": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.unsave": [
+          "the-long-way-home",
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ]
+      }
+    },
+    "SavedEmpty": {
+      "prefix": "saved",
+      "keys": {},
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.empty": [],
+        "saved.empty.title": [],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": []
+      }
+    },
+    "SavedUndo": {
+      "prefix": "saved",
+      "keys": {
+        "saved.list.entry": "the saved thing's title, lowercased, each run of other characters one - (Saved)"
+      },
+      "nodes": {
+        "saved.bottomBar": [],
+        "saved.bottomBar.composeSlot": [],
+        "saved.bottomBar.feedSlot": [],
+        "saved.bottomBar.profileSlot": [],
+        "saved.bottomBar.searchSlot": [],
+        "saved.bottomBar.walletSlot": [],
+        "saved.header": [],
+        "saved.header.back": [],
+        "saved.header.title": [],
+        "saved.list": [],
+        "saved.list.entry": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.aside": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.disc": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.second": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.title": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.trailing": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.list.entry.unsave": [
+          "the-third-headland-light-is-real",
+          "mira-voss",
+          "sunday-at-the-tide-market"
+        ],
+        "saved.snackbar": [],
+        "saved.snackbar.action": [],
+        "saved.snackbar.message": []
+      }
     }
   }
 }

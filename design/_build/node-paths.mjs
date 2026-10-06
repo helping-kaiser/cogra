@@ -51,6 +51,7 @@ const STRIP = / data-node(?:-key)?="[^"]*"/g;
 export const KEY_RULES = {
   card: "the author's handle, without @ (PostCard)",
   commentCard: "the comment author's handle, without @ (CommentCard)",
+  entry: "the saved thing's title, lowercased, each run of other characters one - (Saved)",
   frame: "the picture's position in the post's media, counted from 1 (MediaGallery)",
   tag: "the tag's name, without # (TopicsLine, TopicRemovable)",
   thumb: "the picture's position in the draft's media, counted from 1 (PickedRow)",

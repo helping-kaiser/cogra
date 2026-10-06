@@ -17,15 +17,22 @@
    NO ACTION BUTTON. `EmptyState` takes the one action that fills the list where
    there is one, and here that action is "save something", which cannot be done
    from this screen — it is done on a post, three surfaces away. A button that
-   only navigates somewhere vaguer than the sentence already does is chrome. */
+   only navigates somewhere vaguer than the sentence already does is chrome.
+
+   REGISTERED under the `saved` prefix, named as `Saved` names it (seam 059/061,
+   the Saved packet); the empty line is `empty`. */
+export const NODE = "saved";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" />
+      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
-        <EmptyState title="Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here." />
+        <EmptyState
+          title="Nothing saved yet. A post, a comment or a person can be saved from its own menu, and it waits here."
+          node="empty"
+        />
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

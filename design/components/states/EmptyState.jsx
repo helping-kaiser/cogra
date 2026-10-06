@@ -18,13 +18,15 @@ import { Button } from "../core/Button.jsx";
    content is the opposite of §9's honesty. Space for media is reserved by the
    media component when it arrives, which is a different job. */
 
-export function EmptyState({ title, action, actionLabel, onAction }) {
+export function EmptyState({ title, action, actionLabel, onAction, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)", padding: "var(--space-2) 0" }}>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }}>{title}</p>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "var(--space-3)", padding: "var(--space-2) 0" }} data-node={node}>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", color: "var(--text-secondary)" }} data-node={node && "title"}>
+        {title}
+      </p>
       {action ??
         (actionLabel && onAction ? (
-          <Button variant="outline" size="sm" selfStart onClick={onAction}>
+          <Button variant="outline" size="sm" selfStart onClick={onAction} node={node && "action"}>
             {actionLabel}
           </Button>
         ) : null)}

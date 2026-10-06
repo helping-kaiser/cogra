@@ -33,7 +33,7 @@ import React from "react";
    release, on a cold app open, a snackbar on the feed's arrival says a newer
    version is out, its action opening What's new (`FeedNewerVersion`). It
    confirms nothing; it is the one quiet message a release gets. */
-export function Snackbar({ message, action, onAction, onDismiss, durationMs = 4000, inline = false, offset = 80 }) {
+export function Snackbar({ message, action, onAction, onDismiss, durationMs = 4000, inline = false, offset = 80, node }) {
   React.useEffect(() => {
     if (message === null || message === undefined) return undefined;
     const timer = setTimeout(() => onDismiss && onDismiss(), durationMs);
@@ -75,8 +75,11 @@ export function Snackbar({ message, action, onAction, onDismiss, durationMs = 40
             alignItems: "center",
             gap: "var(--space-4)",
           }}
+          data-node={node}
         >
-          <span style={{ minWidth: 0 }}>{message}</span>
+          <span style={{ minWidth: 0 }} data-node={node && "message"}>
+            {message}
+          </span>
           {action && (
             <button
               type="button"
@@ -97,6 +100,7 @@ export function Snackbar({ message, action, onAction, onDismiss, durationMs = 40
                 whiteSpace: "nowrap",
                 borderRadius: "var(--radius-extra-small)",
               }}
+              data-node={node && "action"}
             >
               {action}
             </button>

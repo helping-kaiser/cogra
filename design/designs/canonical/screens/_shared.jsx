@@ -834,9 +834,9 @@ const CHRONICLE_TABS = [
 const CHRONICLE_TABS_LABEL = "What the chronicle shows";
 
 /* The chronicle column: cards on 8px of surface, the wallet history's seam. */
-function ChronicleList({ children }) {
+function ChronicleList({ children, node }) {
   return (
-    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }}>
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }} data-node={node}>
       {children}
     </div>
   );
@@ -866,10 +866,11 @@ function ChronicleList({ children }) {
    `Unsave Mira Voss` — the row's own title after the verb, the rule the tag
    chip's × and the skip link already keep. A list of identical `Unsave`s tells
    a listener the verb four times and the object never. */
-const Unsave = ({ name }) => (
+const Unsave = ({ name, node }) => (
   <button
     type="button"
     aria-label={`Unsave ${name}`}
+    data-node={node}
     className="cg-state cg-focus cg-hit"
     style={{
       display: "grid",
