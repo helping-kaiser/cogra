@@ -242,6 +242,8 @@ lives in [api-spec.md](../implementation/api-spec.md).
    confirmation link.
 2. **Confirmation.** The user confirms via the emailed link. The
    API records the confirmed request with a 7-day deadline.
+   Re-opening the link inside the grace changes no deadline, and
+   can still opt in to content-level redaction.
 3. **Grace period.** For 7 days, the request is reversible — the
    user can cancel from any logged-in session, restoring full
    account state. Nothing is redacted yet; the request is a
@@ -254,6 +256,17 @@ lives in [api-spec.md](../implementation/api-spec.md).
    hold expiry will eventually destroy it. There is **no restore
    path** post-execution — payload removal is one-way, and the
    platform commits to the redaction once executed.
+
+**An applicant's deletion is immediate.** An account that has not
+landed has nothing on L1 — nothing is on the graph to redact and
+no one's standing to protect — so the five steps do not apply:
+one in-app press deletes the account, credentials, application,
+staged acts and any key backup at once, with no mailed link and no
+grace period, and every session ends. The one exception is the
+landing window: an applicant whose application is approved and
+whose registration has not landed cannot delete, because approval
+has already funded the burn and staged the Registration. Once the
+account lands, the member path above applies.
 
 The grace period exists for the same reason GDPR confirmation
 patterns exist: account deletion is destructive, account-wide,

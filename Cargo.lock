@@ -740,6 +740,7 @@ name = "cogra-linter"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "async-graphql-parser",
  "cc",
  "clap",
  "petgraph",

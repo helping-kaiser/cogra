@@ -1516,6 +1516,7 @@ Every version was verified against the crate's own docs.rs page on 2026-08-25, n
 | tree-sitter-language | 0.1.7 | 2026-08-26 | docs.rs/tree-sitter-language | runtime | `LanguageFn`, which is what the vendored grammar's entry point becomes |
 | cc | 1.4.4 | 2026-08-26 | crates.io/crates/cc | build | compiles the vendored `parser.c` and `scanner.c` |
 | first-party Kotlin grammar | vendored in-repo | — | `vendor/tree-sitter-kotlin/` | runtime | the generated parser is committed; no grammar toolchain builds it |
+| async-graphql-parser | 7.2.1 | 2026-10-06 | docs.rs/async-graphql-parser | runtime | the exported schema's reader for the API contract judgment; the release whose `sdl()` writes the schema, already in the lockfile, no regex engine and no digest on its runtime edges |
 | cogra-interchange | when envelope validation opens | — | — | runtime | R19 of (`tab:lint:functional`); nothing reimplemented linter-side |
 | cargo-fuzz, libfuzzer-sys, arbitrary | audit phase | — | — | dev | the targets of (`preview:lint:fuzz-plan`), absent from the version-1 tree |
 

@@ -598,9 +598,24 @@ User-initiated deletion is governed by
 contribution:
 
 - The deletion confirmation email goes to the verified address on
-  file.
+  file. A second request supersedes the first: the earlier link
+  dies, and the new request carries its own content-sweep choice —
+  the mail screen's resend is exactly this re-call. At most one
+  request stands.
+- The link is the capability: opening it needs no session. An
+  unopened link expires 7 days after the request, in the same
+  family as the email-change window; an expired, superseded,
+  cancelled or spent link answers `DELETION_TOKEN_INVALID`. Once
+  opened, the same link keeps working through the grace — re-opening
+  it never moves the deadline, and can add the content sweep.
 - The user can cancel from any authenticated session during the
   7-day grace window.
+- An applicant's deletion is immediate and in-app — no mailed link,
+  no grace window — through its own verb, and every session is
+  revoked at once. An applicant whose application is approved and
+  whose registration has not landed cannot delete: the server
+  refuses `FORBIDDEN`, and once the account lands the member path
+  applies.
 - When deletion completes, all of the account's refresh tokens
   are revoked. Any outstanding access tokens age out within their
   normal TTL.
@@ -939,15 +954,18 @@ limits survive restarts and hold across instances.
   per IP and per invite link.
 - Password-reset requests — limited per IP and per account.
 - Verification-email resend — limited per account.
+- Account-deletion requests (`requestAccountDeletion`) — limited per
+  account. The caller is authenticated, so the budget answers
+  visibly.
 - Token confirmations (`verifyEmail`, `confirmPasswordReset`,
-  `confirmEmailChange`) — limited per IP. The tokens are
+  `confirmEmailChange`, `confirmAccountDeletion`) — limited per IP. The tokens are
   high-entropy; the budget bounds guessing anyway.
 
 A tripped limit is a transport-tier `RATE_LIMITED` fault
 (api-spec.md "Errors are tiered") — with one deliberate
-exception: **per-account budgets never answer visibly.** They
-are keyed by the submitted email whether or not an account
-exists, and on the silent verbs a tripped budget returns the
+exception: **the email-keyed per-account budgets never answer
+visibly.** They are keyed by the submitted email whether or not
+an account exists, and on the silent verbs a tripped budget returns the
 same `ok: true` and just stops sending — a visible refusal would
 reopen the enumeration channel those verbs exist to close. The
 login backoff refuses visibly, but arms identically for unknown
