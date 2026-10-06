@@ -8,7 +8,8 @@
 //! exports. What is reconciled, in both directions, is every field of the
 //! query root, every field of the mutation root, every value of the error
 //! enum, every union, and every member of a union both documents declare. A
-//! declaration one document carries and the other does not is a drift.
+//! declaration one document carries and the other does not is a drift, and
+//! every drift is a finding but the staged ones below.
 //!
 //! # Two readers, and why
 //!
@@ -45,13 +46,22 @@
 //! specification's own declaration of the type it belongs to, the schema's
 //! site following as a related location.
 //!
-//! # The known drifts
+//! # The staged names
 //!
-//! A drift `[api-contract] known_drift` names is reported all the same, as
-//! advisory, its message naming what removes it. A row whose drift no
-//! longer exists is itself a failing finding. Between the two the allowance
-//! can only shrink: a new drift fails, a closed one fails until its row is
-//! deleted, and the ones carried knowingly stay counted on every run.
+//! The specification is the target contract and runs ahead of what is
+//! built, so the rule is not equality. It is two rules. The schema's surface
+//! lies inside the specification's, without exception: a declaration only
+//! the schema carries is always a finding. And the specification's lead —
+//! what it declares that the schema does not — equals the
+//! `[api-contract] staged` list exactly: an unstaged lead is a finding, and
+//! so is a staged name the schema now declares or the specification no
+//! longer does. The list therefore burns down as the surface is built, and
+//! what is staged produces no finding at all, because it is no defect: it
+//! is the specification being ahead, said out loud in the adoption data.
+//!
+//! A place a fence refuses to read that `[api-contract] known_unreadable`
+//! lists is reported all the same, as advisory, its message naming what
+//! removes it; a row whose refusal is gone is a finding.
 //!
 //! # A departure from the ruled signature, named
 //!
@@ -61,7 +71,8 @@
 //! which no node of the graph carries, and reading them a second time would
 //! judge bytes the run did not lint. For that reason it is called beside
 //! [`super::judge_all`] rather than from it, and it sets each finding's
-//! enforcement itself, because an allowed drift is advisory wherever it sits.
+//! enforcement itself, because a known unreadable line is advisory wherever
+//! it sits.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
@@ -70,7 +81,7 @@ use async_graphql_parser::types::{TypeKind, TypeSystemDefinition};
 use pulldown_cmark::{CodeBlockKind, Event, Options, Parser, Tag, TagEnd};
 
 use crate::adopt::{
-    Adoption, ApiContract, ContractSurface, DriftSide, KnownDrift, KnownUnreadable, relative_str,
+    Adoption, ApiContract, ContractSurface, DriftSide, KnownUnreadable, relative_str,
 };
 use crate::diag::{ByteSpan, Diagnostic, Enforcement, Location, Related, RuleId, Severity};
 
@@ -80,8 +91,9 @@ pub const SPEC_ONLY: RuleId = RuleId::new("contract-spec-only");
 /// The exported schema declares what the specification does not.
 pub const SCHEMA_ONLY: RuleId = RuleId::new("contract-schema-only");
 
-/// A known drift row whose drift no longer exists.
-pub const STALE_ALLOWANCE: RuleId = RuleId::new("contract-allowance-stale");
+/// A staged name that is built or no longer specified, or a known
+/// unreadable line the specification no longer refuses at.
+pub const STALE_ENTRY: RuleId = RuleId::new("contract-stale-entry");
 
 /// A document of the contract that could not be read.
 pub const UNREADABLE: RuleId = RuleId::new("contract-unreadable");
@@ -90,13 +102,7 @@ pub const UNREADABLE: RuleId = RuleId::new("contract-unreadable");
 pub const SUPPRESSED: RuleId = RuleId::new("contract-suppressed");
 
 /// Every rule this module can report.
-pub const RULES: [RuleId; 5] = [
-    STALE_ALLOWANCE,
-    SCHEMA_ONLY,
-    SPEC_ONLY,
-    SUPPRESSED,
-    UNREADABLE,
-];
+pub const RULES: [RuleId; 5] = [SCHEMA_ONLY, SPEC_ONLY, STALE_ENTRY, SUPPRESSED, UNREADABLE];
 
 /// How deep a reader descends into nested values and list types before it
 /// refuses, so that no input can exhaust the stack.
@@ -200,38 +206,48 @@ pub fn reconcile(a: &Adoption, sources: &BTreeMap<PathBuf, Vec<u8>>) -> Vec<Diag
         spec: (&contract.spec, spec_text),
         schema: (&contract.schema, schema_text),
     };
-    let mut drift_allowed: BTreeSet<usize> = BTreeSet::new();
     for drift in compare(&spec_side, &schema_side) {
-        let allowance = contract.known_drift.iter().position(|row| {
-            row.surface == drift.surface && *row.name == *drift.name && row.side == drift.side
-        });
-        if let Some(index) = allowance {
-            drift_allowed.insert(index);
-        }
-        let row = allowance.and_then(|index| contract.known_drift.get(index));
-        found.push(drifted(
-            &drift,
-            &texts,
-            &spec_side,
-            &schema_side,
-            row,
-            enforcement,
-        ));
-    }
-    for (index, row) in contract.known_drift.iter().enumerate() {
-        if !drift_allowed.contains(&index) {
-            found.push(stale(
-                &row.at,
-                &format!("{} {} as {}", row.surface, row.name, row.side),
+        let staged = drift.side == DriftSide::SpecOnly
+            && contract
+                .staged
+                .iter()
+                .any(|one| one.surface == drift.surface && *one.name == *drift.name);
+        if !staged {
+            found.push(drifted(
+                &drift,
+                &texts,
+                &spec_side,
+                &schema_side,
                 enforcement,
             ));
         }
+    }
+    for one in &contract.staged {
+        let key = (one.surface, one.name.to_string());
+        let why = if schema_side.declared.contains_key(&key) {
+            "the exported schema declares it, so it is built"
+        } else if !spec_side.declared.contains_key(&key) {
+            "the specification does not declare it"
+        } else {
+            continue;
+        };
+        found.push(stale(
+            &one.at,
+            &format!(
+                "this row stages {} {}, and {why}; delete it from the staged list",
+                one.surface, one.name
+            ),
+            enforcement,
+        ));
     }
     for (index, row) in contract.known_unreadable.iter().enumerate() {
         if !unread_allowed.contains(&index) {
             found.push(stale(
                 &row.at,
-                &format!("the unreadable line {}", row.line),
+                &format!(
+                    "this row allows the unreadable line {}, and the specification no longer refuses there; delete the row",
+                    row.line
+                ),
                 enforcement,
             ));
         }
@@ -1175,7 +1191,6 @@ fn drifted(
     texts: &Texts<'_>,
     spec: &Surface,
     schema: &Surface,
-    row: Option<&KnownDrift>,
     enforcement: Enforcement,
 ) -> Diagnostic {
     let key = (drift.surface, drift.name.clone());
@@ -1196,7 +1211,7 @@ fn drifted(
                 primary,
                 related,
                 format!(
-                    "the specification declares {} {}, and the exported schema does not",
+                    "the specification declares {} {}, which the exported schema does not and the staged list does not name",
                     drift.surface, drift.name
                 ),
             )
@@ -1222,41 +1237,25 @@ fn drifted(
             )
         }
     };
-    let (enforcement, message) = match row {
-        Some(row) => (
-            Enforcement::Advisory,
-            format!("{message}; a known drift, allowed until {}", row.removed_by),
-        ),
-        None => (enforcement, message),
-    };
-    let mut related: Vec<Related> = related.into_iter().collect();
-    if let Some(row) = row {
-        related.push(Related {
-            at: row.at.clone(),
-            note: String::from("the allowance that carries it"),
-        });
-    }
     Diagnostic {
         rule,
         severity: Severity::Error,
         enforcement,
         primary: Location::in_source(spec_path.to_path_buf(), primary, spec_text),
-        related,
+        related: related.into_iter().collect(),
         message,
     }
 }
 
-/// An allowance whose defect is gone.
-fn stale(at: &Location, allows: &str, enforcement: Enforcement) -> Diagnostic {
+/// A list entry the contract no longer bears out.
+fn stale(at: &Location, message: &str, enforcement: Enforcement) -> Diagnostic {
     Diagnostic {
-        rule: STALE_ALLOWANCE,
+        rule: STALE_ENTRY,
         severity: Severity::Error,
         enforcement,
         primary: at.clone(),
         related: Vec::new(),
-        message: format!(
-            "this row allows {allows}, and the contract no longer carries it; delete the row"
-        ),
+        message: String::from(message),
     }
 }
 

@@ -2114,57 +2114,54 @@ error_enum = \"ErrorCode\"
     ))
 }
 
-/// An allowance is a debt with a creditor, so a known drift row naming
-/// nothing that removes it is refused at load, at its own row.
+/// A list entry is a debt with a creditor, so a staged row naming nothing
+/// that builds it is refused at load, at its own row.
 ///
-/// A contract allowance naming nothing that removes it is refused at its row.
-/// ´claim:adoption:an-unexplained-contract-allowance-is-refused´
+/// A staged row naming nothing that builds it is refused at its row.
+/// ´claim:adoption:an-unexplained-staged-row-is-refused´
 #[test]
-fn a_contract_allowance_naming_no_removal_is_refused() {
+fn a_staged_row_naming_no_build_is_refused() {
     let source = contract_with(
         "docs/spec.md",
         "
-[[api-contract.known_drift]]
+[[api-contract.staged]]
 surface = \"mutation\"
-side = \"spec-only\"
-removed_by = \"  \"
+built_by = \"  \"
 names = [\"logOut\"]
 ",
     );
-    let error = load(&source).expect_err("the allowance names no removal");
+    let error = load(&source).expect_err("the row names no build");
     assert!(
-        matches!(error, AdoptionError::ContractDriftUnexplained { .. }),
+        matches!(error, AdoptionError::ContractRowUnexplained { .. }),
         "{error:?}"
     );
     assert!(row(&source, &error).contains("surface"));
 }
 
-/// Each name is its own allowance, so one name allowed twice — in one row or
+/// Each name is its own entry, so one name staged twice — in one row or
 /// across two — is refused at the second.
 ///
-/// A contract drift allowed twice is refused at the second name.
-/// ´claim:adoption:a-repeated-contract-allowance-is-refused´
+/// A name staged twice is refused at the second.
+/// ´claim:adoption:a-name-staged-twice-is-refused´
 #[test]
-fn a_contract_drift_allowed_twice_is_refused() {
+fn a_name_staged_twice_is_refused() {
     let source = contract_with(
         "docs/spec.md",
         "
-[[api-contract.known_drift]]
+[[api-contract.staged]]
 surface = \"mutation\"
-side = \"spec-only\"
-removed_by = \"a packet\"
+built_by = \"a packet\"
 names = [\"logOut\"]
 
-[[api-contract.known_drift]]
+[[api-contract.staged]]
 surface = \"mutation\"
-side = \"spec-only\"
-removed_by = \"another packet\"
+built_by = \"another packet\"
 names = [\"logIn\", \"logOut\"]
 ",
     );
-    let error = load(&source).expect_err("logOut is allowed twice");
-    let AdoptionError::ContractDriftRepeated { ref name, .. } = error else {
-        panic!("expected ContractDriftRepeated, got {error:?}");
+    let error = load(&source).expect_err("logOut is staged twice");
+    let AdoptionError::ContractRowRepeated { ref name, .. } = error else {
+        panic!("expected ContractRowRepeated, got {error:?}");
     };
     assert_eq!(name, "logOut");
     assert!(row(&source, &error).contains("\"logIn\", \"logOut\""));
@@ -2185,11 +2182,11 @@ fn a_contract_path_naming_a_tree_is_refused() {
     assert_eq!(path, "docs/");
 }
 
-/// The corpus's own contract names its two documents, and every allowance
-/// it carries names what removes it.
+/// The corpus's own contract names its two documents, and every entry it
+/// lists names what builds or removes it.
 ///
-/// The ruled contract names its documents, and every allowance names its removal.
-/// ´claim:adoption:the-ruled-contract-names-its-removals´
+/// The ruled contract names its documents, and every entry names what closes it.
+/// ´claim:adoption:the-ruled-contract-names-what-closes-its-entries´
 #[test]
 fn the_ruled_contract_names_its_documents_and_removals() {
     let ruled = ruled();
@@ -2201,9 +2198,9 @@ fn the_ruled_contract_names_its_documents_and_removals() {
     assert_eq!(contract.schema, PathBuf::from("schema.graphql"));
     assert!(
         contract
-            .known_drift
+            .staged
             .iter()
-            .all(|row| !row.removed_by.trim().is_empty())
+            .all(|row| !row.built_by.trim().is_empty())
     );
     assert!(
         contract
@@ -2211,4 +2208,26 @@ fn the_ruled_contract_names_its_documents_and_removals() {
             .iter()
             .all(|row| !row.removed_by.trim().is_empty())
     );
+}
+
+/// Nothing is ever staged on the schema's side, and the section has no way
+/// to say otherwise: a staged row carrying a side is refused at load.
+///
+/// A staged row cannot name a side, so the schema's side can never be staged.
+/// ´claim:adoption:a-staged-row-has-no-side´
+#[test]
+fn a_staged_row_naming_a_side_is_refused() {
+    let source = contract_with(
+        "docs/spec.md",
+        "
+[[api-contract.staged]]
+surface = \"mutation\"
+side = \"schema-only\"
+built_by = \"a packet\"
+names = [\"logOut\"]
+",
+    );
+    let error = load(&source).expect_err("a staged row has no side");
+    assert!(matches!(error, AdoptionError::Syntax(_)), "{error:?}");
+    assert!(error.to_string().contains("side") || format!("{error:?}").contains("side"));
 }

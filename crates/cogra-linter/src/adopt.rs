@@ -1721,11 +1721,34 @@ pub struct ApiContract {
     pub fence: Box<str>,
     /// The enum whose values are the error vocabulary.
     pub error_enum: Box<str>,
-    /// The drifts the corpus carries knowingly, each with what removes it.
-    pub known_drift: Vec<KnownDrift>,
+    /// The declarations the specification makes ahead of the schema: the
+    /// surface it specifies and nothing has built yet.
+    pub staged: Vec<StagedName>,
     /// The places the specification's fences refuse to read that the corpus
     /// carries knowingly, each with what removes it.
     pub known_unreadable: Vec<KnownUnreadable>,
+}
+
+/// One declaration the specification makes ahead of the schema: one name of
+/// an `[[api-contract.staged]]` row, which groups the names one build ships.
+///
+/// The staged names are the specification's whole lead over the schema, and
+/// exactly that: a declaration only the specification carries is a finding
+/// unless it is staged, and a staged name the schema now declares — built —
+/// or the specification no longer declares is a finding too, so the list
+/// burns down as the surface is built and never outlives it. Nothing is ever
+/// staged on the schema's side: the exported schema declaring what the
+/// specification does not is a finding without exception.
+#[derive(Clone, Debug)]
+pub struct StagedName {
+    /// What kind of declaration it is.
+    pub surface: ContractSurface,
+    /// The declaration's name; `Union.Member` for a union member.
+    pub name: Box<str>,
+    /// What builds it: the packet, slice, or seam entry that ships it.
+    pub built_by: Box<str>,
+    /// The name's own place in its row.
+    pub at: Location,
 }
 
 /// One place a declaring fence of the specification refuses to read, which
@@ -1734,8 +1757,8 @@ pub struct ApiContract {
 /// The place is named by the text of the line the reading stopped on,
 /// trimmed, rather than by its number: a line number moves with every edit
 /// above it, and the text moves only when the defect itself is touched. The
-/// row behaves as a [`KnownDrift`] does — the refusal is reported as
-/// advisory, and a row whose refusal is gone is a finding.
+/// refusal is reported as advisory, and a row whose refusal is gone is a
+/// finding.
 #[derive(Clone, Debug)]
 pub struct KnownUnreadable {
     /// The trimmed text of the line the reading stopped on.
@@ -1783,8 +1806,7 @@ impl fmt::Display for ContractSurface {
 }
 
 /// Which document declares what the other does not.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Deserialize)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum DriftSide {
     /// The specification declares it and the schema does not.
     SpecOnly,
@@ -1793,7 +1815,7 @@ pub enum DriftSide {
 }
 
 impl DriftSide {
-    /// The token the adoption data spells it with.
+    /// The token a finding spells it with.
     #[must_use]
     pub const fn token(self) -> &'static str {
         match self {
@@ -1807,28 +1829,6 @@ impl fmt::Display for DriftSide {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.token())
     }
-}
-
-/// One drift the corpus carries knowingly: one name of a
-/// `[[api-contract.known_drift]]` row, which groups the names one removal
-/// closes.
-///
-/// Each name allows exactly one finding: the drift it names is reported as
-/// advisory rather than failing, and a name whose drift is gone is itself a
-/// finding, so the allowance shrinks as the drifts are closed and never
-/// silently outlives them.
-#[derive(Clone, Debug)]
-pub struct KnownDrift {
-    /// What kind of declaration drifted.
-    pub surface: ContractSurface,
-    /// The declaration's name; `Union.Member` for a union member.
-    pub name: Box<str>,
-    /// Which document carries it alone.
-    pub side: DriftSide,
-    /// The seam entry or packet that removes it.
-    pub removed_by: Box<str>,
-    /// The row it sits in.
-    pub at: Location,
 }
 
 impl Adoption {
@@ -1979,7 +1979,7 @@ struct RawApiContract {
     fence: Box<str>,
     error_enum: Box<str>,
     #[serde(default)]
-    known_drift: Vec<RawKnownDrift>,
+    staged: Vec<RawStaged>,
     #[serde(default)]
     known_unreadable: Vec<RawKnownUnreadable>,
 }
@@ -1992,20 +1992,20 @@ struct RawKnownUnreadable {
     removed_by: Box<str>,
 }
 
-/// One `[[api-contract.known_drift]]` row: the names one removal closes,
-/// sharing a surface and a side, each name spanned so that its own
-/// allowance can be located.
+/// One `[[api-contract.staged]]` row: the names one build ships, sharing a
+/// surface, each name spanned so that its own entry can be located. There is
+/// no side to write: only the specification is ever ahead.
 #[derive(serde::Deserialize)]
-struct RawKnownDrift {
+#[serde(deny_unknown_fields)]
+struct RawStaged {
     surface: Spanned<ContractSurface>,
-    side: DriftSide,
-    removed_by: Box<str>,
+    built_by: Box<str>,
     names: Vec<Spanned<Box<str>>>,
 }
 
 impl RawApiContract {
-    /// Both paths name one file, and every allowance names what removes it
-    /// and allows a drift no other row allows.
+    /// Both paths name one file, every row names what builds or removes
+    /// what it lists, and no name is listed twice.
     fn validate(
         self,
         source: &str,
@@ -2036,11 +2036,11 @@ impl RawApiContract {
             source,
             origin,
         );
-        let mut known_drift: Vec<KnownDrift> = Vec::with_capacity(self.known_drift.len());
-        for raw in self.known_drift {
+        let mut staged: Vec<StagedName> = Vec::with_capacity(self.staged.len());
+        for raw in self.staged {
             let surface = *raw.surface.as_ref();
-            if raw.removed_by.trim().is_empty() || raw.names.is_empty() {
-                return Err(AdoptionError::ContractDriftUnexplained {
+            if raw.built_by.trim().is_empty() || raw.names.is_empty() {
+                return Err(AdoptionError::ContractRowUnexplained {
                     at: row(&raw.surface, source, origin),
                     name: raw
                         .names
@@ -2051,19 +2051,19 @@ impl RawApiContract {
             for name in raw.names {
                 let at = row(&name, source, origin);
                 let name = name.into_inner();
-                if known_drift.iter().any(|kept| {
-                    kept.surface == surface && kept.name == name && kept.side == raw.side
-                }) {
-                    return Err(AdoptionError::ContractDriftRepeated {
+                if staged
+                    .iter()
+                    .any(|kept| kept.surface == surface && kept.name == name)
+                {
+                    return Err(AdoptionError::ContractRowRepeated {
                         at,
                         name: name.to_string(),
                     });
                 }
-                known_drift.push(KnownDrift {
+                staged.push(StagedName {
                     surface,
                     name,
-                    side: raw.side,
-                    removed_by: raw.removed_by.clone(),
+                    built_by: raw.built_by.clone(),
                     at,
                 });
             }
@@ -2074,13 +2074,13 @@ impl RawApiContract {
             let at = row(&raw.line, source, origin);
             let line = raw.line.into_inner();
             if raw.removed_by.trim().is_empty() {
-                return Err(AdoptionError::ContractDriftUnexplained {
+                return Err(AdoptionError::ContractRowUnexplained {
                     at,
                     name: line.to_string(),
                 });
             }
             if known_unreadable.iter().any(|kept| kept.line == line) {
-                return Err(AdoptionError::ContractDriftRepeated {
+                return Err(AdoptionError::ContractRowRepeated {
                     at,
                     name: line.to_string(),
                 });
@@ -2096,7 +2096,7 @@ impl RawApiContract {
             schema: PathBuf::from(self.schema.as_ref().as_str()),
             fence: self.fence,
             error_enum: self.error_enum,
-            known_drift,
+            staged,
             known_unreadable,
         })
     }

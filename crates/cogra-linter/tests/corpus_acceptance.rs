@@ -86,16 +86,17 @@ fn counted() -> BTreeMap<&'static str, usize> {
     by_rule
 }
 
-/// The API contract over the real tree reports exactly what
-/// `[api-contract]` allows: every finding advisory, one per allowance, none
-/// suppressed and none stale. An unallowed drift would be failing, a missing
-/// one would leave a stale allowance, and a renamed document would leave the
-/// reconciliation suppressed, so the three together pin the run to the list.
+/// The API contract over the real tree reports nothing but its known
+/// unreadable lines: no drift outside the staged list, no stale entry, no
+/// suppression, and one advisory refusal per known unreadable line. An
+/// unstaged drift would fail, a built staged name would leave a stale entry,
+/// and a renamed document would leave the reconciliation suppressed, so
+/// together these pin the run to the lists.
 ///
-/// The real contract reports exactly the drifts its allowance lists, each as advisory.
-/// ´claim:corpus:the-api-contract-reports-exactly-its-allowance´
+/// The real contract reports zero findings outside its staged and known-unreadable lists.
+/// ´claim:corpus:the-api-contract-reports-only-its-lists´
 #[test]
-fn the_api_contract_reports_exactly_its_allowance() {
+fn the_api_contract_reports_only_its_lists() {
     use cogra_linter::judge::contract;
 
     let declared = adoption()
@@ -116,15 +117,13 @@ fn the_api_contract_reports_exactly_its_allowance() {
         spelled.join("\n")
     );
     assert!(
-        found
-            .iter()
-            .all(|one| one.rule != contract::SUPPRESSED && one.rule != contract::STALE_ALLOWANCE),
+        found.iter().all(|one| one.rule == contract::UNREADABLE),
         "{}",
         spelled.join("\n")
     );
     assert_eq!(
         found.len(),
-        declared.known_drift.len() + declared.known_unreadable.len(),
+        declared.known_unreadable.len(),
         "{}",
         spelled.join("\n")
     );

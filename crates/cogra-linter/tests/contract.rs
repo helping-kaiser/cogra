@@ -12,11 +12,11 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use cogra_linter::judge::contract::{
-    self, SCHEMA_ONLY, SPEC_ONLY, STALE_ALLOWANCE, SUPPRESSED, UNREADABLE,
+    self, SCHEMA_ONLY, SPEC_ONLY, STALE_ENTRY, SUPPRESSED, UNREADABLE,
 };
 use cogra_linter::{
-    Adoption, ApiContract, ByteSpan, ContractSurface, Diagnostic, DriftSide, Enforcement,
-    KnownDrift, KnownUnreadable, Location,
+    Adoption, ApiContract, ByteSpan, ContractSurface, Diagnostic, Enforcement, KnownUnreadable,
+    Location, StagedName,
 };
 
 const SPEC_PATH: &str = "docs/spec.md";
@@ -69,7 +69,7 @@ union Target = Post | Comment
 ";
 
 /// The corpus's adoption with its contract pointed at the fixtures.
-fn adoption(known_drift: Vec<KnownDrift>, known_unreadable: Vec<KnownUnreadable>) -> Adoption {
+fn adoption(staged: Vec<StagedName>, known_unreadable: Vec<KnownUnreadable>) -> Adoption {
     let mut adoption = Adoption::load(Path::new(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../corpus-adoption.toml"
@@ -80,7 +80,7 @@ fn adoption(known_drift: Vec<KnownDrift>, known_unreadable: Vec<KnownUnreadable>
         schema: PathBuf::from(SCHEMA_PATH),
         fence: Box::from("graphql"),
         error_enum: Box::from("ErrorCode"),
-        known_drift,
+        staged,
         known_unreadable,
     });
     adoption
@@ -94,8 +94,7 @@ fn sources(spec: &str, schema: &str) -> BTreeMap<PathBuf, Vec<u8>> {
     ])
 }
 
-/// An allowance row's location, which no test reads for anything but
-/// identity.
+/// A list entry's location, which no test reads for anything but identity.
 fn somewhere() -> Location {
     Location::new(
         PathBuf::from("corpus-adoption.toml"),
@@ -105,12 +104,12 @@ fn somewhere() -> Location {
     )
 }
 
-fn allowance(surface: ContractSurface, name: &str, side: DriftSide) -> KnownDrift {
-    KnownDrift {
+/// One staged name.
+fn staged(surface: ContractSurface, name: &str) -> StagedName {
+    StagedName {
         surface,
         name: Box::from(name),
-        side,
-        removed_by: Box::from("the packet that fixes it"),
+        built_by: Box::from("the packet that builds it"),
         at: somewhere(),
     }
 }
@@ -173,11 +172,18 @@ fn an_error_code_only_the_schema_declares_fails() {
     assert_eq!(one.rule, SCHEMA_ONLY);
     assert_eq!(one.enforcement, Enforcement::Failing);
     assert_eq!(one.primary.path, PathBuf::from(SPEC_PATH));
-    assert!(line(SPEC, &one.primary).contains("enum ErrorCode"), "{one:#?}");
+    assert!(
+        line(SPEC, &one.primary).contains("enum ErrorCode"),
+        "{one:#?}"
+    );
     assert_eq!(one.related.len(), 1, "{one:#?}");
     assert_eq!(one.related[0].at.path, PathBuf::from(SCHEMA_PATH));
     assert!(line(&schema, &one.related[0].at).contains("RATE_LIMITED"));
-    assert!(one.message.contains("error-code RATE_LIMITED"), "{}", one.message);
+    assert!(
+        one.message.contains("error-code RATE_LIMITED"),
+        "{}",
+        one.message
+    );
 }
 
 /// A query works the same way as a mutation, from either side.
@@ -196,54 +202,68 @@ fn a_query_either_document_alone_declares_is_a_finding() {
     assert_eq!(only(&found).rule, SPEC_ONLY);
 }
 
-/// An allowed drift is still reported, as advisory, and an allowance whose
-/// drift does not exist is a failing finding of its own, so the list can
-/// only shrink.
+/// A staged name is the specification being ahead, and produces no finding;
+/// once the schema declares it, it is built and the entry fails until it is
+/// deleted, so the list burns down.
 ///
-/// An allowed drift stays visible as advisory, and an allowance with no drift fails.
-/// ´claim:contract:allowances-only-shrink´
+/// A staged name is silent while unbuilt and fails once the schema declares it.
+/// ´claim:contract:the-staged-list-burns-down´
 #[test]
-fn an_allowance_keeps_its_drift_visible_and_fails_once_the_drift_is_gone() {
+fn a_staged_name_is_silent_until_built_and_then_fails() {
     let spec = SPEC.replace("  INTERNAL\n", "  INTERNAL\n  ASK_LINK_UNUSABLE\n");
-    let allowed = allowance(
-        ContractSurface::ErrorCode,
-        "ASK_LINK_UNUSABLE",
-        DriftSide::SpecOnly,
-    );
+    let entry = staged(ContractSurface::ErrorCode, "ASK_LINK_UNUSABLE");
     let found = contract::reconcile(
-        &adoption(vec![allowed.clone()], Vec::new()),
+        &adoption(vec![entry.clone()], Vec::new()),
         &sources(&spec, SCHEMA),
     );
-    let one = only(&found);
-    assert_eq!(one.rule, SPEC_ONLY);
-    assert_eq!(one.enforcement, Enforcement::Advisory);
-    assert!(one.message.contains("the packet that fixes it"), "{}", one.message);
+    assert!(found.is_empty(), "{found:#?}");
 
-    let found = contract::reconcile(&adoption(vec![allowed], Vec::new()), &sources(SPEC, SCHEMA));
+    let built = SCHEMA.replace("\tINTERNAL\n", "\tINTERNAL\n\tASK_LINK_UNUSABLE\n");
+    let found = contract::reconcile(&adoption(vec![entry], Vec::new()), &sources(&spec, &built));
     let one = only(&found);
-    assert_eq!(one.rule, STALE_ALLOWANCE);
+    assert_eq!(one.rule, STALE_ENTRY);
     assert_eq!(one.enforcement, Enforcement::Failing);
+    assert!(one.message.contains("built"), "{}", one.message);
 }
 
-/// An allowance names its side: the same name drifting the other way is a
-/// different drift and is not allowed by it.
+/// The staged list is exactly the specification's lead, so a staged name
+/// the specification does not declare fails too.
 ///
-/// An allowance allows one side of one name and nothing else.
-/// ´claim:contract:an-allowance-names-its-side´
+/// A staged name the specification does not declare fails.
+/// ´claim:contract:a-staged-name-must-be-specified´
 #[test]
-fn an_allowance_for_one_side_does_not_allow_the_other() {
-    let schema = SCHEMA.replace("\tINTERNAL\n", "\tINTERNAL\n\tRATE_LIMITED\n");
-    let wrong_side = allowance(
-        ContractSurface::ErrorCode,
-        "RATE_LIMITED",
-        DriftSide::SpecOnly,
-    );
+fn a_staged_name_the_specification_does_not_declare_fails() {
     let found = contract::reconcile(
-        &adoption(vec![wrong_side], Vec::new()),
+        &adoption(vec![staged(ContractSurface::Query, "feed")], Vec::new()),
+        &sources(SPEC, SCHEMA),
+    );
+    let one = only(&found);
+    assert_eq!(one.rule, STALE_ENTRY);
+    assert!(
+        one.message
+            .contains("the specification does not declare it"),
+        "{}",
+        one.message
+    );
+}
+
+/// Staging never reaches the schema's side: a name only the schema
+/// declares fails even when the staged list names it.
+///
+/// A schema-only declaration fails whatever the staged list says.
+/// ´claim:contract:nothing-is-staged-on-the-schema-side´
+#[test]
+fn a_staged_name_never_excuses_a_schema_only_declaration() {
+    let schema = SCHEMA.replace("\tINTERNAL\n", "\tINTERNAL\n\tRATE_LIMITED\n");
+    let found = contract::reconcile(
+        &adoption(
+            vec![staged(ContractSurface::ErrorCode, "RATE_LIMITED")],
+            Vec::new(),
+        ),
         &sources(SPEC, &schema),
     );
     let rules: Vec<_> = found.iter().map(|one| one.rule).collect();
-    assert_eq!(rules, vec![SCHEMA_ONLY, STALE_ALLOWANCE], "{found:#?}");
+    assert_eq!(rules, vec![SCHEMA_ONLY, STALE_ENTRY], "{found:#?}");
     assert!(
         found
             .iter()
@@ -268,7 +288,11 @@ fn a_union_reconciles_as_a_whole_and_then_by_member() {
     let found = contract::reconcile(&adoption(Vec::new(), Vec::new()), &sources(&spec, SCHEMA));
     let one = only(&found);
     assert_eq!(one.rule, SPEC_ONLY);
-    assert!(one.message.contains("union-member Target.Chat"), "{}", one.message);
+    assert!(
+        one.message.contains("union-member Target.Chat"),
+        "{}",
+        one.message
+    );
 }
 
 /// A fence that opens like a definition and holds something else is a
@@ -296,10 +320,7 @@ fn an_unreadable_fence_fails_and_the_reading_resumes() {
         removed_by: Box::from("the packet that fixes it"),
         at: somewhere(),
     };
-    let found = contract::reconcile(
-        &adoption(Vec::new(), vec![known]),
-        &sources(&spec, SCHEMA),
-    );
+    let found = contract::reconcile(&adoption(Vec::new(), vec![known]), &sources(&spec, SCHEMA));
     assert_eq!(found[0].rule, UNREADABLE);
     assert_eq!(found[0].enforcement, Enforcement::Advisory);
 }
@@ -311,7 +332,9 @@ fn an_unreadable_fence_fails_and_the_reading_resumes() {
 /// ´claim:contract:an-excerpt-declares-nothing´
 #[test]
 fn an_excerpt_fence_declares_nothing() {
-    let spec = format!("{SPEC}\nA gallery is a list:\n\n```graphql\nattachments: [MediaAttachment!]!\nsearch(query: String!): [Node!]!\n```\n");
+    let spec = format!(
+        "{SPEC}\nA gallery is a list:\n\n```graphql\nattachments: [MediaAttachment!]!\nsearch(query: String!): [Node!]!\n```\n"
+    );
     let found = contract::reconcile(&adoption(Vec::new(), Vec::new()), &sources(&spec, SCHEMA));
     assert!(found.is_empty(), "{found:#?}");
 }

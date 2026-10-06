@@ -369,25 +369,25 @@ pub enum AdoptionError {
         /// The path as written.
         path: String,
     },
-    /// An `[api-contract]` allowance row says nothing about what removes it,
-    /// or allows no name at all.
+    /// An `[api-contract]` staged or known-unreadable row says nothing about
+    /// what builds or removes what it lists, or lists no name at all.
     ///
-    /// An allowance is a debt with a creditor: a row naming no seam or
-    /// packet is a defect nobody has undertaken to close, which is the
-    /// silent kind the allowance exists to keep out.
-    #[error("api-contract allowance {name} names nothing that removes it")]
-    ContractDriftUnexplained {
+    /// A list entry is a debt with a creditor: a row naming no packet,
+    /// slice, or seam entry is a gap nobody has undertaken to close, which
+    /// is the silent kind the lists exist to keep out.
+    #[error("api-contract row {name} names nothing that builds or removes it")]
+    ContractRowUnexplained {
         /// The row.
         at: Location,
-        /// The drifted name, or the unreadable line.
+        /// The staged name, or the unreadable line.
         name: String,
     },
-    /// Two `[api-contract]` allowance rows allow one defect.
-    #[error("api-contract allowance {name} is written by more than one row")]
-    ContractDriftRepeated {
-        /// The row of the second one.
+    /// One `[api-contract]` entry is written twice.
+    #[error("api-contract entry {name} is written more than once")]
+    ContractRowRepeated {
+        /// The second one.
         at: Location,
-        /// The drifted name, or the unreadable line.
+        /// The staged name, or the unreadable line.
         name: String,
     },
     /// The file's schema major version is not the one this build reads.
@@ -441,8 +441,8 @@ impl AdoptionError {
             | AdoptionError::EffectiveCountMismatch { at, .. }
             | AdoptionError::UnregisteredPackage { at, .. }
             | AdoptionError::ContractPathNotAFile { at, .. }
-            | AdoptionError::ContractDriftUnexplained { at, .. }
-            | AdoptionError::ContractDriftRepeated { at, .. }
+            | AdoptionError::ContractRowUnexplained { at, .. }
+            | AdoptionError::ContractRowRepeated { at, .. }
             | AdoptionError::UnsupportedSchemaVersion { at, .. } => Some(at),
         }
     }

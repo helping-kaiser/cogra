@@ -68,10 +68,10 @@ pub use adopt::{
     Census, CitationIndexes, Claims, Classification, Collision, ConfiguredPath, ContractSurface,
     DriftSide, EnforcementPartition, HeadForm, HeadMatching, HeadRecognition, HeadlessLanguages,
     IgnoreRow, Kind, KindEvidence, KindExtensions, KindGenerator, KindRegister, KindStatuses,
-    KindsAdoption, KnownDrift, KnownUnreadable, Language, Matrix, Meta, NameTransformation,
-    OwnerId, Partition, PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId,
-    ProfileStatus, Profiles, Reach, ReachRow, ReservedKinds, ScannedLanguage, ScannedRegions,
-    Signature, Statement, TypedData, Universe, UnscannedLanguages,
+    KindsAdoption, KnownUnreadable, Language, Matrix, Meta, NameTransformation, OwnerId, Partition,
+    PartitionRule, PathPrefix, Place, PrefixFamily, Profile, ProfileId, ProfileStatus, Profiles,
+    Reach, ReachRow, ReservedKinds, ScannedLanguage, ScannedRegions, Signature, StagedName,
+    Statement, TypedData, Universe, UnscannedLanguages,
 };
 pub use bans::BanRule;
 pub use carrier::{SourceFile, Walk, WalkOutcome};
