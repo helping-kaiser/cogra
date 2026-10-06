@@ -4537,7 +4537,7 @@ function KeptApprovalRow({ shown }) {
   );
 }
 
-function InvitesBody({ approving = false, kept = "none" }) {
+function InvitesBody({ approving = false, kept = "none", revoke }) {
   return (
     <>
       <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
@@ -4631,15 +4631,38 @@ function InvitesBody({ approving = false, kept = "none" }) {
 
         <SectionLabel>Live links</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
-          <PayoutAddress
-            label="Single use · not used yet"
-            address={SOL_INVITE_LINK}
-            onCopy={() => {}}
-            copyLabel="Copy the link"
-            onChange={() => {}}
-            changeLabel="Revoke"
-            caption="Expires in 7 days · 22.09.2026"
-          />
+          {/* REVOKE WAITS (the check round's Q10, jakob 2026-10-06): a revoke is
+              a consequential write, so the card holds while it is in flight and,
+              past 200ms, its word reads `Revoking…`, inert and never dimmed. The
+              `revoke` chip draws that moment on the first link; a failure
+              keeps the card with the standard failure answer. The two
+              readings are toggled by the board's chip values. */}
+          <div style={{ display: revoke ? revoke.rest : "block" }}>
+            <PayoutAddress
+              label="Single use · not used yet"
+              address={SOL_INVITE_LINK}
+              onCopy={() => {}}
+              copyLabel="Copy the link"
+              onChange={() => {}}
+              changeLabel="Revoke"
+              caption="Expires in 7 days · 22.09.2026"
+            />
+          </div>
+          {revoke && (
+            <div style={{ display: revoke.busy }}>
+              <PayoutAddress
+                label="Single use · not used yet"
+                address={SOL_INVITE_LINK}
+                onCopy={() => {}}
+                copyLabel="Copy the link"
+                onChange={() => {}}
+                changeLabel="Revoke"
+                changeBusy
+                changeBusyLabel="Revoking…"
+                caption="Expires in 7 days · 22.09.2026"
+              />
+            </div>
+          )}
           <PayoutAddress
             label="Many uses"
             address={SOL_INVITE_LINK_OPEN}

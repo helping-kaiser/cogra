@@ -2554,6 +2554,8 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Close @rafa&#x27;s application"', tag: "button" },
     { n: 6, find: 'aria-label="Copy the link"', tag: "button", all: true },
     { n: 7, find: ">Revoke</button>", tag: "button", all: true },
+    // The `revoke` chip's in-flight reading of the same control.
+    { n: 7, find: ">Revoking…</button>", tag: "button" },
     { n: 8, find: ">Close all</button>", tag: "button" },
     // The kept approval's row (the `kept` chip), head of Applications.
     { n: 9, find: ">@noor<", tag: "button" },

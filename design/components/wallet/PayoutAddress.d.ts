@@ -14,6 +14,9 @@ export interface PayoutAddressProps {
   /** Renders the Change affordance; the flow it opens is the address-change seal. */
   onChange?: () => void;
   changeLabel?: string;
+  /** The change word in flight past 200ms — it reads `changeBusyLabel` and goes inert, never dimmed (an invite's `Revoking…`). */
+  changeBusy?: boolean;
+  changeBusyLabel?: string;
   /** The quiet line under the address, e.g. "The address is public — and so is every change to it." */
   caption?: string;
   /** Drops the card fill and inset, keeping the whole anatomy — for a string
