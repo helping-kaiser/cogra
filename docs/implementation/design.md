@@ -19,17 +19,17 @@ stay below, under their own section number.
 | 1 | Direction | stays here ([§1](#1-direction)); tone also in [readme §3](../../design/readme.md#3-content-fundamentals) |
 | 2 | Colour | rows 2.1 to 2.5 |
 | 2.1 | The colour decision | [readme §4 Colour](../../design/readme.md#colour); the deviations' reasoning stays here ([§2.1](#21-the-decision)) |
-| 2.2 | Reproducing the palette | stays here ([§2.2](#22-reproducing-the-palette)) |
+| 2.2 | Reproducing the palette | the generator, `web/src/lib/ui/design-tokens.test.ts`, is the recipe; [readme §4 Colour](../../design/readme.md#colour) names it, `make tokens` regenerates the scheme |
 | 2.3 | Tokens | the values: [scheme.json](../../design/tokens/scheme.json), [colors.css](../../design/tokens/colors.css), [tokens.json](../../design/tokens.json); notes stay here ([§2.3](#23-tokens)) |
-| 2.4 | Applying the roles | [readme §4 Colour](../../design/readme.md#colour), [semantic.css](../../design/tokens/semantic.css); the `success` rule stays here ([§2.4](#24-applying-the-roles)) |
+| 2.4 | Applying the roles | [readme §4 Colour](../../design/readme.md#colour), [semantic.css](../../design/tokens/semantic.css) |
 | 2.5 | Dynamic colour | [readme §4 Colour](../../design/readme.md#colour) |
 | 3 | Type | [readme §4 Type](../../design/readme.md#type), [typography.css](../../design/tokens/typography.css), [fonts.css](../../design/tokens/fonts.css); platform notes stay here ([§3](#3-type)) |
 | 4 | Shape, spacing, motion | [readme §4](../../design/readme.md#4-visual-foundations): Spacing and layout, Corner radii and cards, Elevation, Motion; [shape.css](../../design/tokens/shape.css), [spacing.css](../../design/tokens/spacing.css), [motion.css](../../design/tokens/motion.css) |
 | 5 | Iconography | [readme §5](../../design/readme.md#5-iconography), [iconography.md](../../design/guidelines/iconography.md) |
-| 6 | Components | [readme §7](../../design/readme.md#7-components) and each component's `components/<family>/<Name>.prompt.md`; the bar and the collapsing top also [readme §4](../../design/readme.md#4-visual-foundations); the collapsing top's platform mechanics stay here ([§6](#6-components)) |
+| 6 | Components | [readme §7](../../design/readme.md#7-components) and each component's `components/<family>/<Name>.prompt.md`; the bar and the collapsing top also [readme §4](../../design/readme.md#4-visual-foundations) |
 | 7 | Copy | [readme §3](../../design/readme.md#3-content-fundamentals), [copy-voice.md](../../design/guidelines/copy-voice.md) |
 | 8 | The stance control | [readme §8](../../design/readme.md#8-the-stance-control), [stance-control.md](../../design/guidelines/stance-control.md), `components/stance/` |
-| 8.1 | What is being authored | [stance-control.md](../../design/guidelines/stance-control.md#what-is-being-authored); the family slot table stays here ([§8.1](#81-what-is-being-authored)) |
+| 8.1 | What is being authored | [stance-control.md](../../design/guidelines/stance-control.md#what-is-being-authored) |
 | 8.2 | What a pick lands you at | [stance-control.md](../../design/guidelines/stance-control.md#two-numbers-never-one) and [Severance](../../design/guidelines/stance-control.md#severance) |
 | 8.3 | The gesture | [stance-control.md](../../design/guidelines/stance-control.md#the-gesture) and [Confirmation](../../design/guidelines/stance-control.md#confirmation); the passages the web tests parse stay here ([§8.3](#83-the-gesture)) |
 | 8.4 | The emoji readout | [stance-control.md](../../design/guidelines/stance-control.md#the-emoji-readout), `components/stance/StanceReadout.jsx`; the table and the zero-bundle passage stay here ([§8.4](#84-the-emoji-readout)) |
@@ -110,33 +110,6 @@ Every `on`-colour pair in both themes is verified against WCAG
 AA (4.5:1) at generation time. A palette change that fails
 that check does not ship.
 
-### 2.2 Reproducing the palette
-
-Fifteen lines against `@material/material-color-utilities`:
-build `SchemeContent(Hct.fromInt(0xFFEF6C1A), isDark, 0.0)`,
-read every role off `MaterialDynamicColors`. For dark, pass
-the base scheme's accent palettes into a `DynamicScheme` with
-`neutralPalette`/`neutralVariantPalette` rebuilt via
-`TonalPalette.fromHueAndChroma(hue, 1.5)` and `(hue, 2.5)`,
-then override `primary` with `primaryPalette.tone(70)` and
-`onPrimary` with `tone(10)`.
-
-Contrast level is `0.0` throughout. Raising it is a real dial
-if the palette ever needs more separation, but it changes
-every token, so it is a decision, not a tweak.
-
-The generator lives in `web/src/lib/ui/design-tokens.test.ts` and
-writes **`design/tokens/scheme.json`**, the scheme
-`design/tokens/colors.css` transcribes into **`design/tokens.json`**
-— the token contract the clients pin their themes to, the same
-arrangement the client crypto has with `client-crypto-vectors.json`.
-`make tokens` regenerates the scheme; every other run asserts it is
-not stale, and the AA check of §2.1 runs there, so a palette that
-fails cannot be generated. `design/_build/export-tokens.mjs` fails
-when `colors.css` drifts from the scheme. Neither client transcribes
-a value: Android's `ColorSchemeTest` reads the contract and web's
-`palette.test.ts` reads the scheme.
-
 ### 2.3 Tokens
 
 The role values are in `design/tokens/scheme.json`.
@@ -170,7 +143,8 @@ Material has no success role, so this one is generated the way
 Material Theme Builder generates a custom colour: `Blend.harmonize`
 the design colour `#00897B` toward the seed, then read the resulting
 palette at Material's own error tones — light 40/100/90/10, dark
-80/20/30/90 — so success carries exactly the weight error does.
+80/20/30/90 — the weight Material gives an alarm. The error here sits
+at 35/65, so success is lighter than the error, not level with it.
 
 It is a teal rather than a true green for two reasons. Harmonizing a
 green into an orange-led palette lands it within 23° of `tertiary`,
@@ -191,15 +165,6 @@ and Robolectric tests do.
 carries both pairs, and the generator gives them the same values.
 `surfaceTint` follows `primary`, so dark tonal elevation cannot
 reintroduce the tone-80 orange §2.1 rejects.
-
-### 2.4 Applying the roles
-
-- `success` marks a completed action — a signed write landing, a
-  saved edit. Landing settles content the reader already sees; it
-  never announces an arrival (§9). It never carries the meaning
-  alone: the words say what happened and the colour agrees with
-  them (§10). It is not a stance colour either; a positive stance
-  is an opinion, not an outcome.
 
 ---
 
@@ -259,42 +224,7 @@ contract file the way the palette does.
 
 ---
 
-## 6. Components
-
-Android gates M3's
-`enterAlways` behind the accumulated-upward-scroll tally
-([CollapsingTop](../../design/components/navigation/CollapsingTop.prompt.md);
-`rememberCollapsingTop` in the design system), with the bar pinned to `surface` instead of
-M3's on-scroll container tint — the collapsing region reads as
-one plane with the key banner riding it. Reaching the top always
-reveals it regardless of the tally — Android reads the upward
-scroll the list could not consume at its boundary, the web the
-region's own slot returning to view. The web otherwise mirrors
-the motion with a sticky region that hides once half of its own
-flow slot has scrolled past (early enough to feel prompt, late
-enough that the exit motion covers the vacated slot).
-
----
-
 ## 8. The stance control
-
-### 8.1 What is being authored
-
-The census names the two slots per family:
-
-| Family | `p_d` slot | `p_i` slot |
-|---|---|---|
-| Opinion, Affinity | valence | connection |
-| Tag | relevance `r` | confidence `c` |
-| Reference | relevance (census **effort `f`**) | support (census **enthusiasm `e`**) |
-
-Relevance occupies `p_d` in both Tag and Reference, which is why
-the word carries across the two composer sections unchanged.
-Support is the axis that decides whether a mention vouches: a
-citation strictly positive on both axes resolves its fold cell to
-the cited person. These per-record parameters are authored with
-paired sliders (§8.6), not the pad — the pad writes a stance, and
-a citation is not one.
 
 ### 8.3 The gesture
 
