@@ -1797,7 +1797,11 @@ opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
 `Vouching opens the opinion control, set to a gentle default.`). The
 pad's title and its "?" read `Your vouch back`, and its first coaching
 line opens on the title: `Your vouch back. The pad is how you shape what
-reaches you — for or against, and how much.` The band's line keeps
+reaches you — for or against, and how much.` *Carried over — blessed by
+use (jakob 2026-10-06):* the card's title `@mira vouched you in`
+(`VouchBack`, `VouchBackPad`), and the pad's second coaching line, `Later,
+tap the small face under a post to open this — press and hold it instead
+and a gentle 🙂 *(+0.10 / +0.10)* is signed on the spot.` The band's line keeps
 *first opinion*: the borrowed view does end on the first opinion,
 whoever it's toward.
 
@@ -2015,6 +2019,59 @@ section · `Your feed is showing nothing — everything is switched off.`
 **Carried over unchanged, blessed (jakob 2026-10-06)** — drawn by the
 tag round: `Un-tag`, the edit body's `Withdrawn: #coastroad`, and the
 acts card's `Tags withdrawn` row label.
+
+**Carried over — blessed by use (jakob 2026-10-06).** The control's own
+words, drawn on every board that carries a face and recorded here so
+the registry is whole:
+
+- **The twenty faces' words** (`STANCE_ANCHORS`) — the anchor's word,
+  spoken with the pair and printed beside a readout's face: 🙂 `Nice` ·
+  😊 `Like this` · 😍 `Love this` · 👀 `Show me more` · 🤩 `Really into
+  this` · 🍿 `Tell me everything` · 🔥 `All in` · 😕 `Not for me` · 🙁
+  `Don't like this` · 😠 `Really against this` · 😤 `Against, but keep
+  me posted` · 🤬 `Against, and I want all of it` · 😶 `Fine, just not
+  for me` · 😌 `Good, but not in my world` · 🙈 `Rather not see this` ·
+  🤐 `Good, keep it away` · 😑 `Meh` · 😖 `Dislike, keep away` · 🚫
+  `Keep this away` · 💀 `Absolutely not`.
+- **At rest and at zero.** 🫥 `Your opinion` — the face's printed
+  word at rest where the control has room for one (`ProfileOther`,
+  `TagPage`; the spoken name stays the one below), and the seals' label
+  for the opinion row (`ComposeSeal` and its family). 🤷 `No opinion on
+  @rafa yet.` — a pad's current line with nothing signed toward its
+  target (`ApprovePad`, `VouchAskPad`, `VouchBackPad`); on a post it
+  reads `No opinion on this post yet.` (`PadKeyAbsent`).
+- **The face's names.** `Give your opinion on this post` at rest, then
+  `Your opinion on this post: Like this, +0.55 / +0.20. Press and hold to
+  add a positive one.` once one is given; a pick kept pending reads
+  `Your opinion on this post, waiting for your key: Nice, +0.10 /
+  +0.10.` (`PadPending`) and `…waiting for your review: …`
+  (`PadPendingReview`). The target is the card's: `this post`, `this
+  comment`, `this account`, `@ada`, `#saltmaps`.
+- **The non-drag door** — `Choose your opinion on this post`, the
+  hidden-until-focused control beside every face, its target the face's
+  own.
+- **The pad's name** — `Opinion pad for this post`; the targets read
+  `this comment`, `@mira`, `#saltmaps`, and on the seal-scale pads `your
+  own post` (`ComposePad`) and `what you answer` (`ReplyPad`).
+- **The pad's poles** — `Against` · `For` across, `Less` · `More` up;
+  the Affinity pad's `Dislike` · `Like` and `Far away` · `Close to me`
+  (*Topics*).
+- **The readouts, spoken.** `Current opinion: All in, For or against
+  +1.00, How much reaches you +1.00`, `Your pick: Dislike, keep away,
+  For or against −0.55, How much reaches you −0.15` and `Resulting
+  opinion: Tell me everything, For or against +0.45, How much reaches
+  you +0.85` (`PadStanding`, `PadFailed`, `PadWriteRule`); the Affinity
+  pad names its own axes, `Current opinion: Like this, How much you like
+  it +0.60, How close you want to be +0.35` (`TagPageHeldPad`). A list
+  row's readout is spoken as the word and the pair, `Like this, +0.55 /
+  +0.20` (`PostOpinions`, `ProfileStances`, `YourTopics`, the trace's
+  boards).
+- `Your own post always reaches you in full.` — the post's one-axis
+  pad, under its one track (`ComposePad`).
+- `Everything you've said about this post adds up to +1.00 / +1.00, and
+  that is what this walks back.` — the walk-back's total, the person
+  family's twin of the topic's (`SeveranceConfirm`), over `Your pick:` and
+  the readout.
 
 ## The pads and the edit's withdrawals
 
