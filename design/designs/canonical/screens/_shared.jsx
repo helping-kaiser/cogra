@@ -317,12 +317,17 @@ function FeedList({ children }) {
    divider construction, the one day divider the system draws: label-small,
    secondary, centred, no rule and no fill. It belongs to the list, never to
    a card — no card anatomy changes for it. Strings blessed (jakob 2026-10-05;
-   copy-voice, *Ages*). */
-function HistoryDayDivider({ children }) {
+   copy-voice, *Ages*).
+
+   Its placer names it (design ⇄ impl seam 062/063): `History` registers each
+   divider as `day`, keyed by its own words — two days never read alike. */
+function HistoryDayDivider({ children, node, nodeKey }) {
   return (
     <div
       role="heading"
       aria-level={2}
+      data-node={node}
+      data-node-key={node && nodeKey}
       style={{
         alignSelf: "center",
         padding: "4px 0",
@@ -681,11 +686,15 @@ const OWN_PROFILE_MENU = [
   { label: "Share your profile", onSelect: () => {}, node: "share" },
 ];
 
-/* A device-local recent query — a quiet row, never a record (readme §13). */
-function RecentRow({ text }) {
+/* A device-local recent query — a quiet row, never a record (readme §13).
+   Named by its placer (design ⇄ impl seam 062/063): `Explore` registers each
+   row as `recent`, keyed by its query's words, with its `glyph` and `query`. */
+function RecentRow({ text, node, nodeKey }) {
   return (
     <button
       type="button"
+      data-node={node}
+      data-node-key={node && nodeKey}
       className="cg-state cg-focus"
       style={{
         display: "flex",
@@ -702,10 +711,12 @@ function RecentRow({ text }) {
         textAlign: "left",
       }}
     >
-      <span style={{ display: "inline-flex", color: "var(--text-secondary)" }}>
+      <span style={{ display: "inline-flex", color: "var(--text-secondary)" }} data-node={node && "glyph"}>
         <Icon name="search" size={18} />
       </span>
-      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{text}</span>
+      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
+        {text}
+      </span>
     </button>
   );
 }
@@ -742,10 +753,11 @@ function SkyField({ height = 180 }) {
   );
 }
 
-/* The seam — where the ranked results end and the newest tail begins. */
-function Seam() {
+/* The seam — where the ranked results end and the newest tail begins. Named by
+   its placer (seam 062/063), with its words as `label`. */
+function Seam({ node }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
       <span
         style={{
@@ -755,6 +767,7 @@ function Seam() {
           fontWeight: "var(--text-label-small--font-weight)",
           color: "var(--text-secondary)",
         }}
+        data-node={node && "label"}
       >
         Beyond your reach — newest first
       </span>
@@ -764,12 +777,17 @@ function Seam() {
 }
 
 /* The searching view's trigger row: the master FilterTrigger (the FeedFilter
-   idiom — deviations only, "Everything" at rest) with the "?" on the far edge. */
+   idiom — deviations only, "Everything" at rest) with the "?" on the far edge.
+
+   The two controls are the `explore` prefix's `filterTrigger` and `help`
+   (design ⇄ impl seam 062/063) — the trigger named as the feed's and
+   History's is. The row holding them is never named; every board that does
+   not register renders the names stripped. */
 function SearchTriggerRow({ reading }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, padding: "0 16px 8px 16px" }}>
-      <FilterTrigger reading={reading} ariaLabel="What the search shows" />
-      <HelpDot />
+      <FilterTrigger reading={reading} ariaLabel="What the search shows" node="filterTrigger" />
+      <HelpDot node="help" />
     </div>
   );
 }
@@ -4012,8 +4030,15 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
    THE PROFILE AND THE TAG RIDE `PostCard`, as the post-MVP chat and message
    cards do: its header and ⋮, its row, and the card itself as the door. The
    comment keeps its own master, `CommentCard`, in its thread shape. */
-function FeedLeadName({ children }) {
-  return <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{children}</span>;
+function FeedLeadName({ children, node }) {
+  return (
+    <span
+      style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+      data-node={node}
+    >
+      {children}
+    </span>
+  );
 }
 const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
 const FEED_LEAD_TITLE = {
@@ -4160,26 +4185,44 @@ const FEED_BIO = {
    guest feed's rule, `Main`). No guest board draws one. */
 const FEED_DELETED_PROFILE_MENU = PROFILE_DELETED_MENU.filter((row) => row.label !== "Share this profile");
 
-function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false }) {
+/* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
+   `profileCard`, keyed by the person's handle, the card's own parts named as
+   `PostCard` names them and the lead's as `avatar`, `name`, `handle`, with the
+   bio as `bio`. */
+function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, node }) {
   const handle = redacted ? null : "@" + person.handle;
   return (
     <PostCard
       lead={
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", minWidth: 0 }}>
-          <MonogramAvatar name={person.displayName} src={src} size={56} redacted={redacted} />
+          <MonogramAvatar name={person.displayName} src={src} size={56} redacted={redacted} node={node && "avatar"} />
           <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
             {redacted ? (
-              <span style={{ ...FEED_LEAD_TITLE, color: "var(--text-secondary)" }}>{REDACTED_ACTOR_NAME}</span>
+              <span style={{ ...FEED_LEAD_TITLE, color: "var(--text-secondary)" }} data-node={node && "name"}>
+                {REDACTED_ACTOR_NAME}
+              </span>
             ) : (
               <>
-                <span style={FEED_LEAD_TITLE}>{person.displayName}</span>
-                <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+                <span style={FEED_LEAD_TITLE} data-node={node && "name"}>
+                  {person.displayName}
+                </span>
+                <span style={FEED_LEAD_SMALL} data-node={node && "handle"}>
+                  @{person.handle}
+                </span>
               </>
             )}
           </span>
         </span>
       }
-      main={bio && !redacted ? <p style={FEED_BIO}>{bio}</p> : undefined}
+      main={
+        bio && !redacted ? (
+          <p style={FEED_BIO} data-node={node && "bio"}>
+            {bio}
+          </p>
+        ) : undefined
+      }
+      node={node}
+      nodeKey={person.handle}
       targetLabel={handle ?? "this account"}
       bundle={bundle}
       score={score}
@@ -4245,31 +4288,48 @@ const SALTMAPS_TAGGED = [
   { kind: "comment", title: "Low tide is kinder to the rubbings than noon ever was.", by: ADA, age: "4d" },
 ];
 
-function TagFeedCard({ name, through, tagged, score, bundle }) {
+/* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
+   `tagCard`, keyed by the tag's name, the card's own parts named as `PostCard`
+   names them; the lead's are `mark`, `name` and the why-line `through`, the
+   glimpse is `glimpse` with its newest thing's `newest` and `by` (or the
+   empty tag's one line as `nothing`), and the kind's own act is `compose`. */
+function TagFeedCard({ name, through, tagged, score, bundle, node }) {
   const [newest, ...rest] = tagged;
   const glimpse = newest ? (
-    <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }} data-node={node && "glimpse"}>
       <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
         {tagged.map((thing) => (
           <NodeMark key={thing.title} kind={thing.kind} src={thing.cover} onCard />
         ))}
       </span>
       <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
-        <span style={FEED_LEAD_SMALL}>@{newest.by.handle}{rest.length > 0 && ` · and ${rest.length} more`}</span>
+        <span
+          style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+          data-node={node && "newest"}
+        >
+          {newest.title}
+        </span>
+        <span style={FEED_LEAD_SMALL} data-node={node && "by"}>
+          @{newest.by.handle}
+          {rest.length > 0 && ` · and ${rest.length} more`}
+        </span>
       </span>
     </span>
   ) : (
-    <span style={FEED_LEAD_SMALL}>{TAG_NOTHING_RECENT}</span>
+    <span style={FEED_LEAD_SMALL} data-node={node && "nothing"}>
+      {TAG_NOTHING_RECENT}
+    </span>
   );
   return (
     <PostCard
       lead={
         <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <NodeMark kind="topic" onCard />
+          <NodeMark kind="topic" onCard node={node && "mark"} />
           <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <FeedLeadName>{name}</FeedLeadName>
-            <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{reachesThrough(through)}</span>
+            <FeedLeadName node={node && "name"}>{name}</FeedLeadName>
+            <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "through"}>
+              {reachesThrough(through)}
+            </span>
           </span>
         </span>
       }
@@ -4280,8 +4340,10 @@ function TagFeedCard({ name, through, tagged, score, bundle }) {
       score={score}
       onOpenScore={() => {}}
       stanceAxes={AFFINITY_AXES}
-      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} />}
+      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} node={node && "compose"} />}
       onOpen={() => {}}
+      node={node}
+      nodeKey={name.replace(/^#/, "")}
     />
   );
 }
