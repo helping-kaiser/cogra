@@ -30,12 +30,15 @@ import { DIRECTED_LABEL, INTEREST_LABEL } from "@/lib/ui/stance-format";
 import { StanceSlider } from "@/lib/ui/stance-slider";
 import { TransportError } from "@/lib/ui/transport-error";
 
+/** Where an approval's stance sliders start: a mild positive vouch. */
+const APPROVAL_START = 0.1;
+
 function invitesMessage(code: ErrorCode): string {
   switch (code) {
     case "WRITE_RULE_FAILED":
       return "Your account can't fund this approval right now.";
     case "BAD_INPUT":
-      return "That didn't go through — the application or link may have expired or already been handled.";
+      return "That didn't go through — the link may have expired, or the application was already handled.";
     case "NOT_FOUND":
       return "That link is already gone.";
     default:
@@ -52,9 +55,9 @@ export function InvitesView() {
   const [links, setLinks] = useState<readonly InviteLinkView[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [singleUse, setSingleUse] = useState(false);
-  const [prefillPDirected, setPrefillPDirected] = useState(0.1);
-  const [prefillPInterest, setPrefillPInterest] = useState(0.1);
+  // Single-use is the server default too (api-spec CreateInviteLinkInput):
+  // multi-use is the inviter's explicit opening.
+  const [singleUse, setSingleUse] = useState(true);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [error, setError] = useState<ErrorCode | null>(null);
@@ -136,8 +139,6 @@ export function InvitesView() {
     const outcome = await guard.run(() =>
       createInviteLink(client, {
         expiresAt: new Date(Date.now() + LINK_LIFETIME_MS).toISOString(),
-        prefillPDirected,
-        prefillPInterest,
         singleUse,
       }),
     );
@@ -257,8 +258,8 @@ export function InvitesView() {
           <Card>
             <h2 className="text-title-medium">Invite someone you know</h2>
             <p className="text-body-medium text-on-surface-variant">
-              The stance values are a pre-filled suggestion — you commit them at approval, and
-              approving is your priced vouch.
+              The link carries no stance — you choose it when you approve, and approving is your
+              priced vouch.
             </p>
             <form onSubmit={onCreate} className="flex flex-col gap-3" noValidate>
               <label className="flex items-center gap-2 text-label-large">
@@ -271,18 +272,6 @@ export function InvitesView() {
                 />
                 Single-use
               </label>
-              <StanceSlider
-                label={DIRECTED_LABEL}
-                value={prefillPDirected}
-                onChange={setPrefillPDirected}
-                testId="invites_p_directed"
-              />
-              <StanceSlider
-                label={INTEREST_LABEL}
-                value={prefillPInterest}
-                onChange={setPrefillPInterest}
-                testId="invites_p_interest"
-              />
               <Button type="submit" testId="invites_create" size="sm" selfStart disabled={creating}>
                 Create link
               </Button>
@@ -362,8 +351,6 @@ function LinkCard({
         <ApplicationRow
           key={application.id}
           application={application}
-          prefillPDirected={link.prefillPDirected}
-          prefillPInterest={link.prefillPInterest}
           approvingId={approvingId}
           onApprove={onApprove}
         />
@@ -388,21 +375,17 @@ function applicantStatus(application: ApplicationView): string {
 
 function ApplicationRow({
   application,
-  prefillPDirected,
-  prefillPInterest,
   approvingId,
   onApprove,
 }: {
   application: ApplicationView;
-  prefillPDirected: number;
-  prefillPInterest: number;
   approvingId: string | null;
   onApprove: (applicationId: string, pDirected: number, pInterest: number) => void;
 }) {
-  // The link's prefill seeds the form; the commitment happens at
-  // approval (schema: ApplicationApprovalInput).
-  const [pDirected, setPDirected] = useState(prefillPDirected);
-  const [pInterest, setPInterest] = useState(prefillPInterest);
+  // The stance is chosen here and commits at approval (schema:
+  // ApplicationApprovalInput); the link carries none to seed it from.
+  const [pDirected, setPDirected] = useState(APPROVAL_START);
+  const [pInterest, setPInterest] = useState(APPROVAL_START);
 
   const approvable = application.emailVerified && application.keyAttached;
   return (

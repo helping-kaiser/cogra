@@ -67,18 +67,3 @@ export function firstRefusalMessage(errors: readonly UserError[], whenEmpty: str
   const first = errors[0];
   return first === undefined ? whenEmpty : writeRefusalMessage(first.code);
 }
-
-/**
- * The re-arm refusal copy (auth.md "Expiry"), shared by the Home re-arm
- * card and the /join re-arm panel.
- */
-export function rearmMessage(code: ErrorCode): string {
-  switch (code) {
-    case "INVITE_UNUSABLE":
-      return "This invite can't be used — it may have expired or been revoked.";
-    case "BAD_INPUT":
-      return "Your application is still live — it doesn't need a fresh invite.";
-    default:
-      return fallbackMessage(code);
-  }
-}

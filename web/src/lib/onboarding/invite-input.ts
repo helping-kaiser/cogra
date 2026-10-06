@@ -1,5 +1,5 @@
-// Invite input parsing, shared by the front door, the /join route, and
-// the re-arm card: a pasted /join/<id> URL and a bare id are both fine
+// Invite input parsing, shared by the front door and the /join route: a
+// pasted /join/<id> URL and a bare id are both fine
 // (auth.md "Link URLs" — the paste is the universal fallback). The last
 // UUID wins so a full URL's path id beats anything earlier in the text.
 

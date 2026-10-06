@@ -102,7 +102,7 @@ export function VerifyView() {
         <>
           <p role="alert" data-testid="verify_error" className="text-body-medium text-error">
             This verification link doesn&apos;t work. It may have been used already, expired, or the
-            application it belonged to ran out — unverified accounts last 24 hours. Enter your email
+            account it belonged to ran out — unverified accounts last seven days. Enter your email
             and we&apos;ll send a fresh link; if the account is gone, register again with your invite.
           </p>
           <form onSubmit={onResend} className="flex flex-col gap-3" noValidate>
