@@ -6,6 +6,6 @@ ALWAYS no result row stands GIVEN Comments alone is the search filter's kind and
 
 ALWAYS the other kinds' results stand with the line Found through people and tags — start with @handle or #tag. under them GIVEN Comments is on beside another kind and the query names no @handle or #tag
 
-ALWAYS the search filter trigger reads Comments GIVEN Comments alone is the search filter's kind
+ALWAYS explore.filterTrigger reads Comments GIVEN Comments alone is the search filter's kind
 
 WHEN the reader types a query scoped by @handle or #tag -> the comments it reaches replace the line

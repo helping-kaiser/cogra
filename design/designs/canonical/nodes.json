@@ -72,6 +72,203 @@
         "composeDetails.title.label": []
       }
     },
+    "Explore": {
+      "prefix": "explore",
+      "keys": {
+        "explore.recent": "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)"
+      },
+      "nodes": {
+        "explore.band": [],
+        "explore.band.bell": [],
+        "explore.band.chats": [],
+        "explore.band.mark": [],
+        "explore.band.wordmark": [],
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.recent": [
+          "sol-salt",
+          "saltmaps",
+          "coast-road"
+        ],
+        "explore.recent.glyph": [
+          "sol-salt",
+          "saltmaps",
+          "coast-road"
+        ],
+        "explore.recent.query": [
+          "sol-salt",
+          "saltmaps",
+          "coast-road"
+        ],
+        "explore.recentLabel": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": [],
+        "explore.skyCard": [],
+        "explore.skyCard.description": [],
+        "explore.skyCard.field": [],
+        "explore.skyCard.title": [],
+        "explore.topics": [],
+        "explore.topics.chevron": [],
+        "explore.topics.disc": [],
+        "explore.topics.second": [],
+        "explore.topics.title": []
+      }
+    },
+    "ExploreFilter": {
+      "prefix": "explore",
+      "keys": {
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+      },
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.filterSheet": [],
+        "explore.filterSheet.dragHandle": [],
+        "explore.filterSheet.foot": [],
+        "explore.filterSheet.foot.done": [],
+        "explore.filterSheet.foot.reset": [],
+        "explore.filterSheet.help": [],
+        "explore.filterSheet.kinds": [],
+        "explore.filterSheet.kinds.commentsChip": [],
+        "explore.filterSheet.kinds.hint": [],
+        "explore.filterSheet.kinds.label": [],
+        "explore.filterSheet.kinds.postsChip": [],
+        "explore.filterSheet.kinds.profilesChip": [],
+        "explore.filterSheet.kinds.topicsChip": [],
+        "explore.filterSheet.order": [],
+        "explore.filterSheet.order.hint": [],
+        "explore.filterSheet.order.label": [],
+        "explore.filterSheet.order.picker": [],
+        "explore.filterSheet.order.picker.newestOption": [],
+        "explore.filterSheet.order.picker.rankedOption": [],
+        "explore.filterSheet.order.seen": [],
+        "explore.filterSheet.order.seen.box": [],
+        "explore.filterSheet.order.seen.label": [],
+        "explore.filterSheet.title": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.result": [
+          "1",
+          "2"
+        ],
+        "explore.result.mark": [
+          "1",
+          "2"
+        ],
+        "explore.result.name": [
+          "1",
+          "2"
+        ],
+        "explore.result.rank": [
+          "1",
+          "2"
+        ],
+        "explore.result.sub": [
+          "2"
+        ],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
+    "ExploreNone": {
+      "prefix": "explore",
+      "keys": {},
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.empty": [],
+        "explore.empty.title": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
+    "ExploreSearch": {
+      "prefix": "explore",
+      "keys": {
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+      },
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.result": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "explore.result.mark": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "explore.result.name": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "explore.result.rank": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.sub": [
+          "2",
+          "3"
+        ],
+        "explore.result.value": [
+          "4"
+        ],
+        "explore.seam": [],
+        "explore.seam.label": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
+    "ExploreUnscoped": {
+      "prefix": "explore",
+      "keys": {},
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.empty": [],
+        "explore.empty.title": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
     "Feed": {
       "prefix": "feed",
       "keys": {
