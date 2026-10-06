@@ -1008,7 +1008,11 @@
     },
     "HistoryNone": {
       "prefix": "history",
-      "keys": {},
+      "keys": {
+        "history.empty": "the cause chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "history.filterTrigger": "the cause chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)",
+        "history.searchField": "the cause chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
       "nodes": {
         "history.bottomBar": [],
         "history.bottomBar.composeSlot": [],
@@ -1016,9 +1020,37 @@
         "history.bottomBar.profileSlot": [],
         "history.bottomBar.searchSlot": [],
         "history.bottomBar.walletSlot": [],
+        "history.empty": [
+          "search",
+          "kinds"
+        ],
+        "history.empty.action": [
+          "search",
+          "kinds"
+        ],
+        "history.empty.title": [
+          "search",
+          "kinds"
+        ],
+        "history.filterTrigger": [
+          "search",
+          "kinds"
+        ],
         "history.header": [],
         "history.header.back": [],
-        "history.header.title": []
+        "history.header.title": [],
+        "history.searchField": [
+          "search",
+          "kinds"
+        ],
+        "history.searchField.glyph": [
+          "search",
+          "kinds"
+        ],
+        "history.searchField.input": [
+          "search",
+          "kinds"
+        ]
       }
     },
     "PostDetail": {
