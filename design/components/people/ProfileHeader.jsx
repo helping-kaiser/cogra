@@ -144,12 +144,21 @@ export function ProfileHeader({
      header's own width — 96px of avatar and gap plus the labels' measured
      width in `rem`, so it moves with the reader's text size. */
   const container = own ? "cg-profile-own" : "cg-profile-other";
+  /* THE NAME CARRIES WHAT THE EYE READS (readme §10, K13.11): the figures'
+     visible words and numbers first, then the door's purpose — the filter
+     pill's reading-before-purpose order (`triggerName`). */
+  const figuresReading = [
+    posts !== undefined && `${posts} Posts`,
+    stancesOn !== undefined && `${stancesOn} ${own ? "Opinions on you" : "Opinions on them"}`,
+    stancesTaken !== undefined && `${stancesTaken} ${own ? "Opinions by you" : "Opinions by them"}`,
+  ].filter(Boolean).join(", ");
+  const figuresPurpose = own ? "your opinions, both directions" : redacted ? "opinions on and by this account" : "opinions on and by @" + handle;
   const figuresCell = hasFigures
     ? onCounts
       ? (
         <button
           type="button"
-          aria-label={own ? "Your opinions, both directions" : redacted ? "Opinions on and by this account" : "Opinions on and by @" + handle}
+          aria-label={`${figuresReading}, ${figuresPurpose}`}
           onClick={onCounts}
           className="cg-state cg-focus cg-hit cg-profile-figures"
           style={{ gridArea: "figures", alignSelf: "start", display: "flex", gap: "var(--space-5)", border: 0, background: "none", padding: 0, marginTop: 6, cursor: "pointer", fontFamily: "var(--font-sans)", color: "var(--on-surface)", textAlign: "left", width: "fit-content", maxWidth: "100%", borderRadius: "var(--radius-small)" }}
