@@ -395,13 +395,19 @@
       },
       "nodes": {
         "feed.commentCard": [
-          "tobias"
+          "tobias",
+          "sol"
         ],
         "feed.commentCard.media": [
-          "tobias"
+          "tobias",
+          "sol"
         ],
         "feed.commentCard.media.frame": [
-          "tobias/1"
+          "tobias/1",
+          "sol/1"
+        ],
+        "feed.commentCard.media.frame.playDisc": [
+          "sol/1"
         ],
         "feed.commentCard.media.frame.soundDisc": [
           "tobias/1"

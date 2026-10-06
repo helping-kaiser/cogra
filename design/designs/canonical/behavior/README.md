@@ -149,7 +149,7 @@ outcome := [NEVER] <observable> [WITHIN <duration | motion token>]
 Three lines, from the two sidecars:
 
 ```
-WHEN scroll settles at the feed's hard top GIVEN a qualifying clip exists -> the stage re-elects to the first qualifying clip in feed order
+WHEN scroll settles at the feed's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in feed order
 WHEN scroll settles anywhere below the hard top GIVEN the incumbent still qualifies -> NEVER the stage re-elects upward
 ALWAYS the already-published marker never blocks composing or publishing
 ```
