@@ -2696,7 +2696,11 @@ it be, because the fact a reader needs before tapping is that the tap
 deletes nothing. An applicant's deletion is confirmed in the app and
 nothing is mailed, so their footnote stops at `Nothing is deleted here.
 The next screen says what goes and what stays.` (`Settings`' reader chip;
-**blessed**, jakob 2026-10-05).
+**blessed**, jakob 2026-10-05). An applicant whose application is
+approved but whose registration has not landed meets the row in the
+applicant locked look, and its tap answers `You can delete your account
+once you're in.`, `You can vouch once you're in.`'s construction (*new
+2026-10-06, blessed (jakob 2026-10-06)*).
 
 **The request screen says what goes before what stays, and says both.**
 Heading `Delete account`; then `This takes your name off CoGra. What you
