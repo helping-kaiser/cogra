@@ -64,15 +64,23 @@ WHEN a vouch on an ask link is kept for the key -> it stands on Invites as a kep
 
 WHEN the key comes back GIVEN a vouch on an ask link was kept for the key -> the kept approval waits on Invites AND it signs through the approval pad AND NEVER it joins the kept picks' review
 
-ALWAYS a kept approval stands as one row at the head of Applications, before every group, in the application row's anatomy GIVEN a vouch on an ask link was kept for the key
+WHEN a vouch on an ask link is kept because the asker is not fully registered yet -> it stands on Invites as a kept approval of its own AND NEVER anything is signed or spent AND NEVER it joins the kept picks
+
+ALWAYS a kept approval stands as one row at the head of Applications, before every group, in the application row's anatomy GIVEN a vouch on an ask link was kept for the key or for the asker's registration
 
 ALWAYS the kept approval's second line reads Waiting for your key GIVEN the key is elsewhere
 
 ALWAYS the kept approval's second line reads Ready for your approval GIVEN the key is back
 
+ALWAYS the kept approval's second line reads Not fully registered yet GIVEN the asker is not fully registered yet, and Ready for your approval once they are
+
 WHEN tap the kept approval's row GIVEN the key is elsewhere -> the key notice opens, as a kept pick's face does AND NEVER the approval pad opens
 
 WHEN tap the kept approval's row GIVEN the key is back -> the approval pad opens on that applicant
+
+WHEN tap the kept approval's row GIVEN it reads Not fully registered yet -> the snackbar reads @noor has to finish registering before you can approve AND NEVER the approval pad opens
+
+WHEN tap the kept approval's row GIVEN it reads Ready for your approval -> the approval pad opens on that applicant AND it signs only there
 
 WHEN tap the kept approval's close -> the dialog asking to close that application opens, the one every row's close raises
 
