@@ -437,7 +437,7 @@
       "steps": [
         "start · Profile · 7 «Invites» → Invites — links out, people waiting, or both",
         "Invites · 4 «an application ready for you» → ApprovePad — the pad blooms on them — approving is the vouch",
-        "end · ApprovePad · 4 «Set» → Invites — signed — the vouch lands, the row leaves the queue, and the approval notifies them"
+        "end · ApprovePad · 4 «Set» → Invites — signed — the vouch lands, the row leaves the queue, and the approval notifies them; the standard signed-opinion snackbar answers"
       ],
       "boards": [
         "Profile",
@@ -1276,13 +1276,11 @@
       "description": "Details written while the pictures are still climbing reach the gated seal; signing waits for them, then the post lands in its detail view, still settling.",
       "status": "resolved",
       "steps": [
-        "start · ComposeDetails · 10 «Next» → ComposeUploading — uploads still running — details keep writing (drawn on the media page)",
-        "ComposeUploading · 11 «Next» → ComposeSealUploading — uploads still running — the gated seal",
+        "start · ComposeDetails · 10 «Next» → ComposeSealUploading — uploads still running — the gated seal",
         "end · ComposeSealUploading · 7 «Sign and publish» → ComposeLanded — uploads land — signing proceeds to the detail view, still settling"
       ],
       "boards": [
         "ComposeDetails",
-        "ComposeUploading",
         "ComposeSealUploading",
         "ComposeLanded"
       ]
@@ -2196,8 +2194,7 @@
     },
     "ComposeUploading": {
       "flows": [
-        "describe-your-pictures",
-        "publish-while-the-uploads-run"
+        "describe-your-pictures"
       ],
       "endpoint": []
     },
