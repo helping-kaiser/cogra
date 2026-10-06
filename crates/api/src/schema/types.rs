@@ -1400,9 +1400,9 @@ pub struct InviteLinkCheck {
     pub expires_at: DateTime<Utc>,
 }
 
-/// An invite link: pure service-side staging UX. Nothing binds at issue —
-/// the stance values are pre-filled suggestions the inviter adjusts at
-/// approval, and the approval itself is the priced act.
+/// An invite link: pure service-side staging UX. Nothing binds at issue
+/// and the link carries no stance values — the inviter chooses them at
+/// approval, which is the priced act.
 pub struct InviteLink(pub store::InviteLink);
 
 #[Object]
@@ -1424,15 +1424,6 @@ impl InviteLink {
                     viewer_session: None,
                 })
             }))
-    }
-
-    /// A suggestion, never a commitment.
-    async fn prefill_p_directed(&self) -> Dimension {
-        Dimension(self.0.prefill_p_d)
-    }
-
-    async fn prefill_p_interest(&self) -> Dimension {
-        Dimension(self.0.prefill_p_i)
     }
 
     /// One applicant slot (single-use) or many applicants until expiry
@@ -1514,10 +1505,6 @@ impl Application {
 
     async fn created_at(&self) -> DateTime<Utc> {
         self.0.created_at
-    }
-
-    async fn expires_at(&self) -> DateTime<Utc> {
-        self.0.expires_at
     }
 }
 

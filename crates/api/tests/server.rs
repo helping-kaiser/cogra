@@ -221,18 +221,10 @@ async fn seed_link(
     )
     .await
     .expect("actor");
-    postgres_store::auth::create_invite_link(
-        pool,
-        uuid::Uuid::new_v4(),
-        inviter,
-        0.1,
-        0.1,
-        false,
-        expires_at,
-    )
-    .await
-    .expect("link")
-    .id
+    postgres_store::auth::create_invite_link(pool, uuid::Uuid::new_v4(), inviter, false, expires_at)
+        .await
+        .expect("link")
+        .id
 }
 
 /// A live link reads usable, named, and bounded; a revoked one still

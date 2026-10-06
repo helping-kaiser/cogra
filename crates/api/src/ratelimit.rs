@@ -188,7 +188,7 @@ pub struct RateLimitConfig {
     pub login_backoff_base_secs: f64,
     /// The backoff ceiling.
     pub login_backoff_cap_secs: f64,
-    /// Application submits (register, applyWithInvite) per IP.
+    /// Application submits (register) per IP.
     pub register_ip: Window,
     /// Application submits per invite link.
     pub register_link: Window,
