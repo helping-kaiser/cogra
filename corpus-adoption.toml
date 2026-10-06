@@ -2091,6 +2091,23 @@ surface    = "mutation"
 built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
 names      = ["rejectApplication", "rejectLinkApplications", "stageApplicant"]
 
+# The unbuilt applicant-deletion verb and the deletion-link error
+# code (packet contract-recon-deletion-spec, verdict SPEC-ONLY). The
+# oracle compares only the roots, unions and ErrorCode, so the
+# packet's types, enum and fields (AccountDeletion, Removal,
+# RemovalAgent, User.accountDeletion, Post.removal, Comment.removal,
+# AccountDeletionPayload.accountDeletion) ride the same build with
+# no row to hold them.
+[[api-contract.staged]]
+surface    = "error-code"
+built_by   = "packet contract-recon-deletion-spec, then the slice-8 erasure feature packet that builds it"
+names      = ["DELETION_TOKEN_INVALID"]
+
+[[api-contract.staged]]
+surface    = "mutation"
+built_by   = "packet contract-recon-deletion-spec, then the slice-8 erasure feature packet that builds it"
+names      = ["deleteApplicantAccount"]
+
 # UNTRIAGED: the rest of the unbuilt surface the spec already declares.
 # The oracle surfaced these on its first run; no packet names them yet.
 [[api-contract.staged]]
