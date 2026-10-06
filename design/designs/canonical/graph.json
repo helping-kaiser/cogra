@@ -1120,12 +1120,12 @@
     { "from": "ComposeTags", "via": 1, "kind": "advance", "label": "staged tag name", "to": [{ "board": "TagPadCompose", "case": "the tag's pair sheet (master on the compose page)" }] },
     { "from": "ComposeTags", "via": 2, "kind": "advance", "label": "tag chip ×", "to": [{ "terminal": "self", "case": "the tag leaves — the post stops being about it, and the row behind counts one fewer" }] },
     { "from": "ComposeTags", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the seal it opened from, post's or reply's" }] },
-    { "from": "ComposeTags", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "ComposeTags", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — every change already applied stands; swipe down, Back and Escape the same (the sheet law: an editing sheet applies live, so there is nothing staged to discard)" }] },
 
     { "from": "ComposeCitations", "via": 1, "kind": "advance", "label": "staged reference name", "to": [{ "board": "RefPair", "case": "the citation's pair sheet (master on the compose page)" }] },
     { "from": "ComposeCitations", "via": 2, "kind": "advance", "label": "reference remove ×", "to": [{ "terminal": "self", "case": "the citation leaves — the post stops being about it, and the row behind counts one fewer" }] },
     { "from": "ComposeCitations", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the seal it opened from, post's or reply's" }] },
-    { "from": "ComposeCitations", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "ComposeCitations", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — every change already applied stands; swipe down, Back and Escape the same (the sheet law: an editing sheet applies live, so there is nothing staged to discard)" }] },
 
     { "from": "ComposeLicense", "via": 1, "kind": "detour", "label": "? — License", "to": [{ "board": "HelpDialog", "case": "the License text" }] },
     { "from": "ComposeLicense", "via": 2, "kind": "advance", "label": "Credit options", "to": [{ "terminal": "self", "case": "one of three, staged until Done" }] },
@@ -1222,7 +1222,7 @@
     { "from": "EditPicked", "via": 2, "kind": "advance", "label": "Describe", "to": [{ "board": "ComposeDescribe", "case": "the describe sheet (master on the compose page)" }] },
     { "from": "EditPicked", "via": 3, "kind": "advance", "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the edit's batch" }, { "board": "EditWords", "case": "the last one leaves — the body becomes words, and the field arrives empty" }] },
     { "from": "EditPicked", "via": 4, "kind": "advance", "label": "Done", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
-    { "from": "EditPicked", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "EditCompose", "case": "the sheet closes" }] },
+    { "from": "EditPicked", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "board": "EditCompose", "case": "the sheet closes — every change already applied stands; swipe down, Back and Escape the same (the sheet law: an editing sheet applies live, so there is nothing staged to discard)" }] },
 
     { "from": "EditWords", "via": 1, "kind": "cancel", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — where the edit began" }] },
     { "from": "EditWords", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves — draft kept" }] },
@@ -1706,17 +1706,17 @@
     { "from": "ComposePicked", "via": 2, "kind": "advance", "label": "Describe", "to": [{ "board": "ComposeDescribe" }] },
     { "from": "ComposePicked", "via": 3, "kind": "advance", "label": "remove ×", "to": [{ "terminal": "self", "case": "the picture leaves the batch" }, { "board": "ComposePick", "case": "the last one leaves — the manager closes and the pick step comes back, tray empty, the way the video path's × gives the step back; the details stay staged in the draft" }] },
     { "from": "ComposePicked", "via": 4, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes — the pick or the details stage, wherever it opened" }] },
-    { "from": "ComposePicked", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "ComposePicked", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — every change already applied stands; swipe down, Back and Escape the same (the sheet law: an editing sheet applies live, so there is nothing staged to discard)" }] },
 
     { "from": "ComposeDescribe", "via": 1, "kind": "detour", "label": "? — Describing pictures", "to": [{ "board": "HelpDialog", "case": "the Describing-pictures text" }] },
     { "from": "ComposeDescribe", "via": 2, "kind": "advance", "label": "What's in the picture", "to": [{ "terminal": "self", "case": "typing — witnessed at sign, never gating the upload" }] },
     { "from": "ComposeDescribe", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
-    { "from": "ComposeDescribe", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "ComposeDescribe", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the staged description is discarded, a typed description included, and the pictures read as they did before the sheet opened; swipe down, Back and Escape the same (the sheet law: a staging sheet's dismissal discards)" }] },
 
     { "from": "ComposeDescribeVideo", "via": 1, "kind": "detour", "label": "? — Describing pictures", "to": [{ "board": "HelpDialog", "case": "the Describing-pictures text, whose video sentence covers the clip" }] },
     { "from": "ComposeDescribeVideo", "via": 2, "kind": "advance", "label": "What's in the video", "to": [{ "terminal": "self", "case": "typing — one description for the whole clip, none for its cover" }] },
     { "from": "ComposeDescribeVideo", "via": 3, "kind": "advance", "label": "Done", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
-    { "from": "ComposeDescribeVideo", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
+    { "from": "ComposeDescribeVideo", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes — the staged description is discarded, a typed description included, and the clip reads as it did before the sheet opened; swipe down, Back and Escape the same (the sheet law: a staging sheet's dismissal discards)" }] },
 
     { "from": "ComposeUploading", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposeCrop", "case": "one stage back" }] },
     { "from": "ComposeUploading", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept, uploads finish quietly" }] },
