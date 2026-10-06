@@ -21,6 +21,7 @@ import { useState } from "react";
 import { type ReferenceDraft } from "@/lib/references/draft";
 import { REFERENCE_BATCH_CAP } from "@/lib/references/normalize";
 import { Button } from "./button";
+import { instance, part, testAttributes, type DataNode } from "./data-node";
 import { ReferenceChip } from "./reference-chip";
 import { ReferenceFinder } from "./reference-finder";
 import { ReferenceParamSliders } from "./reference-param-sliders";
@@ -32,7 +33,14 @@ export function ReferenceEntryField({
   cap = REFERENCE_BATCH_CAP,
   testIdPrefix,
   finderDebounceMs,
+  node,
 }: {
+  /**
+   * The registered section node on a registered screen
+   * (`composeDetails.references`): its `label`, each staged chip as its
+   * `stagedReference` (keyed by position, counted from 1), and its `add`.
+   */
+  node?: DataNode;
   references: readonly ReferenceDraft[];
   onChange: (references: readonly ReferenceDraft[]) => void;
   /** Per-index refusal, keyed by the server's `["references", i, …]` path. */
@@ -73,8 +81,13 @@ export function ReferenceEntryField({
   };
 
   return (
-    <div className="flex flex-col gap-2" data-testid={`${testIdPrefix}-reference-entry`}>
-      <span className="text-label-large">References</span>
+    <div
+      className="flex flex-col gap-2"
+      {...testAttributes(node, `${testIdPrefix}-reference-entry`)}
+    >
+      <span className="text-label-large" {...testAttributes(part(node, "label"))}>
+        References
+      </span>
       {references.length > 0 && (
         <ul className="flex flex-col gap-2" data-testid={`${testIdPrefix}-reference-list`}>
           {references.map((reference, index) => (
@@ -87,6 +100,7 @@ export function ReferenceEntryField({
                 selectLabel={`Adjust the reference to ${reference.target.label}`}
                 expanded={adjusting === index}
                 testId={`${testIdPrefix}-reference-${index}`}
+                node={instance(node, "stagedReference", String(index + 1))}
               />
               {adjusting === index && (
                 <ReferenceParamSliders
@@ -112,6 +126,7 @@ export function ReferenceEntryField({
       )}
       <Button
         testId={`${testIdPrefix}-reference-add`}
+        node={part(node, "add")}
         variant="outline"
         size="sm"
         onClick={() => setFinding(true)}

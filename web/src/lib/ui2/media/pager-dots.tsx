@@ -31,6 +31,8 @@
 // THE COUNT IS NOT DRAWN (`:330-332`): the plain "Picture n of m" stays in the
 // accessible name.
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 /** The ceiling — seven slots, "the same bound the pattern this copies uses"
  * (`MediaAttachment.jsx:338` — `const DOT_WINDOW = 7`). */
 export const DOT_WINDOW = 7;
@@ -84,11 +86,15 @@ export function PagerDots({
   current,
   tone = "card",
   testId,
+  node,
 }: {
   count: number;
   current: number;
   tone?: DotTone;
+  /** Names the row, and is what each slot's and dot's own id derives from. */
   testId?: string;
+  /** The registered node the row is; it then names the row instead of `testId`. */
+  node?: DataNode;
 }) {
   // "if (count < 2) return null" (`MediaAttachment.jsx:348`): one picture has
   // no position to mark.
@@ -99,7 +105,7 @@ export function PagerDots({
 
   return (
     <div
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       // Live, so a swipe says where it landed to a reader who cannot see the
       // dots move — the row is the only readout either pager draws.
       aria-live="polite"

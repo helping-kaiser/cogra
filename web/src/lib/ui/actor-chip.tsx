@@ -12,6 +12,8 @@ import Link from "next/link";
 
 import { MonogramAvatar as Avatar } from "@/lib/ui2/monogram-avatar";
 
+import { part, testAttributes, type DataNode } from "./data-node";
+
 const SIZES = { sm: 24, lg: 64 } as const;
 
 /**
@@ -22,12 +24,14 @@ export function MonogramAvatar({
   name,
   size = "sm",
   src,
+  node,
 }: {
   name: string;
   size?: keyof typeof SIZES;
   src?: string | null;
+  node?: DataNode;
 }) {
-  return <Avatar name={name} src={src} size={SIZES[size]} />;
+  return <Avatar name={name} src={src} size={SIZES[size]} node={node} />;
 }
 
 /**
@@ -39,22 +43,32 @@ export function ActorChip({
   displayName,
   avatarUrl,
   testId,
+  node,
 }: {
   handle: string;
   displayName: string | null | undefined;
   avatarUrl?: string | null;
   testId?: string;
+  /** The registered chip node (`….authorChip`); its avatar, name and handle are its parts. */
+  node?: DataNode;
 }) {
   const name = displayName?.trim() ? displayName : handle;
   return (
     <Link
       href={`/u/${handle}`}
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       className="inline-flex min-h-6 items-center gap-2"
     >
-      <MonogramAvatar name={name} src={avatarUrl} />
-      <span className="text-label-large">{name}</span>
-      <span className="text-label-medium text-on-surface-variant">@{handle}</span>
+      <MonogramAvatar name={name} src={avatarUrl} node={part(node, "avatar")} />
+      <span className="text-label-large" {...testAttributes(part(node, "name"))}>
+        {name}
+      </span>
+      <span
+        className="text-label-medium text-on-surface-variant"
+        {...testAttributes(part(node, "handle"))}
+      >
+        @{handle}
+      </span>
     </Link>
   );
 }

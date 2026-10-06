@@ -20,4 +20,4 @@ WHEN tap the back arrow -> the reader's own profile comes back, in the state it 
 
 ALWAYS the back arrow reads Back to your profile
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS history.bottomBar rides with no slot lit

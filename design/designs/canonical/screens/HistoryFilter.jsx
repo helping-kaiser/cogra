@@ -26,15 +26,21 @@
    NO "?" ON THIS SHEET. The feed's and search's filter dialog explains the
    settings default, which this list does not have, so none is drawn. A
    `Done` that narrows the list to nothing lands on `HistoryNone`. The sheet
-   is short enough that its content sizes it. */
+   is short enough that its content sizes it.
+
+   REGISTERED under the `history` prefix (design ⇄ impl seam 062/063), the
+   page named as `History` names it. The sheet is `filterSheet` — the
+   `menuSheet` pattern, a sheet named for what it holds — with its `title`,
+   the `kinds` section and each chip as `<value>Chip`, and the `foot`. */
+export const NODE = "history";
 export function Screen() {
   return (
     <>
-      <PageHeader title="History" backHref="#" backLabel="Back to your profile" />
+      <PageHeader title="History" backHref="#" backLabel="Back to your profile" node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar placeholder="Search your history" ariaLabel="Search your history" />
+        <SearchBar placeholder="Search your history" ariaLabel="Search your history" node="searchField" />
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
-          <FilterTrigger reading="Everything" ariaLabel="What your history shows" expanded />
+          <FilterTrigger reading="Everything" ariaLabel="What your history shows" expanded node="filterTrigger" />
         </div>
       </div>
       <FeedList>
@@ -45,19 +51,20 @@ export function Screen() {
           parent={ADA_POST}
           topics={["glovebox", "coastroad"]}
           score="12.40"
+          node="commentCard"
         />
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
       </FeedList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="What your history shows">
-        <SheetTitle>What your history shows</SheetTitle>
-        <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it.">
+      <BottomSheet open ariaLabel="What your history shows" node="filterSheet">
+        <SheetTitle node="title">What your history shows</SheetTitle>
+        <FilterSection label="Kinds" hint="Combine as many as you like. All, until you narrow it." node="kinds">
           {FEED_KINDS.map((kind) => (
-            <Chip key={kind.value} label={kind.label} selected={false} />
+            <Chip key={kind.value} label={kind.label} selected={false} node={`${kind.value}Chip`} />
           ))}
         </FilterSection>
-        <FilterFoot />
+        <FilterFoot node="foot" />
       </BottomSheet>
     </>
   );

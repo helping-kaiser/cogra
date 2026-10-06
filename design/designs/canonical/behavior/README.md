@@ -200,7 +200,9 @@ And it checks nodes, against `nodes.json`:
   `FeedCommentShapes`, a comment card's clip; then the Saved and Hide
   packets' boards — `Saved`, `SavedEmpty`, `SavedUndo`, the three
   profiles and their three menus, `FeedHidden`, `ReaderPostMenu`,
-  `Settings` and `SettingsHidden` — so far), plain words that spell one of its nodes
+  `Settings` and `SettingsHidden`; then the History and Search packets'
+  boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone` and
+  the five `Explore` boards — so far), plain words that spell one of its nodes
   fail: "the media row" on `ComposeDetails` is written
   `composeDetails.mediaRow`. The check knows a node by the words of a
   compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word

@@ -25,6 +25,8 @@
 // framed; hand it none — a comment's crop-less pictures, a pick nobody has
 // framed yet — and it cover-fits the whole picture as it always did.
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 import { cropPreviewStyle } from "../media/crop-preview";
 import type { Crop } from "../media/crop";
 import { formatDuration } from "../media/video";
@@ -91,7 +93,10 @@ export function MediaThumb({
   onRemove,
   removeLabel = "Remove this picture",
   testId,
+  node,
 }: {
+  /** The registered node the tile is; it then names the tile instead of `testId`. */
+  node?: DataNode;
   src?: string | null;
   altText?: string | null;
   size?: number;
@@ -164,7 +169,7 @@ export function MediaThumb({
   const framing = cropPreviewStyle(crop, { width: w, height: h });
   return (
     <span
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       style={{ width: `${w}px`, height: `${h}px`, borderRadius: radius }}
       className="relative flex flex-none items-center justify-center overflow-hidden bg-surface-container-high"
     >

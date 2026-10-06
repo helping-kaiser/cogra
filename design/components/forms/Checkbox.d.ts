@@ -6,6 +6,8 @@ export interface CheckboxProps {
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   id?: string;
+  /** The data-node name its placer gives this checkbox's row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `box`, `label`. */
+  node?: string;
 }
 
 /** The house checkbox: an 18px box on the extra-small rung with a 1px

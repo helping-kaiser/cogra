@@ -21,6 +21,8 @@
 
 import type { ReactNode } from "react";
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 const VARIANTS = {
   filled: "bg-primary text-on-primary",
   outlined: "border border-outline text-primary",
@@ -73,6 +75,7 @@ export function PillButton({
   disabled = false,
   label,
   onClick,
+  node,
 }: {
   children: ReactNode;
   testId: string;
@@ -84,11 +87,13 @@ export function PillButton({
   // For a button whose visible content is a glyph rather than words.
   label?: string;
   onClick?: () => void;
+  /** The registered node this button is, which then names it instead of `testId`. */
+  node?: DataNode;
 }) {
   return (
     <button
       type={type}
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       disabled={disabled}
       aria-label={label}
       onClick={onClick}

@@ -20,6 +20,7 @@
 
 import { useState, type ReactNode } from "react";
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 import { BottomSheet, SheetItem } from "./bottom-sheet";
 
@@ -45,11 +46,15 @@ export function OverflowMenu({
   testId,
   trailing,
   stacked = false,
+  node,
 }: {
   items: readonly MenuItem[];
   /** What the trigger and the sheet are both called, e.g. "More on this post". */
   ariaLabel: string;
+  /** Names the trigger, and is what the sheet's own id derives from. */
   testId: string;
+  /** The registered node the TRIGGER is; it then names the trigger instead of `testId`. */
+  node?: DataNode;
   /** The dialogs and sheets the rows open, mounted beside the menu. */
   trailing?: ReactNode;
   /**
@@ -74,7 +79,7 @@ export function OverflowMenu({
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-haspopup="menu"
-        data-testid={testId}
+        {...testAttributes(node, testId)}
         onClick={() => setOpen(true)}
         className="cg-state cg-focus -m-3 flex size-12 flex-none items-center justify-center rounded-full text-on-surface-variant"
       >

@@ -126,7 +126,7 @@ export function NodeMark({ kind, name, src, onCard = false, redacted = false, si
    section): the moment a picker row is picked it stands above the results as
    a `StagedReference` with its ×, so a picker's list only ever holds rows
    still to add, each with the add mark on its edge. */
-export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, onOpen }) {
+export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, value, rank, trailing, pending = false, onOpen, node, nodeKey }) {
   const tagFamily = pairFamily === undefined ? kind === "topic" : pairFamily === "tag";
   const exact = pair ? (tagFamily ? formatTagPair(pair) : formatStancePair(pair)) : null;
   /* EVERY PAIR HAS A FACE TO FALL BACK TO (jakob's ruling, the geek round —
@@ -165,8 +165,10 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
         color: "var(--on-surface)",
         textAlign: "left",
       }}
+      data-node={node}
+      data-node-key={node && nodeKey}
     >
-      <NodeMark kind={kind} name={name} src={src} />
+      <NodeMark kind={kind} name={name} src={src} node={node && "mark"} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <span
           style={{
@@ -176,6 +178,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
             overflow: "hidden",
             textOverflow: "ellipsis",
           }}
+          data-node={node && "name"}
         >
           {name}
         </span>
@@ -189,6 +192,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
               overflow: "hidden",
               textOverflow: "ellipsis",
             }}
+            data-node={node && "sub"}
           >
             {sub}
           </span>
@@ -201,7 +205,9 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
           add mark), because there the whole row's tap picks — ranking still
           orders the list, the number just yields the edge to the act. */}
       {trailing ? (
-        <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }}>{trailing}</span>
+        <span aria-hidden="true" style={{ flex: "none", display: "inline-flex", color: "var(--text-secondary)" }} data-node={node && "trailing"}>
+          {trailing}
+        </span>
       ) : rank ? (
         <>
           <span
@@ -216,6 +222,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
               color: "var(--text-secondary)",
               whiteSpace: "nowrap",
             }}
+            data-node={node && "rank"}
           >
             <Icon name="graph" size={14} />
             <span>{rank}</span>
@@ -235,6 +242,7 @@ export function ReferenceRow({ kind = "post", name, sub, src, pair, pairFamily, 
               color: "var(--text-secondary)",
               whiteSpace: "nowrap",
             }}
+            data-node={node && "value"}
           >
             {value}
             {!value && exact && (

@@ -72,6 +72,7 @@ import { useStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceBundle, StanceLanding, StanceTargetRef } from "@/lib/stance/stance-data";
 import { useAuthPhase } from "@/lib/session/provider";
 import { buttonClassName } from "@/lib/ui/button";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { JoinPrompt } from "@/lib/ui/join-prompt";
 import { parkedPadStyle } from "@/lib/ui/pad-parking";
 import { SeveranceConfirm } from "@/lib/ui/severance-confirm";
@@ -117,6 +118,7 @@ export function StanceControl({
   bundle: suppliedBundle,
   testIdPrefix,
   axes = STANCE_AXES,
+  node,
 }: {
   target: StanceTargetRef;
   /**
@@ -127,6 +129,13 @@ export function StanceControl({
    */
   bundle?: StanceBundle | null;
   testIdPrefix: string;
+  /**
+   * The registered stance node (`….actionRow.stance`). Its `anchor` — the
+   * resting button — and the anchor's `face` and `exact` are its parts, and
+   * they then carry the node ids instead of their `testIdPrefix` ones; the
+   * pad, the sheets and the rest keep theirs.
+   */
+  node?: DataNode;
   /**
    * The record family's own words for the two slots it fills. The control
    * owns the geometry; the family owns the words, and they are passed
@@ -565,6 +574,7 @@ export function StanceControl({
     // and the pair never do, because the numbers are part of the default
     // reading (§8.3). Standing alone, nothing shrinks it.
     <div
+      {...testAttributes(node)}
       className="relative flex min-w-0 flex-col gap-1"
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
@@ -575,7 +585,7 @@ export function StanceControl({
         <button
           ref={buttonRef}
           type="button"
-          data-testid={testIdPrefix}
+          {...testAttributes(part(node, "anchor"), testIdPrefix)}
           aria-label={
             restingFace === null || restingPair === null
               ? `Take a stance on ${target.label}`
@@ -598,7 +608,7 @@ export function StanceControl({
               answer, and never the shrug a zero standing owns (§8.4). */}
           <span
             aria-hidden="true"
-            data-testid={`${testIdPrefix}-resting-face`}
+            {...testAttributes(part(node, "anchor.face"), `${testIdPrefix}-resting-face`)}
             className={
               restingFace === null
                 ? "flex-none text-title-large opacity-40 grayscale"
@@ -618,7 +628,7 @@ export function StanceControl({
           {restingPair !== null && (
             <span
               aria-hidden="true"
-              data-testid={`${testIdPrefix}-resting-exact`}
+              {...testAttributes(part(node, "anchor.exact"), `${testIdPrefix}-resting-exact`)}
               className="flex-none text-body-small text-on-surface-variant"
             >
               {formatStancePair(restingPair)}

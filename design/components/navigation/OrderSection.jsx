@@ -25,22 +25,28 @@ export const FILTER_ORDER = [
   { value: "newest", label: "Newest" },
 ];
 
-export function FilterSection({ label, hint, children }) {
+export function FilterSection({ label, hint, children, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", padding: "0 var(--space-6) var(--space-4)" }}>
-      <span style={{ fontSize: "var(--text-label-large)", fontWeight: 500 }}>{label}</span>
-      {hint && <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>{hint}</span>}
+    <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", padding: "0 var(--space-6) var(--space-4)" }} data-node={node}>
+      <span style={{ fontSize: "var(--text-label-large)", fontWeight: 500 }} data-node={node && "label"}>
+        {label}
+      </span>
+      {hint && (
+        <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+          {hint}
+        </span>
+      )}
       <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--space-2)" }}>{children}</div>
     </div>
   );
 }
 
-export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen }) {
+export function OrderSection({ order = "ranked", onOrder, seen = false, onSeen, node }) {
   return (
-    <FilterSection label="Order" hint="Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time.">
-      <SegmentedFilter ariaLabel="Order" options={FILTER_ORDER} value={order} onChange={onOrder} />
+    <FilterSection label="Order" hint="Ranked puts what's closest to you first — your view, no one else's. Newest ignores it and lists by time." node={node}>
+      <SegmentedFilter ariaLabel="Order" options={FILTER_ORDER} value={order} onChange={onOrder} node={node && "picker"} />
       <div style={{ flexBasis: "100%" }}>
-        <Checkbox label="Show what you've already seen" checked={seen} onChange={onSeen} />
+        <Checkbox label="Show what you've already seen" checked={seen} onChange={onSeen} node={node && "seen"} />
       </div>
     </FilterSection>
   );

@@ -18,6 +18,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { Icon } from "@/lib/ui/icons";
 
 export function PageHeader({
@@ -27,7 +28,14 @@ export function PageHeader({
   backTestId,
   backScroll,
   action,
+  node,
 }: {
+  /**
+   * The registered header node on a registered screen (`postDetail.header`):
+   * the band is the node, its arrow the `back` part and its title the `title`
+   * part. The action is the caller's, and names itself.
+   */
+  node?: DataNode;
   /** Omit when the surface renders its own heading below the header. */
   title?: string;
   /** Omit on a shell tab root — tabs carry no back arrow. */
@@ -47,14 +55,14 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="flex min-h-12 items-center justify-between gap-3 px-3">
+    <header className="flex min-h-12 items-center justify-between gap-3 px-3" {...testAttributes(node)}>
       <div className="flex min-w-0 items-center gap-2">
         {backHref !== undefined && (
           <Link
             href={backHref}
             scroll={backScroll}
             aria-label={backLabel}
-            data-testid={backTestId}
+            {...testAttributes(part(node, "back"), backTestId)}
             className="cg-state cg-focus grid size-12 flex-none place-items-center rounded-full text-on-surface-variant"
           >
             <Icon name="arrow_back" />
@@ -63,7 +71,9 @@ export function PageHeader({
         {title !== undefined && (
           // A page title is a name and never wraps — a two-line header steals
           // the content's first row.
-          <h1 className="truncate whitespace-nowrap text-title-large">{title}</h1>
+          <h1 className="truncate whitespace-nowrap text-title-large" {...testAttributes(part(node, "title"))}>
+            {title}
+          </h1>
         )}
       </div>
       {action}

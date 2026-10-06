@@ -26,7 +26,7 @@ ALWAYS every card's row reads the opinion, then the score, then the kind's own a
 
 ALWAYS a reply is a comment targeting a comment: as standalone content a reply card may appear in any feed, History included, and the under-card reply expansion never appears in a feed
 
-ALWAYS a comment card carries no view-replies line
+ALWAYS a history.commentCard carries no view-replies line
 
 ALWAYS a thing removed after it was seen keeps its place in History and wears its removal mark
 
@@ -36,21 +36,21 @@ ALWAYS sensitive content in History keeps its veil, as on the feed
 
 ALWAYS History offers no way to clear the list and no way to remove one thing from it
 
-WHEN the comment card's head row is tapped -> the post it answers opens AND its back arrow reads Back to History
+WHEN history.commentCard's head row is tapped -> the post it answers opens AND its back arrow reads Back to History
 
-WHEN the comment card is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to History
+WHEN history.commentCard is tapped outside its head row and its own controls -> the post's comment section opens scrolled to that comment AND the post's back arrow beneath the thread reads Back to History
 
-WHEN the comment glyph on a comment card is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
+WHEN the comment glyph on a history.commentCard is tapped -> the post's comment section opens scrolled to that comment AND the reply composer opens aimed at that comment
 
 WHEN a post's media is tapped -> the post opens as it does from the feed AND its back arrow reads Back to History
 
-WHEN the profile card is tapped -> that person's profile opens AND its back arrow reads Back to History
+WHEN history.profileCard is tapped -> that person's profile opens AND its back arrow reads Back to History
 
-WHEN the tag card is tapped -> the tag's page opens AND its back arrow reads Back to History
+WHEN history.tagCard is tapped -> the tag's page opens AND its back arrow reads Back to History
 
 WHEN a card's Feed score is tapped -> the score's trace opens AND its back arrow reads Back to History
 
-WHEN Tag a new post with it on a tag card is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
+WHEN Tag a new post with it on a history.tagCard is tapped -> the post composer opens at its first stage AND the tag rides staged among the new post's tags
 
 WHEN a press-and-hold on a card's stance face signs -> the face refuses a second press-and-hold until the signing answers AND NEVER the face moves before the signature is taken
 
@@ -72,11 +72,11 @@ WHEN an overscroll bounce settles back at History's hard top GIVEN a qualifying 
 
 ALWAYS a veiled clip has no playback and no sound-disc presence
 
-ALWAYS the search field reads Search your history at rest
+ALWAYS history.searchField reads Search your history at rest
 
-WHEN the reader types in the search field -> History narrows to what matches AND the matches stand ordered by the time the reader first saw each thing, newest first
+WHEN the reader types in history.searchField -> History narrows to what matches AND the matches stand ordered by the time the reader first saw each thing, newest first
 
-ALWAYS the search field matches by the one search rule Explore uses: names and titles, an untitled post by its first words, and never a body, a description or a bio
+ALWAYS history.searchField matches by the one search rule Explore uses: names and titles, an untitled post by its first words, and never a body, a description or a bio
 
 WHEN the query starts with @handle -> the remainder matches that person's own things in History, a comment through the title of what it answers
 
@@ -84,9 +84,9 @@ WHEN the query starts with #tag -> the remainder matches the things in History t
 
 WHEN the reader types a query nothing in History carries -> History stands narrowed to nothing, with Show everything
 
-ALWAYS the filter trigger reads Everything GIVEN no kind is narrowed
+ALWAYS history.filterTrigger reads Everything GIVEN no kind is narrowed
 
-WHEN tap the filter trigger -> the history's filter sheet opens over History
+WHEN tap history.filterTrigger -> the history's filter sheet opens over History
 
 ALWAYS the order History opened in stands frozen while the reader scrolls, and a thing first seen meanwhile joins only at the next open or the next pull down
 
@@ -98,9 +98,9 @@ WHEN the reader scrolls back up far enough to summon the collapsing top GIVEN Hi
 
 WHEN tap Back to top -> the list goes to the top, animated AND NEVER History re-reads
 
-ALWAYS the header, the search field and the filter trigger collapse on the way down and return on the way up
+ALWAYS the header, history.searchField and history.filterTrigger collapse on the way down and return on the way up
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS history.bottomBar rides with no slot lit
 
 WHEN tap the back arrow -> the reader's own profile comes back, in the state it was left
 
