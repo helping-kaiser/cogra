@@ -19,6 +19,7 @@
 #          head recognition per format ........ [head-recognition]
 #          the enforcement partition .......... [enforcement]
 #          the owner reach graph .............. [reach]
+#          the API contract ................... [api-contract]
 #
 # Conventions in this file:
 #   * References to discipline labels are written PLAIN (no backticks,
@@ -2013,5 +2014,118 @@ may_cite = []
 [[reach.owner]]
 owner    = "doc.interchange-conventions"
 may_cite = []
+
+
+####################################################################
+# [api-contract] — the specification and the exported schema agree
+#
+# ADDED 2026-10-06 (MVP superloop, API pipeline rule 2): the API
+# specification declares the surface in its fenced graphql blocks,
+# and schema.graphql is what the API exports. The contract judgment
+# reconciles them over every query-root field, mutation-root field,
+# error_enum value, union, and member of a union both declare.
+#
+# TWO RULES, NOT EQUALITY (lane C, MVP superloop, 2026-10-06 — the
+# announced deviation from rule 2's plain two-direction wording that
+# AWAITS JAKOB'S RULING O1): the spec is the target contract and runs
+# ahead of what is built.
+#   1. schema within spec, without exception: a declaration only
+#      schema.graphql carries always fails. Nothing is staged on the
+#      schema's side, and the section has no way to say so.
+#   2. spec minus schema EQUALS the staged list below, exactly: an
+#      unstaged spec-only declaration fails, and so does a staged
+#      name the schema now declares (built) or the spec no longer
+#      does. The list burns down as the surface is built.
+# A staged name produces no finding; the list itself is the record.
+#
+# Every finding sits on the spec: it is the contract's document and
+# docs/ is failing, where schema.graphql at the root is advisory.
+#
+# STAGED rows name a surface, the names ("Union.Member" for a union
+# member), and what builds them. KNOWN UNREADABLE rows name a fence
+# line the reader refuses at and what removes it; a listed refusal is
+# silent like a staged name, and a row whose refusal is gone fails.
+####################################################################
+
+[api-contract]
+spec       = "docs/implementation/api-spec.md"
+schema     = "schema.graphql"
+fence      = "graphql"
+error_enum = "ErrorCode"
+
+# THE STAGED LIST AS FIRST MEASURED (2026-10-06, main 9938d9329): the
+# spec leads the schema by 62 declarations, the schema leads the spec
+# by none, and one fence place does not read. Each row is one build:
+# the names it ships share its surface and built_by, and each name is
+# its own entry — a built one fails until its name is deleted.
+
+# Comment coverage is staged by slice, said where the two documents
+# meet (api-spec.md CommentTarget, schema.graphql CommentTarget); seam
+# 045.3b verified ALREADY-DONE by packet contract-recon-citations-threads.
+[[api-contract.staged]]
+surface    = "union-member"
+built_by   = "the slices that ship comments on chats, items, and actors (api-spec.md: coverage is staged by slice)"
+names      = [
+  "CommentTarget.Chat",
+  "CommentTarget.ChatMessage",
+  "CommentTarget.Collective",
+  "CommentTarget.Item",
+  "CommentTarget.User",
+]
+
+# The unbuilt ask-link and rejection surface (packet
+# contract-recon-ask-link-spec, verdict SPEC-ONLY); its error code
+# ships with it (seam 045.3a).
+[[api-contract.staged]]
+surface    = "error-code"
+built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
+names      = ["ASK_LINK_UNUSABLE"]
+
+[[api-contract.staged]]
+surface    = "query"
+built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
+names      = ["askLinkCheck"]
+
+[[api-contract.staged]]
+surface    = "mutation"
+built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
+names      = ["rejectApplication", "rejectLinkApplications", "stageApplicant"]
+
+# UNTRIAGED: the rest of the unbuilt surface the spec already declares.
+# The oracle surfaced these on its first run; no packet names them yet.
+[[api-contract.staged]]
+surface    = "query"
+built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
+names      = [
+  "appVersions", "campaign", "chat", "chatMessage", "chatSearch",
+  "collective", "feed", "feedSlice", "honorEntries", "item",
+  "networkParameters", "proposal", "search",
+]
+
+[[api-contract.staged]]
+surface    = "mutation"
+built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
+names      = [
+  "cancelAccountDeletion", "confirmAccountDeletion", "hideActor",
+  "markChatRead", "markSeen", "prepareAccept", "prepareBallot",
+  "prepareBid", "prepareCampaign", "prepareCampaignAdjustment",
+  "prepareChat", "prepareChatInvitation", "prepareChatJoin",
+  "prepareChatJoinRequest", "prepareChatLeave", "prepareChatMessage",
+  "prepareCollective", "prepareCollectiveJoin", "prepareCollectiveLeave",
+  "prepareCollectiveRecognition", "prepareDeInvite",
+  "prepareGuidelinesChange", "prepareItem", "prepareItemEdit",
+  "prepareModeratorRoleChange", "prepareParameterChange",
+  "prepareProposal", "prepareRatify", "prepareReport", "prepareRescind",
+  "prepareSettlement", "prepareTip", "prepareWithdraw", "removeBookmark",
+  "removeContent", "requestAccountDeletion", "setBookmark",
+  "setPreferences", "unhideActor",
+]
+
+# A prose paragraph on the profile field caps sits inside a graphql
+# fence of "Content authoring"; the reader refuses at it and resumes
+# at the next definition, so nothing around it goes uncompared.
+[[api-contract.known_unreadable]]
+line       = "Each profile text field answers to its own cap, Unicode scalar"
+removed_by = "UNTRIAGED: a one-line api-spec.md fence fix, surfaced by the oracle 2026-10-06; no packet yet"
 
 

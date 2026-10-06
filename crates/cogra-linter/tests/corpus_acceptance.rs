@@ -86,6 +86,33 @@ fn counted() -> BTreeMap<&'static str, usize> {
     by_rule
 }
 
+/// The API contract over the real tree reports nothing: the specification's
+/// whole lead over the schema is the staged list, the schema has no lead,
+/// and every refusal is listed. An unstaged drift or an unlisted refusal
+/// would be a finding, a built staged name would leave a stale entry, and a
+/// renamed document would leave the reconciliation suppressed, so an empty
+/// answer here pins the run to the lists.
+///
+/// The real contract reports zero findings outside its staged and known-unreadable lists.
+/// ´claim:corpus:the-api-contract-reports-only-its-lists´
+#[test]
+fn the_api_contract_reports_only_its_lists() {
+    use cogra_linter::judge::contract;
+
+    let declared = adoption()
+        .api_contract
+        .as_ref()
+        .expect("this corpus declares its API contract");
+    assert!(!declared.staged.is_empty(), "the specification runs ahead");
+    let found: Vec<String> = run()
+        .findings
+        .iter()
+        .filter(|one| contract::RULES.contains(&one.rule))
+        .map(spell)
+        .collect();
+    assert!(found.is_empty(), "{}", found.join("\n"));
+}
+
 /// (´rep:lint:first-corpus´): the milestone. The four discipline documents
 /// practice the disciplines they define, and the linter finds nothing
 /// against them.

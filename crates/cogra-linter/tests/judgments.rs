@@ -1164,6 +1164,7 @@ fn no_judgment_rule_identifier_is_label_shaped() {
         .chain(&judge::RULES)
         .chain(&judge::claims::RULES)
         .chain(&judge::freshness::RULES)
+        .chain(&judge::contract::RULES)
         .chain(&cogra_linter::registers::RULES)
         .chain(&cogra_linter::RULES)
     {
