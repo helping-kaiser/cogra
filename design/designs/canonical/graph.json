@@ -991,9 +991,9 @@
     { "from": "ComposePick", "via": 8, "kind": "advance", "label": "Your photos app", "to": [{ "terminal": "os", "case": "the device's own photos app — picks land in the tray" }, { "board": "ComposePickVideo", "case": "a video — the whole body, the step stops taking picks" }, { "board": "ComposePickedErrors", "case": "over its cap, a format nothing here reads, or a kind the body can't hold" }] },
     { "from": "ComposePick", "via": 9, "kind": "advance", "label": "grid tiles", "to": [{ "terminal": "self", "case": "toggles the pick — one video or up to ten pictures" }, { "board": "ComposePickVideo", "case": "a video — the whole body, the step stops taking picks" }, { "board": "ComposePickedErrors", "case": "over its cap, or a format nothing here reads — the step says why" }] },
 
-    { "from": "ComposeCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePick" }] },
-    { "from": "ComposeCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
-    { "from": "ComposeCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails", "case": "pictures — details next" }] },
+    { "from": "ComposeCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "board": "ComposePick", "case": "entered from compose's pick step — one stage back, the picks kept" }, { "terminal": "back", "case": "entered from an edit's add-pictures — the edit comes back as it was left, the pictures unused; never a pick stage (the layer law)" }] },
+    { "from": "ComposeCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept; entered from an edit, the edit is left, its draft kept" }] },
+    { "from": "ComposeCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "board": "ComposeDetails", "case": "pictures — details next" }, { "terminal": "back", "case": "entered from an edit's add-pictures — the edit comes back, the pictures on its media row; never a pick stage" }] },
     { "from": "ComposeCrop", "via": 4, "kind": "advance", "label": "shape chips", "to": [{ "terminal": "self", "case": "one shape for the whole post" }] },
     { "from": "ComposeCrop", "via": 5, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it" }] },
     { "from": "ComposeCrop", "via": 6, "kind": "advance", "label": "picture strip", "to": [{ "terminal": "self", "case": "frames each picture in turn" }] },
@@ -1045,7 +1045,7 @@
     { "from": "ComposeDetailsVideo", "via": 10, "kind": "advance", "label": "remove video ×", "to": [{ "board": "ComposePick", "case": "the clip leaves — the step takes picks again, so another can be chosen" }] },
 
     { "from": "CoverCrop", "via": 1, "kind": "back", "label": "back arrow", "to": [{ "terminal": "back", "case": "one stage back — the cover row that asked, the picture unused" }] },
-    { "from": "CoverCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "leaves the flow — draft kept" }] },
+    { "from": "CoverCrop", "via": 2, "kind": "cancel", "label": "X — leave", "to": [{ "terminal": "back", "case": "entered from a post's compose or edit — leaves the flow, draft kept" }, { "board": "DiscardConfirm", "case": "entered from a reply's or a comment edit's cover row — that composer's own X: the confirm first" }] },
     { "from": "CoverCrop", "via": 3, "kind": "advance", "label": "Next", "to": [{ "terminal": "back", "case": "the cover is set — back to the cover row that asked for it" }] },
     { "from": "CoverCrop", "via": 4, "kind": "advance", "label": "the crop viewport", "to": [{ "terminal": "self", "case": "drag to move, pinch to zoom; focused, the arrow keys move it — the shape is the video's, and locked" }] },
     { "from": "CoverCrop", "via": 5, "kind": "advance", "label": "zoom slider", "to": [{ "terminal": "self", "case": "the zoom, from the fill (1×) to about 4× — the pinch, on screen" }] },

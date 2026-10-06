@@ -30,4 +30,8 @@ WHEN tap the comment count -> the same comments sheet opens over the clip AND th
 
 WHEN tap the opinion face GIVEN the reader is signed out -> the join prompt opens over the paused clip
 
-WHEN press the way back -> the stream closes on the feed it narrowed
+WHEN press the way back GIVEN the stream was opened from the feed it narrowed -> the stream closes on the feed it narrowed
+
+WHEN press the way back GIVEN the stream was opened from anywhere else -> the stream closes onto where it was opened, the state the reader left exactly
+
+ALWAYS the way back reads Back to feed from the feed it narrowed, Back to the post from a post's pinned clip, Back to the profile from another's posts, Back to your profile from the reader's own and Back to History from History
