@@ -1853,10 +1853,14 @@ function ComposeDetailsBody({
   descriptionError,
   nextDisabled = false,
   words = false,
+  publishedOn,
 }) {
   /* The element names are `ComposeDetails`'s calibration IDs (seam 002). They
      reach a built board only where the screen is registered (`NODE`); every
-     other board this body stands on renders them stripped. */
+     other board this body stands on renders them stripped.
+
+     `publishedOn` draws the already-published marker under the media row
+     (copy-voice, *The already-published marker*; `ComposeDetailsReused`). */
   return (
     <>
       <WizardHeader title="Details" node="header" />
@@ -1869,6 +1873,7 @@ function ComposeDetailsBody({
               onManage={() => {}}
               node="mediaRow"
             />
+            {publishedOn && <EditedMarker label={`Already in your post from ${publishedOn}.`} onInspect={() => {}} />}
             <DescribeCounter described={0} total={2} onDescribe={() => {}} node="describeRow" />
           </>
         )}

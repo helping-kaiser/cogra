@@ -620,6 +620,12 @@ Object.assign(FLOW_MARKERS, {
   ],
   ComposeDetails: composeDetails,
   ComposeDetailsCaps: composeDetails,
+  // The stage with its media already published: the stage's own numbers, and
+  // the marker's door under the media row as the next free one.
+  ComposeDetailsReused: [
+    ...composeDetails,
+    { n: 14, find: ">Already in your post from 12 September.</button>", tag: "button" },
+  ],
   // The words path's details: the picture stage's controls minus the media
   // row, the describe row and the Description, numbered in reading order.
   ComposeDetailsWords: [

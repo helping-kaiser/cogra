@@ -12,7 +12,9 @@ ALWAYS the coming-soon page offers no action and names no date
 
 ALWAYS the chats' coming-soon page wears the header's back arrow and the bottom bar with all five slots, no slot lit
 
-ALWAYS the back arrow reads Back to feed, Back to Explore, Back to Wallet or Back to your profile, by the root the chats icon was tapped on, and Back to the profile GIVEN it was opened from a profile's Message
+ALWAYS the back arrow reads Back to feed, Back to Explore, Back to Wallet or Back to your profile, by the root the chats icon was tapped on, GIVEN the page was opened from the band's chats icon
+
+ALWAYS the back arrow reads Back to the profile GIVEN the page was opened from a profile's Message
 
 WHEN tap the back arrow -> the screen it was opened from comes back, in the state it was left
 
