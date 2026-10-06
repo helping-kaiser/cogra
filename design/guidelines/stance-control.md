@@ -1,7 +1,7 @@
 # The stance control · `guide:design:stance-control`
 
-CoGra's signature interaction, in full. Source: `design.md` §8 plus
-`web/src/lib/stance/*` and `web/src/lib/ui/stance-*.tsx`.
+CoGra's signature interaction, in full. Source: readme §8 and the
+stance masters in `components/stance/`.
 
 ## What is being authored
 
