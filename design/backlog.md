@@ -4873,16 +4873,17 @@ mails across the tree. No lane redraws a fixture ahead of it.
 
 The night rulings executed (readme §13) left these for jakob's eye:
 
-- **The borrowed stance's words.** A guest's anchor now wears the
-  viewpoint's stance, but its spoken name still reads `Your opinion on
-  this post: …`, and at rest `Give your opinion on this post`; the
-  printed `Your opinion` beside the hollow face on `ProfileOther` and
-  `TagPage` says the same to a guest (copy-voice, *The opinion pad and
-  its surroundings*). No string names a borrowed stance.
-- **The applicant's anchor.** An applicant borrows the link issuer's
-  view too (readme §13, *Guest and applicant feeds borrow a vantage
-  point*); the law speaks of a guest, and whether an applicant's
-  faces wear the issuer's stances is unruled.
+- **The borrowed stance's words — RULED same day.** The guest
+  anchor's accessible name reads the viewpoint's handle,
+  `@genesismod's stance on this post`, never `Your opinion` (jakob
+  2026-10-06; stance-control, *A guest's view*). Still open here:
+  sweeping the printed `Your opinion` beside the hollow face on
+  `ProfileOther` and `TagPage` for the guest reading, and the
+  at-rest spoken string's exact remaining wording.
+- **The applicant's anchor — RULED same day.** Only a nobody borrows
+  stances: an applicant's faces are their own, hollow where they hold
+  none (jakob 2026-10-06; stance-control, *Only a nobody borrows
+  stances*; the ApplicantFeed line is written).
 - **No board draws a borrowed stance.** Every guest board's posts hold
   no stance from the viewpoint, so only the hollow face is drawn.
 - **An untitled media post on a comment's head row.** The head row
