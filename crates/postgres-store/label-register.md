@@ -9,6 +9,7 @@ label.
 
 | Label                                                                                | Asset                                                             |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `test:integration:a-branch-reads-oldest-first-with-its-pending-replies-last`         | a_branch_reads_oldest_first_with_its_pending_replies_last         |
 | `test:integration:a-chip-row-shows-only-the-content-authors-own-tags`                | a_chip_row_shows_only_the_content_authors_own_tags                |
 | `test:integration:a-landed-version-without-coordinates-falls-below-one-with-them`    | a_landed_version_without_coordinates_falls_below_one_with_them    |
 | `test:integration:a-page-boundary-survives-the-entry-landing-under-it`               | a_page_boundary_survives_the_entry_landing_under_it               |
@@ -21,6 +22,7 @@ label.
 | `test:integration:a-staged-claim-is-not-transposed`                                  | a_staged_claim_is_not_transposed                                  |
 | `test:integration:a-topic-can-be-reclaimed-after-withdrawal`                         | a_topic_can_be_reclaimed_after_withdrawal                         |
 | `test:integration:a-verdict-mark-does-not-hide-a-real-claim`                         | a_verdict_mark_does_not_hide_a_real_claim                         |
+| `test:integration:an-oldest-first-walk-pages-across-both-namespaces`                 | an_oldest_first_walk_pages_across_both_namespaces                 |
 | `test:integration:an-unanswered-target-counts-zero`                                  | an_unanswered_target_counts_zero                                  |
 | `test:integration:bundles-of-different-authors-do-not-fold-together`                 | bundles_of_different_authors_do_not_fold_together                 |
 | `test:integration:current-profile-is-none-for-unknown-actor`                         | current_profile_is_none_for_unknown_actor                         |

@@ -1020,15 +1020,30 @@ async fn comments_thread_and_edit_on_posts_and_comments(pool: PgPool) {
     assert_eq!(reply_row.target_id, comment.node);
     assert_eq!(reply_row.target_type, "comment");
 
-    let on_post = content_store::comments_for_target(&rig.pool, post_id, None, false, 10, true)
-        .await
-        .expect("thread");
+    let on_post = content_store::comments_for_target(
+        &rig.pool,
+        post_id,
+        None,
+        false,
+        10,
+        true,
+        content_store::ThreadOrder::NewestFirst,
+    )
+    .await
+    .expect("thread");
     assert_eq!(on_post.len(), 1);
     assert_eq!(on_post[0].id, comment.node);
-    let on_comment =
-        content_store::comments_for_target(&rig.pool, comment.node, None, false, 10, true)
-            .await
-            .expect("replies");
+    let on_comment = content_store::comments_for_target(
+        &rig.pool,
+        comment.node,
+        None,
+        false,
+        10,
+        true,
+        content_store::ThreadOrder::NewestFirst,
+    )
+    .await
+    .expect("replies");
     assert_eq!(on_comment.len(), 1);
     assert_eq!(on_comment[0].id, reply.node);
 

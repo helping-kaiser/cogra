@@ -215,15 +215,20 @@ record-backed connection encodes the landing-order key
 `(epoch, act time, position)`; pages walk forward with
 `first`/`after` or backward with `last`/`before` (one direction
 per request), and results always come back in the connection's
-declared order. The chronicle, the post listing, and thread
-reads all serve newest-first — a node's landing position is its
-genesis, so editing a comment never moves it up its thread.
+declared order. The chronicle, the post listing, and a thread's
+top level all serve newest-first; a reply branch serves
+oldest-first by default (`Comment.replies(order: ReplyOrder)`) —
+the same order read the other way, so its cursors are the same
+cursors. A node's landing position is its genesis, so editing a
+comment never moves it within its thread.
 
 **Pending entries come first, in their own cursor namespace.** A
 pending write has no causal key yet, so it sorts under a sentinel
 epoch above every real one and orders among pending entries by
 `(authoring instant, node id)` — the instant alone is not unique,
-because nothing serializes two authors' signatures apart. A
+because nothing serializes two authors' signatures apart. Under
+`OLDEST_FIRST` they close the page set instead, since they are the
+newest; the cursor namespaces are unchanged. A
 pending entry's cursor changes when it lands, because its position
 in the order changes; a content cursor therefore carries the
 entry's own id alongside the key, so a walk resuming from it can
@@ -707,8 +712,9 @@ type PostEdge {
   node: Post!
 }
 
-"A page of comments, newest-first: pending entries, then landed
- entries in landing order."
+"A page of comments in the read's order — newest-first (pending
+ entries, then landed entries in landing order) or, for a reply
+ branch by default, that sequence reversed."
 type CommentConnection {
   edges: [CommentEdge!]!
   pageInfo: PageInfo!
@@ -1138,8 +1144,9 @@ type Comment implements Node {
   moderationStatus: ModerationStatus!
   "The qualifiers the minting Review record carried."
   license: License!
-  "This comment's direct replies, newest-first."
-  replies(first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
+  "This comment's direct replies, oldest-first by default: landed
+   replies in landing order, then pending ones closing the branch."
+  replies(order: ReplyOrder! = OLDEST_FIRST, first: Int, after: String, last: Int, before: String, includePending: Boolean! = true): CommentConnection!
   "This comment's current topics — the same fold and the same
    author-owned channel as `Post.topics`; a Comment is Taggable
    like any other content node."
@@ -1149,6 +1156,10 @@ type Comment implements Node {
    artifact like any other passive node."
   references(includePending: Boolean! = true): [ReferenceClaim!]!
 }
+
+"Reply order within one branch (design: replies read oldest first,
+ the thread's top level newest first)."
+enum ReplyOrder { OLDEST_FIRST NEWEST_FIRST }
 
 "What a Review can respond to — root content, another Comment, a
  conversation, a good, or a person's profile (edges.md §3)."
@@ -2411,13 +2422,20 @@ These bind every mutation below.
   a post with tags and references, a proposal anchor with its
   subject Reference, a Collective founding — returns several
   `PreparedWrite`s in relay order. **Each is its own priced act**
-  (one θ-debit each) running its own two-signature handshake; the
-  transport batches freely — one `submitProposals` or
-  `approveActs` call carries the whole batch's signatures — but
-  there is no cross-record atomicity: whether each lands is L1's
-  fact alone, and the flow state advances per record at confirm.
-  The batch size is visible to the client, so the total cost is
-  legible before signing.
+  (one θ-debit each) running its own two-signature handshake, and
+  the transport batches freely — one `submitProposals` or
+  `approveActs` call carries the whole batch's signatures. The
+  product promises the batch lands together or not at all — the
+  seals' `They land together, or none does.`, a design guarantee
+  (2026-09-30). Today the substrate decides each
+  act's landing alone and does not yet back that promise; how CoGra
+  keeps it if Layer 1 never lands a batch whole — records marked as
+  a bundle of N, never shown until all N land, the mirror still
+  mirroring every record — is
+  [open-questions.md Q57](../open-questions.md#q57--batch-atomicity-if-layer-1-cannot-back-it).
+  The flow state advances per record at confirm. The batch size is
+  visible to the client, so the total cost is legible before
+  signing.
 - **A batch is priced whole before any of it is staged.** Staging
   reserves nothing and every act commits its own transaction, so
   without a cumulative check a batch could stage part of itself
@@ -3005,10 +3023,13 @@ input TagInput {
  and never through the author's netted bundle — so a note would
  silently remove the citation from the very fold that renders it.
 
- The target may still be in flight when it is the viewer's own: a
- citation toward a pending node declares that node's act as a
- dependency, so the epoch close cannot order the citation ahead of
- what it cites."
+ The target may still be in flight — the viewer's own or anyone's:
+ reads serve pending content to every viewer, and a citation toward
+ a pending node declares that node's minting act as a dependency, so
+ the epoch close cannot order the citation ahead of what it cites. A
+ target that never lands takes the citation with it: the citation's
+ staged write expires (`STAGED_WRITE_EXPIRED`), which the seal reads
+ as did-not-land."
 input ReferenceInput {
   "The cited node — a post, a comment, or a person's profile.
    External links are body text, never citations: both endpoints of
@@ -3185,6 +3206,12 @@ input PrepareReferenceInput {
  withdrawalCost` serves it on the read side, so a client asks for
  confirmation first and prepares only once the author has agreed —
  the same order every other multi-act gesture follows.
+
+ A count read earlier can differ from the batch prepared here — the
+ bundle may have moved in between (another device's act staging or
+ landing). The prepared `writes` are the truth; a client whose shown
+ count differs re-states it before signing. A bundle that netted to
+ `(0, 0)` meanwhile refuses at `target`.
 
  A citation whose target this instance cannot type is not
  addressable here: the mutation names its target by L2 id, and a

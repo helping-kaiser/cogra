@@ -16,7 +16,7 @@
 
 use std::collections::HashMap;
 
-use common::l1::identifier::NodeId;
+use common::l1::identifier::{ActId, NodeId};
 use postgres_store::content::{Comment, Post};
 use postgres_store::{PgPool, auth as store, content as content_store, hashtag as hashtag_store};
 use uuid::Uuid;
@@ -73,6 +73,84 @@ impl ContentNode {
             Self::Comment(comment) => &comment.l1_node_id,
         }
     }
+
+    /// Whether the genesis record has landed — the row carries its landing
+    /// coordinates once confirm promotes it, and none while it is pending.
+    pub fn landed(&self) -> bool {
+        match self {
+            Self::Post(post) => post.order.is_some(),
+            Self::Comment(comment) => comment.order.is_some(),
+        }
+    }
+}
+
+/// A node a gesture points at, with the act that mints it while that act
+/// has not landed.
+///
+/// Pending content reads to every viewer (substrate.md §6), so any gesture
+/// can name a node whose genesis record is still in flight. A record
+/// toward it must not be ordered ahead of the record that mints it, and the
+/// only instrument that orders one act behind another is a declared
+/// dependency (layer1-interface.md §8.2: "declaring that q's authoritative
+/// time must exceed each member's"). `awaits` is that dependency; a gesture
+/// built on this node carries it in `deps`, so the epoch close holds the
+/// gesture until its node stands — and, should the node never land, the
+/// gesture expires with it rather than landing toward nothing.
+///
+/// Only a minted node can be pending: a Profile or a Type is not the
+/// product of a content act, so `awaits` is always `None` for them.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResolvedNode {
+    pub node: NodeId,
+    pub awaits: Option<ActId>,
+}
+
+impl ResolvedNode {
+    /// A node that is not the product of an act still in flight.
+    fn settled(node: NodeId) -> Self {
+        Self { node, awaits: None }
+    }
+
+    /// The node a content row names, awaiting its minting act while the
+    /// row carries no landing coordinates.
+    ///
+    /// A content node is always minted — its identifier *is* its genesis
+    /// act's — so an identifier of any other shape is a diverged row, not
+    /// input.
+    fn of_content(content: &ContentNode) -> Result<Self, NodeError> {
+        let node = NodeId::parse(content.l1_node_id())
+            .map_err(|e| NodeError::Internal(format!("stored node id: {e}")))?;
+        if content.landed() {
+            return Ok(Self::settled(node));
+        }
+        match &node {
+            NodeId::Mint(act) => Ok(Self {
+                awaits: Some(act.clone()),
+                node,
+            }),
+            other => Err(NodeError::Internal(format!(
+                "content row names an unminted node: {other}"
+            ))),
+        }
+    }
+}
+
+/// The dependency list a gesture declares: the acts the site already
+/// orders it behind, plus each named node's minting act while that is in
+/// flight (a [`ResolvedNode::awaits`]). Duplicates collapse, because a
+/// dependency named twice orders nothing further and still spends the
+/// substrate's per-act dependency budget.
+pub fn deps_awaiting<'a>(
+    site: &[ActId],
+    awaits: impl IntoIterator<Item = &'a Option<ActId>>,
+) -> Vec<ActId> {
+    let mut deps = site.to_vec();
+    for act in awaits.into_iter().flatten() {
+        if !deps.contains(act) {
+            deps.push(act.clone());
+        }
+    }
+    deps
 }
 
 /// The content row an L2 id names, or `None` when it names no content.
@@ -115,38 +193,93 @@ pub async fn resolve_content_many(
         .collect())
 }
 
-/// The minted node a content id names — [`resolve_content`] with the row
-/// dropped, for the callers that only want the identifier.
-pub async fn resolve_content_node(pool: &PgPool, id: Uuid) -> Result<Option<NodeId>, NodeError> {
+/// The minted node a content id names, with its minting act while that is
+/// still in flight — the shape a gesture *on* the node needs.
+pub async fn resolve_content_target(
+    pool: &PgPool,
+    id: Uuid,
+) -> Result<Option<ResolvedNode>, NodeError> {
     let Some(content) = resolve_content(pool, id)
         .await
         .map_err(|e| NodeError::Internal(e.to_string()))?
     else {
         return Ok(None);
     };
-    NodeId::parse(content.l1_node_id())
-        .map(Some)
-        .map_err(|e| NodeError::Internal(format!("stored node id: {e}")))
+    ResolvedNode::of_content(&content).map(Some)
 }
 
-/// Resolves an L2 id to the node it names, trying each class in turn.
+/// Resolves an L2 id to the node it names — [`resolve_target`] with the
+/// pending state dropped.
+pub async fn resolve_id(pool: &PgPool, id: Uuid) -> Result<Option<NodeId>, NodeError> {
+    Ok(resolve_target(pool, id).await?.map(|r| r.node))
+}
+
+/// Resolves an L2 id to the node it names, trying each class in turn, with
+/// the minting act a gesture toward it must wait for.
 ///
 /// A keyless account — an applicant before its ceremony — has no Profile on
 /// the graph to point at, and so reads as unresolvable like an unknown id.
 /// A Type is reached last and only through the registry: the name → id
 /// derivation is one-way, so the row is what makes it invertible, and a
 /// name with no row yet is reachable by name alone.
-pub async fn resolve_id(pool: &PgPool, id: Uuid) -> Result<Option<NodeId>, NodeError> {
+pub async fn resolve_target(pool: &PgPool, id: Uuid) -> Result<Option<ResolvedNode>, NodeError> {
     if let Some(address) = address_of(pool, id).await? {
-        return Ok(Some(NodeId::Prof(address)));
+        return Ok(Some(ResolvedNode::settled(NodeId::Prof(address))));
     }
-    if let Some(node) = resolve_content_node(pool, id).await? {
+    if let Some(node) = resolve_content_target(pool, id).await? {
         return Ok(Some(node));
     }
     if let Some(name) = hashtag_store::name_by_id(pool, id).await? {
         return NodeId::name(&name)
-            .map(Some)
+            .map(|node| Some(ResolvedNode::settled(node)))
             .map_err(|e| NodeError::Internal(e.to_string()));
     }
     Ok(None)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use common::l1::census::Family;
+
+    fn act(author: &str, seq: u64) -> ActId {
+        ActId::new(author, seq, Family::Publish).expect("act")
+    }
+
+    fn awaiting(a: ActId) -> ResolvedNode {
+        ResolvedNode {
+            node: NodeId::Mint(a.clone()),
+            awaits: Some(a),
+        }
+    }
+
+    /// A gesture on a pending node declares the act that mints it, beside whatever its site already orders it behind.
+    /// ´claim:nodes:a-gesture-on-a-pending-node-awaits-its-mint´
+    #[test]
+    fn a_pending_node_adds_its_minting_act_to_the_site_deps() {
+        let own = act("alice", 0);
+        let foreign = act("bob", 3);
+        let deps = deps_awaiting(
+            std::slice::from_ref(&own),
+            [&awaiting(foreign.clone()).awaits],
+        );
+        assert_eq!(deps, vec![own, foreign]);
+    }
+
+    /// (´claim:nodes:a-gesture-on-a-pending-node-awaits-its-mint´)
+    #[test]
+    fn a_settled_node_adds_nothing_and_a_repeat_collapses() {
+        let own = act("alice", 0);
+        let settled = ResolvedNode::settled(NodeId::Prof("bob".into()));
+        let repeat = awaiting(own.clone());
+        let deps = deps_awaiting(
+            std::slice::from_ref(&own),
+            [&settled.awaits, &repeat.awaits],
+        );
+        assert_eq!(
+            deps,
+            vec![own],
+            "a profile awaits nothing; a repeat orders nothing further"
+        );
+    }
 }

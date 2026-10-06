@@ -5,7 +5,7 @@
 //! serialization rules make that state hard to reach end to end — the
 //! store's contract has to hold on its own.
 
-use postgres_store::content::{self, ContentCursor, LandingOrder, Post};
+use postgres_store::content::{self, Comment, ContentCursor, LandingOrder, Post, ThreadOrder};
 use postgres_store::genesis;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -484,9 +484,17 @@ async fn the_comment_edit_whose_record_landed_last_renders_the_comment(pool: PgP
         .expect("the comment is there");
     assert_eq!(rendered.content, "landed later");
 
-    let thread = content::comments_for_target(&pool, host, None, false, 10, true)
-        .await
-        .expect("thread");
+    let thread = content::comments_for_target(
+        &pool,
+        host,
+        None,
+        false,
+        10,
+        true,
+        content::ThreadOrder::NewestFirst,
+    )
+    .await
+    .expect("thread");
     assert_eq!(thread.len(), 1);
     assert_eq!(
         thread[0].content, "landed later",
@@ -622,18 +630,34 @@ async fn the_thread_count_admits_what_the_thread_read_serves(pool: PgPool) {
     .await;
     comment(&pool, commenter, host, None, at(30), "still in flight").await;
 
-    let served = content::comments_for_target(&pool, host, None, false, 50, true)
-        .await
-        .expect("thread");
+    let served = content::comments_for_target(
+        &pool,
+        host,
+        None,
+        false,
+        50,
+        true,
+        content::ThreadOrder::NewestFirst,
+    )
+    .await
+    .expect("thread");
     let total = content::count_comments_for_target(&pool, host, true)
         .await
         .expect("count");
     assert_eq!(total, 3);
     assert_eq!(total, served.len() as i64, "the count answers for the page");
 
-    let landed = content::comments_for_target(&pool, host, None, false, 50, false)
-        .await
-        .expect("landed thread");
+    let landed = content::comments_for_target(
+        &pool,
+        host,
+        None,
+        false,
+        50,
+        false,
+        content::ThreadOrder::NewestFirst,
+    )
+    .await
+    .expect("landed thread");
     let landed_total = content::count_comments_for_target(&pool, host, false)
         .await
         .expect("landed count");
@@ -665,4 +689,136 @@ async fn an_unanswered_target_counts_zero(pool: PgPool) {
             .expect("landed count"),
         0
     );
+}
+
+/// A branch of three landed replies and two pending ones, the pending
+/// ones authored last — the shape every thread-order test reads.
+struct Branch {
+    host: Uuid,
+    landed: [Uuid; 3],
+    pending: [Uuid; 2],
+}
+
+async fn branch(pool: &PgPool) -> Branch {
+    let author = actor(pool, "author").await;
+    let replier = actor(pool, "replier").await;
+    let host = post(pool, author, Some(order(1, 0)), at(0), "host").await;
+    let mut landed = [Uuid::nil(); 3];
+    for (i, slot) in landed.iter_mut().enumerate() {
+        let i = i as i64;
+        *slot = comment(
+            pool,
+            replier,
+            host,
+            Some(order(2 + i, 0)),
+            at(10 + i),
+            "landed",
+        )
+        .await;
+    }
+    let mut pending = [Uuid::nil(); 2];
+    for (i, slot) in pending.iter_mut().enumerate() {
+        *slot = comment(pool, replier, host, None, at(50 + i as i64), "pending").await;
+    }
+    Branch {
+        host,
+        landed,
+        pending,
+    }
+}
+
+async fn thread(
+    pool: &PgPool,
+    host: Uuid,
+    cursor: Option<ContentCursor>,
+    backward: bool,
+    limit: i64,
+    order: ThreadOrder,
+) -> Vec<Comment> {
+    content::comments_for_target(pool, host, cursor, backward, limit, true, order)
+        .await
+        .expect("thread")
+}
+
+fn ids(page: &[Comment]) -> Vec<Uuid> {
+    page.iter().map(|c| c.id).collect()
+}
+
+fn comment_cursor(c: &Comment) -> ContentCursor {
+    ContentCursor {
+        order: c.sort_key(),
+        id: Some(c.id),
+    }
+}
+
+/// Oldest-first is the newest-first sequence read the other way: the
+/// landed replies in landing order, then the pending ones — the newest —
+/// closing the branch rather than leading it.
+///
+/// Oldest-first reads the newest-first thread sequence reversed, so the pending entries close the branch.
+/// ´claim:content:oldest-first-is-the-thread-reversed´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_branch_reads_oldest_first_with_its_pending_replies_last(pool: PgPool) {
+    let b = branch(&pool).await;
+    let [l1, l2, l3] = b.landed;
+    let [p1, p2] = b.pending;
+
+    let oldest = thread(&pool, b.host, None, false, 10, ThreadOrder::OldestFirst).await;
+    assert_eq!(ids(&oldest), vec![l1, l2, l3, p1, p2]);
+
+    let newest = thread(&pool, b.host, None, false, 10, ThreadOrder::NewestFirst).await;
+    assert_eq!(
+        ids(&newest),
+        vec![p2, p1, l3, l2, l1],
+        "the default thread order stays newest-first, pending leading"
+    );
+}
+
+/// Paging forward and back under oldest-first crosses the namespace
+/// boundary the same way the newest-first walk does, with the same
+/// cursors: nothing skipped, nothing served twice.
+///
+/// (´claim:content:oldest-first-is-the-thread-reversed´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_oldest_first_walk_pages_across_both_namespaces(pool: PgPool) {
+    let b = branch(&pool).await;
+    let [l1, l2, l3] = b.landed;
+    let [p1, p2] = b.pending;
+    let oldest = ThreadOrder::OldestFirst;
+
+    let page1 = thread(&pool, b.host, None, false, 2, oldest).await;
+    assert_eq!(ids(&page1), vec![l1, l2]);
+    let page2 = thread(
+        &pool,
+        b.host,
+        Some(comment_cursor(&page1[1])),
+        false,
+        2,
+        oldest,
+    )
+    .await;
+    assert_eq!(ids(&page2), vec![l3, p1], "the walk continues into pending");
+    let page3 = thread(
+        &pool,
+        b.host,
+        Some(comment_cursor(&page2[1])),
+        false,
+        2,
+        oldest,
+    )
+    .await;
+    assert_eq!(ids(&page3), vec![p2]);
+
+    let tail = thread(&pool, b.host, None, true, 2, oldest).await;
+    assert_eq!(ids(&tail), vec![p1, p2], "`last` reads the newest end");
+    let before = thread(
+        &pool,
+        b.host,
+        Some(comment_cursor(&tail[0])),
+        true,
+        2,
+        oldest,
+    )
+    .await;
+    assert_eq!(ids(&before), vec![l2, l3], "and back across the boundary");
 }
