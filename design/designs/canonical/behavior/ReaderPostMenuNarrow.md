@@ -7,3 +7,5 @@ ALWAYS the card's action row reads opinion, score, comments and share, and the r
 ALWAYS the rows under Share keep the wide menu's order and words GIVEN Share leads the reader's post menu
 
 WHEN tap Share in the reader's post menu -> the platform's own share sheet opens, exactly as the share glyph does on a wider phone
+
+WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

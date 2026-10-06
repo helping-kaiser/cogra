@@ -20,6 +20,8 @@ ALWAYS no count stands under the field GIVEN more than 100 of its 1,000 characte
 
 WHEN typing passes the field's 1,000 characters -> the count reads N over in the error colour AND the line A picture's description is at most 1,000 characters. takes the hint's place AND Done stays visible and goes inert AND NEVER Done hides AND NEVER a dialog opens
 
-WHEN press Done -> the sheet closes
+WHEN press Done -> the sheet closes AND the staged description becomes the picture's
 
-WHEN tap the scrim -> the sheet closes
+WHEN tap the scrim -> the sheet closes AND the picture's description is what it was before the sheet opened AND what was typed in What's in the picture is dropped AND NEVER anything staged in the sheet applies
+
+WHEN swipe the sheet down, press system Back or press Escape -> the sheet closes AND the picture's description is what it was before the sheet opened AND what was typed in What's in the picture is dropped AND NEVER anything staged in the sheet applies
