@@ -5,9 +5,10 @@ between people. What you see is shaped only by the connections you make.
 The design carries that as *tone*, never as on-screen vocabulary.
 
 This folder is the design system both CoGra clients read from: colour,
-type, shape, motion, components, copy, and the stance control. It is a
-recreation for design work — not the production source. Where a value
-here differs from the product source, the product source wins.
+type, shape, motion, components, copy, and the stance control. It is
+the authority the apps conform to: where an app differs from it, the
+app changes, and a problem with the design itself is worked out here
+first.
 
 ---
 
@@ -115,7 +116,8 @@ slice binds. An affordance whose destination is neither designed nor built
 stays out of the apps until one exists: never a dead control, and never a
 label that says what the code does not do (the feed's filter reads
 *Newest* until the ranker ships, §13 below). A drawn surface a release does
-not carry yet is staged, not divergent.
+not carry yet is staged, not divergent, and `staged-surfaces.md` lists
+what that leaves on screen.
 
 ---
 
@@ -2068,8 +2070,9 @@ entry first". What stands:
   the shell); each number has exactly one edge `{from, via, kind,
   label, to}`, and `to` lists every outcome as one of four shapes: a
   **board**, a shared **pattern board**, a declared **terminal**
-  (`back` / `self` / `os`), or an explicit **gap** — a design still
-  owed, greppable, listed by the checker, drawn red on the maps.
+  (`back` / `self` / `os` / `document`), or an explicit **gap** — a
+  design still owed, greppable, listed by the checker, drawn red on
+  the maps.
   `entries` records the non-tap ways onto a screen (app open, a mail
   link, time passing); a screen on a wired page must be an entry or
   an edge target. `boardKinds` marks reference boards (anatomy plates,
@@ -2245,7 +2248,9 @@ The rulings the layer rests on:
   is how a sheet's journey concludes, not a way back. A scrim exit is
   always `back`, and it discards (§4, *Sheets*); a flow about leaving a
   sheet unchanged declares that scrim edge as its given end rather than
-  walking it. A sheet's journey ends at its Done: the signing that may follow is the publishing flow's
+  walking it. (The four editing sheets discard nothing since — their
+  scrim exit stays `back` and closes with every change already applied;
+  §4, *Sheets*, the editing-sheet exemption.) A sheet's journey ends at its Done: the signing that may follow is the publishing flow's
   conclusion, never the sheet's.
 - **An `advance` must reach something.** A control whose every outcome
   merely informs — the applicant's locked rows answering with a
@@ -3654,7 +3659,9 @@ what the apps ship had never been ruled. Ruled by jakob the same day.
   review removed it. The tag page carries no follow control; the
   gesture gets its surface in slice 3's round, which is also when the
   roadmap first lets it ship (topic follow is client-hidden until the
-  topic feed lands).
+  topic feed lands). (Ruled since: topic holding ships whole inside
+  V1.0 — slice sequencing, never a hidden surface at the release cut;
+  jakob 2026-10-06, `staged-surfaces.md`.)
 - **Every row carries its claim, plainly.** A signed act is public
   record, so `TaggedRow` simply shows it: the nearest of the thirteen
   `TAG_ANCHORS` leads the flag and the exact pair sits with it. There
@@ -7143,7 +7150,8 @@ The verdict round of the V1.0 audit (the full trail, findings and
 candidates list live in the dev-state audit directory,
 `2026-09-24-mvp-audit/`): every affordance canonical drew beyond what
 the first release serves got a ruling, and the two precedents that used
-to compete got their chooser.
+to compete got their chooser. (What the cut leaves on screen is one
+list since — `staged-surfaces.md`, the release cut's checklist.)
 
 - **A door belongs to a slot, never to a list** (jakob 2026-09-25). The
   staging rule (§2) and the coming-soon door (`ChatsComingSoon`, the Sky
@@ -8180,7 +8188,9 @@ the rest as recommended. Both laws stand in §4.
   aboard"). The reason is his ranker's: every refetch will one day run
   the whole personalized ranking, so five taps must never mean five
   rankings — one re-query per visit. Revisited only if readers turn out
-  to expect collapse-to-submit.
+  to expect collapse-to-submit. (Four editing sheets apply live since,
+  and every way out just closes them — §4, *Sheets*, the editing-sheet
+  exemption, 2026-10-02.)
 - **The post detail's way back names its origin**, by a table built
   from its arriving edges, as the tag page's is (the detail, the clip
   detail, its veiled twin and `Removed`):
@@ -9203,6 +9213,45 @@ blessed, every `13X-final` recommendation adopted.
   resolved, 274 sidecars; five boards re-render. What stays open is
   backlog `13X-close-bite`.
 
+### The check wave — 2026-10-06
+
+The fabric's check round: four audit lanes read the merged tree against
+itself — code against sidecars, prose against prose, rulings against
+strings, and the MVP's coverage — and jakob ruled the brief whole (the
+digest `2026-10-06-check-round-rulings.md`: families A–J and fifteen
+questions, no vetoes). Seven lanes executed it (PRs #82–#88); a
+blessings bite closed it (#89).
+
+- **Every non-reference board walks a flow.** The witness round
+  declared the journeys the boards carry — sign-in, join and the
+  applicant; the key, the intro, settings and deletion; the compose
+  branches and the seal's faults; comments and edits; the feed, the
+  profile, the stance and invites — so all 260 sit on a resolved flow
+  and implementation never guesses a screen order.
+- **copy-voice is the complete registry** of drawn user-facing strings:
+  one transcription recorded every drawn line it lacked, the older ones
+  marked *carried over — blessed by use*, and the round's new lines
+  blessed.
+- **The editing-sheet exemption is law** (§4, *Sheets*), and every sheet
+  sidecar transcribes its kind.
+- **The offline convention is drawn** (the round's Q9). A form's submit
+  that gets no answer says `That didn't send. Try again.` in its own
+  error slot above the submit, keeps what was typed, and the submit is
+  the retry — the answer the graph's case strings label **E5**, after
+  the entry lane's fifth filed question (backlog `13X-passc-entry-a`,
+  *Forms*; ruled 2026-10-05), on 25 form-submit edges. Every other write
+  that gets no answer lands on `NetworkError` (copy-voice, *No answer at
+  all*).
+- **Two boards**: `ComposeDetailsReused` (the already-published marker,
+  backlog 110) and `FeedWordsSensitive` (the words-only veil's source
+  line, backlog 25). Invites' arrow returns to its origin,
+  `StanceCoachMark` retires for the pad's two coaching lines, History
+  stays append-only in first-seen order, and `ChatsComingSoon` conforms
+  to `WalletComingSoon` whole.
+- **The gate**: 274 → **276 screens**, 1864 → **1901 edges**, 0 gaps,
+  flows 66 → **222**, every one resolved, 276 sidecars; the corpus lint
+  reads 3063 sources, none failing.
+
 ---
 
 ## 14. The canvases
@@ -9298,6 +9347,8 @@ graph describes. It gets its edges when it migrates.
 - `styles.css` — the entry point consumers link. `@import` lines only.
 - `readme.md` — this file.
 - `backlog.md` — the ordered queue sessions pull from.
+- `staged-surfaces.md` — every surface the release ships staged: the
+  release cut's checklist, append-only.
 - `SKILL.md` — the Agent Skills wrapper.
 - `thumbnail.html` — the homepage tile.
 - `_build/bundle.mjs` — regenerates `_ds_bundle.js` (which the `@dsCard`

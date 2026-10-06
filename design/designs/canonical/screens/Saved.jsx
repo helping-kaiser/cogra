@@ -22,13 +22,18 @@
 
    EVERY ROW CARRIES ITS OWN UNSAVE (jakob 2026-09-11) — the shared `Unsave`,
    icon-only, standing in the chevron's slot outboard of the age. `SavedUndo`
-   draws the same list the moment one of them is tapped. */
+   draws the same list the moment one of them is tapped.
 
+   REGISTERED under the `saved` prefix (design ⇄ impl seam 059/061, the Saved
+   packet), with `SavedEmpty` and `SavedUndo`: a row is an `entry`, keyed by its
+   title, so the moment after an unsave names the rows that stayed by the same
+   keys. */
+export const NODE = "saved";
 export function Screen() {
   return (
     <>
-      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" />
-      <ChronicleList>
+      <PageHeader title="Saved" backHref="#" backLabel="Back to your profile" node="header" />
+      <ChronicleList node="list">
         <ContentRow
           variant="chronicle"
           chevron={false}
@@ -37,8 +42,10 @@ export function Screen() {
           titleAside="@ada"
           second="Took the coast road instead of the tunnel. Four hours longer, worth every minute."
           trailing="2d"
-          action={<Unsave name="The long way home" />}
+          action={<Unsave name="The long way home" node="unsave" />}
           onOpen={() => {}}
+          node="entry"
+          nodeKey="the-long-way-home"
         />
         <ContentRow
           variant="chronicle"
@@ -48,8 +55,10 @@ export function Screen() {
           titleAside="@tobias"
           second="on The long way home"
           trailing="3d"
-          action={<Unsave name="The third headland light is real" />}
+          action={<Unsave name="The third headland light is real" node="unsave" />}
           onOpen={() => {}}
+          node="entry"
+          nodeKey="the-third-headland-light-is-real"
         />
         <ContentRow
           variant="chronicle"
@@ -59,8 +68,10 @@ export function Screen() {
           titleAside="@mira"
           second="Runs the stand by the sea wall — honey from the headland hives."
           trailing="5d"
-          action={<Unsave name="Mira Voss" />}
+          action={<Unsave name="Mira Voss" node="unsave" />}
           onOpen={() => {}}
+          node="entry"
+          nodeKey="mira-voss"
         />
         <ContentRow
           variant="chronicle"
@@ -70,11 +81,13 @@ export function Screen() {
           titleAside="@mira"
           second="Everything the flats give up in one morning."
           trailing="7d"
-          action={<Unsave name="Sunday at the tide market" />}
+          action={<Unsave name="Sunday at the tide market" node="unsave" />}
           onOpen={() => {}}
+          node="entry"
+          nodeKey="sunday-at-the-tide-market"
         />
       </ChronicleList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

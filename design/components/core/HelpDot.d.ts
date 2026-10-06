@@ -11,6 +11,8 @@ export interface HelpDotProps {
    * inside a tonal block. Same geometry either way.
    */
   variant?: "page" | "inverse";
+  /** The data-node name its placer gives this dot (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function HelpDot(props: HelpDotProps): JSX.Element;

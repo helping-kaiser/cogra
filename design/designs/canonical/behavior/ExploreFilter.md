@@ -14,9 +14,9 @@ ALWAYS the reader's default is the one feed filter default, set in Settings, the
 
 ALWAYS Ranked is the order and Show what you've already seen stands off GIVEN the search filter is at its default and the reader has set no default of their own in Settings
 
-ALWAYS the search filter trigger speaks only the deviations from the search filter's default, a deviation back toward the app's default included
+ALWAYS explore.filterTrigger speaks only the deviations from the search filter's default, a deviation back toward the app's default included
 
-ALWAYS the search filter trigger's spoken name is its reading followed by what the search shows
+ALWAYS explore.filterTrigger's spoken name is its reading followed by what the search shows
 
 ALWAYS the search filter's foot holds Reset in its corner and Done at its end
 

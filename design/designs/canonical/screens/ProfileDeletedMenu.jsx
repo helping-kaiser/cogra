@@ -24,15 +24,20 @@
 
    SAVE AND SHARE NEED NO NAME EITHER. Saving keeps a pointer to a node, and the
    node is there; sharing sends this page, and the page is reachable by the same
-   structure the reader followed to get here. */
+   structure the reader followed to get here.
+
+   REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): the page
+   is `ProfileDeleted`'s, and the sheet is `menuSheet`, its rows named as
+   `ProfileMenu`'s are. */
+export const NODE = "profile";
 export function Screen() {
   return (
     <>
       <ProfileDeletedBody />
 
-      <BottomSheet open ariaLabel="Profile actions">
+      <BottomSheet open ariaLabel="Profile actions" node="menuSheet">
         {PROFILE_DELETED_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

@@ -20,15 +20,20 @@
    Share is a row here and a glyph elsewhere. On a post, share rides the
    affordance row, where the acts are; a profile has no such row — its one wide
    control is the stance on the person — so sharing arrives in the menu instead
-   of inventing a second row to hold it. */
+   of inventing a second row to hold it.
+
+   REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061): the page
+   is `ProfileOther`'s, and the sheet is `menuSheet`, each row named by its own
+   `node`. */
+export const NODE = "profile";
 export function Screen() {
   return (
     <>
       <ProfileOtherBody />
 
-      <BottomSheet open ariaLabel="Profile actions">
+      <BottomSheet open ariaLabel="Profile actions" node="menuSheet">
         {PROFILE_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

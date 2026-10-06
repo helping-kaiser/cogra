@@ -22,6 +22,8 @@ export interface SnackbarProps {
    * surface; pass 16 on a task flow, which carries no bar.
    */
   offset?: number;
+  /** The data-node name its placer gives the snackbar's drawn bar (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `message`, `action`. */
+  node?: string;
 }
 
 export declare function Snackbar(props: SnackbarProps): JSX.Element;

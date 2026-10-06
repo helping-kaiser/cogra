@@ -1,10 +1,10 @@
 # Explore · `spec:design:behavior-explore`
 
-ALWAYS Explore at rest reads the search field, then the Sky card, then Your topics, then Recent
+ALWAYS Explore at rest reads explore.searchField, then explore.skyCard, then Your topics, then Recent
 
-ALWAYS the Sky card reads The Sky — coming soon and opens nothing
+ALWAYS explore.skyCard reads The Sky — coming soon and opens nothing
 
-WHEN the reader types in the search field -> the Sky card drops off the bottom edge AND the searching view takes the screen
+WHEN the reader types in explore.searchField -> explore.skyCard drops off the bottom edge AND the searching view takes the screen
 
 ALWAYS the recent searches are kept on the device and never as a record
 

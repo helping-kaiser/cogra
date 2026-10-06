@@ -5,6 +5,8 @@
  */
 export interface SectionLabelProps {
   children?: React.ReactNode;
+  /** The data-node name its placer gives this label (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function SectionLabel(props: SectionLabelProps): JSX.Element;

@@ -199,9 +199,13 @@ const TOBIAS_COMMENT = "That stretch after the second bend is the reason I keep 
 
    THE HIDE ROW IS NOT HERE, and that is the difference between a card's menu
    and a menu board: hiding names the author, so it is spelled where the author
-   is known rather than handed to every card as one string. */
-const CITE_ROW = { label: "Cite in a new post", onSelect: () => {} };
-const SAVE_ROW = { label: "Save", onSelect: () => {} };
+   is known rather than handed to every card as one string.
+
+   A row's `node` is its data-node name (design ⇄ impl seam 059): a menu board
+   that registers hands it to the row's `SheetItem`, so a row keeps one name on
+   every menu it stands in, whatever its label reads in the state drawn. */
+const CITE_ROW = { label: "Cite in a new post", onSelect: () => {}, node: "cite" };
+const SAVE_ROW = { label: "Save", onSelect: () => {}, node: "save" };
 const CARD_MENU = [SAVE_ROW, CITE_ROW];
 
 /* A POST'S BODY IS WORDS XOR MEDIA (post.md). Every fixture with a picture
@@ -313,12 +317,17 @@ function FeedList({ children }) {
    divider construction, the one day divider the system draws: label-small,
    secondary, centred, no rule and no fill. It belongs to the list, never to
    a card — no card anatomy changes for it. Strings blessed (jakob 2026-10-05;
-   copy-voice, *Ages*). */
-function HistoryDayDivider({ children }) {
+   copy-voice, *Ages*).
+
+   Its placer names it (design ⇄ impl seam 062/063): `History` registers each
+   divider as `day`, keyed by its own words — two days never read alike. */
+function HistoryDayDivider({ children, node, nodeKey }) {
   return (
     <div
       role="heading"
       aria-level={2}
+      data-node={node}
+      data-node-key={node && nodeKey}
       style={{
         alignSelf: "center",
         padding: "4px 0",
@@ -508,7 +517,7 @@ function DetailHeader({ items, node }) {
    has it, post, comment and profile alike: the thumb learns one position, and
    the one menu that also holds Remove is the last place to move the rows
    around. The license closes this menu as it closes the others. */
-const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {} };
+const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "license" };
 /* CITING RIDES THIS MENU TOO (backlog item 100, ruled the batch-rulings
    round). `CARD_MENU`'s own note says citing acts on the thing itself,
    whoever wrote it — the argument Save was already given — and self-citation
@@ -529,7 +538,7 @@ const OWN_POST_MENU = [
   REMOVE_ROW,
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} }, LICENSE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW];
 /* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
    both doors, and this is the comment's). A post's door is a count row on its
    detail surface; a comment has no detail surface of its own — it lives inside a
@@ -649,9 +658,9 @@ function LicenseSheet({ license, stacked = false }) {
    Hide sits last: it is the rarest row and the one that takes something away. */
 const PROFILE_MENU = [
   SAVE_ROW,
-  { label: "Mention in a new post", onSelect: () => {} },
-  { label: "Share this profile", onSelect: () => {} },
-  { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {} },
+  { label: "Mention in a new post", onSelect: () => {}, node: "mention" },
+  { label: "Share this profile", onSelect: () => {}, node: "share" },
+  { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" },
 ];
 
 /* A DELETED ACCOUNT'S MENU (jakob 2026-09-12): the three rows that work on a
@@ -664,24 +673,28 @@ const PROFILE_MENU = [
    answers the same question. */
 const PROFILE_DELETED_MENU = [
   SAVE_ROW,
-  { label: "Share this profile", onSelect: () => {} },
-  { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {} },
+  { label: "Share this profile", onSelect: () => {}, node: "share" },
+  { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {}, node: "hide" },
 ];
 
 /* Your own profile's menu (the private-viewer-state round): the two private
    lists, then share. Saved and History are the only surfaces in the product
    nobody but the reader can see, and the band's ⋮ is where they hang. */
 const OWN_PROFILE_MENU = [
-  { label: "Saved", onSelect: () => {} },
-  { label: "History", onSelect: () => {} },
-  { label: "Share your profile", onSelect: () => {} },
+  { label: "Saved", onSelect: () => {}, node: "saved" },
+  { label: "History", onSelect: () => {}, node: "history" },
+  { label: "Share your profile", onSelect: () => {}, node: "share" },
 ];
 
-/* A device-local recent query — a quiet row, never a record (readme §13). */
-function RecentRow({ text }) {
+/* A device-local recent query — a quiet row, never a record (readme §13).
+   Named by its placer (design ⇄ impl seam 062/063): `Explore` registers each
+   row as `recent`, keyed by its query's words, with its `glyph` and `query`. */
+function RecentRow({ text, node, nodeKey }) {
   return (
     <button
       type="button"
+      data-node={node}
+      data-node-key={node && nodeKey}
       className="cg-state cg-focus"
       style={{
         display: "flex",
@@ -698,10 +711,12 @@ function RecentRow({ text }) {
         textAlign: "left",
       }}
     >
-      <span style={{ display: "inline-flex", color: "var(--text-secondary)" }}>
+      <span style={{ display: "inline-flex", color: "var(--text-secondary)" }} data-node={node && "glyph"}>
         <Icon name="search" size={18} />
       </span>
-      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{text}</span>
+      <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "query"}>
+        {text}
+      </span>
     </button>
   );
 }
@@ -738,10 +753,11 @@ function SkyField({ height = 180 }) {
   );
 }
 
-/* The seam — where the ranked results end and the newest tail begins. */
-function Seam() {
+/* The seam — where the ranked results end and the newest tail begins. Named by
+   its placer (seam 062/063), with its words as `label`. */
+function Seam({ node }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 24px" }} data-node={node}>
       <span style={{ flex: 1, height: 1, background: "var(--border-hairline)" }} />
       <span
         style={{
@@ -751,6 +767,7 @@ function Seam() {
           fontWeight: "var(--text-label-small--font-weight)",
           color: "var(--text-secondary)",
         }}
+        data-node={node && "label"}
       >
         Beyond your reach — newest first
       </span>
@@ -760,12 +777,17 @@ function Seam() {
 }
 
 /* The searching view's trigger row: the master FilterTrigger (the FeedFilter
-   idiom — deviations only, "Everything" at rest) with the "?" on the far edge. */
+   idiom — deviations only, "Everything" at rest) with the "?" on the far edge.
+
+   The two controls are the `explore` prefix's `filterTrigger` and `help`
+   (design ⇄ impl seam 062/063) — the trigger named as the feed's and
+   History's is. The row holding them is never named; every board that does
+   not register renders the names stripped. */
 function SearchTriggerRow({ reading }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4, padding: "0 16px 8px 16px" }}>
-      <FilterTrigger reading={reading} ariaLabel="What the search shows" />
-      <HelpDot />
+      <FilterTrigger reading={reading} ariaLabel="What the search shows" node="filterTrigger" />
+      <HelpDot node="help" />
     </div>
   );
 }
@@ -787,9 +809,9 @@ function HelpDot({ ariaLabel = "How searching works", ...rest }) {
    What the dot holds did not change — Saved, History, Share your profile, the
    private state's one door (readme §13, the private-viewer-state round) — only
    where the reader reaches for it. */
-function ProfileBand({ unread = false, children }) {
+function ProfileBand({ unread = false, children, node }) {
   return (
-    <CograBand unread={unread} trailing={<BandIcon name="settings" label="Settings" />}>
+    <CograBand unread={unread} trailing={<BandIcon name="settings" label="Settings" node={node && "gear"} />} node={node}>
       {children}
     </CograBand>
   );
@@ -798,17 +820,17 @@ function ProfileBand({ unread = false, children }) {
 /* Your own profile's ⋮, in the one place it now stands: closing the actions
    row, after Edit profile and Invites. Written once, so the three boards that
    draw your own header cannot disagree about what the dot holds. */
-const ownProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More on your profile" items={OWN_PROFILE_MENU} />;
+const ownProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More on your profile" items={OWN_PROFILE_MENU} node="menu" />;
 
 /* Another person's ⋮, likewise: closing their actions row after Message. */
-const otherProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More about @ada" items={PROFILE_MENU} />;
+const otherProfileMenu = () => <OverflowMenu placement="row" ariaLabel="More about @ada" items={PROFILE_MENU} node="menu" />;
 
 /* A deleted account's ⋮, closing a row that has no Message to stand after. Its
    name says `this account` for `StanceControl`'s reason on the same row: the
    handle went with the rest of the identity, and naming it back in the one
    string a screen reader reads aloud would undo the redaction. */
 const deletedProfileMenu = () => (
-  <OverflowMenu placement="row" ariaLabel="More about this account" items={PROFILE_DELETED_MENU} />
+  <OverflowMenu placement="row" ariaLabel="More about this account" items={PROFILE_DELETED_MENU} node="menu" />
 );
 
 /* The chronicle's tab row (profile round, 2026-09-01): the `TabBar` master
@@ -834,9 +856,9 @@ const CHRONICLE_TABS = [
 const CHRONICLE_TABS_LABEL = "What the chronicle shows";
 
 /* The chronicle column: cards on 8px of surface, the wallet history's seam. */
-function ChronicleList({ children }) {
+function ChronicleList({ children, node }) {
   return (
-    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }}>
+    <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", gap: 8, padding: "8px 16px 0" }} data-node={node}>
       {children}
     </div>
   );
@@ -866,10 +888,11 @@ function ChronicleList({ children }) {
    `Unsave Mira Voss` — the row's own title after the verb, the rule the tag
    chip's × and the skip link already keep. A list of identical `Unsave`s tells
    a listener the verb four times and the object never. */
-const Unsave = ({ name }) => (
+const Unsave = ({ name, node }) => (
   <button
     type="button"
     aria-label={`Unsave ${name}`}
+    data-node={node}
     className="cg-state cg-focus cg-hit"
     style={{
       display: "grid",
@@ -921,14 +944,21 @@ function ThreadDetail({ menuItems = READER_POST_MENU }) {
    what your own profile holds.
 
    `tail` is the chronicle's last slot: the row a page-failure puts where the
-   next page would have been. Given none, the list simply ends. */
+   next page would have been. Given none, the list simply ends.
+
+   The element names are the `profile` prefix's (design ⇄ impl seam 059/061):
+   `Profile` and `ProfileOwnMenu` register them, and every other board this
+   page stands on renders them stripped. The chronicle's acts are keyed by their
+   position, newest first — two acts can read alike, and an act shows nothing
+   else that is its own. */
 function ProfileOwnBody({ tail = null }) {
   return (
     <>
-      <ProfileBand />
+      <ProfileBand node="band" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
+            node="identity"
             handle="sol"
             displayName="Sol Ferreira"
             bio="Field notes from the flats — salt, paper, and whatever the wind allows."
@@ -950,17 +980,17 @@ function ProfileOwnBody({ tail = null }) {
             menu={ownProfileMenu()}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        <ChronicleList node="chronicle">
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="3d" second="Salt maps of the coast road — rubbings from three weekends at low tide." onOpen={() => {}} node="act" nodeKey="1" />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="4d" second="The third headland light is real — I have a print from 2019 that almost catches it." onOpen={() => {}} node="act" nodeKey="2" />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.4, pInterest: 0.5 }} title="Gave an opinion" titleAside="on @mira" trailing="5d" inert node="act" nodeKey="3" />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="7d" second="Three weekends of walking the same stretch at low tide." onOpen={() => {}} node="act" nodeKey="4" />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated your profile" trailing="14d" inert node="act" nodeKey="5" />
           {tail}
         </ChronicleList>
       </div>
-      <BottomNav active="profile" slots={ALL_SLOTS} inline />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -975,14 +1005,18 @@ function ProfileOwnBody({ tail = null }) {
 
    THE WAY BACK NAMES WHERE IT GOES — the profile's origin-noun table (readme
    §13, the navigation-and-sheets round). The board draws `Back to feed`, the
-   cold entry's label and the feed's alike. */
+   cold entry's label and the feed's alike.
+
+   Named as `ProfileOwnBody` names its page, under the same `profile` prefix:
+   `ProfileOther` and `ProfileMenu` register it. */
 function ProfileOtherBody({ bundle } = {}) {
   return (
     <>
-      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" />
+      <PageHeader title="@ada" backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
+            node="identity"
             handle="ada"
             displayName="Ada Okonkwo"
             avatarSrc="comment-camera.jpg"
@@ -998,16 +1032,16 @@ function ProfileOtherBody({ bundle } = {}) {
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        <ChronicleList node="chronicle">
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="2h" second="The long way home — the light does something at the third headland." onOpen={() => {}} node="act" nodeKey="1" />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="1d" second="The glovebox camera earns its keep — this is the print from 2019." onOpen={() => {}} node="act" nodeKey="2" />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.6, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @tobias" trailing="2d" inert node="act" nodeKey="3" />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="5d" second="Took the coast road instead of the tunnel. Four hours longer, worth every minute." onOpen={() => {}} node="act" nodeKey="4" />
+          <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -1016,17 +1050,19 @@ function ProfileOtherBody({ bundle } = {}) {
    `ProfileOtherBody` is: its own ⋮ needs this page with a sheet over it, and a
    husk drawn twice would drift. The page's reasoning lives on `ProfileDeleted`;
    what matters here is that the sheet board gets the identical husk, so the two
-   boards differ by the sheet alone. */
+   boards differ by the sheet alone. Named as `ProfileOtherBody` names its
+   page; the mark in the bio's place is `removalMark`. */
 function ProfileDeletedBody() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back to feed" />
+      <PageHeader backHref="#" backLabel="Back to feed" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
+            node="identity"
             handle="marlow"
             redacted
-            bio={<RedactedContent reason="account" when="3d" />}
+            bio={<RedactedContent reason="account" when="3d" node="removalMark" />}
             posts={7}
             stancesOn={22}
             stancesTaken={19}
@@ -1036,15 +1072,15 @@ function ProfileDeletedBody() {
             showHandle={false}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert />
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} />
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        <ChronicleList node="chronicle">
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="9d" second="Three mornings on the wall, watching the tide come in over the flats." onOpen={() => {}} node="act" nodeKey="1" />
+          <ContentRow variant="chronicle" chevron={false} glyph="chat_bubble" title="Commented" trailing="12d" second="The tunnel is faster; the coast road is the reason to drive at all." onOpen={() => {}} node="act" nodeKey="2" />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.5, pInterest: 0.3 }} title="Gave an opinion" titleAside="on @sol" trailing="14d" inert node="act" nodeKey="3" />
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} node="act" nodeKey="4" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -3057,20 +3093,28 @@ function ReportProblemBody({ words }) {
    logged-in surface and sits under an inner page's header.
 
    `deleteFootnote` is the deletion group's footnote — the member's by
-   default; `Settings` passes its reader chip's hole. */
+   default; `Settings` passes its reader chip's hole.
+
+   The element names are the `settings` prefix's (design ⇄ impl seam 059/061):
+   `Settings` and `SettingsHidden` register them, and every other board this
+   page stands on renders them stripped. A group is named for its heading, the
+   two unheaded ones for what the page's own note calls them — leaving and
+   ending — and a row by one word for what it is. The sessions are keyed by
+   their position, this device first: two devices can carry one name. */
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
 function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE } = {}) {
   return (
     <>
-      <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" />
+      <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
       {deleting && <DeletionBand days={6} />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
           label="Theme"
           footnote="Auto follows your device's own setting, and the choice stays on this device."
+          node="theme"
         >
           <div>
             <SegmentedFilter
@@ -3082,6 +3126,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
                 { value: "dark", label: "Dark" },
                 { value: "auto", label: "Auto" },
               ]}
+              node="picker"
             />
           </div>
         </SettingsGroup>
@@ -3089,38 +3134,44 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
         <SettingsGroup
           label="Giving an opinion"
           footnote="A tap opens this, everywhere. Press and hold instead, and a small positive one is signed on the spot."
+          node="stance"
         >
           <SettingsRow
             name="settings-stance-input"
             selected
             label="The pad"
             status="A tap opens it; drift to where it feels right."
+            node="pad"
           />
           <SettingsRow
             name="settings-stance-input"
             selected={false}
             label="Sliders"
             status="One slider per side of the opinion."
+            node="sliders"
           />
           <SettingsRow
             name="settings-stance-input"
             selected={false}
             label="Typed values"
             status="Type both numbers exactly."
+            node="typed"
           />
         </SettingsGroup>
 
         <SettingsGroup
           label="Writing"
           footnote="Every signed action is paid for separately. A post's license is settled when it is first signed and never changes."
+          node="writing"
         >
           <SettingsRow
             checked
             label="Confirm multi-action submits"
             status="Ask first when one submit signs more than one action."
             onOpen={() => {}}
+            node="confirm"
           />
-          <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} />
+          <SettingsRow label="Default license" value="Public domain" onOpen={() => {}} node="license" />
         </SettingsGroup>
 
         {/* THE EXACT VALUES ARE A READING SETTING, and a client-local one —
@@ -3132,13 +3183,15 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
         <SettingsGroup
           label="Reading"
           footnote="Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device."
+          node="reading"
         >
-          <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} />
+          <SettingsRow label="What your feed shows" value="Posts" onOpen={() => {}} node="feed" />
           <SettingsRow
             checked={false}
             label="Show exact values"
             status="The number pairs behind the faces."
             onOpen={() => {}}
+            node="exact"
           />
         </SettingsGroup>
 
@@ -3155,8 +3208,9 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
         <SettingsGroup
           label="People"
           footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+          node="people"
         >
-          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} />
+          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} node="hidden" />
         </SettingsGroup>
 
         <SettingsGroup
@@ -3166,45 +3220,66 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
               ? "Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back."
               : "Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back."
           }
+          node="backup"
         >
-          <SettingsRow label="Recovery code" status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"} onOpen={() => {}} />
-          <SettingsRow label="Your key" onOpen={() => {}} />
+          <SettingsRow
+            label="Recovery code"
+            status={backup === "none" ? "Not made yet" : "Last created 12.08.2026"}
+            onOpen={() => {}}
+            node="recovery"
+          />
+          <SettingsRow label="Your key" onOpen={() => {}} node="key" />
           {keptPicks > 0 && (
-            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} />
+            <SettingsRow label={`${keptPicks} kept ${keptPicks === 1 ? "pick" : "picks"} waiting`} onOpen={() => {}} node="kept" />
           )}
         </SettingsGroup>
 
         <SettingsGroup
           label="Sessions"
           footnote="A device you sign out can stay signed in for up to 15 minutes."
+          node="sessions"
         >
-          <SettingsRow label="Firefox on Ubuntu" status="This browser" inert />
+          <SettingsRow label="Firefox on Ubuntu" status="This browser" inert node="session" nodeKey="1" />
           <SettingsRow
             label="Pixel 8"
             status="Last used 2d"
             inert
-            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
+            trailing={
+              <InlineAction onClick={() => {}} node="revoke">
+                Revoke
+              </InlineAction>
+            }
+            node="session"
+            nodeKey="2"
           />
           <SettingsRow
             label="Unnamed device"
             status="Last used 12.08.2026"
             inert
-            trailing={<InlineAction onClick={() => {}}>Revoke</InlineAction>}
+            trailing={
+              <InlineAction onClick={() => {}} node="revoke">
+                Revoke
+              </InlineAction>
+            }
+            node="session"
+            nodeKey="3"
           />
-          <SettingsRow action label="Sign out everywhere else" onOpen={() => {}} />
+          <SettingsRow action label="Sign out everywhere else" onOpen={() => {}} node="elsewhere" />
         </SettingsGroup>
 
         <SettingsGroup
           label="Credentials"
           footnote="Changing your password signs out every other device."
+          node="credentials"
         >
-          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} />
-          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} />
+          <SettingsRow label="Password" status="Changed 21d" onOpen={() => {}} node="password" />
+          <SettingsRow label="Handle" value="@sol" onOpen={() => {}} node="handle" />
           <SettingsRow
             label="Email"
             value="sol@solferreira.art"
             status={emailPending ? "Change pending" : undefined}
             onOpen={() => {}}
+            node="email"
           />
         </SettingsGroup>
 
@@ -3233,24 +3308,25 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             placeholders until CoGra is on a server, the APK path's way:
             real-shaped values on the repo's own `.local` domain, swapped
             when the addresses exist. */}
-        <SettingsGroup label="About">
-          <SettingsRow label="Watch the intro again" onOpen={() => {}} />
-          <SettingsRow label="About CoGra" onOpen={() => {}} />
-          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} />
-          <SettingsRow label="Report a problem" onOpen={() => {}} />
-          <SettingsRow label="Contact" value={CONTACT_ADDRESS} onOpen={() => {}} />
-          <SettingsRow label="Privacy" onOpen={() => {}} />
-          <SettingsRow label="Terms" onOpen={() => {}} />
+        <SettingsGroup label="About" node="about">
+          <SettingsRow label="Watch the intro again" onOpen={() => {}} node="intro" />
+          <SettingsRow label="About CoGra" onOpen={() => {}} node="aboutCogra" />
+          <SettingsRow label="What's new" value={RUNNING_VERSION} onOpen={() => {}} node="whatsNew" />
+          <SettingsRow label="Report a problem" onOpen={() => {}} node="report" />
+          <SettingsRow label="Contact" value={CONTACT_ADDRESS} onOpen={() => {}} node="contact" />
+          <SettingsRow label="Privacy" onOpen={() => {}} node="privacy" />
+          <SettingsRow label="Terms" onOpen={() => {}} node="terms" />
         </SettingsGroup>
 
-        <SettingsGroup ariaLabel="Sign out">
+        <SettingsGroup ariaLabel="Sign out" node="leaving">
           <SettingsRow
             checked={forget}
             label="Don't remember this account on this device"
             status="Your key, your draft and any kept picks are cleared from this browser when you sign out."
             onOpen={() => {}}
+            node="forget"
           />
-          <SettingsRow action label="Sign out" onOpen={() => {}} />
+          <SettingsRow action label="Sign out" onOpen={() => {}} node="leave" />
         </SettingsGroup>
 
         {/* DELETING THE ACCOUNT IS THE LAST ROW, IN ITS OWN GROUP, QUIET AT REST
@@ -3278,8 +3354,8 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             their deletion is confirmed in the app and nothing is mailed, so it
             reads `Nothing is deleted here. The next screen says what goes and
             what stays.` `Settings`' reader chip passes it as a hole. */}
-        <SettingsGroup ariaLabel="Delete account" footnote={deleting ? undefined : deleteFootnote}>
-          <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} />
+        <SettingsGroup ariaLabel="Delete account" footnote={deleting ? undefined : deleteFootnote} node="ending">
+          <SettingsRow label="Delete account" status={deleting ? "Deletion in 6 days" : undefined} onOpen={() => {}} node="delete" />
         </SettingsGroup>
       </div>
     </>
@@ -3954,8 +4030,15 @@ function TagPageBody({ bundle, stanceOpen, stanceDefaultPick } = {}) {
    THE PROFILE AND THE TAG RIDE `PostCard`, as the post-MVP chat and message
    cards do: its header and ⋮, its row, and the card itself as the door. The
    comment keeps its own master, `CommentCard`, in its thread shape. */
-function FeedLeadName({ children }) {
-  return <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{children}</span>;
+function FeedLeadName({ children, node }) {
+  return (
+    <span
+      style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+      data-node={node}
+    >
+      {children}
+    </span>
+  );
 }
 const FEED_LEAD_SMALL = { fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" };
 const FEED_LEAD_TITLE = {
@@ -4102,26 +4185,44 @@ const FEED_BIO = {
    guest feed's rule, `Main`). No guest board draws one. */
 const FEED_DELETED_PROFILE_MENU = PROFILE_DELETED_MENU.filter((row) => row.label !== "Share this profile");
 
-function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false }) {
+/* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
+   `profileCard`, keyed by the person's handle, the card's own parts named as
+   `PostCard` names them and the lead's as `avatar`, `name`, `handle`, with the
+   bio as `bio`. */
+function ProfileFeedCard({ person, src, bio, score, bundle, redacted = false, node }) {
   const handle = redacted ? null : "@" + person.handle;
   return (
     <PostCard
       lead={
         <span style={{ display: "flex", alignItems: "center", gap: "var(--space-4)", minWidth: 0 }}>
-          <MonogramAvatar name={person.displayName} src={src} size={56} redacted={redacted} />
+          <MonogramAvatar name={person.displayName} src={src} size={56} redacted={redacted} node={node && "avatar"} />
           <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
             {redacted ? (
-              <span style={{ ...FEED_LEAD_TITLE, color: "var(--text-secondary)" }}>{REDACTED_ACTOR_NAME}</span>
+              <span style={{ ...FEED_LEAD_TITLE, color: "var(--text-secondary)" }} data-node={node && "name"}>
+                {REDACTED_ACTOR_NAME}
+              </span>
             ) : (
               <>
-                <span style={FEED_LEAD_TITLE}>{person.displayName}</span>
-                <span style={FEED_LEAD_SMALL}>@{person.handle}</span>
+                <span style={FEED_LEAD_TITLE} data-node={node && "name"}>
+                  {person.displayName}
+                </span>
+                <span style={FEED_LEAD_SMALL} data-node={node && "handle"}>
+                  @{person.handle}
+                </span>
               </>
             )}
           </span>
         </span>
       }
-      main={bio && !redacted ? <p style={FEED_BIO}>{bio}</p> : undefined}
+      main={
+        bio && !redacted ? (
+          <p style={FEED_BIO} data-node={node && "bio"}>
+            {bio}
+          </p>
+        ) : undefined
+      }
+      node={node}
+      nodeKey={person.handle}
       targetLabel={handle ?? "this account"}
       bundle={bundle}
       score={score}
@@ -4187,31 +4288,48 @@ const SALTMAPS_TAGGED = [
   { kind: "comment", title: "Low tide is kinder to the rubbings than noon ever was.", by: ADA, age: "4d" },
 ];
 
-function TagFeedCard({ name, through, tagged, score, bundle }) {
+/* NAMED BY ITS PLACER (design ⇄ impl seam 062/063): `History` registers it as
+   `tagCard`, keyed by the tag's name, the card's own parts named as `PostCard`
+   names them; the lead's are `mark`, `name` and the why-line `through`, the
+   glimpse is `glimpse` with its newest thing's `newest` and `by` (or the
+   empty tag's one line as `nothing`), and the kind's own act is `compose`. */
+function TagFeedCard({ name, through, tagged, score, bundle, node }) {
   const [newest, ...rest] = tagged;
   const glimpse = newest ? (
-    <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }}>
+    <span style={{ display: "flex", alignItems: "center", gap: "var(--space-3)", minWidth: 0 }} data-node={node && "glimpse"}>
       <span style={{ display: "flex", gap: "var(--space-1)", flex: "none" }}>
         {tagged.map((thing) => (
           <NodeMark key={thing.title} kind={thing.kind} src={thing.cover} onCard />
         ))}
       </span>
       <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <span style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{newest.title}</span>
-        <span style={FEED_LEAD_SMALL}>@{newest.by.handle}{rest.length > 0 && ` · and ${rest.length} more`}</span>
+        <span
+          style={{ fontSize: "var(--text-label-large)", lineHeight: "var(--text-label-large--line-height)", fontWeight: "var(--text-label-large--font-weight)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+          data-node={node && "newest"}
+        >
+          {newest.title}
+        </span>
+        <span style={FEED_LEAD_SMALL} data-node={node && "by"}>
+          @{newest.by.handle}
+          {rest.length > 0 && ` · and ${rest.length} more`}
+        </span>
       </span>
     </span>
   ) : (
-    <span style={FEED_LEAD_SMALL}>{TAG_NOTHING_RECENT}</span>
+    <span style={FEED_LEAD_SMALL} data-node={node && "nothing"}>
+      {TAG_NOTHING_RECENT}
+    </span>
   );
   return (
     <PostCard
       lead={
         <span style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-          <NodeMark kind="topic" onCard />
+          <NodeMark kind="topic" onCard node={node && "mark"} />
           <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <FeedLeadName>{name}</FeedLeadName>
-            <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{reachesThrough(through)}</span>
+            <FeedLeadName node={node && "name"}>{name}</FeedLeadName>
+            <span style={{ ...FEED_LEAD_SMALL, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} data-node={node && "through"}>
+              {reachesThrough(through)}
+            </span>
           </span>
         </span>
       }
@@ -4222,8 +4340,10 @@ function TagFeedCard({ name, through, tagged, score, bundle }) {
       score={score}
       onOpenScore={() => {}}
       stanceAxes={AFFINITY_AXES}
-      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} />}
+      act={<GlyphAction glyph="add" label={TAG_ACT} onPress={() => {}} node={node && "compose"} />}
       onOpen={() => {}}
+      node={node}
+      nodeKey={name.replace(/^#/, "")}
     />
   );
 }

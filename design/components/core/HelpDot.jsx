@@ -25,13 +25,14 @@ const RINGS = {
   inverse: { border: "1px solid currentColor" },
 };
 
-export function HelpDot({ ariaLabel = "What is this?", onOpen, variant = "page" }) {
+export function HelpDot({ ariaLabel = "What is this?", onOpen, variant = "page", node }) {
   const ring = RINGS[variant] ?? RINGS.page;
   return (
     <button
       type="button"
       aria-label={ariaLabel}
       onClick={onOpen}
+      data-node={node}
       className="cg-state cg-focus"
       style={{
         display: "grid",

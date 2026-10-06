@@ -47,9 +47,9 @@ const WORDS = {
   letterSpacing: "var(--text-label-large--letter-spacing)",
 };
 
-export function TabBar({ tabs = [], value, ariaLabel, onSelect, iconSize = 22 }) {
+export function TabBar({ tabs = [], value, ariaLabel, onSelect, iconSize = 22, node }) {
   return (
-    <div role="group" aria-label={ariaLabel} style={{ display: "flex", borderBottom: "1px solid var(--border-hairline)" }}>
+    <div role="group" aria-label={ariaLabel} style={{ display: "flex", borderBottom: "1px solid var(--border-hairline)" }} data-node={node}>
       {tabs.map((tab) => {
         const selected = tab.id === value;
         const chosen = {
@@ -65,6 +65,7 @@ export function TabBar({ tabs = [], value, ariaLabel, onSelect, iconSize = 22 })
             onClick={onSelect && (() => onSelect(tab.id))}
             className="cg-state cg-focus"
             style={tab.icon ? { ...CELL, ...chosen } : { ...CELL, ...WORDS, ...chosen }}
+            data-node={node && `${tab.id}Tab`}
           >
             {tab.icon ? <Icon name={tab.icon} size={iconSize} /> : tab.label}
           </button>

@@ -56,21 +56,32 @@
 
    NO CLEAR, AND NO PER-ITEM REMOVE (jakob 2026-10-05: "no need for it"). The
    list is the feed's seen filter, so taking a thing out of it would put that
-   thing back into the reader's feed; History offers neither control. */
+   thing back into the reader's feed; History offers neither control.
+
+   REGISTERED under the `history` prefix (design ⇄ impl seam 062/063, the
+   History packet), with `HistoryEmpty`, `HistoryFilter` and `HistoryNone`.
+   Every card keeps the name and key its kind has on the feed — `card` and
+   `commentCard` by their author, `profileCard` by the person, `tagCard` by
+   the tag — because each is the feed's own card; the list holding them is
+   the feed's, unnamed there and here. A day divider is a `day`, keyed by
+   its words. The field is `searchField`, the trigger `filterTrigger`. */
+export const NODE = "history";
 export const FRAME = { width: 390, height: 1720 };
 
 export function Screen() {
   return (
     <>
-      <PageHeader title="History" backHref="#" backLabel="Back to your profile" />
+      <PageHeader title="History" backHref="#" backLabel="Back to your profile" node="header" />
       <div style={{ flex: "none" }}>
-        <SearchBar placeholder="Search your history" ariaLabel="Search your history" />
+        <SearchBar placeholder="Search your history" ariaLabel="Search your history" node="searchField" />
         <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
-          <FilterTrigger reading="Everything" ariaLabel="What your history shows" />
+          <FilterTrigger reading="Everything" ariaLabel="What your history shows" node="filterTrigger" />
         </div>
       </div>
       <FeedList>
-        <HistoryDayDivider>Today</HistoryDayDivider>
+        <HistoryDayDivider node="day" nodeKey="today">
+          Today
+        </HistoryDayDivider>
         <CommentFeedCard
           author={TOBIAS}
           content={TOBIAS_COMMENT}
@@ -78,17 +89,28 @@ export function Screen() {
           parent={ADA_POST}
           topics={["glovebox", "coastroad"]}
           score="12.40"
+          node="commentCard"
         />
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
-        <HistoryDayDivider>Yesterday</HistoryDayDivider>
-        <ProfileFeedCard person={MIRA} src="inviter.jpg" bio="Runs the stand by the sea wall — honey from the headland hives." score="11.70" />
-        <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" />
-        <HistoryDayDivider>2 October</HistoryDayDivider>
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
+        <HistoryDayDivider node="day" nodeKey="yesterday">
+          Yesterday
+        </HistoryDayDivider>
+        <ProfileFeedCard
+          person={MIRA}
+          src="inviter.jpg"
+          bio="Runs the stand by the sea wall — honey from the headland hives."
+          score="11.70"
+          node="profileCard"
+        />
+        <TagFeedCard name="#saltmaps" through={["ada", "tobias"]} tagged={SALTMAPS_TAGGED} score="10.30" node="tagCard" />
+        <HistoryDayDivider node="day" nodeKey="2-october">
+          2 October
+        </HistoryDayDivider>
         {/* First seen three days ago, so it is at least that old: its own age
             reads 3d, never younger than the day it was seen. */}
-        <PostCard {...TOBIAS_POST} timestamp="3d" bundle={mkBundle(0.1, 0.1)} />
+        <PostCard {...TOBIAS_POST} timestamp="3d" bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

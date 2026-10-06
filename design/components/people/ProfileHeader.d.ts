@@ -65,6 +65,8 @@ export interface ProfileHeaderProps {
   redacted?: boolean;
   /** Off where the screen's own top bar already carries @handle. Defaults to true. */
   showHandle?: boolean;
+  /** The data-node name its placer gives this header (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `avatar`, `changeBadge`, `name`, `handle`, `figures` (`posts`, `stancesOn`, `stancesTaken`, each with its `value` and `label`), `bio` (a string bio — a node bio is named by its own placer), `website`, `actionRow` (`edit`, `invites` with its `dot`, `stance` with its `anchor`, `message`; the `menu` is named by its own placer). */
+  node?: string;
 }
 
 export declare function ProfileHeader(props: ProfileHeaderProps): JSX.Element;

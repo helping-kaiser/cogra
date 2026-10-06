@@ -9,7 +9,12 @@
 
    THE PAGE IS `ProfileOwnBody`, in `_shared.jsx`: the band's menu draws this
    same page under its sheet, and the chronicle's page-failure state draws it
-   with one row added. Three boards, one drawing. */
+   with one row added. Three boards, one drawing.
+
+   REGISTERED under the `profile` prefix (design ⇄ impl seam 059/061), the
+   surface every profile board shares: the body names its parts, and `NODE`
+   carries them onto the built board and into `nodes.json`. */
+export const NODE = "profile";
 export function Screen() {
   return <ProfileOwnBody />;
 }

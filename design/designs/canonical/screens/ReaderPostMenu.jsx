@@ -25,19 +25,25 @@
 
    The license row closes this sheet and raises the terms over the surface the
    reader asked from — `PostLicense`, a drawer they drop by the scrim, the swipe
-   or Escape. The terms are never a state of the card. */
+   or Escape. The terms are never a state of the card.
+
+   REGISTERED under the `postDetail` prefix (design ⇄ impl seam 059/061, the
+   Hide packet): the board draws the post's detail with its menu raised, so it
+   is named as `PostDetail` names that surface, and the sheet is `menuSheet`,
+   each row named by its own `node`. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
-      <DetailHeader items={READER_POST_MENU} />
+      <DetailHeader items={READER_POST_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...ADA_POST} variant="detail" />
+        <PostCard {...ADA_POST} variant="detail" node="card" />
       </DetailColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
-      <BottomSheet open ariaLabel="Post actions">
+      <BottomSheet open ariaLabel="Post actions" node="menuSheet">
         {READER_POST_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

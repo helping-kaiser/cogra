@@ -60,6 +60,10 @@ export interface ContentRowProps {
   action?: React.ReactNode;
   /** Where the row goes. */
   onOpen?: () => void;
+  /** The data-node name its placer gives this row (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `disc`, `title`, `aside`, `second`, `trailing`, `chevron`. An `action` is named by its own placer. */
+  node?: string;
+  /** The row's content key when it is a repeated instance — the placer's rule. */
+  nodeKey?: string;
 }
 
 export declare function ContentRow(props: ContentRowProps): JSX.Element;
