@@ -38,7 +38,9 @@ ALWAYS a standing citation whose target was removed keeps its row, wearing the r
 
 ALWAYS a standing citation whose target was removed keeps its pair, its sheet and its ×, and adds nothing to the batch by standing
 
-ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took are uploading
+ALWAYS the line Uploading N of M — signing waits for the picture. stands above the acts footer GIVEN pictures the edit took are uploading and M is 1
+
+ALWAYS the line Uploading N of M — signing waits for the pictures. stands above the acts footer GIVEN pictures the edit took are uploading and M is 2 or more
 
 ALWAYS Sign the edit is enabled GIVEN an upload is running
 

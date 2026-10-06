@@ -20,9 +20,11 @@ WHEN tap the clip's remove control -> the clip leaves whole AND the words edit s
 
 WHEN tap Describe the video -> the describe sheet opens on one description for the clip, none for its cover
 
-WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the footer counts one more AND NEVER a dialog asks
+WHEN tap the × of a tag the post already carries -> the withdrawal of that tag is staged in the batch AND the chip leaves the row for the line Withdrawn: under the tags AND the footer counts one more AND NEVER a dialog asks
 
 WHEN tap the × of a tag picked in this same edit -> the pick is unstaged AND the chip leaves the row AND the footer counts one fewer AND NEVER a withdrawal is staged AND NEVER a dialog asks
+
+WHEN tap Undo on a Withdrawn: line -> the withdrawal is unstaged AND the chip returns as it stood AND the line goes AND the footer counts the withdrawal's record off
 
 WHEN press Sign the edit GIVEN the signing is taken -> the post opens with the edit settling AND the clip points at the cover the edit set, if it set one
 
