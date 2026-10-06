@@ -61,6 +61,12 @@ tree-sitter-language = "0.1.7"
 # The adoption-data parser (design, TOML-parsing decision); Spanned locates
 # adoption defects at their row.
 toml = "1.1"
+# The exported schema's parser for the API-contract judgment: schema.graphql
+# is what async-graphql's own `sdl()` writes, so the parser of the same
+# release reads it back. `parse_schema` returns a ServiceDocument whose
+# definitions carry their positions. Verified against docs.rs/
+# async-graphql-parser 7.2.1 on 2026-10-06.
+async-graphql-parser = "7.2.1"
 serde = { workspace = true }
 thiserror = { workspace = true }
 # The three modes of the command line (design, CLI signature). The derive
