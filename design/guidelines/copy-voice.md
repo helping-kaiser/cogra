@@ -1601,6 +1601,11 @@ and before `Privacy` and `Terms`, each one string for app and web:
 Both addresses (`reports@cogra.local`, `hello@cogra.local`) are
 placeholders until CoGra is on a server, and swap then.
 
+*Carried over — blessed by use (jakob 2026-10-06):* the About group opens
+on `Watch the intro again`, which re-opens the intro (*The intro*,
+below), and a session whose device gave no name reads `Unnamed device`
+(`Settings`).
+
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
 underneath: `Your key, your draft and any kept picks are cleared from
@@ -1915,6 +1920,50 @@ ruling) — and the answers name them as one plural. The app renders the platfor
 key or replace your recovery code. You can go on, or set a screen lock
 first.` — `Go on anyway` · `Cancel`.
 
+**Carried over — blessed by use (jakob 2026-10-06).** The key boards'
+remaining lines, recorded so the registry is whole (browser wording; the
+app's renderings are above):
+
+- **The ceremony** (`KeyCeremony`) — heading `Your key`, the pledge
+  `Everything you publish is signed with a key that is created on this
+  browser and stays in your hands — CoGra never holds it and can never
+  reissue it.`, then `A recovery code is the one way to bring your key to
+  another device, or back after a loss. It is shown once; you keep it
+  somewhere safe.`, with `Create my recovery code` and `Not now`.
+- **Its confirm** (`KeyConfirm`) — `Ready to record your code?` · `The
+  next screen shows your recovery code — 26 characters, shown once, meant
+  only for your eyes. Have somewhere safe ready to keep it, and you stay
+  on that screen until the code is confirmed.` · `Cancel` · `Show my
+  code`.
+- **Its decline** (`KeyDecline`) — `Continue without a backup?` ·
+  `Without a recovery code, losing this device means losing your key.
+  Your sign-in survives, but no one — including CoGra — can bring the key
+  back. You can still create a code later, from settings, while the key
+  exists.` · `I accept the risk` · `Go back`. `SettingsBackupNone` draws
+  its first two sentences.
+- **The code** (`RecoveryCode`, `RecoveryCodeMismatch`) — heading `Your
+  recovery code`, `This is the only way to restore your key. It is shown
+  once and never stored — keep it offline, written down, somewhere
+  safe.`, `Copy`, the field `Type or paste the code to confirm`, and `I've
+  written it down`.
+- **The restore** (`Restore`, `RestoreError`, `RestoreLength`) — heading
+  `Restore your key`, `Enter your recovery code to bring your signing key
+  onto this browser.` (`…into this app.`), and `This is the only way to
+  restore your key. If the code is gone too, the key can't be brought
+  back — your sign-in still works.`; every recovery-code field shows the
+  code's shape as its placeholder, `XXXXX-XXXXX-XXXXX-XXXXX-XXXXXX`.
+- **The key elsewhere** — the notice's body `Restore it with your
+  recovery code to post, vouch, and act. Until then, anything you sign
+  waits as pending.` (`KeyElsewhere`, `PadKeyAbsent`, `PadPending`); on
+  the pad, `Restore the key with your recovery code to finish.` and the
+  way out `Keep it pending, restore later` (`PadKeyAbsent`); a new code
+  without the key, `Making a new code needs the key itself. Your current
+  recovery code keeps working.` (`SettingsBackupKeyAbsent`).
+- **Your key's paragraph** goes on after its first sentence: `Store a copy
+  somewhere safe and you keep it whatever happens to CoGra. Anyone who
+  has a copy can act as you.` (`YourKey`, `YourKeyAbsent`); and with no
+  key here, `There is no key on this browser to show.` (`YourKeyAbsent`).
+
 ## The profile save
 
 Blessed with the small-rulings batch. A profile edit is a signed act
@@ -1930,6 +1979,33 @@ feedback the surface draws:
   is kept` or `Keep the draft, sign later`. Their key-absent notice takes
   the same way out: `Not now` back to the seal, nothing kept — never `Keep
   the draft, restore later` (jakob 2026-10-05).
+
+**Carried over — blessed by use (jakob 2026-10-06).** The profile's own
+words, recorded so the registry is whole:
+
+- **The page** — the figures `Posts` · `Opinions on you` · `Opinions by
+  you` on one's own, `Opinions on them` · `Opinions by them` on
+  another's; the own page's `Edit profile`. The chronicle's tabs `Posts` ·
+  `Comments` · `Everything`, named `What the chronicle shows`; its rows
+  `Published a post` (the post's title under it), `Commented` (the
+  comment's words), `Gave an opinion` (`on @mira`), and `Updated your
+  profile` · `Updated their profile`.
+- **The opinions page** (`ProfileStances`) — its tabs `On them` · `By
+  them`.
+- **The edit** (`ProfileEdit`) — titled `Edit profile`, its fields
+  `Display name` · `Bio` · `Website`, and `Your handle changes in
+  Settings.`
+- **The profile's seal** (`ProfileEditSeal`) — `Your profile` over
+  `Picture, name, bio, and website — one signed change.`; the acts row
+  `Profile` reading `A new picture, bio and website`, its count spoken
+  `1 profile change`; under the card `Every change to your profile is
+  signed in your name and stays in your public record.`; its "?" is named
+  `Changing your profile`.
+- **The picture** — the crop titled `Your picture` with `One picture,
+  shown everywhere you appear.` under the how-to line (`AvatarCrop`); its
+  seal's `Your profile picture` over `Shown everywhere you appear.`, the
+  acts row `Picture` reading `A new profile picture`, and the same
+  signed-change line (`AvatarSeal`).
 
 ## The vouch-back ceremony
 
