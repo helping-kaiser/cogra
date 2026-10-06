@@ -133,3 +133,7 @@ ALWAYS the deletion group's footnote reads Nothing is deleted here. The next scr
 ALWAYS the deletion group's footnote reads Nothing is deleted here. The next screen says what goes and what stays. GIVEN the reader is an applicant
 
 WHEN tap Delete account GIVEN no deletion is in its grace -> the deletion's request screen opens AND NEVER anything is deleted from the row
+
+ALWAYS Delete account wears the locked look, visibly inactive at the disabled opacity and still tappable GIVEN the reader is an applicant whose application is approved and whose registration has not landed
+
+WHEN tap Delete account GIVEN the reader is an applicant whose application is approved and whose registration has not landed -> the snackbar reads You can delete your account once you're in. AND NEVER the deletion's request screen opens AND NEVER anything is deleted

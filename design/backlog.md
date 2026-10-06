@@ -223,8 +223,8 @@ carries a unit, and what it does at zero and negative. `payoutAddress`
 moves off the profile in item 12, so settle the figure first.
 
 ### 12 · Wallet · *design + system* · **built** · **post-MVP since 2026-09-25**
-The V1.0 scope cut (readme §13) moved the eleven wallet boards to
-`designs/postmvp/`; in V1.0 the wallet slot opens `WalletComingSoon`.
+The v1.0.0 scope cut (readme §13) moved the eleven wallet boards to
+`designs/postmvp/`; in v1.0.0 the wallet slot opens `WalletComingSoon`.
 
 Eight boards (Wallet rows on the canonical canvas: at rest, the
 zero state, first-open set-up, the address-publish seal, the
@@ -313,7 +313,7 @@ ago reads a quiet line (`FeedEntryMoved`) — readme §13, *The
 score-and-opinions round*.
 
 ### 14 · Marketplace · *design* · **post-MVP**
-V1.0 serves no items or offers (readme §13, *The V1.0 scope cut*).
+CoGra v1.0.0 serves no items or offers (readme §13, *The v1.0.0 scope cut*).
 Two entrances — your items on a profile, and the marketplace from the
 feed or the wallet. Search by item name, ranked results, offers. The
 profile is also a gate into it, so item 5 should be done first.
@@ -1718,7 +1718,7 @@ settle, each named where it was found rather than folded into the round.
    points at.
 5. ~~**The follow gesture has no surface.**~~ Drawn as `TopicStanceRow`
    on `TagPage`, `TagPageEmpty` and `TagPageHeld` (items 78 and 90);
-   topic follow ships whole in V1.0 (readme §13, *The V1.0 scope cut*).
+   topic follow ships whole in v1.0.0 (readme §13, *The v1.0.0 scope cut*).
 
 ### 47 · The bottom bar's re-tap ladder · *design* · **ruled + recorded**
 
@@ -3537,13 +3537,13 @@ still. Recorded in readme §13 (the stored first frame) and the
 `MediaAttachment` docblock; the web change is the implementation
 session's, relayed as a contract.
 
-### 107 · The V1.0 audit's scope cut — the application queue · *design + system* · **verdicts ruled 2026-09-25, application in progress**
+### 107 · The v1.0.0 audit's scope cut — the application queue · *design + system* · **verdicts ruled 2026-09-25, application in progress**
 
-The V1.0 audit (2026-09-24, seven lanes over all 218 canonical
+The v1.0.0 audit (2026-09-24, seven lanes over all 218 canonical
 boards plus the docs and an external UX rubric; trail in dev-state
 `cogra/tmp_dev/2026-09-24-mvp-audit/`) produced a candidates list of
 everything canonical draws that the first release may not serve.
-jakob ruled all fifteen candidates 2026-09-25; readme §13 *The V1.0
+jakob ruled all fifteen candidates 2026-09-25; readme §13 *The v1.0.0
 scope cut* carries the rulings, including the door-belongs-to-a-slot
 principle that now chooses between the staging rule and the
 coming-soon door.
@@ -3557,14 +3557,14 @@ The application queue, in order:
    card master (cogra wash, headline + one line) replaces
    `ChatsComingSoon`'s bare text and faces the wallet slot's door;
    ~48 nav edges rewire; wallet strings and the CGT help leave
-   V1.0 copy.
+   v1.0.0 copy.
 3. **The kind trims** *(landed with this PR; the history doors
    ruled 2026-09-30)*: feed + search filters down to the four
    served kinds; item/offer/message rows leave `ExploreSearch`;
    `RefsSheet` and `ReferencePicker` down to person/post/comment,
    each row wired; the masters' history doors stay as prop-gated
    anatomy the post-MVP history boards render — no canonical
-   screen passes `onOpenHistory`/`onInspect`, so V1.0 draws no
+   screen passes `onOpenHistory`/`onInspect`, so CoGra v1.0.0 draws no
    door, and the three masters' docblocks declare it.
 4. **The copy round** *(landed 2026-09-25, all strings blessed)*:
    deletion page ("cover", "messages" out),
@@ -3606,7 +3606,7 @@ paragraph describes once-each staging and the three rulings; About's
 what becomes of it, in lines jakob blessed on 2026-10-01. The
 contract's staging surface is relayed to the implementation session
 as a contract need, with the audit's K3 findings. The DeleteAccount
-wallet bullet left V1.0 the same day (the page names what exists);
+wallet bullet left v1.0.0 the same day (the page names what exists);
 About's money section stays by the item-74 ruling — About is the
 fuller version, future features included.
 
@@ -3790,7 +3790,7 @@ draws one and registers it as `feed.commentCard.media.frame`, which
 
 ### 115 · Ranked comment order, once ranking exists · *design* · **filed 2026-09-30** · **future**
 
-The thread's order is ruled for now (jakob 2026-09-30, the V1.0
+The thread's order is ruled for now (jakob 2026-09-30, the v1.0.0
 audit's K5.1): top-level comments newest-first, and the replies in a
 branch oldest-first, on the api's ordering argument. The direction
 after that is ranked: once the ranker serves comments, the thread's
@@ -3911,7 +3911,7 @@ dateline form's owners.
 The already-published marker keeps the `12 September` form (`Already
 in your post from 12 September.`, *The already-published marker*): item
 112's resolution names it a dateline owner in copy-voice's *Ages*. It is
-a V1.0 line, not post-MVP, so the sweep leaves it standing; its board
+a v1.0.0 line, not post-MVP, so the sweep leaves it standing; its board
 is drawn in that form (jakob 2026-10-06, the check round; item 110), and
 the rewritten dateline paragraph keeps it as the form's owner.
 
@@ -4725,7 +4725,7 @@ final brief executed*. What no ruling reached carries to `13X-final`.
 The entry and vouch rulings executed (readme §13) left these for
 jakob's eye:
 
-- **The intro's swipe, post-MVP.** V1.0 moves the five cards by their
+- **The intro's swipe, post-MVP.** CoGra v1.0.0 moves the five cards by their
   buttons alone (jakob, "fine for v1"); whether they swipe is revisited
   after the MVP, never dropped.
 - **System Back in the funnel** (the entry lane's F-9) is in no ruling:

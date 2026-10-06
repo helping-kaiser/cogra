@@ -12,4 +12,8 @@ WHEN tap the pinned clip's veil face -> the pinned clip and the card unveil toge
 
 WHEN tap Show on the card's veil -> the pinned clip and the card unveil together AND the clip and the transport come back in place
 
+WHEN the pinned clip unveils GIVEN the device allows autoplay -> the clip plays
+
+WHEN the pinned clip unveils GIVEN the device suppresses autoplay -> NEVER the clip starts on its own
+
 ALWAYS a reveal holds for every move inside the app until the app is fully closed or the media is hard reset

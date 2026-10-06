@@ -30,6 +30,10 @@ WHEN tap Set GIVEN the key is on another device -> the notice stands as PadKeyAb
 
 WHEN the key is back GIVEN a vouch was kept as a kept approval -> it signs only through the approval pad opened from its card on Invites AND NEVER with the kept picks' Sign them
 
+WHEN tap Set GIVEN the asker is not fully registered yet -> the application is staged AND the vouch is kept as a kept approval AND Invites opens where that row is AND the snackbar reads @noor has to finish registering before you can approve AND NEVER anything is signed or spent
+
+WHEN the asker finishes registering GIVEN a vouch was kept as a kept approval -> it signs only through the approval pad opened from its row on Invites AND NEVER with the kept picks' Sign them
+
 WHEN tap Set GIVEN the signing does not go through -> the pad stays open at the pick, the fault above the commit row and Retry in Set's place, as PadFailed draws it
 
 WHEN tap Set GIVEN the write rule refuses -> nothing is staged or spent AND the notice stands where the landing line and Set were, with Not now, as PadWriteRule draws it

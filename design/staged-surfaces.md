@@ -16,7 +16,7 @@ with the date and the round that lifted it, never deleted. A row under
 ## Coming-soon doors
 
 A slot or icon whose absence would deform the shell keeps its place and
-opens a coming-soon door (readme §13, *The V1.0 scope cut*). Each door
+opens a coming-soon door (readme §13, *The v1.0.0 scope cut*). Each door
 offers no action and names no date (copy-voice, *The coming-soon
 surfaces*).
 
@@ -31,10 +31,10 @@ The edge counts are `graph.json`'s today: every edge whose outcome is
 the door's board. A new board that carries the bar or the band adds
 edges, not rows.
 
-## Kinds and rows V1.0 does not serve
+## Kinds and rows CoGra v1.0.0 does not serve
 
 A kind list or row set shows only served kinds, never a dead chip
-(readme §13, *The V1.0 scope cut*).
+(readme §13, *The v1.0.0 scope cut*).
 
 | Surface | What is held back | What the release shows |
 |---|---|---|
@@ -46,10 +46,10 @@ A kind list or row set shows only served kinds, never a dead chip
 | The reader's menus (`ReaderPostMenu`, `ProfileMenu`, `CommentMenu`) | a content report row (readme §13, *The menus round*) | no Report row |
 | An applicant's comment foot and `Reply` (`ReplyEntry`, `ProfileComments`) | commenting before approval (readme §13, *The applicant's life round*) | both stay drawn and answer in place: `You can comment once you're in.` |
 
-## Copy held to what V1.0 does
+## Copy held to what CoGra v1.0.0 does
 
 Words that would claim something the release does not do (readme §13,
-*The V1.0 scope cut*).
+*The v1.0.0 scope cut*).
 
 | Copy | Held back | Source |
 |---|---|---|
@@ -58,9 +58,9 @@ Words that would claim something the release does not do (readme §13,
 | The editing help | version removal | removal targets the whole post |
 | The citing help | citable kinds beyond a person, a post and a comment | copy-voice, *Citing*; the end-state wording returns with its kinds |
 
-## Waiting on a slice inside V1.0
+## Waiting on a slice inside v1.0.0
 
-Surfaces V1.0 carries whose full behaviour lands with a later slice of
+Surfaces CoGra v1.0.0 carries whose full behaviour lands with a later slice of
 the roadmap. Each row says what the build shows until its slice lands.
 
 | Surface | Waits for | Until then |
@@ -84,12 +84,12 @@ when CoGra is on a server and in the Play Store (backlog 118).
 
 ## Out of the release
 
-Drawn after the MVP or not at all, with nothing on screen in V1.0 but
+Drawn after the MVP or not at all, with nothing on screen in v1.0.0 but
 the doors above: the wallet, chats, push notifications and change
 histories (`designs/postmvp/`, the fifth canvas); the marketplace
 (backlog 14); the Collective actor variant (backlog 15, readme §7); the
 Sky itself (backlog 16); per-kind notification muting (readme §13, *The
-notifications round*); the reader's sensitive gradient, read in V1.0 as
+notifications round*); the reader's sensitive gradient, read in v1.0.0 as
 one show-sensitive threshold (readme §13, *The veil's scope*).
 
 ## Unresolved
@@ -99,19 +99,19 @@ Rows whose on-screen state needs a ruling before they can gate.
 the same day; they stay as the record of what was asked.)
 
 1. **The order swap before the ranker — ruled (jakob 2026-10-06).**
-   Ranking ships inside V1.0: the swap and its `Ranked` default are
+   Ranking ships inside v1.0.0: the swap and its `Ranked` default are
    slice sequencing, not release staging, so no row gates here. The
    interim while the ranker slice is unbuilt is implementation's
    choice — serve `Newest` with the swap arriving alongside the
    ranker, or draw the swap early over a frozen rank — both inside
    the MVP, neither a dead control at the cut.
 2. **The Feed score before the ranker — ruled (jakob 2026-10-06).**
-   Same ruling: the score and its drill-down ship with V1.0. Until
+   Same ruling: the score and its drill-down ship with v1.0.0. Until
    the ranker slice lands the build may show the drawn score reading
    `0` or add the figure with the slice, implementation's choice;
    nothing is staged at the release cut.
 3. **Topic holding before the topic feed — ruled (jakob 2026-10-06).**
-   Topic holding ships whole inside V1.0. The tag round's roadmap
+   Topic holding ships whole inside v1.0.0. The tag round's roadmap
    note ("client-hidden until the topic feed lands") is superseded
    (readme §13 carries the ruled-since mark); the tag page's stance
    row, Explore's `Your topics` door, `YourTopics` and the filter's

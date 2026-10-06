@@ -1,10 +1,10 @@
-Use `ComingSoonCard` for what a **slot or icon** opens while its surface is drawn after V1.0 — the band's chats icon, the bottom bar's wallet slot. It is the page's one moment, under the shell the page already wears.
+Use `ComingSoonCard` for what a **slot or icon** opens while its surface is drawn after v1.0.0 — the band's chats icon, the bottom bar's wallet slot. It is the page's one moment, under the shell the page already wears.
 
 ```jsx
 <ComingSoonCard thing="Chats" line="Your conversations will be here." />
 ```
 
-What holds (readme §13, *The V1.0 scope cut*):
+What holds (readme §13, *The v1.0.0 scope cut*):
 
 - **A door belongs to a slot, never to a list.** A slot or icon whose absence would deform the shell keeps its place and opens this card. A kind list or a row set follows the staging rule instead — it shows only the served kinds, never a chip that leads here.
 - **A drawn anatomy, not bare words.** The card rides `WashCard` with `ghost={false}` — the brand wash, no coin — so the door reads as intentional rather than as a page that failed to load. No new colour.
