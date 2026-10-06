@@ -1181,6 +1181,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedWordsSensitive.dc.html",
+      "title": "Feed · a words-only post, veiled",
+      "x": 8160,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedNothing.dc.html",
       "title": "Feed · everything off",
       "x": 1440,

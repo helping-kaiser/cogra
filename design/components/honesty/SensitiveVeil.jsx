@@ -93,6 +93,7 @@ export function SensitiveVeil({
   revealLabel = "Show",
   radius,
   faceGutter = "var(--space-6)",
+  named = false,
 }) {
   const scope = React.useContext(RevealContext);
   const [local, setLocal] = React.useState(false);
@@ -166,8 +167,17 @@ export function SensitiveVeil({
     /* Text is blurred IN PLACE rather than replaced, so the line keeps its own
        height and nothing below it moves when the reader reveals it. The shape of
        the sentence stays visible, which is honest: the reader can see there is a
-       sentence, only not read it. */
-    return (
+       sentence, only not read it.
+
+       A WORDS-ONLY POST NAMES ITS SOURCE TOO (the check round's Q5, jakob
+       2026-10-06). The source line is unconditional (Q47), and where the words
+       are the post's whole body there is no media face to carry it — so the
+       text veil carries it on its own plate, the quiet line under the blurred
+       words and their `Show`, in the same words the media face uses. `named`
+       is how a caller says this veil is the post's only face; a caption under
+       a veiled picture or clip leaves it off, because the media face already
+       names the source and saying it twice would read as two marks. */
+    const veil = (
       <span style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)", maxWidth: "100%" }}>
         <span aria-hidden="true" style={{ filter: "blur(6px)", userSelect: "none", opacity: 0.75, minWidth: 0 }}>
           {children}
@@ -190,6 +200,15 @@ export function SensitiveVeil({
         >
           {revealLabel}
         </button>
+      </span>
+    );
+    if (!named) return veil;
+    return (
+      <span style={{ display: "flex", flexDirection: "column", gap: "var(--space-1)", maxWidth: "100%" }}>
+        {veil}
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", color: "var(--text-secondary)", textWrap: "pretty" }}>
+          {sourceLine}
+        </span>
       </span>
     );
   }

@@ -34,6 +34,12 @@ export interface SensitiveVeilProps {
   source?: "author" | "platform";
   revealLabel?: string;
   /**
+   * The `text` kind as the post's only face — a words-only post: the source
+   * line stands under the blurred words and their `Show`. Off for a caption
+   * under a veiled picture or clip, whose media face already names the source.
+   */
+  named?: boolean;
+  /**
    * The veiled tile's radius. Authoritative: it styles the scrim AND is forwarded
    * to the child, so a veiled tile in a flush gallery cannot end up rounded
    * beside a square neighbour.

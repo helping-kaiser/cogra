@@ -2319,6 +2319,23 @@ Object.assign(FLOW_MARKERS, {
   ],
 });
 
+/* THE WORDS-ONLY VEIL (the check round's Q5, 2026-10-06): `Feed`'s anatomy and
+   `Feed`'s numbers — the band sweeps below name it at Feed's own — and the
+   veil's `Show` as the next free number. Declared above the sweeps for the
+   reject extension's reason. */
+Object.assign(FLOW_MARKERS, {
+  FeedWordsSensitive: [
+    { n: 1, find: 'what your feed shows"', tag: "button" },
+    ...signedPost({ author: 2, menu: 3, more: 5, topic: 6, stance: 8, score: 9 }),
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 7, find: ">· 1 reference<", tag: "button" },
+    { n: 10, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 10, find: 'aria-label="1 comment"', tag: "button" },
+    ...nav(11),
+    { n: 19, find: ">Show</button>", tag: "button" },
+  ],
+});
+
 /* The band's Chats affordance (jakob 2026-09-01): CograBand carries it on
    every tab root, so every wired band board gets the marker in one sweep —
    the number is each board's next free one, the edge points at the chat
@@ -2329,7 +2346,7 @@ const BAND_CHATS = {
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
-  FeedGallery: 15, FeedCover: 17,
+  FeedGallery: 15, FeedCover: 17, FeedWordsSensitive: 16,
   WalletComingSoon: 6,
 };
 for (const [board, n] of Object.entries(BAND_CHATS)) {
@@ -2348,7 +2365,7 @@ const BAND_BELL = {
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
-  FeedCover: 19,
+  FeedCover: 19, FeedWordsSensitive: 18,
   WalletComingSoon: 7,
   Profile: 15, ProfileApplicant: 15,
 };
@@ -2365,7 +2382,7 @@ const CARD_SHARE = {
   ApplicantRejected: 16, ApplicantLanding: 16,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
   FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
-  FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21,
+  FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21, FeedWordsSensitive: 17,
 };
 for (const [board, n] of Object.entries(CARD_SHARE)) {
   (FLOW_MARKERS[board] ??= []).push({ n, find: 'aria-label="Share this post"', tag: "button", all: true });
