@@ -137,7 +137,8 @@ glyph used as punctuation.
   and the trigger reads the deviation as `settled only` (blessed
   2026-10-01, jakob).
 - `Edited` — an edit, marked softly.
-- `Nothing was signed just now.` — the coach mark's first line.
+- `Nothing is signed until Set.` — the opening of the first-ever pad's
+  second coaching line, and of every pad help that says it.
 - `Signing needs your key, which isn't in this browser — the write waits
   as pending.`
 - `Your opinion of this post drops to nothing. It stops reaching
@@ -710,6 +711,12 @@ Added by the post detail's and the profile's tables, each blessed (jakob 2026-10
   in the accessibility tree tells a listener the verb but not the
   object.
 
+Added by Invites' table (the check round's 2, 2026-10-06): `Back to
+Kept picks` — the arrow from the kept picks' review or their seal, the
+named surface by its title, as `Back to Saved` and `Back to History`
+are (*new 2026-10-06, flagged for blessing*). Its other origins take
+nouns already blessed: `Back to your profile`, `Back to Notifications`.
+
 **The citation's pair** (`RefPair`), where the field and its readout are
 `aria-hidden` and these words are what is said in their place:
 
@@ -779,6 +786,14 @@ Spelled by the round and **blessed (jakob 2026-10-05)**:
 - `Reorder the cover` · `Reorder picture 2` — `PickedSheet`'s focusable
   handle, named for its picture: the first row is the cover, every other
   row its place (*blessed (jakob 2026-10-05)*).
+
+**The profile's figures, spoken** — K13.11 executed (the check round,
+2026-10-06): the figures' one door says its visible words and numbers,
+then its purpose — `{n} Posts, {n} Opinions on them, {n} Opinions by
+them, opinions on and by @handle`. One's own reads `{n} Posts, {n}
+Opinions on you, {n} Opinions by you, your opinions, both directions`;
+a deleted account's ends `opinions on and by this account`
+(`ProfileHeader`; `Profile`, `ProfileOther`, `ProfileDeleted`).
 
 **Carried over — blessed by use (jakob 2026-10-06).** The names the
 boards already speak, recorded so the registry is whole:
@@ -2080,11 +2095,11 @@ state (jakob 2026-10-02, **blessed**). The card's body, on `VouchBack`
 and `VouchBackPad`: `Vouch back to open the way from your side — your
 opinion toward @mira, and your feed grows from it.` (`VouchBack` adds
 `Vouching opens the opinion control, set to a gentle default.`). The
-pad's title and its "?" read `Your vouch back`, and its first coaching
-line opens on the title: `Your vouch back. The pad is how you shape what
+pad's title and its "?" read `Your vouch back`, and the line above its
+two coaching lines opens on the title: `Your vouch back. The pad is how you shape what
 reaches you — for or against, and how much.` *Carried over — blessed by
 use (jakob 2026-10-06):* the card's title `@mira vouched you in`
-(`VouchBack`, `VouchBackPad`), and the pad's second coaching line, `Later,
+(`VouchBack`, `VouchBackPad`), and the pad's first coaching line, `Later,
 tap the small face under a post to open this — press and hold it instead
 and a gentle 🙂 *(+0.10 / +0.10)* is signed on the spot.` The band's line keeps
 *first opinion*: the borrowed view does end on the first opinion,
@@ -2251,12 +2266,13 @@ group, `A tap opens it; drift to where it feels right.` the pad's hint, and
 positive one is signed on the spot.` the footnote — the one place the
 shortcut and the price are said together.
 
-**The coach mark teaches the shortcut, not the control.**
-`Press and hold to sign it outright` over `Nothing was signed just now.
-A tap opens this pad. Press and hold the same button and a gentle 🙂
-*(+0.10 / +0.10)* is signed without opening anything.` The blessed
-first line stays: a reader who has just tapped and seen a pad still
-needs to be told nothing was spent.
+**The first-ever pad teaches in two coaching lines, and nothing else
+teaches it** (the check round's 6, jakob 2026-10-06). On the account's
+first-ever pad open, wherever that pad opens: `Later, tap the small face
+under a post to open this — press and hold it instead and a gentle 🙂
+*(+0.10 / +0.10)* is signed on the spot.`, then `Nothing is signed until
+Set. Prefer sliders or exact numbers? Swap the input in settings.`
+(`VouchBackPad`). They close with the pad and never show again.
 
 **The pad's four help lines.** `Drag the knob. Left
 to right is against to for; bottom to top is how much more of it you
@@ -2935,7 +2951,10 @@ every card and detail already draws:
 - **The tags line** (`TopicsLine`) states in words what its chips do not
   show: the tags that did not fit and the references, `· 13 tags · 3
   references`, each part alone where the other is nothing — `· 1
-  reference` on most cards, `· 1 tag` (`LadderTopics`).
+  reference` on most cards, `· 1 tag` (`LadderTopics`). Where the count
+  is its own door (every feed card, K13.3), its accessible name is its
+  own visible words — `· 3 references`, `· 13 tags · 3 references` — and
+  no name is laid over them.
 - **A comment** — `View 2 replies`, the collapsed branch's line, the count
   the branch's; the thread's foot reads `Add a comment` (the comment
   sheet, `CommentMenu` and its family).

@@ -26,7 +26,7 @@ import { BottomSheet, SheetItem } from "../core/BottomSheet.jsx";
      40px of ink beside the row's buttons and keeps the 48px target through
      `cg-hit` \u2014 the same trade `BandIcon` and the small button make.
    · The sheet is `surfaceContainerHigh` at the medium rung. On Android this is a
-     bottom sheet (design.md \u00a76 lists them in the scaffolding); on web it is an
+     bottom sheet; on web it is an
      anchored menu, which is the same inventory in the platform's own idiom.
      BOTH CLIENTS RENDER AT PHONE WIDTH and follow one design, so the SHEET is the
      default (`presentation="sheet"`, backlog item 3) and the anchored menu is the

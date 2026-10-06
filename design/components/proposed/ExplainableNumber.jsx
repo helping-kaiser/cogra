@@ -15,7 +15,7 @@ const SR_ONLY = {
 
 /* PROPOSED — the shape every number in this product takes, not any one number.
 
-   design.md §7 binds figures with two rules: every number shown is EXPLAINABLE —
+   copy-voice's *The two hard rules about numbers* binds figures: every number shown is EXPLAINABLE —
    traceable, on demand, to what produced it, because a figure with no path behind
    it is the black box again, just smaller — and detail is LAYERED: a calm surface
    by default, the arithmetic a tap away.
@@ -83,7 +83,7 @@ export function ExplainableNumber({ label, value, unit, glyph, onOpenDetail, ove
       )}
       {/* Uncapped, and negative is ordinary: a minus sign, and NO colour. `error`
           is failure only — a score below zero is a fact about reach, not a fault,
-          and colouring it red would editorialise it the way §2.4 forbids for a
+          and colouring it red would editorialise it the way readme §4, *Colour*, forbids for a
           negative stance. */}
       <span style={{ color: overMedia ? "#fff" : "var(--on-surface)", fontWeight: 500 }} data-node={node && "value"}>
         {value}

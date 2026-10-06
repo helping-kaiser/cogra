@@ -1,5 +1,5 @@
 /**
- * design.md §9's two content states. Same register — a statement of fact, never
+ * readme §9's two content states. Same register — a statement of fact, never
  * `error` colouring — and opposite reach: one covers the body and gives it back
  * on a tap, the other takes the whole record for good.
  *

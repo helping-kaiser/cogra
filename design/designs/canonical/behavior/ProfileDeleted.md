@@ -18,7 +18,7 @@ ALWAYS every act still stands in the chronicle with its words gone GIVEN the del
 
 ALWAYS the actions row reads the opinion on the account, worn wide, then the ⋮, and carries no Message
 
-ALWAYS the figures are one tap target, spoken as Opinions on and by this account
+ALWAYS the figures are one tap target, spoken as each figure's number and words — Posts, Opinions on them, Opinions by them — then opinions on and by this account
 
 ALWAYS the wide anchor's accessible name says this account and never a handle
 

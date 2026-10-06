@@ -11,10 +11,10 @@ import {
   SR_ONLY,
 } from "./StanceReadout.jsx";
 
-// The severance confirmation (design.md §8.5). It serves both routes to (0, 0):
+// The severance confirmation (guidelines/stance-control.md, *Severance*). It serves both routes to (0, 0):
 // the explicit gesture, and an ordinary pick that happens to land the bundle
 // there — the second is confirmed, never refused, because the control never
-// prevents a choice (§8.2). The two are the SAME dialog, distinguished only by
+// prevents a choice (the same section). The two are the SAME dialog, distinguished only by
 // the pick line the second one adds.
 //
 // The order is fixed (Android parity): title · the pick line when it was reached
@@ -29,7 +29,7 @@ import {
 // The SHAPE is the control's and does not vary — same order, same safe action
 // on the right, same raw-total-first arithmetic.
 //
-// THE RAW TOTAL LEADS. §8.3 requires the raw sums on every surface that explains
+// THE RAW TOTAL LEADS. *Two numbers, never one* requires the raw sums on every surface that explains
 // cost, because they are what a walk back to zero actually walks — but stating the
 // clipped fold first and the raw sum second reads as broken arithmetic ("my opinion
 // is +1.00, so why does walking it back take +1.40?"). The total is what the
@@ -43,7 +43,7 @@ import {
 // goes to by habit, while the way out stays a text button on the left. It is still
 // reachable in one tap, so the control still never prevents the choice; it just
 // stops being the default-looking one. No new colour is introduced — severance is
-// a deliberate act, not a failure, so `error` stays off this surface (§2.4).
+// a deliberate act, not a failure, so `error` stays off this surface (readme §4, *Colour*).
 //
 // The batch size is the legible cost — each counter-record is its own priced act,
 // so the count is what the reader needs before signing. And the line above it

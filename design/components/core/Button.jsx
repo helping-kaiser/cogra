@@ -1,6 +1,6 @@
 import React from "react";
 
-/* The house button (design.md §6): Material's three vocabularies, and no others
+/* The house button (readme §7): Material's three vocabularies, and no others
    on the page's own ground. Filled `primary`/`onPrimary` for the one committing
    action on a surface, outlined for a secondary action, text for a tertiary
    one. Both unfilled variants put `primary` on the LABEL — the label carries

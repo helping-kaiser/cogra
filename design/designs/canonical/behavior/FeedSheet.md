@@ -56,7 +56,9 @@ WHEN pull down inside the filter sheet -> NEVER the feed refreshes
 
 ALWAYS the trigger's spoken name is its reading followed by what your feed shows
 
-WHEN tap Done -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
+WHEN tap Done GIVEN the staged filter differs from the feed's -> the sheet closes AND the feed re-queries once AND one polite status message says the trigger's new name AND focus returns to the trigger AND NEVER the message draws anything
+
+WHEN tap Done GIVEN the staged filter is the feed's own, nothing changed -> the sheet closes AND the feed is what it was AND focus returns to the trigger AND NEVER the feed re-queries
 
 WHEN tap the scrim -> the sheet closes AND the staged filter is dropped AND the feed is what it was AND NEVER the feed re-queries
 

@@ -10,7 +10,7 @@ ALWAYS the avatar wears the monogram GIVEN the reader has no picture
 
 ALWAYS the figures read Posts, Opinions on you and Opinions by you, each labelled, and never one merged figure
 
-ALWAYS the figures are one tap target, spoken as Your opinions, both directions
+ALWAYS the figures are one tap target, spoken as each figure's number and words — Posts, Opinions on you, Opinions by you — then your opinions, both directions
 
 ALWAYS Invites wears the bell's dot, never a count, and is spoken as Invites — someone is waiting GIVEN an application of the reader's is ready for their approval
 

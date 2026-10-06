@@ -1,5 +1,5 @@
 /**
- * PROPOSED. design.md §6's media attachment: a tile whose space is reserved
+ * PROPOSED. The media attachment (readme §7): a tile whose space is reserved
  * before load, with optional authored alt text.
  *
  * A PICTURE's ratio vocabulary is the compose crop ruling's — `tall` 4:5,

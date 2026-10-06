@@ -106,7 +106,7 @@ export declare const SETTLE_MS: number;
 /** The value once it has stopped changing for `ms` (default `SETTLE_MS`); the first render returns it as it stands. */
 export declare function useSettled<T>(value: T, ms?: number): T;
 
-/** The twenty-anchor contract of design.md §8.4. Both clients read these values. */
+/** The twenty-anchor contract of stance-control's *The emoji readout*. Both clients read these values. */
 export declare const STANCE_ANCHORS: readonly (StancePair & { emoji: string; label: string })[];
 /**
  * The thirteen-anchor contract a tag's pair reads through — four aboutness

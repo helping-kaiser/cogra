@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
 import { VideoTransport } from "./VideoControls.jsx";
 
-/* PROPOSED — design.md §6's "media attachment", with the two rules that were open
+/* PROPOSED — the media attachment (readme §7), with the two rules that were open
    last session now settled by the product (2026-08-26 hand-off).
 
    DECIDED, and built here:

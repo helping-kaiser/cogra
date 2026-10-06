@@ -1,5 +1,5 @@
 /**
- * The designed empty state a list surface owes the reader (design.md §6).
+ * The designed empty state a list surface owes the reader (readme §7, *Intentional additions*).
  * Never scolding, never selling, never `error` colouring.
  */
 export interface EmptyStateProps {

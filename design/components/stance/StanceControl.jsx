@@ -26,8 +26,8 @@ import {
   TAP_DEFAULT,
 } from "./StanceReadout.jsx";
 
-/* CoGra's SIGNATURE INTERACTION (design.md §8). Everything in this file is a rule
-   from that section, not a preference:
+/* CoGra's SIGNATURE INTERACTION (readme §8; guidelines/stance-control.md).
+   Everything in this file is a rule from those, not a preference:
 
    AT REST the target shows the current opinion — face, words, and the folded pair.
    A viewer with no opinion yet sees a MUTED, TRANSLUCENT face: the same control at
@@ -496,10 +496,10 @@ export function StanceControl({
           }}
           data-node={node && "anchor"}
         >
-          {/* Never a bare word (§8.3): a viewer with no bundle gets a face
+          {/* Never a bare word (stance-control, *The gesture*): a viewer with no bundle gets a face
               outside the table, muted and translucent — the control visibly
               waiting to be given a value, and never the shrug a zero opinion
-              owns (§8.4). The anchor's words are not drawn beside it; they ride
+              owns (readme §8). The anchor's words are not drawn beside it; they ride
               the button's accessible name above. */}
           {withHoldRing(overMedia && restingFace === null ? (
             /* OVER MEDIA THE UNSET STATE IS A LINE FACE, not a muted emoji: on
@@ -546,8 +546,8 @@ export function StanceControl({
             </span>
           )}
         </button>
-        {/* The non-drag equivalent, present whatever the stored input is (§8.6,
-            §10) — a drag gesture always has one.
+        {/* The non-drag equivalent, present whatever the stored input is (stance-control,
+            *Alternate and accessible inputs*; readme §10) — a drag gesture always has one.
 
             DIVERGENCE, deliberate: it is not DRAWN. The source renders it as a
             `primary` text button beside every stance control on every card, and a feed of
@@ -556,7 +556,7 @@ export function StanceControl({
             place. It is now visually hidden until focused (the skip-link
             pattern): keyboard, switch, and screen-reader users reach it in one
             tab, and a reader who cannot long-press sets the alternate once in
-            settings, which replaces the pad everywhere (§8.6). ITS NAME CARRIES
+            settings, which replaces the pad everywhere (the same section). ITS NAME CARRIES
             `targetLabel` (backlog item 46.1) — the same source the face's own
             aria-label reads — so a page with more than one stance control, like
             `TagPage`, does not repeat one anonymous name across all of them. */}

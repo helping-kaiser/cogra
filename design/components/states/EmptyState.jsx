@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "../core/Button.jsx";
 
 /* "Empty, loading, and error states for every list surface. DESIGNED, NOT BLANK."
-   — design.md §6.
+   — the source's rule (readme §7, *Intentional additions*).
 
    That line is in the source and the source does not meet it: the product ships
    bare `<p>Loading…</p>` and `<p>Nothing here yet.</p>` with no shared shape. So

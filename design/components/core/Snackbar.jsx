@@ -1,7 +1,8 @@
 import React from "react";
 
-/* The transient confirmation (design.md §6): "Confirmation of a completed action
-   is a snackbar on both platforms, fired once per event." §8.3 makes it
+/* The transient confirmation (readme §13, *The audit answers*): a completed
+   action is confirmed by a snackbar on both platforms, fired once per event.
+   The stance control's *Confirmation* (guidelines/stance-control.md) makes it
    load-bearing rather than decoration — a gesture that stages a priced act must
    never be silent, because silence reads as failure and invites the same act
    again.

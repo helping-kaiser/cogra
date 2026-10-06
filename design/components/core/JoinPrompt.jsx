@@ -2,7 +2,8 @@ import React from "react";
 import { buttonStyle, BUTTON_CLASS } from "./Button.jsx";
 import { useModalFocus } from "./BottomSheet.jsx";
 
-/* The guest prompt behind an account-needing slot (design.md §6): ASK, NEVER
+/* The guest prompt behind an account-needing slot (readme §13, *The pattern
+   boards*): ASK, NEVER
    BOUNCE — the reader picks the auth flow or stays put. Dialog surface is
    `surfaceContainerHigh` at the extra-large rung with 24px padding.
 

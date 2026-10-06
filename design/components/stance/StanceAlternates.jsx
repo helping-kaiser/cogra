@@ -5,11 +5,12 @@ import { StanceSlider } from "./StanceSlider.jsx";
 import { STANCE_AXES } from "./StancePad.jsx";
 import { alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STANCE_RANGES } from "./StanceReadout.jsx";
 
-/* The alternate inputs (design.md §8.6) — paired sliders and direct entry. Same
+/* The alternate inputs (guidelines/stance-control.md, *Alternate and accessible
+   inputs*) — paired sliders and direct entry. Same
    machinery as the pad, different surface: they write the same two values, and the
    readout above them is the same lossy face.
 
-   They are also the ACCESSIBLE path (§8.6, §10): the pad is a drag gesture, and
+   They are also the ACCESSIBLE path (the same section; readme §10): the pad is a drag gesture, and
    these give screen-reader and switch users the FULL RANGE through ordinary,
    well-supported controls rather than a degraded version of the gesture — which is
    why the entry into them is present on every stance control regardless of the
@@ -21,7 +22,7 @@ import { alternatesHelp, clampDimension, HelpLine, helpKey, severanceWords, STAN
    the same two numbers in one dialog is a needless choice at the moment of a
    priced act — the reader has to work out that they are the same values before
    using either. Sliders lead (draggable, but keyboard- and switch-operable, and
-   Android's own StanceSlider); typing is one quiet tap away. §8.6 asks that both
+   Android's own StanceSlider); typing is one quiet tap away. The section asks that both
    routes exist, not that both are on screen at once.
 
    Severance is findable from the open pad; for anyone whose input is an alternate

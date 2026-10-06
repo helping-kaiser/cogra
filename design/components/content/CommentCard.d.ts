@@ -2,7 +2,7 @@ import type { StanceBundle } from "../stance/StanceReadout";
 import type { License } from "../forms/LicenseChooser";
 import type { PostAuthor } from "./PostCard";
 
-/** The comment of design.md §6 — top-level and nested. Renders as an `li`. */
+/** The comment of readme §7's inventory — top-level and nested. Renders as an `li`. */
 export interface CommentCardProps {
   author?: PostAuthor;
   content: string;

@@ -15,8 +15,8 @@ import { ShareButton } from "./ShareButton.jsx";
 import { GlyphAction } from "./GlyphAction.jsx";
 import { NodeMark } from "./ReferenceRow.jsx";
 
-/* The comment of design.md §6 — "author, body, timestamp, media, nested replies,
-   stance control", in its top-level and nested variants. Extracted from
+/* The comment (readme §7, *Intentional additions*) — author, body, timestamp,
+   media, nested replies, stance control, in its top-level and nested variants. Extracted from
    `post-view.tsx` for the same reason as PostCard: it is the product's own
    "second surface" rule, and the recursion was previously inline.
 
