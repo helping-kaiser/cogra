@@ -44,7 +44,11 @@ WHEN tap a group's Close all -> the dialog asking to close all of that group's w
 
 WHEN tap a link's copy control -> the link lands on the clipboard AND the snackbar reads Link copied
 
-WHEN tap a link's Revoke -> the card leaves the page AND the snackbar reads Invite revoked AND NEVER a dialog asks AND NEVER Undo is offered
+WHEN tap a link's Revoke -> the card holds until the revoke answers AND Revoke refuses a second press until the revoke answers AND NEVER a dialog asks AND NEVER Undo is offered
+
+WHEN the revoke has not answered 200ms after the press -> Revoke reads Revoking… in its own place AND NEVER a spinner appears
+
+WHEN a link's Revoke lands -> the card leaves the page AND the snackbar reads Invite revoked AND NEVER Undo is offered
 
 WHEN a link's Revoke lands -> every application already staged through the link stays in the queue, approvable
 
@@ -78,6 +82,6 @@ WHEN pull down GIVEN the page stands all the way at its top -> the page refreshe
 
 WHEN a member opens an ask link GIVEN the asker already waits in their invites -> Invites opens AND the snackbar reads @noor is already waiting in your invites.
 
-WHEN tap the back arrow -> the reader's own profile comes back, in the state it was left
+WHEN tap the back arrow -> the screen Invites was opened from comes back, in the state it was left
 
-ALWAYS the back arrow reads Back to your profile
+ALWAYS the back arrow reads Back to your profile from the reader's own profile, Back to Notifications from Notifications, and Back to Kept picks from the kept picks' review or their seal
