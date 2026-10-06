@@ -2180,11 +2180,14 @@ entry first". What stands:
   gated seal, the license / sensitive sheets, the key-absent seal,
   the stance pad, and the three pattern boards — the guest gate, the
   network error, key-absent acting) rather than duplicated boards.
+  (Every one of those gaps is drawn since; the canonical graph holds
+  none.)
 - **The tag picker's interim entry** (jakob 2026-09-02): until the
   picker board exists, the apps' entry is the existing tag field,
   opened as a sheet from the seal. The gap and the blocked
   `add-a-topic` flow stand — the interim is what the apps ship, not
-  the design owed.
+  the design owed. (`TagPicker` is drawn since 2026-09-09, and the flow
+  resolves.)
 - **The profile round (2026-09-01, item 23 round 1)** drew the
   surface slice 2.1 shipped undesigned — eight boards: your own,
   someone else's, applicant days, the stances page, the posts and
@@ -3397,7 +3400,8 @@ whole canvas rather than a fix to one board.
   door. A guest's band still gates instead: `Main`, `FeedBare` and
   `WalletGuest` send chats to `GuestGate`, because a guest has no chats
   to come back to. The *Message* control on another's profile is a
-  different affordance and still owes its own destination.
+  different affordance and still owes its own destination. (It opens
+  `ChatsComingSoon` too since — §13, *The chats-routing close*.)
 - **The guest and applicant bands ship now; the rank waits.** A band
   that names whose view this is tells the truth the moment it is drawn,
   and the vantage it names — the genesis moderator for a bare arrival,
@@ -3753,7 +3757,8 @@ one sitting.
   post in front of the reader — an edit carries complete state and may
   flip the kind outright, every picture replaced by words or the words
   by a gallery. Web's profile save answers with nothing; a snackbar line
-  is drafted and awaits blessing.
+  is drafted and awaits blessing. (Blessed since, with the small-rulings
+  batch — copy-voice.)
 
 ### The citation's pair, and the settling row — 2026-09-10
 
@@ -4560,7 +4565,9 @@ mechanics were already specified — `docs/instances/erasure.md` §2 and §5
   is deleted in 6 days.` — spelled out, because the ladder's compression
   buys room in lists where many ages compete for it and buys nothing in a
   band, while `6d` means *ago* everywhere else in the product. The two
-  alternatives and the reasoning are in `copy-voice.md`.
+  alternatives and the reasoning are in `copy-voice.md`. (Ruled
+  2026-09-14: forward moments read the ladder forward, `in 6 days` —
+  copy-voice, *Ages*.)
 - **The cancel is a snackbar, and it has no Undo.** The band is on every
   surface, so the cancel is pressed anywhere; a confirmation screen would
   move a reader who tapped two words mid-scroll. The settings round
@@ -7080,10 +7087,11 @@ search:
 - **All chats, never just the viewer's.** A scoped message result
   reaches any plaintext chat — chats are public reads, so the scope
   is the author, not the viewer's membership.
-- **The default mix carries the seven direct kinds.** Selecting an
-  indirect kind without a scope shows a quiet line pointing at the
-  scope operator instead of results (its string is a copy-voice
-  candidate, awaiting blessing).
+- **The default mix carries the direct kinds** — in V1.0 posts,
+  profiles and tags, with comments indirect (§13, *The V1.0 scope
+  cut*). Selecting an indirect kind without a scope shows a quiet line
+  pointing at the scope operator instead of results (its string is
+  copy-voice's, blessed 2026-10-06).
 - `ExploreSearch` already draws exactly this — its rows are an
   @-scoped query's indirect hits — so no board moves; api-spec gains
   the scoped-join paragraph.
@@ -7282,7 +7290,8 @@ they turn a kind on, on one new board, `FeedKinds`.
   drawn at the filter's default, `Posts` alone, so the kinds arrive the way
   the post-MVP chat and message cards did (`ChatFeedCards`): the kinds
   turned on, the trigger reading `4 kinds`, the new cards leading and a post
-  below them. The filter sheet's way out lands on it.
+  below them. The filter sheet's way out lands on it. (At the full set
+  the trigger reads `All kinds` since — §13, *The pill's full set*.)
 - **Each kind keeps the idiom it already wears** (`_shared.jsx`, the V1.0
   feed kinds). The comment is `CommentCard` in its out-of-thread shape — the
   target pointer leading, as on `ProfileComments` and `TagPage` — with
@@ -7743,7 +7752,8 @@ jakob's rulings from his review of the day's rounds.
   `Send by email` is visible and disabled with `Nothing to send yet`
   above it (`ReportProblemEmpty`, the disabled-submit law); leaving with
   Back keeps the words. The page moved into `_shared` as
-  `ReportProblemBody`.
+  `ReportProblemBody`. (Send is live from an empty field since — §13,
+  *The settings and pads rulings executed*.)
 - **Blessed** (jakob): the failure pack's in-flight labels and faults by
   code, the write rule's lines, the failure fixes' lines and the support
   stack's, `settled only`, and the comment-removal strings. The reply
@@ -8873,7 +8883,7 @@ day: the tick is kept, and there are no UI sounds.
   handover and the reel's squish as shared elements and arrival
   exceptions, the collapsing top, in-place changes, `Back to top` and the
   hold's ring; predictive back follows the finger. `motion.css` and the
-  Motion card lose the stale long-press row.
+  Motion card rewrite the stale long-press row.
 - **Haptics only where the platform documents one, Android only** — the
   hold's commit, the reorder's lift, the knob's tick at the zero lines
   and the clamp — **and no UI sounds** (§4). jakob's phone has no
@@ -9053,7 +9063,9 @@ quoted wording is blessed unless marked flagged.
   following (flagged).
 - **The kept picks.** The review and its seal carry `An approval waits on
   Invites — it signs on its own there.` with `Open Invites` when a kept
-  approval also waits (the `approval` chip, flagged); the seal's bug
+  approval also waits (the `approval` chip, flagged — reworded since to
+  `An approval waits in your invites — go there to sign it.`, blessed,
+  copy-voice); the seal's bug
   notice leaves by `Not now`, back to the review. The post edit's bug way
   out is `Discard the edit`, the profile and picture seals' `Not now`
   (both flagged); the comment edit's write rule ends `…your edit is still
