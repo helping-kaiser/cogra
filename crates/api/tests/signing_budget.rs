@@ -179,15 +179,16 @@ async fn landed_post(rig: &WireRig, author: &Member, content: &str) -> String {
 /// ´claim:ratelimit:the-shipped-post-budget-is-ten-an-hour´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_eleventh_post_in_an_hour_is_write_rule_failed(pool: PgPool) {
-    let rig = WireRig::new(
-        pool,
-        budget(|b| b.post = SigningBudget::default().post),
-    );
+    let rig = WireRig::new(pool, budget(|b| b.post = SigningBudget::default().post));
     let author = member(&rig, "prolific").await;
 
     for n in 0..10 {
         let data = rig
-            .gql(Some(&author.token), PREPARE_POST, post(&format!("post {n}")))
+            .gql(
+                Some(&author.token),
+                PREPARE_POST,
+                post(&format!("post {n}")),
+            )
             .await;
         accepted(&data, "preparePost");
     }
@@ -338,9 +339,7 @@ async fn stance_budget_counts_severance_counter_records(pool: PgPool) {
 /// A creation batch the claim budget cannot carry is refused entire, staging nothing and spending nothing of any window.
 /// ´claim:ratelimit:a-batch-is-budgeted-whole´
 #[sqlx::test(migrations = "../../migrations")]
-async fn a_creation_batch_over_the_claim_budget_is_refused_whole_and_stages_nothing(
-    pool: PgPool,
-) {
+async fn a_creation_batch_over_the_claim_budget_is_refused_whole_and_stages_nothing(pool: PgPool) {
     let rig = WireRig::new(
         pool,
         budget(|b| {
@@ -537,7 +536,11 @@ async fn approval_budget_trips_as_write_rule_failed(pool: PgPool) {
     assert_budget_refusal(&data, "approveApplicants");
 
     let data = rig
-        .gql(Some(&inviter.token), APPROVE_APPLICANTS, approvals(&[&first]))
+        .gql(
+            Some(&inviter.token),
+            APPROVE_APPLICANTS,
+            approvals(&[&first]),
+        )
         .await;
     let writes = accepted(&data, "approveApplicants");
     assert_eq!(writes.as_array().expect("writes").len(), 1);
