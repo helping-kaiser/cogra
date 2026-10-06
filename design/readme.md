@@ -9304,6 +9304,8 @@ graph describes. It gets its edges when it migrates.
 - `styles.css` — the entry point consumers link. `@import` lines only.
 - `readme.md` — this file.
 - `backlog.md` — the ordered queue sessions pull from.
+- `staged-surfaces.md` — every surface the release ships staged: the
+  release cut's checklist, append-only.
 - `SKILL.md` — the Agent Skills wrapper.
 - `thumbnail.html` — the homepage tile.
 - `_build/bundle.mjs` — regenerates `_ds_bundle.js` (which the `@dsCard`
