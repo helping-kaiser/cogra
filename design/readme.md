@@ -644,7 +644,7 @@ column at its 42rem.
 where they do not — the *designed* placeholder, not a gap waiting to
 be filled, and where a picture fails to load it is what shows.
 
-**Photography now exists as mock material** (`assets/photos/`, ten real
+**Photography exists as mock material** (`assets/photos/`, ten real
 photographs at true ratios — food, people, animals, scenery). It is
 there so media layouts can be judged at real ratios, and it sets the
 register: the everyday-post register, warm and human per §1 of
@@ -670,42 +670,14 @@ fills is the most common way an icon set starts to look accidental.
   `web/src/lib/ui/icons.tsx`. There is **no icon font and no external
   fetch** in the product.
 
-**The complete set the product uses today** — it is small on purpose:
-
-| Glyph | Where |
-|---|---|
-| `dynamic_feed` | bottom bar, feed slot (one drawing for both selection states; selection shows in colour) |
-| `person` (filled + outlined) | bottom bar, profile slot |
-| `add` | bottom bar, the compose action |
-| `search` | bottom bar, the explore slot |
-| `account_balance_wallet` | bottom bar, the wallet slot |
-| `visibility` / `visibility_off` | password field toggle |
-| `settings` | profile top bar |
-| `arrow_back` | every page header |
-| `more_vert` | every overflow menu — a post's, a comment's, and either profile's actions row |
-| `chat_bubble` | the comments affordance on a card |
-| `volume_up` / `volume_off` | a video's sound toggle |
-| `graph_3` | the Feed score |
-| `bookmark` | the unsave control on a Saved row — the system's own addition (the review-fix round), not yet in the product's set |
-| `check` | the checkbox's mark — the system's own addition (§13's entry screens), not yet in the product's set |
-| `photo_camera` | the avatar's change badge on one's own profile — the system's own addition (profile round), not yet in the product's set |
-| `history` | the chronicle's Everything tab — the system's own addition (profile round), not yet in the product's set |
-| `lock` / `lock_outline` | a chat message sent encrypted, and the chat foot's lock toggle, whose state is its fill — the post-MVP chats round's; `lock_outline` is the system's own addition, `person`'s two-cut precedent |
-| `add_comment` | the chats list's floating New chat — the post-MVP chats round's, the system's own addition |
-| `mic` | the chat foot's voice note, hold to record, standing where the send arrow stands while the field is empty — the post-MVP chats integration round's, the system's own addition |
-| `delete` | the locked voice recording's discard — the post-MVP chats integration round's, the system's own addition |
-
-**All of them are inlined** — path data in `Icon`, reference copies in
-`assets/icons/`. All but `graph_3` are the classic **filled** 24px
-variant, verbatim from `material-design-icons`, which is the exact set
-and variant the product itself inlines, so web and Android match. **The hosted-font
-substitution is gone** (2026-08-26): no icon font, no external request,
-which is what the product does.
-
-The web client's interim words (`Show`/`Hide`, `Settings`) and its `←`
-character were placeholders for icons it had not inlined. The icons
-exist now, so the glyph is the answer everywhere — with a label in the
-accessibility tree, never a word beside the glyph.
+**The set lives in one place**: `guidelines/iconography.md` lists every
+glyph `Icon` holds, where each is used, and its call. All of them are
+inlined — path data in `Icon`, reference copies in `assets/icons/` — and
+all but `graph_3` are the classic **filled** 24px variant, verbatim from
+`material-design-icons`, which is the exact set and variant the product
+itself inlines, so web and Android match. The glyph is the answer
+everywhere — with a label in the accessibility tree, never a word beside
+the glyph.
 
 **One derived glyph, recorded:** `graph_3` exists only in the newer
 Material *Symbols* set and has no FILL-1 cut, so ours is the official
