@@ -28,6 +28,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -60,7 +61,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -93,6 +94,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -204,6 +206,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "PostDetail",
@@ -218,7 +221,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 26 boards → ReplyEntry",
+        "start · «comment count» on 27 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -242,6 +245,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "PostDetail",
@@ -522,6 +526,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
@@ -534,7 +539,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 23 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 24 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -552,6 +557,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "PostDetail",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
@@ -752,6 +758,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -784,7 +791,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -817,6 +824,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -876,6 +884,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -908,7 +917,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -941,6 +950,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -1000,6 +1010,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -1032,7 +1043,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 52 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1063,6 +1074,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
         "HistoryNone",
@@ -1122,6 +1134,7 @@
         "ComposeCited",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeDetailsVideo",
         "ComposeDetailsWords",
         "EditCompose",
@@ -1132,7 +1145,7 @@
         "ReplySealComment"
       ],
       "steps": [
-        "start · «+ Cite something» on 13 boards → ReferencePicker",
+        "start · «+ Cite something» on 14 boards → ReferencePicker",
         "end · ReferencePicker · 5 «result rows» → self — the pick stages in the composer's references — the row leaves the results for the staged section above them, wearing its ×, and the picker stays open for the next"
       ],
       "boards": [
@@ -1142,6 +1155,7 @@
         "ComposeCited",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeDetailsVideo",
         "ComposeDetailsWords",
         "EditCompose",
@@ -1251,13 +1265,14 @@
         "CommentEdit",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeUploading",
         "ReplyMediaErrors",
         "ReplyPictures",
         "ReplyPicturesWeb"
       ],
       "steps": [
-        "start · «Describe the pictures» on 7 boards → ComposeDescribe",
+        "start · «Describe the pictures» on 8 boards → ComposeDescribe",
         "end · ComposeDescribe · 3 «Done» → back — the sheet closes"
       ],
       "boards": [
@@ -1265,6 +1280,7 @@
         "CommentEdit",
         "ComposeDetails",
         "ComposeDetailsCaps",
+        "ComposeDetailsReused",
         "ComposeUploading",
         "ReplyMediaErrors",
         "ReplyPictures",
@@ -1437,6 +1453,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1451,7 +1468,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 31 boards → ProfileOther",
+        "start · «author chip» on 32 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1475,6 +1492,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1510,13 +1528,14 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 20 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 21 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
@@ -1537,6 +1556,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
@@ -1564,6 +1584,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1571,7 +1592,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 21 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 22 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
@@ -1592,6 +1613,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1644,6 +1666,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1651,7 +1674,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 19 boards → RefsSheet",
+        "start · «reference count» on 20 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
@@ -1671,6 +1694,7 @@
         "FeedNarrowed",
         "FeedScrolled",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1791,6 +1815,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -1804,7 +1829,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 30 boards → FeedEntry",
+        "start · «Feed score» on 31 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1834,6 +1859,7 @@
         "FeedScrolled",
         "FeedTopic",
         "FeedUnread",
+        "FeedWordsSensitive",
         "History",
         "KeyElsewhere",
         "Main",
@@ -2052,6 +2078,13 @@
       ]
     },
     "ComposeDetailsCaps": {
+      "flows": [
+        "cite-something",
+        "describe-your-pictures"
+      ],
+      "endpoint": []
+    },
+    "ComposeDetailsReused": {
       "flows": [
         "cite-something",
         "describe-your-pictures"
@@ -2542,6 +2575,22 @@
       "endpoint": []
     },
     "FeedUnread": {
+      "flows": [
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": []
+    },
+    "FeedWordsSensitive": {
       "flows": [
         "follow-a-citation",
         "open-a-posts-pictures",
