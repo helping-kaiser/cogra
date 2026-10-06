@@ -28,9 +28,12 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.MediaFrame
@@ -80,12 +83,20 @@ fun MediaGallery(
     shape: Shape = RectangleShape,
     pagerState: PagerState = rememberPagerState { items.size },
     testTag: String? = null,
+    /**
+     * The gallery's data-node on a registered screen (`feed.card.media`): the
+     * gallery then wears it in place of [testTag], each page its `frame` part
+     * keyed by the page's position counted from 1, and the dot row its
+     * `dots` part.
+     */
+    node: DataNode? = null,
 ) {
     if (items.isEmpty()) return
 
     // The stage this gallery's clips compete for: the scroll surface's, or
     // the gallery's own when it stands in none.
     val stage = LocalScrollStage.current ?: rememberScrollStage()
+    val tag = node?.tag ?: testTag
 
     Column(
         modifier = modifier
@@ -97,14 +108,18 @@ fun MediaGallery(
                     Modifier
                 },
             )
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(if (tag != null) Modifier.testTag(tag) else Modifier),
     ) {
         HorizontalPager(
             state = pagerState,
             // One description for the whole set, on the pager rather than
             // per page: the set is what the reader is being told about, and
-            // the dot row below carries the position.
-            modifier = Modifier.clearAndSetSemantics {
+            // the dot row below carries the position. Each page clears its
+            // own content ([GalleryFrame]), so nothing under the pager is
+            // announced beside it — while a page can still be named for the
+            // conformance harness, which a pager clearing every page at
+            // once would hide.
+            modifier = Modifier.semantics {
                 contentDescription = galleryDescription(items)
             },
         ) { page ->
@@ -116,6 +131,7 @@ fun MediaGallery(
                 fit = fit,
                 maxHeight = maxHeight,
                 shape = shape,
+                node = node?.div("frame")?.keyed("${page + 1}"),
             )
         }
 
@@ -130,7 +146,7 @@ fun MediaGallery(
                 .fillMaxWidth()
                 .padding(top = MediaFrame.DotRowTopPadding),
             tone = DotTone.Card,
-            testTag = testTag?.let { "${it}_dots" },
+            testTag = node?.div("dots")?.tag ?: testTag?.let { "${it}_dots" },
         )
     }
 }
@@ -149,6 +165,7 @@ private fun GalleryFrame(
     fit: ContentScale,
     maxHeight: Dp,
     shape: Shape,
+    node: DataNode?,
 ) {
     val videoUrl = item.videoUrl
     // A clip plays when its surface's stage is its own — THE STAGE LAW
@@ -189,7 +206,11 @@ private fun GalleryFrame(
                 } else {
                     Modifier
                 },
-            ),
+            )
+            // The pager above speaks for the whole set, so a page announces
+            // nothing of its own — the poster's description would be read a
+            // second time. It keeps only its name.
+            .clearAndSetSemantics { node?.let { testTag = it.tag } },
     ) {
         // Symptom (b) is about this number on the way back: the clip
         // should resume if it is in the viewport and must not start if

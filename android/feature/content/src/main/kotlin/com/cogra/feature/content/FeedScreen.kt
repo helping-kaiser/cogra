@@ -44,9 +44,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CollapsingTopBanner
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
 import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograBandChats
@@ -179,9 +182,19 @@ fun FeedRoute(
         viewerId = viewerId,
         onEditPost = onEditPost,
         onCitePost = onCitePost,
-        stanceControl = { target, tag -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag) },
+        stanceControl = { target, tag, node ->
+            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
+        },
     )
 }
+
+/**
+ * The feed's registered prefix (`Feed`/`FeedCover` in
+ * `design/designs/canonical/nodes.json`): every element those boards name
+ * wears its `feed.…` path, so the conformance harness pairs this screen with
+ * them by id.
+ */
+private val FEED = DataNode("feed")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -209,9 +222,10 @@ fun FeedScreen(
     onReveal: (String, SensitiveMark) -> Unit = { _, _ -> },
     /**
      * The stance control a post card carries (design.md §6), hoisted so
-     * the screen stays free of DI and previewable.
+     * the screen stays free of DI and previewable. It is handed the
+     * control's data-node, which the card's row names.
      */
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit = { _, _, _ -> },
     /**
      * THE THREAD, OVER THE FEED. A card's comment count raises the same
      * full-function sheet the detail's count does (jakob 2026-09-15) —
@@ -254,16 +268,19 @@ fun FeedScreen(
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
     WatchFeedTail(listState = listState, state = state, onLoadMore = onLoadMore)
+    val band = FEED / "band"
     Scaffold(
+        modifier = Modifier.dataNodeSurface(),
         topBar = {
             Column {
                 TopAppBar(
                     // A tab root wears the band, never a page title: its
                     // name is the bar slot the reader tapped to get here
                     // (FE-09). The 48dp band is the drawn one (F-10).
-                    title = { CograBandIdentity(testTag = "feed_band") },
+                    title = { CograBandIdentity(testTag = "feed_band", node = band) },
+                    modifier = Modifier.dataNode(band),
                     actions = {
-                        onChats?.let { CograBandChats(it, testTag = "feed_band") }
+                        onChats?.let { CograBandChats(it, testTag = "feed_band", node = band) }
                     },
                     expandedHeight = Layout.TopBarHeight,
                     colors = surfaceTopAppBarColors(),
@@ -564,14 +581,14 @@ private fun ExpiredCard(
  * row ever shrink.
  */
 @Composable
-private fun SummaryTitle(post: PostView) {
+private fun SummaryTitle(post: PostView, node: DataNode) {
     post.title.value?.takeIf { it.isNotEmpty() }?.let { title ->
         Text(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.testTag("feed_post_title_${post.id}"),
+            modifier = Modifier.dataNode(node),
         )
     }
 }
@@ -596,13 +613,17 @@ private fun PostCard(
     onCite: (String) -> Unit,
     revealed: Boolean,
     onReveal: () -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
+    // The instance the board keys by author handle is keyed here by the
+    // post's id — the same key the web's card carries, so the harness pairs
+    // both platforms' cards with one live post.
+    val card = FEED / "card"
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .testTag("feed_post_${post.id}"),
+            .dataNode(card.keyed(post.id)),
     ) {
         Column(
             modifier = Modifier
@@ -617,8 +638,9 @@ private fun PostCard(
                 onEdit = onEdit,
                 onCite = onCite,
                 onShare = onShare,
+                node = card,
             )
-            SummaryTitle(post)
+            SummaryTitle(post, card / "title")
             PostBody(
                 content = post.content,
                 description = post.description,
@@ -626,6 +648,7 @@ private fun PostCard(
                 attachmentsStatus = post.attachmentsStatus,
                 moderation = post.moderation,
                 testTagPrefix = "feed_post_${post.id}",
+                node = card,
                 collapsed = true,
                 bleed = Space.x4,
                 // The whole gallery is one target opening the post: a
@@ -646,6 +669,7 @@ private fun PostCard(
                 onOpenTopic = onOpenTopic,
                 onOpenActor = onOpenActor,
                 onOpenPost = onOpenPost,
+                node = card / "tagsLine",
             )
             // Stance, comment, share — the master's row, minus the two
             // it gates (see `PostAffordanceRow`). THE COUNT RAISES THE
@@ -657,8 +681,9 @@ private fun PostCard(
                 onOpenComments = onOpenComments,
                 onShare = { onShare(post.id) },
                 testTagPrefix = "feed_post_${post.id}",
+                node = card / "actionRow",
             ) {
-                stanceControl(post.id, "feed_post_${post.id}")
+                stanceControl(post.id, "feed_post_${post.id}", card / "actionRow" / "stance")
             }
         }
     }
@@ -680,6 +705,7 @@ private fun CardMenuHeader(
     onEdit: (String) -> Unit,
     onCite: (String) -> Unit,
     onShare: (String) -> Unit,
+    node: DataNode,
 ) {
     var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
     var removeOpen by remember { mutableStateOf(false) }
@@ -720,6 +746,7 @@ private fun CardMenuHeader(
             )
         },
         menuContentDescription = stringResource(R.string.content_menu_post),
+        node = node,
     )
     licenseShown?.let { license ->
         LicenseSheet(license = license, onDismiss = { licenseShown = null })
@@ -748,6 +775,7 @@ private fun CardTopicsLine(
     onOpenTopic: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenPost: (String) -> Unit,
+    node: DataNode,
 ) {
     var refsOpen by rememberSaveable { mutableStateOf(false) }
     TopicsLine(
@@ -756,6 +784,7 @@ private fun CardTopicsLine(
         onOpenTopic = onOpenTopic,
         testTagPrefix = "feed_post_${post.id}",
         onOpenReferences = { refsOpen = true },
+        node = node,
     )
     if (refsOpen) {
         RefsSheet(

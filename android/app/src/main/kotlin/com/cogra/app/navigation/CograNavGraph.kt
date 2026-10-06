@@ -51,6 +51,7 @@ import com.cogra.app.R
 import com.cogra.app.ui.CograBottomBar
 import com.cogra.app.ui.SecurityNoticeHost
 import com.cogra.core.designsystem.CograSnackbarHost
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.LocalSnackbarHostState
 import com.cogra.core.designsystem.StanceAxes
 import com.cogra.core.designsystem.StanceZeroWords
@@ -534,6 +535,15 @@ private fun CograNavGraphContent(
         bottomBar = {
             if (signedIn != null && onReadSurface) {
                 CograBottomBar(
+                    // The bar is the shell's, but each registered board names
+                    // it under its own screen (`feed.bottomBar`,
+                    // `postDetail.bottomBar`), so it wears the name of the
+                    // screen it is standing under.
+                    node = when {
+                        onFeedTab -> DataNode("feed") / "bottomBar"
+                        onPostDetail -> DataNode("postDetail") / "bottomBar"
+                        else -> null
+                    },
                     feedSelected = onFeedTab,
                     profileSelected = onOwnProfileTab,
                     onFeed = { toTab(Feed) },

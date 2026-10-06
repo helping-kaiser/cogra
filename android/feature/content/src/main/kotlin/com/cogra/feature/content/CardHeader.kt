@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.cogra.core.designsystem.ActorChip
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.MenuRow
 import com.cogra.core.designsystem.v2.token.Space
@@ -50,6 +51,12 @@ internal fun ContentCardHeader(
     menu: List<MenuRow> = emptyList(),
     menuContentDescription: String = "",
     stacked: Boolean = false,
+    /**
+     * The card's data-node on a registered screen (`feed.card`): the chip,
+     * the age and the ⋮ then wear its `authorChip`, `timestamp` and `menu`
+     * parts in place of the [testTagPrefix] tags.
+     */
+    node: DataNode? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -65,6 +72,7 @@ internal fun ContentCardHeader(
                     onOpen = { onOpenActor(it.handle) },
                     avatarUrl = it.avatar?.url,
                     testTag = "${testTagPrefix}_author",
+                    node = node?.div("authorChip"),
                 )
             }
         }
@@ -74,12 +82,12 @@ internal fun ContentCardHeader(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .padding(start = Space.x3)
-                .testTag("${testTagPrefix}_age"),
+                .testTag(node?.div("timestamp")?.tag ?: "${testTagPrefix}_age"),
         )
         CograOverflowMenu(
             items = menu,
             contentDescription = menuContentDescription,
-            testTag = "${testTagPrefix}_menu",
+            testTag = node?.div("menu")?.tag ?: "${testTagPrefix}_menu",
             stacked = stacked,
         )
     }

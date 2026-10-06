@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.ThemePreviews
@@ -66,12 +68,20 @@ fun WizardHeader(
     onHelp: (() -> Unit)? = null,
     helpContentDescription: String = "What this means",
     testTag: String? = null,
+    /**
+     * The header's data-node on a registered screen (`composeDetails.header`):
+     * the header, its back arrow, title and X then wear the registered paths
+     * in place of the [testTag] ones. The help dot is not on a registered
+     * board, so it keeps its own.
+     */
+    node: DataNode? = null,
 ) {
+    val tag = node?.tag ?: testTag
     Row(
         modifier = modifier
             .defaultMinSize(minHeight = Layout.TopBarHeight)
             .padding(horizontal = Layout.TopBarPadding)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(if (tag != null) Modifier.testTag(tag) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -80,7 +90,7 @@ fun WizardHeader(
                 onClick = onBack,
                 modifier = Modifier
                     .size(Layout.TouchTargetMin)
-                    .testTag(testTag?.let { "${it}_back" } ?: "wizard_back"),
+                    .testTag(partTag(node, testTag, "back")),
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -106,7 +116,7 @@ fun WizardHeader(
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).dataNode(node?.div("title")),
         )
 
         // The X: out of the flow entirely, from any stage, with the draft
@@ -116,7 +126,7 @@ fun WizardHeader(
                 onClick = onLeave,
                 modifier = Modifier
                     .size(Layout.TouchTargetMin)
-                    .testTag(testTag?.let { "${it}_leave" } ?: "wizard_leave"),
+                    .testTag(partTag(node, testTag, "leave")),
             ) {
                 Icon(
                     imageVector = Icons.Filled.Close,
@@ -146,6 +156,10 @@ fun WizardHeader(
         }
     }
 }
+
+/** A header control's tag: its registered path, else `<testTag>_<part>`, else `wizard_<part>`. */
+private fun partTag(node: DataNode?, testTag: String?, part: String): String =
+    node?.div(part)?.tag ?: testTag?.let { "${it}_$part" } ?: "wizard_$part"
 
 @ThemePreviews
 @Composable

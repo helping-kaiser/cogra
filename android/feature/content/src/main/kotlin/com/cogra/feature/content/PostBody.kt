@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.v2.atom.bleedHorizontally
 import com.cogra.core.designsystem.v2.media.MediaGallery
 import com.cogra.core.designsystem.v2.media.MediaItem
@@ -132,6 +133,14 @@ internal fun PostBody(
     sensitiveSource: SensitiveSource = SensitiveSource.Author,
     /** The author's public reason, shown on the veil after the source. */
     sensitiveReason: String? = null,
+    /**
+     * The card's data-node on a registered screen (`feed.card`): the words,
+     * the description, the opener and the gallery then wear its `body`,
+     * `description`, `opener` and `media` parts in place of the
+     * [testTagPrefix] tags. The veil and the removal placeholder are not
+     * drawn on a registered board, so they keep theirs.
+     */
+    node: DataNode? = null,
 ) {
     if (isRemoved(content, attachments, attachmentsStatus)) {
         RemovedPlaceholder(
@@ -159,11 +168,11 @@ internal fun PostBody(
         ) {
             val gallery: @Composable () -> Unit = {
                 if (attachments.isNotEmpty() && !mediaPinned) {
-                    Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery")
+                    Gallery(attachments, surface, onOpenMedia, bleed, "${testTagPrefix}_gallery", node?.div("media"))
                 }
             }
             val caption: @Composable () -> Unit = {
-                Caption(words, description?.value, collapsed, testTagPrefix)
+                Caption(words, description?.value, collapsed, testTagPrefix, node)
             }
 
             // A post leads with its pictures; a comment leads with its
@@ -219,6 +228,7 @@ private fun Caption(
     description: String?,
     collapsed: Boolean,
     testTagPrefix: String,
+    node: DataNode?,
 ) {
     // What the clamp hid, remembered from the reading that hid it: once
     // the opener has unfolded the text nothing overflows any more, so a
@@ -233,7 +243,7 @@ private fun Caption(
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = if (clamping) TEXT_BODY_CLAMP_LINES else Int.MAX_VALUE,
             onOverflow = { folded = true },
-            testTag = "${testTagPrefix}_words",
+            testTag = node?.div("body")?.tag ?: "${testTagPrefix}_words",
         )
     }
     description?.takeIf { it.isNotEmpty() }?.let {
@@ -242,7 +252,7 @@ private fun Caption(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = if (clamping) DESCRIPTION_CLAMP_LINES else Int.MAX_VALUE,
             onOverflow = { folded = true },
-            testTag = "${testTagPrefix}_description",
+            testTag = node?.div("description")?.tag ?: "${testTagPrefix}_description",
         )
     }
     // Only where there is something folded away. A text control, not a
@@ -254,7 +264,7 @@ private fun Caption(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .clickable { open = !open }
-                .testTag("${testTagPrefix}_opener"),
+                .testTag(node?.div("opener")?.tag ?: "${testTagPrefix}_opener"),
         )
     }
 }
@@ -316,6 +326,7 @@ private fun Gallery(
     onOpenMedia: ((page: Int) -> Unit)?,
     bleed: Dp,
     testTag: String,
+    node: DataNode?,
 ) {
     val items = attachments.map { it.toItem() }
     when (surface) {
@@ -330,6 +341,7 @@ private fun Gallery(
             onOpen = onOpenMedia,
             modifier = if (bleed > 0.dp) Modifier.bleedHorizontally(bleed) else Modifier,
             testTag = testTag,
+            node = node,
         )
 
         BodySurface.Comment -> MediaGallery(
@@ -340,6 +352,7 @@ private fun Gallery(
             maxHeight = MediaFrame.CommentMaxHeight,
             shape = MaterialTheme.shapes.medium,
             testTag = testTag,
+            node = node,
         )
     }
 }

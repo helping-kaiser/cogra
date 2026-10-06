@@ -68,6 +68,14 @@ fun ReferenceChip(
     onRemove: (() -> Unit)? = null,
     testTag: String? = null,
     values: ReferenceChipValues? = null,
+    /**
+     * The chip's data-node on a registered screen, already keyed
+     * (`composeDetails.references.stagedReference:1`): the chip, its label
+     * (`name`), its supporting line (`kind`) and its remove button then wear
+     * the registered paths in place of [testTag]'s. The open target keeps
+     * `<testTag>_open`.
+     */
+    node: DataNode? = null,
 ) {
     val reading = values?.let {
         stringResource(R.string.reference_chip_values, signedValue(it.relevance), signedValue(it.support))
@@ -80,14 +88,20 @@ fun ReferenceChip(
             signedValue(it.support),
         )
     }
-    val chipModifier = modifier.then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
+    val (chipTag, removeTag) = chipTags(node, testTag)
+    val chipModifier = modifier.then(if (chipTag != null) Modifier.testTag(chipTag) else Modifier)
     val chipLabel: @Composable () -> Unit = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Column {
-                Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.dataNode(node?.div("name")),
+                )
                 supporting?.let {
                     Text(
                         it,
@@ -95,6 +109,7 @@ fun ReferenceChip(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.dataNode(node?.div("kind")),
                     )
                 }
             }
@@ -124,7 +139,7 @@ fun ReferenceChip(
             )
             IconButton(
                 onClick = onRemove,
-                modifier = if (testTag != null) Modifier.testTag("${testTag}_remove") else Modifier,
+                modifier = if (removeTag != null) Modifier.testTag(removeTag) else Modifier,
             ) {
                 Icon(
                     Icons.Filled.Close,
@@ -141,6 +156,10 @@ fun ReferenceChip(
         )
     }
 }
+
+/** The chip's own tag and its remove button's: registered paths, else the [testTag] family. */
+private fun chipTags(node: DataNode?, testTag: String?): Pair<String?, String?> =
+    (node?.tag ?: testTag) to (node?.div("remove")?.tag ?: testTag?.let { "${it}_remove" })
 
 /** Both citation parameters are bipolar, so both readings carry their sign. */
 private fun signedValue(value: Double): String =

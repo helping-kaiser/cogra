@@ -48,10 +48,12 @@ import androidx.annotation.StringRes
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.CollapsingTopBanner
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.TagParameterSliders
 import com.cogra.core.designsystem.TopicChip
 import com.cogra.core.designsystem.collapsingTop
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.Hairline
@@ -617,13 +619,22 @@ internal fun TopicEntry(
     onTagConfidenceChange: (String, Double) -> Unit,
     /** The comment surfaces sit inside a card; the heading would only repeat. */
     showHeading: Boolean = true,
+    /**
+     * The section's data-node on a registered screen (`composeDetails.tags`):
+     * the section, its heading (`label`), each chip (keyed by its name) and
+     * the add action then wear the registered paths. The free-text field, the
+     * preview and the refusals are not drawn on the board and keep their
+     * [testTagPrefix] tags.
+     */
+    node: DataNode? = null,
 ) {
     val tagInput = section.input
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.dataNode(node)) {
         if (showHeading) {
             Text(
                 stringResource(R.string.content_topics_heading),
                 style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.dataNode(node?.div("label")),
             )
         }
         if (section.tags.isNotEmpty()) {
@@ -638,6 +649,7 @@ internal fun TopicEntry(
                         onClick = { onTuneTag(row.name) },
                         onRemove = { onRemoveTag(row.name) },
                         testTag = "${testTagPrefix}_tag_${row.name}",
+                        node = node?.div("tag")?.keyed(row.name),
                     )
                 }
             }
@@ -678,7 +690,7 @@ internal fun TopicEntry(
                 TextButton(
                     onClick = onAddTag,
                     enabled = isAddableTagName(tagInput),
-                    modifier = Modifier.testTag("${testTagPrefix}_tag_add"),
+                    modifier = Modifier.testTag(node?.div("add")?.tag ?: "${testTagPrefix}_tag_add"),
                 ) {
                     Text(stringResource(R.string.content_topics_add))
                 }

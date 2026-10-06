@@ -48,8 +48,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.CograSnackbarHost
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.dataNode
+import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
@@ -146,7 +149,9 @@ fun PostDetailRoute(
         onReference = onReference,
         onShare = { id -> context.sharePost(viewModel.shareUrl(id)) },
         onBack = onBack,
-        stanceControl = { target, tag -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag) },
+        stanceControl = { target, tag, node ->
+            StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag, node = node)
+        },
         commentsSheet = { onDismiss ->
             CommentsSheetRoute(
                 postId = postId,
@@ -219,8 +224,11 @@ fun PostDetailScreen(
     /** Hands this post to the platform's own share sheet. */
     onShare: (String) -> Unit,
     onBack: () -> Unit,
-    /** The stance control the post and every comment carry (design.md §6). */
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit = { _, _ -> },
+    /**
+     * The stance control the post carries (design.md §6), handed the
+     * control's data-node, which the card's row names.
+     */
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit = { _, _, _ -> },
     /**
      * THE THREAD, WHICH THIS SCREEN NO LONGER OWNS. The sheet is the one
      * comments surface and holds its own state, so the detail supplies
@@ -241,7 +249,9 @@ fun PostDetailScreen(
     // covered — and every way out of them comes back to it (`ReplyCompose` and
     // `CommentEdit` both cancel and advance to the thread).
     var commentsOpen by rememberSaveable { mutableStateOf(false) }
+    val header = POST_DETAIL / "header"
     Scaffold(
+        modifier = Modifier.dataNodeSurface(),
         snackbarHost = { CograSnackbarHost(snackbar) },
         topBar = {
             // THE DETAIL'S BAR IS PINNED (jakob 2026-09-15): collapsing the
@@ -258,12 +268,13 @@ fun PostDetailScreen(
                 // have. `expandedHeight` is the documented way to set it.
                 expandedHeight = Layout.TopBarHeight,
                 colors = surfaceTopAppBarColors(),
+                modifier = Modifier.dataNode(header),
                 // No title in the band: the post's title is the card's
                 // heading, above its media (`_shared.jsx:287-289` — the
                 // detail header takes no title prop).
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("detail_back")) {
+                    IconButton(onClick = onBack, modifier = Modifier.dataNode(header / "back")) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.content_back),
@@ -280,6 +291,7 @@ fun PostDetailScreen(
                         // Over the page — never stacked.
                         onLicense = { license -> licenseShown = license },
                         onShare = onShare,
+                        node = header / "menu",
                     )
                 },
             )
@@ -445,6 +457,7 @@ private fun DetailMenu(
     onRemove: () -> Unit,
     onLicense: (LicenseChoice) -> Unit,
     onShare: (String) -> Unit,
+    node: DataNode,
 ) {
     if (post == null) return
     if (isRemoved(post.content, post.attachments, post.attachmentsStatus)) return
@@ -472,7 +485,7 @@ private fun DetailMenu(
             testTagPrefix = "detail_menu",
         ),
         contentDescription = stringResource(R.string.content_menu_post),
-        testTag = "detail_menu",
+        testTag = node.tag,
     )
 }
 
@@ -492,7 +505,7 @@ private fun PostDetailBody(
     onOpenComments: () -> Unit,
     /** Hands this post to the platform's own share sheet. */
     onShare: (String) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
     // A removed post keeps its skeleton and loses everything the payload
     // carried: the license, the topics and the citations rode it away.
@@ -607,9 +620,11 @@ private fun DetailCard(
     onOpenPost: (String) -> Unit,
     onOpenComments: () -> Unit,
     onShare: (String) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth().testTag("detail_card")) {
+    // Keyed by the post's id, the key the feed's card and the web's carry.
+    val card = POST_DETAIL / "card"
+    Card(modifier = Modifier.fillMaxWidth().dataNode(card.keyed(post.id))) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -625,6 +640,7 @@ private fun DetailCard(
                 at = post.createdAt,
                 onOpenActor = onOpenActor,
                 testTagPrefix = "detail",
+                node = card,
             )
             // The title titles the thing, so it stands above the media rather
             // than in the bar: below the picture it would read as a caption,
@@ -634,7 +650,7 @@ private fun DetailCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.testTag("detail_title"),
+                    modifier = Modifier.dataNode(card / "title"),
                 )
             }
             // Media, words and description are one region because the veil
@@ -646,6 +662,7 @@ private fun DetailCard(
                 attachmentsStatus = post.attachmentsStatus,
                 moderation = post.moderation,
                 testTagPrefix = "detail",
+                node = card,
                 modifier = Modifier.testTag("detail_body"),
                 bleed = Space.x4,
                 mediaPinned = mediaPinned,
@@ -662,6 +679,7 @@ private fun DetailCard(
                 onOpenComments = onOpenComments,
                 onShare = onShare,
                 stanceControl = stanceControl,
+                node = card,
             )
         }
     }
@@ -687,7 +705,8 @@ private fun DetailCardFoot(
     /** `ReplyEntry`: the affordance row's count raises the thread. */
     onOpenComments: () -> Unit,
     onShare: (String) -> Unit,
-    stanceControl: @Composable (target: String, testTagPrefix: String) -> Unit,
+    stanceControl: @Composable (target: String, testTagPrefix: String, node: DataNode?) -> Unit,
+    node: DataNode,
 ) {
     if (post.landing.isPending) {
         PendingMarker(testTag = "detail_pending")
@@ -703,6 +722,7 @@ private fun DetailCardFoot(
             onOpenTopic = onOpenTopic,
             testTagPrefix = "detail_post",
             onOpen = { refsOpen = true },
+            node = node / "tagsLine",
         )
         if (refsOpen) {
             RefsSheet(
@@ -721,10 +741,18 @@ private fun DetailCardFoot(
         onOpenComments = onOpenComments,
         onShare = { onShare(post.id) },
         testTagPrefix = "detail_post",
+        node = node / "actionRow",
     ) {
-        stanceControl(post.id, "detail_post")
+        stanceControl(post.id, "detail_post", node / "actionRow" / "stance")
     }
 }
+
+/**
+ * The detail's registered prefix (`PostDetail` in
+ * `design/designs/canonical/nodes.json`): every element the board names
+ * wears its `postDetail.…` path.
+ */
+private val POST_DETAIL = DataNode("postDetail")
 
 /**
  * The post, as the composer's target card reads it (`ReplyEntry` 7).

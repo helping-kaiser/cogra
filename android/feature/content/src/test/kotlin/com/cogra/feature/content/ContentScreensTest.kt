@@ -21,6 +21,7 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isRoot
@@ -80,6 +81,7 @@ class ContentScreensTest {
         onChats: (() -> Unit)? = null,
         onShare: (String) -> Unit = {},
         onStance: (String, String) -> Unit = { _, _ -> },
+        onStanceNode: (com.cogra.core.designsystem.DataNode?) -> Unit = {},
         viewerId: String? = null,
         onEditPost: (String) -> Unit = {},
         onCitePost: (String) -> Unit = {},
@@ -89,7 +91,10 @@ class ContentScreensTest {
         compose.setContent {
             FeedScreen(
                 onShare = onShare,
-                stanceControl = { target, tag -> onStance(target, tag) },
+                stanceControl = { target, tag, node ->
+                    onStance(target, tag)
+                    onStanceNode(node)
+                },
                 state = state,
                 onRefresh = onRefresh,
                 onLoadMore = onLoadMore,
@@ -137,7 +142,7 @@ class ContentScreensTest {
         // A tab root's name is the bar slot the reader tapped to get here,
         // so the band carries the mark and the wordmark and no screen
         // title (FE-09).
-        compose.onNodeWithTag("feed_band_wordmark").assertTextEquals("cogra")
+        compose.onNodeWithTag("feed.band.wordmark").assertTextEquals("cogra")
         compose.onNodeWithText("Feed").assertDoesNotExist()
     }
 
@@ -146,9 +151,38 @@ class ContentScreensTest {
         var chats = 0
         renderFeed(FeedUiState(loading = false), onChats = { chats++ })
 
-        compose.onNodeWithTag("feed_band_chats").performClick()
+        compose.onNodeWithTag("feed.band.chats").performClick()
 
         assertThat(chats).isEqualTo(1)
+    }
+
+    @Test
+    fun aFeedCardWearsTheRegisteredDataNodePaths() {
+        // The conformance harness finds the `Feed` board's elements by exactly
+        // these paths (design/designs/canonical/nodes.json), each card keyed by
+        // its post's id, and the stance slot is handed its own path.
+        val stanceNodes = mutableListOf<String?>()
+        renderFeed(
+            FeedUiState(loading = false, posts = listOf(testPost("p1"))),
+            onChats = {},
+            onStanceNode = { stanceNodes += it?.tag },
+        )
+
+        listOf("feed.band", "feed.band.mark", "feed.band.wordmark", "feed.band.chats", "feed.card:p1")
+            .forEach { compose.onNodeWithTag(it, useUnmergedTree = true).assertExists() }
+        // Not `share`: below 360dp (Robolectric's default window) the row
+        // sheds it into the ⋮, which `share`'s own tests pin.
+        listOf(
+            "feed.card.authorChip",
+            "feed.card.authorChip.avatar",
+            "feed.card.authorChip.name",
+            "feed.card.authorChip.handle",
+            "feed.card.timestamp",
+            "feed.card.menu",
+            "feed.card.actionRow",
+            "feed.card.actionRow.comments",
+        ).forEach { compose.onNodeIn(feedCard("p1"), it, useUnmergedTree = true).assertExists() }
+        assertThat(stanceNodes.distinct()).containsExactly("feed.card.actionRow.stance")
     }
 
     @Test
@@ -158,7 +192,7 @@ class ContentScreensTest {
         // band lies.
         renderFeed(FeedUiState(loading = false), onChats = null)
 
-        compose.onNodeWithTag("feed_band_chats").assertDoesNotExist()
+        compose.onNodeWithTag("feed.band.chats").assertDoesNotExist()
     }
 
     @Test
@@ -202,7 +236,7 @@ class ContentScreensTest {
         // semantics — the marker is read out as part of the card and is
         // only addressable on its own in the unmerged tree.
         compose.onNodeWithTag("feed_post_pending_p1", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed.card:p1").assertExists()
         compose.onNodeWithTag("feed_post_pending_p2", useUnmergedTree = true).assertDoesNotExist()
     }
 
@@ -224,7 +258,7 @@ class ContentScreensTest {
             FeedUiState(loading = false, posts = listOf(testPost("p1"), testPost("p2"))),
             onOpenPost = { opened = it },
         )
-        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.onNodeWithTag("feed.card:p1").performClick()
         assertThat(opened).isEqualTo("p1")
         compose.onNodeWithTag("feed_empty").assertDoesNotExist()
     }
@@ -338,7 +372,7 @@ class ContentScreensTest {
         // Ten posts, five short of the end: the watched post is the sixth.
         // `performScrollToNode` — not `performScrollTo` — because the tail
         // post is not yet composed off-screen in a `LazyColumn`.
-        compose.onNodeWithTag("feed_list").performScrollToNode(hasTestTag("feed_post_p6"))
+        compose.onNodeWithTag("feed_list").performScrollToNode(hasTestTag("feed.card:p6"))
         compose.waitForIdle()
         assertThat(calls).isEqualTo(1)
 
@@ -406,7 +440,7 @@ class ContentScreensTest {
             ),
             onRefresh = { retried = true },
         )
-        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed.card:p1").assertExists()
         compose.onNodeWithTag("feed_transport_error").assertDoesNotExist()
         compose.onNodeWithTag("feed_transport_banner").assertExists()
         compose.onNodeWithTag("feed_retry").performClick()
@@ -425,7 +459,7 @@ class ContentScreensTest {
             ),
             onLoadMore = { more = true },
         )
-        compose.onNodeWithTag("feed_post_p1").assertExists()
+        compose.onNodeWithTag("feed.card:p1").assertExists()
         compose.onNodeWithTag("feed_transport_banner").assertDoesNotExist()
         compose.onNodeWithTag("feed_load_more").assertDoesNotExist()
         compose.onNodeWithTag("feed_load_more_error").performScrollTo().assertExists()
@@ -442,7 +476,7 @@ class ContentScreensTest {
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             viewerId = "someone-else",
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_save").assertExists()
         compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_hide").assertExists()
@@ -464,7 +498,7 @@ class ContentScreensTest {
             viewerId = "author-1",
             onEditPost = { editing = it },
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_save").assertExists()
         compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_sensitive").assertExists()
@@ -498,7 +532,7 @@ class ContentScreensTest {
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             viewerId = null,
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
         compose.onNodeWithTag("feed_p1_menu_edit").assertDoesNotExist()
     }
@@ -512,7 +546,7 @@ class ContentScreensTest {
             viewerId = "someone-else",
             onCitePost = { cited = it },
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_cite").performClick()
         assertThat(cited).isEqualTo("p1")
     }
@@ -529,7 +563,7 @@ class ContentScreensTest {
             ),
             viewerId = "someone-else",
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_license").performClick()
         compose.onNodeWithTag("license_sheet_terms").assertExists()
     }
@@ -544,7 +578,7 @@ class ContentScreensTest {
             FeedUiState(loading = false, posts = listOf(testPost("p1"), testPost("p2"))),
             viewerId = "someone-else",
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_cite").assertExists()
         compose.onNodeWithTag("feed_p2_menu_cite").assertDoesNotExist()
     }
@@ -561,8 +595,8 @@ class ContentScreensTest {
             ),
             viewerId = "author-1",
         )
-        compose.onNodeWithTag("feed_post_p1").assertExists()
-        compose.onNodeWithTag("feed_p1_menu").assertDoesNotExist()
+        compose.onNodeWithTag("feed.card:p1").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").assertDoesNotExist()
     }
 
     // -- Composer --
@@ -813,7 +847,7 @@ class ContentScreensTest {
      * opens it the way a reader does — through the affordance row's count.
      */
     private fun openComments() {
-        compose.onNodeWithTag("detail_post_comments").performClick()
+        compose.onNodeWithTag("postDetail.card.actionRow.comments").performClick()
         // The sheet animates in, so the thread's composition is not finished
         // when the click returns — a test that reads state rather than nodes
         // has no other sync point.
@@ -845,7 +879,7 @@ class ContentScreensTest {
             // thread's own window, exactly as `CommentsSheetRoute` holds it.
             var licenseShown by remember { mutableStateOf<LicenseChoice?>(null) }
             PostDetailScreen(
-                stanceControl = { target, tag -> onStance(target, tag) },
+                stanceControl = { target, tag, _ -> onStance(target, tag) },
                 state = state.detail,
                 viewerId = viewerId,
                 onRefresh = onRefresh,
@@ -1104,7 +1138,7 @@ class ContentScreensTest {
         )
         compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
 
-        compose.onNodeWithTag("feed_post_p1_comments").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments").performClick()
         compose.waitForIdle()
 
         assertThat(raised).containsExactly("p1")
@@ -1243,14 +1277,14 @@ class ContentScreensTest {
             onRefresh = { refreshes++ },
         )
         // Down the post, well past the header…
-        val titleAtRest = compose.onNodeWithTag("detail_title").getUnclippedBoundsInRoot().top
+        val titleAtRest = compose.onNodeWithTag("postDetail.card.title").getUnclippedBoundsInRoot().top
         repeat(3) {
             compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
         }
         // …which is the premise the rest of this test rests on, so it is
         // asserted rather than assumed: a list that never moved would make
         // the correction below a pull from the top, which SHOULD refresh.
-        val titleScrolled = compose.onNodeWithTag("detail_title").getUnclippedBoundsInRoot().top
+        val titleScrolled = compose.onNodeWithTag("postDetail.card.title").getUnclippedBoundsInRoot().top
         assertThat(titleScrolled.value).isLessThan(titleAtRest.value)
         // …then a correction back up that the thread itself absorbs.
         compose.onNodeWithTag("detail_list").performTouchInput {
@@ -1275,13 +1309,13 @@ class ContentScreensTest {
                 post = testPost("p1", body = "Body p1. ".repeat(400)),
             ),
         )
-        val before = compose.onNodeWithTag("detail_menu").getUnclippedBoundsInRoot()
+        val before = compose.onNodeWithTag("postDetail.header.menu").getUnclippedBoundsInRoot()
         repeat(3) {
             compose.onNodeWithTag("detail_list").performTouchInput { swipeUp() }
         }
-        compose.onNodeWithTag("detail_menu").assertIsDisplayed()
-        compose.onNodeWithTag("detail_back").assertIsDisplayed()
-        val after = compose.onNodeWithTag("detail_menu").getUnclippedBoundsInRoot()
+        compose.onNodeWithTag("postDetail.header.menu").assertIsDisplayed()
+        compose.onNodeWithTag("postDetail.header.back").assertIsDisplayed()
+        val after = compose.onNodeWithTag("postDetail.header.menu").getUnclippedBoundsInRoot()
         assertThat(after.top.value).isEqualTo(before.top.value)
     }
 
@@ -1338,7 +1372,7 @@ class ContentScreensTest {
         compose.onNodeWithTag("detail_license_terms").assertDoesNotExist()
         compose.onNodeWithTag("comment_license_terms_c1").assertDoesNotExist()
 
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_license").performClick()
         compose.onNodeWithTag("license_sheet_terms").assertExists()
     }
@@ -1354,7 +1388,7 @@ class ContentScreensTest {
                 post = testPost("p1", license = LicenseChoice(attribution = 1.0, provenance = 0.0)),
             ),
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_license").performClick()
 
         compose.onNodeWithText("Credit").assertExists()
@@ -1376,7 +1410,7 @@ class ContentScreensTest {
                 post = testPost("p1", license = LicenseChoice(attribution = 0.0, provenance = 0.0)),
             ),
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_license").performClick()
         compose.onNodeWithTag("license_sheet_terms_public_domain").assertExists()
         // The rows below still spell what it means.
@@ -1391,7 +1425,7 @@ class ContentScreensTest {
             detailFixture(loading = false, post = testPost("p1")),
             viewerId = "someone-else",
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_save").assertExists()
         compose.onNodeWithTag("detail_menu_cite").assertExists()
         compose.onNodeWithTag("detail_menu_hide").assertExists()
@@ -1413,7 +1447,7 @@ class ContentScreensTest {
             viewerId = "author-1",
             onEdit = { editing = it },
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_save").assertExists()
         compose.onNodeWithTag("detail_menu_cite").assertExists()
         compose.onNodeWithTag("detail_menu_sensitive").assertExists()
@@ -1449,7 +1483,7 @@ class ContentScreensTest {
             viewerId = "author-1",
             onEdit = { editing = it },
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_sensitive").performClick()
         assertThat(editing).isEqualTo("p1")
     }
@@ -1499,9 +1533,9 @@ class ContentScreensTest {
     @Test
     fun thePostsOwnMenuOpensOverThePageAlone() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("comments_sheet").assertDoesNotExist()
-        compose.onNodeWithTag("detail_menu_sheet").assertExists()
+        compose.onNodeWithTag("postDetail.header.menu_sheet").assertExists()
     }
 
     // ONE SHEET, TWO MENUS (`CommentLicense.jsx:9-10`): raised from a
@@ -1530,14 +1564,14 @@ class ContentScreensTest {
             detailFixture(loading = false, post = testPost("p1")),
             viewerId = "someone-else",
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_save").performClick()
         // The screen is where it was: the row acted on nothing.
-        compose.onNodeWithTag("detail_card").assertExists()
+        compose.onNode(isDetailCard()).assertExists()
 
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_hide").performClick()
-        compose.onNodeWithTag("detail_card").assertExists()
+        compose.onNode(isDetailCard()).assertExists()
     }
 
     // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
@@ -1550,12 +1584,12 @@ class ContentScreensTest {
         )
 
         val pinned = compose.onNodeWithTag(PINNED_CLIP_TAG).getUnclippedBoundsInRoot()
-        val card = compose.onNodeWithTag("detail_card").getUnclippedBoundsInRoot()
+        val card = compose.onNode(isDetailCard()).getUnclippedBoundsInRoot()
         assertThat(pinned.bottom.value).isAtMost(card.top.value)
         // The clip LEFT the card: the body has no gallery left to draw.
-        compose.onNodeWithTag("detail_gallery").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.card.media").assertDoesNotExist()
         // The card is still the post as it always reads.
-        compose.onNodeWithTag("detail_title").assertExists()
+        compose.onNodeWithTag("postDetail.card.title").assertExists()
     }
 
     @Test
@@ -1572,7 +1606,7 @@ class ContentScreensTest {
         )
 
         compose.onNodeWithTag(PINNED_CLIP_TAG).assertDoesNotExist()
-        compose.onNodeWithTag("detail_gallery").assertExists()
+        compose.onNodeWithTag("postDetail.card.media").assertExists()
     }
 
     /** A removed record is the skeleton: there is no clip left to pin. */
@@ -1589,7 +1623,7 @@ class ContentScreensTest {
         )
 
         compose.onNodeWithTag(PINNED_CLIP_TAG).assertDoesNotExist()
-        compose.onNodeWithTag("detail_gallery").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.card.media").assertDoesNotExist()
         // The skeleton says so where the body was.
         compose.onNodeWithText("Removed by its author").assertExists()
     }
@@ -1611,14 +1645,14 @@ class ContentScreensTest {
             detailFixture(loading = false, post = testPost("p1")),
             viewerId = "author-1",
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_remove").performClick()
         compose.onNodeWithTag("post_remove_confirm").assertExists()
 
         compose.onNodeWithTag("post_remove_confirm_remove").performClick()
         compose.onNodeWithTag("post_remove_confirm").assertDoesNotExist()
         // The post is still on the screen: nothing was removed.
-        compose.onNodeWithTag("detail_card").assertExists()
+        compose.onNode(isDetailCard()).assertExists()
     }
 
     /**
@@ -1903,7 +1937,7 @@ class ContentScreensTest {
             ),
         )
         openComments()
-        compose.onNodeWithTag("detail_author").assertExists()
+        compose.onNodeWithTag("postDetail.card.authorChip").assertExists()
         compose.onNodeWithTag("comment_c1_author").assertExists()
     }
 
@@ -1917,7 +1951,7 @@ class ContentScreensTest {
                 posts = listOf(testPost("p1").copy(topics = listOf(testTopicClaim("rust")))),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:rust").assertExists()
     }
 
     // -- The detail is a card, author first, title above the media --
@@ -1925,7 +1959,7 @@ class ContentScreensTest {
     @Test
     fun theDetailDrawsThePostAsACard() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
-        compose.onNodeWithTag("detail_card").assertExists()
+        compose.onNode(isDetailCard()).assertExists()
     }
 
     /** PEOPLE FIRST: the author leads, above the title and the body. */
@@ -1933,9 +1967,9 @@ class ContentScreensTest {
     fun theAuthorLeadsTheDetailRatherThanTrailingIt() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
 
-        val author = compose.onNodeWithTag("detail_author", useUnmergedTree = true)
+        val author = compose.onNodeWithTag("postDetail.card.authorChip", useUnmergedTree = true)
             .fetchSemanticsNode().positionInRoot.y
-        val title = compose.onNodeWithTag("detail_title", useUnmergedTree = true)
+        val title = compose.onNodeWithTag("postDetail.card.title", useUnmergedTree = true)
             .fetchSemanticsNode().positionInRoot.y
         val body = compose.onNodeWithTag("detail_body", useUnmergedTree = true)
             .fetchSemanticsNode().positionInRoot.y
@@ -1954,7 +1988,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("detail_title", useUnmergedTree = true)
+        compose.onNodeWithTag("postDetail.card.title", useUnmergedTree = true)
             .assertTextEquals("Salt maps")
         compose.onAllNodesWithText("Salt maps").assertCountEquals(1)
     }
@@ -1970,7 +2004,7 @@ class ContentScreensTest {
         // read by the line it draws.
         compose.onNodeWithText("Removed by its author").assertExists()
         compose.onNodeWithTag("detail_license_terms", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag("detail_post_topics_line", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.card.tagsLine", useUnmergedTree = true).assertDoesNotExist()
     }
 
     /**
@@ -1983,7 +2017,7 @@ class ContentScreensTest {
             detailFixture(loading = false, post = removedPost()),
             viewerId = "author-1",
         )
-        compose.onNodeWithTag("detail_menu").assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.header.menu").assertDoesNotExist()
     }
 
     /**
@@ -1997,10 +2031,10 @@ class ContentScreensTest {
     fun aRemovedPostKeepsItsSkeleton() {
         renderDetail(detailFixture(loading = false, post = removedPost().copy(commentCount = 2)))
 
-        compose.onNodeWithTag("detail_author", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("detail_age", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("detail_post_comments", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.card.authorChip", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.card.timestamp", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.card.actionRow.comments", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("postDetail.card.actionRow.share", useUnmergedTree = true).assertExists()
     }
 
     private fun removedPost() = testPost("p1").copy(
@@ -2029,10 +2063,10 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.opener", useUnmergedTree = true)
             .assertTextEquals("More")
-        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true).performClick()
-        compose.onNodeWithTag("feed_post_p1_opener", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.opener", useUnmergedTree = true).performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.opener", useUnmergedTree = true)
             .assertTextEquals("Less")
     }
 
@@ -2047,7 +2081,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("detail_opener", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.card.opener", useUnmergedTree = true).assertDoesNotExist()
     }
 
     // -- The card header: author left, age right --
@@ -2075,7 +2109,7 @@ class ContentScreensTest {
     @Test
     fun aCardWearsItsAge() {
         renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
-        compose.onNodeWithTag("feed_p1_age", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.timestamp", useUnmergedTree = true).assertExists()
     }
 
     @Test
@@ -2108,12 +2142,16 @@ class ContentScreensTest {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 3))),
         )
-        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.share", useUnmergedTree = true).assertExists()
         // The Post Score's drill-down is an acknowledged gap and the
         // contract carries no score; the ⋮ opens a menu W3 builds.
-        compose.onNodeWithTag("feed_post_p1_score", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag("feed_post_p1_overflow", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.score", useUnmergedTree = true).assertDoesNotExist()
+        // The ⋮ sits beside the age, never in the row.
+        compose.onNode(
+            hasTestTag("feed.card.menu") and hasAnyAncestor(hasTestTag("feed.card.actionRow")),
+            useUnmergedTree = true,
+        ).assertDoesNotExist()
     }
 
     /** The count is spoken, never drawn as a word — the row is glyphs. */
@@ -2122,7 +2160,7 @@ class ContentScreensTest {
         renderFeed(
             FeedUiState(loading = false, posts = listOf(testPost("p1").copy(commentCount = 1))),
         )
-        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments", useUnmergedTree = true)
             .assertContentDescriptionEquals("1 comment")
     }
 
@@ -2130,9 +2168,9 @@ class ContentScreensTest {
     @Test
     fun anUncommentedPostDrawsTheGlyphAlone() {
         renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
-        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments", useUnmergedTree = true)
             .assertContentDescriptionEquals("0 comments")
-        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments", useUnmergedTree = true)
             .assertTextEquals()
     }
 
@@ -2154,13 +2192,13 @@ class ContentScreensTest {
             thread = CommentsUiState(loading = false, comments = listOf(testComment("c1"))),
         )
         // The card's own tap: "read the post".
-        compose.onNodeWithTag("feed_post_p1").performClick()
+        compose.onNodeWithTag("feed.card:p1").performClick()
         assertThat(opened).isEqualTo("p1")
 
         // The count, a different intent: "read the replies" — answered
         // over the feed rather than by leaving it.
         opened = null
-        compose.onNodeWithTag("feed_post_p1_comments", useUnmergedTree = true).performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.comments", useUnmergedTree = true).performClick()
         compose.waitForIdle()
         assertThat(opened).isNull()
         compose.onNodeWithTag("comments_sheet").assertExists()
@@ -2176,7 +2214,7 @@ class ContentScreensTest {
                 comments = listOf(testComment("c1")),
             ),
         )
-        compose.onNodeWithTag("detail_post_comments").assert(hasClickAction())
+        compose.onNodeWithTag("postDetail.card.actionRow.comments").assert(hasClickAction())
         openComments()
         compose.onNodeWithTag("detail_comment_c1").assertExists()
     }
@@ -2190,7 +2228,7 @@ class ContentScreensTest {
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             onShare = { shared += it },
         )
-        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.share", useUnmergedTree = true).performClick()
         assertThat(shared).containsExactly("p1")
     }
 
@@ -2198,7 +2236,7 @@ class ContentScreensTest {
     @Config(qualifiers = "w411dp-h891dp")
     fun theShareControlNamesWhatItShares() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
-        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true)
+        compose.onNodeWithTag("postDetail.card.actionRow.share", useUnmergedTree = true)
             .assertContentDescriptionEquals("Share this post")
     }
 
@@ -2217,7 +2255,7 @@ class ContentScreensTest {
     @Config(qualifiers = "w359dp-h640dp")
     fun theFeedCardsRowShedsShareBelowTheNarrowBreakpoint() {
         renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
-        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.share", useUnmergedTree = true).assertDoesNotExist()
     }
 
     /** The detail's own row sheds it the same way. */
@@ -2225,7 +2263,7 @@ class ContentScreensTest {
     @Config(qualifiers = "w359dp-h640dp")
     fun theDetailsRowShedsShareBelowTheNarrowBreakpoint() {
         renderDetail(detailFixture(loading = false, post = testPost("p1")))
-        compose.onNodeWithTag("detail_post_share", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("postDetail.card.actionRow.share", useUnmergedTree = true).assertDoesNotExist()
     }
 
     /**
@@ -2237,7 +2275,7 @@ class ContentScreensTest {
     @Config(qualifiers = "w360dp-h640dp")
     fun theRowKeepsShareAtTheBreakpointItself() {
         renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
-        compose.onNodeWithTag("feed_post_p1_share", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.actionRow.share", useUnmergedTree = true).assertExists()
     }
 
     /**
@@ -2253,7 +2291,7 @@ class ContentScreensTest {
             viewerId = "someone-else",
             onShare = { shared += it },
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_share").assertExists().performClick()
         assertThat(shared).containsExactly("p1")
     }
@@ -2271,7 +2309,7 @@ class ContentScreensTest {
             viewerId = "someone-else",
             onShare = { shared += it },
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_share").assertExists().performClick()
         assertThat(shared).containsExactly("p1")
     }
@@ -2284,7 +2322,7 @@ class ContentScreensTest {
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             viewerId = "someone-else",
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_share").assertDoesNotExist()
     }
 
@@ -2300,7 +2338,7 @@ class ContentScreensTest {
             FeedUiState(loading = false, posts = listOf(testPost("p1"))),
             viewerId = "author-1",
         )
-        compose.onNodeWithTag("feed_p1_menu").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.menu").performClick()
         compose.onNodeWithTag("feed_p1_menu_share").assertDoesNotExist()
     }
 
@@ -2330,12 +2368,12 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
-        compose.onNodeWithTag("feed_post_p1_topic_kotlin").assertExists()
-        compose.onNodeWithTag("feed_post_p1_topic_compose").assertDoesNotExist()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:rust").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:kotlin").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:compose").assertDoesNotExist()
         // The card is one clickable, so its plain text merges into it —
         // the counts are read off the unmerged tree.
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
             .assertTextEquals("· 1 topic")
     }
 
@@ -2356,7 +2394,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
             .assertTextEquals("· 2 references")
         compose.onNodeWithTag("feed_post_p1_reference_l1-user-ada", useUnmergedTree = true)
             .assertDoesNotExist()
@@ -2376,7 +2414,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
             .assertTextEquals("· 3 topics · 1 reference")
     }
 
@@ -2393,7 +2431,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
             .assertDoesNotExist()
     }
 
@@ -2410,9 +2448,9 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topic_$OVERLONG_TOPIC").assertDoesNotExist()
-        compose.onNodeWithTag("feed_post_p1_topic_rust").assertExists()
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:$OVERLONG_TOPIC").assertDoesNotExist()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:rust").assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
             .assertTextEquals("· 1 topic")
     }
 
@@ -2432,8 +2470,8 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topics_line", useUnmergedTree = true).assertExists()
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine", useUnmergedTree = true).assertExists()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true)
             .assertTextEquals("· 2 topics")
     }
 
@@ -2441,7 +2479,7 @@ class ContentScreensTest {
     @Test
     fun aPostWithNoTopicsOrReferencesDrawsNoLine() {
         renderFeed(FeedUiState(loading = false, posts = listOf(testPost("p1"))))
-        compose.onNodeWithTag("feed_post_p1_topics_line", useUnmergedTree = true)
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine", useUnmergedTree = true)
             .assertDoesNotExist()
     }
 
@@ -2456,7 +2494,7 @@ class ContentScreensTest {
             ),
             onOpenTopic = { opened = it },
         )
-        compose.onNodeWithTag("feed_post_p1_topic_rust").performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.tag:rust").performClick()
         assertThat(opened).isEqualTo("rust")
     }
 
@@ -2475,7 +2513,7 @@ class ContentScreensTest {
             ),
             onOpenTopic = { opened = it },
         )
-        compose.onNodeWithTag("detail_post_topic_rust").performClick()
+        compose.onNodeWithTag("postDetail.card.tagsLine.tag:rust").performClick()
         assertThat(opened).isNull()
         compose.onNodeWithTag("detail_post_refs_sheet").assertExists()
     }
@@ -2522,7 +2560,7 @@ class ContentScreensTest {
             ),
         )
         compose.onNodeWithTag("feed_post_p1_refs_sheet").assertDoesNotExist()
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("feed_post_p1_refs_sheet").assertExists()
         compose.onNodeWithTag("feed_post_p1_refs_topic_photography_pair", useUnmergedTree = true)
             .assertTextEquals("+0.40 / 0.90")
@@ -2550,7 +2588,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("feed_post_p1_topics_counts", useUnmergedTree = true).performClick()
+        compose.onNodeIn(feedCard("p1"), "feed.card.tagsLine.counts", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("feed_post_p1_refs_sheet").assertExists()
         compose.onNodeWithTag("feed_post_p1_refs_topic_photography").performClick()
         compose.onNodeWithTag("feed_post_p1_refs_sheet").assertDoesNotExist()
@@ -2577,7 +2615,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("detail_post_topics_line").performClick()
+        compose.onNodeWithTag("postDetail.card.tagsLine").performClick()
         compose.onNodeWithTag("detail_post_refs_sheet").assertExists()
         compose.onNodeWithTag("detail_post_refs_reference_l1-p2_pair", useUnmergedTree = true)
             .assertTextEquals("+0.55 / +0.20")
@@ -2601,7 +2639,7 @@ class ContentScreensTest {
                 ),
             ),
         )
-        compose.onNodeWithTag("detail_post_topics_line").performClick()
+        compose.onNodeWithTag("postDetail.card.tagsLine").performClick()
         compose.onNodeWithTag("detail_post_refs_topic_coastroad_pending", useUnmergedTree = true)
             .assertExists()
         compose.onNodeWithTag("detail_post_refs_reference_l1-user-mira_pending", useUnmergedTree = true)
@@ -2620,7 +2658,7 @@ class ContentScreensTest {
                 post = testPost("p1").copy(references = listOf(testReferenceClaim(null))),
             ),
         )
-        compose.onNodeWithTag("detail_post_topics_line").performClick()
+        compose.onNodeWithTag("postDetail.card.tagsLine").performClick()
         compose.onNodeWithTag("detail_post_refs_reference_l1-untypeable").assertExists()
     }
 
@@ -2881,7 +2919,7 @@ class ContentScreensTest {
             viewerId = "someone-else",
             onReference = { referenced += it },
         )
-        compose.onNodeWithTag("detail_menu").performClick()
+        compose.onNodeWithTag("postDetail.header.menu").performClick()
         compose.onNodeWithTag("detail_menu_cite").performClick()
         assertThat(referenced).containsExactly("p1")
     }

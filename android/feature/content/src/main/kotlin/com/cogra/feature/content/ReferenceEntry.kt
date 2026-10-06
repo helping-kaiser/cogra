@@ -34,9 +34,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.ReferenceChip
 import com.cogra.core.designsystem.ReferenceParameterSliders
+import com.cogra.core.designsystem.dataNode
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.references.MAX_REFERENCES
@@ -67,12 +69,21 @@ internal fun ReferenceEntry(
     onReferenceSupportChange: (String, Double) -> Unit,
     /** The comment surfaces sit inside a card; the heading would only repeat. */
     showHeading: Boolean = true,
+    /**
+     * The section's data-node on a registered screen
+     * (`composeDetails.references`): the section, its heading (`label`), each
+     * staged chip (`stagedReference`, keyed by its position counted from 1)
+     * and the add action then wear the registered paths. The finder and the
+     * refusals keep their [testTagPrefix] tags.
+     */
+    node: DataNode? = null,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.dataNode(node)) {
         if (showHeading) {
             Text(
                 stringResource(R.string.content_references_heading),
                 style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.dataNode(node?.div("label")),
             )
         }
         if (section.references.isNotEmpty()) {
@@ -81,13 +92,14 @@ internal fun ReferenceEntry(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.testTag("${testTagPrefix}_references"),
             ) {
-                section.references.forEach { row ->
+                section.references.forEachIndexed { index, row ->
                     ReferenceChip(
                         label = referenceLabel(row.target),
                         supporting = referenceSupporting(row.target),
                         onClick = { onTuneReference(row.targetId) },
                         onRemove = { onRemoveReference(row.targetId) },
                         testTag = "${testTagPrefix}_reference_${row.targetId}",
+                        node = node?.div("stagedReference")?.keyed("${index + 1}"),
                     )
                 }
             }
@@ -108,7 +120,7 @@ internal fun ReferenceEntry(
         } else {
             TextButton(
                 onClick = onOpenFinder,
-                modifier = Modifier.testTag("${testTagPrefix}_reference_add"),
+                modifier = Modifier.testTag(node?.div("add")?.tag ?: "${testTagPrefix}_reference_add"),
             ) {
                 Text(stringResource(R.string.content_references_add))
             }

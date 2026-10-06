@@ -21,7 +21,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
@@ -82,15 +84,20 @@ fun CograBand(
     }
 }
 
-/** The mark and the wordmark — the band's whole left side. */
+/**
+ * The mark and the wordmark — the band's whole left side.
+ *
+ * @param node the band's data-node on a registered screen (`feed.band`):
+ *   the mark and the wordmark then wear its `mark` and `wordmark` parts.
+ */
 @Composable
-fun CograBandIdentity(modifier: Modifier = Modifier, testTag: String? = null) {
+fun CograBandIdentity(modifier: Modifier = Modifier, testTag: String? = null, node: DataNode? = null) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
-        CograMark(size = 24.dp)
+        CograMark(modifier = Modifier.dataNode(node?.div("mark")), size = 24.dp)
         Text(
             text = WORDMARK,
             style = MaterialTheme.typography.titleLarge,
@@ -99,24 +106,30 @@ fun CograBandIdentity(modifier: Modifier = Modifier, testTag: String? = null) {
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.testTag(
-                testTag?.let { "${it}_wordmark" } ?: "cogra_band_wordmark",
+                node?.div("wordmark")?.tag ?: testTag?.let { "${it}_wordmark" } ?: "cogra_band_wordmark",
             ),
         )
     }
 }
 
-/** The chats affordance, left of whatever the screen puts in the corner. */
+/**
+ * The chats affordance, left of whatever the screen puts in the corner.
+ *
+ * @param node the band's data-node on a registered screen; the control wears
+ *   its `chats` part.
+ */
 @Composable
 fun CograBandChats(
     onChats: () -> Unit,
     contentDescription: String = stringResource(R.string.cogra_band_chats),
     testTag: String? = null,
+    node: DataNode? = null,
 ) {
     IconButton(
         onClick = onChats,
         modifier = Modifier
             .size(Layout.TouchTargetMin)
-            .testTag(testTag?.let { "${it}_chats" } ?: "cogra_band_chats"),
+            .testTag(node?.div("chats")?.tag ?: testTag?.let { "${it}_chats" } ?: "cogra_band_chats"),
     ) {
         Icon(
             imageVector = Icons.Filled.Forum,

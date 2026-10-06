@@ -49,6 +49,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.cogra.core.designsystem.DataNode
+import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.v2.token.Space
 import com.cogra.feature.content.R
 
@@ -111,6 +113,13 @@ internal fun PostAffordanceRow(
     testTagPrefix: String,
     modifier: Modifier = Modifier,
     actions: @Composable () -> Unit = {},
+    /**
+     * The row's data-node on a registered screen (`feed.card.actionRow`):
+     * the row and its comments and share controls then wear the registered
+     * paths in place of the [testTagPrefix] tags. The stance control is the
+     * caller's slot, so the caller hands it the row's `stance` part.
+     */
+    node: DataNode? = null,
     stanceControl: @Composable () -> Unit,
 ) {
     val narrow = isNarrowShareWidth()
@@ -119,16 +128,16 @@ internal fun PostAffordanceRow(
         // `justifyContent: "space-between"`, `flexWrap: "nowrap"`). Spacing
         // the controls by a fixed gap huddled them against the leading edge
         // instead, leaving the card's width unused to their right.
-        modifier = modifier.fillMaxWidth().testTag("${testTagPrefix}_affordances"),
+        modifier = modifier.fillMaxWidth().testTag(node?.tag ?: "${testTagPrefix}_affordances"),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         stanceControl()
-        CommentAffordance(commentCount, onOpenComments, testTagPrefix)
+        CommentAffordance(commentCount, onOpenComments, testTagPrefix, node?.div("comments"))
         // THE ROW GIVES WAY FROM ITS END strictly below the narrow-share
         // breakpoint: share is the first to move into the ⋮.
         if (!narrow) {
-            ShareAffordance(onShare, testTagPrefix)
+            ShareAffordance(onShare, testTagPrefix, node?.div("share"))
         }
         actions()
     }
@@ -150,6 +159,7 @@ private fun CommentAffordance(
     count: Int,
     onOpen: (() -> Unit)?,
     testTagPrefix: String,
+    node: DataNode?,
 ) {
     val spoken = pluralStringResource(R.plurals.content_comment_count, count, count)
     val glyphAndCount: @Composable RowScope.() -> Unit = {
@@ -164,15 +174,17 @@ private fun CommentAffordance(
                 text = count.toString(),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.dataNode(node?.div("count")),
             )
         }
     }
+    val tag = node?.tag ?: "${testTagPrefix}_comments"
     if (onOpen == null) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(GLYPH_GAP),
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .testTag("${testTagPrefix}_comments")
+                .testTag(tag)
                 .clearAndSetSemantics { contentDescription = spoken },
             content = glyphAndCount,
         )
@@ -180,7 +192,7 @@ private fun CommentAffordance(
         GlyphButton(
             onClick = onOpen,
             description = spoken,
-            testTag = "${testTagPrefix}_comments",
+            testTag = tag,
             content = glyphAndCount,
         )
     }
@@ -192,11 +204,11 @@ private fun CommentAffordance(
  * something the graph does not record.
  */
 @Composable
-private fun ShareAffordance(onShare: () -> Unit, testTagPrefix: String) {
+private fun ShareAffordance(onShare: () -> Unit, testTagPrefix: String, node: DataNode?) {
     GlyphButton(
         onClick = onShare,
         description = stringResource(R.string.content_share_post),
-        testTag = "${testTagPrefix}_share",
+        testTag = node?.tag ?: "${testTagPrefix}_share",
     ) {
         Icon(
             imageVector = Icons.Filled.Share,

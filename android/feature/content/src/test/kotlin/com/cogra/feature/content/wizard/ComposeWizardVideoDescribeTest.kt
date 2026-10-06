@@ -140,7 +140,7 @@ class ComposeWizardVideoDescribeTest {
     fun theVideoTileCarriesNoManagerAndOpensNoSheet() {
         compose.setContent { Wizard(onVideoDetails) }
 
-        compose.onNodeWithTag("wizard_picked_row").assertHasNoClickAction()
+        compose.onNodeWithTag("composeDetails.mediaRow").assertHasNoClickAction()
     }
 
     // Finding 7 (`ComposeDetailsVideo.jsx` lines 23-32): the tile's only
@@ -177,7 +177,7 @@ class ComposeWizardVideoDescribeTest {
 
         // The Details tile is gone with the stage it stood on; the pick
         // step's own Next pill is what replaces it.
-        compose.onNodeWithTag("wizard_picked_row").assertDoesNotExist()
+        compose.onNodeWithTag("composeDetails.mediaRow").assertDoesNotExist()
         compose.onNodeWithTag("wizard_pick_next").assertIsDisplayed()
     }
 }
