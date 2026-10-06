@@ -18,4 +18,4 @@ WHEN tap License terms -> the menu closes AND the post's terms come up in a shee
 
 WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND this post rides the draft unseen until the details stage
 
-WHEN tap the scrim -> the sheet closes
+WHEN tap the scrim, swipe the sheet down, press system Back or press Escape -> the sheet closes AND nothing changes

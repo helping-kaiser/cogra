@@ -4062,7 +4062,14 @@ carries it today, and this item stays open for the vehicle itself.
 The navigation-and-sheets round (readme §13) executed jakob's two laws
 and the K11 recommendations, and left these for his eye:
 
-- **The sheet law's reach into the editing sheets.** The law says no
+- ~~**The sheet law's reach into the editing sheets.**~~ — closed
+  2026-10-06 (the check round's rulings, item 1): readme §4, *Sheets*,
+  writes the editing-sheet exemption jakob ruled 2026-10-02 —
+  `ComposeTags`, `ComposePicked`, `EditPicked` and `ComposeCitations`
+  apply live and every way out just closes them; the describe sheets,
+  `ComposeLicense` and `ComposeSensitive` stage, and dismissal discards.
+  The BottomSheet master and every sheet sidecar state the two kinds.
+  The law says no
   sheet applies live, but five sheets carrying a `Done` still edit in
   place: the staged-tags and staged-citations sheets' × (`ComposeTags`,
   `ComposeCitations`), the Show-all sheet's reorder and × (`ComposePicked`,

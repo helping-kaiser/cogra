@@ -574,14 +574,23 @@ current state or gone.
 
 ### Sheets
 
-**Every sheet carries a commit, and dismissal discards** (jakob
-2026-10-01, the sheet law). A sheet that holds a choice stages it:
-nothing applies until the sheet's commit — `Done`, `Save`, the act its
-foot names — and the commit applies. The scrim, a swipe down, system
-Back and Escape all discard: the sheet closes and everything is what it
-was. **There are no live-apply sheets.** A sheet with nothing to stage
-keeps the law by its shape: a menu's row is an act and its own commit,
-and a sheet that only lists or reads has nothing to apply.
+**A sheet that holds a choice is one of two kinds.** **A staging sheet
+carries a commit, and dismissal discards** (jakob 2026-10-01, the sheet
+law): nothing applies until the sheet's commit — `Done`, `Save`, the
+act its foot names — and the commit applies. The scrim, a swipe down,
+system Back and Escape all discard: the sheet closes and everything is
+what it was, so a description typed and then dismissed is gone. **An
+editing sheet applies live, and every way out just closes it** (jakob
+2026-10-02, the editing-sheet exemption): each change applies the
+moment it is made, so the scrim, a swipe down, system Back, Escape and
+`Done` alike close the sheet and everything already applied stands —
+nothing is staged, so nothing discards. The editing sheets are four:
+`ComposeTags`, `ComposePicked`, `EditPicked` and `ComposeCitations`.
+Every other sheet that holds a choice stages — `ComposeLicense`,
+`ComposeSensitive`, `ComposeDescribe`, `ComposeDescribeVideo` and the
+filter sheets among them. A sheet with nothing to stage keeps the law
+by its shape: a menu's row is an act and its own commit, and a sheet
+that only lists or reads has nothing to apply.
 
 The feed's filter is where the law pays, and the reason is jakob's:
 today a refetch is the newest twenty posts, but once the ranker ships
