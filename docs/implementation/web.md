@@ -234,7 +234,7 @@ login screen — the signed-out entry — carries the browse entry so
 an anonymous visitor finds the public read without an account.
 
 The shell is the bottom bar
-([design.md §6](design.md#6-components)), rendered from the root
+([design/readme.md §7](../../design/readme.md#7-components)), rendered from the root
 layout so it frames the read surfaces across the public tier and
 the `(app)` group alike — `/feed`, `/posts/<id>`, `/u/<handle>`,
 and `/profile`. The task flows (`/compose`, `/profile/edit`,
@@ -308,7 +308,7 @@ whichever surface started it.
 
 ## Design guidelines
 
-[design.md](design.md) is the design system both clients
+[design/readme.md](../../design/readme.md) is the design system both clients
 implement — colour tokens, type, shape, motion, components,
 copy rules, and the stance control. Read it before writing UI.
 Web-side: the Material 3 roles land as CSS custom properties in

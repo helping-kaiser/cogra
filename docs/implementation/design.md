@@ -1,13 +1,45 @@
 # Design · `spec:implementation:design-system`
 
-The visual and interaction system both clients implement:
-colour, type, shape, motion, components, copy, and the stance
-control. Android and web read the same rules from here so the
-two apps stay one product; [android.md](android.md) and
-[web.md](web.md) carry only what is genuinely
-platform-specific.
+The design law lives in [`design/`](../../design/readme.md):
+[readme.md](../../design/readme.md) and the behavior sidecars beside
+the canonical screens ([behavior/](../../design/designs/canonical/behavior/README.md))
+are the contract both clients conform to. Android and web read the
+rules there; [android.md](android.md) and [web.md](web.md) carry only
+what is platform-specific. **Every frontend change reads
+`design/readme.md` before writing code.**
 
-**Every frontend change reads this file before writing code.**
+This file keeps its section numbers, so a citation of `design.md §n`
+resolves through the map in one hop. Passages with no home in `design/`
+stay below, under their own section number.
+
+## Section map
+
+| § | Topic | Home |
+|---|---|---|
+| 1 | Direction | stays here ([§1](#1-direction)); tone also in [readme §3](../../design/readme.md#3-content-fundamentals) |
+| 2 | Colour | rows 2.1 to 2.5 |
+| 2.1 | The colour decision | [readme §4 Colour](../../design/readme.md#colour); the deviations' reasoning stays here ([§2.1](#21-the-decision)) |
+| 2.2 | Reproducing the palette | stays here ([§2.2](#22-reproducing-the-palette)) |
+| 2.3 | Tokens | the values: [scheme.json](../../design/tokens/scheme.json), [colors.css](../../design/tokens/colors.css), [tokens.json](../../design/tokens.json); notes stay here ([§2.3](#23-tokens)) |
+| 2.4 | Applying the roles | [readme §4 Colour](../../design/readme.md#colour), [semantic.css](../../design/tokens/semantic.css); the `success` rule stays here ([§2.4](#24-applying-the-roles)) |
+| 2.5 | Dynamic colour | [readme §4 Colour](../../design/readme.md#colour) |
+| 3 | Type | [readme §4 Type](../../design/readme.md#type), [typography.css](../../design/tokens/typography.css), [fonts.css](../../design/tokens/fonts.css); platform notes stay here ([§3](#3-type)) |
+| 4 | Shape, spacing, motion | [readme §4](../../design/readme.md#4-visual-foundations): Spacing and layout, Corner radii and cards, Elevation, Motion; [shape.css](../../design/tokens/shape.css), [spacing.css](../../design/tokens/spacing.css), [motion.css](../../design/tokens/motion.css) |
+| 5 | Iconography | [readme §5](../../design/readme.md#5-iconography), [iconography.md](../../design/guidelines/iconography.md) |
+| 6 | Components | [readme §7](../../design/readme.md#7-components) and each component's `components/<family>/<Name>.prompt.md`; the bar and the collapsing top also [readme §4](../../design/readme.md#4-visual-foundations); the collapsing top's platform mechanics stay here ([§6](#6-components)) |
+| 7 | Copy | [readme §3](../../design/readme.md#3-content-fundamentals), [copy-voice.md](../../design/guidelines/copy-voice.md) |
+| 8 | The stance control | [readme §8](../../design/readme.md#8-the-stance-control), [stance-control.md](../../design/guidelines/stance-control.md), `components/stance/` |
+| 8.1 | What is being authored | [stance-control.md](../../design/guidelines/stance-control.md#what-is-being-authored); the family slot table stays here ([§8.1](#81-what-is-being-authored)) |
+| 8.2 | What a pick lands you at | [stance-control.md](../../design/guidelines/stance-control.md#two-numbers-never-one) and [Severance](../../design/guidelines/stance-control.md#severance) |
+| 8.3 | The gesture | [stance-control.md](../../design/guidelines/stance-control.md#the-gesture) and [Confirmation](../../design/guidelines/stance-control.md#confirmation); the passages the web tests parse stay here ([§8.3](#83-the-gesture)) |
+| 8.4 | The emoji readout | [stance-control.md](../../design/guidelines/stance-control.md#the-emoji-readout), `components/stance/StanceReadout.jsx`; the table and the zero-bundle passage stay here ([§8.4](#84-the-emoji-readout)) |
+| 8.5 | Severance | [stance-control.md](../../design/guidelines/stance-control.md#severance), `components/stance/SeveranceConfirm.jsx` |
+| 8.6 | Alternate inputs | [stance-control.md](../../design/guidelines/stance-control.md#alternate-and-accessible-inputs) |
+| 8.7 | Teaching it | [stance-control.md](../../design/guidelines/stance-control.md#teaching-it) |
+| 9 | Honesty surfaces | [readme §9](../../design/readme.md#9-honesty-surfaces), `components/honesty/` |
+| 10 | Accessibility | [readme §10](../../design/readme.md#10-accessibility) |
+| 11 | The mark | [readme §6](../../design/readme.md#6-the-mark), [brand-mark.html](../../design/guidelines/brand-mark.html), [brand-tile.html](../../design/guidelines/brand-tile.html), [brand-wordmark.html](../../design/guidelines/brand-wordmark.html) |
+| 12 | Open decisions | drawn faces: [stance-control.md](../../design/guidelines/stance-control.md#the-emoji-readout); Cyrillic and Greek stay here ([§12](#12-open-decisions)) |
 
 ---
 
@@ -72,8 +104,7 @@ tone.** Two separate fixes:
 
 The error palette departs in hue and tone for the same underlying
 reason — Material's placement assumes an accent less saturated and
-further from red than this one. That departure is recorded with the
-Error table in §2.3, where its numbers belong.
+further from red than this one. That departure is recorded in §2.3.
 
 Every `on`-colour pair in both themes is verified against WCAG
 AA (4.5:1) at generation time. A palette change that fails
@@ -108,46 +139,7 @@ a value: Android's `ColorSchemeTest` reads the contract and web's
 
 ### 2.3 Tokens
 
-These are the Material 3 roles. **Screens never name a colour
-— they read a role.** A literal hex or a Tailwind palette
-class in a component is a bug; it is what makes a future
-palette change a rewrite instead of a token edit.
-
-**Primary**
-
-| Role | Light | Dark |
-|---|---|---|
-| `primary` | `#9F4100` | `#FF8D50` |
-| `onPrimary` | `#FFFFFF` | `#341100` |
-| `primaryContainer` | `#EF6C1A` | `#EF6C1A` |
-| `onPrimaryContainer` | `#4F1D00` | `#4F1D00` |
-
-**Secondary**
-
-| Role | Light | Dark |
-|---|---|---|
-| `secondary` | `#8E4D2B` | `#FFB692` |
-| `onSecondary` | `#FFFFFF` | `#542103` |
-| `secondaryContainer` | `#FEAA81` | `#743918` |
-| `onSecondaryContainer` | `#783C1C` | `#F8A57B` |
-
-**Tertiary**
-
-| Role | Light | Dark |
-|---|---|---|
-| `tertiary` | `#666000` | `#D3CB42` |
-| `onTertiary` | `#FFFFFF` | `#343200` |
-| `tertiaryContainer` | `#B7AF26` | `#B7AF26` |
-| `onTertiaryContainer` | `#454100` | `#454100` |
-
-**Error**
-
-| Role | Light | Dark |
-|---|---|---|
-| `error` | `#A5004A` | `#FF6B95` |
-| `onError` | `#FFFFFF` | `#66002B` |
-| `errorContainer` | `#FFD9DF` | `#8F003F` |
-| `onErrorContainer` | `#8F003F` | `#FFD9DF` |
+The role values are in `design/tokens/scheme.json`.
 
 The error palette departs from Material's stock output twice, in **hue**
 and in **tone**, because an orange-led palette collides with a stock
@@ -174,13 +166,6 @@ saturated.
 
 **Success** — a CoGra role, outside Material's set
 
-| Role | Light | Dark |
-|---|---|---|
-| `success` | `#006C4F` | `#7CD8B3` |
-| `onSuccess` | `#FFFFFF` | `#003828` |
-| `successContainer` | `#98F5CE` | `#00513B` |
-| `onSuccessContainer` | `#002116` | `#98F5CE` |
-
 Material has no success role, so this one is generated the way
 Material Theme Builder generates a custom colour: `Blend.harmonize`
 the design colour `#00897B` toward the seed, then read the resulting
@@ -201,42 +186,6 @@ property, which would read `isSystemInDarkTheme()` at the call site and
 disagree with any caller passing `darkTheme` explicitly — as previews
 and Robolectric tests do.
 
-**Surface**
-
-| Role | Light | Dark |
-|---|---|---|
-| `surface` | `#FFF8F6` | `#151312` |
-| `onSurface` | `#251913` | `#E8E1DF` |
-| `surfaceVariant` | `#FDDCCD` | `#4B4644` |
-| `onSurfaceVariant` | `#584237` | `#CDC5C2` |
-| `surfaceDim` | `#EDD5CB` | `#151312` |
-| `surfaceBright` | `#FFF8F6` | `#3C3837` |
-
-**Surface containers**
-
-| Role | Light | Dark |
-|---|---|---|
-| `surfaceContainerLowest` | `#FFFFFF` | `#100E0D` |
-| `surfaceContainerLow` | `#FFF1EB` | `#1E1B1A` |
-| `surfaceContainer` | `#FFEAE1` | `#221F1E` |
-| `surfaceContainerHigh` | `#FBE3D9` | `#2C2928` |
-| `surfaceContainerHighest` | `#F5DED4` | `#373433` |
-
-**Outline**
-
-| Role | Light | Dark |
-|---|---|---|
-| `outline` | `#8C7165` | `#968F8D` |
-| `outlineVariant` | `#E0C0B2` | `#4B4644` |
-
-**Inverse**
-
-| Role | Light | Dark |
-|---|---|---|
-| `inverseSurface` | `#3B2D27` | `#E8E1DF` |
-| `inverseOnSurface` | `#FFEDE6` | `#33302F` |
-| `inversePrimary` | `#FFB692` | `#9F4100` |
-
 `scrim` and `shadow` are `#000000` in both themes. `background` and
 `onBackground` mirror `surface` and `onSurface` exactly — Material
 carries both pairs, and the generator gives them the same values.
@@ -245,46 +194,16 @@ reintroduce the tone-80 orange §2.1 rejects.
 
 ### 2.4 Applying the roles
 
-- Page and screen ground is `surface`. Cards and raised
-  regions step up through `surfaceContainerLow` →
-  `surfaceContainer` → `surfaceContainerHigh` →
-  `surfaceContainerHighest`; never invent an intermediate. A card
-  is Material's **filled** card at `surfaceContainerHighest` and
-  carries no outline: the fill is what makes it read as a card,
-  and an outline on the page colour is the *outlined* card, a
-  different component. Dialogs sit on `surfaceContainerHigh`.
-- `primaryContainer` is the loudest surface in the app. It
-  belongs to the bar's compose action and to a committed
-  stance — not to every button. Spend it in one place per
-  screen.
-- Secondary text is `onSurfaceVariant`, never `onSurface` at
-  reduced opacity: opacity breaks the contrast guarantee the
-  token carries.
-- `error` is for failure, never for negative stance. A
-  negative stance is an ordinary, legitimate opinion (§8) and
-  colouring it as an error editorialises it.
 - `success` marks a completed action — a signed write landing, a
   saved edit. Landing settles content the reader already sees; it
   never announces an arrival (§9). It never carries the meaning
-  alone: the words say what
-  happened and the colour agrees with them (§10). It is not a stance
-  colour either; a positive stance is an opinion, not an outcome.
-
-### 2.5 Dynamic colour
-
-Material You dynamic colour is **off**. The brand hue carries
-identity that a wallpaper-derived palette would erase, and
-with two clients the wallpaper source exists on only one of
-them. Revisit as a user-facing preference, never as the
-default.
+  alone: the words say what happened and the colour agrees with
+  them (§10). It is not a stance colour either; a positive stance
+  is an opinion, not an outcome.
 
 ---
 
 ## 3. Type
-
-**Figtree** ([Google Fonts](https://fonts.google.com/specimen/Figtree),
-SIL OFL 1.1), variable, weight axis 300–900, subset to
-**latin + latin-ext**.
 
 Latin-ext is not optional: `İ ğ ş` live there, so a
 `latin`-only subset silently breaks Turkish. Figtree has no
@@ -292,29 +211,10 @@ Cyrillic or Greek and no upstream plan for them; if CoGra ever
 ships either script this choice must be revisited, and that is
 a product-scope decision rather than a typographic one.
 
-One family for everything — headers included, with weight
-doing the work a second face would. Figtree's variable file is
+Figtree's variable file is
 ~30 KB as subset woff2 (20 KB latin, 10 KB latin-ext) and
 ~61 KB as the upstream TTF, so the whole type budget is smaller
 than a single static weight of most alternatives.
-
-Codes and identifiers — recovery codes, key ids, seed entry —
-are the one exception, set in the platform's own monospace
-(`FontFamily.Monospace`, `ui-monospace`). That is a legibility
-device for strings read character by character, where `0/O` and
-`l/1` have to separate and a mistyped recovery code is
-unrecoverable. It is never UI chrome (§1), and it ships no
-bytes.
-
-There is no italic axis: roman and italic are two files on
-both platforms. Figtree's italic is a slant with a redrawn
-single-storey `a`, not a full cursive redraw — fine for
-emphasis in user text, not a display device.
-
-**The type scale is Material 3's fifteen roles, unmodified.**
-Sizes, line heights, and tracking come from the M3 scale; only
-the family is swapped. Deviating from the scale is a decision
-to raise, not a per-screen liberty.
 
 On Android, a variable font must live in `app/res/font/`
 (lowercase filename), needs API 26+, and cannot be delivered
@@ -348,16 +248,8 @@ and `type.test.ts` pins the stylesheet to that package, so a
 hand-edited number cannot survive. The same test fails on a
 `text-sm`, `font-medium`, or `tracking-*` left in a screen: an
 ad-hoc size is what makes the next scale change a rewrite instead
-of a token edit, exactly as §2.3 says of a literal hex. Unclassed
+of a token edit, exactly as a literal hex is a bug ([readme §4 Colour](../../design/readme.md#colour)). Unclassed
 text lands on `body-large`.
-
-Which role a surface takes: page titles are `headline-small`,
-card and section headings `title-medium`, form labels and buttons
-`label-large`, body and status copy `body-medium`, captions and
-bylines `body-small`, reading content `body-large`. A displayed
-recovery code takes `title-large` in the platform monospace with
-wider tracking — it is transcribed by hand, so it is the largest
-thing on its surface.
 
 The two token sets round three trackings differently —
 `display-large`, `body-medium`, and `title-medium`, by at most
@@ -367,211 +259,12 @@ contract file the way the palette does.
 
 ---
 
-## 4. Shape, spacing, motion
-
-These follow Material 3 as documented. Where this doc is
-silent, M3 is the answer, and the M3 default is the decision —
-not a placeholder awaiting taste.
-
-- **Shape.** The M3 shape scale — 4 / 8 / 12 / 16 / 28dp, plus
-  the full pill. Text fields take the 4dp rung, cards and inline
-  containers 12dp, dialogs 28dp; buttons take the pill at every
-  size, which is Material's button shape rather than a rung.
-  Cards and sheets sit at the generous end of the scale; the
-  direction is rounded and soft, and a square corner should look
-  like a mistake. On web the five rungs are the only radius names
-  that exist — Tailwind's own are cleared, and `shape.test.ts`
-  fails on an off-scale corner. One radius on every surface is
-  how the two clients drift apart without anyone deciding to.
-- **Spacing.** A 4dp/4px base grid. Screen gutters and list
-  spacing follow M3 defaults.
-- **Elevation.** Tonal elevation through the surface-container
-  roles. Shadows stay soft and are never used to manufacture
-  urgency.
-- **Motion.** M3 motion, standard easing and durations.
-  Motion clarifies where something came from; it never
-  performs. Honour reduced-motion preferences on both
-  platforms.
-- **Touch targets.** 48dp minimum, including the stance
-  control's resting state.
-
----
-
-## 5. Iconography
-
-Material Symbols, one weight and one fill style throughout —
-mixing fills is the most common way an icon set starts to look
-accidental. On Android these come from the Compose
-`material-icons-extended` artifact exposed by
-`core:designsystem`. Icons never carry meaning alone: every
-icon-only control has a label for assistive technology.
-
----
-
 ## 6. Components
 
-Shared components live in `core:designsystem` on Android and
-`web/src/lib/ui/` on web. **The moment a piece appears on a
-second surface it moves into the shared module** — a copy is
-never the answer.
-
-**Buttons are Material's three**, and no others: filled
-(`primary` on `onPrimary`) for the one committing action on a
-surface, outlined for a secondary action, text for a tertiary
-one. Both unfilled variants put `primary` on the *label* — the
-label carries the emphasis, not the border, and a body-coloured
-label on an outlined button reads as disabled. What separates a
-button from a link is what the control does: performing an
-action is a button, going somewhere is a link. A button dressed
-as an underlined link is neither, and it is the form a
-destructive action is most likely to arrive in.
-
-The inventory both platforms implement, with equivalent
-behaviour and matching names:
-
-- **Post card** — author (avatar, display name, handle,
-  timestamp), optional title, optional description, body,
-  media gallery, stance control. Variants: text-only,
-  single-image, gallery, with and without title.
-- **Comment** — author, body, timestamp, media, replies, stance
-  control. Variants: top-level, nested. **Replies nest one
-  level**: a reply to a reply flattens into that level and opens
-  with the `@handle` it answers — the mention is the structure.
-  Comment media is words-first — pictures sit below the words,
-  inset, capped at comment scale so a comment never becomes a
-  post, and never cropped: a single picture shows whole at its
-  own ratio, multiples share the square pager.
-- **Profile header** — avatar, name, handle, bio, link,
-  connection count, and a primary action. The profile carries
-  **one image, the avatar**; there is no cover. Changing it is a
-  signed act with its own seal — pick, circular 1:1 crop, sign.
-- **Actor chip / row** — compact person-or-group reference. A
-  Collective looks like a person but reads as a shared
-  identity.
-- **Topic chip** — a tappable tag.
-- **Reference chip** — a compact content citation: the cited
-  node's author and its title or snippet. A profile target
-  renders as the actor chip instead.
-- **Reference chip row** — the citations an artifact's author
-  built into it, under the body, tapping through to the cited
-  node. Deliberately plain — structure over polish, so the
-  redesign hits it once.
-- **Reference affordance** — on a content detail view, the
-  control that opens the composer with that node prefilled as a
-  citation. The user-facing word is **Reference**, never "cite":
-  every content node can be referenced, and a reference to a
-  profile is a mention.
-- **Reference finder** — the picker the composer's reference
-  section opens, bound to `referenceCandidates`. Its visual
-  design is pending; the structure it binds to is fixed, so the
-  look changes without the clients rebinding.
-- **Media attachment** — aspect-ratio-reserved tile with an
-  optional description. Space is reserved before load so content
-  never jumps. Portrait caps at 4:5 and a taller frame is fitted
-  whole inside it, plain surface showing at the sides — the
-  layout never decides the author's crop. **The gallery is a
-  pager**: every picture in a post shares the post's one crop
-  shape, so the card shows one frame at that shape, swiped, each
-  picture whole exactly as the author shaped it — dots below,
-  dots only, never a count pill. A post carries at most **ten
-  pictures, or one video** with its cover; a comment at most
-  **four**. The cover step belongs to video; a gallery's cover is
-  its first picture, set by order.
-- **Media viewer** — the full-size view a tap opens from the
-  detail surface: contained, as large as the screen allows,
-  dismissed with back, Escape, or the backdrop, and the route
-  never changes. In the feed the same tap opens the post.
-- **Picker, crop, and upload** — the compose wizard's body-first
-  pick: a picked tray over a newest-first device grid, the first
-  pick the cover; on web the grid is a file button and a drop
-  target, because a browser has no device gallery. The crop
-  offers one shape for the whole post — 4:5, 1:1, or 1.91:1 —
-  with framing chosen per picture and a complete non-drag route
-  through discrete move and zoom controls. **Upload starts after
-  the crop, and only the cropped export ever leaves the device**:
-  the original frame can hold what the author never meant to
-  share. Progress rides the picked thumbnails, a failed picture
-  offers retry or removal, and **the seal gates on it** — signing
-  waits until the pictures it signs exist. The tray's Show all
-  sheet is the per-picture manager: reorder, remove, describe.
-  Comments have no pick stage — Add opens the platform's own
-  picker (the photo sheet on Android, the file dialog on web,
-  which also takes a drop anywhere on the composer) — and comment
-  pictures never crop, so they upload at pick.
-- **Descriptions** — a picture's description is authored,
-  optional, and **never invented**: a picture the author left
-  undescribed is skipped by screen readers rather than guessed
-  at. The entry is the describe counter, shown wherever a
-  composer holds picked pictures, never on the crop step.
-  Description and upload are detached — the upload moves bytes,
-  the description rides the signature — so neither waits on the
-  other.
-- **Acts card** — what a signing lands: one row per kind of act
-  with its cost, the sum, and, on every multi-act seal, the note
-  that they land together or none does. A ceremony screen carries
-  it inline; a composer peeks at it through a bottom sheet, which
-  is what an edit's "This creates n signed actions" footer opens.
-- **Wizard chrome** — every composer-flow stage wears the same
-  header, and the header carries only the ways out: `← Title … X`.
-  The arrow steps one stage back, never out of the flow; the X
-  leaves the whole flow from any stage. **The forward action
-  always lives at the bottom** — a Next that moves between
-  corners as the stages change is an accidental-leave trap. The
-  crop viewport is full-bleed: cropping needs the picture at the
-  width the screen allows.
-- **Body veil** — the sensitive state. The body blurs as one
-  region: media, text, and description together, with the title
-  and topics outside it and readable, so a reader can decide from
-  the frame. One tap reveals everything, the whole gallery
-  included — never one picture of it — and the content stays
-  mounted underneath, keeping its exact space, so revealing moves
-  nothing on screen.
-- **Empty, loading, and error states** for every list surface.
-  Designed, not blank.
-- **Scaffolding** — top app bars, bottom navigation, bottom
-  sheets, snackbars.
-
-The bottom bar is the app's frame. Five slots, left to right:
-**feed, search, create post, wallet, profile** — each slot
-arrives with the slice that builds its surface, so the bar grows
-toward five. The center slot is the compose *action*, not a
-destination — a deliberate deviation from M3's destinations-only
-navigation-bar guidance, accepted for the reach of the one
-gesture the product lives on; it wears `primaryContainer`
-(§2.4). Every viewer gets the same shell: the bar shows for
-signed-in, applicant, and anonymous viewers alike, and a slot
-that needs an account (the compose action, the profile tab)
-asks on an anonymous tap — a dialog offering sign-in or
-keep-browsing — never yanking the read away. The bar rides every
-**read** surface — the tab roots and the read drill-ins (post
-detail, any actor's profile) — and leaves the **task** flows
-(compose, profile edit, settings, invites, the key and auth
-surfaces), which carry a back arrow instead: a drill-in is still
-reading, so the frame that got the reader there stays, while a
-flow owns the screen until it finishes. Login is the
-signed-out entry; the invite entry and the public feed hang
-off it. The bars are compact: the 64dp short
-navigation bar rather than the taller classic one, under the
-stock small top app bar with its inset applied exactly once; the
-web mirrors them (≈61px bar, ≈48px header band), its slots
-wearing the same Material glyphs as the app's. Settings hangs off
-the profile screen's top-bar gear; invite management is a
-standalone entry on one's own profile. The application and
-reciprocation cards are shell-scoped banners — they ride above
-whichever tab is active until resolved.
-
-The screen top collapses: scrolling down hides the top app bar,
-and about a third of a screen of accumulated upward scroll
-brings it back — never the first upward pixel, so a short
-correction toward a post's top summons nothing, and any
-downward scroll resets the tally. **The post detail's bar is
-pinned instead** (jakob 2026-09-15): it is the only place the
-post's menu and its way back stand — the card yields its own ⋮
-on a detail surface — so a collapse takes every act on the post
-off screen mid-read. Which of the remaining surfaces collapse
-and which pin is undrawn, and owed (`design/backlog.md` item 98). Android gates M3's
-`enterAlways` behind that tally (`rememberCollapsingTop` in the
-design system), with the bar pinned to `surface` instead of
+Android gates M3's
+`enterAlways` behind the accumulated-upward-scroll tally
+([CollapsingTop](../../design/components/navigation/CollapsingTop.prompt.md);
+`rememberCollapsingTop` in the design system), with the bar pinned to `surface` instead of
 M3's on-scroll container tint — the collapsing region reads as
 one plane with the key banner riding it. Reaching the top always
 reveals it regardless of the tally — Android reads the upward
@@ -579,124 +272,15 @@ scroll the list could not consume at its boundary, the web the
 region's own slot returning to view. The web otherwise mirrors
 the motion with a sticky region that hides once half of its own
 flow slot has scrolled past (early enough to feel prompt, late
-enough that the exit motion covers the vacated slot). A must-act
-card — the key-restore banner, shown whenever the account's
-actor key is attached but absent on this device, member and
-applicant alike — rides the collapsing region on every main
-surface (a purely read-only surface may omit it), following the
-reader away and back by scroll direction instead of living only
-at the top of the list; the banner stack never repeats it. The
-same region carries the borrowed-view band for a reader whose
-feed is not their own — the guest and the applicant alike — and
-the guest's reading of it holds the one sign-in-or-join entry,
-riding in place of a separate header action.
-
-Confirmation of a completed action is a snackbar on both
-platforms, fired once per event.
-
----
-
-## 7. Copy
-
-**Numbers are in scope.** CoGra's ranking is not a black box,
-and the UI must not behave as though it were. A post can show
-what it scored and why it sits where it does, opening into the
-actual paths behind it. Showing the number is the honest move;
-withholding it would be the opacity this product exists to
-refuse.
-
-Two rules keep that from becoming noise. **Every number shown
-is explainable** — traceable, on demand, to what produced it;
-a figure with no path behind it is exactly the black box again,
-just smaller. And **detail is layered**: a calm surface by
-default, the arithmetic a tap away, with the density partly
-the reader's own choice to opt into or out of.
-
-What stays out of user-facing copy is the *implementation
-vocabulary* — words describing how the thing is built rather
-than what the reader is doing: graph, node, edge, vertex,
-tensor, weight, parameter, decentralized, protocol, token,
-crypto.
-
-The rule is "as little as possible, as much as needed", not a
-word ban: where the format *is* the content, name it exactly. A
-key export that won't say PEM, PKCS#8, hex, or Ed25519 is an
-export nobody can feed to another tool
-([auth.md "Key export"](auth.md#key-export)), and codes, keys,
-and recovery are the reader's own vocabulary on those surfaces.
-Plain language frames the block; the precise label sits on it.
-
-This is greppable and should be enforced as a check over
-Android's `strings.xml` files and the web copy rather than
-left to review.
-
-The docs' internal vocabulary — *valence*, *connection*,
-`p_d`, `p_i` — is for this repo, not the screen.
-[edges.md §1](../primitive/edges.md) explicitly leaves
-frontend labels free: "CoGra's frontend labels surface
-whichever aspect fits the gesture."
-
-Write from the reader's side. Active voice. A control says
-what will happen; the confirmation says what happened.
+enough that the exit motion covers the vacated slot).
 
 ---
 
 ## 8. The stance control
 
-CoGra's signature interaction.
-
 ### 8.1 What is being authored
 
-Every interaction carries two independent values, both
-continuous floats in `[−1, +1]`
-([edges.md §1](../primitive/edges.md)):
-
-- **`p_d` — valence.** How you stand on it, from against to
-  for.
-- **`p_i` — connection.** How much you want it in your world,
-  from keep-it-away to tell-me-everything.
-
-All four quadrants are legitimate and there is no authoring
-bar. Negative `p_i` genuinely means "do not let this reach
-people through me", and that is the intended semantic, not a
-mistake to design around. Note that
-[invitations.md §5](../primitive/invitations.md) treats
-negative connection as a trap *in the invitation flow
-specifically*, where a modest positive pair is the better
-expression; that guidance is scoped to invitations and does
-not generalise to everyday stance.
-
-What the UI needs to send is only the target, the two floats,
-and an optional acting identity. Domain, mask, and tier are
-family-fixed by the census and are never UI choices
-([edges.md §1](../primitive/edges.md)); the family follows
-from the target.
-
-**Each gesture authors one edge.** The pad writes a single
-record carrying exactly the values picked, both in `[−1, +1]`.
-It never computes a delta against your history and never
-rewrites what is already there. One new edge against a
-years-long bundle is a real, visible signal without erasing
-the years — a bad week with an old friend should not undo the
-friendship, and their weight in your world should come out
-roughly where it was, a little lower, not negative.
-
-Everything about the bundle is **read-side**: your current
-standing toward someone, what a pick will add to it, and what
-reaching severance would take. The picker surfaces that
-information; it never folds it into the value it writes.
-Current standing ships with the control; richer neighbourhood
-context arrives with feed ranking.
-
-Nothing implicit ever becomes a record: scrolling, dwell,
-opening, and sharing are not stances ([graph-model.md
-§Stances, not events](../primitive/graph-model.md)).
-
-**Valence and connection are the stance family's words for the
-two slots.** Every family carries the same pair, and the census
-names them per family ([edges.md §1](../primitive/edges.md)); the
-labels the clients show are CoGra's, chosen so a casual author
-reads them without the census vocabulary:
+The census names the two slots per family:
 
 | Family | `p_d` slot | `p_i` slot |
 |---|---|---|
@@ -712,86 +296,20 @@ the cited person. These per-record parameters are authored with
 paired sliders (§8.6), not the pad — the pad writes a stance, and
 a citation is not one.
 
-### 8.2 What a pick lands you at
-
-The value written is one edge; what matters is where the
-bundle lands once that edge folds in. Those are two different
-numbers, and the control has to show the second one.
-
-A bundle whose folded parameter is zero is routing-inert — it
-carries nothing ([feed-ranking.md](../primitive/feed-ranking.md)).
-A bundle netting to `(0, 0)` is severance: deliberate,
-burn-priced, and carrying consequences ordinary stances do not
-— no feed presence, no attribution earnings, no vouch
-propagation.
-
-**A single pick can reach severance.** Against a short history
-it is easy: one `(+1, +1)` edge plus a new `(−1, −1)` nets to
-exactly zero. The protection is not arithmetic and cannot be —
-it is telling people where they are about to land.
-
-So the control **never prevents a choice**. The whole square is
-reachable, corners included; someone dragging to the far
-corner means it, and withholding `(−1, −1)` would be the worse
-failure. What it does instead is explain, and confirm when it
-matters:
-
-- Always show where the pick lands the bundle, not only the
-  value being written. This costs nothing to fetch: the bundle
-  is already loaded by the read that rendered the thing being
-  rated.
-- If the result is inert on either axis, say the stance will
-  carry nothing.
-- If the result is `(0, 0)`, name it as severance, say what it
-  costs, and ask whether that was the intent (§8.5).
-
 ### 8.3 The gesture
+
+The web tests parse these passages (`anchors.test.ts`, `landing.test.ts`, `pad-parking.test.ts`); where one differs from `design/`, `design/` rules.
 
 A single tap target at rest. A plain tap commits a modest
 positive — **`(+0.1, +0.1)`**, per the repo-wide low-defaults
 policy: defaults sit low so stronger stances stay expressible
 ([invitations.md §3](../primitive/invitations.md)).
 
-Press and hold, and the pad blooms. **The field is a soft
-rounded square, and the drawn field is the value space**: the
-knob travels exactly the field, the corners of the field are
-`(±1, ±1)`, and the knob never leaves the drawn shape — what
-the finger sees is what the value does. Horizontal is valence,
-vertical is connection. **The pad opens at the origin**,
-untilted toward either direction — the low default belongs to
-the tap, not to the considered gesture.
-
-**Releasing the finger never commits.** The pad is a considered
-surface: drag positions the knob, release leaves the pick
-standing and the pad open, and an explicit **Set** commits.
-Cancel — or tapping outside — dismisses and stages nothing. An
-accidental lift must never sign a priced act. A small **`?`**
-on the pad opens the §8.7 explanation on demand, for anyone
-meeting the control after the one-time coach mark is spent.
-
 **The pad lives at one fixed spot: the lower centre of the
 viewport** — the thumb-comfort zone — the same place every
 time, regardless of which control opened it. Muscle memory is
 part of the control; a pad that appears somewhere new on every
-press cannot be operated without looking. The knob starts at
-the field's origin; the drag is accumulated travel, so the
-finger's absolute position never matters.
-
-**The stance control owns its touches.** No interaction with
-it — tap, hold, drag, release, or the open pad itself — may
-also trigger the surface underneath: opening the pad must
-never also open the post, and dismissing it must never
-navigate. One gesture, one meaning.
-
-The pad shows the face, the words, and **the exact pair** —
-`+0.40 / +0.20`-style, updating live with the drag — and the
-landing line below carries the same three (§8.2): face, words,
-and pair, for where the bundle ends up. The numbers are part
-of the default reading: the face carries the feel and the pair
-carries the fact, and hiding either makes the other harder to
-trust. The inert centre-lines are drawn as visibly dead ground
-rather than hidden, so the model reads as legible rather than
-mysterious.
+press cannot be operated without looking.
 
 **The landing updates in real time.** The read that rendered
 the surface already carries the viewer's bundle — its raw
@@ -802,56 +320,7 @@ carries exactly the picked values (§8.1) and the backend's
 answer remains the authority once a record is signed; the live
 line is display, computed from served numbers.
 
-**Clipped is not hidden.** The fold the graph reads clips at
-`±1`, and the standing line shows that fold — but a bundle
-whose raw sum lies beyond the clip still carries that history,
-and every surface that explains cost (the severance
-confirmation above all) states the **raw sums**, because they
-are what a walk back to zero actually walks.
-
-**A tap answers immediately.** The resting target updates to
-the new standing at once — the pending-inclusive fold, so the
-answer is visible before the record lands — and a transient
-signed-confirmation appears (the platform's standard transient
-surface). A gesture that stages a priced act must never be
-silent: silence reads as failure and invites the same act
-again.
-
-**At rest the target shows the standing.** A viewer with a
-bundle toward the thing sees its face and folded pair on the
-resting target itself; a viewer without one sees a **muted,
-translucent 🫥** — the dotted-line face, the same control at
-rest, visibly waiting to be given a value — never a bare word.
-The affordance keeps an accessible label either way. The bundle
-is already loaded by the read that rendered the surface (§8.2) —
-showing it costs nothing and is the difference between a control
-and a mystery button.
-
 ### 8.4 The emoji readout
-
-The committed value is the exact continuous pair. The emoji is
-a **lossy readout of the edge being authored** — this pick,
-not the bundle it joins. Where the bundle ends up is shown
-separately (§8.2); conflating the two would make the face
-mean something different depending on history, which is
-exactly what a readout must not do.
-
-Decoupling the readout from the value is what lets the value
-stay continuous while the feedback stays legible. Emoji count
-controls readability only, never precision.
-
-**The readout sits just above the pad**, never under the knob:
-a thumb on the control covers exactly the spot where feedback
-would otherwise appear, so it has to live clear of the finger
-to be worth anything.
-
-Twenty anchors are placed in the field; the readout is the
-**nearest anchor by Euclidean distance**. They are deliberately
-dense in the for-it-and-want-it quadrant, where most real
-stances land and small differences matter, and sparse at the
-extremes, where finer distinctions carry no meaning. A regular
-grid cannot express that, and puts visible seams in a
-continuous field.
 
 **The zero bundle never speaks through the table.** A bundle
 standing at exactly `(0, 0)` — severed, or netted there — is
@@ -860,14 +329,6 @@ neighbour ("🙂 Nice") is a lie. It gets its own readout: **🤷**
 with the severed/no-standing wording, on every surface that
 shows a standing. The anchor table reads picks and non-zero
 bundles only.
-
-**The resting face is 🫥**, muted (§8.3) — the dotted-line face,
-"nothing here yet". It sits outside the table for the same
-reason the zero bundle does: an unauthored target must not read
-as a standing the viewer already holds. It is not 🤷 — never
-authored and netted to zero are different states, and the
-clients tell them apart. Like the table, it is a value both
-clients read.
 
 | `p_d` | `p_i` | Readout | Label |
 |---:|---:|:---:|---|
@@ -892,157 +353,9 @@ clients read.
 | −0.35 | −0.85 | 🚫 | Keep this away |
 | −0.90 | −0.90 | 💀 | Absolutely not |
 
-The table is the contract: both platforms read these values,
-and a change here changes both apps.
-
-System emoji are used rather than drawn faces. They render
-differently across Android versions and between the two
-clients, which is a known and accepted cost; drawn faces are
-the upgrade path if that inconsistency becomes a problem.
-
-### 8.5 Severance
-
-Severance — a bundle netted to `(0, 0)` — has its own flow for
-the case where it is the goal: an explicit route with its own
-confirmation, **findable from the open pad**, because someone
-who has decided they need it has to be able to discover how.
-
-It can also arrive as the result of an ordinary pick (§8.2).
-That case is handled by the same confirmation rather than by
-refusing the pick: the user is told what the choice nets to,
-what it costs, and asked whether that was the intent.
-
-Either way, this is where the read-side guidance belongs —
-current standing, and what reaching zero would actually take.
-
-### 8.6 Alternate inputs
-
-The pad is the default, not the only way. Settings offer the
-same value through:
-
-- **Paired sliders** — one per parameter.
-- **Direct entry** — typed values for people who want exact
-  control.
-
-Same machinery, different surface. These are also the
-**accessible path**: the pad is a drag gesture, and the
-alternates give screen-reader and switch users the full range
-through ordinary, well-supported controls rather than a
-degraded version of the gesture. Selecting an alternate
-replaces the pad everywhere, not per-screen.
-
-### 8.7 Teaching it
-
-A held gesture is invisible until taught, and a tap that
-stages a priced act must not be the teaching moment's
-casualty. **The first tap ever on a stance target teaches
-before it acts**: it opens the coach mark — anchored to the
-target, overlapping nothing, staying until dismissed or until
-the first successful hold — and stages nothing. Every tap
-after that acts, with the immediate feedback of §8.3. The
-resting target is labelled throughout, so the feature is
-discoverable but never blocking — and never silently
-expensive.
-
----
-
-## 9. Honesty surfaces
-
-The protocol never deletes and never erases silently
-([layers.md §5](../primitive/layers.md)), and the UI has to
-carry that without alarming anyone.
-
-- **Edited** — a soft marker with an optional tap to see what
-  changed. Friendly, not forensic.
-- **Removed** — a calm placeholder in place of the content,
-  never a silent gap. It reads as a statement of fact, not a
-  warning.
-- **Sensitive** — a neutral wash over the body with tap to
-  reveal, warm wording, no warning glyph. A veil either exists
-  or it does not: it is one state, never a scale the reader
-  tunes.
-- **Pending** — content authored but not yet L1-final. It shows
-  in full to every reader, not just its author, with a quiet
-  marker saying it is still settling
-  ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission)).
-  Nothing is greyed out or held back: the content is real, only
-  its place in the order is not. If the act expires unlanded, the
-  content leaves every reader's view — readers see nothing in its
-  place, since on the graph nothing ever existed — and the author
-  gets a calm notice that it did not land, in this section's
-  register, never `error` colouring.
-
-None of these use `error` colouring.
-
----
-
-## 10. Accessibility
-
-Part of the bar from day one, never retrofitted — the same
-rule the platform docs already carry ([android.md
-§Accessibility](android.md#accessibility), [web.md
-§Accessibility](web.md#accessibility)).
-
-- Every `on`-colour pair meets WCAG AA, verified at palette
-  generation.
-- Colour never carries meaning alone; stance is always
-  accompanied by words.
-- 48dp minimum touch targets.
-- Every icon-only control is labelled.
-- Drag gestures always have a non-drag equivalent (§8.6).
-- Both themes are designed, not derived by inversion.
-
----
-
-## 11. The mark
-
-CoGra's mark is a **lowercase g**. The bowl is the stance pad and
-the dot inside it is a committed pick sitting in the
-for-it-and-want-it quadrant — the letterform and the signature
-interaction (§8) are the same drawing.
-
-The obvious alternative, a rounded square holding an offset
-circle, is not available: that is Instagram's glyph in silhouette,
-corner radius, and dot placement. The g keeps the field and the
-pick inside a shape nobody owns.
-
-**It is drawn on Figtree's own `g`**, not freehand — bowl 524
-units across, x-height 500, overshoot 12, descender 213 below the
-baseline, advance 601, left sidebearing 30. The stroke is matched
-to weight 700 so the mark sits in the wordmark without reading as
-a lighter letter dropped between the others. The tail is the
-font's descender centreline, extracted from the glyph outline
-rather than approximated, trimmed so the round terminal stops
-short of where the font's flat cut lands.
-
-`docs/assets/cogra-mark.svg` is the source of truth. Every other
-asset is generated from it and **never redrawn** — a second
-drawing is how a mark starts to drift.
-
-**Colour.** Standing alone, the letter takes `primary` and the
-pick takes `primaryContainer`. As an app icon or favicon the mark
-sits on a `primaryContainer` ground with `onPrimaryContainer` ink
-and a `surface` pick, so a browser tab and a home screen show the
-same tile.
-
-**Android.** An adaptive icon: `primaryContainer` background
-layer, the mark as the foreground, and a monochrome layer for
-themed icons. Content is scaled so the mark's enclosing circle
-matches the 66dp keyline on the 108dp layer, which no launcher
-mask can clip.
-
-**Web.** The same tile as `favicon.ico` (16/32/48), `icon.svg`,
-and `apple-icon.png`, placed by Next.js's file conventions rather
-than hand-written `<link>` tags.
-
-**Wordmark.** "cogra" set in Figtree. The mark may stand in for
-the `g`, taking the real glyph's advance and left sidebearing so
-the spacing matches rather than approximates it.
-
 ---
 
 ## 12. Open decisions
 
-- **Drawn faces** as a replacement for system emoji (§8.4).
 - **Cyrillic or Greek support**, which would force the
   typeface choice open again (§3).

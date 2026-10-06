@@ -2486,7 +2486,7 @@ These bind every mutation below.
 - **Stance prepares write the picked values; severance alone is
   net-state.** A stance record carries exactly the two values the
   author picked — one new edge against the bundle, never a
-  derived delta ([design.md §8.1](design.md)). The bundle is a
+  derived delta ([stance-control.md "What is being authored"](../../design/guidelines/stance-control.md#what-is-being-authored)). The bundle is a
   read-side per-author fold — `viewerStance` on every stance-able
   node: current standing and where a pick lands it are shown,
   never folded into what is written. The one exception is the
@@ -2792,7 +2792,7 @@ selection rule, or a different bundle.
 
 What a pick *writes* is never derived from the bundle; where the
 pick *lands* is, and the control has to show it
-([design.md §8.2](design.md)). Every stance-able node carries the
+([stance-control.md "Two numbers, never one"](../../design/guidelines/stance-control.md#two-numbers-never-one)). Every stance-able node carries the
 viewer's own bundle as a field, folded by the published rule —
 same-author sum-then-clip, keyed (author, target, family), with
 payload-marked records excluded
@@ -2848,7 +2848,7 @@ Severance is priced off it: `severanceCost` is
 `⌈max(|Σ_d|, |Σ_i|)⌉`, which the folded pair alone cannot yield.
 Clients recompute the landing the same way, folding `raw + pick`
 locally under the drag so the pad answers with no round trip
-([design.md §8.3](design.md)); `projected` gives a caller the same
+([stance-control.md "Two numbers, never one"](../../design/guidelines/stance-control.md#two-numbers-never-one)); `projected` gives a caller the same
 fold server-side in the read that already fetched the bundle.
 
 The field is `viewerStance(pick: StancePickInput, includePending:
