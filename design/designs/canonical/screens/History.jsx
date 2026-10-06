@@ -34,7 +34,7 @@
    SEARCH AND FILTER ON TOP. The search field is the system's one search bar,
    its placeholder naming the list it searches, and it matches by the one
    search rule Explore uses (readme §4, *Search*) — over the seen-list alone,
-   newest-seen first. Under it the feed's worded trigger, in search's position
+   newest first by first seeing. Under it the feed's worded trigger, in search's position
    and search's kind semantics — nothing narrowed reads `Everything`, and a
    chip narrows. Its sheet is `HistoryFilter`. The bar and the trigger ride
    the collapsing top with the header (readme §4: history collapses). A search

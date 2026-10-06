@@ -6,7 +6,7 @@
    KINDS, AND ONLY KINDS. The kind list is `FEED_KINDS` — one list, so the
    history gains a kind the round the feed does. The feed sheet's other
    sections have no work here: the order is the history's one order,
-   newest-seen first; the seen toggle would choose between a list of seen
+   newest first by first seeing; the seen toggle would choose between a list of seen
    things and nothing; the forms, what else is admitted and the topic are
    the feed's narrowings, and none is ruled for this list.
 
