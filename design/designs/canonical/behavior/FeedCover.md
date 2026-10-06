@@ -34,6 +34,8 @@ WHEN tap feed.card.media.frame.soundDisc GIVEN sound is off -> sound turns on fo
 
 WHEN tap feed.card.media.frame.soundDisc GIVEN sound is on -> sound turns off for every clip on every surface
 
+ALWAYS assistive technology reaches mute and unmute as a custom action on feed.card.media.frame, the traversal inside feed.card.media staying cleared, GIVEN feed.card.media.frame's clip is playing
+
 ALWAYS a clip starts muted GIVEN the reader has not turned sound on
 
 WHEN the browser refuses sound to a clip taking the stage GIVEN the web and sound is on -> the clip plays muted AND sound turns off for every clip on every surface AND NEVER the clip stays frozen
