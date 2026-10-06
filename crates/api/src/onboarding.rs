@@ -28,11 +28,11 @@ use crate::relay::RelayError;
 /// A never-verified account expires this long after registration
 /// (auth.md "Expiry"); past the bound it is dead — reapable, and
 /// replaceable in place by a registration claiming its handle or email.
-const UNVERIFIED_TTL_HOURS: i64 = 24;
+pub const UNVERIFIED_TTL_DAYS: i64 = 7;
 
 /// The moment before which a never-verified account counts as dead.
 fn dead_before() -> DateTime<Utc> {
-    Utc::now() - Duration::hours(UNVERIFIED_TTL_HOURS)
+    Utc::now() - Duration::days(UNVERIFIED_TTL_DAYS)
 }
 
 /// Operational knobs of the admission flow.
@@ -171,9 +171,10 @@ pub struct RegisteredAccount {
 /// email conflicts surface here, at the form. Pure L2 — nothing touches
 /// L1.
 ///
-/// The two bounds differ (auth.md "Expiry"): the account dies unverified
-/// on its own clock, while the application row is bounded by the invite
-/// link's expiry. The verification mail carries the link URL and the bare
+/// The two clocks are independent (auth.md "Expiry"): the link's expiry
+/// bounds registration through it, the account dies unverified on its own
+/// clock, and the application row carries none. The verification mail
+/// carries the link URL and the bare
 /// token beside it, the universal fallback native apps accept as a paste
 /// (auth.md "Link URLs").
 pub async fn register(
@@ -221,7 +222,6 @@ pub async fn register(
         &password_hash,
         &verification.hash,
         dead_before(),
-        link.expires_at,
     )
     .await?;
     match outcome {
@@ -235,7 +235,7 @@ pub async fn register(
             to: email,
             subject: "Verify your CoGra email".into(),
             body: format!(
-                "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}\n\nThe account expires in {UNVERIFIED_TTL_HOURS} hours if unverified.",
+                "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}\n\nThe account expires in {UNVERIFIED_TTL_DAYS} days if unverified.",
                 token = verification.token
             ),
         })
@@ -243,7 +243,7 @@ pub async fn register(
     let session = auth::issue_session(pool, auth_cfg, account_id, device_label.as_deref()).await?;
     Ok(RegisteredAccount {
         session,
-        expires_at: Utc::now() + Duration::hours(UNVERIFIED_TTL_HOURS),
+        expires_at: Utc::now() + Duration::days(UNVERIFIED_TTL_DAYS),
     })
 }
 
@@ -317,49 +317,13 @@ pub async fn attach_actor_key(
     }
 }
 
-/// Re-arms an expired, never-approved application with a fresh invite
-/// link — a new application row for the viewer's account (auth.md
-/// "Expiry"). Refused while a live application exists.
-pub async fn apply_with_invite(
-    pool: &PgPool,
-    account_id: Uuid,
-    invite_link: Uuid,
-) -> Result<store::Application, OnboardingError> {
-    let credentials = store::credentials_by_actor(pool, account_id)
-        .await?
-        .ok_or(OnboardingError::Forbidden)?;
-    if credentials.account_state != store::AccountState::Applicant {
-        return Err(OnboardingError::Forbidden);
-    }
-    if let Some(latest) = store::latest_application_for(pool, account_id).await?
-        && latest.landed_at.is_none()
-        && (latest.approved_at.is_some() || latest.expires_at > Utc::now())
-    {
-        return Err(OnboardingError::BadInput {
-            field: "inviteLink",
-            message: "a live application already exists".into(),
-        });
-    }
-    if !store::invite_link_usable(pool, invite_link).await? {
-        return Err(OnboardingError::InviteUnusable);
-    }
-    let link = store::invite_link(pool, invite_link)
-        .await?
-        .ok_or(OnboardingError::InviteUnusable)?;
-    let id = Uuid::new_v4();
-    store::create_application(pool, id, account_id, link.id, link.expires_at).await?;
-    store::application(pool, id)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("application vanished after creation".into()))
-}
-
 /// A refusal from an approval batch, and where it belongs: an entry's
 /// index, or `None` when the batch as a whole is refused and no single
 /// entry is at fault.
 pub type ApprovalFault = (Option<usize>, OnboardingError);
 
 /// One approval: the application plus the stance values the inviter
-/// commits (pre-filled from the link, adjusted at will).
+/// picks for it and commits.
 #[derive(Debug, Clone)]
 pub struct Approval {
     pub application: Uuid,
@@ -482,12 +446,6 @@ async fn validate_approval(
         return Err(OnboardingError::BadInput {
             field: "application",
             message: "no key attached".into(),
-        });
-    }
-    if application.expires_at <= Utc::now() {
-        return Err(OnboardingError::BadInput {
-            field: "application",
-            message: "application expired".into(),
         });
     }
     Ok(application)

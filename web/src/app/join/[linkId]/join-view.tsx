@@ -2,7 +2,7 @@
 
 // Invite check + apply (Android's InviteEntry/Apply folded into the
 // link route — the route carries the id, so the paste box lives on the
-// front door; auth.md "Expiry", web.md "Routes").
+// front door; web.md "Routes").
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,12 +11,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import type { AccountState, ErrorCode } from "@/__generated__/graphql";
 import { fetchMe } from "@/lib/api/auth-api";
-import {
-  applyWithInvite,
-  checkInviteLink,
-  register,
-  type InviteCheck,
-} from "@/lib/api/onboarding-api";
+import { checkInviteLink, register, type InviteCheck } from "@/lib/api/onboarding-api";
 import { extractInviteId } from "@/lib/onboarding/invite-input";
 import {
   emailPlausible,
@@ -29,9 +24,8 @@ import {
 import { deviceLabel } from "@/lib/session/device-label";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
-import { useRegistrationFlow } from "@/lib/signing/provider";
 import { Button } from "@/lib/ui/button";
-import { fallbackMessage, rearmMessage } from "@/lib/ui/error-messages";
+import { fallbackMessage } from "@/lib/ui/error-messages";
 import { PasswordField } from "@/lib/ui/password-field";
 import { TransportError } from "@/lib/ui/transport-error";
 
@@ -153,9 +147,6 @@ export function JoinView({ linkId }: { linkId: string }) {
       )}
 
       {usable && inviteId !== null && phase === "signedOut" && <ApplyForm inviteId={inviteId} />}
-      {usable && inviteId !== null && phase === "signedIn" && accountState === "APPLICANT" && (
-        <RearmPanel inviteId={inviteId} />
-      )}
       {phase === "signedIn" && accountState === "MEMBER" && (
         <>
           <p data-testid="join_member_note" className="text-body-medium">
@@ -314,59 +305,5 @@ function ApplyForm({ inviteId }: { inviteId: string }) {
         Create account
       </Button>
     </form>
-  );
-}
-
-function RearmPanel({ inviteId }: { inviteId: string }) {
-  const client = useApolloClient();
-  const guard = useAuthGuard();
-  const flow = useRegistrationFlow();
-  const router = useRouter();
-
-  const [inProgress, setInProgress] = useState(false);
-  const [error, setError] = useState<ErrorCode | null>(null);
-  const [transportFailed, setTransportFailed] = useState(false);
-
-  const onRearm = async () => {
-    if (inProgress) return;
-    setInProgress(true);
-    setError(null);
-    setTransportFailed(false);
-    const outcome = await guard.run(() => applyWithInvite(client, inviteId));
-    setInProgress(false);
-    switch (outcome.kind) {
-      case "success":
-        flow.ensureAdvancing();
-        router.replace("/");
-        break;
-      case "refused":
-        setError(outcome.errors[0].code);
-        break;
-      case "failed":
-        setTransportFailed(true);
-        break;
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-body-medium">
-        You&apos;re signed in. If your application expired, this invite re-arms it.
-      </p>
-      {error !== null && (
-        <p role="alert" data-testid="rearm_error" className="text-body-medium text-error">
-          {rearmMessage(error)}
-        </p>
-      )}
-      {transportFailed && <TransportError testId="rearm_transport_error" />}
-      {inProgress && (
-        <p role="status" data-testid="rearm_progress" className="text-body-medium text-on-surface-variant">
-          Applying the invite…
-        </p>
-      )}
-      <Button testId="rearm_submit" onClick={onRearm} disabled={inProgress}>
-        Use this invite
-      </Button>
-    </div>
   );
 }

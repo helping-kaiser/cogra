@@ -56,7 +56,6 @@ private class ScriptedOnboarding : ThrowingOnboardingRepository() {
     var status: ApplicationStatus = ApplicationStatus(AccountState.APPLICANT, null, null, null)
     var verify: Outcome<Unit> = Outcome.Success(Unit)
     var resend: Outcome<Unit> = Outcome.Success(Unit)
-    var rearm: Outcome<Unit> = Outcome.Success(Unit)
     var polls = 0
     var resendCalls = 0
 
@@ -71,8 +70,6 @@ private class ScriptedOnboarding : ThrowingOnboardingRepository() {
         resendCalls += 1
         return resend
     }
-
-    override suspend fun applyWithInvite(inviteLink: String): Outcome<Unit> = rearm
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -136,14 +133,12 @@ class HomeViewModelTest {
         verified: Boolean = true,
         keyAttached: Boolean = true,
         approved: Boolean = false,
-        expired: Boolean = false,
     ) = ApplicationView(
         handle = "joiner",
         emailVerified = verified,
         keyAttached = keyAttached,
         approvedAt = if (approved) Instant.EPOCH else null,
         landedAt = null,
-        expiresAt = if (expired) Instant.EPOCH else Instant.MAX,
     )
 
     private fun applicantStatus(application: ApplicationView? = applicationView()) =
@@ -467,35 +462,5 @@ class HomeViewModelTest {
         val next = viewModel(registration)
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(next.state.value.welcome).isFalse()
-    }
-
-    @Test
-    fun aDeadApplicationRearmsWithAFreshInvite() = homeTest {
-        account.profile = applicant()
-        onboarding.status = applicantStatus(application = null)
-        val vm = viewModel()
-        dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.progress).isEqualTo(RegistrationProgress.NeedsInvite)
-
-        // Garbage first: no request leaves the device.
-        vm.onRearmInputChange("not a link")
-        vm.onRearm()
-        assertThat(vm.state.value.rearmMalformed).isTrue()
-
-        // A refusal surfaces its code.
-        onboarding.rearm = Outcome.Refused(listOf(UserError(ErrorCode.INVITE_UNUSABLE, "dead")))
-        vm.onRearmInputChange("0d9e4a71-2f4b-4a1e-9c53-8d54f0a3b2c1")
-        vm.onRearm()
-        dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.rearmError).isEqualTo(ErrorCode.INVITE_UNUSABLE)
-
-        // A fresh link re-arms and pokes the loop.
-        val pollsBefore = onboarding.polls
-        onboarding.rearm = Outcome.Success(Unit)
-        onboarding.status = applicantStatus(applicationView(verified = false))
-        vm.onRearm()
-        dispatcher.scheduler.runCurrent()
-        assertThat(vm.state.value.rearmInput).isEmpty()
-        assertThat(onboarding.polls).isGreaterThan(pollsBefore)
     }
 }

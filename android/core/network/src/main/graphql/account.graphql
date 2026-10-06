@@ -116,8 +116,6 @@ query InviteLinks {
       edges {
         node {
           id
-          prefillPDirected
-          prefillPInterest
           singleUse
           createdAt
           expiresAt
@@ -139,8 +137,6 @@ mutation CreateInviteLink($input: CreateInviteLinkInput!) {
   createInviteLink(input: $input) {
     inviteLink {
       id
-      prefillPDirected
-      prefillPInterest
       singleUse
       createdAt
       expiresAt

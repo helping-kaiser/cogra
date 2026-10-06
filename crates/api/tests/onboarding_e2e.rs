@@ -204,8 +204,6 @@ async fn new_invite_link(rig: &Rig, inviter_token: &str) -> String {
                }"#,
             json!({ "input": {
                 "expiresAt": "2027-01-01T00:00:00Z",
-                "prefillPDirected": 0.1,
-                "prefillPInterest": 0.1,
             }}),
         )
         .await;
@@ -228,7 +226,7 @@ async fn new_invite_link(rig: &Rig, inviter_token: &str) -> String {
 /// the token read "from the inbox", and the key ceremony as a logged-in
 /// step where the device mints the key and attaches the public halves.
 ///
-/// The inviter approves from the queue, adjusting the pre-filled stance;
+/// The inviter approves from the queue, choosing the stance there;
 /// the funding burn lands on the applicant's own address; the inviter
 /// signs their vouch through the generic relay legs, and the applicant's
 /// device signs the staged Registration on next open, discovering it
@@ -284,8 +282,6 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
                }"#,
             json!({ "input": {
                 "expiresAt": "2027-01-01T00:00:00Z",
-                "prefillPDirected": 0.1,
-                "prefillPInterest": 0.1,
             }}),
         )
         .await;
@@ -678,8 +674,6 @@ async fn the_attached_key_reads_for_its_viewer_only(pool: PgPool) {
             }",
             json!({ "input": {
                 "expiresAt": "2027-01-01T00:00:00Z",
-                "prefillPDirected": 0.1,
-                "prefillPInterest": 0.1,
             }}),
         )
         .await;
@@ -872,5 +866,240 @@ async fn an_over_long_password_still_reaches_verification_at_login(pool: PgPool)
         wrong["logIn"]["userErrors"][0]["code"], "INVALID_CREDENTIALS",
         "a wrong over-long password is refused as a credentials mismatch, not as bad input — \
          proof that verification, not a length gate, is what refused it"
+    );
+}
+
+/// A seeded member, logged in through the real surface — the inviter the
+/// entry-funnel tests below issue their links as.
+async fn logged_in_inviter(rig: &Rig) -> String {
+    rig.seed_member("inviter", "inviter@example.com", "inviter password")
+        .await;
+    let login = rig
+        .gql(
+            None,
+            "mutation($input: LogInInput!) {
+                logIn(input: $input) { auth { accessToken } userErrors { code } }
+            }",
+            json!({ "input": { "email": "inviter@example.com", "password": "inviter password" } }),
+        )
+        .await;
+    login["logIn"]["auth"]["accessToken"]
+        .as_str()
+        .expect("session")
+        .to_string()
+}
+
+const CREATE_INVITE_LINK: &str = "mutation($input: CreateInviteLinkInput!) {
+    createInviteLink(input: $input) {
+        inviteLink { id singleUse expiresAt }
+        userErrors { code field }
+    }
+}";
+
+const REGISTER: &str = "mutation($input: RegisterInput!) {
+    register(input: $input) { auth { accessToken } expiresAt userErrors { code field } }
+}";
+
+const VERIFY_EMAIL: &str = "mutation($input: VerifyEmailInput!) {
+    verifyEmail(input: $input) { ok userErrors { code } }
+}";
+
+fn register_vars(link: &str, handle: &str) -> Value {
+    json!({ "input": {
+        "inviteLink": link,
+        "handle": handle,
+        "email": format!("{handle}@example.com"),
+        "password": "a strong password",
+    }})
+}
+
+/// A link's expiry bounds only registration through it, so it carries no
+/// floor: a link that lives one hour issues (auth.md "Expiry").
+///
+/// An invite link's expiry has no floor: an hour-long link issues.
+/// ´claim:onboarding:an-invite-link-expiry-has-no-floor´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_one_hour_invite_link_is_accepted(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter_token = logged_in_inviter(&rig).await;
+    let expires = chrono::Utc::now() + chrono::Duration::hours(1);
+    let issued = rig
+        .gql(
+            Some(&inviter_token),
+            CREATE_INVITE_LINK,
+            json!({ "input": { "expiresAt": expires.to_rfc3339() } }),
+        )
+        .await;
+    assert_eq!(
+        issued["createInviteLink"]["userErrors"],
+        json!([]),
+        "{issued}"
+    );
+    assert!(issued["createInviteLink"]["inviteLink"]["id"].is_string());
+}
+
+/// The one bound createInviteLink keeps: the expiry must lie in the
+/// future, refused at the field as BAD_INPUT.
+///
+/// An invite link whose expiry already passed is refused as BAD_INPUT at expiresAt.
+/// ´claim:onboarding:a-past-invite-expiry-is-bad-input´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_past_expiry_is_bad_input(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter_token = logged_in_inviter(&rig).await;
+    let expires = chrono::Utc::now() - chrono::Duration::minutes(1);
+    let refused = rig
+        .gql(
+            Some(&inviter_token),
+            CREATE_INVITE_LINK,
+            json!({ "input": { "expiresAt": expires.to_rfc3339() } }),
+        )
+        .await;
+    assert!(refused["createInviteLink"]["inviteLink"].is_null());
+    assert_eq!(
+        refused["createInviteLink"]["userErrors"][0]["code"],
+        "BAD_INPUT"
+    );
+    assert_eq!(
+        refused["createInviteLink"]["userErrors"][0]["field"][0],
+        "expiresAt"
+    );
+}
+
+/// A link issued without saying otherwise admits one applicant
+/// (api-spec `CreateInviteLinkInput.singleUse`); multi-use is the
+/// inviter's explicit opening.
+///
+/// An invite link is single-use unless its issuer opens it to multi-use.
+/// ´claim:onboarding:invite-links-default-to-single-use´
+#[sqlx::test(migrations = "../../migrations")]
+async fn invite_links_default_to_single_use(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter_token = logged_in_inviter(&rig).await;
+    let defaulted = rig
+        .gql(
+            Some(&inviter_token),
+            CREATE_INVITE_LINK,
+            json!({ "input": { "expiresAt": "2027-01-01T00:00:00Z" } }),
+        )
+        .await;
+    assert_eq!(
+        defaulted["createInviteLink"]["inviteLink"]["singleUse"],
+        true
+    );
+    let opened = rig
+        .gql(
+            Some(&inviter_token),
+            CREATE_INVITE_LINK,
+            json!({ "input": { "expiresAt": "2027-01-01T00:00:00Z", "singleUse": false } }),
+        )
+        .await;
+    assert_eq!(opened["createInviteLink"]["inviteLink"]["singleUse"], false);
+}
+
+/// The single-use slot at the wire: the first registration takes it, and
+/// a second registrant through the same link meets INVITE_UNUSABLE at the
+/// form, with no account created.
+///
+/// A second registration through a spent single-use link is refused at the wire as INVITE_UNUSABLE.
+/// ´claim:onboarding:a-spent-single-use-link-refuses-at-the-wire´
+#[sqlx::test(migrations = "../../migrations")]
+async fn register_through_a_spent_single_use_link_is_invite_unusable(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter_token = logged_in_inviter(&rig).await;
+    let link = new_invite_link(&rig, &inviter_token).await;
+
+    let first = rig.gql(None, REGISTER, register_vars(&link, "first")).await;
+    assert!(
+        first["register"]["auth"]["accessToken"].is_string(),
+        "{first}"
+    );
+
+    let second = rig
+        .gql(None, REGISTER, register_vars(&link, "second"))
+        .await;
+    assert!(second["register"]["auth"].is_null());
+    assert_eq!(
+        second["register"]["userErrors"][0]["code"],
+        "INVITE_UNUSABLE"
+    );
+    assert!(
+        postgres_store::genesis::actor_by_handle(&rig.pool, "second")
+            .await
+            .expect("query")
+            .is_none(),
+        "a refused registration creates nothing"
+    );
+}
+
+/// Registers one applicant through a fresh link and ages its account by
+/// `age`, returning the verification token from its mail.
+async fn registered_and_aged(rig: &Rig, inviter_token: &str, age: chrono::Duration) -> String {
+    let link = new_invite_link(rig, inviter_token).await;
+    let registered = rig
+        .gql(None, REGISTER, register_vars(&link, "joiner"))
+        .await;
+    assert!(
+        registered["register"]["auth"]["accessToken"].is_string(),
+        "{registered}"
+    );
+    sqlx::query(
+        "UPDATE user_credentials SET created_at = NOW() - make_interval(secs => $1)
+         WHERE email = $2",
+    )
+    .bind(age.num_seconds() as f64)
+    .bind("joiner@example.com")
+    .execute(&rig.pool)
+    .await
+    .expect("age");
+    rig.mailer.latest_token_for("joiner@example.com")
+}
+
+/// A never-verified account lives seven days (auth.md "Expiry"): on day
+/// six its verification link still works.
+///
+/// A never-verified account still verifies inside its seven-day window.
+/// ´claim:onboarding:an-account-verifies-inside-its-seven-days´
+#[sqlx::test(migrations = "../../migrations")]
+async fn verify_on_day_six_succeeds(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter_token = logged_in_inviter(&rig).await;
+    let token = registered_and_aged(&rig, &inviter_token, chrono::Duration::days(6)).await;
+    let verified = rig
+        .gql(
+            None,
+            VERIFY_EMAIL,
+            json!({ "input": { "verificationToken": token } }),
+        )
+        .await;
+    assert_eq!(verified["verifyEmail"]["ok"], true, "{verified}");
+}
+
+/// Past its seven days a never-verified account is dead — reapable and
+/// replaceable — so its token answers VERIFICATION_TOKEN_INVALID.
+///
+/// A never-verified account past its seven days can no longer verify: its token is invalid.
+/// ´claim:onboarding:a-dead-account-cannot-verify´
+#[sqlx::test(migrations = "../../migrations")]
+async fn verify_after_seven_days_is_token_invalid(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter_token = logged_in_inviter(&rig).await;
+    let token = registered_and_aged(
+        &rig,
+        &inviter_token,
+        chrono::Duration::days(api::onboarding::UNVERIFIED_TTL_DAYS) + chrono::Duration::hours(1),
+    )
+    .await;
+    let refused = rig
+        .gql(
+            None,
+            VERIFY_EMAIL,
+            json!({ "input": { "verificationToken": token } }),
+        )
+        .await;
+    assert_eq!(refused["verifyEmail"]["ok"], false);
+    assert_eq!(
+        refused["verifyEmail"]["userErrors"][0]["code"],
+        "VERIFICATION_TOKEN_INVALID"
     );
 }

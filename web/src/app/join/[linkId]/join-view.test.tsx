@@ -6,7 +6,6 @@ import type { RegisterMutationVariables } from "@/__generated__/graphql";
 import { createTokenStore } from "@/lib/session/token-store";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
-import { fakeFlow } from "@/test/registration";
 import { JoinView } from "./join-view";
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -213,10 +212,10 @@ describe("JoinView", () => {
     expect(screen.queryByTestId("apply_transport_error")).not.toBeInTheDocument();
   });
 
-  it("offers re-arm instead of the form to a signed-in applicant", async () => {
+  it("offers a signed-in applicant neither the form nor the sign-in link", async () => {
     server.use(usableCheck, meHandler("APPLICANT"));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
-    expect(await screen.findByTestId("rearm_submit")).toBeInTheDocument();
+    expect(await screen.findByTestId("invite_inviter")).toBeInTheDocument();
     expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
     expect(screen.queryByTestId("invite_login")).not.toBeInTheDocument();
   });
@@ -226,7 +225,6 @@ describe("JoinView", () => {
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
     expect(await screen.findByTestId("join_member_note")).toBeInTheDocument();
     expect(screen.getByTestId("join_member_invites")).toHaveAttribute("href", "/invites");
-    expect(screen.queryByTestId("rearm_submit")).not.toBeInTheDocument();
     expect(screen.queryByTestId("apply_handle")).not.toBeInTheDocument();
   });
 
@@ -234,53 +232,7 @@ describe("JoinView", () => {
     server.use(usableCheck, graphql.query("Me", () => HttpResponse.error()));
     renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
     expect(await screen.findByTestId("invite_inviter")).toBeInTheDocument();
-    expect(screen.queryByTestId("rearm_submit")).not.toBeInTheDocument();
     expect(screen.queryByTestId("join_member_note")).not.toBeInTheDocument();
   });
 
-  it("re-arms, pokes the loop, and goes home", async () => {
-    server.use(
-      usableCheck,
-      meHandler("APPLICANT"),
-      graphql.mutation("ApplyWithInvite", () =>
-        HttpResponse.json({
-          data: {
-            applyWithInvite: {
-              __typename: "ApplyWithInvitePayload",
-              application: { __typename: "Application", id: "app-2" },
-              userErrors: [],
-            },
-          },
-        }),
-      ),
-    );
-    const { flow } = fakeFlow();
-    renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore(), flow });
-    fireEvent.click(await screen.findByTestId("rearm_submit"));
-    await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
-    expect(flow.ensureAdvancing).toHaveBeenCalled();
-  });
-
-  it("surfaces a re-arm refusal", async () => {
-    server.use(
-      usableCheck,
-      meHandler("APPLICANT"),
-      graphql.mutation("ApplyWithInvite", () =>
-        HttpResponse.json({
-          data: {
-            applyWithInvite: {
-              __typename: "ApplyWithInvitePayload",
-              application: null,
-              userErrors: [
-                { __typename: "UserError", message: "live", code: "BAD_INPUT", field: null },
-              ],
-            },
-          },
-        }),
-      ),
-    );
-    renderWithProviders(<JoinView linkId={ID} />, { store: signedInStore() });
-    fireEvent.click(await screen.findByTestId("rearm_submit"));
-    expect(await screen.findByTestId("rearm_error")).toHaveTextContent("still live");
-  });
 });

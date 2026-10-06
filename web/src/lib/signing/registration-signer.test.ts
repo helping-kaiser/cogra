@@ -20,8 +20,6 @@ const server = startMswServer();
 
 const passthroughGuard: AuthGuard = { run: (block) => block(), prime: async () => {} };
 
-const NOW = Date.parse("2026-08-07T12:00:00Z");
-const FUTURE = "2026-08-08T12:00:00Z";
 const PAST = "2026-08-06T12:00:00Z";
 
 function client() {
@@ -93,7 +91,6 @@ function application(overrides: Record<string, unknown> = {}) {
     approvedAt: null,
     landedAt: null,
     createdAt: PAST,
-    expiresAt: FUTURE,
     ...overrides,
   };
 }
@@ -142,7 +139,6 @@ describe("registration signer", () => {
       store,
       ceremony: deps.ceremony ?? fakeCeremony(),
       writeSigner: deps.writeSigner ?? fakeWriteSigner({ kind: "done", id: "sw-1", state: "RELAYING" }),
-      now: () => NOW,
     });
   }
 
@@ -208,19 +204,14 @@ describe("registration signer", () => {
     expect(writeSigner.calls).toBe(1);
   });
 
-  it("needs an invite when no application exists", async () => {
+  it("refuses when an applicant has no application", async () => {
     server.use(statusHandler(me({ application: null })));
-    expect(await signer({}).advance()).toEqual({ kind: "needsInvite" });
+    expect(await signer({}).advance()).toEqual({ kind: "refused", errors: [] });
   });
 
   it("awaits landing once approved", async () => {
     server.use(statusHandler(me({ application: application({ approvedAt: PAST }) })));
     expect(await signer({}).advance()).toEqual({ kind: "awaitingLanding" });
-  });
-
-  it("needs an invite when the application expired", async () => {
-    server.use(statusHandler(me({ application: application({ expiresAt: PAST }) })));
-    expect(await signer({}).advance()).toEqual({ kind: "needsInvite" });
   });
 
   it("reports the two proofs while approval is pending", async () => {

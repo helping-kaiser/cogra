@@ -273,8 +273,6 @@ open class ThrowingAccountRepository : AccountRepository {
     override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = throw UnsupportedOperationException()
     override suspend fun createInviteLink(
         expiresAt: Instant,
-        prefillPDirected: Double,
-        prefillPInterest: Double,
         singleUse: Boolean,
     ): Outcome<InviteLinkInfo> = throw UnsupportedOperationException()
     override suspend fun revokeInviteLink(id: String): Outcome<Unit> = throw UnsupportedOperationException()
@@ -307,7 +305,6 @@ open class ThrowingOnboardingRepository : OnboardingRepository {
     override suspend fun resendVerificationEmail(email: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun attachActorKey(actorPubkeyBase64: String, realizationAddress: String): Outcome<Unit> =
         throw UnsupportedOperationException()
-    override suspend fun applyWithInvite(inviteLink: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun applicationStatus(): Outcome<ApplicationStatus> = throw UnsupportedOperationException()
 }
 

@@ -44,14 +44,10 @@ class InvitesViewModelTest {
 
         override suspend fun createInviteLink(
             expiresAt: Instant,
-            prefillPDirected: Double,
-            prefillPInterest: Double,
             singleUse: Boolean,
         ): Outcome<InviteLinkInfo> {
             val link = InviteLinkInfo(
                 "link-${links.size}",
-                prefillPDirected,
-                prefillPInterest,
                 singleUse,
                 Instant.EPOCH,
                 expiresAt,
@@ -101,7 +97,8 @@ class InvitesViewModelTest {
     fun createAndRevokeRefreshTheList() = runTest(dispatcher) {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        vm.onSingleUseChange(true)
+        // No toggle: a link is single-use unless the inviter opens it.
+        assertThat(vm.state.value.singleUse).isTrue()
         vm.onCreate()
         dispatcher.scheduler.advanceUntilIdle()
         val link = vm.state.value.links.single()

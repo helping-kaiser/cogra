@@ -101,14 +101,12 @@ class RegistrationSignerTest {
         keyAttached: Boolean = true,
         approved: Boolean = false,
         landed: Boolean = false,
-        expired: Boolean = false,
     ) = ApplicationView(
         handle = "joiner",
         emailVerified = emailVerified,
         keyAttached = keyAttached,
         approvedAt = if (approved) Instant.EPOCH else null,
         landedAt = if (landed) Instant.EPOCH else null,
-        expiresAt = if (expired) Instant.EPOCH else Instant.MAX,
     )
 
     private fun status(
@@ -239,14 +237,11 @@ class RegistrationSignerTest {
     }
 
     @Test
-    fun aDeadApplicationNeedsAFreshInvite() = runTest {
-        // Reaped entirely.
+    fun anApplicantWithoutAnApplicationIsAServerFault() = runTest {
+        // Registration writes the application with the account and it
+        // carries no timer, so its absence is nothing the person can act on.
         onboarding.status = status(application = null)
-        assertThat(signer.advance()).isEqualTo(RegistrationProgress.NeedsInvite)
-
-        // Expired unapproved.
-        onboarding.status = status(application = application(expired = true))
-        assertThat(signer.advance()).isEqualTo(RegistrationProgress.NeedsInvite)
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.Refused(emptyList()))
     }
 
     @Test

@@ -440,11 +440,7 @@ async fn approvable_application(rig: &WireRig, inviter: &Member, handle: &str) -
             "mutation($input: CreateInviteLinkInput!) {
                createInviteLink(input: $input) { inviteLink { id } userErrors { code } }
              }",
-            json!({ "input": {
-                "expiresAt": "2099-01-01T00:00:00Z",
-                "prefillPDirected": 0.1,
-                "prefillPInterest": 0.1,
-            }}),
+            json!({ "input": { "expiresAt": "2099-01-01T00:00:00Z" }}),
         )
         .await;
     let link = link["createInviteLink"]["inviteLink"]["id"]

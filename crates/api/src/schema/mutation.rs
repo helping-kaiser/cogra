@@ -27,8 +27,8 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PreparedWrite,
-    Session, StagedWriteType, User, UserError,
+    AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PreparedWrite, Session,
+    StagedWriteType, User, UserError,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -279,7 +279,7 @@ struct RegisterInput {
 #[derive(SimpleObject)]
 struct RegisterPayload {
     auth: Option<AuthSession>,
-    /// When the account expires unless its email is verified (24 h,
+    /// When the account expires unless its email is verified (7 days,
     /// auth.md "Expiry").
     expires_at: Option<DateTime<Utc>>,
     user_errors: Vec<UserError>,
@@ -329,26 +329,11 @@ struct AttachActorKeyPayload {
     user_errors: Vec<UserError>,
 }
 
-/// Re-arm an expired, never-approved application with a fresh invite
-/// link — a new application row for the viewer's account (auth.md
-/// "Expiry"). BAD_INPUT while a live application exists;
-/// INVITE_UNUSABLE for a dead link.
-#[derive(InputObject)]
-struct ApplyWithInviteInput {
-    invite_link: Uuid,
-}
-
-#[derive(SimpleObject)]
-struct ApplyWithInvitePayload {
-    application: Option<Application>,
-    user_errors: Vec<UserError>,
-}
-
 #[derive(InputObject)]
 struct ApplicationApprovalInput {
     application: Uuid,
-    /// The inviter's stance toward the joiner — pre-filled from the
-    /// link, committed here.
+    /// The inviter's stance toward the joiner, chosen here — approval is
+    /// where the values are picked and where they commit.
     p_directed: Dimension,
     p_interest: Dimension,
 }
@@ -1135,12 +1120,17 @@ struct KeyBackupChallengePayload {
     user_errors: Vec<UserError>,
 }
 
+/// Issue a time-gated invite link. It carries no stance values — the
+/// inviter picks those at approval, the priced act. expiresAt must lie in
+/// the future and has no floor: it bounds registration through the link
+/// and nothing else, so an account registered through it keeps its full
+/// 7-day verification window and its application waits with no timer
+/// (auth.md "Expiry").
 #[derive(InputObject)]
 struct CreateInviteLinkInput {
     expires_at: DateTime<Utc>,
-    prefill_p_directed: Dimension,
-    prefill_p_interest: Dimension,
-    /// Defaults to multi-use.
+    /// One applicant slot when true; many applicants otherwise. Defaults
+    /// to single-use.
     single_use: Option<bool>,
 }
 
@@ -1355,45 +1345,6 @@ impl Mutation {
             Err(OnboardingError::Forbidden) => Err(forbidden()),
             Err(e) => Ok(AttachActorKeyPayload {
                 user: None,
-                user_errors: vec![UserError::from_onboarding(&e, "")],
-            }),
-        }
-    }
-
-    /// Re-arms an expired, never-approved application with a fresh
-    /// invite link — a new application row for the viewer's account. A
-    /// re-arm is an application submit, so it spends the same budgets
-    /// `register` does (auth.md "Rate limiting").
-    async fn apply_with_invite(
-        &self,
-        ctx: &Context<'_>,
-        input: ApplyWithInviteInput,
-    ) -> async_graphql::Result<ApplyWithInvitePayload> {
-        let v = viewer(ctx)?;
-        let pool = ctx.data::<PgPool>()?;
-        let limits = ctx.data::<RateLimitConfig>()?;
-        guard_window(
-            ctx,
-            scope::REGISTER_IP,
-            &request_ip(ctx)?,
-            limits.register_ip,
-        )
-        .await?;
-        guard_window(
-            ctx,
-            scope::REGISTER_LINK,
-            &input.invite_link.to_string(),
-            limits.register_link,
-        )
-        .await?;
-        match onboarding::apply_with_invite(pool, v.user_id, input.invite_link).await {
-            Ok(application) => Ok(ApplyWithInvitePayload {
-                application: Some(Application(application)),
-                user_errors: vec![],
-            }),
-            Err(OnboardingError::Forbidden) => Err(forbidden()),
-            Err(e) => Ok(ApplyWithInvitePayload {
-                application: None,
                 user_errors: vec![UserError::from_onboarding(&e, "")],
             }),
         }
@@ -2045,9 +1996,8 @@ impl Mutation {
     }
 
     /// Issues an invite link — pure service-side staging UX; its id is
-    /// the shareable capability. Nothing binds at issue: the stance
-    /// values are pre-filled suggestions, and the approval is the priced
-    /// act.
+    /// the shareable capability. Nothing binds at issue and the link
+    /// carries no stance values: the approval is the priced act.
     async fn create_invite_link(
         &self,
         ctx: &Context<'_>,
@@ -2069,9 +2019,7 @@ impl Mutation {
             pool,
             Uuid::new_v4(),
             v.user_id,
-            input.prefill_p_directed.0,
-            input.prefill_p_interest.0,
-            input.single_use.unwrap_or(false),
+            input.single_use.unwrap_or(true),
             input.expires_at,
         )
         .await?;

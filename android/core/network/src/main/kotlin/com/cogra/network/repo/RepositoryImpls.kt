@@ -46,7 +46,6 @@ import com.cogra.domain.topics.TagClaim
 import com.cogra.network.auth.AuthGuard
 import com.cogra.network.fetch
 import com.cogra.network.graphql.ApplicationStatusQuery
-import com.cogra.network.graphql.ApplyWithInviteMutation
 import com.cogra.network.graphql.ApproveActsMutation
 import com.cogra.network.graphql.ApproveApplicantsMutation
 import com.cogra.network.graphql.AttachActorKeyMutation
@@ -91,7 +90,6 @@ import com.cogra.network.graphql.UploadKeyBackupMutation
 import com.cogra.network.graphql.UserByHandleQuery
 import com.cogra.network.graphql.VerifyEmailMutation
 import com.cogra.network.graphql.type.ApplicationApprovalInput
-import com.cogra.network.graphql.type.ApplyWithInviteInput
 import com.cogra.network.graphql.type.ApprovalSignatureInput
 import com.cogra.network.graphql.type.ApproveActsInput
 import com.cogra.network.graphql.type.ApproveApplicantsInput
@@ -187,14 +185,6 @@ class OnboardingRepositoryImpl @Inject constructor(private val client: ApolloCli
             ),
         ).payloadOutcome({ it.attachActorKey.userErrors.map { e -> e.userErrorFields } }) {
             it.attachActorKey.user?.let { Unit }
-        }
-    }
-
-    override suspend fun applyWithInvite(inviteLink: String): Outcome<Unit> = guard.run {
-        client.mutation(
-            ApplyWithInviteMutation(ApplyWithInviteInput(inviteLink)),
-        ).payloadOutcome({ it.applyWithInvite.userErrors.map { e -> e.userErrorFields } }) {
-            it.applyWithInvite.application?.let { Unit }
         }
     }
 
@@ -444,8 +434,6 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
                 links.map { link ->
                     InviteLinkInfo(
                         id = link.id,
-                        prefillPDirected = link.prefillPDirected,
-                        prefillPInterest = link.prefillPInterest,
                         singleUse = link.singleUse,
                         createdAt = link.createdAt,
                         expiresAt = link.expiresAt,
@@ -461,16 +449,12 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
 
     override suspend fun createInviteLink(
         expiresAt: Instant,
-        prefillPDirected: Double,
-        prefillPInterest: Double,
         singleUse: Boolean,
     ): Outcome<InviteLinkInfo> = guard.run {
         client.mutation(
             CreateInviteLinkMutation(
                 CreateInviteLinkInput(
                     expiresAt = expiresAt,
-                    prefillPDirected = prefillPDirected,
-                    prefillPInterest = prefillPInterest,
                     singleUse = Optional.present(singleUse),
                 ),
             ),
@@ -478,8 +462,6 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
             it.createInviteLink.inviteLink?.let { link ->
                 InviteLinkInfo(
                     id = link.id,
-                    prefillPDirected = link.prefillPDirected,
-                    prefillPInterest = link.prefillPInterest,
                     singleUse = link.singleUse,
                     createdAt = link.createdAt,
                     expiresAt = link.expiresAt,

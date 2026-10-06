@@ -49,8 +49,6 @@ pub mod constraints {
 pub struct InviteLink {
     pub id: Uuid,
     pub inviter_id: Uuid,
-    pub prefill_p_d: f64,
-    pub prefill_p_i: f64,
     pub single_use: bool,
     pub created_at: DateTime<Utc>,
     pub expires_at: DateTime<Utc>,
@@ -106,7 +104,6 @@ pub struct Application {
     pub approved_at: Option<DateTime<Utc>>,
     pub landed_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
 }
 
 /// Why a session was revoked (auth.md "Reuse detection"): only a
@@ -195,8 +192,6 @@ macro_rules! invite_link_from_row {
         InviteLink {
             id: $r.id,
             inviter_id: $r.inviter_id,
-            prefill_p_d: $r.prefill_p_d,
-            prefill_p_i: $r.prefill_p_i,
             single_use: $r.single_use,
             created_at: $r.created_at,
             expires_at: $r.expires_at,
@@ -209,21 +204,15 @@ pub async fn create_invite_link(
     pool: &PgPool,
     id: Uuid,
     inviter_id: Uuid,
-    prefill_p_d: f64,
-    prefill_p_i: f64,
     single_use: bool,
     expires_at: DateTime<Utc>,
 ) -> Result<InviteLink, sqlx::Error> {
     sqlx::query!(
-        "INSERT INTO auth_invite_links
-             (id, inviter_id, prefill_p_d, prefill_p_i, single_use, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id, inviter_id, prefill_p_d, prefill_p_i, single_use,
-                   created_at, expires_at, revoked_at",
+        "INSERT INTO auth_invite_links (id, inviter_id, single_use, expires_at)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, inviter_id, single_use, created_at, expires_at, revoked_at",
         id,
         inviter_id,
-        prefill_p_d,
-        prefill_p_i,
         single_use,
         expires_at,
     )
@@ -234,8 +223,7 @@ pub async fn create_invite_link(
 
 pub async fn invite_link(pool: &PgPool, id: Uuid) -> Result<Option<InviteLink>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,
-                created_at, expires_at, revoked_at
+        "SELECT id, inviter_id, single_use, created_at, expires_at, revoked_at
          FROM auth_invite_links WHERE id = $1",
         id,
     )
@@ -249,8 +237,7 @@ pub async fn invite_links_for(
     inviter_id: Uuid,
 ) -> Result<Vec<InviteLink>, sqlx::Error> {
     Ok(sqlx::query!(
-        "SELECT id, inviter_id, prefill_p_d, prefill_p_i, single_use,
-                created_at, expires_at, revoked_at
+        "SELECT id, inviter_id, single_use, created_at, expires_at, revoked_at
          FROM auth_invite_links WHERE inviter_id = $1
          ORDER BY created_at DESC",
         inviter_id,
@@ -282,8 +269,11 @@ pub async fn revoke_invite_link(
 }
 
 /// Whether the link can stage a new applicant now: live, and — for a
-/// single-use link — its one slot not already held by a live, approved,
-/// or landed application (invitations.md §4 "Link modes").
+/// single-use link — its one slot not already held by an application
+/// through it (invitations.md §4 "Link modes"). Applications carry no
+/// timer, so a waiting one holds the slot exactly as an approved or
+/// landed one does; the reaper deleting a never-verified account is what
+/// frees it (auth.md "Expiry").
 pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT EXISTS(
@@ -294,9 +284,6 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
                  AND (NOT l.single_use OR NOT EXISTS(
                      SELECT 1 FROM auth_applications a
                      WHERE a.invite_link_id = l.id
-                       AND (a.expires_at > NOW()
-                            OR a.approved_at IS NOT NULL
-                            OR a.landed_at IS NOT NULL)
                  ))
            ) AS "usable!""#,
         id,
@@ -332,7 +319,6 @@ pub async fn register_account(
     password_hash: &str,
     verification_token_hash: &[u8],
     dead_before: DateTime<Utc>,
-    application_expires_at: DateTime<Utc>,
 ) -> Result<RegisterOutcome, sqlx::Error> {
     let mut tx = pool.begin().await?;
     let dead: Vec<Uuid> = sqlx::query_scalar!(
@@ -383,12 +369,11 @@ pub async fn register_account(
     .execute(&mut *tx)
     .await?;
     sqlx::query!(
-        "INSERT INTO auth_applications (id, account_id, invite_link_id, expires_at)
-         VALUES ($1, $2, $3, $4)",
+        "INSERT INTO auth_applications (id, account_id, invite_link_id)
+         VALUES ($1, $2, $3)",
         application_id,
         account_id,
         invite_link_id,
-        application_expires_at,
     )
     .execute(&mut *tx)
     .await?;
@@ -449,7 +434,6 @@ macro_rules! application_from_row {
             approved_at: $r.approved_at,
             landed_at: $r.landed_at,
             created_at: $r.created_at,
-            expires_at: $r.expires_at,
         }
     };
 }
@@ -459,7 +443,7 @@ pub async fn application(pool: &PgPool, id: Uuid) -> Result<Option<Application>,
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at, ap.expires_at
+                  ap.approved_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
@@ -481,7 +465,7 @@ pub async fn latest_application_for(
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at, ap.expires_at
+                  ap.approved_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
@@ -503,7 +487,7 @@ pub async fn applications_for_link(
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at, ap.expires_at
+                  ap.approved_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
@@ -516,29 +500,6 @@ pub async fn applications_for_link(
     .into_iter()
     .map(|r| application_from_row!(r))
     .collect())
-}
-
-/// A fresh application row for an account a new invite link re-arms
-/// (auth.md "Expiry"; `applyWithInvite`). Liveness — at most one live
-/// application per account — is checked by the caller, not a constraint.
-pub async fn create_application(
-    pool: &PgPool,
-    id: Uuid,
-    account_id: Uuid,
-    invite_link_id: Uuid,
-    expires_at: DateTime<Utc>,
-) -> Result<(), sqlx::Error> {
-    sqlx::query!(
-        "INSERT INTO auth_applications (id, account_id, invite_link_id, expires_at)
-         VALUES ($1, $2, $3, $4)",
-        id,
-        account_id,
-        invite_link_id,
-        expires_at,
-    )
-    .execute(pool)
-    .await?;
-    Ok(())
 }
 
 /// Marks the email channel proven (auth.md §Application step 4).
@@ -654,9 +615,10 @@ pub async fn attach_actor_key(
 
 /// Marks the inviter's priced approval — the `approved_at IS NULL`
 /// predicate is the concurrency gate against a duplicate approval.
-/// Refused (None) unless the application is live and approvable: email
-/// verified and key attached, both enforced here as well as validated by
-/// the caller (auth.md §Application).
+/// Refused (None) unless the application is still waiting and approvable:
+/// email verified and key attached, both enforced here as well as
+/// validated by the caller (auth.md §Application). No clock gates it — an
+/// application waits on a vouch with no timer (auth.md "Expiry").
 pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
         "UPDATE auth_applications ap
@@ -665,7 +627,6 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
          WHERE ap.id = $1 AND a.id = ap.account_id AND c.actor_id = ap.account_id
            AND ap.approved_at IS NULL
            AND ap.landed_at IS NULL
-           AND ap.expires_at > NOW()
            AND c.email_verified_at IS NOT NULL
            AND a.actor_pubkey IS NOT NULL
          RETURNING ap.account_id",
@@ -730,10 +691,10 @@ pub async fn land_account(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx:
 ///
 /// The newest row is the account's current application, the same rule
 /// [`latest_application_for`] reads `User.application` by, and it answers
-/// both states with one ordering: an applicant has only live or dead
-/// rows, and a landed member's last row is the one they landed through —
-/// `apply_with_invite` refuses an account that is not an applicant, so no
-/// row can be created after the landing.
+/// both states with one ordering: an applicant's newest row is the one it
+/// waits on, and a landed member's last row is the one they landed
+/// through — registration writes an application only for the fresh
+/// account it creates, so no row can be created after the landing.
 pub async fn inviter_of(
     pool: &PgPool,
     account_id: Uuid,

@@ -34,7 +34,6 @@ class StatusBannersTest {
             StatusBanners(
                 state = state,
                 onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
-                onRearmInputChange = {}, onRearm = {},
                 onDismissWaitingHint = {},
                 onPDirectedChange = {}, onPInterestChange = {},
                 onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
@@ -298,25 +297,6 @@ class StatusBannersTest {
     fun landingRendersItsStatusLine() {
         render(applicant(RegistrationProgress.AwaitingLanding))
         compose.onNodeWithTag("home_landing").assertExists()
-    }
-
-    @Test
-    fun aDeadApplicationRendersTheRearmCard() {
-        render(applicant(RegistrationProgress.NeedsInvite))
-        compose.onNodeWithTag("home_rearm").assertExists()
-        compose.onNodeWithTag("rearm_input").assertExists()
-        compose.onNodeWithTag("rearm_submit").assertIsNotEnabled()
-    }
-
-    @Test
-    fun aRearmRefusalRendersItsMessage() {
-        render(
-            applicant(RegistrationProgress.NeedsInvite).copy(
-                rearmInput = "x",
-                rearmError = ErrorCode.INVITE_UNUSABLE,
-            ),
-        )
-        compose.onNodeWithTag("rearm_error").assertExists()
     }
 
     @Test

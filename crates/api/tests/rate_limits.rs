@@ -92,8 +92,6 @@ impl Rig {
             &self.pool,
             Uuid::new_v4(),
             inviter,
-            0.1,
-            0.1,
             false,
             Utc::now() + chrono::Duration::days(1),
         )
@@ -116,9 +114,6 @@ const LOG_IN: &str = "mutation($input: LogInInput!) {
 }";
 const REGISTER: &str = "mutation($input: RegisterInput!) {
     register(input: $input) { auth { accessToken } userErrors { code } }
-}";
-const APPLY: &str = "mutation($input: ApplyWithInviteInput!) {
-    applyWithInvite(input: $input) { application { id } userErrors { code } }
 }";
 const REQUEST_RESET: &str = "mutation($input: RequestPasswordResetInput!) {
     requestPasswordReset(input: $input) { ok }
@@ -412,51 +407,6 @@ async fn register_budgets_per_ip_and_per_link(pool: PgPool) {
     let json = rig.gql("10.1.0.2", REGISTER, register_vars(link, 3)).await;
     assert_eq!(transport_code(&json), None, "{json}");
     let json = rig.gql("10.1.0.2", REGISTER, register_vars(link, 4)).await;
-    assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
-}
-
-/// A re-arm is an application submit, so the same IP budget refuses it
-/// before any flow logic runs.
-///
-/// A re-arm is a registration submit, so it spends the same budget and is refused before any flow logic runs.
-/// ´claim:ratelimit:a-re-arm-spends-the-register-budget´
-#[sqlx::test(migrations = "../../migrations")]
-async fn apply_with_invite_spends_the_register_budget(pool: PgPool) {
-    let mut limits = RateLimitConfig::unlimited();
-    limits.register_ip = Window {
-        limit: 1,
-        window_secs: 3600.0,
-    };
-    let rig = Rig::new(pool, limits);
-    let link = rig.invite_link().await;
-
-    let json = rig.gql("10.1.1.1", REGISTER, register_vars(link, 0)).await;
-    let token = json["data"]["register"]["auth"]["accessToken"]
-        .as_str()
-        .expect("session")
-        .to_string();
-
-    let body = json!({
-        "query": APPLY,
-        "variables": { "input": { "inviteLink": link } },
-    })
-    .to_string();
-    let request = Request::builder()
-        .method("POST")
-        .uri("/graphql")
-        .header("content-type", "application/json")
-        .header("x-real-ip", "10.1.1.1")
-        .header("authorization", format!("Bearer {token}"))
-        .body(Body::from(body))
-        .expect("request");
-    let response = rig.app.clone().oneshot(request).await.expect("response");
-    let bytes = response
-        .into_body()
-        .collect()
-        .await
-        .expect("body")
-        .to_bytes();
-    let json: Value = serde_json::from_slice(&bytes).expect("json");
     assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
 }
 

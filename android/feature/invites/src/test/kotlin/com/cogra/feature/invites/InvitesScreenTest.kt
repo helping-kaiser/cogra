@@ -21,8 +21,6 @@ class InvitesScreenTest {
 
     private fun readyLink() = InviteLinkInfo(
         id = "link-1",
-        prefillPDirected = 0.1,
-        prefillPInterest = 0.1,
         singleUse = false,
         createdAt = Instant.EPOCH,
         expiresAt = Instant.MAX,
@@ -48,8 +46,6 @@ class InvitesScreenTest {
                 state = state,
                 onBack = {},
                 onSingleUseChange = {},
-                onPrefillPDirectedChange = {},
-                onPrefillPInterestChange = {},
                 onCreate = {},
                 onRevoke = {},
                 onApprove = onApprove,

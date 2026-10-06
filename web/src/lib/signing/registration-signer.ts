@@ -1,7 +1,7 @@
 // One pass of the application poll (auth.md "Approval and landing";
 // Android mirror: RegistrationSigner.kt): read the status, flush the
 // parked backup, then branch — member, staged Registration to sign,
-// re-arm needed, landing awaited, or the applicant cards.
+// landing awaited, or the applicant cards.
 
 import type { ApolloClient } from "@apollo/client";
 
@@ -28,8 +28,6 @@ export type RegistrationProgress =
       keyAttached: boolean;
       keyOnDevice: boolean;
     }
-  /** No application, or an expired one — a fresh invite re-arms it. */
-  | { kind: "needsInvite" }
   /** The device refused to sign — no amount of polling repairs it. */
   | { kind: "rejectedByDevice"; reason: string }
   | { kind: "refused"; errors: readonly UserError[] }
@@ -45,11 +43,8 @@ export function createRegistrationSigner(deps: {
   store: IdentityStore;
   ceremony: KeyCeremony;
   writeSigner: WriteSigner;
-  /** Injectable for tests; production uses the wall clock. */
-  now?: () => number;
 }): RegistrationSigner {
   const { client, guard, store, ceremony, writeSigner } = deps;
-  const now = deps.now ?? (() => Date.now());
 
   /** base64 of the account slot's public key half; null when the slot is empty. */
   async function devicePubkey(): Promise<string | null> {
@@ -97,9 +92,11 @@ export function createRegistrationSigner(deps: {
         }
       }
 
-      if (application === null) return { kind: "needsInvite" };
+      // Registration writes the application with the account, and an
+      // application carries no timer (auth.md "Expiry"), so an applicant
+      // without one is a server fault rather than a step the person takes.
+      if (application === null) return { kind: "refused", errors: [] };
       if (application.approvedAt !== null) return { kind: "awaitingLanding" };
-      if (Date.parse(application.expiresAt) < now()) return { kind: "needsInvite" };
 
       const devicePub = await devicePubkey();
       return {

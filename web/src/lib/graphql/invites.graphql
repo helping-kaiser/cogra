@@ -10,8 +10,6 @@ query InviteLinks {
       edges {
         node {
           id
-          prefillPDirected
-          prefillPInterest
           singleUse
           createdAt
           expiresAt

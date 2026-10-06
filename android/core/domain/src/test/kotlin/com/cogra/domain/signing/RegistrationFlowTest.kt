@@ -71,7 +71,6 @@ class RegistrationFlowTest {
         keyAttached = true,
         approvedAt = if (approved) Instant.EPOCH else null,
         landedAt = if (landed) Instant.EPOCH else null,
-        expiresAt = Instant.MAX,
     )
 
     private fun waiting() = ApplicationStatus(AccountState.APPLICANT, application(), null, null)

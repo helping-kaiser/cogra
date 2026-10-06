@@ -62,14 +62,13 @@ type Application {
 	"""
 	landedAt: DateTime
 	createdAt: DateTime!
-	expiresAt: DateTime!
 }
 
 input ApplicationApprovalInput {
 	application: UUID!
 	"""
-	The inviter's stance toward the joiner — pre-filled from the
-	link, committed here.
+	The inviter's stance toward the joiner, chosen here — approval is
+	where the values are picked and where they commit.
 	"""
 	pDirected: Dimension!
 	pInterest: Dimension!
@@ -98,21 +97,6 @@ type ApplicationEdge {
 	A cursor for use in pagination
 	"""
 	cursor: String!
-}
-
-"""
-Re-arm an expired, never-approved application with a fresh invite
-link — a new application row for the viewer's account (auth.md
-"Expiry"). BAD_INPUT while a live application exists;
-INVITE_UNUSABLE for a dead link.
-"""
-input ApplyWithInviteInput {
-	inviteLink: UUID!
-}
-
-type ApplyWithInvitePayload {
-	application: Application
-	userErrors: [UserError!]!
 }
 
 input ApprovalSignatureInput {
@@ -439,12 +423,19 @@ type ConfirmPasswordResetPayload {
 	userErrors: [UserError!]!
 }
 
+"""
+Issue a time-gated invite link. It carries no stance values — the
+inviter picks those at approval, the priced act. expiresAt must lie in
+the future and has no floor: it bounds registration through the link
+and nothing else, so an account registered through it keeps its full
+7-day verification window and its application waits with no timer
+(auth.md "Expiry").
+"""
 input CreateInviteLinkInput {
 	expiresAt: DateTime!
-	prefillPDirected: Dimension!
-	prefillPInterest: Dimension!
 	"""
-	Defaults to multi-use.
+	One applicant slot when true; many applicants otherwise. Defaults
+	to single-use.
 	"""
 	singleUse: Boolean
 }
@@ -640,11 +631,6 @@ type InviteLink {
 	The issuing actor.
 	"""
 	inviter: Actor
-	"""
-	A suggestion, never a commitment.
-	"""
-	prefillPDirected: Dimension!
-	prefillPInterest: Dimension!
 	"""
 	One applicant slot (single-use) or many applicants until expiry
 	(multi-use).
@@ -1046,13 +1032,6 @@ type Mutation {
 	"""
 	attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
 	"""
-	Re-arms an expired, never-approved application with a fresh
-	invite link — a new application row for the viewer's account. A
-	re-arm is an application submit, so it spends the same budgets
-	`register` does (auth.md "Rate limiting").
-	"""
-	applyWithInvite(input: ApplyWithInviteInput!): ApplyWithInvitePayload!
-	"""
 	Always succeeds, to avoid revealing whether an application
 	exists. The per-account resend budget (auth.md "Rate limiting")
 	trips silently for the same reason: a visible refusal would leak
@@ -1180,9 +1159,8 @@ type Mutation {
 	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
 	"""
 	Issues an invite link — pure service-side staging UX; its id is
-	the shareable capability. Nothing binds at issue: the stance
-	values are pre-filled suggestions, and the approval is the priced
-	act.
+	the shareable capability. Nothing binds at issue and the link
+	carries no stance values: the approval is the priced act.
 	"""
 	createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
 	"""
@@ -2401,7 +2379,7 @@ form, before any later step.
 type RegisterPayload {
 	auth: AuthSession
 	"""
-	When the account expires unless its email is verified (24 h,
+	When the account expires unless its email is verified (7 days,
 	auth.md "Expiry").
 	"""
 	expiresAt: DateTime

@@ -59,15 +59,11 @@ function link(overrides: {
   id?: string;
   revokedAt?: string | null;
   singleUse?: boolean;
-  prefillPDirected?: number;
-  prefillPInterest?: number;
   applications?: ApplicationFields[];
 } = {}) {
   return {
     __typename: "InviteLink",
     id: overrides.id ?? "l1",
-    prefillPDirected: overrides.prefillPDirected ?? 0.1,
-    prefillPInterest: overrides.prefillPInterest ?? 0.1,
     singleUse: overrides.singleUse ?? false,
     createdAt: "2026-08-07T00:00:00Z",
     expiresAt: "2026-08-14T00:00:00Z",
@@ -158,7 +154,7 @@ describe("InvitesView", () => {
     expect(screen.getByTestId("invites_back")).toHaveAttribute("href", "/profile");
   });
 
-  it("creates a link and refreshes the list", async () => {
+  it("creates a single-use link by default and refreshes the list", async () => {
     let created = false;
     server.use(
       meHandler("MEMBER"),
@@ -180,10 +176,9 @@ describe("InvitesView", () => {
       ),
       graphql.mutation("CreateInviteLink", ({ variables }) => {
         created = true;
-        const input = (variables as { input: { singleUse: boolean; prefillPDirected: number } })
-          .input;
+        const input = (variables as { input: Record<string, unknown> }).input;
         expect(input.singleUse).toBe(true);
-        expect(input.prefillPDirected).toBe(0.1);
+        expect(input).not.toHaveProperty("prefillPDirected");
         return HttpResponse.json({
           data: {
             createInviteLink: {
@@ -197,7 +192,7 @@ describe("InvitesView", () => {
     );
     renderWithProviders(<InvitesView />, { store: signedInStore(), writeSigner: fakeWriteSigner() });
 
-    fireEvent.click(await screen.findByTestId("invites_single_use"));
+    expect(await screen.findByTestId("invites_single_use")).toBeChecked();
     fireEvent.click(screen.getByTestId("invites_create"));
     expect(await screen.findByTestId("link_l1")).toBeInTheDocument();
   });
@@ -259,12 +254,12 @@ describe("InvitesView", () => {
     expect(screen.queryByTestId("approve_a3")).not.toBeInTheDocument();
   });
 
-  it("approving commits the link's prefill, signs the vouch, and reports it", async () => {
+  it("approving commits the chosen stance, signs the vouch, and reports it", async () => {
     let variables: Record<string, unknown> | null = null;
     server.use(
       meHandler("MEMBER"),
       linksHandler([
-        link({ prefillPDirected: 0.4, prefillPInterest: 0.2, applications: [application()] }),
+        link({ applications: [application()] }),
       ]),
       approveHandler((v) => (variables = v)),
     );
@@ -277,7 +272,7 @@ describe("InvitesView", () => {
       expect.objectContaining({ id: "w1", state: "AWAITING_PRE_SIGN" }),
     );
     expect(variables).toEqual({
-      input: { approvals: [{ application: "a1", pDirected: 0.4, pInterest: 0.2 }] },
+      input: { approvals: [{ application: "a1", pDirected: 0.1, pInterest: 0.1 }] },
     });
   });
 

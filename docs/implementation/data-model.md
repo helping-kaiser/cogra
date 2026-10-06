@@ -1222,8 +1222,7 @@ CREATE INDEX auth_invite_links_inviter_idx
 -- inviter (invitations.md §4) — and the URL carries only the row
 -- id. One row per account, written at registration. It points at a
 -- person rather than a slot, so it stands: no expiry, no use
--- count, no revocation column. What is bounded is the application
--- it stages.
+-- count, no revocation column.
 CREATE TABLE auth_ask_links (
     id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id  UUID         NOT NULL UNIQUE REFERENCES actors(id) ON DELETE CASCADE,
@@ -1251,16 +1250,15 @@ CREATE TABLE auth_ask_links (
 -- took the applicant up from the other end (auth.md "The ask
 -- link"), and approver_id is that member.
 --
--- expires_at bounds the row, never the account: the link's expiry
--- for a link staging, the staging member's chosen window for an
--- ask-link one. A closed, never-approved application — expired, or
--- rejected by the approver (rejected_at) — stops being approvable
--- but deletes nothing: either end of the funnel re-arms the
--- account with a new row (applyWithInvite, stageApplicant,
--- api-spec.md). At most one live application per account is
--- enforced at those mutations, not by constraint — liveness is
--- time-dependent. Never-verified accounts are deleted whole by the
--- reaper, applications included (auth.md "Expiry").
+-- The row carries no timer: an application waits on a vouch until
+-- it is approved or rejected (auth.md "Expiry"), and a link's
+-- expiry bounds only registration through it. A rejected
+-- application (rejected_at) stops being approvable but deletes
+-- nothing; a member taking up the account's ask link stages a new
+-- row (stageApplicant, api-spec.md). At most one live application
+-- per account is enforced at that mutation, not by constraint.
+-- Never-verified accounts are deleted whole by the reaper,
+-- applications included (auth.md "Expiry").
 CREATE TABLE auth_applications (
     id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id      UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
@@ -1280,7 +1278,6 @@ CREATE TABLE auth_applications (
     -- the latch cannot diverge; rebuildable from the mirror.
     reciprocated_at TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at      TIMESTAMPTZ NOT NULL,
     CHECK ((invite_link_id IS NULL) <> (ask_link_id IS NULL))
 );
 CREATE INDEX auth_applications_approver_idx

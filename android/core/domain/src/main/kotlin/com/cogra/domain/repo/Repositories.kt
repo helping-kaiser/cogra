@@ -66,9 +66,6 @@ interface OnboardingRepository {
     /** The key ceremony's server half; replaceable until approval. */
     suspend fun attachActorKey(actorPubkeyBase64: String, realizationAddress: String): Outcome<Unit>
 
-    /** Re-arms an expired, never-approved application with a fresh link. */
-    suspend fun applyWithInvite(inviteLink: String): Outcome<Unit>
-
     /** The me-driven status poll — also the crash-repair hook. */
     suspend fun applicationStatus(): Outcome<ApplicationStatus>
 }
@@ -164,8 +161,6 @@ interface AccountRepository {
 
     suspend fun createInviteLink(
         expiresAt: Instant,
-        prefillPDirected: Double,
-        prefillPInterest: Double,
         singleUse: Boolean,
     ): Outcome<InviteLinkInfo>
 
