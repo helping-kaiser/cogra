@@ -2532,7 +2532,7 @@ and the parts of item 33 that could be settled without drawing a feed).
   they will not open.
 - **The cover is the clip's face wherever the clip isn't running.**
   First paint before autoplay; every still representation (a quoted
-  target, a history row); and any context where autoplay is
+  target); and any context where autoplay is
   suppressed — reduced motion, data saver. In the feed the cover holds
   until playback first starts and **never returns**: a clip that stops
   being the playing one freezes on the frame it reached, because
@@ -2651,7 +2651,7 @@ item 33, jakob's rulings the same day).
   product that draws play, because autoplay is absent by the device's
   own word and a cover with no way to play it is a picture pretending
   to be a clip; the tap plays it there, in the feed. Quoted targets
-  and history rows wear the cover as a thumbnail.
+  wear the cover as a thumbnail.
 - **The viewer is reached by the second tap**: media in a card opens
   the post, media in the post opens the frame — or the transport's own
   fullscreen toggle, which is the same door. It is **the whole surface
@@ -4173,7 +4173,7 @@ Three rulings about the still a clip wears, and the wizard they rewrite
   are always moving, never at rest."*
 - **The coverless clip's face is its first frame**, cropped exactly as the
   clip is. The suppressed-autoplay card wears it under the play disc;
-  quoted targets and history rows take it as their thumbnail. Nothing on a
+  quoted targets take it as their thumbnail. Nothing on a
   reading surface branches on it — `MediaAttachment` is handed a still and
   shows it, and whether that still was chosen or taken was settled while
   the post was written.
