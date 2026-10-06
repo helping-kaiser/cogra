@@ -99,9 +99,10 @@ happen; the confirmation says what happened.**
 | `You can invite once you're in.` | `Feature locked` |
 
 Sentence case everywhere. No title case, no all-caps, no exclamation
-marks outside a genuine welcome (`Approved! Your registration is
-landing`). Em dashes carry asides; `…` marks work in progress (*In-flight
-labels*).
+marks outside a genuine welcome — and the one welcome drawn,
+`ApplicantLanding`'s `Approved — your registration is landing`, carries
+its warmth in an em dash instead. Em dashes carry asides; `…` marks work
+in progress (*In-flight labels*).
 
 ## Emoji
 
@@ -507,11 +508,27 @@ and the way back to it from an edit:
   "thumbnail": the cover is the video's own face, and naming it twice
   would make it a second picture.
 
+**The video-cover round's lines** (backlog item 49; *blessed (jakob
+2026-10-06)*):
+
+- `It plays the moment it is on screen, so it starts on its own first
+  frame.` — the quiet line under the `Cover` row's door where a clip has
+  no cover (`ComposeDetailsVideo`, `EditComposeVideo`,
+  `ReplyVideoFailed`).
+- `This clip gave no frames — choose a picture of your own, or leave it
+  without one.` — the frame strip's caption when the device cut no frames
+  from the clip (`ComposeCoverNoFrames`).
+- `No frame` — the neutral tile's label in that state
+  (`ComposeCoverNoFrames`).
+
 ## The crops' how-to line
 
 The three crops (`ComposeCrop`, `AvatarCrop`, `CoverCrop`) say how the
 picture moves in one quiet line under the zoom: `Drag to move, pinch to
-zoom.` A device with no touch to pinch — a desktop browser — reads
+zoom.` On `ComposeCrop` the line opens with what the crop decides, `One
+shape for the whole post.` — the prefix *blessed (jakob 2026-10-06)*, so
+the post crop's line reads `One shape for the whole post. Drag to move,
+pinch to zoom.`. A device with no touch to pinch — a desktop browser — reads
 `Drag or use the arrow keys to move, the slider to zoom.` in its place,
 naming the two ways the crop offers there (jakob 2026-10-05; *new
 2026-10-05, flagged for blessing*). The arrow keys move the picture 1 %
@@ -734,7 +751,8 @@ entry: `Sign comment` becomes `Signing comment…`, `Sign in` becomes
 `Signing in…`, and `Create account` becomes `Creating account…`. *(All
 of these arrived with the failure pack; blessed, jakob 2026-10-01.)* The
 settings commits' labels are the construction's, confirmed as a set
-(jakob 2026-10-05, blessed): `Revoking…`, `Signing out…`, `Changing
+(jakob 2026-10-05, blessed): `Revoking…` (also `Invites`' `Revoke`,
+jakob 2026-10-06, *Invites*), `Signing out…`, `Changing
 password…`, `Changing handle…`, `Changing email…`, `Confirming the
 code…`, `Creating a new recovery code…`, `Resending the link…`, `Adding
 it to the deletion…`, `Canceling…` — and `Sending the confirmation
@@ -771,19 +789,20 @@ doesn't know which field is wrong.
 - `That doesn't match the code above.` — the key ceremony's confirm
   field, on RecoveryCodeMismatch.
 
-**Copy-only** — named, not yet drawn on a board (no client-side format
-validation exists yet to trigger them):
+**Local format failures** — each answers on the press, under its own
+field:
 
-- `A handle is 3–30 characters: a–z, 0–9, _.` — Join's Handle field,
-  a local format failure; `ChangeHandle`'s New handle answers with it on
-  the press, and its dialog never opens (jakob 2026-10-05).
-- `That doesn't look like an email address.` — Join's Email field, a
-  local format failure; the email change's New email takes it too, and
-  that one is **drawn**: `ChangeEmail`'s `fault` chip at `malformed`
-  (jakob 2026-10-05).
-- `That doesn't look like an invite link.` — the invite field's local
-  format failure, in the email line's shape; it names the link because
-  the field asks for a link. Drawn on `InviteEntryError`.
+- `A handle is 3–30 characters: a–z, 0–9, _.` — Join's Handle field;
+  `ChangeHandle`'s New handle answers with it on the press, and its
+  dialog never opens (jakob 2026-10-05). No board draws it; the `Join`
+  and `ChangeHandle` sidecars carry it.
+- `That doesn't look like an email address.` — Join's Email field; the
+  email change's New email takes it too, **drawn** on `ChangeEmail`'s
+  `fault` chip at `malformed` (jakob 2026-10-05), and `ApplicantEmail`'s
+  sidecar carries it.
+- `That doesn't look like an invite link.` — the invite field's, in the
+  email line's shape; it names the link because the field asks for a
+  link. **Drawn** on `InviteEntryError`.
 
 ## Commits that wait
 
@@ -1873,6 +1892,24 @@ is the contract's default, and the poles say why that is not
 overconfidence: an author is *certain* of a declaration they are making
 about their own post.
 
+**The tag pad's thirteen words** (`TAG_ANCHORS`, readme §11) — each
+anchor's gloss, the words the spoken reading carries with the pair and
+never drawn beside the face. As drawn, *blessed (jakob 2026-10-06)*:
+
+- Certain, from `Barely` to `Entirely`: 🔍 `had to look, but it's in
+  there` · 🔗 `definitely linked` · 🔒 `locked on` · 🎯 `exactly this`.
+- Fairly sure: 💧 `a drop of it, I think` · 🧩 `a piece of the picture`
+  · 🧲 `pulled toward it` · 🗝️ `likely the key to it`.
+- Guessing: ❔ `faint maybe` · 🎲 `could go either way` · 🎣 `fishing
+  for it` · 🔮 `big claim, divined`.
+- The floating thirteenth: 💯 `all of it, full stop`.
+
+The boards speak them in three constructions: `Your pick: had to look, but it's in there. How much it is about
+this +0.10, How sure you are 1.00` on the pad (`TagPad`,
+`TagPadCompose`), `Tagged: definitely linked, +0.40 / 0.90` on the tag
+page's flag (`TagPage`), and the bare `definitely linked, +0.40 / 0.90`
+on a references sheet's row (`RefsSheet`).
+
 **And it says when it costs.** `Signed with the post, as its own
 action.` The sheet stages; the seal signs. A slider that moved a number
 with no word about it would read as free.
@@ -1975,10 +2012,9 @@ section · `Your feed is showing nothing — everything is switched off.`
 `These wait with your application and arrive with you.` ·
 `What you post now arrives with you.`
 
-**Carried over unchanged, and still unblessed** — drawn by the tag
-round, named here so the review pass has them in one place: `Un-tag`,
-the edit body's `Withdrawn: #coastroad`, and the acts card's
-`Tags withdrawn` row label.
+**Carried over unchanged, blessed (jakob 2026-10-06)** — drawn by the
+tag round: `Un-tag`, the edit body's `Withdrawn: #coastroad`, and the
+acts card's `Tags withdrawn` row label.
 
 ## The pads and the edit's withdrawals
 
@@ -2757,6 +2793,12 @@ happened is that a second proof landed, which is nothing a reader can
 picture; what they need is the errand and the name, in that order. The
 profile row's mark speaks as `Invites — someone is waiting`.
 
+**Revoke waits for its answer** (jakob 2026-10-06): the card holds while
+the revoke is in flight and `Revoke` reads `Revoking…` — the settings
+sessions' in-flight word (*In-flight labels*), placed on `Invites`'
+live-link card, *blessed (jakob 2026-10-06)*. A revoke that fails keeps
+the card, with the standard failure answer.
+
 **Two snackbars the list owes, drawn nowhere and named in the graph**:
 `Invite revoked` when a card leaves, and `@imke has to finish
 registering before you can approve` when a not-ready row is pressed —
@@ -3079,6 +3121,7 @@ results would stand — the way, not an apology:
 
 - `Found through people and tags — start with @handle or #tag.`
   **Drawn** on `ExploreUnscoped`, as the results region's empty state.
+  *Blessed (jakob 2026-10-06).*
 
 ## Chats
 
