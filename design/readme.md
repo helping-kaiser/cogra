@@ -87,7 +87,7 @@ What that means for design work:
   as different navigation.
 - **Writes are signed on the device.** A post, a comment, an edit, and a
   stance are each a signed, priced act. The UI's honesty obligations
-  (§9 of `design.md`, §8 below) follow from that.
+  (§§8–9 below) follow from that.
 - **Numbers are in scope.** Ranking is not a black box, so a surface may
   show what something scored — provided every number shown is
   explainable and the detail is layered.
@@ -660,8 +660,8 @@ be filled, and where a picture fails to load it is what shows.
 **Photography exists as mock material** (`assets/photos/`, ten real
 photographs at true ratios — food, people, animals, scenery). It is
 there so media layouts can be judged at real ratios, and it sets the
-register: the everyday-post register, warm and human per §1 of
-`design.md`, not brand stock. No grain filter, no duotone, no
+register: the everyday-post register, warm and human, not brand
+stock. No grain filter, no duotone, no
 illustration style. **Still never invent imagery** — a tile with no
 source reserves its space and says what belongs there.
 
@@ -791,8 +791,8 @@ which is what makes a guess expensive.
 |---|---|---|
 | `ExplainableNumber` | the shape §7 requires of every figure: a quiet inline value and one tap to its explanation, and nothing more — there is no expand-in-place variant, because the product's one figure is the score every ranked card wears (the Feed score, on a post, a comment, a person and a tag alike) and its explanation is four screens deep | — |
 
-The **five-slot bottom bar** is not in this group: `design.md` §6 already
-fixes the slots and their order, so `BottomNav` simply accepts
+The **five-slot bottom bar** is not in this group: the five slots and
+their order are fixed law here, so `BottomNav` simply accepts
 `slots={ALL_SLOTS}` and every new layout should be checked against it.
 A design that has only ever seen three slots is a design that breaks when
 the bar grows.
@@ -810,7 +810,7 @@ neighbours do. It takes Material's `search`.
 
 ### Specified in the source but not built here
 
-Called for by `design.md` §6/§9 and absent from the current product
+Called for by the source design system and absent from the current product
 code, so absent here too. They are the honest gaps, not omissions to
 paper over:
 
@@ -821,7 +821,8 @@ paper over:
 
 ### Intentional additions
 
-- `BottomSheet` (+ `SheetItem`, `SheetTitle`) — `design.md` §6 lists sheets in
+- `BottomSheet` (+ `SheetItem`, `SheetTitle`) — the source design system
+  lists sheets in
   the scaffolding and the product never built one, so the overflow menu, the
   license terms and every filter were each improvising. A sheet is a drawer
   the reader opened and can drop: it comes from the edge it goes back to,
@@ -873,7 +874,7 @@ paper over:
 - **Media avatars** — `MonogramAvatar` and `ActorChip` take a photo at both
   sizes. The monogram stays the designed fallback rather than a gap waiting
   for one, and a broken image falls back to it silently.
-- `EditedMarker` — `design.md` §9 specifies the Edited marker and the
+- `EditedMarker` — §9 specifies the Edited marker and the
   product renders it inline in `post-view.tsx` rather than as a shared
   component. It is lifted into a component here because it is the twin of
   `PendingMarker` and a designer will reach for both together.
