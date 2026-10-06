@@ -388,7 +388,7 @@ came from; it never performs.** **Reduced motion is a house quality
 bar** (jakob, the key-loss round): WCAG places it at AAA, and the house
 holds every surface to it anyway — on both platforms, under the OS's
 own preference, every motion either stops travelling and fading or
-does not run.
+does not run, save the hold's ring (below).
 
 **Every motion in the product is in this table, and nothing else moves**
 (the K13 round; `tokens/motion.css`, `tokens/transitions.css`, the
@@ -417,7 +417,10 @@ stagger — and one transition is on screen at a time. **The handover and
 the squish are the arrival exceptions**, and they are the transition
 itself: the one frame the reader is following carries over while the
 screen around it arrives whole. Under `prefers-reduced-motion` every row
-above still swaps; it just does not travel or fade.
+above still swaps; it just does not travel or fade. **The hold's ring is
+the one exception**: it still fills, because it is a reading of the
+time left rather than a movement (blessed as drawn, jakob 2026-10-05;
+`StanceControl`).
 
 **Android's predictive back follows the finger** (targetSdk 36): the
 back gesture drives the back motion by its progress — the same geometry
@@ -6594,7 +6597,7 @@ on the Chats page. The masters grew in the tree's prelude —
   (`secondary-container`): the bar's compose action keeps the one loud
   surface, and opening a picker commits nothing.
 - **The list collapses; the thread pins (jakob).** The chats list is a
-  surface a reader dwells in, so it moves to §2's Collapses column and
+  surface a reader dwells in, so it moves to §4's Collapses column and
   takes `CollapsingTop`; a chat's thread keeps its pin.
 - **Previews decrypt wherever the reader holds the key (jakob).** Push
   already shows the words, so hiding them on the list is annoyance
