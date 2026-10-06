@@ -1374,10 +1374,20 @@ CREATE TABLE auth_email_changes (
 );
 
 -- Account deletions: the grace-period state per
--- erasure.md §5 — requested, cancellable from any
--- logged-in session until scheduled_for, executed by the worker
--- after it. include_content records the content-level opt-in
--- (settable at request or confirmation).
+-- erasure.md §5 — requested, then confirmed by opening the mailed
+-- link, cancellable from any logged-in session until the deadline,
+-- executed by the worker after it. A requested-not-confirmed row
+-- has no deadline: the table carries a confirmed state distinct
+-- from requested, and the deadline exists only in it. A second
+-- request supersedes the first (at most one standing request per
+-- user). An unopened link expires 7 days after the request (the
+-- token-expiry mark, as auth_email_changes carries); a confirmed
+-- row's token stays valid through the grace for re-opening.
+-- include_content records the content-level opt-in (settable at
+-- request, confirmation, or a re-open inside the grace; never
+-- cleared). The columns below are the foundation shape, which does
+-- not yet represent the confirmed state, the supersede, or the link
+-- expiry; the erasure slice reshapes them.
 CREATE TABLE auth_account_deletions (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id             UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
