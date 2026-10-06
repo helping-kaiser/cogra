@@ -25,12 +25,13 @@
    Its words are new and blessed (jakob 2026-10-05; copy-voice, *Saved,
    History and hiding*).
 
-   REGISTERED under the `history` prefix (design ⇄ impl seam 062/063), the
-   header and the bar named as `History` names them. THE FIELD, THE TRIGGER
-   AND THE EMPTY STATE ARE NOT NAMED YET: the `cause` chip draws each of them
-   twice, one shown at a time, and one path cannot stand on two elements of
-   one board — how a chip-drawn state names its copies is a convention still
-   to rule. Naming them then is pure addition. */
+   REGISTERED under the `history` prefix (design ⇄ impl seam 062/063), every
+   node named as `History` names it — the header, `searchField`,
+   `filterTrigger`, the bar — and the empty state `empty`, as `HistoryEmpty`
+   names it. The `cause` chip draws the field, the trigger and the empty
+   state twice, one shown at a time: each copy keeps the one path and takes
+   the chip's value as its key, `search` or `kinds` (jakob 2026-10-06, seam
+   069 — a chip-drawn state duplicate; `_build/node-paths.mjs`). */
 export const NODE = "history";
 export const PROPS = { cause: { editor: "enum", options: ["search", "kinds"], default: "search" } };
 export const VALS = `searchShown: this.props.cause === "kinds" ? "none" : "block", kindsShown: this.props.cause === "kinds" ? "block" : "none"`;
@@ -39,11 +40,11 @@ export function Screen() {
   return (
     <>
       <PageHeader title="History" backHref="#" backLabel="Back to your profile" node="header" />
-      <div style={{ display: "{{searchShown}}" }}>
+      <div style={{ display: "{{searchShown}}" }} data-node-chip="cause" data-node-key="search">
         <div style={{ flex: "none" }}>
-          <SearchBar query="brackish cartography" ariaLabel="Search your history" />
+          <SearchBar query="brackish cartography" ariaLabel="Search your history" node="searchField" />
           <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
-            <FilterTrigger reading="Everything" ariaLabel="What your history shows" />
+            <FilterTrigger reading="Everything" ariaLabel="What your history shows" node="filterTrigger" />
           </div>
         </div>
         <div style={{ padding: "8px 24px" }}>
@@ -51,18 +52,19 @@ export function Screen() {
             title="Nothing you've seen carries that name. Search reads names and titles, never bodies — fewer words reach further."
             actionLabel="Show everything"
             onAction={() => {}}
+            node="empty"
           />
         </div>
       </div>
-      <div style={{ display: "{{kindsShown}}" }}>
+      <div style={{ display: "{{kindsShown}}" }} data-node-chip="cause" data-node-key="kinds">
         <div style={{ flex: "none" }}>
-          <SearchBar placeholder="Search your history" ariaLabel="Search your history" />
+          <SearchBar placeholder="Search your history" ariaLabel="Search your history" node="searchField" />
           <div style={{ display: "flex", alignItems: "center", padding: "0 16px 8px 16px" }}>
-            <FilterTrigger reading="Tags" ariaLabel="What your history shows" />
+            <FilterTrigger reading="Tags" ariaLabel="What your history shows" node="filterTrigger" />
           </div>
         </div>
         <div style={{ padding: "8px 24px" }}>
-          <EmptyState title="Nothing you've seen is of that kind." actionLabel="Show everything" onAction={() => {}} />
+          <EmptyState title="Nothing you've seen is of that kind." actionLabel="Show everything" onAction={() => {}} node="empty" />
         </div>
       </div>
       <div style={{ flex: 1 }} />
