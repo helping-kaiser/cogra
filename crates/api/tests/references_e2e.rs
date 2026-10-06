@@ -12,6 +12,8 @@ use axum::http::Request;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::client::ActorKey;
+use common::l1::handshake::Proposal;
+use common::l1::identifier::ActId;
 use common::l1::wire;
 use http_body_util::BodyExt;
 use l1_standin::{StandIn, StandInConfig};
@@ -311,6 +313,48 @@ impl Citer {
         data["post"]["references"].clone()
     }
 
+    /// A post stopped at its pre-commitment: pending content, readable to
+    /// everyone, whose minting act has not landed. Returns the post's id
+    /// and that act, plus the signed write so a test can land it later.
+    async fn pending_post(
+        &self,
+        token: &str,
+        key: &ActorKey,
+        title: &str,
+    ) -> (String, ActId, Vec<SignedWrite>) {
+        let prepared = self.prepare_post_citing(token, title, json!([])).await;
+        let writes = &prepared["preparePost"]["writes"];
+        let mint = proposals(writes)[0].body.act_id();
+        let signed = self.pre_sign(token, key, writes).await;
+        let node = prepared["preparePost"]["node"]
+            .as_str()
+            .expect("node")
+            .to_string();
+        (node, mint, signed)
+    }
+
+    async fn staged_state(&self, token: &str, id: &str) -> Value {
+        self.gql(
+            Some(token),
+            r#"query($id: UUID!) { stagedWrite(id: $id) { state } }"#,
+            json!({ "id": id }),
+        )
+        .await["stagedWrite"]["state"]
+            .clone()
+    }
+
+    async fn landed_references_of_post(&self, token: &str, post: &str) -> Value {
+        self.gql(
+            Some(token),
+            r#"query($id: UUID!) {
+                 post(id: $id) { references(includePending: false) { targetId } }
+               }"#,
+            json!({ "id": post }),
+        )
+        .await["post"]["references"]
+            .clone()
+    }
+
     /// How many staged writes this author has in flight — the assertion
     /// behind "a refused batch leaves nothing behind".
     async fn writes_in_flight(&self, actor: Uuid) -> i64 {
@@ -327,6 +371,23 @@ fn refusals(payload: &Value, mutation: &str) -> Vec<Value> {
         .as_array()
         .expect("userErrors array")
         .clone()
+}
+
+/// The proposals a prepare handed back, decoded as the device decodes
+/// them before signing — what the deps assertions read.
+fn proposals(writes: &Value) -> Vec<Proposal> {
+    writes
+        .as_array()
+        .expect("writes array")
+        .iter()
+        .map(|w| {
+            wire::decode_proposal(
+                &B64.decode(w["canonicalProposal"].as_str().expect("proposal"))
+                    .expect("b64"),
+            )
+            .expect("decodes")
+        })
+        .collect()
 }
 
 fn families(payload: &Value, mutation: &str) -> Vec<String> {
@@ -1375,4 +1436,236 @@ async fn the_finder_resolves_for_an_anonymous_viewer_too(pool: PgPool) {
         .gql(None, REFERENCE_CANDIDATES, json!({ "query": "alice" }))
         .await;
     assert_eq!(found["referenceCandidates"][0]["targetId"], json!(alice));
+}
+
+/// Seam 045.2: citing someone else's still-pending post is design-intended,
+/// and the citation must not be ordered ahead of what it cites. The
+/// creation batch keeps its own-mint dependency and adds the target's
+/// minting act beside it.
+///
+/// (´claim:references:a-pending-target-is-a-dependency´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn citing_another_authors_pending_post_declares_its_mint_as_a_dependency(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    rig.member("alice", "alice@example.test").await;
+    let alice = rig.log_in("alice@example.test").await;
+    let (_, bob_key) = rig.member("bob", "bob@example.test").await;
+    let bob = rig.log_in("bob@example.test").await;
+    let (cited, bobs_mint, _) = rig.pending_post(&bob, &bob_key, "still settling").await;
+
+    let prepared = rig
+        .prepare_post_citing(&alice, "citing", json!([{ "target": cited }]))
+        .await;
+    assert_eq!(refusals(&prepared, "preparePost"), Vec::<Value>::new());
+
+    let batch = proposals(&prepared["preparePost"]["writes"]);
+    let own_mint = batch[0].body.act_id();
+    assert_eq!(
+        batch[1].deps,
+        vec![own_mint, bobs_mint],
+        "the citation waits for the artifact it cites from and for its target"
+    );
+}
+
+/// D17's own case — citing one's own in-flight post from content that has
+/// already landed — which no staging path declared before.
+///
+/// (´claim:references:a-pending-target-is-a-dependency´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn citing_my_own_pending_post_declares_its_mint_as_a_dependency(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let (cited, mint, _) = rig.pending_post(&token, &key, "still settling").await;
+
+    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    assert_eq!(refusals(&prepared, "prepareReference"), Vec::<Value>::new());
+    assert_eq!(
+        proposals(&prepared["prepareReference"]["writes"])[0].deps,
+        vec![mint]
+    );
+}
+
+/// The standalone citation's other endpoint: hung off a citing artifact
+/// that is itself still pending, it waits for that artifact's mint.
+///
+/// (´claim:references:a-pending-target-is-a-dependency´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_citation_hung_off_a_pending_artifact_declares_its_mint(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let (carrier, carrier_mint, _) = rig.pending_post(&token, &key, "carrier").await;
+
+    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    assert_eq!(refusals(&prepared, "prepareReference"), Vec::<Value>::new());
+    assert_eq!(
+        proposals(&prepared["prepareReference"]["writes"])[0].deps,
+        vec![carrier_mint]
+    );
+}
+
+/// Between two landed endpoints there is nothing to wait for, and nothing
+/// is declared — a dependency on a landed act orders nothing and still
+/// spends the act's dependency budget.
+///
+/// (´claim:references:a-pending-target-is-a-dependency´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_citation_between_landed_nodes_declares_nothing(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+
+    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    assert!(
+        proposals(&prepared["prepareReference"]["writes"])[0]
+            .deps
+            .is_empty()
+    );
+}
+
+/// A target that never lands takes the citation with it: the citation is
+/// signed and approved, yet no epoch orders it, and the sweep that
+/// collects the target collects it too — the staged write the seal reads
+/// as did-not-land (`STAGED_WRITE_EXPIRED` on the client's handshake).
+///
+/// A citation whose target never lands is never ordered, and expires with it.
+/// ´claim:references:a-citation-expires-with-its-target´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_citation_whose_target_never_lands_expires(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let (_, bob_key) = rig.member("bob", "bob@example.test").await;
+    let bob = rig.log_in("bob@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let (cited, _, _) = rig.pending_post(&bob, &bob_key, "never lands").await;
+
+    let prepared = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let writes = &prepared["prepareReference"]["writes"];
+    let citation = writes[0]["id"].as_str().expect("id").to_string();
+    rig.land(&token, &key, writes).await;
+
+    assert_eq!(
+        rig.landed_references_of_post(&token, &carrier).await,
+        json!([]),
+        "no epoch orders a citation ahead of its target"
+    );
+    assert_ne!(rig.staged_state(&token, &citation).await, json!("LANDED"));
+
+    postgres_store::staged::expire_due(&rig.pool, 1_000, GC)
+        .await
+        .expect("expires");
+    assert_eq!(rig.staged_state(&token, &citation).await, json!("EXPIRED"));
+}
+
+/// The withdrawal's counter-records carry the same dependency the records
+/// they net carried: free of it, they could land while what they net
+/// expires, leaving a refutation nobody authored.
+///
+/// (´claim:references:a-pending-target-is-a-dependency´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_withdrawal_toward_a_pending_target_declares_its_mint(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let (cited, mint, _) = rig.pending_post(&token, &key, "still settling").await;
+    let citation = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    rig.pre_sign(&token, &key, &citation["prepareReference"]["writes"])
+        .await;
+
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": cited }}),
+        )
+        .await;
+    assert_eq!(
+        refusals(&withdrawal, "prepareReferenceWithdrawal"),
+        Vec::<Value>::new()
+    );
+    let counters = proposals(&withdrawal["prepareReferenceWithdrawal"]["writes"]);
+    assert!(!counters.is_empty());
+    for counter in counters {
+        assert_eq!(counter.deps, vec![mint.clone()]);
+    }
+}
+
+/// Seam 046.10: the count a client showed can differ from the batch
+/// prepared, because the bundle may move in between — here, another
+/// device's citation staging after the read. The prepared batch nets the
+/// bundle as it stands at prepare, and that is the truth.
+///
+/// A withdrawal prepares the batch that nets the bundle as it stands at prepare, not the count read earlier.
+/// ´claim:references:the-prepared-withdrawal-is-the-truth´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_withdrawal_prepared_after_the_bundle_moved_stages_the_current_count(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let strong = json!({ "relevance": 0.8, "support": 0.4 });
+    rig.land_citation(&token, &key, &carrier, &cited, strong.clone())
+        .await;
+
+    let shown = rig
+        .gql(
+            Some(&token),
+            r#"query($id: UUID!) { post(id: $id) { references { withdrawalCost } } }"#,
+            json!({ "id": carrier }),
+        )
+        .await;
+    assert_eq!(shown["post"]["references"][0]["withdrawalCost"], json!(1));
+
+    let elsewhere = rig.cite_from(&token, &carrier, &cited, strong).await;
+    rig.pre_sign(&token, &key, &elsewhere["prepareReference"]["writes"])
+        .await;
+
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": cited }}),
+        )
+        .await;
+    assert_eq!(
+        families(&withdrawal, "prepareReferenceWithdrawal").len(),
+        2,
+        "⌈1.6⌉ counter-records, not the one shown before the bundle moved"
+    );
+}
+
+/// The other drift: the bundle netted to `(0, 0)` meanwhile — here, a
+/// first withdrawal already signed — and the second refuses at `target`.
+///
+/// (´claim:references:the-prepared-withdrawal-is-the-truth´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_withdrawal_of_an_already_netted_bundle_refuses_at_target(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    rig.land_citation(&token, &key, &carrier, &cited, json!({}))
+        .await;
+
+    let input = json!({ "input": { "artifact": carrier, "target": cited }});
+    let first = rig
+        .gql(Some(&token), WITHDRAW_REFERENCE, input.clone())
+        .await;
+    rig.pre_sign(&token, &key, &first["prepareReferenceWithdrawal"]["writes"])
+        .await;
+
+    let second = rig.gql(Some(&token), WITHDRAW_REFERENCE, input).await;
+    let errors = refusals(&second, "prepareReferenceWithdrawal");
+    assert_eq!(errors.len(), 1, "{second}");
+    assert_eq!(errors[0]["code"], json!("BAD_INPUT"));
+    assert_eq!(errors[0]["field"], json!(["target"]));
 }
