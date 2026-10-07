@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, actor_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at\n         FROM staged_writes WHERE id = $1",
+  "query": "SELECT id, actor_id, author, seq, family, middle,\n                target, p_d, p_i, settlement_ref, license, asserted_parents,\n                deps, payload, state, author_pubkey, nonce, pre_signature,\n                content_salt, deps_salt, content_commitment, deps_commitment,\n                host_seal, prepared_epoch, node_id, pre_signed_at, carried\n         FROM staged_writes WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -132,6 +132,11 @@
         "ordinal": 25,
         "name": "pre_signed_at",
         "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 26,
+        "name": "carried",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -165,8 +170,9 @@
       true,
       false,
       true,
-      true
+      true,
+      false
     ]
   },
-  "hash": "1083d99753238e52cbbb78655f53069d8c0b93340054860398ce24262b25b193"
+  "hash": "cfa788ee13bba2b5a0efbaa5cbd815816da876496cb103fb93e3494dc9f5f571"
 }
