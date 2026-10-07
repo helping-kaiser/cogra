@@ -17,6 +17,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { useCoversSurface } from "./covering-layer";
 import { PillButton } from "./pill-button";
 
 export function RemoveConfirm({
@@ -31,6 +32,8 @@ export function RemoveConfirm({
   testId?: string;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
+  // A dialog over a surface suspends its stage (Feed.md:31, `covering-layer.tsx`).
+  useCoversSurface(open, "suspend");
 
   useEffect(() => {
     const dialog = ref.current;

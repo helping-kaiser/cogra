@@ -10,7 +10,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { intersect, observedThresholds } from "@/test/media-env";
+import { intersect, liveObserverCount, observedThresholds } from "@/test/media-env";
 import { VeilContext } from "./body-veil";
 import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
@@ -82,6 +82,45 @@ describe("autoplay", () => {
 
   it("never carries the native transport — every card wears the sound disc instead", () => {
     expect(player()).not.toHaveAttribute("controls");
+  });
+
+  it("does not start on its own where the reader asks for reduced motion", () => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: (query: string) => ({ matches: query === "(prefers-reduced-motion: reduce)" }),
+    });
+    try {
+      const video = player();
+      act(() => intersect(true));
+      expect(video.paused).toBe(true);
+      // The sound disc is still drawn — the clip is there, it only waits.
+      expect(screen.getByTestId("video-player-sound")).toBeInTheDocument();
+    } finally {
+      delete (window as unknown as Record<string, unknown>).matchMedia;
+    }
+  });
+});
+
+// N2 (the stage-law packet §2.10; RULINGS night 2d): mute and unmute stay
+// reachable by assistive technology on the playing clip. On the web that is
+// the disc itself — a native button naming what a press does, with nothing
+// over the frame hiding it from the accessibility tree.
+describe("the sound disc's accessibility (N2)", () => {
+  it("is a focusable native button whose name says what the press does", () => {
+    player();
+    const disc = screen.getByRole("button", { name: "Turn sound on" });
+    expect(disc.tagName).toBe("BUTTON");
+    expect(disc).toHaveAttribute("type", "button");
+    disc.focus();
+    expect(disc).toHaveFocus();
+  });
+
+  it("sits in no subtree hidden from assistive technology", () => {
+    player();
+    const disc = screen.getByTestId("video-player-sound");
+    expect(disc.closest("[aria-hidden='true']")).toBeNull();
+    expect(disc.closest("[inert]")).toBeNull();
   });
 });
 
@@ -165,6 +204,19 @@ describe("one clip at a time (FE-28)", () => {
 
     expect(second.paused).toBe(false);
     expect(first.paused).toBe(true);
+  });
+});
+
+// TEARDOWN HYGIENE (the stage-law packet's §6 row; seam 024's teardown-race
+// class): a player that leaves takes its observer with it, so nothing keeps
+// answering for a clip that is gone.
+describe("teardown hygiene", () => {
+  it("disconnects its observer when it unmounts", () => {
+    const before = liveObserverCount();
+    const { unmount } = render(<VideoPlayer src={CLIP} />);
+    expect(liveObserverCount()).toBe(before + 1);
+    unmount();
+    expect(liveObserverCount()).toBe(before);
   });
 });
 

@@ -24,6 +24,9 @@ import {
 
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
+import { ScrollHostProvider } from "@/lib/ui/scroll-host";
+
+import { CoveringLayerProvider, useCoversSurface } from "./covering-layer";
 
 /**
  * THE SLIVER A SHEET AT ITS CEILING LEAVES BEHIND (`_shared.jsx:1249` —
@@ -144,6 +147,13 @@ export function BottomSheet({
   stacked?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
+  // A SHEET OVER A SURFACE SUSPENDS THAT SURFACE'S STAGE (design/readme.md
+  // §13; Feed.md:31). It covers from the moment it is raised to the moment
+  // the reader drops it — the exit animation below is the drop already under
+  // way — and what it draws stands on it, so a surface inside the sheet (the
+  // comment thread) is a stage of its own that only a layer raised over the
+  // sheet can cover (`covering-layer.tsx`).
+  const layer = useCoversSurface(open, "suspend");
   // A DISMISSAL EXITS THE EDGE IT ENTERED FROM (design/tokens/transitions.css).
   // `close()` drops the element out of the top layer at once, so the sheet is
   // held open for the length of its exit animation and closed after.
@@ -281,7 +291,13 @@ export function BottomSheet({
           // scroll stays as the fallback for content that cannot shrink.
           className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
         >
-          {children}
+          {/* What the sheet holds stands ON the sheet: a stage inside it is
+              covered only by a layer raised over the sheet, and its scroller
+              is this body — not the page under the sheet, which never scrolls
+              while the sheet is up (`scroll-host.tsx`). */}
+          <CoveringLayerProvider layer={layer}>
+            <ScrollHostProvider value={body}>{children}</ScrollHostProvider>
+          </CoveringLayerProvider>
         </div>
         {foot !== undefined && <div className="flex-none pb-8">{foot}</div>}
       </div>

@@ -21,6 +21,7 @@ import type { StanceInputMode } from "@/lib/stance/input-mode";
 import { buttonClassName } from "@/lib/ui/button";
 import { STANCE_AXES, type StanceAxes } from "@/lib/ui/stance-format";
 import { StanceSlider } from "@/lib/ui/stance-slider";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 function DirectEntry({
   label,
@@ -103,6 +104,12 @@ export function StanceAlternates({
   landing?: React.ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // THE PAD IN ITS ALTERNATE FORM, so it announces itself as the pad does — a
+  // PAUSE, not a suspension (Feed.md:39/41; `covering-layer.tsx`). "Choosing
+  // one replaces the pad everywhere" (the header above, §8.6): for a reader
+  // whose input is an alternate, this dialog is the opinion pad. Mounted only
+  // while open, so it covers for as long as it is mounted.
+  useCoversSurface(true, "pause");
   useEffect(() => {
     const dialog = ref.current;
     if (dialog !== null && !dialog.open) dialog.showModal();

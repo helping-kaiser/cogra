@@ -23,6 +23,7 @@ import { fetchReferenceCandidates } from "@/lib/api/references-api";
 import type { ReferenceDraft } from "@/lib/references/draft";
 import { isQueryable, targetKindWord } from "@/lib/references/normalize";
 import { buttonClassName } from "@/lib/ui/button";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 /** How long the finder waits for typing to settle before it asks. */
 export const FINDER_DEBOUNCE_MS = 250;
@@ -59,6 +60,9 @@ export function ReferenceFinder({
     candidates: readonly ReferenceDraft[];
     failed: boolean;
   } | null>(null);
+  // Mounted only while open, so it covers for as long as it is mounted: a
+  // dialog over a surface suspends its stage (Feed.md:31, `covering-layer.tsx`).
+  useCoversSurface(true, "suspend");
 
   useEffect(() => {
     const dialog = ref.current;

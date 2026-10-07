@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { galleryOf } from "@/lib/compose/comment-edit";
+import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
 import { CommentEditView } from "./comment-edit-view";
 
 function draw(overrides: Partial<Parameters<typeof CommentEditView>[0]> = {}) {
@@ -230,5 +231,14 @@ describe("CommentEdit", () => {
       fireEvent.click(screen.getByTestId("header-help"));
       expect(props.onHelp).toHaveBeenCalled();
     });
+  });
+});
+
+// A modal dialog over the thread's surface, so it announces itself as one
+// (`covering-layer.tsx`; Feed.md:31) for as long as it is mounted.
+describe("CommentEdit as a covering layer", () => {
+  it("suspends the surface beneath it while it is up", () => {
+    draw();
+    expect(raisedLayersForTests()).toEqual(["suspend"]);
   });
 });

@@ -32,6 +32,7 @@ import {
   standingLine,
   type BundleState,
 } from "@/lib/ui/stance-readout";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 export function SeveranceConfirm({
   pick,
@@ -70,6 +71,9 @@ export function SeveranceConfirm({
   const isTopic = kind === "topic";
   const zero = isTopic ? DISCONNECT_ZERO : SEVERANCE_ZERO;
   const ref = useRef<HTMLDialogElement>(null);
+  // Mounted only while open, so it covers for as long as it is mounted: a
+  // dialog over a surface suspends its stage (Feed.md:31, `covering-layer.tsx`).
+  useCoversSurface(true, "suspend");
   useEffect(() => {
     const dialog = ref.current;
     if (dialog !== null && !dialog.open) dialog.showModal();
