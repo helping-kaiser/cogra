@@ -10,17 +10,22 @@
    THE ROWS ARE `OWN_POST_MENU`, not four written out by hand. The list is the
    same atom `DetailHeader` is handed above, so the sheet a reader sees and the
    menu the header mounts cannot disagree — which is how the other three menu
-   boards have always been drawn. */
+   boards have always been drawn.
+
+   REGISTERED under the `postDetail` prefix (design ⇄ impl seam 086), named as
+   `ReaderPostMenu` is: the detail beneath as `PostDetail` names it, the menu
+   `menuSheet` with one name per row. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
-      <DetailHeader items={OWN_POST_MENU} />
+      <DetailHeader items={OWN_POST_MENU} node="header" />
       <DetailColumn>
-        <PostCard {...SOL_POST} variant="detail" bundle={mkBundle(0.1, 1)} />
+        <PostCard {...SOL_POST} variant="detail" bundle={mkBundle(0.1, 1)} node="card" />
       </DetailColumn>
-      <BottomSheet open ariaLabel="Post actions">
+      <BottomSheet open ariaLabel="Post actions" node="menuSheet">
         {OWN_POST_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

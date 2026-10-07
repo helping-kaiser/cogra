@@ -24,16 +24,23 @@
 
    The menu is `stacked`, so its wash falls between the two layers and its
    surface takes the rung above the thread's. The thread keeps its top edge, its
-   handle and its Comments title in view over the menu. */
+   handle and its Comments title in view over the menu.
+
+   REGISTERED under the `postDetail` prefix (design ⇄ impl seam 086): the thread
+   is the post's detail with its sheet raised, and a menu belongs to the surface
+   that hosts it. The detail beneath is named as `PostDetail` names it, the menu
+   is `menuSheet` with one name per row, as every menu's; the thread's own sheet
+   stays unnamed until a board registers it. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
       <ThreadDetail />
       <CommentsThreadSheet />
 
-      <BottomSheet open stacked ariaLabel="Comment actions">
+      <BottomSheet open stacked ariaLabel="Comment actions" node="menuSheet">
         {COMMENT_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

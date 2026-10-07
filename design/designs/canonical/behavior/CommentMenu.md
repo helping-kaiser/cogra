@@ -2,7 +2,7 @@
 
 ALWAYS the comment's menu opens stacked over the thread, its wash between the two sheets and the thread's top still in view
 
-ALWAYS the comment's menu reads Save or Unsave, then Cite in a new post, then Cited by, then Opinions on this, then License terms
+ALWAYS the comment's menu reads Save or Unsave, then Cite in a new post, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms
 
 ALWAYS the comment's menu carries no Hide row
 
@@ -16,9 +16,9 @@ WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AN
 
 WHEN tap Opinions on this -> the menu closes AND the comment's opinions sheet comes up over the thread
 
-WHEN tap Cited by -> the menu closes AND what cites the comment comes up over the thread
+WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the comment comes up over the thread
 
-ALWAYS Opinions on this and Cited by stand in the comment's menu whatever their counts
+ALWAYS Opinions on this and postDetail.menuSheet.citedBy stand in the comment's menu whatever their counts
 
 WHEN tap License terms -> the menu closes AND the comment's terms come up in a sheet over the thread
 

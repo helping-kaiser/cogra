@@ -119,7 +119,12 @@
    collapse to 0ms (the duration tokens already do this on their own) and the
    screen arrives whole: edge drawn, halo at full radius, words in place. A
    reader who asked for stillness gets the ceremony's content and none of its
-   choreography, and nothing is withheld from them. */
+   choreography, and nothing is withheld from them.
+
+   REGISTERED under its own `vouchedIn` prefix (design ⇄ impl seam 086), named
+   as the other landings name theirs: `title`, `body`, the one way on `onward`;
+   the picture is `sky`, whole — its points, halo and edge stay unnamed. */
+export const NODE = "vouchedIn";
 
 /* The ceremony's sky. `SkyField`'s vocabulary — token colours only, weighted
    discs, hairline edges — at full bleed, with the reader's own point and the
@@ -138,7 +143,7 @@ const YOU_AT = { x: 195, y: 516, r: 8 };
 
 function CeremonySky() {
   return (
-    <div style={{ position: "relative", width: SKY_W, height: SKY_H, flex: "none", margin: "0 auto" }}>
+    <div style={{ position: "relative", width: SKY_W, height: SKY_H, flex: "none", margin: "0 auto" }} data-node="sky">
       <Raw
         style={{ display: "block", lineHeight: 0 }}
         html={`<svg viewBox="0 0 ${SKY_W} ${SKY_H}" width="${SKY_W}" height="${SKY_H}" aria-hidden="true" style="display:block">
@@ -205,6 +210,7 @@ export function Screen() {
             fontWeight: "var(--text-headline-small--font-weight)",
             textAlign: "center",
           }}
+          data-node="title"
         >
           You're part of the sky now.
         </h1>
@@ -218,11 +224,12 @@ export function Screen() {
             color: "var(--text-secondary)",
             textAlign: "center",
           }}
+          data-node="body"
         >
           Your opinion on @mira is signed, and the way is open both ways. The feed you see from here is your own.
         </p>
         <div style={{ marginTop: 32 }}>
-          <Button>Go to your feed</Button>
+          <Button node="onward">Go to your feed</Button>
         </div>
       </div>
     </div>

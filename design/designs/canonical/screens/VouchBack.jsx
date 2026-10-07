@@ -18,16 +18,23 @@
 
    THE CARD WEARS THE OLIVE REGISTER (the olive split: it asks the reader to
    act), drawn once as `VouchBackCard` in `_shared.jsx` and shared with the
-   pad's board. */
+   pad's board.
+
+   REGISTERED under the feed's own prefix (design ⇄ impl seam 086): the shell
+   is the feed, named as `Feed` names it, the band under the CoGra band
+   `borrowedViewBand` as on `ApplicantRejected`; the card is `vouchCard`, its
+   `Got it` `dismiss` and its `Vouch back` `vouch`. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
         <BorrowedViewBand
           handle="mira"
           displayName="Mira Voss"
           avatarSrc="inviter.jpg"
           line="Browsing from @mira's view — your first opinion starts your own."
+          node="borrowedViewBand"
         />
       </CograBand>
       <FeedList>
@@ -35,16 +42,19 @@ export function Screen() {
           body="Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default."
           actions={
             <>
-              <Button variant="text" style={{ color: "var(--on-tertiary-container)" }}>
+              <Button variant="text" style={{ color: "var(--on-tertiary-container)" }} node="dismiss">
                 Got it
               </Button>
-              <Button variant="inverse">Vouch back</Button>
+              <Button variant="inverse" node="vouch">
+                Vouch back
+              </Button>
             </>
           }
+          node="vouchCard"
         />
-        <PostCard {...ADA_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
