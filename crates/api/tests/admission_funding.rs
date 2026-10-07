@@ -750,6 +750,45 @@ async fn the_registration_relay_waits_for_settlement(pool: PgPool) {
     assert_eq!(rig.account_state(applicant.account).await, "member");
 }
 
+/// At the stand-in's default delay the burn settles at the request, and
+/// the approval reads that settlement at once: nothing is held, the
+/// applicant's approval leg relays straight through, and one close lands
+/// the Registration — the dev flow as it was before the burn crossed the
+/// seam.
+///
+/// At the default settlement delay nothing is held, and the Registration lands at the next close.
+/// ´claim:onboarding:at-the-default-delay-the-registration-relays-at-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn at_the_default_delay_the_registration_relays_at_once(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let (mira, _) = rig.inviter("mira").await;
+    let link = rig.link(mira).await;
+    let applicant = rig.applicant(link, "newbie").await;
+    rig.approve_one(mira, rig.registration_path(applicant.account).await)
+        .await;
+    assert!(
+        rig.funding(&applicant.key.address())
+            .await
+            .settled_at
+            .is_some(),
+        "stamped by the approval itself, before any ingestion pass"
+    );
+
+    let registration = rig.the_registration(applicant.account).await;
+    assert_eq!(
+        rig.sign(&applicant.key, registration.id).await,
+        Ok(StagedState::Relaying)
+    );
+    assert!(rig.held_signature(registration.id).await.is_none());
+    rig.standin
+        .close_epoch()
+        .await
+        .expect("closes")
+        .expect("the Registration publishes");
+    rig.ingest().await;
+    assert_eq!(rig.account_state(applicant.account).await, "member");
+}
+
 /// The voucher's Opinion is prepared with the Registration's act id
 /// fixed at prepare, so the voucher signs it at once, burn pending or
 /// not: their approval leg relays without a hold — only the admission

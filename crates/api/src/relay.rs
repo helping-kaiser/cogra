@@ -9,7 +9,6 @@
 //! The relay confers nothing: both signatures cover the act, so nothing
 //! here can alter or author one (architecture.md "The write path").
 
-use common::l1::census::Family;
 use common::l1::crypto::{self, tags};
 use common::l1::handshake::{ApprovalWitness, PreSignedProposal, VerifiedAct};
 use postgres_store::PgPool;
@@ -48,6 +47,10 @@ pub enum RelayError {
     Staged(#[from] staged::StagedError),
     #[error(transparent)]
     Boundary(BoundaryError),
+    /// The admission funding a Registration's relay waits on could not
+    /// be read; the device's retry of the leg runs it again.
+    #[error("admission funding: {0}")]
+    Funding(String),
 }
 
 fn wrong_state(id: Uuid, expected: &str, actual: StagedState) -> RelayError {
@@ -151,7 +154,7 @@ pub async fn submit_approval<B: L1Boundary>(
         StagedState::AwaitingApproval | StagedState::Relaying => {}
         other => return Err(wrong_state(id, "awaiting_approval", other)),
     }
-    if awaits_funding(pool, &write).await? {
+    if waits_for_funding(boundary, pool, &write).await? {
         check_witness(&write, &approval_signature)?;
         staged::hold_approval(pool, id, &approval_signature).await?;
         // The settlement pass may have settled the funding between the
@@ -159,7 +162,7 @@ pub async fn submit_approval<B: L1Boundary>(
         // hold to relay. Re-reading after the hold is stored closes the
         // gap — whichever side sees both facts relays, and relaying twice
         // is idempotent.
-        if !awaits_funding(pool, &write).await? {
+        if !waits_for_funding(boundary, pool, &write).await? {
             relay_held(boundary, pool, id, approval_signature).await?;
         }
         return Ok(());
@@ -178,19 +181,15 @@ pub async fn submit_approval<B: L1Boundary>(
     }
 }
 
-/// Whether this write is an unchained admission Registration whose
-/// address's funding exists and has not settled — the one approval the
-/// relay holds. A Registration with no funding row at all (an address
-/// funded outside the admission flow) has nothing to wait on.
-async fn awaits_funding(pool: &PgPool, write: &staged::StagedWrite) -> Result<bool, RelayError> {
-    let body = &write.proposal.body;
-    if body.family != Family::Registration || !body.asserted_parents.is_empty() {
-        return Ok(false);
-    }
-    let funding = postgres_store::auth::admission_funding(pool, &body.author)
+/// The relay's view of [crate::onboarding::awaits_funding].
+async fn waits_for_funding<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    write: &staged::StagedWrite,
+) -> Result<bool, RelayError> {
+    crate::onboarding::awaits_funding(pool, boundary, write)
         .await
-        .map_err(staged::StagedError::Storage)?;
-    Ok(funding.is_some_and(|f| f.settled_at.is_none()))
+        .map_err(|e| RelayError::Funding(e.to_string()))
 }
 
 /// Verifies a witness the relay is about to hold, exactly as the host

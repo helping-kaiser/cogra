@@ -688,8 +688,10 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         cfg.admission_burn_micro,
     )
     .await?
+        && let Some(ticket) =
+            request_burn(pool, boundary, &address, cfg.admission_burn_micro, key).await?
     {
-        request_burn(pool, boundary, &address, cfg.admission_burn_micro, key).await?;
+        stamp_if_settled(pool, boundary, &address, &ticket).await?;
     }
     let funding = store::admission_funding(pool, &address)
         .await?
@@ -756,6 +758,64 @@ async fn request_burn<B: L1Boundary>(
             store::record_funding_request(pool, address, None).await?;
             Ok(None)
         }
+    }
+}
+
+/// Reads a ticket's settlement once and stamps the funding settled if the
+/// burn is already pinned — so a realization that settles at once (the
+/// stand-in at its default delay) leaves nothing for the relay to hold
+/// and no wait on the next ingestion pass. Anything else is left to the
+/// settlement pass, which owns the failure stamp and its log line; a
+/// failed read here changes nothing.
+async fn stamp_if_settled<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    address: &str,
+    ticket: &BurnTicket,
+) -> Result<bool, OnboardingError> {
+    match boundary.burn_settlement(ticket).await {
+        Ok(BurnSettlement::Settled { .. }) => {
+            store::mark_funding_settled(pool, address).await?;
+            Ok(true)
+        }
+        _ => Ok(false),
+    }
+}
+
+/// Whether a staged write is an unchained admission Registration whose
+/// address's funding exists and has not settled — the one approval leg
+/// the relay holds (`relay::submit_approval`). A Registration with no
+/// funding row (an address funded outside the admission flow) has
+/// nothing to wait on. A row not yet stamped settled is asked of the
+/// realization first, so a burn that settled since the last settlement
+/// pass relays now rather than one pass later; a failed funding waits for
+/// good.
+pub(crate) async fn awaits_funding<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    write: &staged::StagedWrite,
+) -> Result<bool, OnboardingError> {
+    let body = &write.proposal.body;
+    if body.family != Family::Registration || !body.asserted_parents.is_empty() {
+        return Ok(false);
+    }
+    let Some(funding) = store::admission_funding(pool, &body.author).await? else {
+        return Ok(false);
+    };
+    if funding.settled_at.is_some() {
+        return Ok(false);
+    }
+    if funding.failed_at.is_some() {
+        return Ok(true);
+    }
+    match &funding.ticket {
+        Some(ticket) => {
+            Ok(
+                !stamp_if_settled(pool, boundary, &body.author, &BurnTicket(ticket.clone()))
+                    .await?,
+            )
+        }
+        None => Ok(true),
     }
 }
 
