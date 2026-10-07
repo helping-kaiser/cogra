@@ -8294,6 +8294,7 @@ the rest as recommended. Both laws stand in §4.
   | Saved | `Back to Saved` |
   | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
+  | Explore, mid-query (jakob 2026-10-07) | `Back to the search` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
 
@@ -9423,6 +9424,14 @@ wait for jakob's review (copy-voice marks each).
   row bare. Newest is also the order before the ranker exists, so the
   interim reads exactly this; when the split ships is the implementation's
   sequencing.
+- **The Profiles row** (item 23; SG-4). `ExplorePerson`: an unscoped
+  query, `salt`, reaching `Sal Torres` through the handle — the picker's
+  own person row (`ReferencePicker`), avatar, display name over `@handle`,
+  the rank on its edge. It is a board of its own because a scoped query
+  never returns a person (jakob 2026-10-07), so `ExploreSearch`'s `@sol
+  salt` cannot hold one. Another person's row opens their profile under
+  `Back to the search`, now in the profile's noun table; the reader's own
+  opens their own.
 
 ---
 

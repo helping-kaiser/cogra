@@ -1100,6 +1100,15 @@
       "page": "feed"
     },
     {
+      "file": "ExplorePerson.dc.html",
+      "title": "Explore · a person found",
+      "x": 1920,
+      "y": 5736,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Feed.dc.html",
       "title": "Feed · signed in",
       "x": 0,
@@ -1572,7 +1581,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 5140,
+      "h": 5308,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1635,7 +1644,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 7704,
+      "h": 7730,
       "page": "profile",
       "title": "Profile · flow map"
     },

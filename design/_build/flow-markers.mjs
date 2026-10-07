@@ -217,6 +217,15 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: "First try at a rubbing", tag: "button", all: true },
     { n: 5, find: "The wax-stick ones read like weather charts", tag: "button", all: true },
   ],
+  /* The Profiles row (ruling 23): `ExploreSearch`'s numbering, the person's
+     row taking the comment row's 5 — the one row each board has that the
+     other has not. */
+  ExplorePerson: [
+    { n: 11, find: ">saltmaps<", tag: "button" },
+    ...searchShell("salt", 6),
+    { n: 4, find: "Salt maps of the coast road", tag: "button" },
+    { n: 5, find: ">Sal Torres<", tag: "button" },
+  ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
     { n: 2, find: 'role="switch"', tag: "button", all: true },

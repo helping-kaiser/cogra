@@ -16,6 +16,9 @@
       "name": "edit-avatar-standalone",
       "description": "The change badge on your own profile picture goes straight to the crop and its own seal — one signature, the picture alone.",
       "start": { "board": "Profile", "via": 4 },
+      "waypoints": [
+        { "board": "AvatarCrop", "via": 3, "to": "AvatarSeal" }
+      ],
       "end": { "board": "AvatarSeal", "via": 4, "case": "signed — shown everywhere you appear" }
     },
     {
@@ -1342,6 +1345,12 @@
       "description": "Cited by on a post's own view opens what cites it; a citing post's row opens that post's detail.",
       "start": { "board": "PostDetail", "via": 16 },
       "end": { "board": "CitedBy", "via": 1, "to": "PostDetail" }
+    },
+    {
+      "name": "search-and-open-a-person",
+      "description": "A bare word that matches a person's name or handle brings their row among the results; it opens their profile, its arrow reading Back to the search.",
+      "start": { "board": "Explore", "via": 1, "to": "ExplorePerson" },
+      "end": { "board": "ExplorePerson", "via": 5, "to": "ProfileOther" }
     },
     {
       "name": "search-for-a-name-nothing-carries",

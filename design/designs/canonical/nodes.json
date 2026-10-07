@@ -954,6 +954,48 @@
         "explore.searchField.input": []
       }
     },
+    "ExplorePerson": {
+      "prefix": "explore",
+      "keys": {
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+      },
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.result": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.mark": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.name": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.rank": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.sub": [
+          "2"
+        ],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
     "ExploreSearch": {
       "prefix": "explore",
       "keys": {

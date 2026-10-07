@@ -12,6 +12,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -61,7 +62,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 54 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -78,6 +79,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -742,6 +744,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -791,7 +794,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 54 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -808,6 +811,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -868,6 +872,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -917,7 +922,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 54 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -934,6 +939,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -994,6 +1000,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -1043,7 +1050,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 54 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1058,6 +1065,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -3610,6 +3618,20 @@
       ]
     },
     {
+      "name": "search-and-open-a-person",
+      "description": "A bare word that matches a person's name or handle brings their row among the results; it opens their profile, its arrow reading Back to the search.",
+      "status": "resolved",
+      "steps": [
+        "start · Explore · 1 «search field» → ExplorePerson — an unscoped query that reaches a person by name or handle — the Profiles row among the results",
+        "end · ExplorePerson · 5 «profile result row» → ProfileOther — another person — their profile, its back arrow reading Back to the search"
+      ],
+      "boards": [
+        "Explore",
+        "ExplorePerson",
+        "ProfileOther"
+      ]
+    },
+    {
       "name": "search-for-a-name-nothing-carries",
       "description": "A search for a name nothing carries says so where the results would stand; a name something carries brings results again.",
       "status": "resolved",
@@ -4889,12 +4911,14 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "search-and-open-a-person",
         "search-and-open-a-post",
         "search-for-a-name-nothing-carries",
         "search-into-a-thread",
         "walk-your-topics"
       ],
       "endpoint": [
+        "search-and-open-a-person",
         "search-and-open-a-post",
         "search-for-a-name-nothing-carries",
         "search-into-a-thread",
@@ -4914,6 +4938,16 @@
         "publish-a-video",
         "publish-words",
         "search-for-a-name-nothing-carries"
+      ],
+      "endpoint": []
+    },
+    "ExplorePerson": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "search-and-open-a-person"
       ],
       "endpoint": []
     },
@@ -5887,6 +5921,7 @@
         "publish-a-video",
         "publish-words",
         "read-someones-posts",
+        "search-and-open-a-person",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "visit-an-author"
@@ -5898,6 +5933,7 @@
         "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
         "read-someones-posts",
+        "search-and-open-a-person",
         "visit-an-author"
       ]
     },
