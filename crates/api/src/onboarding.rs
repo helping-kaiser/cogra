@@ -618,7 +618,16 @@ async fn approve_one<B: L1Boundary>(
     let Some(account_id) = store::approve_application(pool, application.id).await? else {
         return Err(answered_meanwhile(pool, application.id).await);
     };
-    let vouched = vouch(pool, boundary, cfg, inviter, approval, application.id, account_id).await;
+    let vouched = vouch(
+        pool,
+        boundary,
+        cfg,
+        inviter,
+        approval,
+        application.id,
+        account_id,
+    )
+    .await;
     if vouched.is_err()
         && let Err(e) = store::unmark_unvouched(pool, application.id).await
     {

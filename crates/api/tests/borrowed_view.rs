@@ -177,7 +177,11 @@ async fn land(pool: &PgPool, account: Uuid) {
         .await
         .expect("query")
         .expect("path");
-    assert!(store::land_path_directly(pool, path.id).await.expect("land"));
+    assert!(
+        store::land_path_directly(pool, path.id)
+            .await
+            .expect("land")
+    );
 }
 
 fn viewer(user_id: Uuid) -> Option<Viewer> {

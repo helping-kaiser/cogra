@@ -491,7 +491,9 @@ fn funding_budget(limit: i32) -> SigningBudget {
 /// The decisions queue on the account, not on their paths, so the
 /// account is funded once — one guard row, one burn on the realization —
 /// and one admission Registration is staged, which both vouching Opinions
-/// depend on. Before the account lock, each path's own row lock let both
+/// depend on; each decision records its own vouch. The second path is the
+/// rig's stub for PS-7's `stageApplicant` (module docs): it covers the
+/// decisions and everything after them, not how the path came to exist. Before the account lock, each path's own row lock let both
 /// decisions find no Registration and no burn, and both funded and staged.
 ///
 /// Two paths vouched at once fund the account once and stage one Registration that both vouches depend on.
@@ -524,6 +526,15 @@ async fn two_paths_vouched_at_once_fund_and_stage_once(pool: PgPool) {
     let anchor = registration.proposal.body.act_id();
     assert_eq!(a[0].proposal.deps, vec![anchor.clone()]);
     assert_eq!(b[0].proposal.deps, vec![anchor]);
+    let vouches: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM auth_application_vouches
+         WHERE application_id = ANY($1) AND lapsed_at IS NULL",
+    )
+    .bind(vec![first[0], second[0]])
+    .fetch_one(&rig.pool)
+    .await
+    .expect("count");
+    assert_eq!(vouches, 2, "each decision records its own vouch");
 }
 
 /// With the burn pending on the realization, nothing that reaches the
@@ -772,7 +783,9 @@ async fn at_the_default_delay_the_registration_relays_at_once(pool: PgPool) {
     let vouch = rig
         .approve_one(mira, rig.registration_path(applicant.account).await)
         .await;
-    rig.sign(&mira_key, vouch.id).await.expect("the vouch relays");
+    rig.sign(&mira_key, vouch.id)
+        .await
+        .expect("the vouch relays");
     assert!(
         rig.funding(&applicant.key.address())
             .await
@@ -960,7 +973,8 @@ async fn a_failed_funding_stalls_without_refusing_the_voucher(pool: PgPool) {
             &rig.pool,
             &rig.realization,
             &rig.cfg,
-            application.account_id)
+            application.account_id
+        )
         .await
         .is_err()
     );

@@ -720,13 +720,19 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
         .await
         .expect("query")
         .expect("approvable");
-    store::record_vouch(&rig.pool, application.id, inviter, "act:addr:stub:0:opinion")
-        .await
-        .expect("the vouch the approval would record");
+    store::record_vouch(
+        &rig.pool,
+        application.id,
+        inviter,
+        "act:addr:stub:0:opinion",
+    )
+    .await
+    .expect("the vouch the approval would record");
     let approved = rig.application_of(account).await;
 
-    let stage =
-        || onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id);
+    let stage = || {
+        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id)
+    };
     let (first, second) = tokio::join!(stage(), stage());
     let (first, second) = (first.expect("stages"), second.expect("stages"));
 
@@ -790,14 +796,23 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
         .await
         .expect("query")
         .expect("approvable");
-    store::record_vouch(&rig.pool, application.id, inviter, "act:addr:stub:0:opinion")
-        .await
-        .expect("the vouch the approval would record");
+    store::record_vouch(
+        &rig.pool,
+        application.id,
+        inviter,
+        "act:addr:stub:0:opinion",
+    )
+    .await
+    .expect("the vouch the approval would record");
     let approved = rig.application_of(account).await;
-    let admission =
-        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id)
-            .await
-            .expect("stages");
+    let admission = onboarding::ensure_admission_staged(
+        &rig.pool,
+        &rig.boundary,
+        &rig.cfg,
+        approved.account_id,
+    )
+    .await
+    .expect("stages");
 
     let address = store::actor_identity(&rig.pool, account)
         .await
@@ -832,10 +847,14 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
     .await
     .expect("stages chained");
 
-    let again =
-        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id)
-            .await
-            .expect("finds admission");
+    let again = onboarding::ensure_admission_staged(
+        &rig.pool,
+        &rig.boundary,
+        &rig.cfg,
+        approved.account_id,
+    )
+    .await
+    .expect("finds admission");
     assert_eq!(again.id, admission.id);
     assert_ne!(again.id, chained.id);
     let staged_rows: i64 = sqlx::query_scalar(
