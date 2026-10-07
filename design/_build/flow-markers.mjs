@@ -1166,6 +1166,25 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'opinions on this post</span>', tag: "button" },
     { n: 16, find: '<span>Cited by ', tag: "button" },
   ],
+  // The detail a moment after Hide @ada (ruling 65): `PostDetail`'s numbers,
+  // to the number, on the post the menu's board draws — which carries no
+  // Cited-by line, so 16 stays unused — and the snackbar's Undo as the next
+  // free number.
+  PostDetailHidden: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
+    { n: 6, find: 'aria-label="Give your opinion on this post"', tag: "button" },
+    { n: 6, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 7, find: ">Feed score</span>", tag: "button" },
+    { n: 8, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(10),
+    { n: 15, find: 'opinions on this post</span>', tag: "button" },
+    { n: 17, find: ">Undo</button>", tag: "button" },
+  ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More on this post"', tag: "button" },
@@ -1283,6 +1302,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
     { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
+  ],
+  // The page a moment after Hide @ada (ruling 65): `ProfileOther`'s numbers,
+  // to the number, and the snackbar's Undo as the next free one.
+  ProfileOtherHidden: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
+    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
+    { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
+    { n: 5, find: ">Message</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button" },
+    { n: 6, find: 'aria-label="Comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 7, find: "The long way home — the light does something", tag: "button" },
+    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
+    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    ...nav(8),
+    { n: 13, find: ">Undo</button>", tag: "button" },
   ],
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1453,6 +1490,13 @@ Object.assign(FLOW_MARKERS, {
   SettingsHidden: [
     { n: 1, find: ">Unhide</button>", tag: "button", all: true },
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The same sheet a moment after an unhide (ruling 65): its numbers, and the
+  // snackbar's Undo raised over it as the next free one.
+  SettingsUnhidden: [
+    { n: 1, find: ">Unhide</button>", tag: "button", all: true },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: ">Undo</button>", tag: "button" },
   ],
   // Saved and History: the back arrow, the rows (one control, one number, drawn
   // once per row) and the bar.

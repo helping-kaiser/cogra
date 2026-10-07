@@ -200,7 +200,8 @@ And it checks nodes, against `nodes.json`:
   `FeedCommentShapes`, a comment card's clip; then the Saved and Hide
   packets' boards — `Saved`, `SavedEmpty`, `SavedUndo`, the three
   profiles and their three menus, `FeedHidden`, `ReaderPostMenu`,
-  `Settings` and `SettingsHidden`; then the History and Search packets'
+  `Settings` and `SettingsHidden`, and the hide's three other landings,
+  `PostDetailHidden`, `ProfileOtherHidden` and `SettingsUnhidden`; then the History and Search packets'
   boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone` and
   the `Explore` boards, `ExplorePerson` among them; then the invites and deletion packets' boards —
   `Invites`, `RejectConfirm`, `RejectAllConfirm`, the four `VouchAsk`

@@ -9432,6 +9432,17 @@ wait for jakob's review (copy-voice marks each).
   salt` cannot hold one. Another person's row opens their profile under
   `Back to the search`, now in the profile's noun table; the reader's own
   opens their own.
+- **The hide's three other landings** (item 65; the hidden-actors
+  packet's registration ask). `FeedHidden`'s shape — the surface the tap
+  was made on, unchanged, with the snackbar over it — drawn where the
+  feed's board could not stand in: `PostDetailHidden` (the post being
+  read, `ReaderPostMenu`'s detail case), `ProfileOtherHidden` (the
+  person's profile, `ProfileMenu`'s; a deleted account's page answers in
+  the same shape with its nameless line) and `SettingsUnhidden` (the
+  Hidden accounts sheet a moment after `Unhide`, the row gone and the
+  rows behind it moved up, the snackbar raised above the sheet at the
+  screen's foot). Their snackbars register under each surface's own
+  prefix.
 
 ---
 

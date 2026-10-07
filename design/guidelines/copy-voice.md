@@ -2511,6 +2511,9 @@ they will look for again in settings. The pair on the other side is
 `@ada is hidden — their posts stay out of your feed.` with `Undo`
 beside it. It says what changed and how far it reaches, which is what
 stops a reader wondering whether they have done something to someone.
+It lands wherever the tap was made, in the same words: over the feed
+(`FeedHidden`), over the post being read (`PostDetailHidden`) and over
+the person's profile (`ProfileOtherHidden`).
 A deleted account has no handle to spell, so hiding one answers `This
 account is hidden — its posts stay out of your feed.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
@@ -2555,7 +2558,8 @@ looking.` The footnote carries the whole of what hiding means, which is
 the group anatomy's own rule. With nobody hidden the row reads `None`.
 `Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
 their posts can reach your feed again.` with `Undo` beside it (*new
-2026-10-05, blessed (jakob 2026-10-05)*).
+2026-10-05, blessed (jakob 2026-10-05)*), raised over the sheet while
+others stay hidden (`SettingsUnhidden`).
 
 **The sheet is titled by the row that opened it** — `Hidden accounts` —
 and each row carries `Unhide` and the moment of the hiding in the ages

@@ -1313,6 +1313,15 @@
       "end": { "board": "ReaderPostMenu", "via": 3, "to": "FeedHidden" }
     },
     {
+      "name": "hide-someone-from-their-post",
+      "description": "Hide on the menu of a post being read asks nothing: the post stays where it is, the snackbar offers Undo, and the feed, the next time it is opened, has that person's rows gone.",
+      "start": { "board": "PostDetail", "via": 2 },
+      "waypoints": [
+        { "board": "ReaderPostMenu", "via": 3, "to": "PostDetailHidden" }
+      ],
+      "end": { "board": "PostDetailHidden", "via": 10, "to": "FeedHidden" }
+    },
+    {
       "name": "read-a-posts-license",
       "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
       "start": { "board": "Feed", "via": 3 },
@@ -1405,7 +1414,10 @@
       "name": "hide-someone-from-their-profile",
       "description": "Hide on another's profile menu asks nothing; the page stays open, and the feed, the next time it is opened, has their rows gone and the ones behind them moved up.",
       "start": { "board": "ProfileOther", "via": 2 },
-      "end": { "board": "ProfileMenu", "via": 4, "to": "FeedHidden" }
+      "waypoints": [
+        { "board": "ProfileMenu", "via": 4, "to": "ProfileOtherHidden" }
+      ],
+      "end": { "board": "ProfileOtherHidden", "via": 8, "to": "FeedHidden" }
     },
     {
       "name": "hide-a-deleted-account",

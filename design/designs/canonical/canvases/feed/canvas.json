@@ -271,6 +271,15 @@
       "page": "feed"
     },
     {
+      "file": "PostDetailHidden.dc.html",
+      "title": "Post · its author just hidden",
+      "x": 3840,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "ExplorePerson.dc.html",
       "title": "Explore · a person found",
       "x": 1920,

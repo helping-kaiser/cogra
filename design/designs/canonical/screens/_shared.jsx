@@ -3139,7 +3139,7 @@ function ReportProblemBody({ words }) {
 const SETTINGS_DELETE_FOOTNOTE =
   "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
 
-function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE } = {}) {
+function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPending = false, deleting = false, deleteFootnote = SETTINGS_DELETE_FOOTNOTE, hidden = "3" } = {}) {
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
@@ -3245,7 +3245,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
           node="people"
         >
-          <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} node="hidden" />
+          <SettingsRow label="Hidden accounts" value={hidden} onOpen={() => {}} node="hidden" />
         </SettingsGroup>
 
         <SettingsGroup

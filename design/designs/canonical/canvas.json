@@ -1100,6 +1100,33 @@
       "page": "feed"
     },
     {
+      "file": "PostDetailHidden.dc.html",
+      "title": "Post · its author just hidden",
+      "x": 3840,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "ProfileOtherHidden.dc.html",
+      "title": "Profile · someone else's, just hidden",
+      "x": 4320,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsUnhidden.dc.html",
+      "title": "Settings · hidden accounts, one just unhidden",
+      "x": 3840,
+      "y": 4661,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ExplorePerson.dc.html",
       "title": "Explore · a person found",
       "x": 1920,
