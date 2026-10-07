@@ -84,7 +84,7 @@ export function verifyEmail(
   );
 }
 
-/** One of api-spec.md's three deliberately-silent verbs — never a userError. */
+/** One of api-spec.md's two deliberately-silent verbs — never a userError. */
 export function resendVerificationEmail(
   client: ApolloClient,
   email: string,

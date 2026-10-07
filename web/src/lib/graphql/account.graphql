@@ -1,7 +1,6 @@
 # Account reads, credential recovery, and credential changes.
-# requestPasswordReset and requestEmailChange are silent verbs: no
-# userErrors by design — surfacing a failure would reintroduce
-# account enumeration (api-spec.md § Mutations → Conventions →
+# requestPasswordReset is a silent verb: no userErrors by design —
+# surfacing a failure would reintroduce account enumeration (api-spec.md § Mutations → Conventions →
 # Errors).
 
 query Me {
@@ -99,9 +98,16 @@ mutation ChangeHandle($input: ChangeHandleInput!) {
   }
 }
 
+# A wrong password and a malformed address refuse as userErrors; a spent
+# account mail budget is a transport-tier RATE_LIMITED.
 mutation RequestEmailChange($input: RequestEmailChangeInput!) {
   requestEmailChange(input: $input) {
-    ok
+    pendingEmailChange {
+      newEmail
+    }
+    userErrors {
+      ...UserErrorFields
+    }
   }
 }
 
