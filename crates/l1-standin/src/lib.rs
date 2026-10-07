@@ -5,7 +5,9 @@
 //!
 //! - Money is numbers only: the B_i surface and θ-debits are integer
 //!   micro-unit balances, with no realization of the burn primitive
-//!   behind them.
+//!   behind them. An admission burn request settles after a configurable
+//!   number of epochs (default immediately), so the pending window a real
+//!   settling realization has can be provoked.
 //! - Standing is partial: formation, the admission handshake, ordering,
 //!   causal keys, maturity, and the θ-ledger are implemented in full, but
 //!   the conserved standing solve of §11.3–11.5 is not — every act's
@@ -23,18 +25,23 @@ mod seal;
 
 use std::sync::Arc;
 
-use common::l1::handshake::{AccountBalance, ApprovalWitness, EpochPackage};
+use common::l1::handshake::{
+    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage,
+};
 use common::l1::identifier::ActId;
 use common::l1::{PreSignedProposal, VerifiedAct};
 use ed25519_dalek::SigningKey;
 use rand::RngCore;
 use rand::rngs::OsRng;
-use sqlx::PgPool;
+use sqlx::types::Uuid;
+use sqlx::{PgConnection, PgPool};
 use tokio::sync::OnceCell;
 
 /// Operating values for the constants layer1-interface.md §6 marks
 /// "illustrative, not locked": the per-act price θ (micro-units), the
-/// epoch act budget N_epoch, and the payload carriage bound M_payload.
+/// epoch act budget N_epoch, and the payload carriage bound M_payload —
+/// plus the one stand-in knob that is not a protocol constant, the
+/// settlement delay of an admission burn.
 #[derive(Debug, Clone)]
 pub struct StandInConfig {
     /// θ in integer micro-units (1e-6).
@@ -44,6 +51,13 @@ pub struct StandInConfig {
     /// M_payload — per-act payload bound, aggregate over a hyper-edge's
     /// projections (layer1-interface.md §8.4).
     pub max_payload_bytes: usize,
+    /// How many epoch closes an admission burn waits before it settles
+    /// (`L1_STANDIN_SETTLEMENT_DELAY_EPOCHS`, development.md). Zero — the
+    /// default — settles at the request, which is the stand-in's
+    /// behavior from before the burn sat behind the seam; above zero the
+    /// burn reads pending until that many epochs have closed, the window
+    /// a real realization's settlement depth opens (R4(e)).
+    pub settlement_delay_epochs: i64,
 }
 
 impl StandInConfig {
@@ -66,9 +80,19 @@ impl StandInConfig {
             theta_micro,
             epoch_target_acts,
             max_payload_bytes,
+            settlement_delay_epochs: 0,
         };
         config.check()?;
         Ok(config)
+    }
+
+    /// The same config with admission burns settling after `epochs`
+    /// closes — checked, since a negative delay would settle a burn
+    /// before it was requested.
+    pub fn settling_after(mut self, epochs: i64) -> Result<Self, StandInError> {
+        self.settlement_delay_epochs = epochs;
+        self.check()?;
+        Ok(self)
     }
 
     /// The same check, for a config assembled field-by-field. `StandIn`
@@ -92,6 +116,12 @@ impl StandInConfig {
                 "the payload bound must be positive".into(),
             ));
         }
+        if self.settlement_delay_epochs < 0 {
+            return Err(StandInError::Host(format!(
+                "the settlement delay cannot be negative, got {}",
+                self.settlement_delay_epochs
+            )));
+        }
         Ok(())
     }
 }
@@ -102,6 +132,7 @@ impl Default for StandInConfig {
             theta_micro: Self::DEFAULT_THETA_MICRO,
             epoch_target_acts: 10_000,
             max_payload_bytes: 64 * 1024,
+            settlement_delay_epochs: 0,
         }
     }
 }
@@ -212,9 +243,12 @@ impl StandIn {
         Ok(self.host_key().await?.verifying_key().as_bytes().to_vec())
     }
 
-    /// The stand-in burn primitive: credit a committed admission burn to
-    /// an address — B_i and the residual balance both rise by the burned
-    /// amount. Numbers only; no real reserve economy.
+    /// The stand-in burn primitive, credited at once and with no request
+    /// behind it: B_i and the residual balance both rise by the burned
+    /// amount. Numbers only; no real reserve economy. The admission flow
+    /// does not reach for it — admission burns go through
+    /// [`Self::request_admission_burn`] across the seam — so what is left
+    /// is the genesis bootstrap's funding and test rigs (`DevSubstrate`).
     pub async fn credit_burn(&self, address: &str, amount_micro: i64) -> Result<(), StandInError> {
         if amount_micro <= 0 {
             return Err(StandInError::Formation(
@@ -233,6 +267,92 @@ impl StandIn {
         .execute(&self.pool)
         .await?;
         Ok(())
+    }
+
+    /// The admission burn request of the seam: record the burn under the
+    /// requester's idempotency key, due to settle `settlement_delay_epochs`
+    /// closes from now. A retried request with the same key is the same
+    /// burn — it returns the same ticket and credits nothing twice; the
+    /// same key naming a different address or amount is not a retry and
+    /// is refused as a conflict.
+    ///
+    /// The request holds the epoch table in SHARE mode, which the close's
+    /// EXCLUSIVE lock conflicts with: a request and a close never
+    /// interleave, so the epoch the delay counts from is exact, and a
+    /// zero-delay burn settles in this very transaction rather than
+    /// waiting on a close that might already have passed it by.
+    pub async fn request_admission_burn(
+        &self,
+        address: &str,
+        amount_micro: i64,
+        key: Uuid,
+    ) -> Result<BurnTicket, StandInError> {
+        if amount_micro <= 0 {
+            return Err(StandInError::Formation(
+                "burn amount must be positive".into(),
+            ));
+        }
+        let mut tx = self.pool.begin().await?;
+        sqlx::query!("LOCK TABLE l1_epochs IN SHARE MODE")
+            .execute(&mut *tx)
+            .await?;
+        let current = last_closed_epoch(&mut tx).await?;
+        let inserted = sqlx::query!(
+            "INSERT INTO l1_admission_burns
+                 (key, address, amount_micro, requested_epoch, settles_after_epoch)
+             VALUES ($1, $2, $3, $4::BIGINT, $4::BIGINT + $5::BIGINT)
+             ON CONFLICT (key) DO NOTHING",
+            key,
+            address,
+            amount_micro,
+            current,
+            self.config.settlement_delay_epochs,
+        )
+        .execute(&mut *tx)
+        .await?
+        .rows_affected();
+        if inserted == 0 {
+            let existing = sqlx::query!(
+                "SELECT address, amount_micro FROM l1_admission_burns WHERE key = $1",
+                key,
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+            if existing.address != address || existing.amount_micro != amount_micro {
+                return Err(StandInError::Conflict(format!(
+                    "burn key {key} already names a different burn"
+                )));
+            }
+        }
+        settle_due(&mut tx, current).await?;
+        tx.commit().await?;
+        Ok(BurnTicket(key.to_string()))
+    }
+
+    /// The settlement read of the seam: whether the ticket's burn has
+    /// settled into B_i. The stand-in never refuses a burn it accepted, so
+    /// it answers only `Pending` or `Settled`; a ticket it never issued is
+    /// an unknown act, which the requester heals by requesting again under
+    /// the same key.
+    pub async fn burn_settlement(
+        &self,
+        ticket: &BurnTicket,
+    ) -> Result<BurnSettlement, StandInError> {
+        let key = Uuid::parse_str(&ticket.0)
+            .map_err(|_| StandInError::UnknownAct(format!("burn ticket {}", ticket.0)))?;
+        let row = sqlx::query!(
+            "SELECT amount_micro, settled_at FROM l1_admission_burns WHERE key = $1",
+            key,
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .ok_or_else(|| StandInError::UnknownAct(format!("burn ticket {}", ticket.0)))?;
+        Ok(match row.settled_at {
+            Some(_) => BurnSettlement::Settled {
+                pinned_micro: row.amount_micro,
+            },
+            None => BurnSettlement::Pending,
+        })
     }
 
     /// The B_i read of the seam. An address the ledger has never seen is a
@@ -305,22 +425,59 @@ impl StandIn {
     }
 }
 
+/// The last closed epoch, -1 before the first close.
+async fn last_closed_epoch(conn: &mut PgConnection) -> Result<i64, StandInError> {
+    Ok(
+        sqlx::query_scalar!(r#"SELECT COALESCE(MAX(epoch), -1) AS "e!" FROM l1_epochs"#)
+            .fetch_one(conn)
+            .await?,
+    )
+}
+
+/// Settles every admission burn due by `epoch`: marks it settled and
+/// credits B_i and the residual balance, in one statement so a burn is
+/// never marked without its credit or credited twice. A concurrent settle
+/// re-checks `settled_at IS NULL` on the row it waited for and skips it.
+pub(crate) async fn settle_due(conn: &mut PgConnection, epoch: i64) -> Result<(), StandInError> {
+    sqlx::query!(
+        r#"WITH due AS (
+               UPDATE l1_admission_burns SET settled_at = NOW()
+               WHERE settled_at IS NULL AND settles_after_epoch <= $1
+               RETURNING address, amount_micro
+           ), credit AS (
+               SELECT address, SUM(amount_micro)::BIGINT AS amount FROM due GROUP BY address
+           )
+           INSERT INTO l1_accounts (address, burned_total_micro, balance_micro)
+           SELECT address, amount, amount FROM credit
+           ON CONFLICT (address) DO UPDATE SET
+               burned_total_micro = l1_accounts.burned_total_micro + EXCLUDED.burned_total_micro,
+               balance_micro      = l1_accounts.balance_micro + EXCLUDED.balance_micro"#,
+        epoch,
+    )
+    .execute(conn)
+    .await?;
+    Ok(())
+}
+
 /// The surfaces that are *not* the seam: what CoGra reaches for that the
 /// real Layer 1 will not offer, named in one place so the swap has a list
 /// instead of a search.
 ///
 /// The seam is `api`'s `L1Boundary` — the two relay legs, the epoch read,
-/// the B_i read, the published θ. Everything here is stand-in-only:
-/// crediting an admission burn stands in for a realization of the burn
-/// primitive CoGra does not run, closing an epoch stands in for a clock the
-/// substrate keeps itself, and reading back a sealed act is a
-/// crash-recovery affordance the seam deliberately does not carry. At the
-/// swap each of these needs an answer of its own — a live realization, the
-/// substrate's own close, and a resumable bootstrap — and none of them is
-/// "one new implementation of the boundary".
+/// the B_i read, the published θ, and the admission burn's request and
+/// settlement read. Everything here is stand-in-only: crediting a burn at
+/// once stands in for the realization's settled burn where CoGra wants
+/// funding with no request behind it — the genesis bootstrap's cast and
+/// test rigs; closing an epoch stands in for a clock the substrate keeps
+/// itself; and reading back a sealed act is a crash-recovery affordance
+/// the seam deliberately does not carry. At the swap each of these needs
+/// an answer of its own — the bootstrap funding its cast through the
+/// seam's request, the substrate's own close, and a resumable bootstrap —
+/// and none of them is "one new implementation of the boundary".
 pub trait DevSubstrate {
-    /// Credit a committed admission burn to an address (the stand-in burn
-    /// primitive).
+    /// Credit a settled burn to an address at once (the stand-in burn
+    /// primitive) — the genesis bootstrap's funding; admissions request
+    /// theirs through the seam.
     fn credit_burn(
         &self,
         address: &str,
