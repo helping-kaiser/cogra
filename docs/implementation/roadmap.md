@@ -166,10 +166,13 @@ event-driven and is not an MVP dependency.
   hidden actors, and view history; implementation outstanding.
 - **Slice 2.7 — search**, with the Explore surface that waits on it
   (the Explore boards are drawn).
-- **Slice 3 — the ranked feed, backend-direct only**, the Reel
-  stream included. The miner-container and on-device stages stay on
-  the contract and ship after the MVP; so do the feed's L1-view /
-  L2-view toggle and the quick-pad variant.
+- **Slice 3 — the ranked feed**, the Reel stream included. The
+  ranker is standalone and never runs inside the backend process: it
+  runs on the viewer's device or in its own container on the server,
+  and the backend API serves the ranked result either way. Which of
+  the two the MVP ships is decided in the slice's build. Delegated
+  miners ship after the MVP; so do the feed's L1-view / L2-view
+  toggle and the quick-pad variant.
 - **Slice 3.1 — notifications, the minimal cut**: implementing the
   drawn notifications list; no push channel.
 - **Slice 8's erasure half** — self-deletion of content and account
@@ -555,13 +558,14 @@ from the media path and carrying their own doc write-back:
   hop-by-hop in Rust ([architecture.md](architecture.md)).
 - The `ranker` crate: pure feed-ranking math, no I/O, one
   implementation for every transport stage.
-- `feedSlice` and `feed` on the backend; the `rank` operation hosted
-  **backend-direct** — the first transport stage
-  ([miner-api.md](miner-api.md)).
-- The rollout then continues along the same contract: the miner
-  container (a delegated service), then on-device via UniFFI — the
-  decentralized end state. No stage changes the slice-in,
-  ordered-list-out shape.
+- `feedSlice` and `feed` on the backend; the `rank` operation in the
+  standalone ranker, never inside the backend process: on the
+  viewer's device (the best case) or in its own container on the
+  server ([miner-api.md](miner-api.md)). The backend API serves the
+  ranked result either way.
+- The same contract also covers a delegated miner (a third party's
+  ranker service); on the device the ranker is bound in via UniFFI.
+  No deployment changes the slice-in, ordered-list-out shape.
 - **Third-party topic claims** join the chip row and the topic
   feed. A tag whose author is not the content's author reaches a
   viewer only through the tagger, at the viewer's forward-path
@@ -638,9 +642,10 @@ from the media path and carrying their own doc write-back:
   a clean feed immediately instead of an epoch later, and when the
   pending layer is being flooded the L1 view is the retreat to
   what has actually settled.
-- **Hand test:** ranked feed on the device; later, the same feed
-  ranked by the container and on-device (web ranks backend-direct
-  until the Wasm stage — [web.md](web.md)).
+- **Hand test:** ranked feed on the device; the same feed ranked by
+  the ranker container and on-device (the web app gets its ranked
+  results through the backend API until the Wasm stage —
+  [web.md](web.md)).
 - **Surfaces:** backend, API, miner transport, Android, web.
 
 ### Slice 3.1 — Notifications
