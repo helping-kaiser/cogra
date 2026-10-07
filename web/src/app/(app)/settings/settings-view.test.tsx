@@ -143,6 +143,12 @@ describe("the settings page", () => {
     expect(screen.getByTestId("settings.header.title")).toHaveTextContent("Settings");
   });
 
+  it("header_stays_pinned_while_scrolling", async () => {
+    renderSettings();
+    const header = await screen.findByTestId("settings.header");
+    expect(header.parentElement).toHaveClass("sticky", "top-0");
+  });
+
   it("carries no restore card and no collapsing top", async () => {
     renderSettings({ keyOnDevice: false });
     await screen.findByTestId("settings.credentials.password.status");
@@ -376,7 +382,8 @@ describe("the settings page", () => {
   it("contact_opens_mail_not_the_report", async () => {
     renderSettings();
     expect(await screen.findByTestId("settings.about.contact.value")).toHaveTextContent("hello@cogra.local");
-    expect(screen.getByTestId("settings.about.whatsNew.value")).not.toBeEmptyDOMElement();
+    // The running version, as the build inlines it (`next.config.ts`).
+    expect(screen.getByTestId("settings.about.whatsNew.value")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("settings.about.aboutCogra"));
     expect(push).toHaveBeenCalledWith("/about?from=settings");
   });

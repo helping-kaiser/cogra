@@ -71,8 +71,8 @@ const node = (tail: string): DataNode => part(NODE, tail);
 /** The contact door's address — a placeholder until CoGra is on a server. */
 export const CONTACT_ADDRESS = "hello@cogra.local";
 
-/** The version running here — `web/package.json`, which the build reads. */
-export const RUNNING_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.1.0";
+/** The version running here — `web/package.json`, inlined by the build (`next.config.ts`). */
+export const RUNNING_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
 
 /** The registry's spelling of each stance input's row. */
 const STANCE_ROWS: readonly { mode: StanceInputMode; key: string; label: string; status: string }[] = [
