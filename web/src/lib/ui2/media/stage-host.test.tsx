@@ -14,17 +14,19 @@ import { describe, expect, it } from "vitest";
 
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 import {
+  intersectEach,
   liveObserverCount,
   pullsAtTop,
   scrollsTo,
+  setsPageVisibility,
   settlesScroll,
   suppressesAutoplay,
-  intersectEach,
   type Intersection,
 } from "@/test/media-env";
 
 import { BottomSheet } from "../bottom-sheet";
 import { coverListenersForTests } from "../covering-layer";
+import { VeilContext } from "./body-veil";
 import { MediaGallery } from "./media-gallery";
 import { StageHost } from "./stage-host";
 import { VideoPlayer } from "./video-player";
@@ -330,6 +332,118 @@ describe.each(SURFACES)("the hard top of $name", ({ mount, scroller }) => {
     frame({ a: 1, b: 0.9 });
     settlesScroll(scroller());
     expect(playing("a", "b")).toEqual([]);
+  });
+});
+
+// PAGE VISIBILITY (the packet's §6 RF-7 row; §3.2 rule 11). Written in Feed.md
+// and applied page-wide (flag §7.2-a): "It only plays while it is actually on
+// screen" (`MediaAttachment.jsx:45`, L09).
+describe("page visibility", () => {
+  const hosts: [string, (ids: readonly string[]) => void][] = [
+    ["on the feed", onList],
+    ["in the thread", (ids) => void render(<Thread ids={ids} />)],
+    [
+      "the detail's pinned clip, on its own stage",
+      (ids) =>
+        void render(
+          <>
+            {ids.map((id) => (
+              <VideoPlayer key={id} src={CLIP} surface="transport" testId={id} />
+            ))}
+          </>,
+        ),
+    ],
+  ];
+
+  it.each(hosts)("hiding the page pauses the playing clip on its frame — %s (F25 Feed.md:51)", (_, mount) => {
+    mount(["a"]);
+    frame({ a: 1 });
+    act(() => {
+      clip("a").currentTime = 6;
+    });
+    act(() => setsPageVisibility("hidden"));
+    expect(playing("a")).toEqual([]);
+    expect(clip("a").currentTime).toBe(6);
+  });
+
+  it("showing it again resumes that same clip from its frame, never re-electing (F26 Feed.md:53)", () => {
+    render(<List ids={["a", "b"]} />);
+    frame({ a: 1, b: 1 });
+    act(() => {
+      clip("a").currentTime = 6;
+    });
+    act(() => setsPageVisibility("hidden"));
+    // Whatever the observer reports while hidden decides nothing.
+    frame({ a: 0.5, b: 1 });
+    expect(playing("a", "b")).toEqual([]);
+
+    act(() => setsPageVisibility("visible"));
+    expect(playing("a", "b")).toEqual(["a"]);
+    expect(clip("a").currentTime).toBe(6);
+  });
+
+  it("showing it under suppressed autoplay plays nothing; the clip stands frozen wearing its play disc (F27 Feed.md:55)", () => {
+    suppressesAutoplay({ reducedMotion: true });
+    render(<List ids={["a"]} />);
+    frame({ a: 1 });
+    fireEvent.click(screen.getByTestId("a-play"));
+    act(() => setsPageVisibility("hidden"));
+    act(() => setsPageVisibility("visible"));
+    expect(playing("a")).toEqual([]);
+    expect(screen.getByTestId("a-play")).toBeInTheDocument();
+  });
+
+  it("a clip the reader paused stays paused when the page shows again", () => {
+    render(<VideoPlayer src={CLIP} surface="transport" testId="a" />);
+    frame({ a: 1 });
+    fireEvent.click(screen.getByTestId("a-transport-play"));
+    expect(playing("a")).toEqual([]);
+    act(() => setsPageVisibility("hidden"));
+    act(() => setsPageVisibility("visible"));
+    expect(playing("a")).toEqual([]);
+  });
+});
+
+// SUPPRESSION (the packet's §6 RF-4 row): "ALWAYS no clip starts on its own on
+// any surface GIVEN the device suppresses autoplay" (FeedCover.md:25) — the
+// rows the other suites do not already carry (landing: the hard-top suite;
+// dismissal: `covering-layer.test.tsx`; page show: above; the live signal and
+// the disc: `video-player.test.tsx`).
+describe("suppressed autoplay starts nothing on its own", () => {
+  it("on the detail's pinned clip arriving — the transport's play still starts it (C10, rule 12)", () => {
+    suppressesAutoplay({ saveData: true });
+    render(<VideoPlayer src={CLIP} surface="transport" testId="a" />);
+    frame({ a: 1 });
+    expect(playing("a")).toEqual([]);
+    fireEvent.click(screen.getByTestId("a-transport-play"));
+    expect(playing("a")).toEqual(["a"]);
+  });
+
+  it("on an unveil (C10; Feed.md:49 GIVEN the device allows autoplay)", () => {
+    suppressesAutoplay({ reducedMotion: true });
+    function Veiled({ veiled }: { veiled: boolean }) {
+      return (
+        <StageHost>
+          <VeilContext.Provider value={veiled}>
+            <VideoPlayer src={CLIP} testId="a" />
+          </VeilContext.Provider>
+        </StageHost>
+      );
+    }
+    const { rerender } = render(<Veiled veiled />);
+    frame({ a: 1 });
+    rerender(<Veiled veiled={false} />);
+    expect(playing("a")).toEqual([]);
+    expect(screen.getByTestId("a-play")).toBeInTheDocument();
+  });
+
+  it("when autoplay is allowed again, an empty stage goes to the topmost qualifying clip (rule 3)", () => {
+    suppressesAutoplay({ reducedMotion: true });
+    render(<List ids={["a", "b"]} />);
+    frame({ a: 1, b: 1 });
+    expect(playing("a", "b")).toEqual([]);
+    act(() => suppressesAutoplay({ reducedMotion: false }));
+    expect(playing("a", "b")).toEqual(["a"]);
   });
 });
 
