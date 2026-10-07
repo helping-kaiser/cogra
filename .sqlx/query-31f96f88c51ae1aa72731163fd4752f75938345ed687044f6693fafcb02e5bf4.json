@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT family FROM staged_writes WHERE actor_id = $1 AND state = 'carried'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "family",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "31f96f88c51ae1aa72731163fd4752f75938345ed687044f6693fafcb02e5bf4"
+}

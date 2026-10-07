@@ -267,7 +267,9 @@ applicant | member`, a column on the credentials row
 The state gates *acting through CoGra* and is enforced
 server-side — an acting call from a non-member account is
 `FORBIDDEN`, or `EMAIL_NOT_VERIFIED` while that is the proof
-standing in the way ([api-spec.md](api-spec.md)). It is service state,
+standing in the way ([api-spec.md](api-spec.md)) — save the
+once-each acts a verified applicant carries with their application
+("Application" below). It is service state,
 distinct from two neighbors: the mutual-pair **membership** of
 [invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)
 — a `member` account that has not yet reciprocated is a member in
@@ -477,11 +479,21 @@ dismissible hints — the actionable email-verification step, the
 approval wait, the landing. The first tap of a kind opens the
 real surface and stages the act; the next tap of a staged kind
 answers in place that it waits with the application. A staged
-act is visible only to its author, in their own chronicle —
-nothing is public before it is signed. It **signs at approval,
-automatically**, in the batch the vouch-in lands with; on
-rejection it waits on the device, never sent, until a member
-vouches the account in, then signs with the landing batch.
+act is **carried**: the server holds it — whether or not any path
+is open, never garbage-collected, surviving the loss of the device
+— and it is visible only to its author, in their own chronicle;
+nothing is public before it is signed. It **signs at the landing,
+automatically**: the landing that completes the ceremony releases
+the carried acts as one batch, each depending on the admission
+Registration and the winning vouch, and the device's poll signs
+them without a prompt. Never earlier: an act signed at
+registration could leave permanent graph content from someone no
+member's edge ever reached. The staging verbs are the ordinary
+`preparePost` and `prepareStance`, open to a verified applicant
+with an attached key for exactly these three kinds; the signing
+budget is spent at staging, and solvency is left to ordering — the
+applicant may hold no funds yet, and the batch cannot be orderable
+before the funded landing.
 Every other acting surface stays visible but
 locked: styled as disabled yet still tappable, with the tap
 explaining that approval unlocks it. Account management —

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "UPDATE staged_writes\n         SET state = 'expired', expired_epoch = $1, updated_at = NOW()\n         WHERE state NOT IN ('landed', 'expired')\n           AND prepared_epoch + $2 <= $1\n         RETURNING node_id, pre_signed_at",
+  "query": "UPDATE staged_writes\n         SET state = 'expired', expired_epoch = $1, updated_at = NOW()\n         WHERE state NOT IN ('landed', 'expired', 'carried')\n           AND prepared_epoch + $2 <= $1\n         RETURNING node_id, pre_signed_at",
   "describe": {
     "columns": [
       {
@@ -25,5 +25,5 @@
       true
     ]
   },
-  "hash": "305642322135e355de3bed7344215f42405011b744274a645c81c0c010ace411"
+  "hash": "23b2a5ef88ebf9a8213ddae523c83356a4c167b4da15189afd9e42e29856de4f"
 }

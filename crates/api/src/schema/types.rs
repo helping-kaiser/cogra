@@ -607,6 +607,11 @@ impl Sign {
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
 pub enum StagedWriteState {
+    /// Carried with the author's application: held by the server, seen by
+    /// the author alone, never signed before the account lands — the
+    /// landing completes its dependencies and moves it to AWAITING_PRE_SIGN
+    /// for the device to sign with the vouch-in batch.
+    Carried,
     /// Prepared; the pre-commitment not yet submitted.
     AwaitingPreSign,
     /// Pre-signed and submitted; the backend awaits the host-sealed
@@ -629,6 +634,7 @@ pub enum StagedWriteState {
 impl StagedWriteState {
     pub fn from_store(s: staged::StagedState) -> Self {
         match s {
+            staged::StagedState::Carried => Self::Carried,
             staged::StagedState::AwaitingPreSign => Self::AwaitingPreSign,
             staged::StagedState::Sealing => Self::Sealing,
             staged::StagedState::AwaitingApproval => Self::AwaitingApproval,
@@ -757,6 +763,7 @@ pub struct PreparedWrite {
     pub family: RecordFamily,
     pub proposal: common::l1::Proposal,
     pub gc_after_epochs: i64,
+    pub carried: bool,
 }
 
 impl PreparedWrite {
@@ -766,6 +773,16 @@ impl PreparedWrite {
             family: RecordFamily::from_family(p.proposal.body.family),
             proposal: p.proposal,
             gc_after_epochs: p.gc_after_epochs,
+            carried: false,
+        }
+    }
+
+    /// A write an applicant staged, carried with their application: not
+    /// for the device to sign now.
+    pub fn carried_write(p: crate::prepare::Prepared) -> Self {
+        Self {
+            carried: true,
+            ..Self::from_prepared(p)
         }
     }
 }
@@ -811,8 +828,19 @@ impl PreparedWrite {
     /// A staged write that never completes the handshake and lands is
     /// garbage-collected — staged payload included — after this many
     /// epochs (an operational parameter; data-model.md "Staged writes").
+    /// A carried write is never collected before the landing releases it;
+    /// its window starts then.
     async fn gc_after_epochs(&self) -> i64 {
         self.gc_after_epochs
+    }
+
+    /// Whether the write is carried with the author's application rather
+    /// than staged for signing now: an applicant's once-each post,
+    /// Opinion or Affinity. A carried write is NEVER signed by the device
+    /// on prepare — its dependencies are completed at the account's
+    /// landing, and the device signs it then, with the vouch-in batch.
+    async fn carried(&self) -> bool {
+        self.carried
     }
 }
 
@@ -828,6 +856,14 @@ impl StagedWriteType {
 
     async fn state(&self) -> StagedWriteState {
         StagedWriteState::from_store(self.0.state)
+    }
+
+    /// Whether the write was carried with the author's application —
+    /// true from staging on. Once the landing releases it (state
+    /// AWAITING_PRE_SIGN) it is the vouch-in batch, which the device signs
+    /// without a prompt.
+    async fn carried(&self) -> bool {
+        self.0.carried
     }
 
     async fn family(&self) -> RecordFamily {

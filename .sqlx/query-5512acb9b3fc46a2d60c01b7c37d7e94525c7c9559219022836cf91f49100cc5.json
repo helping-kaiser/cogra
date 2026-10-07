@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n                 SET state = 'awaiting_pre_sign',\n                     deps = deps || ARRAY[$2, $3]::TEXT[],\n                     prepared_epoch = (SELECT last_epoch FROM mirror_epoch_cursor),\n                     updated_at = NOW()\n                 WHERE actor_id = $1 AND state = 'carried'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5512acb9b3fc46a2d60c01b7c37d7e94525c7c9559219022836cf91f49100cc5"
+}

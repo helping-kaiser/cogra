@@ -246,6 +246,56 @@ async fn member_viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
     Ok(v)
 }
 
+/// Who is acting on a mutation an applicant may also use: a member acts
+/// directly; an applicant carries the act with their application
+/// (auth.md "Application").
+enum Acting {
+    Member(Viewer),
+    Applicant(Viewer),
+}
+
+/// The gate of the once-each mutations (`preparePost`, `prepareStance`):
+/// the member gate, except that a verified applicant passes as an
+/// applicant, whose act the mutation carries instead of staging for
+/// signing. An unverified account still reads EMAIL_NOT_VERIFIED.
+async fn acting_viewer(ctx: &Context<'_>) -> async_graphql::Result<Acting> {
+    let v = viewer(ctx)?;
+    let pool = ctx.data::<PgPool>()?;
+    let credentials = store::credentials_by_actor(pool, v.user_id)
+        .await?
+        .ok_or_else(unauthenticated)?;
+    match credentials.account_state {
+        store::AccountState::Member => Ok(Acting::Member(v)),
+        _ if credentials.email_verified_at.is_none() => Err(email_not_verified()),
+        store::AccountState::Applicant => Ok(Acting::Applicant(v)),
+        _ => Err(forbidden()),
+    }
+}
+
+/// A carried staging that did not open, as the mutation answers it: the
+/// account-state refusals at the transport tier, as every acting gate
+/// answers them; the once-each rule and a missing key as a userError.
+fn carry_refusal(e: onboarding::CarryOpenError) -> Result<UserError, async_graphql::Error> {
+    use onboarding::CarryRefusal;
+    match e {
+        onboarding::CarryOpenError::Refused(CarryRefusal::NotApplicant) => Err(forbidden()),
+        onboarding::CarryOpenError::Refused(CarryRefusal::EmailNotVerified) => {
+            Err(email_not_verified())
+        }
+        onboarding::CarryOpenError::Refused(CarryRefusal::NoKey) => Ok(UserError::new(
+            ErrorCode::BadInput,
+            "attach a key before staging an act with the application",
+        )),
+        onboarding::CarryOpenError::Refused(CarryRefusal::AlreadyCarried(family)) => {
+            Ok(UserError::new(
+                ErrorCode::BadInput,
+                format!("one {family} already waits with the application"),
+            ))
+        }
+        other => Ok(internal(other)),
+    }
+}
+
 fn internal(e: impl std::fmt::Display) -> UserError {
     tracing::error!(error = %e, "mutation internal fault");
     UserError::new(ErrorCode::Internal, "internal error")
@@ -1020,6 +1070,22 @@ impl PrepareContentPayload {
                     .writes
                     .into_iter()
                     .map(PreparedWrite::from_prepared)
+                    .collect(),
+            ),
+            user_errors: vec![],
+        }
+    }
+
+    /// An applicant's post, carried with their application: the same batch,
+    /// every write marked carried — nothing for the device to sign now.
+    fn carried(prepared: crate::content::PreparedContent) -> Self {
+        Self {
+            node: Some(prepared.node),
+            writes: Some(
+                prepared
+                    .writes
+                    .into_iter()
+                    .map(PreparedWrite::carried_write)
                     .collect(),
             ),
             user_errors: vec![],
@@ -2463,19 +2529,64 @@ impl Mutation {
     /// Prepares the viewer's stance toward a node — one new edge carrying
     /// exactly the picked values, never a delta against the bundle
     /// (design.md §8.1). Toward a Profile this is the interpersonal
-    /// stance, including the reciprocation gesture.
+    /// stance, including the reciprocation gesture. A verified applicant
+    /// with an attached key may stage one Opinion and one Affinity: each
+    /// comes back carried with the application — nothing to sign until
+    /// the landing — and a second of a family refuses with BAD_INPUT.
     async fn prepare_stance(
         &self,
         ctx: &Context<'_>,
         input: PrepareStanceInput,
     ) -> async_graphql::Result<PreparePayload> {
-        let v = member_viewer(ctx).await?;
+        let acting = acting_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let staging = staging(ctx)?;
         let target = match stance::TargetRef::of(input.target, input.topic_name) {
             Ok(target) => target,
             Err(e) => return Ok(stance_refusal(e)),
+        };
+        let v = match acting {
+            Acting::Member(v) => v,
+            Acting::Applicant(v) => {
+                let family = match stance::resolve_target(pool, &target).await {
+                    Ok(resolved) => resolved.family,
+                    Err(e) => return Ok(stance_refusal(e)),
+                };
+                let lock = match onboarding::open_carry(pool, v.user_id, family).await {
+                    Ok(lock) => lock,
+                    Err(e) => {
+                        return Ok(PreparePayload {
+                            writes: None,
+                            user_errors: vec![carry_refusal(e)?],
+                        });
+                    }
+                };
+                let prepared = match stance::prepare_stance(
+                    pool,
+                    &crate::prepare::Carrying(boundary),
+                    staging,
+                    v.user_id,
+                    &target,
+                    input.p_directed.0,
+                    input.p_interest.0,
+                )
+                .await
+                {
+                    Ok(prepared) => prepared,
+                    Err(e) => return Ok(stance_refusal(e)),
+                };
+                if let Err(e) = onboarding::close_carry(pool, lock, &[prepared.id]).await {
+                    return Ok(PreparePayload {
+                        writes: None,
+                        user_errors: vec![carry_refusal(e)?],
+                    });
+                }
+                return Ok(PreparePayload {
+                    writes: Some(vec![PreparedWrite::carried_write(prepared)]),
+                    user_errors: vec![],
+                });
+            }
         };
         match stance::prepare_stance(
             pool,
@@ -2731,13 +2842,16 @@ impl Mutation {
     /// Prepares a new Post: one genesis Publish through the ordinary
     /// write path — the returned write pre-signs, seals, and approves
     /// like any other; `node` is the id the post serves under once the
-    /// record lands (post.md §1).
+    /// record lands (post.md §1). A verified applicant with an attached
+    /// key may stage one post: the batch comes back carried with the
+    /// application — nothing to sign until the landing — and a second
+    /// post refuses with BAD_INPUT.
     async fn prepare_post(
         &self,
         ctx: &Context<'_>,
         input: PreparePostInput,
     ) -> async_graphql::Result<PrepareContentPayload> {
-        let v = member_viewer(ctx).await?;
+        let acting = acting_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let staging = staging(ctx)?;
@@ -2755,6 +2869,38 @@ impl Mutation {
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
+        };
+        let v = match acting {
+            Acting::Member(v) => v,
+            Acting::Applicant(v) => {
+                let lock = match onboarding::open_carry(
+                    pool,
+                    v.user_id,
+                    common::l1::census::Family::Publish,
+                )
+                .await
+                {
+                    Ok(lock) => lock,
+                    Err(e) => return Ok(PrepareContentPayload::refused(vec![carry_refusal(e)?])),
+                };
+                let prepared = match crate::content::prepare_post(
+                    pool,
+                    &crate::prepare::Carrying(boundary),
+                    staging,
+                    v.user_id,
+                    draft,
+                )
+                .await
+                {
+                    Ok(prepared) => prepared,
+                    Err(e) => return Ok(PrepareContentPayload::from_error(e)),
+                };
+                let ids: Vec<Uuid> = prepared.writes.iter().map(|w| w.id).collect();
+                if let Err(e) = onboarding::close_carry(pool, lock, &ids).await {
+                    return Ok(PrepareContentPayload::refused(vec![carry_refusal(e)?]));
+                }
+                return Ok(PrepareContentPayload::carried(prepared));
+            }
         };
         match crate::content::prepare_post(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),

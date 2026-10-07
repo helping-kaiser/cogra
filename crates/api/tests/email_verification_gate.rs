@@ -204,9 +204,13 @@ async fn every_acting_gesture_refuses_an_unverified_account(pool: PgPool) {
 
 /// Verification is one of two proofs, and only the missing one may be
 /// named: an applicant who has answered the link is waiting on their
-/// inviter, which is the generic refusal and not this one.
+/// inviter, which is the generic refusal and not this one. The exception
+/// is the stance an applicant may carry with the application (auth.md
+/// "Application"): the gate admits it, and what stands in its way here is
+/// the key this applicant has not attached yet — a userError on the
+/// payload, not a refusal of the account.
 ///
-/// An applicant whose address is proven but whose application is unapproved is refused as FORBIDDEN.
+/// An applicant whose address is proven but whose application is unapproved is refused as FORBIDDEN, save the act they may carry.
 /// ´claim:verification:a-proven-address-leaves-the-generic-refusal´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_verified_applicant_meets_the_generic_refusal(pool: PgPool) {
@@ -217,6 +221,14 @@ async fn a_verified_applicant_meets_the_generic_refusal(pool: PgPool) {
 
     for (name, mutation) in acting_mutations(inviter) {
         let refused = execute(&schema, applicant, &mutation).await;
+        if name == "prepareStance" {
+            assert_eq!(transport_code(&refused), None, "{name}: {refused}");
+            assert_eq!(
+                refused["data"]["prepareStance"]["userErrors"][0]["code"], "BAD_INPUT",
+                "{name}: {refused}"
+            );
+            continue;
+        }
         assert_eq!(
             transport_code(&refused),
             Some("FORBIDDEN"),

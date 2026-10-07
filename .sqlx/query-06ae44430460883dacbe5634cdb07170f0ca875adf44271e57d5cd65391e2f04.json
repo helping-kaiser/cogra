@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM staged_writes\n               WHERE actor_id = $1 AND family = $2\n                 AND (state NOT IN ('awaiting_pre_sign', 'expired', 'carried')\n                      OR (carried AND state = 'awaiting_pre_sign'))\n           ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "06ae44430460883dacbe5634cdb07170f0ca875adf44271e57d5cd65391e2f04"
+}

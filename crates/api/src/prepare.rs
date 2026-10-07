@@ -90,6 +90,79 @@ pub struct Gesture {
     pub node: Option<Uuid>,
 }
 
+/// The boundary as an applicant's carried staging sees it (auth.md
+/// "Application"; seam 099 ruling 73). An act carried with an application
+/// is not priced when it is staged — the applicant may hold no funds yet,
+/// and the act cannot become orderable before the landing, whose batch it
+/// joins — so the write rule's balance read answers "no constraint" here
+/// and only here. Every other read, the per-act formation checks, and the
+/// signing budget the staging spends are the real ones.
+pub(crate) struct Carrying<'a, B>(pub &'a B);
+
+impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
+    async fn seal(
+        &self,
+        pre: common::l1::PreSignedProposal,
+    ) -> Result<common::l1::VerifiedAct, BoundaryError> {
+        self.0.seal(pre).await
+    }
+
+    async fn approve(
+        &self,
+        witness: common::l1::handshake::ApprovalWitness,
+    ) -> Result<(), BoundaryError> {
+        self.0.approve(witness).await
+    }
+
+    async fn epochs_since(
+        &self,
+        after: i64,
+    ) -> Result<Vec<common::l1::handshake::EpochPackage>, BoundaryError> {
+        self.0.epochs_since(after).await
+    }
+
+    async fn balance(
+        &self,
+        address: &str,
+    ) -> Result<common::l1::handshake::AccountBalance, BoundaryError> {
+        let published = self.0.balance(address).await?;
+        Ok(common::l1::handshake::AccountBalance {
+            balance: f64::INFINITY,
+            ..published
+        })
+    }
+
+    async fn host_public_key(&self) -> Result<Vec<u8>, BoundaryError> {
+        self.0.host_public_key().await
+    }
+
+    async fn current_theta(&self) -> Result<f64, BoundaryError> {
+        self.0.current_theta().await
+    }
+
+    async fn max_payload_bytes(&self) -> Result<usize, BoundaryError> {
+        self.0.max_payload_bytes().await
+    }
+
+    async fn request_admission_burn(
+        &self,
+        address: &str,
+        amount_micro: i64,
+        key: Uuid,
+    ) -> Result<common::l1::handshake::BurnTicket, BoundaryError> {
+        self.0
+            .request_admission_burn(address, amount_micro, key)
+            .await
+    }
+
+    async fn burn_settlement(
+        &self,
+        ticket: &common::l1::handshake::BurnTicket,
+    ) -> Result<common::l1::handshake::BurnSettlement, BoundaryError> {
+        self.0.burn_settlement(ticket).await
+    }
+}
+
 /// A prepared staged write: the handle for the whole handshake plus the
 /// exact proposal the device recomputes and pre-signs.
 #[derive(Debug, Clone)]

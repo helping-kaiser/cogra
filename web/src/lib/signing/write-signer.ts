@@ -232,6 +232,12 @@ export function createWriteSigner(deps: {
         return done(id, staged.state);
       case "EXPIRED":
         return refuse(id, [synthesized("STAGED_WRITE_EXPIRED", "garbage-collected unlanded")]);
+      case "CARRIED":
+        // Carried with the application: never this device's to sign before
+        // the landing releases it as AWAITING_PRE_SIGN. Nothing is spent.
+        return refuseKeeping(id, [
+          synthesized("INTERNAL", "carried with the application — it signs at the landing"),
+        ]);
       default:
         // A state this build does not know (the generated union lags the
         // server): refuse without spending the material — an updated
