@@ -21,26 +21,37 @@ const kebab = (role: string): string => role.replace(/[A-Z]/g, (c) => `-${c.toLo
 
 const cssVar = (role: string): string => `--${kebab(role)}`;
 
-/** The `:root` block, and the one nested in the dark media query. */
-function declarations(theme: "light" | "dark"): Map<string, string> {
-  const source =
-    theme === "light"
-      ? CSS.slice(0, CSS.indexOf("@media (prefers-color-scheme: dark)"))
-      : CSS.slice(CSS.indexOf("@media (prefers-color-scheme: dark)"));
-  const block = source.match(/:root\s*\{([^}]*)\}/);
-  if (block === null) throw new Error(`no :root block for ${theme}`);
-  const found = new Map<string, string>();
-  for (const [, name, value] of block[1].matchAll(/(--[a-z-]+)\s*:\s*([^;]+);/g)) {
-    found.set(name, value.trim());
+/**
+ * A theme's role block: `light` is the bare `:root`, `auto-dark` the one
+ * nested in the dark media query (Auto on a dark device), `chosen-dark` the
+ * `[data-theme="dark"]` one (Dark chosen in Settings).
+ */
+function declarations(block: "light" | "auto-dark" | "chosen-dark"): Map<string, string> {
+  const media = CSS.indexOf("@media (prefers-color-scheme: dark)");
+  const pattern = {
+    light: /:root\s*\{([^}]*)\}/,
+    "auto-dark": /:root:not\(\[data-theme="light"\]\)\s*\{([^}]*)\}/,
+    "chosen-dark": /:root\[data-theme="dark"\]\s*\{([^}]*)\}/,
+  }[block];
+  const source = block === "light" ? CSS.slice(0, media) : CSS.slice(media);
+  const found = source.match(pattern);
+  if (found === null) throw new Error(`no ${block} block`);
+  const roles = new Map<string, string>();
+  for (const [, name, value] of found[1].matchAll(/(--[a-z-]+)\s*:\s*([^;]+);/g)) {
+    roles.set(name, value.trim());
   }
-  return found;
+  return roles;
 }
 
 describe("globals.css", () => {
-  it.each(["light", "dark"] as const)("carries every %s role from the token file", (theme) => {
-    const declared = declarations(theme);
+  it.each([
+    ["light", "light"],
+    ["auto-dark", "dark"],
+    ["chosen-dark", "dark"],
+  ] as const)("carries every role of the %s block from the token file", (block, theme) => {
+    const declared = declarations(block);
     for (const [role, value] of Object.entries(TOKENS[theme])) {
-      expect(declared.get(cssVar(role)), `${theme} ${cssVar(role)}`).toBe(value.toLowerCase());
+      expect(declared.get(cssVar(role)), `${block} ${cssVar(role)}`).toBe(value.toLowerCase());
     }
   });
 
@@ -58,7 +69,7 @@ describe("globals.css", () => {
   it("leaves no raw palette colour in the stylesheet", () => {
     // Roles are defined in the :root blocks and nowhere else; a hex loose in a
     // rule is the bug design/readme.md §4 Colour names. Comments are prose, not styling.
-    const styling = CSS.replace(/\/\*[\s\S]*?\*\//g, "").replace(/:root\s*\{[^}]*\}/g, "");
+    const styling = CSS.replace(/\/\*[\s\S]*?\*\//g, "").replace(/:root[^{]*\{[^}]*\}/g, "");
     expect(styling).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 });

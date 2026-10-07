@@ -22,6 +22,7 @@ import {
   type RefObject,
 } from "react";
 
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
 import { ScrollHostProvider } from "@/lib/ui/scroll-host";
@@ -85,7 +86,15 @@ export function BottomSheet({
   testId = "bottom-sheet",
   stacked = false,
   coverHeld = false,
+  node,
 }: {
+  /**
+   * The registered sheet node on a registered screen
+   * (`settings.licenseSheet`): the sheet is the node, its grip `dragHandle`
+   * and its heading row `title` — the surface then wears the node's id
+   * instead of `testId`.
+   */
+  node?: DataNode;
   open: boolean;
   onClose: () => void;
   /**
@@ -223,7 +232,7 @@ export function BottomSheet({
   return (
     <dialog
       ref={ref}
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       aria-label={title}
       onClose={onClose}
       // A press outside drops the sheet — the same gesture as the back arrow,
@@ -280,11 +289,20 @@ export function BottomSheet({
             gesture is read across the whole surface, so the grip marks where
             the eye goes rather than the only place that answers; the
             backdrop, Escape and the sheet's own action drop it too. */}
-        <span aria-hidden="true" className="mx-auto mt-3 h-1 w-8 rounded-full bg-outline-variant" />
+        <span
+          aria-hidden="true"
+          className="mx-auto mt-3 h-1 w-8 rounded-full bg-outline-variant"
+          {...testAttributes(part(node, "dragHandle"))}
+        />
         {titleHidden ? null : titleTrailing === undefined ? (
-          <h2 className="px-6 pt-4 pb-2 text-title-medium">{title}</h2>
+          <h2 className="px-6 pt-4 pb-2 text-title-medium" {...testAttributes(part(node, "title"))}>
+            {title}
+          </h2>
         ) : (
-          <div className="flex items-center gap-2 px-6 pt-4 pb-2">
+          <div
+            className="flex items-center gap-2 px-6 pt-4 pb-2"
+            {...testAttributes(part(node, "title"))}
+          >
             <h2 className="m-0 flex-1 text-title-medium">{title}</h2>
             {titleTrailing}
           </div>

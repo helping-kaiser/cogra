@@ -11,21 +11,26 @@
 // of the page's border/primary pair, which on the page would be a second
 // colour family arguing with the panel's own (HelpDot.jsx:10-16).
 
+import { testAttributes, type DataNode } from "@/lib/ui/data-node";
+
 export function HelpDot({
   ariaLabel,
   onOpen,
   testId,
   variant = "page",
+  node,
 }: {
   ariaLabel: string;
   onOpen: () => void;
   testId?: string;
   variant?: "page" | "inverse";
+  /** The registered node this dot is (`settings.licenseSheet.title.help`). */
+  node?: DataNode;
 }) {
   return (
     <button
       type="button"
-      data-testid={testId}
+      {...testAttributes(node, testId)}
       aria-label={ariaLabel}
       onClick={onOpen}
       className={`cg-state cg-focus cg-hit relative flex size-8 flex-none items-center justify-center rounded-full text-label-large ${

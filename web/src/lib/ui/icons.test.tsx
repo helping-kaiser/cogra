@@ -63,6 +63,12 @@ describe("icons", () => {
       "fullscreen",
       "volume_up",
       "volume_off",
+      // Settings: a row's chevron, About's fold, the password reveal
+      // (SettingsRow.jsx, About.jsx, PasswordField.jsx).
+      "chevron_right",
+      "expand_more",
+      "visibility",
+      "visibility_off",
     ];
     expect([...shippedNames()].sort()).toEqual([...needed].sort());
   });
