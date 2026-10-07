@@ -4,7 +4,7 @@
     {
       "name": "publish-a-post",
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "pictures — the crop" },
         { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
@@ -47,7 +47,7 @@
     {
       "name": "reply-to-a-post",
       "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
-      "start": { "control": "comment count", "except": ["Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
+      "start": { "control": "comment count", "except": ["Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected"] },
       "waypoints": [
         { "board": "ReplyEntry", "via": 7, "to": "ReplyCompose" },
         { "board": "ReplyCompose", "via": 3 }
@@ -174,7 +174,7 @@
     {
       "name": "take-a-stance-on-a-post",
       "description": "Tap the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
-      "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
+      "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected"] },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
     {
@@ -257,7 +257,7 @@
     {
       "name": "publish-words",
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4, "case": "the body empty — the words stage, no ask" },
         { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
@@ -268,7 +268,7 @@
     {
       "name": "publish-a-video",
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a horizontal or square video — its face" },
         { "board": "ComposeCover", "via": 6 },
@@ -279,7 +279,7 @@
     {
       "name": "publish-a-vertical-video",
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a vertical video — no cover step, the door waits on details" },
         { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
@@ -636,6 +636,12 @@
       "name": "watch-the-registration-land",
       "description": "Once the approval is given the applicant's card flips where the reader stands while the device signs the registration — a machine's step, read rather than tapped; the landing itself opens the vouch-back.",
       "start": { "board": "ApplicantLanding" }
+    },
+    {
+      "name": "ask-again-after-an-approval-fell-through",
+      "description": "An approval that lapses before the reader is in flips the landing card back to waiting, naming nobody; the ask link on it goes to anyone already in, and the first vouch lands it.",
+      "start": { "board": "ApplicantFellThrough" },
+      "end": { "board": "ApplicantFellThrough", "via": 20 }
     },
     {
       "name": "ask-another-member-to-vouch",

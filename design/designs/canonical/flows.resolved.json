@@ -1465,6 +1465,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1499,12 +1500,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 33 boards → ProfileOther",
+        "start · «author chip» on 34 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
         "ProfileOther",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1545,6 +1547,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1567,12 +1570,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 21 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 22 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
         "PostDetail",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1601,6 +1605,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1624,12 +1629,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 22 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 23 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
         "Reel",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1685,6 +1691,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1706,13 +1713,14 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 20 boards → RefsSheet",
+        "start · «reference count» on 21 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
         "RefsSheet",
         "PostDetail",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1829,6 +1837,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1862,7 +1871,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 32 boards → FeedEntry",
+        "start · «Feed score» on 33 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1874,6 +1883,7 @@
         "RankHop",
         "RankRecords",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -2175,6 +2185,18 @@
       ],
       "boards": [
         "ApplicantLanding"
+      ]
+    },
+    {
+      "name": "ask-again-after-an-approval-fell-through",
+      "description": "An approval that lapses before the reader is in flips the landing card back to waiting, naming nobody; the ask link on it goes to anyone already in, and the first vouch lands it.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFellThrough",
+        "end · ApplicantFellThrough · 20 «copy your ask link» → self — the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows"
+      ],
+      "boards": [
+        "ApplicantFellThrough"
       ]
     },
     {
@@ -4199,6 +4221,19 @@
         "verify-the-email",
         "verify-the-email-in-the-app",
         "watch-the-intro"
+      ]
+    },
+    "ApplicantFellThrough": {
+      "flows": [
+        "ask-again-after-an-approval-fell-through",
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": [
+        "ask-again-after-an-approval-fell-through"
       ]
     },
     "ApplicantKeyElsewhere": {

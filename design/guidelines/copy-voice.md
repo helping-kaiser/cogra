@@ -1535,6 +1535,14 @@ Every other line here is **carried over — blessed by use (jakob
   expire. While @mira's answer is open, it can't start a second
   application.` (`ProfileApplicant` too).
 
+- **The approval that fell through** (`ApplicantFellThrough`, jakob
+  2026-10-07, ruling 60) — the landing card flipped back to waiting, naming
+  nobody: `The approval didn't land` over `You're waiting again — anyone
+  who's already in can vouch you in, and the first vouch lands it.`, with
+  `ApplicantRejected`'s ask-link block (`Ask someone you know to vouch for
+  you` and its caption) and `Got it` (*new 2026-10-07, the title and the
+  body drafted — their wording jakob's at review*).
+
 ## The settings page
 
 Drawn on `Settings`, `SettingsBackup` and `YourKey`, blessed with the

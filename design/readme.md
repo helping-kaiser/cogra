@@ -9443,6 +9443,15 @@ wait for jakob's review (copy-voice marks each).
   rows behind it moved up, the snackbar raised above the sheet at the
   screen's foot). Their snackbars register under each surface's own
   prefix.
+- **The approval that fell through** (item 60; seam 090.4).
+  `ApplicantFellThrough`: `ApplicantWaiting`'s shell with the card flipped
+  once more, the way `ApplicantLanding` and `ApplicantRejected` are — the
+  landing card goes back to waiting when its approval lapses before the
+  reader is in and no other is live. It wears the waiting card's dress and
+  `Got it`, names no member (which open application the account shows next
+  is not the card's to say), and carries `ApplicantRejected`'s ask-link
+  block, since anyone already in can now vouch. It registers with the
+  applicant boards' own round.
 
 ---
 
