@@ -1606,6 +1606,11 @@ shipped *Create a new recovery code* and *Show my key* were controls
 standing where a name belongs; the act keeps its words on the screen it
 happens on. The group's footnote: `Your key signs everything you publish
 and lives only in this browser. Your recovery code is the only way back.`
+— in the app `Your key signs everything you publish and lives only in
+this app. Your recovery code is the only way back.`, and with no code
+yet `Until you make a recovery code, it can't be brought back.` in the
+second sentence's place (*the app's lines blessed (jakob
+2026-10-07)*).
 
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
@@ -1680,7 +1685,11 @@ below), and a session whose device gave no name reads `Unnamed device`
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
 underneath: `Your key, your draft and any kept picks are cleared from
-this browser when you sign out.` (*blessed (jakob 2026-10-05)*).
+this browser when you sign out.` (*blessed (jakob 2026-10-05)*); in the
+app, `Your key, your draft and any kept picks are cleared from this app
+when you sign out.` (*blessed (jakob 2026-10-07)*). The three app lines
+say `this app`, never `this phone`, since the app runs on tablets and
+emulators too; Sessions' `This phone` stays its own case.
 
 **A new recovery code** (`SettingsBackup`): the heading, then
 `A new code re-encrypts your key and replaces the old backup — recovery
@@ -1850,9 +1859,13 @@ sol@solferreira.art.`; opened again after the change applied, `The
 change it belonged to already happened. Your email is now
 sol@ferreira.studio.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
 With the address taken,
-`That address is taken now` over the `EMAIL_IN_USE` line above — an
-applicant's fresh link (`ApplicantEmail`) answers a taken address the
-same way on its landing (jakob 2026-10-05). Signed
+`That address is taken now` over the `EMAIL_IN_USE` line above, and
+`Back to settings`. An applicant's fresh link (`ApplicantEmail`) answers
+a taken address on its landing under the same heading (jakob
+2026-10-05) with `That address now belongs to another account. Your
+email stays as it is.` (*a draft of 2026-10-07*) and `VerifyExpired`'s
+way on, `Go to the feed` with a session and `Sign in` without (jakob
+2026-10-07). Signed
 out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
 `This link confirms sol@ferreira.studio as your new address. It counts
 once you're signed in.` · `Sign in`. Opened under a different account,
@@ -2000,8 +2013,12 @@ CoGra — can bring them back.` — `Make a recovery code` ·
 `Sign out, keep them locked` · `Erase them and sign out` (the plurals
 blessed, jakob 2026-10-05). The body names all three things the opt-in
 would clear — the key, the draft, the picks kept pending (jakob's
-ruling) — and the answers name them as one plural. The app renders the platform noun as
-`This app` and `in this app`.
+ruling) — and the answers name them as one plural. The app's body
+reads `This app holds the only copy of your key. Signing out leaves
+your key, your draft and any opinions you kept pending here, locked
+until you sign in to this app again. Erase them instead, and no one —
+including CoGra — can bring them back.` (*blessed (jakob
+2026-10-07)*).
 
 **No screen lock** (Android, in front of every reveal or replace):
 `This phone has no screen lock` / `Anyone who picks it up could see your

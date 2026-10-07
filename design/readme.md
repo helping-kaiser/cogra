@@ -9451,6 +9451,16 @@ lines; quoted wordings are his.
   A sensitive result wears the text tile; a full match is equality; a
   still-settling result shows nothing extra; the mixed unscoped state
   says the search-scope line after the last row.
+- **Settings' loose ends.** `ApplicantEmail` opened from Settings returns
+  there, on back and on success with the same snackbar; an unverified
+  applicant's pending change keeps the row's `Change pending` and the
+  tap opens their own address change. Once the code's side is
+  confirmed, `ChangeEmailConfirm` drops its field and commitment. The
+  address-taken landing goes `Back to settings` for a member and takes
+  `VerifyExpired`'s way on for an applicant, whose body never promises
+  that confirming again applies it. `ChangePassword`'s re-auth budget
+  says B7's line above its commitment. The app's three settings lines
+  say `this app`.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not

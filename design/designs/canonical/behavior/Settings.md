@@ -96,6 +96,8 @@ WHEN tap Email GIVEN no email change is in flight -> the change request opens
 
 WHEN tap Email GIVEN the reader is an applicant whose address is not verified yet -> the applicant's own address change opens AND NEVER the member's two-sided change request opens
 
+WHEN tap Email GIVEN the reader is an applicant whose address is not verified yet and an email change is pending -> the applicant's own address change opens AND NEVER the change's confirmation opens
+
 ALWAYS the Email row reads the address alone, with no Change pending, GIVEN an email change ran out before both sides landed
 
 WHEN tap Email GIVEN an email change ran out before both sides landed -> the change request opens again
@@ -115,6 +117,12 @@ WHEN tap Contact -> the reader's own mail opens addressed to the contact address
 WHEN tap Privacy or Terms -> the written document opens
 
 ALWAYS the don't-remember switch's line reads Your key, your draft and any kept picks are cleared from this browser when you sign out. on the web
+
+ALWAYS the don't-remember switch's line reads Your key, your draft and any kept picks are cleared from this app when you sign out. on android
+
+ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Your recovery code is the only way back. on the web and Your key signs everything you publish and lives only in this app. Your recovery code is the only way back. on android GIVEN a recovery code exists
+
+ALWAYS settings.backup.footnote reads Your key signs everything you publish and lives only in this browser. Until you make a recovery code, it can't be brought back. on the web and Your key signs everything you publish and lives only in this app. Until you make a recovery code, it can't be brought back. on android GIVEN no recovery code exists
 
 WHEN tap Don't remember this account on this device -> the switch flips AND NEVER a dialog asks AND NEVER the reader is signed out
 
