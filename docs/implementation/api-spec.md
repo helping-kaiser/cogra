@@ -1032,6 +1032,9 @@ type User implements Node & Actor {
   hiddenActors(first: Int, after: String, last: Int, before: String): HiddenActorConnection
   "Active authentication sessions, one per refresh token."
   sessions: [Session!]
+  "When the password was last set — at registration, a reset or a
+   change. Field-level: viewer-only."
+  passwordChangedAt: DateTime
   "Cross-device preferences."
   preferences: UserPreferences
   "The viewer's pending staged writes — acts mid-handshake,
@@ -1042,6 +1045,10 @@ type User implements Node & Actor {
    ciphertext under the recovery code; the server cannot decrypt it
    (auth.md \"Key recovery\")."
   keyBackup: String
+  "When the stored key backup was made — the newest, the one
+   recovery serves; null when none was uploaded. Field-level:
+   viewer-only."
+  keyBackupCreatedAt: DateTime
   "The account's attached actor public key (base64), null before the
    key ceremony. The client's repair-attach verifies the device-held
    key against this before offering it, so a device carrying another
@@ -1576,6 +1583,9 @@ type UserPreferences {
    genesis signing, and changing this never reaches a post already
    published."
   defaultLicense: License
+  "Whether the account has seen the intro — it shows once per
+   account, on whichever device signs in first. False until set."
+  hasSeenOnboarding: Boolean!
 }
 
 "An outstanding invite link issued by an actor — service-side
@@ -2224,6 +2234,19 @@ type Query {
    one sees who is asking before anything is written, and the app
    can gate the staging call. Null when the id references no link."
   askLinkCheck(id: UUID!): AskLinkCheck
+
+  "Anonymous pre-sign-in check of an email change's new-address link,
+   so a device with no session can say what the link is for before
+   anything applies (ChangeEmailLinkedSignedOut). It reads and never
+   writes: no side is confirmed, consumed or reset. Null when the token
+   references no change — unknown, malformed, an original-address code,
+   a verification-link token, or a change row a retention sweep has
+   dropped all answer null alike. Holding the 256-bit token is the
+   proof: it was mailed to `newEmail`, so its holder learns nothing
+   about an address they do not already read. For the same reason the
+   answer carries nothing about the account the change belongs to —
+   no handle, no current address, no id."
+  emailChangeLinkCheck(token: String!): EmailChangeLinkCheck
 
   "The governed network parameters, from the operational carrier —
    all of them, or the named keys. The catalog is network.md's; the
@@ -4536,7 +4559,13 @@ input ConfirmPasswordResetInput {
 type ConfirmPasswordResetPayload { ok: Boolean }
 
 "Change the password while authenticated. Re-verifies currentPassword,
- breach-checks newPassword, and revokes the account's other sessions."
+ breach-checks newPassword, and revokes the account's other sessions.
+ A wrong currentPassword is INVALID_CREDENTIALS at
+ [\"currentPassword\"] and counts toward the account's
+ re-authentication backoff (auth.md \"Rate limiting\"), shared with
+ every verb that re-proves the password inside a session; while it
+ is serving a delay the call answers a transport-tier RATE_LIMITED
+ before the password is checked."
 input ChangePasswordInput {
   currentPassword: String!
   newPassword: String!
@@ -4561,7 +4590,8 @@ type ChangePasswordPayload { ok: Boolean }
  Requests spend a per-account mail budget; a spent budget answers a
  transport-tier RATE_LIMITED and nothing is mailed or recorded. The
  budget is per account and says nothing about newEmail, so it leaks
- nothing."
+ nothing. The password re-proof spends the re-authentication backoff
+ changePassword shares, refused the same way."
 input RequestEmailChangeInput {
   newEmail: String!
   currentPassword: String!
@@ -4746,6 +4776,24 @@ type AskLinkCheck {
  viewer-relative; an anonymous call never reads it."
 enum AskLinkUnusableReason { LANDED WAITING_ELSEWHERE WAITING_ON_VIEWER }
 
+"The anonymous view of an email change's new-address link (the
+ `emailChangeLinkCheck` query). Holding the token is holding the link."
+type EmailChangeLinkCheck {
+  "The address this link confirms — the inbox the link was mailed to."
+  newEmail: String!
+  "Where the link's change stands, by what ended it if anything did —
+   the confirm's own end-state codes (EMAIL_CHANGE_ALREADY_APPLIED /
+   _CANCELED / _EXPIRED), read without a session."
+  state: EmailChangeLinkState!
+}
+
+"PENDING: the change is live in its window (either side may already
+ have landed; a taken address still reads PENDING — the collision is
+ answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
+ change moved the address. CANCELED: called off, or superseded by a
+ newer request. EXPIRED: its window closed before both sides landed."
+enum EmailChangeLinkState { PENDING APPLIED CANCELED EXPIRED }
+
 "Remove the payload of a record the viewer authored — the
  per-content self-service erasure path (erasure.md §1). Immediate
  and permanent: the record drops to its reduced projection with
@@ -4899,14 +4947,25 @@ input MarkChatReadInput {
 }
 type MarkChatReadPayload { chat: Chat! }
 
+"A preference write. An absent field is left as it is; an explicit
+ null restores its default."
 input SetPreferencesInput {
-  "0 (show everything) to 10 (strictest); null restores the default."
+  "0 (show everything) to 10 (strictest); null restores the default.
+   Outside 0–10 is BAD_INPUT."
   contentFilteringSeverityLevel: Int
   "The license new posts start from; null restores public domain (0/0).
-   Both axes take the same three readings the composer publishes."
+   Both axes take the same three readings the composer publishes —
+   0, 0.5 and 1; any other value is BAD_INPUT on that axis."
   defaultLicense: LicenseInput
+  "Whether the account has seen the intro; null restores false."
+  hasSeenOnboarding: Boolean
 }
-type SetPreferencesPayload { preferences: UserPreferences! }
+"`preferences` is null exactly when a userError refused the write,
+ which then wrote nothing."
+type SetPreferencesPayload {
+  preferences: UserPreferences
+  userErrors: [UserError!]!
+}
 
 extend type Mutation {
   setBookmark(input: SetBookmarkInput!): SetBookmarkPayload!

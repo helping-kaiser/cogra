@@ -951,19 +951,36 @@ pub async fn credentials_by_actor(
     .transpose()
 }
 
+/// Rotates the password hash and stamps when it was set, in one
+/// statement — the age Settings reads can never disagree with the hash.
 pub async fn update_password_hash(
     pool: &PgPool,
     actor_id: Uuid,
     password_hash: &str,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
-        "UPDATE user_credentials SET password_hash = $2 WHERE actor_id = $1",
+        "UPDATE user_credentials SET password_hash = $2, password_changed_at = NOW()
+         WHERE actor_id = $1",
         actor_id,
         password_hash,
     )
     .execute(pool)
     .await?;
     Ok(())
+}
+
+/// When the account's password was last set — at registration, a reset
+/// or a change.
+pub async fn password_changed_at(
+    pool: &PgPool,
+    actor_id: Uuid,
+) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT password_changed_at FROM user_credentials WHERE actor_id = $1",
+        actor_id,
+    )
+    .fetch_optional(pool)
+    .await
 }
 
 /// Inserts a fresh session row (the raw token never persists — only its
@@ -1845,6 +1862,114 @@ pub async fn latest_key_backup(
     )
     .fetch_optional(pool)
     .await
+}
+
+/// When the account's stored backup was made — the newest one, the only
+/// one recovery serves; a replacement restamps it.
+pub async fn key_backup_created_at(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT MAX(created_at) FROM auth_key_backups WHERE user_id = $1",
+        user_id,
+    )
+    .fetch_one(pool)
+    .await
+}
+
+/// The account's cross-device preferences (data-model.md
+/// `user_preferences`). An account that never set one has no row and
+/// reads every field at its default.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Preferences {
+    pub content_filtering_severity_level: Option<i16>,
+    /// The `(attribution, provenance)` pair new posts start from; None
+    /// reads as public domain.
+    pub default_license: Option<(f64, f64)>,
+    pub has_seen_onboarding: bool,
+}
+
+pub async fn preferences(pool: &PgPool, user_id: Uuid) -> Result<Preferences, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT content_filtering_severity_level, default_license_attribution,
+                default_license_provenance, has_seen_onboarding
+         FROM user_preferences WHERE user_id = $1",
+        user_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| Preferences {
+        content_filtering_severity_level: r.content_filtering_severity_level,
+        default_license: r
+            .default_license_attribution
+            .zip(r.default_license_provenance),
+        has_seen_onboarding: r.has_seen_onboarding,
+    })
+    .unwrap_or_default())
+}
+
+/// One preference write: each field is left as it is (None), or set to
+/// the given value, where an inner None restores the default — the
+/// absent-versus-null distinction of the GraphQL input.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct PreferencesUpdate {
+    pub content_filtering_severity_level: Option<Option<i16>>,
+    pub default_license: Option<Option<(f64, f64)>>,
+    pub has_seen_onboarding: Option<bool>,
+}
+
+/// Applies a preference write and answers the stored preferences after
+/// it. The row is created on first write; an absent field keeps what the
+/// row held, read and written in the one statement.
+pub async fn set_preferences(
+    pool: &PgPool,
+    user_id: Uuid,
+    update: PreferencesUpdate,
+) -> Result<Preferences, sqlx::Error> {
+    let (set_level, level) = match update.content_filtering_severity_level {
+        Some(value) => (true, value),
+        None => (false, None),
+    };
+    let (set_license, license) = match update.default_license {
+        Some(value) => (true, value),
+        None => (false, None),
+    };
+    let r = sqlx::query!(
+        r#"INSERT INTO user_preferences AS p
+               (user_id, content_filtering_severity_level, default_license_attribution,
+                default_license_provenance, has_seen_onboarding)
+           VALUES ($1, $3, $5, $6, COALESCE($7, FALSE))
+           ON CONFLICT (user_id) DO UPDATE SET
+               content_filtering_severity_level = CASE WHEN $2
+                   THEN EXCLUDED.content_filtering_severity_level
+                   ELSE p.content_filtering_severity_level END,
+               default_license_attribution = CASE WHEN $4
+                   THEN EXCLUDED.default_license_attribution
+                   ELSE p.default_license_attribution END,
+               default_license_provenance = CASE WHEN $4
+                   THEN EXCLUDED.default_license_provenance
+                   ELSE p.default_license_provenance END,
+               has_seen_onboarding = COALESCE($7, p.has_seen_onboarding)
+           RETURNING content_filtering_severity_level, default_license_attribution,
+                     default_license_provenance, has_seen_onboarding"#,
+        user_id,
+        set_level,
+        level,
+        set_license,
+        license.map(|(a, _)| a),
+        license.map(|(_, o)| o),
+        update.has_seen_onboarding,
+    )
+    .fetch_one(pool)
+    .await?;
+    Ok(Preferences {
+        content_filtering_severity_level: r.content_filtering_severity_level,
+        default_license: r
+            .default_license_attribution
+            .zip(r.default_license_provenance),
+        has_seen_onboarding: r.has_seen_onboarding,
+    })
 }
 
 /// The identity association of one actor row. The key halves are None

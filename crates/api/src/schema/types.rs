@@ -1438,6 +1438,47 @@ impl User {
             .map(PendingEmailChange::from_store))
     }
 
+    /// When the password was last set — at registration, a reset or a
+    /// change. Field-level: viewer-only.
+    async fn password_changed_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::password_changed_at(pool, self.identity.id).await?)
+    }
+
+    /// When the stored key backup was made — the newest, the one
+    /// recovery serves; null when none was uploaded. Field-level:
+    /// viewer-only.
+    async fn key_backup_created_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::key_backup_created_at(pool, self.identity.id).await?)
+    }
+
+    /// Cross-device preferences. Field-level: viewer-only.
+    async fn preferences(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<UserPreferences>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(Some(UserPreferences::from_store(
+            store::preferences(pool, self.identity.id).await?,
+        )))
+    }
+
     /// The account's latest application — the applicant's own view of
     /// its progress; null when the account has none. Reading it is the
     /// admission flow's repair hook: an approved application whose
@@ -1512,6 +1553,77 @@ impl PendingEmailChange {
             link_confirmed: change.new_verified_at.is_some(),
             expires_at: change.expires_at,
             new_email: change.new_email,
+        }
+    }
+}
+
+/// A User's cross-device preferences.
+#[derive(SimpleObject)]
+pub struct UserPreferences {
+    /// Sensitive-content filter aggressiveness: 0 (show everything) to
+    /// 10 (strictest); null when unset, so the frontend default applies.
+    pub content_filtering_severity_level: Option<i32>,
+    /// The license the composer starts a new post from; null when unset,
+    /// so the composer starts at public domain (0/0). It seeds the
+    /// authoring-time declaration and binds nothing: the license is
+    /// settled per post at its genesis signing, and changing this never
+    /// reaches a post already published.
+    pub default_license: Option<License>,
+    /// Whether the account has seen the intro — it shows once per
+    /// account, on whichever device signs in first. False until set.
+    pub has_seen_onboarding: bool,
+}
+
+impl UserPreferences {
+    pub fn from_store(preferences: store::Preferences) -> Self {
+        Self {
+            content_filtering_severity_level: preferences
+                .content_filtering_severity_level
+                .map(i32::from),
+            default_license: preferences
+                .default_license
+                .map(|(attribution, provenance)| License {
+                    attribution,
+                    provenance,
+                }),
+            has_seen_onboarding: preferences.has_seen_onboarding,
+        }
+    }
+}
+
+/// The anonymous view of an email change's new-address link (the
+/// `emailChangeLinkCheck` query). Holding the token is holding the link.
+#[derive(SimpleObject)]
+pub struct EmailChangeLinkCheck {
+    /// The address this link confirms — the inbox the link was mailed to.
+    pub new_email: String,
+    /// Where the link's change stands, by what ended it if anything did —
+    /// the confirm's own end-state codes (EMAIL_CHANGE_ALREADY_APPLIED /
+    /// _CANCELED / _EXPIRED), read without a session.
+    pub state: EmailChangeLinkState,
+}
+
+/// PENDING: the change is live in its window (either side may already
+/// have landed; a taken address still reads PENDING — the collision is
+/// answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
+/// change moved the address. CANCELED: called off, or superseded by a
+/// newer request. EXPIRED: its window closed before both sides landed.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum EmailChangeLinkState {
+    Pending,
+    Applied,
+    Canceled,
+    Expired,
+}
+
+impl EmailChangeLinkState {
+    pub fn of(end: Option<store::EmailChangeEnd>) -> Self {
+        match end {
+            None => Self::Pending,
+            Some(store::EmailChangeEnd::Applied) => Self::Applied,
+            Some(store::EmailChangeEnd::Canceled) => Self::Canceled,
+            Some(store::EmailChangeEnd::RanOut) => Self::Expired,
         }
     }
 }

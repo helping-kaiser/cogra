@@ -2,8 +2,9 @@
 //! "Email change"): the two-sided proof end to end, the 6-digit code and
 //! its wrong-try cap, resend of the owed sides, cancel, the answers a
 //! link gives once its change ended, the unverified carve-out, the
-//! account mail budget, and the viewer-only reads. Requires a live
-//! Postgres (`make up`).
+//! account mail budget, the viewer-only reads, and the anonymous link
+//! check a signed-out landing reads. Requires a live Postgres
+//! (`make up`).
 
 use std::sync::{Arc, Mutex};
 
@@ -1238,4 +1239,274 @@ async fn the_reap_window_does_not_restart(pool: PgPool) {
     assert_eq!(refused["ok"], false);
     assert_eq!(codes(&refused), vec!["VERIFICATION_TOKEN_INVALID"]);
     assert_eq!(rig.stored_email(user).await, "typo@example.com");
+}
+
+const LINK_CHECK: &str = "query($token: String!) {
+    emailChangeLinkCheck(token: $token) { newEmail state }
+}";
+
+impl Rig {
+    /// The anonymous check, or with a session when one is given.
+    async fn link_check(&self, session: Option<&str>, link: &str) -> Value {
+        self.gql(session, LINK_CHECK, json!({ "token": link }))
+            .await["emailChangeLinkCheck"]
+            .clone()
+    }
+}
+
+fn pending(new_email: &str) -> Value {
+    json!({ "newEmail": new_email, "state": "PENDING" })
+}
+
+/// A live change's link reads its new address and PENDING with no
+/// session at all.
+///
+/// A live change's link reads its new address and pending state without a session.
+/// ´claim:auth:a-link-check-reads-a-live-change-anonymously´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_reads_a_pending_change_without_a_session(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+
+    assert_eq!(rig.link_check(None, &link).await, pending("b@example.com"));
+}
+
+/// Either side landing alone leaves the link reading PENDING — the code
+/// confirmed, or the link itself confirmed signed in.
+///
+/// A change with a side still owed reads pending, whichever side landed.
+/// ´claim:auth:a-link-check-stays-pending-while-a-side-is-owed´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_stays_pending_while_a_side_is_owed(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    rig.confirm(&token, &rig.mailer.latest_code_for("a@example.com"))
+        .await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+    assert_eq!(rig.link_check(None, &link).await, pending("b@example.com"));
+
+    rig.request_change(&token, "c@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("c@example.com");
+    assert_eq!(codes(&rig.confirm(&token, &link).await), Vec::<&str>::new());
+    assert_eq!(rig.link_check(None, &link).await, pending("c@example.com"));
+}
+
+/// Once both sides land, the link reads APPLIED.
+///
+/// An applied change's link reads applied.
+/// ´claim:auth:a-link-check-reads-an-applied-change´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_reads_an_applied_change(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+    rig.confirm(&token, &rig.mailer.latest_code_for("a@example.com"))
+        .await;
+    rig.confirm(&token, &link).await;
+
+    assert_eq!(
+        rig.link_check(None, &link).await,
+        json!({ "newEmail": "b@example.com", "state": "APPLIED" })
+    );
+}
+
+/// A canceled change's link reads CANCELED.
+///
+/// A canceled change's link reads canceled.
+/// ´claim:auth:a-link-check-reads-a-canceled-change´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_reads_a_canceled_change(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+    rig.cancel(&token).await;
+
+    assert_eq!(
+        rig.link_check(None, &link).await,
+        json!({ "newEmail": "b@example.com", "state": "CANCELED" })
+    );
+}
+
+/// A change superseded by a newer request reads CANCELED, while the newer
+/// one's link reads PENDING.
+///
+/// A superseded change's link reads canceled.
+/// ´claim:auth:a-link-check-reads-a-superseded-change-as-canceled´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_reads_a_superseded_change_as_canceled(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let first = rig.mailer.latest_code_for("b@example.com");
+    rig.request_change(&token, "c@example.com", PASSWORD).await;
+    let second = rig.mailer.latest_code_for("c@example.com");
+
+    assert_eq!(
+        rig.link_check(None, &first).await,
+        json!({ "newEmail": "b@example.com", "state": "CANCELED" })
+    );
+    assert_eq!(
+        rig.link_check(None, &second).await,
+        pending("c@example.com")
+    );
+}
+
+/// A change past its window reads EXPIRED.
+///
+/// A change past its window reads expired.
+/// ´claim:auth:a-link-check-reads-a-run-out-change-as-expired´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_reads_a_change_past_its_window_as_expired(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let user = rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+    rig.run_out(user).await;
+
+    assert_eq!(
+        rig.link_check(None, &link).await,
+        json!({ "newEmail": "b@example.com", "state": "EXPIRED" })
+    );
+}
+
+/// An unknown token reads null, and so do garbage and the empty string —
+/// one answer, nothing to tell them apart.
+///
+/// An unknown token reads null, indistinguishable from garbage.
+/// ´claim:auth:a-link-check-learns-nothing-from-an-unknown-token´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_is_null_for_an_unknown_token(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let unknown = api::auth::new_secret().token;
+    for token in [unknown.as_str(), "not a token", ""] {
+        assert!(rig.link_check(None, token).await.is_null(), "{token:?}");
+    }
+}
+
+/// The original address's code and a verification-link token — the
+/// carve-out's new-address link among them — read null like any unknown
+/// token.
+///
+/// A code from the original address, or a verification-link token, reads null.
+/// ´claim:auth:a-link-check-answers-only-change-links´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_is_null_for_a_code_or_a_verification_token(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let code = rig.mailer.latest_code_for("a@example.com");
+    assert!(rig.link_check(None, &code).await.is_null());
+
+    let (_, registration_link) = rig
+        .seed_unverified("bob", "typo@example.com", PASSWORD)
+        .await;
+    assert!(rig.link_check(None, &registration_link).await.is_null());
+    let bob = rig.access_token("typo@example.com", PASSWORD).await;
+    rig.request_change(&bob, "right@example.com", PASSWORD)
+        .await;
+    let carve_out_link = rig.mailer.latest_code_for("right@example.com");
+    assert!(rig.link_check(None, &carve_out_link).await.is_null());
+}
+
+/// Once the retention sweep drops an ended change, its link reads null.
+///
+/// A link whose change the retention sweep dropped reads null.
+/// ´claim:auth:a-link-check-is-null-once-swept´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_is_null_once_the_row_is_swept(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+    rig.cancel(&token).await;
+    sqlx::query("UPDATE auth_email_changes SET cancelled_at = NOW() - INTERVAL '2 days'")
+        .execute(&rig.pool)
+        .await
+        .expect("ages the cancel");
+
+    let swept = store::sweep_spent_secrets(&rig.pool, 86_400.0, 86_400.0)
+        .await
+        .expect("sweep");
+    assert_eq!(swept.email_changes, 1);
+    assert!(rig.link_check(None, &link).await.is_null());
+}
+
+/// The check writes nothing: after it, the link's side is still owed, and
+/// the signed-in confirm still lands it and applies the change.
+///
+/// The link check never confirms, consumes or resets the side it reads.
+/// ´claim:auth:a-link-check-never-writes´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_never_confirms_or_consumes_the_side(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let user = rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+    rig.confirm(&token, &rig.mailer.latest_code_for("a@example.com"))
+        .await;
+
+    rig.link_check(None, &link).await;
+    rig.link_check(None, &link).await;
+    assert_eq!(
+        rig.me(&token).await["pendingEmailChange"]["linkConfirmed"],
+        false
+    );
+    assert_eq!(rig.stored_email(user).await, "a@example.com");
+
+    assert_eq!(codes(&rig.confirm(&token, &link).await), Vec::<&str>::new());
+    assert_eq!(rig.stored_email(user).await, "b@example.com");
+}
+
+/// An address another account took meanwhile still reads PENDING: the
+/// check reports the change row alone, never whether an address is
+/// registered.
+///
+/// The link check never reveals whether its address belongs to another account.
+/// ´claim:auth:a-link-check-has-no-cross-account-lookup´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_reports_a_taken_address_as_pending(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    let token = rig.access_token("a@example.com", PASSWORD).await;
+    rig.request_change(&token, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+    rig.seed_user("bob", "b@example.com", PASSWORD).await;
+
+    assert_eq!(rig.link_check(None, &link).await, pending("b@example.com"));
+}
+
+/// A session changes nothing: the owner, another account and no one at
+/// all read the same answer.
+///
+/// The link check answers the same with or without a session, whoever's.
+/// ´claim:auth:a-link-check-ignores-the-session´
+#[sqlx::test(migrations = "../../migrations")]
+async fn email_change_link_check_answers_the_same_signed_in_as_another_account(pool: PgPool) {
+    let rig = Rig::new(pool);
+    rig.seed_user("alice", "a@example.com", PASSWORD).await;
+    rig.seed_user("bob", "bob@example.com", PASSWORD).await;
+    let alice = rig.access_token("a@example.com", PASSWORD).await;
+    let bob = rig.access_token("bob@example.com", PASSWORD).await;
+    rig.request_change(&alice, "b@example.com", PASSWORD).await;
+    let link = rig.mailer.latest_code_for("b@example.com");
+
+    let anonymous = rig.link_check(None, &link).await;
+    assert_eq!(anonymous, pending("b@example.com"));
+    assert_eq!(rig.link_check(Some(&alice), &link).await, anonymous);
+    assert_eq!(rig.link_check(Some(&bob), &link).await, anonymous);
 }

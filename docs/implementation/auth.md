@@ -988,6 +988,13 @@ limits survive restarts and hold across instances.
 - Login attempts — limited per IP and per account, with
   exponential backoff on consecutive failures; a successful
   login ends the run.
+- Re-authentication inside a session (`changePassword`,
+  `requestEmailChange`) — one per-account run of consecutive wrong
+  current passwords, shared by every verb that re-proves the
+  password, with the same exponential backoff; a right password
+  ends the run. Without it a live session could guess the password
+  it was opened with. The caller is authenticated, so the backoff
+  answers visibly.
 - Application submits (`register`) — limited
   per IP and per invite link.
 - Password-reset requests — limited per IP and per account.

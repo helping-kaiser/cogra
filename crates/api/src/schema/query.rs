@@ -13,11 +13,11 @@ use postgres_store::{PgPool, auth as store, content as content_store, genesis, m
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType, Node,
-    PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
-    ReferenceTarget, StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor,
-    content_cursor_key, keyset_connection, keyset_page, list_cost, list_limit, record_connection,
-    resolve_reference_target,
+    Actor, CommentType, EmailChangeLinkCheck, EmailChangeLinkState, HashtagType, InviteLinkCheck,
+    KeysetConnection, MediaAttachmentType, Node, PostType, Record, RecordConnection, RecordFamily,
+    RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User, borrowed_vantage,
+    connection_cost, content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost,
+    list_limit, record_connection, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -98,6 +98,35 @@ impl Query {
             inviter_handle: inviter.handle,
             expires_at: link.expires_at,
         }))
+    }
+
+    /// Anonymous pre-sign-in check of an email change's new-address
+    /// link, so a device with no session can say what the link is for
+    /// before anything applies. It reads and never writes: no side is
+    /// confirmed, consumed or reset. Null when the token references no
+    /// change — unknown, malformed, an original-address code, a
+    /// verification-link token, or a change row a retention sweep has
+    /// dropped all answer null alike. Holding the 256-bit token is the
+    /// proof: it was mailed to `newEmail`, so its holder learns nothing
+    /// about an address they do not already read. For the same reason
+    /// the answer carries nothing about the account the change belongs
+    /// to — no handle, no current address, no id.
+    async fn email_change_link_check(
+        &self,
+        ctx: &Context<'_>,
+        token: String,
+    ) -> async_graphql::Result<Option<EmailChangeLinkCheck>> {
+        let pool = ctx.data::<PgPool>()?;
+        let unverified_carve_out = |change: &store::EmailChange| !change.requires_code;
+        Ok(
+            store::email_change_by_token(pool, &crate::auth::hash_of(&token))
+                .await?
+                .filter(|change| !unverified_carve_out(change))
+                .map(|change| EmailChangeLinkCheck {
+                    state: EmailChangeLinkState::of(change.end()),
+                    new_email: change.new_email,
+                }),
+        )
     }
 
     /// The viewer's own account, resolved from the request's auth token.

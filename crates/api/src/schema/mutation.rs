@@ -28,7 +28,7 @@ use uuid::Uuid;
 
 use super::types::{
     AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PendingEmailChange,
-    PreparedWrite, Session, StagedWriteType, User, UserError,
+    PreparedWrite, Session, StagedWriteType, User, UserError, UserPreferences,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -116,6 +116,30 @@ fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> 
         body: format!(
             "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}\nOr paste the token in the app: {token}"
         ),
+    }
+}
+
+/// Re-proves the current password inside a live session, spending the
+/// account's re-authentication budget (auth.md "Rate limiting"): a
+/// serving backoff refuses as a transport-tier RATE_LIMITED before the
+/// password is even checked, a wrong password counts toward the run,
+/// and a right one ends it. Answers whether the password matched.
+async fn reauthenticate(
+    pool: &PgPool,
+    limits: &RateLimitConfig,
+    account: Uuid,
+    credentials: &store::Credentials,
+    password: &str,
+) -> async_graphql::Result<bool> {
+    if ratelimit::reauth_blocked(pool, account).await?.is_some() {
+        return Err(rate_limited());
+    }
+    if auth::verify_password(&credentials.password_hash, password) {
+        ratelimit::reauth_succeeded(pool, account).await?;
+        Ok(true)
+    } else {
+        ratelimit::reauth_failed(pool, limits, account).await?;
+        Ok(false)
     }
 }
 
@@ -1199,6 +1223,42 @@ struct DismissVouchBackPayload {
     user_errors: Vec<UserError>,
 }
 
+/// A preference write. Every field is optional in the GraphQL sense: an
+/// absent field is left as it is; an explicit null restores its default.
+#[derive(InputObject)]
+struct SetPreferencesInput {
+    /// 0 (show everything) to 10 (strictest); null restores the default.
+    content_filtering_severity_level: async_graphql::MaybeUndefined<i32>,
+    /// The license new posts start from; null restores public domain
+    /// (0/0). Both axes take the same three readings the composer
+    /// publishes — 0, 0.5 and 1.
+    default_license: async_graphql::MaybeUndefined<LicenseInput>,
+    /// Whether the account has seen the intro; null restores false.
+    has_seen_onboarding: async_graphql::MaybeUndefined<bool>,
+}
+
+#[derive(SimpleObject)]
+struct SetPreferencesPayload {
+    preferences: Option<UserPreferences>,
+    user_errors: Vec<UserError>,
+}
+
+/// The three readings a license axis takes in the composer, and so in the
+/// default it starts from.
+const LICENSE_READINGS: [f64; 3] = [0.0, 0.5, 1.0];
+
+/// A license default on the three readings, or the field it fails on.
+fn default_license_pair(license: &LicenseInput) -> Result<(f64, f64), &'static str> {
+    let reading = |value: f64| LICENSE_READINGS.contains(&value);
+    if !reading(license.attribution) {
+        return Err("attribution");
+    }
+    if !reading(license.provenance) {
+        return Err("provenance");
+    }
+    Ok((license.attribution, license.provenance))
+}
+
 #[derive(InputObject)]
 struct UploadKeyBackupInput {
     /// The client-encrypted key-backup blob (base64) — ciphertext under
@@ -1806,7 +1866,10 @@ impl Mutation {
     }
 
     /// Re-verifies the current password, rotates the hash, and revokes
-    /// the account's other sessions.
+    /// the account's other sessions. The re-proof spends the account's
+    /// re-authentication budget, shared with every verb that re-proves
+    /// the password in a live session: a run of wrong ones backs off as
+    /// a visible RATE_LIMITED, and a right one ends the run.
     async fn change_password(
         &self,
         ctx: &Context<'_>,
@@ -1814,10 +1877,19 @@ impl Mutation {
     ) -> async_graphql::Result<ChangePasswordPayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
         let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
             return Err(unauthenticated());
         };
-        if !auth::verify_password(&credentials.password_hash, &input.current_password) {
+        if !reauthenticate(
+            pool,
+            limits,
+            v.user_id,
+            &credentials,
+            &input.current_password,
+        )
+        .await?
+        {
             return Ok(ChangePasswordPayload {
                 ok: None,
                 user_errors: vec![UserError::at(
@@ -1856,8 +1928,10 @@ impl Mutation {
     /// request supersedes a pending one. A new address already
     /// registered to another account reads exactly like success; a wrong
     /// password is INVALID_CREDENTIALS, which leaks nothing to a caller
-    /// already signed in. Spends the account's mail budget: a spent
-    /// budget answers RATE_LIMITED and nothing is mailed or recorded.
+    /// already signed in. The re-proof spends the account's
+    /// re-authentication budget, the one changePassword shares. Spends
+    /// the account's mail budget: a spent budget answers RATE_LIMITED
+    /// and nothing is mailed or recorded.
     async fn request_email_change(
         &self,
         ctx: &Context<'_>,
@@ -1875,7 +1949,15 @@ impl Mutation {
             pending_email_change: None,
             user_errors: vec![error],
         };
-        if !auth::verify_password(&credentials.password_hash, &input.current_password) {
+        if !reauthenticate(
+            pool,
+            limits,
+            v.user_id,
+            &credentials,
+            &input.current_password,
+        )
+        .await?
+        {
             return Ok(refuse(UserError::at(
                 ErrorCode::InvalidCredentials,
                 "current password did not match",
@@ -2182,6 +2264,73 @@ impl Mutation {
             user: store::actor_identity(pool, v.user_id)
                 .await?
                 .map(|identity| User::from_viewer(identity, v)),
+            user_errors: vec![],
+        })
+    }
+
+    /// Writes the viewer's cross-device preferences. An absent field is
+    /// left as it is; an explicit null restores its default. A license
+    /// axis off the three published readings, or a filter level outside
+    /// 0–10, is BAD_INPUT on that field and writes nothing.
+    async fn set_preferences(
+        &self,
+        ctx: &Context<'_>,
+        input: SetPreferencesInput,
+    ) -> async_graphql::Result<SetPreferencesPayload> {
+        use async_graphql::MaybeUndefined;
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let refuse = |message: &str, field: &[&str]| SetPreferencesPayload {
+            preferences: None,
+            user_errors: vec![UserError::at(
+                ErrorCode::BadInput,
+                message,
+                field.iter().map(|f| (*f).to_string()).collect(),
+            )],
+        };
+        let level = match input.content_filtering_severity_level {
+            MaybeUndefined::Undefined => None,
+            MaybeUndefined::Null => Some(None),
+            MaybeUndefined::Value(level) => match i16::try_from(level) {
+                Ok(level) if (0..=10).contains(&level) => Some(Some(level)),
+                _ => {
+                    return Ok(refuse(
+                        "the filter level is 0 to 10",
+                        &["contentFilteringSeverityLevel"],
+                    ));
+                }
+            },
+        };
+        let license = match &input.default_license {
+            MaybeUndefined::Undefined => None,
+            MaybeUndefined::Null => Some(None),
+            MaybeUndefined::Value(license) => match default_license_pair(license) {
+                Ok(pair) => Some(Some(pair)),
+                Err(axis) => {
+                    return Ok(refuse(
+                        "a license axis takes 0, 0.5 or 1",
+                        &["defaultLicense", axis],
+                    ));
+                }
+            },
+        };
+        let onboarding = match input.has_seen_onboarding {
+            MaybeUndefined::Undefined => None,
+            MaybeUndefined::Null => Some(false),
+            MaybeUndefined::Value(seen) => Some(seen),
+        };
+        let stored = store::set_preferences(
+            pool,
+            v.user_id,
+            store::PreferencesUpdate {
+                content_filtering_severity_level: level,
+                default_license: license,
+                has_seen_onboarding: onboarding,
+            },
+        )
+        .await?;
+        Ok(SetPreferencesPayload {
+            preferences: Some(UserPreferences::from_store(stored)),
             user_errors: vec![],
         })
     }
