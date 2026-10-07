@@ -392,7 +392,8 @@ describe("the settings page", () => {
     search = new URLSearchParams("done=handle");
     renderSettings();
     expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent("Your handle is now @sol.");
-    expect(replace).toHaveBeenCalledWith("/settings");
+    // The `?done=` is dropped in the effect after the snackbar's render.
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/settings"));
   });
 
   it("success_returns_to_settings_with_the_snackbar_and_new_age", async () => {
