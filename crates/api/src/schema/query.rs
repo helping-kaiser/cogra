@@ -124,10 +124,14 @@ impl Query {
     /// 1. An **invite-link arrival**, still signed out, borrows **the
     ///    inviter's** view, resolved from the link id. That resolution
     ///    arrives with slice 3 and its own band-line ruling.
-    /// 2. An **applicant** borrows **their inviter's**, from the moment
-    ///    the account exists and before either proof is in — and a
-    ///    **landed member** keeps borrowing it until their own first
-    ///    stance toward them exists, the vouch-back.
+    /// 2. An **applicant** borrows **their approver's**, from the moment
+    ///    the account exists and before either proof is in, whatever they
+    ///    stage — and a **landed member** keeps borrowing it until their
+    ///    first Opinion is signed, toward any target, landed or in flight.
+    ///    An Affinity never ends it; a first Opinion that expires with
+    ///    none landed returns it; an Opinion carried from the application
+    ///    signs with the vouch-in batch, so that member owns their view
+    ///    from landing on.
     /// 3. A **bare visitor**, with nothing more specific to go on,
     ///    borrows the **Genesis Moderator's** view. Strictly the
     ///    fallback: it is the only vantage that names no relationship

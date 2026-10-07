@@ -297,7 +297,8 @@ fn path(index: usize, field: &str) -> Vec<String> {
 /// citing artifact, terminating at the cited target.
 ///
 /// `site_deps` orders the act behind the records its site must not be
-/// ordered ahead of — the act that mints a still-pending middle. The act
+/// ordered ahead of — the act that mints a still-pending middle, and on a
+/// withdrawal the in-flight records the counter-record nets. The act
 /// that mints a still-pending *target* (D17) is added here, from the plan,
 /// rather than by each caller: it belongs to the citation, not its site,
 /// and every staging path — creation batch, standalone citation, withdrawal
@@ -512,12 +513,13 @@ pub async fn prepare_reference<B: L1Boundary>(
 /// `PrepareReferenceWithdrawalInput`).
 ///
 /// Each counter-record declares the same dependencies a citation on this
-/// pair would: the minting act of a still-pending artifact or target. The
-/// records it nets declared them, so they land only behind those mints or
-/// expire with them; a counter-record free of the dependency could land
-/// alone, and the bundle would then net to the negation of what was
-/// withdrawn — a refutation nobody authored. Only a declared dependency
-/// orders one act behind another (layer1-interface.md §8.2).
+/// pair would — the minting act of a still-pending artifact or target —
+/// and, beside them, every still-in-flight record the batch nets. A
+/// counter-record free of either could land while what it nets expires,
+/// and the bundle would then net to the negation of what was withdrawn —
+/// a refutation nobody authored. If the citation did not land, neither
+/// does its walk-back. Only a declared dependency orders one act behind
+/// another (layer1-interface.md §8.2).
 pub async fn prepare_reference_withdrawal<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -535,7 +537,7 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
     refuse_topic_target(&resolved.node)
         .map_err(|(field, message)| ReferenceError::at(vec![field.to_string()], message))?;
     let author = author_address(pool, viewer).await?;
-    let sum = store_refs::bundle(
+    let bundle = store_refs::netted_bundle(
         pool,
         &author,
         &citing.node.to_string(),
@@ -543,7 +545,7 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
         ReferenceView::IncludingPending { actor: &author },
     )
     .await?;
-    let batch = sum.severance_batch();
+    let batch = bundle.sum.severance_batch();
     if batch.is_empty() {
         return Err(ReferenceError::at(
             vec!["target".to_string()],
@@ -560,7 +562,7 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
         &[(SigningClass::Claim, batch.len())],
     )
     .await?;
-    let site_deps = nodes::deps_awaiting(&[], [&citing.awaits]);
+    let site_deps = withdrawal_deps(&citing.awaits, &bundle.in_flight)?;
     let mut prepared = Vec::with_capacity(batch.len());
     for (relevance, support) in batch {
         let counter = PlannedReference {
@@ -576,6 +578,28 @@ pub async fn prepare_reference_withdrawal<B: L1Boundary>(
         );
     }
     Ok(prepared)
+}
+
+/// The site dependencies of a withdrawal's counter-records: the citing
+/// artifact's mint while it is in flight, plus the pending records the
+/// batch nets, as the bundle read named them. The target's mint is not
+/// here — [`reference_gesture`] adds it, as it does for every citation.
+///
+/// The batch is computed against the pending-inclusive sum, so every
+/// pending record in that sum is one the counters net; leaving any of them
+/// undeclared lets the counters land without it.
+fn withdrawal_deps(
+    citing_awaits: &Option<ActId>,
+    in_flight: &[String],
+) -> Result<Vec<ActId>, ReferencesError> {
+    let mut awaited = Vec::with_capacity(in_flight.len() + 1);
+    awaited.push(citing_awaits.clone());
+    for act in in_flight {
+        let act = ActId::parse(act)
+            .map_err(|e| ReferencesError::Internal(format!("stored act id {act}: {e}")))?;
+        awaited.push(Some(act));
+    }
+    Ok(nodes::deps_awaiting(&[], &awaited))
 }
 
 /// The minted node a citation hangs off, with its minting act while that

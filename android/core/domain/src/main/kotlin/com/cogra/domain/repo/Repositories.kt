@@ -148,6 +148,9 @@ interface AccountRepository {
 
     suspend fun changeHandle(handle: String): Outcome<Unit>
 
+    /** Puts the vouch-back prompt away for good, on every device — account state. */
+    suspend fun dismissVouchBack(): Outcome<Unit>
+
     suspend fun requestPasswordReset(email: String): Outcome<Unit>
 
     suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit>

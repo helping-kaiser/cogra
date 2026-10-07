@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applications\n         SET first_opinion_at = NOW()\n         WHERE account_id = $1 AND landed_at IS NOT NULL\n           AND first_opinion_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3b2350c27b1e5c9446488fc990486e9cf6d4b53f1e0b7629cbc197b5a7f6ac93"
+}

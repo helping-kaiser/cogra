@@ -101,17 +101,6 @@ interface IdentityStore {
     suspend fun handshakeIds(): Set<String>
 
     /**
-     * Device-local UX state: whether the first-login reciprocation
-     * prompt was dismissed on this device. Dismissal memory only —
-     * whether the pair is complete is the graph-derived
-     * `User.hasReciprocated` (auth.md "Reciprocation is the joiner's
-     * own act"); the offer legitimately reappears on a new device.
-     */
-    suspend fun reciprocationDismissed(): Boolean
-
-    suspend fun markReciprocationDismissed()
-
-    /**
      * Device-local UX state: whether the tap that teaches the held
      * gesture has been spent. Set when the coach mark opens, so a
      * restart cannot swallow a second priced tap in silence

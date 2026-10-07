@@ -41,15 +41,25 @@ private const val SLOW_DELAY_MS = 10_000L
 private fun member(
     invitedBy: ActorRef? = ActorRef("inv1", "inviter"),
     hasReciprocated: Boolean = false,
-) = UserProfile("u1", "joiner", "joiner", AccountState.MEMBER, hasReciprocated, invitedBy)
+    vouchBackDismissed: Boolean = false,
+) = UserProfile("u1", "joiner", "joiner", AccountState.MEMBER, hasReciprocated, invitedBy, vouchBackDismissed)
 
 private fun applicant() =
     UserProfile("u1", "joiner", "joiner", AccountState.APPLICANT, false, invitedBy = null)
 
 private class ScriptedAccount : ThrowingAccountRepository() {
     var profile: UserProfile? = member()
+    var dismissal: Outcome<Unit> = Outcome.Success(Unit)
+    var dismissals = 0
 
     override suspend fun me(): Outcome<UserProfile?> = Outcome.Success(profile)
+
+    /** The server keeps the dismissal on the account, as the API does. */
+    override suspend fun dismissVouchBack(): Outcome<Unit> {
+        dismissals += 1
+        if (dismissal is Outcome.Success) profile = profile?.copy(vouchBackDismissed = true)
+        return dismissal
+    }
 }
 
 private class ScriptedOnboarding : ThrowingOnboardingRepository() {
@@ -166,16 +176,16 @@ class HomeViewModelTest {
     }
 
     @Test
-    fun reciprocatingSignsWithoutTouchingTheDeviceBit() = homeTest {
+    fun reciprocatingSignsWithoutDismissing() = homeTest {
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onReciprocate()
         dispatcher.scheduler.advanceUntilIdle()
         assertThat(vm.state.value.reciprocated).isTrue()
         assertThat(vm.state.value.reciprocationTarget).isNull()
-        // The graph knows (the staged write is in flight); the device
-        // bit is dismissal memory only.
-        assertThat(identity.dismissedReciprocation).isFalse()
+        // The graph knows (the staged write is in flight); vouching back
+        // is not a dismissal.
+        assertThat(account.dismissals).isEqualTo(0)
 
         // The next profile read carries the server's answer.
         account.profile = member(hasReciprocated = true)
@@ -186,27 +196,46 @@ class HomeViewModelTest {
 
     @Test
     fun theServerAnswerSilencesThePromptAcrossDevices() = homeTest {
-        // A reciprocated pair, fresh device: no local bit, no prompt.
+        // A reciprocated pair, fresh device: no prompt.
         account.profile = member(hasReciprocated = true)
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(identity.dismissedReciprocation).isFalse()
         assertThat(vm.state.value.reciprocationTarget).isNull()
     }
 
     @Test
-    fun dismissalIsRememberedToo() = homeTest {
+    fun theAccountsDismissalSilencesThePromptOnAnyDevice() = homeTest {
+        account.profile = member(vouchBackDismissed = true)
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.reciprocationTarget).isNull()
+    }
+
+    @Test
+    fun dismissalIsAccountState() = homeTest {
+        val vm = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.reciprocationTarget).isNotNull()
+        vm.onDismissReciprocation()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(account.dismissals).isEqualTo(1)
+        assertThat(vm.state.value.reciprocationTarget).isNull()
+
+        // Kept by the server, still unreciprocated: no prompt on reload.
+        val next = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(next.state.value.reciprocationTarget).isNull()
+    }
+
+    @Test
+    fun aDismissalTheServerDidNotKeepLeavesThePrompt() = homeTest {
+        account.dismissal = Outcome.Failed(IllegalStateException("offline"))
         val vm = viewModel()
         dispatcher.scheduler.advanceUntilIdle()
         vm.onDismissReciprocation()
         dispatcher.scheduler.advanceUntilIdle()
-        assertThat(identity.dismissedReciprocation).isTrue()
-        assertThat(vm.state.value.reciprocationTarget).isNull()
-
-        // Dismissed locally, still unreciprocated: no prompt on reload.
-        val next = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(next.state.value.reciprocationTarget).isNull()
+        assertThat(account.dismissals).isEqualTo(1)
+        assertThat(vm.state.value.reciprocationTarget).isNotNull()
     }
 
     @Test
@@ -405,7 +434,7 @@ class HomeViewModelTest {
         vm.onDismissWaitingHint()
         assertThat(vm.state.value.waitingHintDismissed).isTrue()
         // Nothing was persisted — the hint returns with the next app run.
-        assertThat(identity.dismissedReciprocation).isFalse()
+        assertThat(account.dismissals).isEqualTo(0)
     }
 
     @Test

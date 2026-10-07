@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import type { MeUser } from "@/lib/api/auth-api";
+import { dismissVouchBack, type MeUser } from "@/lib/api/auth-api";
 import { prepareStance } from "@/lib/api/writes-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { useAuthGuard } from "@/lib/session/runtime";
@@ -20,7 +20,6 @@ import { StanceSlider } from "@/lib/ui/stance-slider";
 
 type DeviceState = {
   keyOnDevice: boolean;
-  reciprocationDismissed: boolean;
   pendingCount: number;
 };
 
@@ -42,6 +41,9 @@ export function MemberStatus({
   const [signing, setSigning] = useState(false);
   const [signingFailed, setSigningFailed] = useState(false);
   const [reciprocated, setReciprocated] = useState(false);
+  // Set once the server has the dismissal, so the card goes now rather
+  // than on the next `me` read; the account state is what keeps it away.
+  const [putAway, setPutAway] = useState(false);
   // The confirmation is a separate flag from the fact: `reciprocated` keeps
   // the card away for good, this one only says so once.
   const [confirming, setConfirming] = useState(false);
@@ -50,14 +52,9 @@ export function MemberStatus({
   const dismissConfirmation = useCallback(() => setConfirming(false), []);
 
   const readDevice = useCallback(() => {
-    return Promise.all([
-      store.actorKey(),
-      store.reciprocationDismissed(),
-      store.handshakeIds(),
-    ]).then(([key, dismissed, pending]) => {
+    return Promise.all([store.actorKey(), store.handshakeIds()]).then(([key, pending]) => {
       setDevice({
         keyOnDevice: key !== null,
-        reciprocationDismissed: dismissed,
         pendingCount: pending.length,
       });
     });
@@ -69,14 +66,15 @@ export function MemberStatus({
 
   if (device === null) return null;
 
-  // The pair's state is the graph's (hasReciprocated); the device
-  // remembers only a dismissal.
+  // The pair's state is the graph's (hasReciprocated) and the dismissal
+  // is the account's (vouchBackDismissed); the device remembers neither.
   const inviter = me.invitedBy;
   const prompt =
     inviter !== null &&
     device.keyOnDevice &&
     !me.hasReciprocated &&
-    !device.reciprocationDismissed &&
+    !me.vouchBackDismissed &&
+    !putAway &&
     !reciprocated;
 
   const onReciprocate = async () => {
@@ -105,8 +103,8 @@ export function MemberStatus({
   };
 
   const onSkip = async () => {
-    await store.markReciprocationDismissed();
-    await readDevice();
+    const dismissed = await guard.run(() => dismissVouchBack(client));
+    if (dismissed.kind === "success") setPutAway(true);
   };
 
   const onResume = async () => {

@@ -44,9 +44,10 @@ is decided per surface as slices land, not by the framework.
 The math lives once, in the `ranker` crate
 ([architecture.md](architecture.md#cratesranker)); the browser
 binds it as a WebAssembly module, the same way the Android app
-binds it through UniFFI. This is a later rollout stage
+binds it through UniFFI. This is a later deployment
 ([miner-api.md "Transport"](miner-api.md#transport)); until then
-the web app calls `rank` on the backend like any client.
+the web app gets its ranked results through the backend API, served
+by the standalone ranker container.
 
 ## Key custody — WebCrypto
 

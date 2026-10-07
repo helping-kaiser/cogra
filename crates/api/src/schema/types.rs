@@ -161,45 +161,93 @@ impl StanceBundle {
     }
 }
 
-/// The actor whose view this account still borrows: their inviter until
-/// the account's own first stance toward them exists — the vouch-back —
-/// and nobody after (`design/readme.md` §13). Vacuously nobody without an
-/// inviter, which is the genesis account's case.
+/// The actor whose view this account still borrows (`design/readme.md`
+/// §13, api-spec.md `Query.borrowedView`): the approver their application
+/// came through, until the member's first Opinion is signed — toward any
+/// target — and nobody after. Vacuously nobody without an approver, which
+/// is the genesis account's case.
 ///
-/// ONE QUERY PATH BEHIND TWO QUESTIONS. `User.hasReciprocated` drives the
-/// reciprocation prompt and `Query.borrowedView` drives the band, and §13
-/// puts both on the same moment: the view hands over exactly when the
-/// prompt is answered. Deriving one from the other keeps that a fact of
-/// the code rather than a promise two copies would eventually break.
+/// The ladder, rung by rung:
 ///
-/// A missing address answers "still borrowing": no Opinion can exist
-/// without both, because a keyless account has signed nothing.
+/// - An **applicant** keeps the approver's view whatever they stage: the
+///   probe is not consulted before landing (VouchBack.md:21's carried
+///   opinion signs with the vouch-in batch, so it ends the borrowing at
+///   landing, not before).
+/// - A **landed member** borrows until an Opinion of theirs has landed in
+///   the mirror or is signed and in flight (VouchBack.md:15). An Affinity
+///   never ends it (VouchBack.md:19): only the Opinion family is probed.
+/// - **Only a landed Opinion latches.** An in-flight one ends the
+///   borrowing without latching, so an expiry with nothing landed returns
+///   it (VouchBack.md:17). The latch is the same reads-may-repair cache as
+///   the reciprocation latch (auth.md "Reads may repair, never decide"):
+///   idempotent, convergent toward a permanent mirror fact, and it keeps
+///   the band from flickering back while a mirror rebuild catches up.
+///
+/// The vouch-back is one Opinion among others here; `hasReciprocated`
+/// asks the inviter-targeted question separately ([`has_reciprocated`]),
+/// because the prompt and the band no longer share their moment.
+///
+/// A missing address answers "still borrowing": a keyless account has
+/// signed nothing, so no Opinion of its own can exist.
 pub(crate) async fn borrowed_vantage(
     ctx: &Context<'_>,
     account: &store::ActorIdentity,
 ) -> async_graphql::Result<Option<store::ActorIdentity>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(inviter) = store::inviter_of(pool, account.id).await? else {
+    let Some(approver) = store::inviter_of(pool, account.id).await? else {
         return Ok(None);
     };
-    if store::reciprocation_latched(pool, account.id).await? {
+    let Some(landed) = store::landed_vouch_state(pool, account.id).await? else {
+        return Ok(Some(approver));
+    };
+    if landed.first_opinion_latched {
         return Ok(None);
+    }
+    let Some(account_address) = &account.realization_address else {
+        return Ok(Some(approver));
+    };
+    let source = NodeId::Addr(account_address.clone()).to_string();
+    if mirror::has_any_opinion_from(pool, &source).await? {
+        store::latch_first_opinion(pool, account.id).await?;
+        return Ok(None);
+    }
+    if staged::has_signed_of_family(pool, account.id, Family::Opinion).await? {
+        return Ok(None);
+    }
+    Ok(Some(approver))
+}
+
+/// Whether the account's reciprocal Opinion toward its inviter exists —
+/// confirmed in the mirror (latched on the landed application row) or in
+/// flight as one of its staged writes (auth.md "Reciprocation is the
+/// joiner's own act"). True without an inviter: there is nothing to
+/// reciprocate.
+///
+/// A missing address answers false: no Opinion can exist without both,
+/// because a keyless account has signed nothing.
+pub(crate) async fn has_reciprocated(
+    ctx: &Context<'_>,
+    account: &store::ActorIdentity,
+) -> async_graphql::Result<bool> {
+    let pool = ctx.data::<PgPool>()?;
+    let Some(inviter) = store::inviter_of(pool, account.id).await? else {
+        return Ok(true);
+    };
+    if store::reciprocation_latched(pool, account.id).await? {
+        return Ok(true);
     }
     let (Some(account_address), Some(inviter_address)) =
         (&account.realization_address, &inviter.realization_address)
     else {
-        return Ok(Some(inviter));
+        return Ok(false);
     };
     let source = NodeId::Addr(account_address.clone()).to_string();
     let target = NodeId::Prof(inviter_address.clone()).to_string();
     if mirror::has_opinion_toward(pool, &source, &target).await? {
         store::latch_reciprocated(pool, account.id).await?;
-        return Ok(None);
+        return Ok(true);
     }
-    if staged::has_live_targeting(pool, account.id, Family::Opinion, &target).await? {
-        return Ok(None);
-    }
-    Ok(Some(inviter))
+    Ok(staged::has_live_targeting(pool, account.id, Family::Opinion, &target).await?)
 }
 
 /// Resolves the `viewerStance` field shared by every stance-able node.
@@ -1307,7 +1355,21 @@ impl User {
         if !self.is_viewer(ctx) {
             return Ok(true);
         }
-        Ok(borrowed_vantage(ctx, &self.identity).await?.is_none())
+        has_reciprocated(ctx, &self.identity).await
+    }
+
+    /// Whether the account dismissed the vouch-back prompt — for good,
+    /// on every device (auth.md "Reciprocation is the joiner's own act").
+    /// Vouching back stays reachable from the inviter's profile.
+    /// Field-level: viewer-only; false for any other viewer.
+    async fn vouch_back_dismissed(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        if !self.is_viewer(ctx) {
+            return Ok(false);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::landed_vouch_state(pool, self.identity.id)
+            .await?
+            .is_some_and(|state| state.vouch_back_dismissed))
     }
 
     /// The account's service state — gates acting through CoGra (auth.md

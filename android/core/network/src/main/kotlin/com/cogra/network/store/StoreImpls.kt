@@ -202,13 +202,6 @@ class IdentityStoreImpl @Inject constructor(
         return store.names(prefix).map { it.removePrefix(prefix) }.toSet()
     }
 
-    override suspend fun reciprocationDismissed(): Boolean =
-        key(RECIPROCATION)?.let { store.get(it) } != null
-
-    override suspend fun markReciprocationDismissed() {
-        key(RECIPROCATION)?.let { store.put(it, byteArrayOf(1)) }
-    }
-
     override suspend fun stancePadTaught(): Boolean =
         key(STANCE_PAD_TAUGHT)?.let { store.get(it) } != null
 
@@ -271,7 +264,6 @@ class IdentityStoreImpl @Inject constructor(
         const val ACCT_PREFIX = "acct:"
         const val SEED = "actor_seed"
         const val PENDING_BLOB = "pending_backup_blob"
-        const val RECIPROCATION = "reciprocation_dismissed"
         const val STANCE_PAD_TAUGHT = "stance_pad_taught"
         const val STANCE_INPUT_MODE = "stance_input_mode"
         const val CONFIRM_MULTI_ACTION = "confirm_multi_action_submits"
