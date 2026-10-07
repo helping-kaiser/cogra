@@ -78,6 +78,7 @@ export const KEY_RULES = {
   tag: "the tag's name, without # (TopicsLine, TopicRemovable)",
   tagCard: "the tag's name, without # (the tag feed card)",
   thumb: "the picture's position in the draft's media, counted from 1 (PickedRow)",
+  tier: "the reading's position on its license axis, the least asked first, counted from 1 (LicenseAxis)",
   session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
   stagedReference: "the reference's position in the staged set, counted from 1 (the screen that stages it)",
 };
