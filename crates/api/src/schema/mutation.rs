@@ -1894,22 +1894,22 @@ impl Mutation {
     }
 
     /// Dismiss the vouch-back prompt for good (account state; idempotent).
-    ///
-    /// FORBIDDEN, not a no-op, for an account with no landed application —
-    /// an applicant, or a genesis actor that never applied. The dismissal
-    /// lives on the landed application row, so before landing there is
-    /// nowhere to keep it: a no-op would answer success while the prompt
-    /// came back at landing, silently dropping the intent. And no such
-    /// account is ever shown the prompt, so the call is a client bug — the
-    /// transport-tier refusal the acting gate uses for the same reason
-    /// (api-spec "Authentication"). Not `EMAIL_NOT_VERIFIED` even when
-    /// the address is unproven: proving it would not make the call valid.
+    /// FORBIDDEN for an account with no landed application — an applicant
+    /// or a genesis actor: no prompt is ever shown to it, and before
+    /// landing there is no row to keep the dismissal on.
     async fn dismiss_vouch_back(
         &self,
         ctx: &Context<'_>,
     ) -> async_graphql::Result<DismissVouchBackPayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
+        // FORBIDDEN rather than an idempotent no-op: a no-op would answer
+        // success while the dismissal had nowhere to live, so the prompt
+        // would come back at landing and the intent would be dropped
+        // silently. The call is a client bug — no such account is shown
+        // the prompt — which is what the transport-tier refusal is for
+        // (api-spec "Authentication"). Never EMAIL_NOT_VERIFIED: proving
+        // the address would not make the call valid.
         if !store::dismiss_vouch_back(pool, v.user_id).await? {
             use async_graphql::ErrorExtensions;
             return Err(
