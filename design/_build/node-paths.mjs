@@ -23,6 +23,11 @@
 // instances join their keys outermost first with `/` (`ada/photography`).
 // Two nodes with one (path, key) on one board fail the build.
 //
+// A COUNT OF PATHS counts distinct node names, never key-expanded instances
+// (seam 086): a board's count is the number of paths in its registry entry, a
+// keyed node rendered under three keys counting once, and a registry total is
+// the sum of its boards' counts.
+//
 // A CHIP-DRAWN STATE DUPLICATE carries the SAME path, with its chip's value as
 // its key (jakob 2026-10-06, seam 069). Where a board's tweak chip draws an
 // element once per value — one copy shown at a time, `HistoryNone`'s `cause`

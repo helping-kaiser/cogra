@@ -6,20 +6,36 @@
    `PadLine` LIVES IN `_shared.jsx` (the invites round): the approval pad on
    the other side of this same handshake draws the identical line, and a pad's
    own voice written twice is a pad's own voice that drifts. The card beneath
-   the wash is `VouchBackCard`, `VouchBack`'s own, in its olive register. */
+   the wash is `VouchBackCard`, `VouchBack`'s own, in its olive register.
+
+   REGISTERED under the feed's own prefix (design ⇄ impl seam 086), the shell
+   beneath named as on `VouchBack` and the stance control `stance`, as on
+   `VouchAskPad`. The open pad's own parts and the wash stay unnamed for now: no
+   registered board names a pad's anatomy or a scrim yet. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view — your first opinion starts your own." />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand
+          handle="mira"
+          displayName="Mira Voss"
+          avatarSrc="inviter.jpg"
+          line="Browsing from @mira's view — your first opinion starts your own."
+          node="borrowedViewBand"
+        />
       </CograBand>
       <FeedList>
         <VouchBackCard
           body="Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it."
+          node="vouchCard"
           actions={
             <>
-              <Button variant="text" style={{ color: "var(--on-tertiary-container)" }}>Got it</Button>
+              <Button variant="text" style={{ color: "var(--on-tertiary-container)" }} node="dismiss">
+                Got it
+              </Button>
               <StanceControl
+                node="stance"
                 targetLabel="@mira"
                 helpLabel="Your vouch back"
                 help={YOUR_VOUCH_BACK_HELP}
@@ -43,7 +59,7 @@ export function Screen() {
           }
         />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
 
       {/* The wash sits over the shell; the parked pad (fixed, above it) stays sharp. */}
       <div style={{ position: "absolute", inset: 0, background: "var(--scrim-dialog)" }} />

@@ -381,6 +381,199 @@
         "changePassword.title": []
       }
     },
+    "CommentMenu": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.menuSheet": [],
+        "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
+        "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.opinions": [],
+        "postDetail.menuSheet.save": []
+      }
+    },
+    "CommentMenuOwn": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.menuSheet": [],
+        "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.citedBy": [],
+        "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.opinions": [],
+        "postDetail.menuSheet.remove": [],
+        "postDetail.menuSheet.save": []
+      }
+    },
     "ComposeDetails": {
       "prefix": "composeDetails",
       "keys": {
@@ -2740,6 +2933,101 @@
         "invites.linksLabel": []
       }
     },
+    "RemoveMenu": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.card": [
+          "sol"
+        ],
+        "postDetail.card.actionRow": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.share": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.exact": [
+          "sol"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "sol"
+        ],
+        "postDetail.card.authorChip": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "sol"
+        ],
+        "postDetail.card.authorChip.name": [
+          "sol"
+        ],
+        "postDetail.card.description": [
+          "sol"
+        ],
+        "postDetail.card.media": [
+          "sol"
+        ],
+        "postDetail.card.media.dots": [
+          "sol"
+        ],
+        "postDetail.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "postDetail.card.opinions": [
+          "sol"
+        ],
+        "postDetail.card.tagsLine": [
+          "sol"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "postDetail.card.timestamp": [
+          "sol"
+        ],
+        "postDetail.card.title": [
+          "sol"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.menuSheet": [],
+        "postDetail.menuSheet.cite": [],
+        "postDetail.menuSheet.dragHandle": [],
+        "postDetail.menuSheet.edit": [],
+        "postDetail.menuSheet.license": [],
+        "postDetail.menuSheet.markSensitive": [],
+        "postDetail.menuSheet.remove": [],
+        "postDetail.menuSheet.save": []
+      }
+    },
     "Saved": {
       "prefix": "saved",
       "keys": {
@@ -4079,6 +4367,149 @@
         "vouchAsk.header.back": [],
         "vouchAsk.profileDoor": [],
         "vouchAsk.title": []
+      }
+    },
+    "VouchBack": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.borrowedViewBand": [],
+        "feed.borrowedViewBand.avatar": [],
+        "feed.borrowedViewBand.line": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.vouchCard": [],
+        "feed.vouchCard.avatar": [],
+        "feed.vouchCard.body": [],
+        "feed.vouchCard.dismiss": [],
+        "feed.vouchCard.title": [],
+        "feed.vouchCard.vouch": []
+      }
+    },
+    "VouchBackPad": {
+      "prefix": "feed",
+      "keys": {},
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.borrowedViewBand": [],
+        "feed.borrowedViewBand.avatar": [],
+        "feed.borrowedViewBand.line": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.vouchCard": [],
+        "feed.vouchCard.avatar": [],
+        "feed.vouchCard.body": [],
+        "feed.vouchCard.dismiss": [],
+        "feed.vouchCard.stance": [],
+        "feed.vouchCard.stance.anchor": [],
+        "feed.vouchCard.stance.anchor.face": [],
+        "feed.vouchCard.title": []
+      }
+    },
+    "VouchedIn": {
+      "prefix": "vouchedIn",
+      "keys": {},
+      "nodes": {
+        "vouchedIn.body": [],
+        "vouchedIn.onward": [],
+        "vouchedIn.sky": [],
+        "vouchedIn.title": []
       }
     }
   }
