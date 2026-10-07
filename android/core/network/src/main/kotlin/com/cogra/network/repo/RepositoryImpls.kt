@@ -29,7 +29,6 @@ import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
 import com.cogra.domain.SelfMarkView
-import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserProfile
 import com.cogra.domain.WriteState
@@ -55,7 +54,6 @@ import com.cogra.network.graphql.ChangeHandleMutation
 import com.cogra.network.graphql.ChangePasswordMutation
 import com.cogra.network.graphql.CommentForEditQuery
 import com.cogra.network.graphql.CommentRepliesQuery
-import com.cogra.network.graphql.ConfirmEmailChangeMutation
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
 import com.cogra.network.graphql.CreateInviteLinkMutation
 import com.cogra.network.graphql.CreateKeyBackupChallengeMutation
@@ -78,13 +76,11 @@ import com.cogra.network.graphql.PreparePostMutation
 import com.cogra.network.graphql.PrepareProfileUpdateMutation
 import com.cogra.network.graphql.PrepareStanceMutation
 import com.cogra.network.graphql.RegisterMutation
-import com.cogra.network.graphql.RequestEmailChangeMutation
 import com.cogra.network.graphql.RequestPasswordResetMutation
 import com.cogra.network.graphql.ResendVerificationEmailMutation
 import com.cogra.network.graphql.RevokeInviteLinkMutation
 import com.cogra.network.graphql.RevokeOtherSessionsMutation
 import com.cogra.network.graphql.RevokeSessionMutation
-import com.cogra.network.graphql.SessionsQuery
 import com.cogra.network.graphql.StagedWriteQuery
 import com.cogra.network.graphql.SubmitProposalsMutation
 import com.cogra.network.graphql.UploadKeyBackupMutation
@@ -98,7 +94,6 @@ import com.cogra.network.graphql.type.AttachActorKeyInput
 import com.cogra.network.graphql.type.AttachmentInput
 import com.cogra.network.graphql.type.ChangeHandleInput
 import com.cogra.network.graphql.type.ChangePasswordInput
-import com.cogra.network.graphql.type.ConfirmEmailChangeInput
 import com.cogra.network.graphql.type.ConfirmPasswordResetInput
 import com.cogra.network.graphql.type.CreateInviteLinkInput
 import com.cogra.network.graphql.type.LogInInput
@@ -111,7 +106,6 @@ import com.cogra.network.graphql.type.PrepareStanceInput
 import com.cogra.network.graphql.type.ProposalSignatureInput
 import com.cogra.network.graphql.type.ReferenceInput
 import com.cogra.network.graphql.type.RegisterInput
-import com.cogra.network.graphql.type.RequestEmailChangeInput
 import com.cogra.network.graphql.type.RequestPasswordResetInput
 import com.cogra.network.graphql.type.ResendVerificationEmailInput
 import com.cogra.network.graphql.type.RevokeInviteLinkInput
@@ -202,6 +196,11 @@ class OnboardingRepositoryImpl @Inject constructor(private val client: ApolloCli
                             it.family == Family.REGISTRATION && it.state != WriteState.EXPIRED
                         },
                     actorPubkey = me.actorPubkey,
+                    carriedBatch = me.stagedWrites?.edges.orEmpty()
+                        .map { it.node.stagedWriteFields }
+                        .filter { it.carried }
+                        .map { it.toDomain() }
+                        .filter { it.state == WriteState.AWAITING_PRE_SIGN },
                 ),
             )
         }
@@ -226,18 +225,6 @@ class SessionRepositoryImpl @Inject constructor(private val client: ApolloClient
         ),
     ).payloadOutcome({ it.refreshSession.userErrors.map { e -> e.userErrorFields } }) {
         it.refreshSession.auth?.authSessionFields?.let(::authOf)
-    }
-
-    override suspend fun sessions(): Outcome<List<SessionInfo>> = guard.run {
-        client.query(SessionsQuery()).fetch().flatMap { data ->
-            val sessions = data.me?.sessions ?: return@flatMap unauthenticatedRefusal()
-            Outcome.Success(
-                sessions.map {
-                    val s = it.sessionFields
-                    SessionInfo(s.id, s.deviceLabel, s.createdAt, s.lastUsedAt, s.expiresAt, s.isCurrent)
-                },
-            )
-        }
     }
 
     override suspend fun revokeSession(id: String?): Outcome<Unit> = guard.run {
@@ -423,19 +410,6 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
         ).payloadOutcome({ it.confirmPasswordReset.userErrors.map { e -> e.userErrorFields } }) {
             if (it.confirmPasswordReset.ok == true) Unit else null
         }
-
-    override suspend fun requestEmailChange(newEmail: String, currentPassword: String): Outcome<Unit> = guard.run {
-        client.mutation(RequestEmailChangeMutation(RequestEmailChangeInput(newEmail, currentPassword)))
-            .payloadOutcome({ it.requestEmailChange.userErrors.map { e -> e.userErrorFields } }) {
-                it.requestEmailChange.pendingEmailChange?.let { Unit }
-            }
-    }
-
-    override suspend fun confirmEmailChange(code: String): Outcome<Unit> = client.mutation(
-        ConfirmEmailChangeMutation(ConfirmEmailChangeInput(code)),
-    ).payloadOutcome({ it.confirmEmailChange.userErrors.map { e -> e.userErrorFields } }) {
-        it.confirmEmailChange.user?.let { Unit }
-    }
 
     override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = guard.run {
         client.query(InviteLinksQuery()).fetch().flatMap { data ->

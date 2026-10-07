@@ -30,6 +30,7 @@ import {
   HANDLE_MAX_CHARS,
   HANDLE_MIN_CHARS,
   HANDLE_PATTERN,
+  PASSWORD_MAX_CHARS,
   PASSWORD_MIN_CHARS,
 } from "@/lib/onboarding/registration-rules";
 import { BIO_MAX_CHARS, DISPLAY_NAME_MAX_CHARS, WEBSITE_URL_MAX_CHARS } from "@/lib/profile/caps";
@@ -78,6 +79,7 @@ type Constants = {
     handleCharsetPattern: string;
     handleMaxChars: number;
     handleMinChars: number;
+    passwordMaxChars: number;
     passwordMinChars: number;
   };
   writeSigner: {
@@ -186,6 +188,7 @@ describe("registration rules", () => {
     expect(HANDLE_MIN_CHARS).toBe(constants.registration.handleMinChars);
     expect(HANDLE_MAX_CHARS).toBe(constants.registration.handleMaxChars);
     expect(PASSWORD_MIN_CHARS).toBe(constants.registration.passwordMinChars);
+    expect(PASSWORD_MAX_CHARS).toBe(constants.registration.passwordMaxChars);
     expect(HANDLE_PATTERN.source).toBe(constants.registration.handleCharsetPattern);
   });
 });

@@ -14,6 +14,7 @@ import { fallbackMessage } from "@/lib/ui/error-messages";
 import { logIn } from "@/lib/api/auth-api";
 import { identityStore, type IdentityStore } from "@/lib/identity/store";
 import { deviceLabel } from "@/lib/session/device-label";
+import { afterSignIn } from "@/lib/session/held-link";
 import { useAuthPhase, useTokenStore } from "@/lib/session/provider";
 import { securityNotices, type SecurityNotices } from "@/lib/session/security-notices";
 import { Button } from "@/lib/ui/button";
@@ -55,7 +56,9 @@ export function LoginForm({
   const [transportFailed, setTransportFailed] = useState(false);
 
   useEffect(() => {
-    if (phase === "signedIn") router.replace("/");
+    // A sign-in begun from the email change's signed-out landing goes back
+    // to it, where the held link's side applies (`held-link.ts`).
+    if (phase === "signedIn") router.replace(afterSignIn());
   }, [phase, router]);
 
   const canSubmit = email.trim() !== "" && password !== "" && !inProgress;

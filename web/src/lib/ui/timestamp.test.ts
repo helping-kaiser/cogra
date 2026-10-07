@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { shortTimestamp } from "./timestamp";
+import { dateline, ladderAge, shortTimestamp } from "./timestamp";
+
+describe("ladderAge (copy-voice *Ages*)", () => {
+  const now = Date.parse("2026-09-09T12:00:00.000Z");
+  const daysAgo = (days: number) => new Date(now - days * 86_400_000).toISOString();
+
+  it("climbs the ladder up to thirty days", () => {
+    expect(ladderAge(daysAgo(2), now)).toBe("2d");
+    expect(ladderAge(daysAgo(30), now)).toBe("30d");
+  });
+
+  it("reads a date past it", () => {
+    const iso = daysAgo(31);
+    expect(ladderAge(iso, now)).toBe(dateline(iso));
+    expect(dateline("2026-08-12T10:00:00")).toBe("12.08.2026");
+  });
+});
 
 const NOW = Date.parse("2026-09-09T12:00:00.000Z");
 const ago = (ms: number) => new Date(NOW - ms).toISOString();

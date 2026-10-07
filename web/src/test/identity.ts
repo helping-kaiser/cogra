@@ -60,6 +60,7 @@ export function fakeIdentityStore(initial: {
       ephemeral = value;
       return Promise.resolve();
     },
+    isEphemeral: () => Promise.resolve(ephemeral),
     purgeIfEphemeral() {
       if (ephemeral) {
         keyOnDevice = false;

@@ -35,7 +35,6 @@ data class SessionInfo(
     val deviceLabel: String?,
     val createdAt: Instant,
     val lastUsedAt: Instant?,
-    val expiresAt: Instant,
     val isCurrent: Boolean,
 )
 
@@ -124,10 +123,18 @@ data class ApplicationStatus(
      * against (auth.md "Multi-account device custody").
      */
     val actorPubkey: String?,
+    /**
+     * The acts carried with the application that the landing released —
+     * carried, awaiting the pre-signature — which the poll signs without
+     * a prompt (auth.md "Application"). Empty before the landing.
+     */
+    val carriedBatch: List<StagedWriteView> = emptyList(),
 )
 
 /** Handshake progress of a staged write (api-spec.md "The write flow"). */
 enum class WriteState {
+    /** Carried with the application: held server-side until the landing releases it. */
+    CARRIED,
     AWAITING_PRE_SIGN,
     SEALING,
     AWAITING_APPROVAL,

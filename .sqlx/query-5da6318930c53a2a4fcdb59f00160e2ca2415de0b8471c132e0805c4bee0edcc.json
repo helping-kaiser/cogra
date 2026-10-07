@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH due AS (\n               UPDATE l1_admission_burns SET settled_at = NOW()\n               WHERE settled_at IS NULL AND settles_after_epoch <= $1\n               RETURNING address, amount_micro\n           ), credit AS (\n               SELECT address, SUM(amount_micro)::BIGINT AS amount FROM due GROUP BY address\n           )\n           INSERT INTO l1_accounts (address, burned_total_micro, balance_micro)\n           SELECT address, amount, amount FROM credit\n           ON CONFLICT (address) DO UPDATE SET\n               burned_total_micro = l1_accounts.burned_total_micro + EXCLUDED.burned_total_micro,\n               balance_micro      = l1_accounts.balance_micro + EXCLUDED.balance_micro",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5da6318930c53a2a4fcdb59f00160e2ca2415de0b8471c132e0805c4bee0edcc"
+}

@@ -203,4 +203,15 @@ describe("LoginForm", () => {
     renderWithProviders(<LoginForm />, { store });
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/"));
   });
+
+  // ChangeEmailLinkedSignedOut.md: the sign-in opens holding the link, and
+  // once signed in the link's landing follows.
+  it("goes back to a held email-change link once signed in", async () => {
+    window.sessionStorage.setItem("cogra.heldEmailChangeLink", "tok-held");
+    const store = createTokenStore();
+    store.save({ accessToken: "a", refreshToken: "r", accountId: "acct-1" });
+    renderWithProviders(<LoginForm />, { store });
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/email-change"));
+    window.sessionStorage.clear();
+  });
 });

@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -7,7 +7,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
-import { intersect } from "@/test/media-env";
+import { intersect, intersectEach } from "@/test/media-env";
 import { FeedView } from "./feed-view";
 import { forgetFeed, recallFeed } from "./feed-memory";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
@@ -116,7 +116,7 @@ function post(
     title: moderated(title),
     description: moderated(null),
     content: moderated(`body of ${id}`),
-    attachments: [],
+    attachments: [] as unknown[],
     attachmentsStatus: "NORMAL",
     author: {
       __typename: "User",
@@ -291,6 +291,106 @@ describe("FeedView", () => {
     expect(scroller.scrollTop).toBe(1240);
     expect(recallFeed()?.place.offset).toBe(1240);
     scroller.remove();
+  });
+
+  // THE FEED'S ONE STAGE (Feed.md:3–55), driven through the real list: the
+  // host around it, the cards' frames on it, and the thread over it.
+  describe("the feed's stage", () => {
+    const clipPost = (id: string, comments = 0) => ({
+      ...post(id, `Clip ${id}`, false, [], comments),
+      attachments: [
+        {
+          __typename: "MediaAttachment",
+          id: `m-${id}`,
+          url: `https://media.test/${id}.mp4`,
+          altText: null,
+          status: "NORMAL",
+          mimeType: "video/mp4",
+          options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+          coverMedia: null,
+          coverTaken: false,
+        },
+      ],
+    });
+    const frameOf = (postId: string) =>
+      screen
+        .getByTestId(byNode("feed.card.media.frame", `${postId}/1`))
+        .querySelector("video") as HTMLVideoElement;
+    const emptyThread = graphql.query("PostComments", () =>
+      HttpResponse.json({
+        data: {
+          post: {
+            __typename: "Post",
+            id: "p1",
+            comments: {
+              __typename: "CommentConnection",
+              totalCount: 0,
+              edges: [],
+              pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+            },
+          },
+        },
+      }),
+    );
+
+    it("plays one clip, the topmost of those that qualify (F01 Feed.md:3, F08 Feed.md:17)", async () => {
+      server.use(
+        graphql.query("Posts", () =>
+          HttpResponse.json({ data: postsPage([clipPost("p1"), clipPost("p2")], null, false) }),
+        ),
+      );
+      renderWithProviders(<FeedView />);
+      await screen.findByTestId(byNode("feed.card.media.frame", "p2/1"));
+      act(() =>
+        intersectEach([
+          { target: frameOf("p2"), ratio: 1 },
+          { target: frameOf("p1"), ratio: 0.8 },
+        ]),
+      );
+      expect(frameOf("p1").paused).toBe(false);
+      expect(frameOf("p2").paused).toBe(true);
+    });
+
+    // F13 Feed.md:31 — the thread over the feed stops its clip. SL-1 flag c —
+    // the thread then yields to its composer and takes the screen back; the
+    // feed beneath never reads the moment between as the suspension lifting,
+    // so its clip does not start until the reader drops the thread for real
+    // (F15 Feed.md:35).
+    it("stops under the thread, starts nothing through the composer's handover, and decides again once the thread drops", async () => {
+      server.use(
+        graphql.query("Posts", () =>
+          HttpResponse.json({ data: postsPage([clipPost("p1", 1)], null, false) }),
+        ),
+        emptyThread,
+        meHandler(),
+      );
+      renderWithProviders(<FeedView store={fakeIdentityStore({ keyOnDevice: true })} />, {
+        store: signedInStore(),
+      });
+      await screen.findByTestId(byNode("feed.card.media.frame", "p1/1"));
+      const video = frameOf("p1");
+      act(() => intersectEach([{ target: video, ratio: 1 }]));
+      expect(video.paused).toBe(false);
+
+      fireEvent.click(screen.getByTestId(byNode("feed.card.actionRow.comments", "p1")));
+      const sheet = await screen.findByTestId("comments-sheet");
+      expect(video.paused).toBe(true);
+
+      let starts = 0;
+      video.addEventListener("play", () => {
+        starts += 1;
+      });
+      fireEvent.click(await screen.findByTestId("comment-add"));
+      await screen.findByTestId("reply-wizard");
+      await waitFor(() => expect(sheet).not.toBeVisible());
+      fireEvent.click(screen.getByTestId("header-back"));
+      await waitFor(() => expect(screen.getByTestId("comments-sheet")).toBeVisible());
+      expect(starts).toBe(0);
+      expect(video.paused).toBe(true);
+
+      fireEvent(sheet, new Event("close"));
+      await waitFor(() => expect(video.paused).toBe(false));
+    });
   });
 
   it("shows the comments glyph alone where there are none", async () => {

@@ -3,6 +3,7 @@ import { Figtree } from "next/font/google";
 import "./globals.css";
 
 import { ApolloWrapper } from "@/lib/apollo-wrapper";
+import { THEME_BOOT_SCRIPT } from "@/lib/settings/theme-boot";
 import { SessionProvider } from "@/lib/session/provider";
 import { AuthRuntimeProvider } from "@/lib/session/runtime";
 import { RegistrationProvider } from "@/lib/signing/provider";
@@ -36,10 +37,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // The theme chosen in Settings rides the document as `data-theme`, set by
+    // the head script before the first paint — React did not render it, so
+    // the attribute is the one hydration difference this element owns.
     <html
       lang="en"
       className={`${figtree.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       {/* THE DOCUMENT DOES NOT SCROLL — the shell's middle does (`shell.tsx`).
           A percentage height resolves against the LARGE viewport, so a body
           left at `min-h-full` stands taller than the shell's `100dvh` by

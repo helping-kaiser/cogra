@@ -33,6 +33,7 @@ import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
 import com.cogra.domain.testing.ThrowingMediaRepository
+import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.testing.ThrowingVideoProcessor
 import com.cogra.domain.testing.ThrowingReferenceRepository
 import com.cogra.domain.topics.TagClaim
@@ -292,6 +293,13 @@ class ComposeWizardViewModelTest {
         }
     }
 
+    /** The account's default license as the settings read answers it; null is public domain. */
+    private var accountDefault: LicenseChoice? = null
+
+    private val settings = object : ThrowingSettingsRepository() {
+        override suspend fun defaultLicense(): Outcome<LicenseChoice?> = Outcome.Success(accountDefault)
+    }
+
     private fun viewModel() = ComposeWizardViewModel(
         content = content,
         references = references,
@@ -301,7 +309,25 @@ class ComposeWizardViewModelTest {
         deviceMedia = deviceMedia,
         drafts = drafts,
         signer = WriteSigner(sealer, identity),
+        settings = settings,
     )
+
+    /** SettingsLicense.md: "a new post starts from the account's default license". */
+    @Test
+    fun `new_post_starts_from_the_default`() = runTest(dispatcher) {
+        accountDefault = LicenseChoice(1.0, 0.5)
+        val vm = viewModel()
+        vm.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(vm.state.value.license).isEqualTo(LicenseChoice(1.0, 0.5))
+
+        // With none set, a new post starts at public domain.
+        accountDefault = null
+        val fresh = viewModel()
+        fresh.start()
+        dispatcher.scheduler.advanceUntilIdle()
+        assertThat(fresh.state.value.license).isEqualTo(LicenseChoice.PublicDomain)
+    }
 
     @Before
     fun setUp() {

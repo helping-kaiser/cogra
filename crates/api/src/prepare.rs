@@ -90,6 +90,79 @@ pub struct Gesture {
     pub node: Option<Uuid>,
 }
 
+/// The boundary as an applicant's carried staging sees it (auth.md
+/// "Application"; seam 099 ruling 73). An act carried with an application
+/// is not priced when it is staged — the applicant may hold no funds yet,
+/// and the act cannot become orderable before the landing, whose batch it
+/// joins — so the write rule's balance read answers "no constraint" here
+/// and only here. Every other read, the per-act formation checks, and the
+/// signing budget the staging spends are the real ones.
+pub(crate) struct Carrying<'a, B>(pub &'a B);
+
+impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
+    async fn seal(
+        &self,
+        pre: common::l1::PreSignedProposal,
+    ) -> Result<common::l1::VerifiedAct, BoundaryError> {
+        self.0.seal(pre).await
+    }
+
+    async fn approve(
+        &self,
+        witness: common::l1::handshake::ApprovalWitness,
+    ) -> Result<(), BoundaryError> {
+        self.0.approve(witness).await
+    }
+
+    async fn epochs_since(
+        &self,
+        after: i64,
+    ) -> Result<Vec<common::l1::handshake::EpochPackage>, BoundaryError> {
+        self.0.epochs_since(after).await
+    }
+
+    async fn balance(
+        &self,
+        address: &str,
+    ) -> Result<common::l1::handshake::AccountBalance, BoundaryError> {
+        let published = self.0.balance(address).await?;
+        Ok(common::l1::handshake::AccountBalance {
+            balance: f64::INFINITY,
+            ..published
+        })
+    }
+
+    async fn host_public_key(&self) -> Result<Vec<u8>, BoundaryError> {
+        self.0.host_public_key().await
+    }
+
+    async fn current_theta(&self) -> Result<f64, BoundaryError> {
+        self.0.current_theta().await
+    }
+
+    async fn max_payload_bytes(&self) -> Result<usize, BoundaryError> {
+        self.0.max_payload_bytes().await
+    }
+
+    async fn request_admission_burn(
+        &self,
+        address: &str,
+        amount_micro: i64,
+        key: Uuid,
+    ) -> Result<common::l1::handshake::BurnTicket, BoundaryError> {
+        self.0
+            .request_admission_burn(address, amount_micro, key)
+            .await
+    }
+
+    async fn burn_settlement(
+        &self,
+        ticket: &common::l1::handshake::BurnTicket,
+    ) -> Result<common::l1::handshake::BurnSettlement, BoundaryError> {
+        self.0.burn_settlement(ticket).await
+    }
+}
+
 /// A prepared staged write: the handle for the whole handshake plus the
 /// exact proposal the device recomputes and pre-signs.
 #[derive(Debug, Clone)]
@@ -238,6 +311,67 @@ pub async fn prepare<B: L1Boundary>(
     actor_id: Uuid,
     gesture: Gesture,
 ) -> Result<Prepared, PrepareError> {
+    prepare_under(
+        boundary,
+        pool,
+        gc_after_epochs,
+        actor_id,
+        gesture,
+        Solvency::PublishedBalance,
+    )
+    .await
+}
+
+/// Where a prepare's W1 estimate comes from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Solvency {
+    /// The published B_i read — every act but one.
+    PublishedBalance,
+    /// The caller holds a live admission funding row for the author: the
+    /// unchained admission Registration, whose solvency source is the burn
+    /// that row requested, not a balance that may not show it yet.
+    AdmissionFunded,
+}
+
+/// Prepares the unchained admission Registration, whose W1 pre-check is
+/// its address's funding row rather than the B_i read (auth.md
+/// "Funding"). Under a realization that settles a burn after a delay, the
+/// published balance reads zero until the burn pins, so the B_i read would
+/// refuse the very act the burn exists to fund — surfacing as the
+/// voucher's write-rule refusal. The funding row is an honest L2 estimate
+/// instead: θ is far below the admission burn, and the relay holds the
+/// Registration's approval leg until the burn settles, so the act is never
+/// orderable before its author can pay for it.
+///
+/// The caller must hold that row, live — claimed or found, not failed —
+/// under the account lock (`onboarding::ensure_admission_staged`); every
+/// other check of [`prepare`] runs unchanged.
+pub(crate) async fn prepare_funded_admission<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    gc_after_epochs: i64,
+    actor_id: Uuid,
+    gesture: Gesture,
+) -> Result<Prepared, PrepareError> {
+    prepare_under(
+        boundary,
+        pool,
+        gc_after_epochs,
+        actor_id,
+        gesture,
+        Solvency::AdmissionFunded,
+    )
+    .await
+}
+
+async fn prepare_under<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    gc_after_epochs: i64,
+    actor_id: Uuid,
+    gesture: Gesture,
+    solvency: Solvency,
+) -> Result<Prepared, PrepareError> {
     gesture
         .family
         .params_check(gesture.p_d, gesture.p_i)
@@ -250,13 +384,15 @@ pub async fn prepare<B: L1Boundary>(
         )));
     }
 
-    let theta = boundary.current_theta().await?;
-    let balance = boundary.balance(&gesture.author).await?;
-    if !affordable(balance.balance, theta, 1) {
-        return Err(PrepareError::WriteRule {
-            balance: balance.balance,
-            theta,
-        });
+    if solvency == Solvency::PublishedBalance {
+        let theta = boundary.current_theta().await?;
+        let balance = boundary.balance(&gesture.author).await?;
+        if !affordable(balance.balance, theta, 1) {
+            return Err(PrepareError::WriteRule {
+                balance: balance.balance,
+                theta,
+            });
+        }
     }
 
     let prepared_epoch = mirror::last_ingested_epoch(pool).await?;

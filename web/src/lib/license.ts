@@ -141,3 +141,35 @@ export function licenseReadings(license: License): readonly LicenseReading[] {
 export function isPublicDomain(license: License): boolean {
   return license.attribution === 0 && license.provenance === 0;
 }
+
+/**
+ * THE PAIR'S NAME (copy-voice.md "The license block"): `Public domain` for
+ * the zero pair, every other pair its two tier names joined by ` · ` —
+ * `Credit always · Not logged`. What the settings default row reads.
+ */
+export function licenseName(license: License): string {
+  if (isPublicDomain(license)) return "Public domain";
+  const credit = tierOf(ATTRIBUTION_TIERS, license.attribution)?.label ?? `Credit ${license.attribution}`;
+  const record = tierOf(PROVENANCE_TIERS, license.provenance)?.label ?? `Logged ${license.provenance}`;
+  return `${credit} · ${record}`;
+}
+
+/** A tier hint lowercased at its head with its full stop dropped. */
+function joinable(hint: string): string {
+  const bare = hint.endsWith(".") ? hint.slice(0, -1) : hint;
+  return bare.charAt(0).toLowerCase() + bare.slice(1);
+}
+
+/**
+ * THE AUTHOR'S READING OF A PAIR, ONE JOINING RULE (copy-voice.md
+ * `licenseSummary`; jakob 2026-10-01): the pair's name, ` — `, the credit
+ * tier's hint and the record tier's hint joined by `, and`, each lowercased
+ * at its head with its full stop dropped, closed by one full stop —
+ * `Public domain — nobody owes you a name, and uses go unlogged.`
+ */
+export function licenseReading(license: License): string {
+  const credit = tierOf(ATTRIBUTION_TIERS, license.attribution)?.hint;
+  const record = tierOf(PROVENANCE_TIERS, license.provenance)?.hint;
+  if (credit === undefined || record === undefined) return licenseName(license);
+  return `${licenseName(license)} — ${joinable(credit)}, and ${joinable(record)}.`;
+}

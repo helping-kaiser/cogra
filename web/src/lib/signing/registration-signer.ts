@@ -71,10 +71,25 @@ export function createRegistrationSigner(deps: {
       // waits on a milestone — flush every pass, result ignored.
       await ceremony.uploadPendingBackup();
 
-      const { accountState, actorPubkey, application, stagedRegistration } = status.value;
-      if (accountState === "MEMBER") return { kind: "member" };
+      const { accountState, actorPubkey, application, stagedRegistration, carriedBatch } =
+        status.value;
+      if (accountState === "MEMBER") {
+        // The landing released what the applicant carried: sign it now,
+        // without a prompt, with the vouch-in (auth.md "Application").
+        // Best-effort by design — a write left mid-handshake keeps its
+        // material for resume(), and one never started is still
+        // AWAITING_PRE_SIGN on the next pass.
+        if (carriedBatch.length > 0 && keyUsable(await devicePubkey(), actorPubkey)) {
+          await writeSigner.sign(carriedBatch);
+        }
+        return { kind: "member" };
+      }
 
-      if (stagedRegistration !== null) {
+      // A LANDED Registration is done: the node exists, and what the
+      // account waits on now is a vouch (auth.md "Approval and landing").
+      // Falling through to the application reads waiting again after a
+      // lapsed vouch, approved while a vouch is in play.
+      if (stagedRegistration !== null && stagedRegistration.state !== "LANDED") {
         if (!keyUsable(await devicePubkey(), actorPubkey)) {
           return { kind: "awaitingSigningKey" };
         }

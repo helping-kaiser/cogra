@@ -13,11 +13,11 @@ use postgres_store::{PgPool, auth as store, content as content_store, genesis, m
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType, Node,
-    PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
-    ReferenceTarget, StagedWriteType, User, borrowed_vantage, connection_cost, content_cursor,
-    content_cursor_key, keyset_connection, keyset_page, list_cost, list_limit, record_connection,
-    resolve_reference_target,
+    Actor, CommentType, EmailChangeLinkCheck, EmailChangeLinkState, HashtagType, InviteLinkCheck,
+    KeysetConnection, MediaAttachmentType, Node, PostType, Record, RecordConnection, RecordFamily,
+    RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User, borrowed_vantage,
+    connection_cost, content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost,
+    list_limit, record_connection, resolve_reference_target,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
@@ -100,6 +100,35 @@ impl Query {
         }))
     }
 
+    /// Anonymous pre-sign-in check of an email change's new-address
+    /// link, so a device with no session can say what the link is for
+    /// before anything applies. It reads and never writes: no side is
+    /// confirmed, consumed or reset. Null when the token references no
+    /// change — unknown, malformed, an original-address code, a
+    /// verification-link token, or a change row a retention sweep has
+    /// dropped all answer null alike. Holding the 256-bit token is the
+    /// proof: it was mailed to `newEmail`, so its holder learns nothing
+    /// about an address they do not already read. For the same reason
+    /// the answer carries nothing about the account the change belongs
+    /// to — no handle, no current address, no id.
+    async fn email_change_link_check(
+        &self,
+        ctx: &Context<'_>,
+        token: String,
+    ) -> async_graphql::Result<Option<EmailChangeLinkCheck>> {
+        let pool = ctx.data::<PgPool>()?;
+        let unverified_carve_out = |change: &store::EmailChange| !change.requires_code;
+        Ok(
+            store::email_change_by_token(pool, &crate::auth::hash_of(&token))
+                .await?
+                .filter(|change| !unverified_carve_out(change))
+                .map(|change| EmailChangeLinkCheck {
+                    state: EmailChangeLinkState::of(change.end()),
+                    new_email: change.new_email,
+                }),
+        )
+    }
+
     /// The viewer's own account, resolved from the request's auth token.
     /// Null when the request is unauthenticated.
     async fn me(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<User>> {
@@ -124,7 +153,9 @@ impl Query {
     /// 1. An **invite-link arrival**, still signed out, borrows **the
     ///    inviter's** view, resolved from the link id. That resolution
     ///    arrives with slice 3 and its own band-line ruling.
-    /// 2. An **applicant** borrows **their approver's**, from the moment
+    /// 2. An **applicant** borrows **the view of the issuer of the invite
+    ///    link they registered through** — whoever's vouch lands them —
+    ///    from the moment
     ///    the account exists and before either proof is in, whatever they
     ///    stage — and a **landed member** keeps borrowing it until their
     ///    first Opinion is signed, toward any target, landed or in flight.

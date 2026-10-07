@@ -110,6 +110,7 @@ import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { CitedBySheet } from "@/lib/ui2/cited-by-sheet";
 import { LicenseSheet } from "@/lib/ui2/license-sheet";
 import { OverflowMenu, type MenuItem } from "@/lib/ui2/overflow-menu";
+import { StageHost } from "@/lib/ui2/media/stage-host";
 import { commentTarget, ReplyWizard } from "@/app/posts/[id]/reply/reply-wizard-view";
 import { CommentEditView } from "@/app/posts/[id]/edit/comment-edit-view";
 import { MultiActionConfirm } from "@/lib/ui/signed-actions";
@@ -1175,6 +1176,12 @@ export function CommentsSheet({
         tallest
         bodyRef={bodyRef}
         testId="comments-sheet"
+        // THE THREAD HANDS THE SCREEN TO ITS COMPOSER WITHOUT A GAP. The sheet
+        // drops as the wizard or the editor rises, and rises again as it
+        // leaves; holding the sheet's cover through the takeover is what
+        // keeps the surface beneath from reading the moment between as the
+        // suspension lifting (`BottomSheet`'s `coverHeld`).
+        coverHeld={replying !== null || editing !== null}
         foot={
           <>
             {/* A completed action is confirmed by a SNACKBAR on both platforms
@@ -1224,63 +1231,69 @@ export function CommentsSheet({
       >
         {/* The list's own gutter is 16px, not the sheet's 24
             (`_shared.jsx:1251`): comment cards stand wider in the sheet than
-            rows of text would. */}
-        <div className="-mx-2 flex flex-col gap-3">
-          {/* The thread's own first read, inside the thread — the surface
-              underneath is already drawn and is not waiting on this. */}
-          {loading && (
-            <p role="status" aria-live="polite" data-testid="comments-loading">
-              Loading…
-            </p>
-          )}
-          {/* A failed thread read reads where the thread is, which is here. */}
-          {transportFault === "refresh" && (
-            <div className="flex items-center gap-3">
-              <TransportError testId="comments-transport-error" />
-              <Button
-                testId="comments-retry"
-                variant="outline"
-                size="sm"
-                onClick={() => read()}
-              >
-                Retry
-              </Button>
-            </div>
-          )}
-          {!loading && transportFault !== "refresh" && comments.length === 0 && (
-            <p data-testid="post-no-comments">No comments yet.</p>
-          )}
-          <ul className="flex flex-col gap-3">
-            {comments.map((comment) => renderComment(comment, 0, null))}
-          </ul>
-          {hasMore &&
-            (transportFault === "append" ? (
+            rows of text would.
+            THE THREAD IS ITS OWN STAGE (design/readme.md §13: "a clip drawn
+            on the sheet competes for the stage by the same law"), standing
+            on the sheet and landing at the sheet body's own hard top
+            (ReplyEntry.md:3/5). */}
+        <StageHost>
+          <div className="-mx-2 flex flex-col gap-3">
+            {/* The thread's own first read, inside the thread — the surface
+                underneath is already drawn and is not waiting on this. */}
+            {loading && (
+              <p role="status" aria-live="polite" data-testid="comments-loading">
+                Loading…
+              </p>
+            )}
+            {/* A failed thread read reads where the thread is, which is here. */}
+            {transportFault === "refresh" && (
               <div className="flex items-center gap-3">
-                <TransportError
-                  testId="post-more-comments-error"
-                  message="Can't reach the server — more comments can't load right now."
-                />
+                <TransportError testId="comments-transport-error" />
                 <Button
-                  testId="post-more-comments-retry"
+                  testId="comments-retry"
                   variant="outline"
                   size="sm"
-                  onClick={() => void onLoadMore()}
-                  disabled={loadingMore}
+                  onClick={() => read()}
                 >
                   Retry
                 </Button>
               </div>
-            ) : (
-              <Button
-                testId="post-more-comments"
-                variant="outline"
-                onClick={() => void onLoadMore()}
-                disabled={loadingMore}
-              >
-                Load more
-              </Button>
-            ))}
-        </div>
+            )}
+            {!loading && transportFault !== "refresh" && comments.length === 0 && (
+              <p data-testid="post-no-comments">No comments yet.</p>
+            )}
+            <ul className="flex flex-col gap-3">
+              {comments.map((comment) => renderComment(comment, 0, null))}
+            </ul>
+            {hasMore &&
+              (transportFault === "append" ? (
+                <div className="flex items-center gap-3">
+                  <TransportError
+                    testId="post-more-comments-error"
+                    message="Can't reach the server — more comments can't load right now."
+                  />
+                  <Button
+                    testId="post-more-comments-retry"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void onLoadMore()}
+                    disabled={loadingMore}
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  testId="post-more-comments"
+                  variant="outline"
+                  onClick={() => void onLoadMore()}
+                  disabled={loadingMore}
+                >
+                  Load more
+                </Button>
+              ))}
+          </div>
+        </StageHost>
       </BottomSheet>
       {/* ONE LICENSE SHEET FOR THE THREAD, raised by whichever comment's menu
           row asked. The terms of a node read the same whichever menu asked for

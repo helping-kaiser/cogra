@@ -150,10 +150,10 @@ class RepositoriesTest {
                  "createdAt":"2026-08-06T12:00:00+00:00"},
                "stagedWrites":{"__typename":"StagedWriteConnection","edges":[
                  {"__typename":"StagedWriteEdge","node":
-                  {"__typename":"StagedWrite","id":"old","state":"EXPIRED","family":"REGISTRATION",
+                  {"__typename":"StagedWrite","carried":false,"id":"old","state":"EXPIRED","family":"REGISTRATION",
                    "canonicalProposal":"$proposal","verifiedAct":null,"record":null}},
                  {"__typename":"StagedWriteEdge","node":
-                  {"__typename":"StagedWrite","id":"reg","state":"AWAITING_PRE_SIGN","family":"REGISTRATION",
+                  {"__typename":"StagedWrite","carried":false,"id":"reg","state":"AWAITING_PRE_SIGN","family":"REGISTRATION",
                    "canonicalProposal":"$proposal","verifiedAct":null,"record":null}}]}}}}""",
         )
         val status = (onboarding.applicationStatus() as Outcome.Success).value
@@ -241,7 +241,7 @@ class RepositoriesTest {
         tokenStore.save(AuthTokens("a", "r", "u1"))
         val proposal = Base64.getEncoder().encodeToString(byteArrayOf(1, 2, 3))
         enqueue(
-            """{"data":{"stagedWrite":{"__typename":"StagedWrite","id":"w1",
+            """{"data":{"stagedWrite":{"__typename":"StagedWrite","carried":false,"id":"w1",
                "state":"AWAITING_APPROVAL","family":"OPINION",
                "canonicalProposal":"$proposal","verifiedAct":null,"record":null}}}""",
         )
@@ -261,31 +261,5 @@ class RepositoriesTest {
         assertThat((writes.hostPublicKey() as Outcome.Success).value).isEqualTo(ByteArray(32) { 7 })
         assertThat((writes.hostPublicKey() as Outcome.Success).value).isEqualTo(ByteArray(32) { 7 })
         assertThat(server.requestCount).isEqualTo(1)
-    }
-
-    @Test
-    fun aSignedOutViewerReadRefusesWithoutReplay() = runTest {
-        val sessions = SessionRepositoryImpl(client, guard())
-        enqueue("""{"data":{"me":null}}""")
-        val refused = sessions.sessions() as Outcome.Refused
-        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNAUTHENTICATED)
-        // No tokens → no refresh, no replay.
-        assertThat(server.requestCount).isEqualTo(1)
-    }
-
-    @Test
-    fun sessionsMapWithInstants() = runTest {
-        val sessions = SessionRepositoryImpl(client, guard())
-        tokenStore.save(AuthTokens("a", "r", "u1"))
-        enqueue(
-            """{"data":{"me":{"__typename":"User","sessions":[
-               {"__typename":"Session","id":"s1","deviceLabel":"phone",
-                "createdAt":"2026-07-24T12:00:00+00:00","lastUsedAt":null,
-                "expiresAt":"2026-08-23T12:00:00+00:00","isCurrent":true}]}}}""",
-        )
-        val list = (sessions.sessions() as Outcome.Success).value
-        assertThat(list.single().deviceLabel).isEqualTo("phone")
-        assertThat(list.single().lastUsedAt).isNull()
-        assertThat(list.single().isCurrent).isTrue()
     }
 }

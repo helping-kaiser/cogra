@@ -42,6 +42,7 @@ import { useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
+import { StageHost } from "@/lib/ui2/media/stage-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
@@ -356,41 +357,46 @@ export function FeedView({
           board's own `FeedList`, `gap: 8, padding: "8px 0 0 0"`. What the
           42rem column shows above phone width is whatever it shows: desktop is
           out of design scope until the mobile set is complete (readme §2). */}
-      <ul className="flex flex-col gap-2" data-testid="feed-list">
-        {posts.map((post, index) => (
-          // The card names itself to the pin: it is the anchor the reader's
-          // place is measured against (`scroll-pin.ts`). One of them also
-          // carries the watch that fetches the next page.
-          <li
-            key={post.id}
-            {...{ [ANCHOR_ATTRIBUTE]: post.id }}
-            ref={index === tailIndex ? tailRef : undefined}
-          >
-            <PostCard
-              post={post}
-              // The registered Feed screen's card, keyed by the post's id —
-              // the record's own identity, where the board keys its sample
-              // cards by author (`design/designs/canonical/nodes.json`).
-              node={{ path: "feed.card", key: post.id }}
-              href={`/posts/${post.id}`}
-              testId={`feed-post-${post.id}`}
-              authorTestId={`feed-author-${post.id}`}
-              stanceTestId={`feed-stance-${post.id}`}
-              comments={
-                liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
-              }
-              // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
-              // edge advances to `ReplyEntry`) — the card's own tap opens the
-              // post, which is the different intent.
-              onOpenComments={() => {
-                setCommentsPost(post);
-                setCommentsOpen(true);
-              }}
-              onLinkCopied={() => setLinkCopied(true)}
-            />
-          </li>
-        ))}
-      </ul>
+      {/* THE FEED'S ONE STAGE (Feed.md:3–55): every clip in the list — a
+          post's, and a comment card's when the feed draws one (Feed.md:7) —
+          competes for it, and it lands at the feed's own hard top. */}
+      <StageHost>
+        <ul className="flex flex-col gap-2" data-testid="feed-list">
+          {posts.map((post, index) => (
+            // The card names itself to the pin: it is the anchor the reader's
+            // place is measured against (`scroll-pin.ts`). One of them also
+            // carries the watch that fetches the next page.
+            <li
+              key={post.id}
+              {...{ [ANCHOR_ATTRIBUTE]: post.id }}
+              ref={index === tailIndex ? tailRef : undefined}
+            >
+              <PostCard
+                post={post}
+                // The registered Feed screen's card, keyed by the post's id —
+                // the record's own identity, where the board keys its sample
+                // cards by author (`design/designs/canonical/nodes.json`).
+                node={{ path: "feed.card", key: post.id }}
+                href={`/posts/${post.id}`}
+                testId={`feed-post-${post.id}`}
+                authorTestId={`feed-author-${post.id}`}
+                stanceTestId={`feed-stance-${post.id}`}
+                comments={
+                  liveComments?.id === post.id ? liveComments.total : post.comments.totalCount
+                }
+                // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
+                // edge advances to `ReplyEntry`) — the card's own tap opens the
+                // post, which is the different intent.
+                onOpenComments={() => {
+                  setCommentsPost(post);
+                  setCommentsOpen(true);
+                }}
+                onLinkCopied={() => setLinkCopied(true)}
+              />
+            </li>
+          ))}
+        </ul>
+      </StageHost>
       <div className="flex flex-col gap-4 px-6">
         {/* The slot the next page fills. At rest it is empty — the page comes
             because the reader kept going. In flight it is the list's own

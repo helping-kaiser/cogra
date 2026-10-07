@@ -63,6 +63,8 @@ export type IdentityStore = {
    * unchecked login clears an earlier flag.
    */
   setEphemeral(value: boolean): Promise<void>;
+  /** Whether the active account is flagged "don't remember" here. */
+  isEphemeral(): Promise<boolean>;
   /**
    * Drops every handshake this account has parked on this device.
    *
@@ -447,6 +449,12 @@ export function createIdentityStore(deps: {
         ...(ux ?? EMPTY_UX),
         ephemeral: value,
       }));
+    },
+
+    async isEphemeral() {
+      const account = await forRead();
+      if (account === null) return false;
+      return (await read<UxRecord>(UX, account))?.ephemeral ?? false;
     },
 
     async clearHandshakes() {

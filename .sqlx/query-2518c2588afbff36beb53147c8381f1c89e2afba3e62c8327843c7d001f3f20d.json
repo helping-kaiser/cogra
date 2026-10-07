@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_admission_fundings\n         SET attempts = attempts + 1, ticket = COALESCE($2, ticket)\n         WHERE address = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2518c2588afbff36beb53147c8381f1c89e2afba3e62c8327843c7d001f3f20d"
+}

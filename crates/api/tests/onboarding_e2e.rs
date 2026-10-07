@@ -342,13 +342,12 @@ async fn an_invite_link_becomes_a_landed_funded_reciprocated_member(pool: PgPool
     assert_eq!(me["me"]["accountState"], "APPLICANT");
     assert_eq!(me["me"]["emailVerified"], false);
     assert_eq!(me["me"]["application"]["keyAttached"], false);
-    assert_eq!(
-        me["me"]["invitedBy"]["handle"], "inviter",
-        "the borrowed view persists through the applicant days \
-         (open-questions.md Q44), so provenance reads from the application \
-         rather than from a landing that has not happened yet"
+    assert!(
+        me["me"]["invitedBy"].is_null(),
+        "invitedBy names the member whose vouch landed the account, so it is \
+         null before any landing; the borrowed view has its own source, the \
+         link issuer"
     );
-    assert_eq!(me["me"]["invitedBy"]["id"], inviter_id.to_string());
 
     let refused = rig
         .gql_raw(

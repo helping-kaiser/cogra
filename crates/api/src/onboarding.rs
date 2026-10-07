@@ -2,9 +2,13 @@
 //!
 //! The applicant-as-account admission flow (auth.md "Account lifecycle";
 //! invitations.md §4): link → registration (a real account + session) →
-//! the key ceremony as a logged-in attach → admission burn at approval →
-//! staged Registration signed on the device → landing flips the account
-//! to member.
+//! the key ceremony as a logged-in attach → any number of open paths, each
+//! a member's queue entry → a vouch decision on a path: the admission burn
+//! requested across the seam, settling asynchronously, the staged
+//! Registration, and the voucher's Opinion, recorded by act id → the
+//! Registration signed on the device, its approval leg relayed once the
+//! burn settles → landing, when the Registration and the first
+//! vouch-Opinion have both confirmed, flips the account to member.
 //!
 //! The backend orchestrates and relays; the applicant's own signatures
 //! ground the actor, so nothing here can author for anyone.
@@ -13,15 +17,15 @@ use chrono::{DateTime, Duration, Utc};
 use common::l1::census::Family;
 use common::l1::crypto;
 use common::l1::encoding::Encoder;
+use common::l1::handshake::{BurnSettlement, BurnTicket};
 use common::l1::identifier::NodeId;
-use l1_standin::StandIn;
 use postgres_store::{PgPool, auth as store, staged};
 use uuid::Uuid;
 
 use crate::auth::{self, AuthConfig, IssuedSession};
 use crate::l1::L1Boundary;
 use crate::mailer::{Mail, Mailer};
-use crate::prepare::{self, Gesture, PrepareError, Staging, Target};
+use crate::prepare::{self, Gesture, PrepareError, Target};
 use crate::ratelimit::{SigningBudget, SigningClass};
 use crate::relay::RelayError;
 
@@ -100,6 +104,14 @@ pub enum OnboardingError {
     /// a write-rule refusal the author waits out.
     #[error("write rule: the signing budget cannot carry this batch right now")]
     SigningBudget,
+    /// An approval batch that would fund fresh addresses did not fit the
+    /// voucher's budgets — the signing budget and the admission funding
+    /// budget are charged as one, so either may be the one that is full.
+    /// The same write-rule refusal, waited out the same way.
+    #[error(
+        "write rule: the signing budget or the admission funding budget cannot carry this batch right now"
+    )]
+    FundingBudget,
     #[error("signature invalid: {0}")]
     SignatureInvalid(String),
     #[error("staged write expired; the flow re-stages on next poll")]
@@ -226,6 +238,7 @@ pub async fn register(
     .await?;
     match outcome {
         store::RegisterOutcome::Created => {}
+        store::RegisterOutcome::InviteUnusable => return Err(OnboardingError::InviteUnusable),
         store::RegisterOutcome::HandleTaken => return Err(OnboardingError::HandleTaken),
         store::RegisterOutcome::EmailInUse => return Err(OnboardingError::EmailInUse),
     }
@@ -339,7 +352,8 @@ pub async fn resend_verification(
 /// The ceremony's two outputs must cohere: the submitted address has
 /// to be the one the submitted public key controls. Approval funds an
 /// admission burn to that address, and funding one the key cannot spend
-/// from would strand the admission (substrate.md §6).
+/// from would strand the admission (substrate.md §6) — which is also why
+/// the key is replaceable only until the address is funded.
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
@@ -379,22 +393,21 @@ pub struct Approval {
 }
 
 /// Approves applications: marks each approval, runs the admission
-/// sequence backend-side (admission burn + staged Registration), and
-/// prepares the inviter's own Opinion records — the vouch is the
-/// inviter's signature, never a server write (api-spec
+/// sequence backend-side (the funding claim and burn request + staged
+/// Registration), and prepares the inviter's own Opinion records — the
+/// vouch is the inviter's signature, never a server write (api-spec
 /// `approveApplicants`).
 ///
 /// Every entry is validated before any is executed, and the whole batch
-/// is put to the write rule — the inviter's balance and signing budget —
-/// before any of it is staged (D19): an inviter who cannot afford five
-/// vouches is refused five rather than discovering it on the third.
-/// Failures after that pass are per-entry: the approvals that already
-/// executed stand, and their repair path is the applicant's own status
-/// poll.
+/// is put to the write rule — the inviter's balance, signing budget, and
+/// admission funding budget — before any of it is staged or burned (D19):
+/// an inviter who cannot afford five vouches is refused five rather than
+/// discovering it on the third. Failures after that pass are per-entry:
+/// the approvals that already executed stand, and their repair path is
+/// the applicant's own status poll.
 pub async fn approve_applicants<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    funding: &StandIn,
     cfg: &OnboardingConfig,
     budget: &SigningBudget,
     inviter: Uuid,
@@ -412,27 +425,13 @@ pub async fn approve_applicants<B: L1Boundary>(
         return Err(errors);
     }
 
-    let staging = Staging {
-        gc_after_epochs: cfg.gc_after_epochs,
-        budget: *budget,
-    };
-    if let Err(e) = price_batch(pool, boundary, &staging, inviter, approvals.len()).await {
+    if let Err(e) = price_batch(pool, boundary, budget, inviter, &applications).await {
         return Err(vec![(None, e)]);
     }
 
     let mut prepared = Vec::with_capacity(approvals.len());
     for (i, (approval, application)) in approvals.iter().zip(applications).enumerate() {
-        match approve_one(
-            pool,
-            boundary,
-            funding,
-            cfg,
-            inviter,
-            approval,
-            &application,
-        )
-        .await
-        {
+        match approve_one(pool, boundary, cfg, inviter, approval, &application).await {
             Ok(opinion) => prepared.push(opinion),
             Err(e) => {
                 errors.push((Some(i), e));
@@ -446,11 +445,114 @@ pub async fn approve_applicants<B: L1Boundary>(
     }
 }
 
-/// Checks one approval is the inviter's to make and still live.
+fn unknown_application() -> OnboardingError {
+    OnboardingError::BadInput {
+        field: "application",
+        message: "unknown application".into(),
+    }
+}
+
+/// The application, when it sits in `approver`'s queue — the queue of the
+/// invite link's issuer.
 ///
 /// The approval queue is issuer-visible only, so someone else's queue
 /// reads as an unknown application rather than a refusal — the two are
 /// deliberately indistinguishable to the caller.
+async fn queued_application(
+    pool: &PgPool,
+    approver: Uuid,
+    id: Uuid,
+) -> Result<store::Application, OnboardingError> {
+    let application = store::application(pool, id)
+        .await?
+        .ok_or_else(unknown_application)?;
+    let link = store::invite_link(pool, application.invite_link_id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("application without a link".into()))?;
+    if link.inviter_id != approver {
+        return Err(unknown_application());
+    }
+    Ok(application)
+}
+
+/// Refuses an application its approver has already answered, naming the
+/// answer: approved (landed included) or rejected (api-spec
+/// `approveApplicants`, `rejectApplication`).
+fn still_waiting(application: &store::Application) -> Result<(), OnboardingError> {
+    let answered = if application.approved_at.is_some() {
+        "already approved"
+    } else if application.rejected_at.is_some() {
+        "already rejected"
+    } else {
+        return Ok(());
+    };
+    Err(OnboardingError::BadInput {
+        field: "application",
+        message: answered.into(),
+    })
+}
+
+/// Refuses a path whose account already landed through another path: it
+/// left its queue at the landing (seam 099 ruling 67), and no decision on
+/// it means anything any more.
+async fn not_landed_elsewhere(
+    pool: &PgPool,
+    application: &store::Application,
+) -> Result<(), OnboardingError> {
+    if store::account_landed(pool, application.account_id).await? {
+        return Err(OnboardingError::BadInput {
+            field: "application",
+            message: "the applicant has already landed".into(),
+        });
+    }
+    Ok(())
+}
+
+/// Names why a gated mark found the row no longer waiting — the loser of
+/// a race against an approval, a rejection or a landing reads the
+/// winner's answer.
+async fn answered_meanwhile(pool: &PgPool, id: Uuid) -> OnboardingError {
+    match store::application(pool, id).await {
+        Ok(Some(application)) => match still_waiting(&application) {
+            Err(answered) => answered,
+            Ok(()) => match not_landed_elsewhere(pool, &application).await {
+                Err(landed) => landed,
+                Ok(()) => OnboardingError::BadInput {
+                    field: "application",
+                    message: "no longer approvable".into(),
+                },
+            },
+        },
+        Ok(None) => unknown_application(),
+        Err(e) => e.into(),
+    }
+}
+
+/// Closes one application in the approver's own queue without approving
+/// it (auth.md "Rejection"): the row is marked rejected and nothing else
+/// changes. The account keeps its login, its reads and its attached key,
+/// and a single-use invite link it came through stays used up.
+///
+/// An unknown and a foreign application read alike; an approved or
+/// already-rejected one refuses, naming which. The store's waiting
+/// predicate is the concurrency gate, so a rejection racing an approval
+/// leaves exactly one of the two marks.
+pub async fn reject_application(
+    pool: &PgPool,
+    approver: Uuid,
+    id: Uuid,
+) -> Result<store::Application, OnboardingError> {
+    let application = queued_application(pool, approver, id).await?;
+    still_waiting(&application)?;
+    if !store::reject_application(pool, application.id, approver).await? {
+        return Err(answered_meanwhile(pool, application.id).await);
+    }
+    store::application(pool, application.id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("application vanished at rejection".into()))
+}
+
+/// Checks one approval is the inviter's to make and still live.
 async fn validate_approval(
     pool: &PgPool,
     inviter: Uuid,
@@ -462,27 +564,9 @@ async fn validate_approval(
             message: "stance parameters must lie in [-1, 1]".into(),
         });
     }
-    let application = store::application(pool, approval.application)
-        .await?
-        .ok_or(OnboardingError::BadInput {
-            field: "application",
-            message: "unknown application".into(),
-        })?;
-    let link = store::invite_link(pool, application.invite_link_id)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("application without a link".into()))?;
-    if link.inviter_id != inviter {
-        return Err(OnboardingError::BadInput {
-            field: "application",
-            message: "unknown application".into(),
-        });
-    }
-    if application.approved_at.is_some() {
-        return Err(OnboardingError::BadInput {
-            field: "application",
-            message: "already approved".into(),
-        });
-    }
+    let application = queued_application(pool, inviter, approval.application).await?;
+    still_waiting(&application)?;
+    not_landed_elsewhere(pool, &application).await?;
     if !application.email_verified {
         return Err(OnboardingError::BadInput {
             field: "application",
@@ -499,34 +583,78 @@ async fn validate_approval(
 }
 
 /// Executes one validated approval: marks it, runs the admission
-/// sequence, and prepares the inviter's vouching Opinion.
+/// sequence, prepares the inviter's vouching Opinion, and records the
+/// vouch by that Opinion's act id — the act the landing predicate waits
+/// for (EC-R2; seam 099 ruling 71).
 ///
-/// Marking is the concurrency gate — a concurrent duplicate approval
-/// loses on the `approved_at` guard, before any burn. The Opinion the
-/// inviter then signs depends on the Registration, so it orders after
-/// the anchor it vouches for (invitations.md §2).
+/// Marking is the concurrency gate — a concurrent duplicate approval or
+/// rejection loses on the waiting guard, before any burn. The whole
+/// sequence holds the account lock, so decisions on any of the account's
+/// paths serialize: one funding, one admission Registration, and every
+/// vouch's Opinion depends on that one Registration — the edges race only
+/// on L1, where the first to land wins. Holding the lock from mark to
+/// vouch is also what lets every other lock holder treat a mark with no
+/// vouch as dead. A sequence that fails after the mark clears it again,
+/// so the path waits rather than reading approved with nothing in play.
+///
+/// The Opinion depends on the Registration, so it orders after the anchor
+/// it vouches for (invitations.md §2), and it is signable at once whether
+/// or not the burn has settled: the Registration's relay waits for the
+/// funding, not the vouch.
 async fn approve_one<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    funding: &StandIn,
     cfg: &OnboardingConfig,
     inviter: Uuid,
     approval: &Approval,
     application: &store::Application,
 ) -> Result<prepare::Prepared, OnboardingError> {
-    let account_id = store::approve_application(pool, application.id)
-        .await?
-        .ok_or(OnboardingError::BadInput {
-            field: "application",
-            message: "already approved".into(),
-        })?;
+    let mut lock = pool.begin().await?;
+    if !store::lock_account(&mut lock, application.account_id).await? {
+        return Err(OnboardingError::Internal(
+            "account vanished at approval".into(),
+        ));
+    }
+    let Some(account_id) = store::approve_application(pool, application.id).await? else {
+        return Err(answered_meanwhile(pool, application.id).await);
+    };
+    let vouched = vouch(
+        pool,
+        boundary,
+        cfg,
+        inviter,
+        approval,
+        application.id,
+        account_id,
+    )
+    .await;
+    if vouched.is_err()
+        && let Err(e) = store::unmark_unvouched(pool, application.id).await
+    {
+        tracing::error!(
+            application = %application.id,
+            error = %e,
+            "a failed approval's mark could not be cleared; the next lock holder heals it"
+        );
+    }
+    lock.commit().await?;
+    vouched
+}
 
-    let approved = store::application(pool, application.id)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("application vanished at approval".into()))?;
-    let registration = ensure_admission_staged(pool, boundary, funding, cfg, &approved).await?;
+/// The marked half of [`approve_one`], under its lock: stage, prepare the
+/// Opinion, record the vouch.
+async fn vouch<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    cfg: &OnboardingConfig,
+    inviter: Uuid,
+    approval: &Approval,
+    application_id: Uuid,
+    account_id: Uuid,
+) -> Result<prepare::Prepared, OnboardingError> {
+    let registration =
+        stage_admission_locked(pool, boundary, cfg, account_id, Some(inviter)).await?;
     let applicant_address = actor_address(pool, account_id).await?;
-
     let inviter_address = actor_address(pool, inviter).await?;
     let opinion = prepare::prepare(
         boundary,
@@ -549,27 +677,57 @@ async fn approve_one<B: L1Boundary>(
         },
     )
     .await?;
+    store::record_vouch(
+        pool,
+        application_id,
+        inviter,
+        &opinion.proposal.body.act_id().to_string(),
+    )
+    .await?;
     Ok(opinion)
 }
-
-/// The inviter's own vouches, put to the write rule as one gesture (D19).
+/// The inviter's own vouches, put to the write rule as one gesture (D19):
+/// the batch's solvency, then its signing budget and its admission
+/// funding budget, charged as one.
+///
+/// The funding budget counts only the entries that would claim a fresh
+/// funding row — an applicant whose address is already funded costs the
+/// fund nothing. The count is read before the claims, so a concurrent
+/// approval that funds one of these addresses first can only make it an
+/// overcharge, never an outflow nobody paid budget for.
 async fn price_batch<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    staging: &Staging,
+    budget: &SigningBudget,
     inviter: Uuid,
-    acts: usize,
+    applications: &[store::Application],
 ) -> Result<(), OnboardingError> {
     let address = actor_address(pool, inviter).await?;
-    Ok(prepare::check_write_rule(
-        boundary,
+    prepare::check_batch_solvency(boundary, &address, applications.len()).await?;
+
+    let mut applicants = Vec::with_capacity(applications.len());
+    for application in applications {
+        let applicant = actor_address(pool, application.account_id).await?;
+        if !applicants.contains(&applicant) {
+            applicants.push(applicant);
+        }
+    }
+    let funded = store::funded_addresses(pool, &applicants).await?;
+    let fresh = applicants.iter().filter(|a| !funded.contains(a)).count();
+
+    let fits = crate::ratelimit::spend_signing_and_funding(
         pool,
-        staging,
+        budget,
         inviter,
-        &address,
-        &[(SigningClass::Approval, acts)],
+        &[(SigningClass::Approval, applications.len())],
+        fresh,
     )
-    .await?)
+    .await?;
+    match (fits, fresh) {
+        (true, _) => Ok(()),
+        (false, 0) => Err(OnboardingError::SigningBudget),
+        (false, _) => Err(OnboardingError::FundingBudget),
+    }
 }
 
 /// The attached address of an actor row; Internal when the actor is
@@ -591,50 +749,82 @@ fn registration_payload(handle: &str) -> Vec<u8> {
     e.finish()
 }
 
-/// Idempotently brings an approved application to "staged and fundable":
-/// the admission burn (guarded by the fresh address's zero burn history)
-/// and the staged Registration, staged under the applicant's own actor
-/// row. Also the repair path — a crash between approval and staging
-/// heals on the applicant's next status poll (`User.application`).
-/// Reachable concurrently from the approving mutation and that poll;
-/// serialized on the application row so the sequence runs at most once
-/// at a time. The transaction exists only to hold that row lock — the
+/// Idempotently brings an approved application to "staged and funded":
+/// the address's admission funding (claimed, and its burn requested
+/// across the seam) and the staged Registration, staged under the
+/// applicant's own actor row. Also the repair path — a crash between
+/// approval and staging heals on the applicant's next status poll
+/// (`User.application`), which passes no `trigger`.
+///
+/// Reachable concurrently from every approval of the account and from
+/// that poll; serialized on the **account** (`store::lock_account`), so
+/// the sequence runs at most once at a time per account whichever path
+/// it comes through. The transaction exists only to hold that lock — the
 /// writes below it commit on their own connections — so a loser queues
 /// there and then finds the winner's work: the staged admission row, and
-/// the burn via the B_i read.
+/// the funding row.
 ///
 /// Only the unchained Registration counts as the admission one. A profile
 /// update is also `Family::Registration` but always asserts its chain
 /// parent (substrate.md §9), so it must neither satisfy the
 /// already-staged check nor hide the admission row behind itself.
 ///
-/// The funding guard is the applicant address's zero burn history, which
-/// is sound because that address is fresh — minted at the key ceremony
-/// and funded only by this flow. The burn atomically writes the very fact
-/// that guards it, so a crash on either side heals correctly on the next
-/// poll, and the comparison against zero is exact in `f64`.
+/// The funding guard is the address's funding row, never the B_i read: a
+/// realization that settles a burn after a delay publishes a balance that
+/// reads zero while the burn is pending, so a guard on B_i would burn
+/// again on every retry and poll in that window. Only the inserter of the
+/// row requests the burn; a request lost to a crash or a transient
+/// realization error leaves the row ticketless, and the settlement pass
+/// re-requests it under the same key, so the realization burns once.
+///
+/// This is the poll's entry, account-scoped (EC-R2): it runs while the
+/// account is an applicant with some path holding a live vouch, whichever
+/// path that is, and it re-stages only the Registration — it never
+/// prepares anyone's Opinion. Under the lock it first returns to waiting
+/// any path whose mark lost its vouch (an approval that died between the
+/// two). An approval stages through [`stage_admission_locked`] inside its
+/// own hold of the lock instead.
 pub async fn ensure_admission_staged<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
-    funding: &StandIn,
     cfg: &OnboardingConfig,
-    application: &store::Application,
+    account_id: Uuid,
 ) -> Result<prepare::Prepared, OnboardingError> {
-    if application.approved_at.is_none() {
-        return Err(OnboardingError::BadInput {
-            field: "application",
-            message: "not approved".into(),
-        });
-    }
-
     let mut lock = pool.begin().await?;
-    if !store::lock_application(&mut lock, application.id).await? {
+    if !store::lock_account(&mut lock, account_id).await? {
         return Err(OnboardingError::Internal(
-            "application vanished at staging".into(),
+            "account vanished at staging".into(),
         ));
     }
+    store::heal_unvouched_marks(&mut lock, account_id).await?;
+    let Some(current) = store::current_application_for(pool, account_id).await? else {
+        return Err(not_vouched());
+    };
+    if current.approved_at.is_none() || current.landed_at.is_some() {
+        return Err(not_vouched());
+    }
+    let prepared = stage_admission_locked(pool, boundary, cfg, account_id, None).await?;
+    lock.commit().await?;
+    Ok(prepared)
+}
 
-    if let Some(existing) = staged::list_for_actor(pool, application.account_id)
+fn not_vouched() -> OnboardingError {
+    OnboardingError::BadInput {
+        field: "application",
+        message: "no live vouch on an applicant's path".into(),
+    }
+}
+
+/// The admission sequence proper — funding, then the staged Registration
+/// — for an account whose lock the caller holds.
+async fn stage_admission_locked<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    cfg: &OnboardingConfig,
+    account_id: Uuid,
+    trigger: Option<Uuid>,
+) -> Result<prepare::Prepared, OnboardingError> {
+    if let Some(existing) = staged::list_for_actor(pool, account_id)
         .await
         .map_err(|e| OnboardingError::Internal(e.to_string()))?
         .into_iter()
@@ -644,7 +834,6 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
                 && w.proposal.body.asserted_parents.is_empty()
         })
     {
-        lock.commit().await?;
         return Ok(prepare::Prepared {
             id: existing.id,
             proposal: existing.proposal,
@@ -652,23 +841,39 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         });
     }
 
-    let address = actor_address(pool, application.account_id).await?;
-    let balance = boundary
-        .balance(&address)
-        .await
-        .map_err(|e| OnboardingError::Internal(e.to_string()))?;
-    if crate::bootstrap::never_burned(balance.burned_total) {
-        funding
-            .credit_burn(&address, cfg.admission_burn_micro)
-            .await
-            .map_err(|e| OnboardingError::Internal(e.to_string()))?;
+    let address = actor_address(pool, account_id).await?;
+    let handle = store::actor_identity(pool, account_id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("account vanished at staging".into()))?
+        .handle;
+    if let Some(key) = store::claim_admission_funding(
+        pool,
+        &address,
+        account_id,
+        trigger,
+        cfg.admission_burn_micro,
+    )
+    .await?
+        && let Some(ticket) =
+            request_burn(pool, boundary, &address, cfg.admission_burn_micro, key).await?
+    {
+        stamp_if_settled(pool, boundary, &address, &ticket).await?;
+    }
+    let funding = store::admission_funding(pool, &address)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("funding row vanished at staging".into()))?;
+    if funding.failed_at.is_some() {
+        return Err(OnboardingError::Internal(format!(
+            "the admission funding of {address} failed on the realization; \
+             no Registration is staged that could never be paid for"
+        )));
     }
 
-    let prepared = prepare::prepare(
+    let prepared = prepare::prepare_funded_admission(
         boundary,
         pool,
         cfg.gc_after_epochs,
-        application.account_id,
+        account_id,
         Gesture {
             author: address.clone(),
             family: Family::Registration,
@@ -680,45 +885,423 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
             license: None,
             asserted_parents: vec![],
             deps: vec![],
-            payload: registration_payload(&application.handle),
+            payload: registration_payload(&handle),
             node: None,
         },
     )
     .await?;
-    lock.commit().await?;
     Ok(prepared)
 }
 
-/// Confirm-side landing (auth.md "Approval and landing" step 4): every
-/// promoted Registration flips its account's approved application to
-/// landed and the account state to member. Driven off the ingestion
-/// pass; a no-op for Registrations without an approved application (the
-/// genesis records on a rebuild). A failure leaves the application
-/// approved — it lands on a later pass — and is returned rather than
-/// swallowed, so the ingestion pass reports what did not follow.
-pub async fn land_promoted(
+/// Sends one burn request under the funding's key and records it — the
+/// attempt always, the ticket when the realization answered. A refused
+/// request is logged, not raised: the funding row stands, and the
+/// settlement pass re-requests under the same key, so an approval or a
+/// poll is never refused for a realization's transient trouble and the
+/// realization still burns once.
+async fn request_burn<B: L1Boundary>(
     pool: &PgPool,
-    promoted: &[staged::PromotedWrite],
-) -> Vec<crate::ingest::PromotionFailure> {
-    let mut failures = Vec::new();
-    for write in promoted {
-        if write.family != Family::Registration.as_str() {
-            continue;
+    boundary: &B,
+    address: &str,
+    amount_micro: i64,
+    key: Uuid,
+) -> Result<Option<BurnTicket>, OnboardingError> {
+    match boundary
+        .request_admission_burn(address, amount_micro, key)
+        .await
+    {
+        Ok(ticket) => {
+            store::record_funding_request(pool, address, Some(&ticket.0)).await?;
+            Ok(Some(ticket))
         }
-        match store::land_account(pool, write.actor_id).await {
-            Ok(true) => tracing::info!(account = %write.actor_id, "application landed"),
-            Ok(false) => {}
-            Err(e) => failures.push(crate::ingest::PromotionFailure {
-                stage: "onboarding",
-                staged: write.id,
-                act_id: write.act_id.clone(),
-                error: e.to_string(),
-            }),
+        Err(e) => {
+            tracing::warn!(
+                address,
+                error = %e,
+                "admission burn request failed; the settlement pass re-requests it under the same key"
+            );
+            store::record_funding_request(pool, address, None).await?;
+            Ok(None)
+        }
+    }
+}
+
+/// Reads a ticket's settlement once and stamps the funding settled if the
+/// burn is already pinned — so a realization that settles at once (the
+/// stand-in at its default delay) leaves nothing for the relay to hold
+/// and no wait on the next ingestion pass. Anything else is left to the
+/// settlement pass, which owns the failure stamp and its log line; a
+/// failed read here changes nothing.
+async fn stamp_if_settled<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    address: &str,
+    ticket: &BurnTicket,
+) -> Result<bool, OnboardingError> {
+    match boundary.burn_settlement(ticket).await {
+        Ok(BurnSettlement::Settled { .. }) => {
+            store::mark_funding_settled(pool, address).await?;
+            Ok(true)
+        }
+        _ => Ok(false),
+    }
+}
+
+/// Whether a staged write is an unchained admission Registration whose
+/// address's funding exists and has not settled — the one approval leg
+/// the relay holds (`relay::submit_approval`). A Registration with no
+/// funding row (an address funded outside the admission flow) has
+/// nothing to wait on. A row not yet stamped settled is asked of the
+/// realization first, so a burn that settled since the last settlement
+/// pass relays now rather than one pass later; a failed funding waits for
+/// good.
+pub(crate) async fn awaits_funding<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    write: &staged::StagedWrite,
+) -> Result<bool, OnboardingError> {
+    let body = &write.proposal.body;
+    if body.family != Family::Registration || !body.asserted_parents.is_empty() {
+        return Ok(false);
+    }
+    let Some(funding) = store::admission_funding(pool, &body.author).await? else {
+        return Ok(false);
+    };
+    if funding.settled_at.is_some() {
+        return Ok(false);
+    }
+    if funding.failed_at.is_some() {
+        return Ok(true);
+    }
+    match &funding.ticket {
+        Some(ticket) => {
+            Ok(
+                !stamp_if_settled(pool, boundary, &body.author, &BurnTicket(ticket.clone()))
+                    .await?,
+            )
+        }
+        None => Ok(true),
+    }
+}
+
+/// What one settlement pass did, carried on the ingest outcome so callers
+/// and tests see it rather than only the log.
+#[derive(Debug, Default)]
+pub struct SettlementOutcome {
+    /// Addresses whose funding this pass stamped settled.
+    pub settled: Vec<String>,
+    /// Addresses whose funding the realization refused for good.
+    pub failed: Vec<String>,
+    /// Burn requests this pass (re)sent.
+    pub requested: usize,
+    /// Held admission Registrations whose approval leg this pass relayed.
+    pub relayed: Vec<Uuid>,
+    /// What went wrong on the way; every item is retried by the next pass.
+    pub errors: Vec<String>,
+}
+
+impl SettlementOutcome {
+    fn is_idle(&self) -> bool {
+        self.settled.is_empty()
+            && self.failed.is_empty()
+            && self.requested == 0
+            && self.relayed.is_empty()
+            && self.errors.is_empty()
+    }
+}
+
+/// The settlement pass (auth.md "Funding"), run by every ingestion pass:
+///
+/// 1. every pending funding's settlement is read across the seam and
+///    stamped once the burn is pinned; a funding with no ticket — its
+///    request lost to a crash or refused transiently — or whose read
+///    errs is re-requested under its own key, so the realization still
+///    burns once; a refusal for good is stamped failed and logged at
+///    error level, and the applicant's Registration stays held;
+/// 2. every held admission Registration whose funding has settled — not
+///    only those this pass settled, so a hold stored just after an
+///    earlier pass read its funding is never stranded — has its approval
+///    leg relayed and its hold cleared.
+///
+/// Costs one indexed scan of pending rows and one seam call per pending
+/// row: O(pending), negligible at friends-cohort scale. A pass that did
+/// anything logs its wall time.
+pub async fn settle_admission_fundings<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+) -> SettlementOutcome {
+    let started = std::time::Instant::now();
+    let mut outcome = SettlementOutcome::default();
+    match store::pending_admission_fundings(pool).await {
+        Ok(pending) => {
+            for funding in pending {
+                if let Err(e) = settle_one(boundary, pool, &funding, &mut outcome).await {
+                    outcome
+                        .errors
+                        .push(format!("funding of {}: {e}", funding.address));
+                }
+            }
+        }
+        Err(e) => outcome.errors.push(format!("pending fundings: {e}")),
+    }
+    match staged::held_approvals_ready(pool).await {
+        Ok(held) => {
+            for hold in held {
+                match crate::relay::relay_held(boundary, pool, hold.id, hold.approval_signature)
+                    .await
+                {
+                    Ok(()) => outcome.relayed.push(hold.id),
+                    Err(e) => outcome
+                        .errors
+                        .push(format!("held approval of staged {}: {e}", hold.id)),
+                }
+            }
+        }
+        Err(e) => outcome.errors.push(format!("held approvals: {e}")),
+    }
+    for error in &outcome.errors {
+        tracing::error!(error = %error, "settlement pass step failed; the next pass retries it");
+    }
+    if !outcome.is_idle() {
+        tracing::info!(
+            settled = outcome.settled.len(),
+            failed = outcome.failed.len(),
+            requested = outcome.requested,
+            relayed = outcome.relayed.len(),
+            errors = outcome.errors.len(),
+            elapsed_ms = started.elapsed().as_millis() as u64,
+            "admission settlement pass"
+        );
+    }
+    outcome
+}
+
+async fn settle_one<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    funding: &store::AdmissionFunding,
+    outcome: &mut SettlementOutcome,
+) -> Result<(), OnboardingError> {
+    let rerequest = |outcome: &mut SettlementOutcome| {
+        outcome.requested += 1;
+        request_burn(
+            pool,
+            boundary,
+            &funding.address,
+            funding.amount_micro,
+            funding.request_key,
+        )
+    };
+    let ticket = match &funding.ticket {
+        Some(ticket) => BurnTicket(ticket.clone()),
+        None => match rerequest(outcome).await? {
+            Some(ticket) => ticket,
+            None => return Ok(()),
+        },
+    };
+    match boundary.burn_settlement(&ticket).await {
+        Ok(BurnSettlement::Settled { pinned_micro }) => {
+            if pinned_micro != funding.amount_micro {
+                tracing::warn!(
+                    address = funding.address,
+                    requested = funding.amount_micro,
+                    pinned = pinned_micro,
+                    "the realization pinned a different amount than was requested"
+                );
+            }
+            if store::mark_funding_settled(pool, &funding.address).await? {
+                outcome.settled.push(funding.address.clone());
+            }
+        }
+        Ok(BurnSettlement::Pending) => {}
+        Ok(BurnSettlement::Failed(reason)) => {
+            if store::mark_funding_failed(pool, &funding.address).await? {
+                tracing::error!(
+                    address = funding.address,
+                    reason,
+                    "the realization refused an admission burn; the applicant's Registration stays held"
+                );
+                outcome.failed.push(funding.address.clone());
+            }
+        }
+        Err(e) => {
+            tracing::warn!(
+                address = funding.address,
+                error = %e,
+                "settlement read failed; re-requesting under the same key"
+            );
+            rerequest(outcome).await?;
+        }
+    }
+    Ok(())
+}
+
+/// Why an account may not carry an act with its application.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CarryRefusal {
+    /// Not an applicant — a member acts directly; anyone else not at all.
+    NotApplicant,
+    /// The email is not proven yet: an unverified account is reaped whole,
+    /// and nothing is held for it before it is a person waiting on a vouch.
+    EmailNotVerified,
+    /// No key attached: the act has no author address to stage under.
+    NoKey,
+    /// The applicant already carries an act of this kind — once each.
+    AlreadyCarried(Family),
+}
+
+/// The account lock an applicant's carried staging holds from its gate to
+/// its carry, so a staging and the landing that releases the batch never
+/// interleave: the landing either sees the act carried, or the staging
+/// sees a member and refuses.
+pub struct CarryLock(sqlx::Transaction<'static, sqlx::Postgres>);
+
+/// Opens an applicant's carried staging of one act of `family` (auth.md
+/// "Application"; seam 099 rulings 68, 73): under the account lock, the
+/// account must be an applicant with a proven email and an attached key,
+/// and may carry one act of each kind — a post (its Publish, with the
+/// topics and citations it declares), an Opinion, an Affinity. The caller
+/// prepares the act through [`prepare::Carrying`] and hands the staged ids
+/// to [`close_carry`].
+pub async fn open_carry(
+    pool: &PgPool,
+    account: Uuid,
+    family: Family,
+) -> Result<CarryLock, CarryOpenError> {
+    let mut lock = pool.begin().await?;
+    if !store::lock_account(&mut lock, account).await? {
+        return Err(CarryRefusal::NotApplicant.into());
+    }
+    let credentials = store::credentials_by_actor(pool, account)
+        .await?
+        .ok_or(CarryRefusal::NotApplicant)?;
+    if credentials.account_state != store::AccountState::Applicant {
+        return Err(CarryRefusal::NotApplicant.into());
+    }
+    if credentials.email_verified_at.is_none() {
+        return Err(CarryRefusal::EmailNotVerified.into());
+    }
+    let keyed = store::actor_identity(pool, account)
+        .await?
+        .and_then(|identity| identity.realization_address)
+        .is_some();
+    if !keyed {
+        return Err(CarryRefusal::NoKey.into());
+    }
+    let carried = staged::carried_families(pool, account)
+        .await
+        .map_err(|e| CarryOpenError::Internal(e.to_string()))?;
+    if carried.iter().any(|f| f == family.as_str()) {
+        return Err(CarryRefusal::AlreadyCarried(family).into());
+    }
+    Ok(CarryLock(lock))
+}
+
+/// Carries the writes the gated prepare staged, and releases the lock.
+pub async fn close_carry(
+    pool: &PgPool,
+    lock: CarryLock,
+    ids: &[Uuid],
+) -> Result<(), CarryOpenError> {
+    staged::carry(pool, ids)
+        .await
+        .map_err(|e| CarryOpenError::Internal(e.to_string()))?;
+    lock.0.commit().await?;
+    Ok(())
+}
+
+/// A carried staging that could not open: refused, or a fault.
+#[derive(Debug, thiserror::Error)]
+pub enum CarryOpenError {
+    #[error("{0:?}")]
+    Refused(CarryRefusal),
+    #[error(transparent)]
+    Storage(#[from] sqlx::Error),
+    #[error("internal: {0}")]
+    Internal(String),
+}
+
+impl From<CarryRefusal> for CarryOpenError {
+    fn from(r: CarryRefusal) -> Self {
+        CarryOpenError::Refused(r)
+    }
+}
+
+/// Confirm-side landing (auth.md "Approval and landing"; EC-R2): every
+/// account with a recorded vouch-Opinion newly in the mirror is put to the
+/// landing predicate (`store::evaluate_landing`) — its own Registration
+/// confirmed AND its first vouch-Opinion by causal key confirmed. The
+/// candidates come from the mirror itself, not from this pass's
+/// promotions, so a late landing, a reaped staged write and a rebuild all
+/// reach the same decision. Driven off every ingestion pass. A failure
+/// leaves the account as it was — it is decided again on a later pass —
+/// and is returned rather than swallowed; its `staged` field names the
+/// account, since a landing belongs to no single staged write.
+pub async fn land_ready_accounts(pool: &PgPool) -> Vec<crate::ingest::PromotionFailure> {
+    let failure = |account: Uuid, e: sqlx::Error| crate::ingest::PromotionFailure {
+        stage: "landing",
+        staged: account,
+        act_id: String::new(),
+        error: e.to_string(),
+    };
+    let candidates = match store::landing_candidates(pool).await {
+        Ok(candidates) => candidates,
+        Err(e) => return vec![failure(Uuid::nil(), e)],
+    };
+    let mut failures = Vec::new();
+    for account in candidates {
+        match store::evaluate_landing(pool, account, Family::Registration.as_str()).await {
+            Ok(store::Landing::Landed {
+                application_id,
+                voucher_id,
+                released,
+            }) => tracing::info!(
+                %account,
+                application = %application_id,
+                voucher = %voucher_id,
+                carried_acts_released = released,
+                "the entry ceremony landed"
+            ),
+            Ok(_) => {}
+            Err(e) => failures.push(failure(account, e)),
         }
     }
     failures
 }
 
+/// The lapse step (EC-R2 "a fallen ritual"), run by every ingestion pass
+/// after the staged-write GC: a vouch whose Opinion was collected unlanded
+/// lapses, and its path returns to waiting — the account's node and
+/// funding stay, and any member may vouch again with no second burn. A
+/// lapsed vouch is not erased: if its Opinion lands late after all, the
+/// landing predicate still counts it. Returns the vouches lapsed;
+/// failures are logged and retried by the next pass.
+pub async fn lapse_dead_vouches(pool: &PgPool) -> u64 {
+    let dead = match store::vouches_to_lapse(pool).await {
+        Ok(dead) => dead,
+        Err(e) => {
+            tracing::error!(error = %e, "lapse scan failed; the next pass retries it");
+            return 0;
+        }
+    };
+    let mut by_account: std::collections::BTreeMap<Uuid, Vec<Uuid>> = Default::default();
+    for (vouch, account) in dead {
+        by_account.entry(account).or_default().push(vouch);
+    }
+    let mut lapsed = 0;
+    for (account, vouches) in by_account {
+        match store::lapse_vouches(pool, account, &vouches).await {
+            Ok(n) => lapsed += n,
+            Err(e) => {
+                tracing::error!(%account, error = %e, "vouch lapse failed; the next pass retries it");
+            }
+        }
+    }
+    if lapsed > 0 {
+        tracing::info!(lapsed, "vouches lapsed; their paths wait again");
+    }
+    lapsed
+}
 /// How long a revoked or expired refresh token is kept: long enough for
 /// reuse detection to still recognise a replayed one.
 const REFRESH_TOKEN_RETENTION_SECS: f64 = 30.0 * 24.0 * 60.0 * 60.0;

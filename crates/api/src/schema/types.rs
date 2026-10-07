@@ -27,8 +27,6 @@ use postgres_store::{
 };
 use uuid::Uuid;
 
-use l1_standin::StandIn;
-
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
@@ -162,14 +160,16 @@ impl StanceBundle {
 }
 
 /// The actor whose view this account still borrows (`design/readme.md`
-/// §13, api-spec.md `Query.borrowedView`): the approver their application
-/// came through, until the member's first Opinion is signed — toward any
-/// target — and nobody after. Vacuously nobody without an approver, which
-/// is the genesis account's case.
+/// §13, api-spec.md `Query.borrowedView`): the issuer of the invite link
+/// the account registered through, until the member's first Opinion is
+/// signed — toward any target — and nobody after. The lender is the
+/// issuer for the whole ladder, whoever's vouch landed the account (G2).
+/// Vacuously nobody without an issuer, which is the genesis account's
+/// case.
 ///
 /// The ladder, rung by rung:
 ///
-/// - An **applicant** keeps the approver's view whatever they stage: the
+/// - An **applicant** keeps the issuer's view whatever they stage: the
 ///   probe is not consulted before landing (VouchBack.md:21's carried
 ///   opinion signs with the vouch-in batch, so it ends the borrowing at
 ///   landing, not before).
@@ -194,17 +194,17 @@ pub(crate) async fn borrowed_vantage(
     account: &store::ActorIdentity,
 ) -> async_graphql::Result<Option<store::ActorIdentity>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(approver) = store::inviter_of(pool, account.id).await? else {
+    let Some(issuer) = store::link_issuer_of(pool, account.id).await? else {
         return Ok(None);
     };
     let Some(landed) = store::landed_vouch_state(pool, account.id).await? else {
-        return Ok(Some(approver));
+        return Ok(Some(issuer));
     };
     if landed.first_opinion_latched {
         return Ok(None);
     }
     let Some(account_address) = &account.realization_address else {
-        return Ok(Some(approver));
+        return Ok(Some(issuer));
     };
     let source = NodeId::Addr(account_address.clone()).to_string();
     if mirror::has_any_opinion_from(pool, &source).await? {
@@ -214,14 +214,15 @@ pub(crate) async fn borrowed_vantage(
     if staged::has_signed_of_family(pool, account.id, Family::Opinion).await? {
         return Ok(None);
     }
-    Ok(Some(approver))
+    Ok(Some(issuer))
 }
 
-/// Whether the account's reciprocal Opinion toward its inviter exists —
-/// confirmed in the mirror (latched on the landed application row) or in
-/// flight as one of its staged writes (auth.md "Reciprocation is the
-/// joiner's own act"). True without an inviter: there is nothing to
-/// reciprocate.
+/// Whether the account's reciprocal Opinion toward the member who vouched
+/// it in exists — confirmed in the mirror (latched on the landed
+/// application row) or in flight as one of its staged writes (auth.md
+/// "Reciprocation is the joiner's own act"). True with no admitting voucher
+/// — before landing, or for the genesis account: there is nothing to
+/// reciprocate yet.
 ///
 /// A missing address answers false: no Opinion can exist without both,
 /// because a keyless account has signed nothing.
@@ -230,7 +231,7 @@ pub(crate) async fn has_reciprocated(
     account: &store::ActorIdentity,
 ) -> async_graphql::Result<bool> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(inviter) = store::inviter_of(pool, account.id).await? else {
+    let Some(inviter) = store::admitting_voucher_of(pool, account.id).await? else {
         return Ok(true);
     };
     if store::reciprocation_latched(pool, account.id).await? {
@@ -444,7 +445,8 @@ impl UserError {
             OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
             OnboardingError::WriteRule { .. }
             | OnboardingError::BatchWriteRule { .. }
-            | OnboardingError::SigningBudget => {
+            | OnboardingError::SigningBudget
+            | OnboardingError::FundingBudget => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
             OnboardingError::SignatureInvalid(_) => {
@@ -605,6 +607,11 @@ impl Sign {
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
 pub enum StagedWriteState {
+    /// Carried with the author's application: held by the server, seen by
+    /// the author alone, never signed before the account lands — the
+    /// landing completes its dependencies and moves it to AWAITING_PRE_SIGN
+    /// for the device to sign with the vouch-in batch.
+    Carried,
     /// Prepared; the pre-commitment not yet submitted.
     AwaitingPreSign,
     /// Pre-signed and submitted; the backend awaits the host-sealed
@@ -613,7 +620,9 @@ pub enum StagedWriteState {
     /// The sealed act is back and awaits the device's approval witness.
     AwaitingApproval,
     /// Approved and submitted for ordering; the backend drives retries
-    /// across epoch boundaries.
+    /// across epoch boundaries — including relaying the approval of an
+    /// admission Registration whose funding has not settled yet, once it
+    /// does.
     Relaying,
     /// The accepted act is in the mirror and the staged effects are
     /// promoted.
@@ -625,6 +634,7 @@ pub enum StagedWriteState {
 impl StagedWriteState {
     pub fn from_store(s: staged::StagedState) -> Self {
         match s {
+            staged::StagedState::Carried => Self::Carried,
             staged::StagedState::AwaitingPreSign => Self::AwaitingPreSign,
             staged::StagedState::Sealing => Self::Sealing,
             staged::StagedState::AwaitingApproval => Self::AwaitingApproval,
@@ -753,6 +763,7 @@ pub struct PreparedWrite {
     pub family: RecordFamily,
     pub proposal: common::l1::Proposal,
     pub gc_after_epochs: i64,
+    pub carried: bool,
 }
 
 impl PreparedWrite {
@@ -762,6 +773,16 @@ impl PreparedWrite {
             family: RecordFamily::from_family(p.proposal.body.family),
             proposal: p.proposal,
             gc_after_epochs: p.gc_after_epochs,
+            carried: false,
+        }
+    }
+
+    /// A write an applicant staged, carried with their application: not
+    /// for the device to sign now.
+    pub fn carried_write(p: crate::prepare::Prepared) -> Self {
+        Self {
+            carried: true,
+            ..Self::from_prepared(p)
         }
     }
 }
@@ -807,8 +828,19 @@ impl PreparedWrite {
     /// A staged write that never completes the handshake and lands is
     /// garbage-collected — staged payload included — after this many
     /// epochs (an operational parameter; data-model.md "Staged writes").
+    /// A carried write is never collected before the landing releases it;
+    /// its window starts then.
     async fn gc_after_epochs(&self) -> i64 {
         self.gc_after_epochs
+    }
+
+    /// Whether the write is carried with the author's application rather
+    /// than staged for signing now: an applicant's once-each post,
+    /// Opinion or Affinity. A carried write is NEVER signed by the device
+    /// on prepare — its dependencies are completed at the account's
+    /// landing, and the device signs it then, with the vouch-in batch.
+    async fn carried(&self) -> bool {
+        self.carried
     }
 }
 
@@ -824,6 +856,14 @@ impl StagedWriteType {
 
     async fn state(&self) -> StagedWriteState {
         StagedWriteState::from_store(self.0.state)
+    }
+
+    /// Whether the write was carried with the author's application —
+    /// true from staging on. Once the landing releases it (state
+    /// AWAITING_PRE_SIGN) it is the vouch-in batch, which the device signs
+    /// without a prompt.
+    async fn carried(&self) -> bool {
+        self.0.carried
     }
 
     async fn family(&self) -> RecordFamily {
@@ -1322,16 +1362,17 @@ impl User {
         self.identity.realization_address.clone()
     }
 
-    /// The actor whose invite this account came through — landing
-    /// provenance for the reciprocation gesture; the graph's own record
-    /// of the vouch is the inviter's Opinion. Field-level: viewer-only;
-    /// null for accounts without an application trace (genesis actors).
+    /// The member whose vouch-Opinion landed the account first — the
+    /// target of the reciprocation gesture; the graph's own record of the
+    /// vouch is that member's Opinion. Null before landing, and for
+    /// accounts without an application trace (genesis actors).
+    /// Field-level: viewer-only.
     async fn invited_by(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
         if !self.is_viewer(ctx) {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        Ok(store::inviter_of(pool, self.identity.id)
+        Ok(store::admitting_voucher_of(pool, self.identity.id)
             .await?
             .map(|identity| {
                 Actor::User(User {
@@ -1438,26 +1479,70 @@ impl User {
             .map(PendingEmailChange::from_store))
     }
 
-    /// The account's latest application — the applicant's own view of
-    /// its progress; null when the account has none. Reading it is the
-    /// admission flow's repair hook: an approved application whose
-    /// staged Registration was lost re-stages here, on the poll (auth.md
-    /// "Approval and landing"). Field-level: viewer-only.
+    /// When the password was last set — at registration, a reset or a
+    /// change. Field-level: viewer-only.
+    async fn password_changed_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::password_changed_at(pool, self.identity.id).await?)
+    }
+
+    /// When the stored key backup was made — the newest, the one
+    /// recovery serves; null when none was uploaded. Field-level:
+    /// viewer-only.
+    async fn key_backup_created_at(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<DateTime<Utc>>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::key_backup_created_at(pool, self.identity.id).await?)
+    }
+
+    /// Cross-device preferences. Field-level: viewer-only.
+    async fn preferences(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<UserPreferences>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(Some(UserPreferences::from_store(
+            store::preferences(pool, self.identity.id).await?,
+        )))
+    }
+
+    /// The account's current application — the applicant's own view of
+    /// its progress; null when the account has none. With several paths
+    /// the read prefers the landed path, then the approved-not-landed path
+    /// with the earliest live vouch, then the newest waiting path, then
+    /// the newest closed one. Reading it is the admission flow's repair
+    /// hook: while some path holds a live vouch and the account has not
+    /// landed, a staged Registration that was lost or collected re-stages
+    /// here, on the poll — the Registration only, never anyone's Opinion
+    /// (auth.md "Approval and landing"). Field-level: viewer-only.
     async fn application(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Application>> {
         if !self.is_viewer(ctx) {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        let Some(application) = store::latest_application_for(pool, self.identity.id).await? else {
+        let Some(application) = store::current_application_for(pool, self.identity.id).await?
+        else {
             return Ok(None);
         };
         if application.approved_at.is_some() && application.landed_at.is_none() {
             let boundary = ctx.data::<StandInBoundary>()?;
-            let funding = ctx.data::<StandIn>()?;
             let cfg = ctx.data::<OnboardingConfig>()?;
             if let Err(e) =
-                onboarding::ensure_admission_staged(pool, boundary, funding, cfg, &application)
-                    .await
+                onboarding::ensure_admission_staged(pool, boundary, cfg, self.identity.id).await
             {
                 tracing::error!(error = %e, "staged-registration repair failed");
             }
@@ -1512,6 +1597,77 @@ impl PendingEmailChange {
             link_confirmed: change.new_verified_at.is_some(),
             expires_at: change.expires_at,
             new_email: change.new_email,
+        }
+    }
+}
+
+/// A User's cross-device preferences.
+#[derive(SimpleObject)]
+pub struct UserPreferences {
+    /// Sensitive-content filter aggressiveness: 0 (show everything) to
+    /// 10 (strictest); null when unset, so the frontend default applies.
+    pub content_filtering_severity_level: Option<i32>,
+    /// The license the composer starts a new post from; null when unset,
+    /// so the composer starts at public domain (0/0). It seeds the
+    /// authoring-time declaration and binds nothing: the license is
+    /// settled per post at its genesis signing, and changing this never
+    /// reaches a post already published.
+    pub default_license: Option<License>,
+    /// Whether the account has seen the intro — it shows once per
+    /// account, on whichever device signs in first. False until set.
+    pub has_seen_onboarding: bool,
+}
+
+impl UserPreferences {
+    pub fn from_store(preferences: store::Preferences) -> Self {
+        Self {
+            content_filtering_severity_level: preferences
+                .content_filtering_severity_level
+                .map(i32::from),
+            default_license: preferences
+                .default_license
+                .map(|(attribution, provenance)| License {
+                    attribution,
+                    provenance,
+                }),
+            has_seen_onboarding: preferences.has_seen_onboarding,
+        }
+    }
+}
+
+/// The anonymous view of an email change's new-address link (the
+/// `emailChangeLinkCheck` query). Holding the token is holding the link.
+#[derive(SimpleObject)]
+pub struct EmailChangeLinkCheck {
+    /// The address this link confirms — the inbox the link was mailed to.
+    pub new_email: String,
+    /// Where the link's change stands, by what ended it if anything did —
+    /// the confirm's own end-state codes (EMAIL_CHANGE_ALREADY_APPLIED /
+    /// _CANCELED / _EXPIRED), read without a session.
+    pub state: EmailChangeLinkState,
+}
+
+/// PENDING: the change is live in its window (either side may already
+/// have landed; a taken address still reads PENDING — the collision is
+/// answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
+/// change moved the address. CANCELED: called off, or superseded by a
+/// newer request. EXPIRED: its window closed before both sides landed.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum EmailChangeLinkState {
+    Pending,
+    Applied,
+    Canceled,
+    Expired,
+}
+
+impl EmailChangeLinkState {
+    pub fn of(end: Option<store::EmailChangeEnd>) -> Self {
+        match end {
+            None => Self::Pending,
+            Some(store::EmailChangeEnd::Applied) => Self::Applied,
+            Some(store::EmailChangeEnd::Canceled) => Self::Canceled,
+            Some(store::EmailChangeEnd::RanOut) => Self::Expired,
         }
     }
 }
@@ -1574,8 +1730,15 @@ impl InviteLink {
         self.0.revoked_at
     }
 
+    /// Whether the link can stage a new applicant now — the reckoning
+    /// inviteLinkCheck.usable reports.
+    async fn usable(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::invite_link_usable(pool, self.0.id).await?)
+    }
+
     /// The inviter's approval queue: applications staged through this
-    /// link, with their status.
+    /// link, with their status, rejected ones included.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn applications(
         &self,
@@ -1621,13 +1784,44 @@ impl Application {
         self.0.key_attached
     }
 
-    /// When the inviter's priced approval happened; null while pending.
+    /// The member whose queue this application sits in — the issuer of
+    /// the invite link it came through: whose vouch it waits on, or whose
+    /// vouch is in play. Visible wherever the application is.
+    async fn approver(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let Some(link) = store::invite_link(pool, self.0.invite_link_id).await? else {
+            return Ok(None);
+        };
+        Ok(store::actor_identity(pool, link.inviter_id)
+            .await?
+            .map(|identity| {
+                Actor::User(User {
+                    identity,
+                    viewer_session: None,
+                })
+            }))
+    }
+
+    /// Since when this path has a live vouch — its approver's decision,
+    /// whose Opinion has not landed or lapsed; null while waiting,
+    /// including after a vouch lapsed. A landed path keeps it.
     async fn approved_at(&self) -> Option<DateTime<Utc>> {
         self.0.approved_at
     }
 
-    /// When the Registration confirmed and the account became a member;
-    /// null before.
+    /// When the approver closed the application without approving it —
+    /// on its own (rejectApplication) or with its link's whole waiting
+    /// queue (rejectLinkApplications); null otherwise. A rejection closes
+    /// this queue entry only: the account persists, and a member taking up
+    /// the account's ask link stages a new application (auth.md
+    /// "Rejection").
+    async fn rejected_at(&self) -> Option<DateTime<Utc>> {
+        self.0.rejected_at
+    }
+
+    /// When the ceremony completed through this path — the account's own
+    /// Registration and this path's vouch-Opinion both confirmed, the
+    /// vouch the first to land; null otherwise.
     async fn landed_at(&self) -> Option<DateTime<Utc>> {
         self.0.landed_at
     }

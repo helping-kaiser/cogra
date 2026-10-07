@@ -9,6 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.cogra.domain.store.ThemeChoice
 
 internal val LightColors = lightColorScheme(
     primary = LightTokens.primary,
@@ -143,6 +144,23 @@ fun CograTheme(
             content = content,
         )
     }
+}
+
+/**
+ * Whether the app paints dark under the reader's device-local choice
+ * (Settings.md "Theme"): Light and Dark are absolute, and Auto follows the
+ * device's own light-or-dark setting.
+ */
+fun paintsDark(choice: ThemeChoice, systemDark: Boolean): Boolean = when (choice) {
+    ThemeChoice.LIGHT -> false
+    ThemeChoice.DARK -> true
+    ThemeChoice.AUTO -> systemDark
+}
+
+/** [CograTheme] under the device's theme choice — repaints the moment it changes. */
+@Composable
+fun CograTheme(choice: ThemeChoice, content: @Composable () -> Unit) {
+    CograTheme(darkTheme = paintsDark(choice, isSystemInDarkTheme()), content = content)
 }
 
 /** Accessor for the roles Material does not carry — `CograTheme.colors.success`. */

@@ -32,7 +32,6 @@ pub fn api_context(
         ApiContext {
             pool,
             boundary: api::l1::StandInBoundary(standin.clone()),
-            funding: standin,
             auth: auth.clone(),
             mailer,
             web_origin: WebOrigin("http://localhost:3000".into()),
@@ -66,7 +65,7 @@ pub fn connect_info_app_with_standin(
     rate_limits: RateLimitConfig,
 ) -> (axum::Router, StandIn) {
     let (ctx, auth) = api_context(pool, mailer, rate_limits);
-    let standin = ctx.funding.clone();
+    let standin = ctx.boundary.0.clone();
     let uploads = upload_routing(&ctx);
     let app = api::app(
         api::schema::build(ctx),

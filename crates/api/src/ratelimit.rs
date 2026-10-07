@@ -1,9 +1,11 @@
 //! ´mod:module:ratelimit´
 //!
 //! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
-//! plus the login backoff (auth.md "Rate limiting"), the email-change
+//! plus the login and re-authentication backoffs (auth.md "Rate
+//! limiting"), the email-change
 //! mail budget, the media upload budget, and the per-account signing
-//! budget spent at prepare (api-spec.md "Conventions").
+//! budget spent at prepare (api-spec.md "Conventions") with the voucher's
+//! admission funding budget priced beside it.
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
 //! survive restarts and hold across instances. Auth keys that name an
@@ -37,6 +39,7 @@ pub mod scope {
     pub const RESET_EMAIL: &str = "reset_email";
     pub const RESEND_EMAIL: &str = "resend_email";
     pub const CONFIRM_IP: &str = "confirm_ip";
+    pub const REAUTH_ACCOUNT: &str = "reauth_account";
     pub const EMAIL_CHANGE_REQUEST_ACCOUNT: &str = "email_change_request_account";
     pub const EMAIL_CHANGE_RESEND_ACCOUNT: &str = "email_change_resend_account";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
@@ -47,6 +50,7 @@ pub mod scope {
     pub const SIGN_CLAIM: &str = "sign_claim";
     pub const SIGN_APPROVAL: &str = "sign_approval";
     pub const SIGN_ANY: &str = "sign_any";
+    pub const ADMISSION_FUNDING_ACCOUNT: &str = "admission_funding_account";
 }
 
 /// One fixed-window budget: at most `limit` attempts per `window_secs`.
@@ -113,6 +117,17 @@ pub struct SigningBudget {
     pub approval: Window,
     /// Every staged act, whatever its class.
     pub any: Window,
+    /// The voucher's admission funding budget — not a signing class: it
+    /// counts community-fund outflows, spent only by approval entries
+    /// whose decision claims a fresh funding row (a vouch on an
+    /// already-funded applicant costs the fund nothing and spends none).
+    /// Priced with the approval batch, whole, before anything is staged
+    /// or burned. Per voucher, never instance-global: a global cap is one
+    /// an attacker could exhaust to stall every admission. The default,
+    /// 20 a day, sits well above inviting at a human pace (economics.md
+    /// §7.2) and below `approval`, so it is the scope that binds a bulk
+    /// voucher.
+    pub admission_funding: Window,
 }
 
 impl SigningBudget {
@@ -125,6 +140,7 @@ impl SigningBudget {
         claim: Window::GENEROUS,
         approval: Window::GENEROUS,
         any: Window::GENEROUS,
+        admission_funding: Window::GENEROUS,
     };
 
     fn window(&self, class: SigningClass) -> Window {
@@ -172,6 +188,10 @@ impl Default for SigningBudget {
                 limit: 2000,
                 window_secs: DAY,
             },
+            admission_funding: Window {
+                limit: 20,
+                window_secs: DAY,
+            },
         }
     }
 }
@@ -203,6 +223,15 @@ pub struct RateLimitConfig {
     /// Token confirmations (verifyEmail, confirmPasswordReset,
     /// confirmEmailChange) per IP.
     pub confirm_ip: Window,
+    /// Consecutive wrong current passwords per account before the
+    /// re-authentication backoff bites — every verb that re-proves the
+    /// password inside a live session shares the one run, so a session
+    /// holder cannot guess the password through any of them.
+    pub reauth_backoff_threshold: i32,
+    /// First re-authentication delay, doubling per further failure.
+    pub reauth_backoff_base_secs: f64,
+    /// The re-authentication backoff ceiling.
+    pub reauth_backoff_cap_secs: f64,
     /// Email-change requests per account — the mail budget. The caller
     /// is authenticated, so it answers visibly; each request mails an
     /// address of the caller's choosing, which is the spam vector.
@@ -254,6 +283,9 @@ impl Default for RateLimitConfig {
                 limit: 30,
                 window_secs: 900.0,
             },
+            reauth_backoff_threshold: 10,
+            reauth_backoff_base_secs: 1.0,
+            reauth_backoff_cap_secs: 900.0,
             email_change_request_account: Window {
                 limit: 5,
                 window_secs: 3600.0,
@@ -309,6 +341,10 @@ impl RateLimitConfig {
             ("RATE_LIMIT_SIGN_CLAIM", &mut cfg.signing.claim.limit),
             ("RATE_LIMIT_SIGN_APPROVAL", &mut cfg.signing.approval.limit),
             ("RATE_LIMIT_SIGN_ANY", &mut cfg.signing.any.limit),
+            (
+                "RATE_LIMIT_ADMISSION_FUNDING",
+                &mut cfg.signing.admission_funding.limit,
+            ),
         ] {
             if let Ok(raw) = std::env::var(var) {
                 *limit = raw
@@ -336,6 +372,9 @@ impl RateLimitConfig {
             reset_email: generous,
             resend_email: generous,
             confirm_ip: generous,
+            reauth_backoff_threshold: i32::MAX,
+            reauth_backoff_base_secs: 0.0,
+            reauth_backoff_cap_secs: 0.0,
             email_change_request_account: generous,
             email_change_resend_account: generous,
             email_change_code_tries: 5,
@@ -357,6 +396,20 @@ pub async fn spend_signing(
     account: Uuid,
     acts: &[(SigningClass, usize)],
 ) -> Result<bool, sqlx::Error> {
+    spend_signing_and_funding(pool, budget, account, acts, 0).await
+}
+
+/// [`spend_signing`] for an approval batch, which also spends
+/// `fresh_fundings` from the voucher's admission funding budget — in the
+/// same all-or-nothing charge, so a batch either fits both budgets or
+/// spends neither.
+pub async fn spend_signing_and_funding(
+    pool: &PgPool,
+    budget: &SigningBudget,
+    account: Uuid,
+    acts: &[(SigningClass, usize)],
+    fresh_fundings: usize,
+) -> Result<bool, sqlx::Error> {
     let key = account.to_string();
     let mut per_class: Vec<(SigningClass, i32)> = Vec::new();
     for &(class, n) in acts {
@@ -369,7 +422,8 @@ pub async fn spend_signing(
     let total = per_class
         .iter()
         .fold(0i32, |sum, (_, n)| sum.saturating_add(*n));
-    if total == 0 {
+    let fresh_fundings = i32::try_from(fresh_fundings).unwrap_or(i32::MAX);
+    if total == 0 && fresh_fundings == 0 {
         return Ok(true);
     }
     let charge = |scope: &'static str, window: Window, n: i32| store::Charge {
@@ -383,7 +437,16 @@ pub async fn spend_signing(
         .iter()
         .map(|&(class, n)| charge(class.scope(), budget.window(class), n))
         .collect();
-    charges.push(charge(scope::SIGN_ANY, budget.any, total));
+    if total > 0 {
+        charges.push(charge(scope::SIGN_ANY, budget.any, total));
+    }
+    if fresh_fundings > 0 {
+        charges.push(charge(
+            scope::ADMISSION_FUNDING_ACCOUNT,
+            budget.admission_funding,
+            fresh_fundings,
+        ));
+    }
     store::charge_all_within(pool, &charges).await
 }
 
@@ -455,6 +518,40 @@ pub async fn login_failed(
 /// A successful login ends the consecutive-failure run.
 pub async fn login_succeeded(pool: &PgPool, email: &str) -> Result<(), sqlx::Error> {
     store::clear(pool, scope::LOGIN_EMAIL, email).await
+}
+
+/// The re-authentication backoff's gate: Some(unblock time) while the
+/// account is serving a delay. Keyed by the authenticated account — the
+/// caller already holds a session, so naming the account leaks nothing.
+pub async fn reauth_blocked(
+    pool: &PgPool,
+    account: Uuid,
+) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    store::blocked_until(pool, scope::REAUTH_ACCOUNT, &account.to_string()).await
+}
+
+/// One consecutive wrong current password for the account; from the
+/// threshold on, each failure doubles the delay.
+pub async fn reauth_failed(
+    pool: &PgPool,
+    cfg: &RateLimitConfig,
+    account: Uuid,
+) -> Result<(), sqlx::Error> {
+    store::record_failure(
+        pool,
+        scope::REAUTH_ACCOUNT,
+        &account.to_string(),
+        cfg.reauth_backoff_threshold,
+        cfg.reauth_backoff_base_secs,
+        cfg.reauth_backoff_cap_secs,
+    )
+    .await?;
+    Ok(())
+}
+
+/// A right current password ends the consecutive-failure run.
+pub async fn reauth_succeeded(pool: &PgPool, account: Uuid) -> Result<(), sqlx::Error> {
+    store::clear(pool, scope::REAUTH_ACCOUNT, &account.to_string()).await
 }
 
 /// Throttle rows idle this long (and not blocking) are swept.

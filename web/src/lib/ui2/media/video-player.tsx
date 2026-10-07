@@ -13,17 +13,15 @@
 // and sound is something the reader turns on.
 //
 // AND THE PLAY CALL CAN STILL BE REFUSED. `play()` returns a promise that
-// rejects — `NotAllowedError` — when the browser declines, so the rejection is
-// handled rather than left to become an unhandled rejection in the console. A
-// refused autoplay is not an error state for the reader: the poster is showing,
-// the controls are there, and pressing play works.
+// rejects — `NotAllowedError` — when the browser declines; a refused UNMUTED
+// start plays muted and turns the sound off everywhere (FeedCover.md:41), which
+// `playback.ts` does for every start this player makes.
 //
-// VISIBILITY DRIVES PLAYBACK via IntersectionObserver, which is the documented
-// way to react to an element entering the viewport
-// (https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver) and
-// costs nothing per frame, unlike a scroll handler. A clip that scrolls away
-// pauses rather than stopping: coming back should resume where the reader was,
-// not restart.
+// THE STAGE DECIDES WHEN IT PLAYS. The player measures nothing itself: it
+// joins its surface's stage (`stage-host.tsx`), whose one IntersectionObserver
+// and pure election say which clip holds it (the stage law, Feed.md:3–55), and
+// the stage starts and freezes the element. A clip that loses the stage
+// pauses rather than stopping: it stands on the frame it reached.
 //
 // THE MUTE IS BOUND BOTH WAYS. Nothing but this component's own sound disc
 // changes `.muted` today, but a `volumechange` can still arrive from outside
@@ -31,26 +29,26 @@
 // so reading it back into the shared store is what keeps an out-of-band mute
 // from silently diverging from what every other player on screen shows.
 //
-// `prefers-reduced-motion` STOPS THE AUTOPLAY. Video that starts by itself is
-// motion the reader did not ask for, and the reduced-motion preference is the
-// standing request not to be shown it. The clip still plays on a press. The
-// preference is read through `autoplay-suppression.ts`, which also carries
-// the rest of the device's suppression signal for the stage.
+// A DEVICE THAT SUPPRESSES AUTOPLAY GETS THE PLAY DISC. "ALWAYS the device
+// suppresses autoplay GIVEN it asks for reduced motion or data saver"
+// (FeedCover.md:23), and then no clip starts on its own (FeedCover.md:25) —
+// so a frame whose clip is not playing wears the play disc in the sound
+// disc's place (FeedCover.md:21), and a tap plays the clip where it stands
+// (FeedCover.md:27). Read live through `autoplay-suppression.ts`: a reader
+// changing either preference while the page is up changes the disc.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 
-import { prefersReducedMotion } from "./autoplay-suppression";
+import { useAutoplaySuppressed } from "./autoplay-suppression";
 import { useVeiled } from "./body-veil";
-import { isMuted, setMuted, useMuted } from "./mute";
+import { setMuted, useMuted } from "./mute";
+import { startPlayback } from "./playback";
+import { OnStage, useStage } from "./stage-host";
 import { formatDuration } from "./video";
 import { VideoTransport } from "./video-transport";
-import { claim, surrender } from "./video-stage";
-
-/** Enough of the frame in view to be worth playing — android's gate, blessed
- * (design/readme.md: "One clip plays at a time, at 70% visibility or more"). */
-const VISIBLE_ENOUGH = 0.7;
+import { claim } from "./video-stage";
 
 /**
  * How much of a player a surface gets — the control ladder, as a type
@@ -80,7 +78,21 @@ export type PlayerSurface = "full" | "reading" | "transport";
  * video" (`VideoControls.jsx:35-37`); this is the hide it auto-hides on. */
 const CHROME_LINGER_MS = 3_000;
 
-export function VideoPlayer({
+/**
+ * A clip on its surface's stage — or, where no surface hosts one, on a private
+ * stage of its own (`stage-host.tsx`).
+ */
+export function VideoPlayer(props: VideoPlayerProps) {
+  return (
+    <OnStage>
+      <Player {...props} />
+    </OnStage>
+  );
+}
+
+type VideoPlayerProps = Parameters<typeof Player>[0];
+
+function Player({
   src,
   poster,
   altText,
@@ -93,10 +105,13 @@ export function VideoPlayer({
   durationMs,
   safeArea = false,
   soundNode,
+  playNode,
 }: {
   src: string;
   /** The registered node the sound disc is; it then names the disc instead of `testId`'s. */
   soundNode?: DataNode;
+  /** The registered node the play disc is (`….frame.playDisc`), likewise. */
+  playNode?: DataNode;
   /** The video's face. Null when there is none, or when it was redacted. */
   poster?: string | null;
   altText?: string | null;
@@ -105,6 +120,10 @@ export function VideoPlayer({
    * element's own metadata lands with the authoritative number. */
   durationMs?: number | null;
   testId?: string;
+  /**
+   * Whether the clip joins its surface's stage at all. Off, it never starts on
+   * its own — only by the reader's own press.
+   */
   autoplay?: boolean;
   surface?: PlayerSurface;
   /**
@@ -153,12 +172,15 @@ export function VideoPlayer({
 }) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const muted = useMuted();
-  // The sensitive veil covers its clip the same way a sheet suspends the
-  // surface behind it (design/readme.md, backlog item 103): a veiled clip
-  // sits fully out of the stage rotation — no playback, no sound-disc
-  // presence — because the veil is the reader's declared not-yet.
-  // Unveiling re-elects the stage exactly as a sheet's dismissal does, so
-  // the clip below only autoplays if it wins the visibility gate again.
+  const suppressed = useAutoplaySuppressed();
+  const stage = useStage();
+  // A veiled clip sits fully out of the stage rotation — "ALWAYS a veiled clip
+  // has no playback and no sound-disc presence" (Feed.md:43) — because the
+  // veil is the reader's declared not-yet. "The unveil is an eligibility
+  // change, not a suspension lift" (design/readme.md §13): the unveiled clip
+  // joins the rotation exactly as a clip scrolling into view does, and
+  // "WHEN a veiled clip unveils GIVEN the incumbent still qualifies -> NEVER
+  // the stage changes hands" (Feed.md:47).
   const veiled = useVeiled();
   const transport = surface === "transport";
   // The clip's own clock, read off the element rather than held beside it: the
@@ -188,54 +210,37 @@ export function VideoPlayer({
     if (video && video.muted !== muted) video.muted = muted;
   }, [muted]);
 
+  // ON THE STAGE for as long as the player is mounted. It joins unveiled and
+  // the veil effect below says otherwise in the same commit — so a veil
+  // coming or going is an eligibility change on the one registration, never a
+  // leave-and-rejoin that would hand the stage away.
   useEffect(() => {
     const video = ref.current;
-    if (!video || !autoplay) return;
-    if (typeof IntersectionObserver === "undefined") return;
+    if (!video || !autoplay || stage === null) return;
+    stage.register(stageToken, video, false);
+    return () => stage.unregister(stageToken);
+  }, [autoplay, stage, stageToken]);
 
-    if (veiled) {
-      // Out of the rotation entirely: surrender any claim already held
-      // (defends the rare case a revealed clip is veiled again) and skip
-      // observing altogether, so a clip behind the blur never claims the
-      // stage and never draws its sound disc while it holds no claim.
-      if (!video.paused) video.pause();
-      surrender(stageToken);
+  useEffect(() => {
+    if (autoplay) stage?.setVeiled(stageToken, veiled);
+  }, [autoplay, stage, stageToken, veiled]);
+
+  /**
+   * The reader starts the clip — its play disc, or the transport's play. On
+   * the stage it becomes the incumbent (FeedCover.md:27); a player kept off
+   * the stage still takes the player layer, so one clip plays at a time
+   * however it was started.
+   */
+  const startByHand = () => {
+    const video = ref.current;
+    if (!video) return;
+    if (autoplay && stage !== null) {
+      stage.handStart(stageToken);
       return;
     }
-
-    if (prefersReducedMotion()) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            // Claim the stage before playing — one clip plays at a time, so
-            // claiming pauses whatever this replaces (FE-28).
-            claim(stageToken, video);
-            // Muted at the moment of the call, not merely at mount: a reader
-            // who left the sound on is still governed by the same store, and an
-            // unmuted autoplay would simply be refused.
-            video.muted = isMuted();
-            void video.play().catch(() => {
-              // NotAllowedError, or a decode this browser cannot start. The
-              // poster stays, the sound disc stays, and nothing is said — a
-              // refusal here is the browser's policy, not a fault the reader
-              // can act on.
-            });
-          } else {
-            if (!video.paused) video.pause();
-            surrender(stageToken);
-          }
-        }
-      },
-      { threshold: VISIBLE_ENOUGH },
-    );
-    observer.observe(video);
-    return () => {
-      observer.disconnect();
-      surrender(stageToken);
-    };
-  }, [autoplay, src, stageToken, veiled]);
+    claim(stageToken, video);
+    startPlayback(video);
+  };
 
   // The chrome only hides over a clip that is RUNNING. Hiding it over a paused
   // clip would leave the reader with a still picture and no way back to the
@@ -373,11 +378,6 @@ export function VideoPlayer({
             const video = ref.current;
             if (!video) return;
             if (video.paused) {
-              // A press claims the stage the same way arriving in view does:
-              // one clip plays at a time however it was started, so pressing
-              // play here pauses whatever was running (FE-28).
-              claim(stageToken, video);
-              video.muted = isMuted();
               // PLAY AT THE END IS REPLAY. `play()` on an ended element seeks
               // to the start itself — "if the playback position is the end of
               // the media resource… seek to the earliest possible position"
@@ -387,7 +387,9 @@ export function VideoPlayer({
               // also what puts the rendered clock back to 0:00 in the same
               // frame, instead of a tick later.
               if (video.ended) seekTo(0);
-              void video.play().catch(() => {});
+              // The press takes the stage, the same as a play-disc tap: one
+              // clip plays at a time however it was started.
+              startByHand();
             } else {
               video.pause();
             }
@@ -403,21 +405,50 @@ export function VideoPlayer({
         />
       )}
 
-      {/* THE ONE CONTROL EVERY CARD'S CLIP WEARS — no play/pause, no duration
-          pill, at both scales (design/readme.md, "the video conform round").
-          It carries the sticky decision every video shares, so pressing it
-          here changes the sound for the whole session — which is why it
-          reads the shared store rather than the element. Veiled, it is gone
-          entirely rather than merely blurred — a sound control for a clip
-          that cannot claim playback would offer a decision that does
-          nothing (backlog item 103). */}
-      {!transport && !veiled && (
+      {/* ONE CONTROL ON EVERY CARD'S CLIP — no play/pause, no duration pill,
+          at both scales (design/readme.md, "the video conform round") — and
+          WHICH ONE is the control ladder (`MediaAttachment.prompt.md:17`).
+          The SOUND disc "GIVEN the device allows autoplay or its clip is
+          playing" (FeedCover.md:17); the PLAY disc in its place "GIVEN the
+          device suppresses autoplay and its clip is not playing"
+          (FeedCover.md:21). Never both, and on every unveiled frame — not
+          only the stage holder's. Veiled, neither is drawn: a control for a
+          clip that cannot take the stage would offer a decision that does
+          nothing (Feed.md:43–45, backlog item 103). Both are the master's
+          `MediaDisc`, which keeps the tap to itself: a disc inside a card's
+          open-the-post link must never open the post (FeedCover.md:27). */}
+      {!transport && !veiled && suppressed && !playing && (
+        <button
+          type="button"
+          {...testAttributes(playNode, `${testId}-play`)}
+          // Says what the tap does, the copy voice's "the only one that
+          // appears beside a still frame" (`MediaAttachment.jsx:323`).
+          aria-label="Play this video"
+          onClick={(event) => {
+            keepToTheDisc(event);
+            startByHand();
+          }}
+          className={DISC_CLASS}
+          style={DISC_STYLE}
+        >
+          <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+      )}
+      {/* The sound disc carries the sticky decision every video shares, so
+          pressing it here changes the sound for the whole session — which
+          is why it reads the shared store rather than the element. */}
+      {!transport && !veiled && !(suppressed && !playing) && (
         <button
           type="button"
           {...testAttributes(soundNode, `${testId}-sound`)}
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
           aria-pressed={!muted}
-          onClick={() => setMuted(!muted)}
+          onClick={(event) => {
+            keepToTheDisc(event);
+            setMuted(!muted);
+          }}
           // `surface-snackbar` and `on-surface-snackbar` are tokens-2.css
           // SEMANTIC ALIASES (tokens-2.css:161-188), never bridged into
           // Tailwind's `@theme` the way the 1.0 palette is — by that file's
@@ -441,15 +472,8 @@ export function VideoPlayer({
           // is the one thing an unlayered rule cannot outrank, so the two
           // answers are the same answer. Same file, same mechanism, same
           // shape as the snackbar colours below.
-          className="cg-state cg-focus grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0"
-          style={{
-            position: "absolute",
-            bottom: "8px",
-            right: "8px",
-            zIndex: 2,
-            background: "var(--surface-snackbar)",
-            color: "var(--on-surface-snackbar)",
-          }}
+          className={DISC_CLASS}
+          style={DISC_STYLE}
         >
           <svg viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-hidden="true">
             {muted ? (
@@ -462,4 +486,28 @@ export function VideoPlayer({
       )}
     </span>
   );
+}
+
+/** Every disc a clip wears is one `MediaDisc`: one plate, one corner. */
+const DISC_CLASS =
+  "cg-state cg-focus grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0";
+
+/** See the sound disc's note for why the corner and the plate are a style. */
+const DISC_STYLE: CSSProperties = {
+  position: "absolute",
+  bottom: "8px",
+  right: "8px",
+  zIndex: 2,
+  background: "var(--surface-snackbar)",
+  color: "var(--on-surface-snackbar)",
+};
+
+/**
+ * A disc's press is the disc's alone, as the master's `MediaDisc` keeps it
+ * (`MediaAttachment.jsx:151-154`): it never reaches the card's open-the-post
+ * link around the frame.
+ */
+function keepToTheDisc(event: MouseEvent<HTMLButtonElement>): void {
+  event.stopPropagation();
+  event.preventDefault();
 }

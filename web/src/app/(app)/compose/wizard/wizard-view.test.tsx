@@ -995,3 +995,66 @@ describe("the compose wizard", () => {
     });
   });
 });
+
+// SettingsLicense.md: a new post starts from the account's default license.
+describe("the license a new post starts from", () => {
+  it("new_post_starts_from_the_default", async () => {
+    server.use(
+      graphql.query("DefaultLicense", () =>
+        HttpResponse.json({
+          data: {
+            me: {
+              __typename: "User",
+              id: "u1",
+              preferences: {
+                __typename: "UserPreferences",
+                defaultLicense: { __typename: "License", attribution: 1, provenance: 0 },
+              },
+            },
+          },
+        }),
+      ),
+    );
+    render();
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), {
+      target: { value: "Three weekends at low tide." },
+    });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByTestId(byNode("composeDetails.title.input"));
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    await screen.findByText("Last step");
+    // The seal's License row reads the seeded pair, never public domain.
+    const licenseRow = screen.getByTestId("wizard-open-license").parentElement!;
+    await waitFor(() => expect(licenseRow).toHaveTextContent("Every use credits you."));
+    expect(licenseRow).not.toHaveTextContent("Public domain");
+  });
+
+  it("a draft taken up keeps the license it was written under", async () => {
+    server.use(
+      graphql.query("DefaultLicense", () =>
+        HttpResponse.json({
+          data: {
+            me: {
+              __typename: "User",
+              id: "u1",
+              preferences: {
+                __typename: "UserPreferences",
+                defaultLicense: { __typename: "License", attribution: 1, provenance: 0 },
+              },
+            },
+          },
+        }),
+      ),
+    );
+    const drafts = fakeDrafts({
+      ...emptyWizard(),
+      mode: "words",
+      words: "Kept words.",
+      license: { attribution: 0, provenance: 1 },
+    });
+    render(drafts);
+    fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
+    await waitFor(() => expect(drafts.held()?.license).toEqual({ attribution: 0, provenance: 1 }));
+  });
+});

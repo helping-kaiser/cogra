@@ -113,12 +113,60 @@ mutation ChangeHandle($input: ChangeHandleInput!) {
   }
 }
 
-# A wrong password and a malformed address refuse as userErrors; a spent
-# account mail budget is a transport-tier RATE_LIMITED.
-mutation RequestEmailChange($input: RequestEmailChangeInput!) {
-  requestEmailChange(input: $input) {
+# Settings' one read (settings-surface §6.1): every row the page draws
+# stands on these, all viewer-only. The sessions come this device first
+# by the client's own sort, `isCurrent` naming it.
+query SettingsAccount {
+  me {
+    id
+    handle
+    email
+    emailVerified
+    accountState
+    actorPubkey
+    passwordChangedAt
+    keyBackupCreatedAt
     pendingEmailChange {
-      newEmail
+      ...PendingEmailChangeFields
+    }
+    preferences {
+      defaultLicense {
+        attribution
+        provenance
+      }
+    }
+    sessions {
+      id
+      deviceLabel
+      createdAt
+      lastUsedAt
+      isCurrent
+    }
+  }
+}
+
+# The license a new post starts from — the wizard's seed. Null reads as
+# public domain.
+query DefaultLicense {
+  me {
+    id
+    preferences {
+      defaultLicense {
+        attribution
+        provenance
+      }
+    }
+  }
+}
+
+# An absent field is left as it is; null restores the default.
+mutation SetPreferences($input: SetPreferencesInput!) {
+  setPreferences(input: $input) {
+    preferences {
+      defaultLicense {
+        attribution
+        provenance
+      }
     }
     userErrors {
       ...UserErrorFields
@@ -126,13 +174,70 @@ mutation RequestEmailChange($input: RequestEmailChangeInput!) {
   }
 }
 
-mutation ConfirmEmailChange($input: ConfirmEmailChangeInput!) {
-  confirmEmailChange(input: $input) {
-    user {
-      id
+# A wrong password and a malformed address refuse as userErrors; a spent
+# account mail budget, and a run of wrong passwords, are a transport-tier
+# RATE_LIMITED.
+mutation RequestEmailChange($input: RequestEmailChangeInput!) {
+  requestEmailChange(input: $input) {
+    pendingEmailChange {
+      ...PendingEmailChangeFields
     }
     userErrors {
       ...UserErrorFields
     }
+  }
+}
+
+# The code from the current address or the token from the new one's
+# link; `user.pendingEmailChange` reads null once the change applied.
+mutation ConfirmEmailChange($input: ConfirmEmailChangeInput!) {
+  confirmEmailChange(input: $input) {
+    user {
+      id
+      email
+      pendingEmailChange {
+        ...PendingEmailChangeFields
+      }
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# Re-mails the owed sides only; NOT_FOUND once nothing is pending.
+mutation ResendEmailChange {
+  resendEmailChange {
+    pendingEmailChange {
+      ...PendingEmailChangeFields
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+mutation CancelEmailChange {
+  cancelEmailChange {
+    user {
+      id
+      email
+      pendingEmailChange {
+        ...PendingEmailChangeFields
+      }
+    }
+    userErrors {
+      ...UserErrorFields
+    }
+  }
+}
+
+# The signed-out landing's read of a new-address link: anonymous, writes
+# nothing, null for any token that names no change. The token is a
+# secret, so it rides the POST body like every operation here.
+query EmailChangeLinkCheck($token: String!) {
+  emailChangeLinkCheck(token: $token) {
+    newEmail
+    state
   }
 }

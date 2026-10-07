@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_application_vouches SET landed_at = NOW()\n             WHERE id = $1 AND landed_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a1c8b6266d0971eb4fbb94ca0efa9b188cdbe615d7f8e5691b010d812edac9ce"
+}

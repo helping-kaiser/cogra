@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applications ap\n         SET approved_at = NOW()\n         FROM actors a, user_credentials c\n         WHERE ap.id = $1 AND a.id = ap.account_id AND c.actor_id = ap.account_id\n           AND ap.approved_at IS NULL\n           AND ap.rejected_at IS NULL\n           AND ap.landed_at IS NULL\n           AND c.account_state = 'applicant'\n           AND c.email_verified_at IS NOT NULL\n           AND a.actor_pubkey IS NOT NULL\n           AND NOT EXISTS (SELECT 1 FROM auth_applications o\n                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)\n         RETURNING ap.account_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "944a27cf8354c20ddb19d5a9a6f3b4ea3fa3f399a8e2ceaec1ee0cd59720eb72"
+}

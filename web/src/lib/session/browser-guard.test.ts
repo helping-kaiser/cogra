@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BorrowedViewDocument,
   MeDocument,
-  SessionsDocument,
+  SettingsAccountDocument,
 } from "@/__generated__/graphql";
 import { createGuardedClient, guardOf } from "./browser-guard";
 import { createTokenStore, type TokenStore } from "./token-store";
@@ -110,7 +110,7 @@ describe("the session gate on a page's first requests", () => {
     await Promise.all([
       client.query({ query: MeDocument, fetchPolicy: "network-only" }),
       client.query({ query: BorrowedViewDocument, fetchPolicy: "network-only" }),
-      client.query({ query: SessionsDocument, fetchPolicy: "network-only" }),
+      client.query({ query: SettingsAccountDocument, fetchPolicy: "network-only" }),
     ]);
 
     const refreshes = sent.filter((call) => call.operation === "RefreshSession");

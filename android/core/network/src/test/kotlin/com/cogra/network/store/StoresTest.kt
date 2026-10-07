@@ -4,17 +4,24 @@
 
 package com.cogra.network.store
 
+import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.decodeProposal
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.compose.ComposeDraft
+import com.cogra.domain.compose.DraftBodyKind
+import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.store.SessionRead
+import com.cogra.domain.store.ThemeChoice
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -173,6 +180,120 @@ class StoresTest {
 
         stores.signIn("account-a")
         assertThat(stores.identity.actorSeed()).isEqualTo(seedA)
+    }
+
+    // ------------------------------------------------ custody (packet §9)
+
+    /** Counts the transactions a store commits — `edit` is `updateData`. */
+    private class CountingDataStore(private val inner: DataStore<Preferences>) : DataStore<Preferences> {
+        var edits = 0
+
+        override val data: Flow<Preferences> get() = inner.data
+
+        override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences {
+            edits++
+            return inner.updateData(transform)
+        }
+    }
+
+    /** Signs in, then gives the account a seed, a blob, handshakes, flags and a draft. */
+    private suspend fun seedCustody(encrypted: EncryptedStore, account: String): Stores {
+        val stores = Stores(encrypted)
+        stores.signIn(account)
+        val actor = ActorKey.generate()
+        stores.identity.saveActorSeed(actor.seed())
+        stores.identity.savePendingBackupBlob(byteArrayOf(9))
+        stores.identity.saveHandshake("w1", actor.preSign(decodeProposal(proposalOf(actor))))
+        stores.identity.markStancePadTaught()
+        stores.identity.setForgetOnSignOut(true)
+        ComposeDraftStoreImpl(encrypted, stores.tokens)
+            .save(ComposeDraft(bodyKind = DraftBodyKind.Words, body = "half a thought"))
+        return stores
+    }
+
+    @Test
+    fun `purge_is_one_datastore_edit`() = runTest {
+        val file = File(tmp.newFolder(), "test.preferences_pb")
+        val counting = CountingDataStore(PreferenceDataStoreFactory.create(scope = scope) { file })
+        val encrypted = EncryptedStore(counting, FakeCipher())
+        val stores = seedCustody(encrypted, "account-a")
+
+        counting.edits = 0
+        stores.identity.purgeCustodySet()
+        // Six names of the slot plus the draft, gone in one transaction:
+        // a process death can no longer leave the account half-cleared.
+        assertThat(counting.edits).isEqualTo(1)
+        assertThat(encrypted.names("acct:account-a:")).isEmpty()
+
+        // The remote path's purge is one edit too.
+        val again = seedCustody(encrypted, "account-a")
+        counting.edits = 0
+        again.identity.purge()
+        assertThat(counting.edits).isEqualTo(1)
+        assertThat(encrypted.names("acct:account-a:")).isEmpty()
+    }
+
+    @Test
+    fun `the_draft_is_in_the_explicit_sign_out_purge`() = runTest {
+        val encrypted = store()
+        // Another account's draft and slot must survive this account's purge.
+        val other = seedCustody(encrypted, "account-b")
+        val stores = seedCustody(encrypted, "account-a")
+        val drafts = ComposeDraftStoreImpl(encrypted, stores.tokens)
+        assertThat(drafts.draft()).isNotNull()
+
+        stores.identity.purgeCustodySet()
+        assertThat(drafts.draft()).isNull()
+        assertThat(stores.identity.actorSeed()).isNull()
+        assertThat(stores.identity.handshakeIds()).isEmpty()
+        assertThat(stores.identity.forgetOnSignOut()).isFalse()
+
+        other.signIn("account-b")
+        assertThat(ComposeDraftStoreImpl(encrypted, other.tokens).draft()).isNotNull()
+        assertThat(other.identity.actorSeed()).isNotNull()
+    }
+
+    /**
+     * THE CUSTODY BOUNDARY, pinned (custody packet §1.2): a session ended
+     * from elsewhere keeps today's purge of a forget account's slot and
+     * does NOT newly purge its draft. Only the explicit sign-out does —
+     * moving this line is the custody packet's call, never a side effect.
+     */
+    @Test
+    fun `the_remote_end_keeps_its_purge_and_leaves_the_draft`() = runTest {
+        val encrypted = store()
+        val stores = seedCustody(encrypted, "account-a")
+
+        EndLocalSession(stores.identity, stores.tokens).end()
+        assertThat(stores.tokens.current()).isNull()
+        assertThat(encrypted.names("acct:account-a:")).isEmpty()
+        // The draft is still on the device, under its own record.
+        assertThat(encrypted.get("compose_draft:account-a")).isNotNull()
+
+        stores.signIn("account-a")
+        assertThat(ComposeDraftStoreImpl(encrypted, stores.tokens).draft()?.body).isEqualTo("half a thought")
+        assertThat(stores.identity.actorSeed()).isNull()
+    }
+
+    /** Settings.md "Theme" / "Show exact values": the device's, never the account's. */
+    @Test
+    fun devicePreferencesSurviveEveryAccountsPurgeAndSignIn() = runTest {
+        val encrypted = store()
+        val device = DevicePreferencesImpl(encrypted)
+        assertThat(device.theme.first()).isEqualTo(ThemeChoice.AUTO)
+        assertThat(device.showExactValues.first()).isFalse()
+
+        val stores = seedCustody(encrypted, "account-a")
+        device.setTheme(ThemeChoice.DARK)
+        device.setShowExactValues(true)
+        stores.identity.purgeCustodySet()
+        stores.tokens.clear()
+        stores.signIn("account-b")
+
+        assertThat(device.theme.first()).isEqualTo(ThemeChoice.DARK)
+        assertThat(device.showExactValues.first()).isTrue()
+        device.setShowExactValues(false)
+        assertThat(device.showExactValues.first()).isFalse()
     }
 
     private fun proposalOf(actor: ActorKey): ByteArray = com.cogra.crypto.encodeProposal(

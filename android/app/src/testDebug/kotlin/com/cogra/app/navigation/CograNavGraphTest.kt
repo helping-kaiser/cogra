@@ -21,10 +21,8 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeDown
 import androidx.compose.ui.test.performTextInput
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.ComposeNavigator
@@ -36,6 +34,7 @@ import com.cogra.app.di.ScriptedAccountRepository
 import com.cogra.app.di.ScriptedContentRepository
 import com.cogra.app.di.ScriptedOnboardingRepository
 import com.cogra.app.di.ScriptedProfileRepository
+import com.cogra.app.di.ScriptedSettingsRepository
 import com.cogra.app.di.ScriptedTopicRepository
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
@@ -77,6 +76,8 @@ class CograNavGraphTest {
     @Inject lateinit var identity: FakeIdentityStore
 
     @Inject lateinit var account: ScriptedAccountRepository
+
+    @Inject lateinit var settings: ScriptedSettingsRepository
 
     @Inject lateinit var onboarding: ScriptedOnboardingRepository
 
@@ -827,11 +828,12 @@ class CograNavGraphTest {
         assertThat(identity.seed).isEqualTo(actor.seed())
     }
 
-    // The husk banner rides every main surface (design.md §6): the
-    // composer warns before drafting, settings alongside the backup
-    // card.
+    // The husk banner rides the composer (design.md §6) and warns before
+    // drafting. Settings no longer carries it: the header is pinned and
+    // the key card stands at the feed's head (Settings.md; KeyElsewhere.md
+    // :3).
     @Test
-    fun theHuskBannerRidesTheComposerAndSettings() {
+    fun theHuskBannerRidesTheComposerButNotSettings() {
         signIn()
         identity.seed = null
         account.profile = member()
@@ -852,7 +854,8 @@ class CograNavGraphTest {
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Settings>() == true
         }
-        waitForTag("home_restore")
+        waitForTag("settings.header")
+        assertThat(compose.onAllNodesWithTag("home_restore").fetchSemanticsNodes()).isEmpty()
     }
 
     @Test
@@ -869,25 +872,76 @@ class CograNavGraphTest {
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
 
-        compose.onNodeWithTag("settings_new_handle").performScrollTo().performTextInput("renamed")
-        compose.onNodeWithTag("settings_change_handle").performScrollTo().performClick()
-        compose.waitForIdle()
+        // The Handle row opens ChangeHandle; the press asks first (053.8).
+        compose.onNodeWithTag("settings.credentials.handle").performScrollTo().performClick()
+        waitForTag("changeHandle.handle.input")
+        compose.onNodeWithTag("changeHandle.handle.input").performTextInput("renamed")
+        compose.onNodeWithTag("changeHandle.commit.action").performScrollTo().performClick()
+        waitForTag("changeHandle.dialog.change")
         // The service knows the new handle; the profile fake follows.
         profiles.profile = com.cogra.domain.testing.testProfile(id = "u1", handle = "renamed")
-
-        // The scroll to the handle field collapsed the enterAlways bar;
-        // an upward swipe brings it back before the tap — the thumb's
-        // own gesture.
-        compose.onRoot().performTouchInput { swipeDown() }
-        compose.waitForIdle()
+        compose.onNodeWithTag("changeHandle.dialog.change").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Settings>() == true
+        }
 
         // The profile outlives the push/pop; only the nav result
         // re-reads, so the handle must refresh on return.
-        compose.onNodeWithTag("settings_back").performClick()
+        waitForTag("settings.header.back")
+        compose.onNodeWithTag("settings.header.back").performClick()
         compose.waitUntilAtLeastOneExists(
             hasTestTag("profile_handle") and hasText("renamed", substring = true),
             timeoutMillis = 30_000,
         )
+    }
+
+    /** `app_link_opens_email_change_in_the_app`: the `/email-change` App Link lands in the app and applies the side. */
+    @Test
+    fun `app_link_opens_email_change_in_the_app`() {
+        signIn()
+        identity.seed = ActorKey.generate().seed()
+        account.profile = member()
+        render()
+        waitFor(barSlot("profile"))
+
+        val handled = navController.handleDeepLink(joinIntent("/email-change?token=link-token"))
+        assertThat(handled).isTrue()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<ChangeEmailLinked>() == true
+        }
+        assertThat(navController.currentBackStackEntry?.toRoute<ChangeEmailLinked>()?.token).isEqualTo("link-token")
+        // Signed in: the landing applies the side with the token itself.
+        waitForTag("changeEmail.onward")
+        assertThat(settings.confirmedTokens).containsExactly("link-token")
+    }
+
+    /** ChangeEmailLinkedSignedOut.md: Sign in holds the link; the side applies once signed in. */
+    @Test
+    fun `signed_out_landing_signs_in_then_applies_the_side`() {
+        settings.linkCheck = com.cogra.domain.Outcome.Success(
+            com.cogra.domain.settings.EmailChangeLinkCheck(
+                "sol@ferreira.studio",
+                com.cogra.domain.settings.EmailChangeLinkState.PENDING,
+            ),
+        )
+        render()
+        waitForTag("login_email")
+        navController.handleDeepLink(joinIntent("/email-change?token=held-token"))
+        waitForTag("changeEmail.onward")
+        // Nothing applies before sign-in.
+        assertThat(settings.confirmedTokens).isEmpty()
+
+        compose.onNodeWithTag("changeEmail.onward").performClick()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
+        }
+        account.profile = member()
+        signIn()
+        compose.waitUntil(timeoutMillis = 30_000) {
+            navController.currentBackStackEntry?.destination?.hasRoute<ChangeEmailLinked>() == true
+        }
+        waitForTag("changeEmail.onward")
+        assertThat(settings.confirmedTokens).containsExactly("held-token")
     }
 
     @Test
@@ -904,7 +958,8 @@ class CograNavGraphTest {
         compose.waitForIdle()
         assertThat(compose.onAllNodes(isBottomBar()).fetchSemanticsNodes()).isEmpty()
 
-        compose.onNodeWithTag("settings_export_key").performScrollTo().performClick()
+        // The Your key row opens the key's page directly.
+        compose.onNodeWithTag("settings.backup.key").performScrollTo().performClick()
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<KeyExport>()).isTrue()
         // Arriving reveals nothing: the screen's own gate stands first.
@@ -950,7 +1005,7 @@ class CograNavGraphTest {
         compose.waitForIdle()
         assertThat(navController.currentBackStackEntry?.destination?.hasRoute<Settings>()).isTrue()
 
-        compose.onNodeWithTag("settings_sign_out").performScrollTo().performClick()
+        compose.onNodeWithTag("settings.leaving.leave").performScrollTo().performClick()
         compose.waitUntil(timeoutMillis = 30_000) {
             navController.currentBackStackEntry?.destination?.hasRoute<Login>() == true
         }
