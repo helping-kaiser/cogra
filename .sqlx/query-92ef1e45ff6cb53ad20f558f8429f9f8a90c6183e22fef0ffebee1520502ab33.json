@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.actor_id FROM user_credentials c\n         WHERE c.email = $1 AND c.email_verified_at IS NULL AND c.created_at >= $2\n           AND NOT EXISTS (\n               SELECT 1 FROM auth_email_changes e\n               WHERE e.user_id = c.actor_id AND NOT e.requires_code\n                 AND e.cancelled_at IS NULL AND e.applied_at IS NULL\n                 AND e.expires_at > NOW())",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "actor_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "92ef1e45ff6cb53ad20f558f8429f9f8a90c6183e22fef0ffebee1520502ab33"
+}

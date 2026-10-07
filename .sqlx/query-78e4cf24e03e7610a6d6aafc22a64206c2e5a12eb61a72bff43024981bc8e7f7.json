@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, original_code_hash, original_confirmed_at, code_disabled_at\n         FROM auth_email_changes\n         WHERE user_id = $1 AND requires_code\n           AND cancelled_at IS NULL AND applied_at IS NULL AND expires_at > NOW()\n         FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "original_code_hash",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 2,
+        "name": "original_confirmed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "code_disabled_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "78e4cf24e03e7610a6d6aafc22a64206c2e5a12eb61a72bff43024981bc8e7f7"
+}

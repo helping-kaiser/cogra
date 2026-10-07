@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_email_changes\n               SET failed_attempts = failed_attempts + 1,\n                   code_disabled_at = CASE WHEN failed_attempts + 1 >= $2\n                                           THEN NOW() END\n               WHERE id = $1\n               RETURNING code_disabled_at IS NOT NULL AS \"disabled!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "disabled!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "81a93c75ff607c37509726beda1d491c36736e4da6695f56b57fb14ac9de44cb"
+}
