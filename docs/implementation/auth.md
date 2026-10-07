@@ -951,11 +951,15 @@ There is no separate "abandon application" act: a signed-out
 application keeps following its lifecycle ("Application").
 
 The one exception is the **"don't remember me" opt-in**, offered
-at login and restore: an account flagged with it has its key
-material — seed, pending backup blob, handshake material, and
-device-local flags — purged from the device at sign-out (and on
-a session invalidation that clears the tokens). For a shared or
-public device; default off.
+at login, at restore and in Settings: an account flagged with it
+has its key material — seed, pending backup blob, handshake
+material, and device-local flags — purged from the device at
+sign-out (and on a session invalidation that clears the tokens).
+An explicit sign-out clears the account's unpublished draft with
+it, and asks first when this device holds the only copy of an
+unbacked key — make a recovery code, or erase and sign out. A
+remembered account's sign-out clears nothing, its draft included.
+For a shared or public device; default off.
 
 ### Multi-account device custody
 
