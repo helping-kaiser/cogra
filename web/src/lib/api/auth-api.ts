@@ -98,7 +98,7 @@ export function refreshExecutor(client: ApolloClient): RefreshExecutor {
     );
 }
 
-/** One of api-spec.md's three deliberately-silent verbs — never a userError. */
+/** One of api-spec.md's two deliberately-silent verbs — never a userError. */
 export function requestPasswordReset(
   client: ApolloClient,
   email: string,

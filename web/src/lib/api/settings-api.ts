@@ -86,21 +86,27 @@ export async function changeHandle(client: ApolloClient, handle: string): Promis
   return success(outcome.value.handle);
 }
 
-/** One of api-spec.md's three deliberately-silent verbs — never a userError. */
-export function requestEmailChange(
+/**
+ * Opens the change: a wrong current password is INVALID_CREDENTIALS and a
+ * malformed address BAD_INPUT; an address another account holds reads as
+ * success (auth.md "Email change").
+ */
+export async function requestEmailChange(
   client: ApolloClient,
   newEmail: string,
   currentPassword: string,
-): Promise<Outcome<boolean>> {
-  return payloadOutcome(
+): Promise<Outcome<true>> {
+  const outcome = await payloadOutcome(
     () =>
       client.mutate({
         mutation: RequestEmailChangeDocument,
         variables: { input: { newEmail, currentPassword } },
       }),
-    () => [],
-    (data) => data.requestEmailChange.ok,
+    (data) => data.requestEmailChange.userErrors,
+    (data) => data.requestEmailChange.pendingEmailChange,
   );
+  if (outcome.kind !== "success") return outcome;
+  return success(true);
 }
 
 export function confirmEmailChange(client: ApolloClient, code: string): Promise<Outcome<true>> {

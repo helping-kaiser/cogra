@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_email_changes SET cancelled_at = NOW()\n         WHERE user_id = $1 AND cancelled_at IS NULL AND applied_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "22b5f1a96baedd60325161f34efc3b9dcaac592a93f79ab4fc3107625bf2d4b4"
+}

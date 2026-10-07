@@ -187,11 +187,17 @@ describe("changeHandle", () => {
 });
 
 describe("the email-change pair", () => {
-  it("requestEmailChange is a silent verb", async () => {
+  it("requestEmailChange succeeds on the opened change", async () => {
     server.use(
       graphql.mutation("RequestEmailChange", () =>
         HttpResponse.json({
-          data: { requestEmailChange: { __typename: "RequestEmailChangePayload", ok: true } },
+          data: {
+            requestEmailChange: {
+              __typename: "RequestEmailChangePayload",
+              pendingEmailChange: { __typename: "PendingEmailChange", newEmail: "new@example.com" },
+              userErrors: [],
+            },
+          },
         }),
       ),
     );
@@ -199,6 +205,32 @@ describe("the email-change pair", () => {
       kind: "success",
       value: true,
     });
+  });
+
+  it("requestEmailChange surfaces a wrong current password", async () => {
+    server.use(
+      graphql.mutation("RequestEmailChange", () =>
+        HttpResponse.json({
+          data: {
+            requestEmailChange: {
+              __typename: "RequestEmailChangePayload",
+              pendingEmailChange: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "bad",
+                  code: "INVALID_CREDENTIALS",
+                  field: ["currentPassword"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    expect(
+      hasCode(await requestEmailChange(client(), "new@example.com", "pw"), "INVALID_CREDENTIALS"),
+    ).toBe(true);
   });
 
   it("confirmEmailChange trims the code and succeeds on a returned user", async () => {

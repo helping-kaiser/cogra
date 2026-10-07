@@ -14,6 +14,13 @@ const server = startMswServer();
 
 const CODE = "AAAAA-BBBBB-CCCCC-DDDDD-EEEEEE";
 
+/** The payload of a request that opened its change. */
+const REQUESTED_EMAIL_CHANGE = {
+  __typename: "RequestEmailChangePayload",
+  pendingEmailChange: { __typename: "PendingEmailChange", newEmail: "new@example.com" },
+  userErrors: [],
+};
+
 function signedInStore() {
   const store = createTokenStore();
   store.save({ accessToken: "access-1", refreshToken: "refresh-1", accountId: "acct-1" });
@@ -374,7 +381,7 @@ describe("SettingsView credentials", () => {
     server.use(
       graphql.mutation("RequestEmailChange", () =>
         HttpResponse.json({
-          data: { requestEmailChange: { __typename: "RequestEmailChangePayload", ok: true } },
+          data: { requestEmailChange: REQUESTED_EMAIL_CHANGE },
         }),
       ),
       okMutation("ConfirmEmailChange", "ConfirmEmailChangePayload", {
@@ -401,11 +408,47 @@ describe("SettingsView credentials", () => {
     );
   });
 
+  it("refuses an email change request with the wrong current password", async () => {
+    server.use(
+      graphql.mutation("RequestEmailChange", () =>
+        HttpResponse.json({
+          data: {
+            requestEmailChange: {
+              __typename: "RequestEmailChangePayload",
+              pendingEmailChange: null,
+              userErrors: [
+                {
+                  __typename: "UserError",
+                  message: "current password did not match",
+                  code: "INVALID_CREDENTIALS",
+                  field: ["currentPassword"],
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    );
+    renderSettings();
+
+    fireEvent.change(await screen.findByTestId("settings_new_email"), {
+      target: { value: "new@example.com" },
+    });
+    fireEvent.change(screen.getByTestId("settings_email_password"), {
+      target: { value: "wrong-password" },
+    });
+    fireEvent.click(screen.getByTestId("settings_request_email"));
+    expect(await screen.findByTestId("settings_feedback")).toHaveTextContent(
+      "Your current password didn't match.",
+    );
+    expect(screen.queryByTestId("settings_email_code")).not.toBeInTheDocument();
+  });
+
   it("renders a rate-limited email confirm as a backoff, not a connectivity failure", async () => {
     server.use(
       graphql.mutation("RequestEmailChange", () =>
         HttpResponse.json({
-          data: { requestEmailChange: { __typename: "RequestEmailChangePayload", ok: true } },
+          data: { requestEmailChange: REQUESTED_EMAIL_CHANGE },
         }),
       ),
       graphql.mutation("ConfirmEmailChange", () =>

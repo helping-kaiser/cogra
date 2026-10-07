@@ -313,6 +313,18 @@ pub enum ErrorCode {
     ActorKeyInUse,
     /// The email-verification token is invalid or expired.
     VerificationTokenInvalid,
+    /// The email change ran out before both sides landed.
+    EmailChangeExpired,
+    /// The email-change link belongs to a different account than the
+    /// session's.
+    EmailChangeOtherAccount,
+    /// The current-address code was disabled after too many wrong tries;
+    /// a resend sends a fresh one.
+    EmailChangeCodeDisabled,
+    /// The link's email change was called off.
+    EmailChangeCanceled,
+    /// The link's email change already applied.
+    EmailChangeAlreadyApplied,
     /// The password-reset token is invalid, expired, or already used.
     ResetTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
@@ -1400,6 +1412,32 @@ impl User {
             .map(|c| c.email_verified_at.is_some()))
     }
 
+    /// The account's email address. Field-level: viewer-only.
+    async fn email(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::credentials_by_actor(pool, self.identity.id)
+            .await?
+            .map(|c| c.email))
+    }
+
+    /// The account's email change in flight, if any; null when none is
+    /// pending or the last one ran out. Field-level: viewer-only.
+    async fn pending_email_change(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<PendingEmailChange>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::pending_email_change(pool, self.identity.id)
+            .await?
+            .map(PendingEmailChange::from_store))
+    }
+
     /// The account's latest application — the applicant's own view of
     /// its progress; null when the account has none. Reading it is the
     /// admission flow's repair hook: an approved application whose
@@ -1447,6 +1485,34 @@ impl User {
         Ok(Some(
             offset_connection(links, after, before, first, last, InviteLink).await?,
         ))
+    }
+}
+
+/// An email change awaiting its proofs (auth.md "Email change").
+#[derive(SimpleObject, Debug, Clone)]
+pub struct PendingEmailChange {
+    pub new_email: String,
+    /// Whether this change needs the current-address code at all — false
+    /// on the unverified carve-out, where the new address's link is the
+    /// whole proof.
+    pub requires_code: bool,
+    /// The current-address code has been confirmed (always false when
+    /// requiresCode is false).
+    pub code_confirmed: bool,
+    /// The new address's link has been opened.
+    pub link_confirmed: bool,
+    pub expires_at: DateTime<Utc>,
+}
+
+impl PendingEmailChange {
+    pub fn from_store(change: store::EmailChange) -> Self {
+        Self {
+            requires_code: change.requires_code,
+            code_confirmed: change.requires_code && change.original_confirmed_at.is_some(),
+            link_confirmed: change.new_verified_at.is_some(),
+            expires_at: change.expires_at,
+            new_email: change.new_email,
+        }
     }
 }
 

@@ -1,9 +1,9 @@
 //! ´mod:module:ratelimit´
 //!
 //! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
-//! plus the login backoff (auth.md "Rate limiting"), the media upload
-//! budget, and the per-account signing budget spent at prepare
-//! (api-spec.md "Conventions").
+//! plus the login backoff (auth.md "Rate limiting"), the email-change
+//! mail budget, the media upload budget, and the per-account signing
+//! budget spent at prepare (api-spec.md "Conventions").
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
 //! survive restarts and hold across instances. Auth keys that name an
@@ -37,6 +37,8 @@ pub mod scope {
     pub const RESET_EMAIL: &str = "reset_email";
     pub const RESEND_EMAIL: &str = "resend_email";
     pub const CONFIRM_IP: &str = "confirm_ip";
+    pub const EMAIL_CHANGE_REQUEST_ACCOUNT: &str = "email_change_request_account";
+    pub const EMAIL_CHANGE_RESEND_ACCOUNT: &str = "email_change_resend_account";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
     pub const SIGN_POST: &str = "sign_post";
     pub const SIGN_COMMENT: &str = "sign_comment";
@@ -201,6 +203,15 @@ pub struct RateLimitConfig {
     /// Token confirmations (verifyEmail, confirmPasswordReset,
     /// confirmEmailChange) per IP.
     pub confirm_ip: Window,
+    /// Email-change requests per account — the mail budget. The caller
+    /// is authenticated, so it answers visibly; each request mails an
+    /// address of the caller's choosing, which is the spam vector.
+    pub email_change_request_account: Window,
+    /// Email-change resends per account, the same budget's other verb.
+    pub email_change_resend_account: Window,
+    /// Wrong codes against one email-change code before it is disabled
+    /// until a resend mints a fresh one (auth.md "Email change").
+    pub email_change_code_tries: i32,
     /// Media uploads per account. Uploading is not an act, so θ prices
     /// nothing about it and an insolvent actor can still fill the store —
     /// this is the only cost control media has.
@@ -243,6 +254,15 @@ impl Default for RateLimitConfig {
                 limit: 30,
                 window_secs: 900.0,
             },
+            email_change_request_account: Window {
+                limit: 5,
+                window_secs: 3600.0,
+            },
+            email_change_resend_account: Window {
+                limit: 5,
+                window_secs: 3600.0,
+            },
+            email_change_code_tries: 5,
             upload_account: Window {
                 limit: 60,
                 window_secs: 3600.0,
@@ -267,6 +287,18 @@ impl RateLimitConfig {
             ("RATE_LIMIT_RESEND_PER_EMAIL", &mut cfg.resend_email.limit),
             ("RATE_LIMIT_CONFIRM_PER_IP", &mut cfg.confirm_ip.limit),
             (
+                "RATE_LIMIT_EMAIL_CHANGE_REQUEST_PER_ACCOUNT",
+                &mut cfg.email_change_request_account.limit,
+            ),
+            (
+                "RATE_LIMIT_EMAIL_CHANGE_RESEND_PER_ACCOUNT",
+                &mut cfg.email_change_resend_account.limit,
+            ),
+            (
+                "RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES",
+                &mut cfg.email_change_code_tries,
+            ),
+            (
                 "RATE_LIMIT_UPLOAD_PER_ACCOUNT",
                 &mut cfg.upload_account.limit,
             ),
@@ -288,7 +320,9 @@ impl RateLimitConfig {
     }
 
     /// A config no test can trip by accident — for rigs exercising other
-    /// surfaces.
+    /// surfaces. The email-change code cap keeps its default: it is a
+    /// security property, not a throttle, and five wrong codes are never
+    /// incidental.
     pub fn unlimited() -> Self {
         let generous = Window::GENEROUS;
         Self {
@@ -302,6 +336,9 @@ impl RateLimitConfig {
             reset_email: generous,
             resend_email: generous,
             confirm_ip: generous,
+            email_change_request_account: generous,
+            email_change_resend_account: generous,
+            email_change_code_tries: 5,
             upload_account: generous,
             signing: SigningBudget::UNLIMITED,
         }
@@ -348,6 +385,30 @@ pub async fn spend_signing(
         .collect();
     charges.push(charge(scope::SIGN_ANY, budget.any, total));
     store::charge_all_within(pool, &charges).await
+}
+
+/// Spends one unit of an account's mail budget, answering whether it
+/// fit. A refusal spends nothing — the person waits the window out, and
+/// a refused request mails and records nothing, so it is not an attempt
+/// worth counting the way a guessed token is.
+pub async fn spend_mail_budget(
+    pool: &PgPool,
+    scope: &'static str,
+    account: Uuid,
+    window: Window,
+) -> Result<bool, sqlx::Error> {
+    let key = account.to_string();
+    store::charge_all_within(
+        pool,
+        &[store::Charge {
+            scope,
+            key: &key,
+            window_secs: window.window_secs,
+            n: 1,
+            limit: window.limit,
+        }],
+    )
+    .await
 }
 
 /// Counts the attempt and answers whether it is within the window's

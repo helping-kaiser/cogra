@@ -426,7 +426,9 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
 
     override suspend fun requestEmailChange(newEmail: String, currentPassword: String): Outcome<Unit> = guard.run {
         client.mutation(RequestEmailChangeMutation(RequestEmailChangeInput(newEmail, currentPassword)))
-            .payloadOutcome({ emptyList() }) { if (it.requestEmailChange.ok) Unit else null }
+            .payloadOutcome({ it.requestEmailChange.userErrors.map { e -> e.userErrorFields } }) {
+                it.requestEmailChange.pendingEmailChange?.let { Unit }
+            }
     }
 
     override suspend fun confirmEmailChange(code: String): Outcome<Unit> = client.mutation(
