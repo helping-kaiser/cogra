@@ -84,9 +84,23 @@ export function BottomSheet({
   bodyRef,
   testId = "bottom-sheet",
   stacked = false,
+  coverHeld = false,
 }: {
   open: boolean;
   onClose: () => void;
+  /**
+   * THE HANDOVER FRAME. The sheet keeps announcing its cover after it drops,
+   * for as long as this is true — the one exception to "it covers until the
+   * reader drops it". A sheet that steps aside for a full-focus surface it
+   * raised (the comment thread yielding to the reply wizard or the comment
+   * editor) holds its cover until that surface stands and gives it back when
+   * the sheet rises again, so the surface beneath never reads the moment
+   * between the two as the suspension lifting: no clip there starts, and
+   * none is decided from empty, only to be stopped a frame later
+   * (Feed.md:33, "ALWAYS no clip on the feed plays GIVEN a sheet or a dialog
+   * covers the feed" — the takeover covers it all along).
+   */
+  coverHeld?: boolean;
   // Every sheet is titled: the title is what the sheet is labelled by, so a
   // screen reader announces what opened rather than "dialog".
   title: string;
@@ -152,8 +166,9 @@ export function BottomSheet({
   // the reader drops it — the exit animation below is the drop already under
   // way — and what it draws stands on it, so a surface inside the sheet (the
   // comment thread) is a stage of its own that only a layer raised over the
-  // sheet can cover (`covering-layer.tsx`).
-  const layer = useCoversSurface(open, "suspend");
+  // sheet can cover (`covering-layer.tsx`). A handover holds it past the drop
+  // (`coverHeld`): the same layer, never lowered and raised again.
+  const layer = useCoversSurface(open || coverHeld, "suspend");
   // A DISMISSAL EXITS THE EDGE IT ENTERED FROM (design/tokens/transitions.css).
   // `close()` drops the element out of the top layer at once, so the sheet is
   // held open for the length of its exit animation and closed after.

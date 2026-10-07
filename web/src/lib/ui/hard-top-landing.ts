@@ -28,8 +28,7 @@
 // starts to travel. Only a landing from there counts — which is also what
 // keeps a rubber band that is both a pull and a scroll from landing twice.
 //
-// Behaviour-neutral on its own: nothing listens for a landing until the stage
-// host does (the election PR).
+// Every hosted stage listens on its own scroller (`stage-host.tsx`).
 
 import { useEffect, useEffectEvent, type RefObject } from "react";
 
