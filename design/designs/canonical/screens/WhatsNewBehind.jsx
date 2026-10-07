@@ -25,7 +25,12 @@
 
    THE PAGE IS ONE OF TWO SURFACES. The other is the once-per-release
    snackbar on a cold open's feed (`FeedNewerVersion`), whose action is the
-   same `Update now`. */
+   same `Update now`.
+
+   REGISTERED under `WhatsNew`'s `whatsNew` prefix (design ⇄ impl seam 089):
+   the same page, so the same paths, plus the line's `newerLine` and its
+   `update`; the newer release joins under its own version's key. */
+export const NODE = "whatsNew";
 export function Screen() {
   return <WhatsNewBody newer={NEWER_RELEASE} />;
 }

@@ -2873,14 +2873,22 @@ const UPDATE_NOW = "Update now";
    level — `RELEASES_URL` + `/tag/v<version>`. The doors are named for their
    release, because controls reading the same words a thumb apart tell a
    listener the verb and not the object (copy-voice, *The settings page*,
-   `Copy the PEM block`'s rule). */
+   `Copy the PEM block`'s rule).
+
+   REGISTERED under the `whatsNew` prefix (design ⇄ impl seam 089, the
+   release-registry packet): each release is its `dateline` and its `release`
+   card, both keyed by the version (`0.1.2` keys `0-1-2`), and the card's door
+   is `door`. The note lines are fixture, not copy, and stay unnamed inside the
+   card, as About's answer lines do inside `answer`. */
+const releaseKey = (version) => version.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
 function Release({ version, date, installed = false, newest = false, notes }) {
   const word = installed ? " · installed" : newest ? " · newest" : "";
   return (
     <>
-      <SectionLabel>{`Version ${version}${word} · ${date}`}</SectionLabel>
+      <SectionLabel node="dateline" nodeKey={releaseKey(version)}>{`Version ${version}${word} · ${date}`}</SectionLabel>
       <div style={{ padding: "0 16px" }}>
-        <Card>
+        <Card node="release" nodeKey={releaseKey(version)}>
           {notes.map((line) => (
             <p
               key={line}
@@ -2894,7 +2902,7 @@ function Release({ version, date, installed = false, newest = false, notes }) {
               {line}
             </p>
           ))}
-          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
+          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}} node="door">
             See it on GitHub
           </InlineAction>
         </Card>
@@ -2909,14 +2917,19 @@ function Release({ version, date, installed = false, newest = false, notes }) {
    release heads the list as the newest; nothing else changes: no badge, no
    banner, no nagging. `Update now` opens the store listing
    (`STORE_LISTING_URL`) in the app; on the web it reloads the page into the
-   new version. Its spoken name says which version it brings. */
+   new version. Its spoken name says which version it brings.
+
+   The page names its parts under the `whatsNew` prefix: the `header`, the
+   behind state's `newerLine` with its `update`, each `Release`'s own, and the
+   `footnote`. */
 function WhatsNewBody({ newer }) {
   return (
     <>
-      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" />
+      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 0 16px" }}>
         {newer && (
           <p
+            data-node="newerLine"
             style={{
               margin: 0,
               padding: "8px 24px 0",
@@ -2927,7 +2940,7 @@ function WhatsNewBody({ newer }) {
             }}
           >
             {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
-            <InlineAction size="sm" ariaLabel={`Update to version ${newer.version}`} onClick={() => {}}>
+            <InlineAction size="sm" ariaLabel={`Update to version ${newer.version}`} onClick={() => {}} node="update">
               {UPDATE_NOW}
             </InlineAction>
           </p>
@@ -2936,7 +2949,7 @@ function WhatsNewBody({ newer }) {
           <Release key={release.version} {...release} />
         ))}
         <div style={{ padding: "16px 24px 0" }}>
-          <QuietNote>Newest first.</QuietNote>
+          <QuietNote node="footnote">Newest first.</QuietNote>
         </div>
       </div>
     </>

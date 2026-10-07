@@ -4633,6 +4633,67 @@
         "vouchedIn.sky": [],
         "vouchedIn.title": []
       }
+    },
+    "WhatsNew": {
+      "prefix": "whatsNew",
+      "keys": {
+        "whatsNew.dateline": "the release's version, lowercased, each run of other characters one - (What's new's datelines)",
+        "whatsNew.release": "the release's version, lowercased, each run of other characters one - (What's new's release cards)"
+      },
+      "nodes": {
+        "whatsNew.dateline": [
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.footnote": [],
+        "whatsNew.header": [],
+        "whatsNew.header.back": [],
+        "whatsNew.header.title": [],
+        "whatsNew.release": [
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.release.door": [
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ]
+      }
+    },
+    "WhatsNewBehind": {
+      "prefix": "whatsNew",
+      "keys": {
+        "whatsNew.dateline": "the release's version, lowercased, each run of other characters one - (What's new's datelines)",
+        "whatsNew.release": "the release's version, lowercased, each run of other characters one - (What's new's release cards)"
+      },
+      "nodes": {
+        "whatsNew.dateline": [
+          "0-1-3",
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.footnote": [],
+        "whatsNew.header": [],
+        "whatsNew.header.back": [],
+        "whatsNew.header.title": [],
+        "whatsNew.newerLine": [],
+        "whatsNew.newerLine.update": [],
+        "whatsNew.release": [
+          "0-1-3",
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.release.door": [
+          "0-1-3",
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ]
+      }
     }
   }
 }
