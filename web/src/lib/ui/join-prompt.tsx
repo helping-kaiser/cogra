@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import { buttonClassName } from "@/lib/ui/button";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 export function JoinPrompt({
   open,
@@ -19,6 +20,8 @@ export function JoinPrompt({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // A dialog over a surface suspends its stage (Feed.md:31, `covering-layer.tsx`).
+  useCoversSurface(open, "suspend");
   useEffect(() => {
     const dialog = ref.current;
     if (dialog === null) return;

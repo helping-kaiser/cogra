@@ -23,6 +23,7 @@
 // (CommentEditActs), which is the EditActs pattern at comment scale.
 
 import { BottomSheet } from "@/lib/ui2/bottom-sheet";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { PillButton, TextAction } from "@/lib/ui2/pill-button";
 import { TextField } from "@/lib/ui2/text-field";
@@ -119,6 +120,11 @@ export function CommentEditView({
   onLeave: () => void;
 }) {
   const full = gallery.length >= COMMENT_ATTACHMENT_CAP;
+  // A modal dialog over the surface that raised it, so it announces itself as
+  // one: the stage beneath it is suspended while it is up (Feed.md:31,
+  // `covering-layer.tsx`). Mounted only while open, so it covers for as long
+  // as it is mounted.
+  useCoversSurface(true, "suspend");
 
   return (
     <div
