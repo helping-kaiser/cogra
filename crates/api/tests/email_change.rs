@@ -1067,7 +1067,7 @@ async fn an_unverified_account_changes_email_by_the_new_link_alone(pool: PgPool)
 }
 
 /// The registration link sent to the replaced address dies with the
-/// request, and a resend to the replaced address mails nothing while the
+/// request, and a verification resend sends nothing there while the
 /// change is live.
 ///
 /// The link sent to the replaced address stops working, and no fresh one goes there.
@@ -1095,6 +1095,51 @@ async fn the_replaced_addresss_link_dies(pool: PgPool) {
     .await;
     assert_eq!(rig.mailer.count_for("typo@example.com"), 0);
     assert_eq!(rig.stored_email(user).await, "typo@example.com");
+}
+
+/// While the carve-out is pending, the account's verification link lives
+/// at the new address: a verification resend rotates it and mails the
+/// new address, the previous link dies, and the fresh one applies the
+/// change.
+///
+/// A verification resend during a pending carve-out mails a fresh link to the new address.
+/// ´claim:auth:a-verification-resend-follows-the-carve-out´
+#[sqlx::test(migrations = "../../migrations")]
+async fn resend_during_a_pending_carve_out_mails_the_new_address(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let (user, _) = rig
+        .seed_unverified("alice", "typo@example.com", PASSWORD)
+        .await;
+    let token = rig.access_token("typo@example.com", PASSWORD).await;
+    rig.request_change(&token, "right@example.com", PASSWORD)
+        .await;
+    let first = rig.mailer.latest_code_for("right@example.com");
+
+    rig.gql(
+        None,
+        "mutation { resendVerificationEmail(input: { email: \"typo@example.com\" }) { ok } }",
+        json!({}),
+    )
+    .await;
+    assert_eq!(rig.mailer.count_for("typo@example.com"), 0);
+    assert_eq!(rig.mailer.count_for("right@example.com"), 2);
+    let fresh = rig.mailer.latest_for("right@example.com");
+    assert!(
+        fresh.body.contains("/verify?token="),
+        "body {:?}",
+        fresh.body
+    );
+
+    assert_eq!(
+        codes(&rig.verify(&first).await),
+        vec!["VERIFICATION_TOKEN_INVALID"]
+    );
+    let verified = rig
+        .verify(&rig.mailer.latest_code_for("right@example.com"))
+        .await;
+    assert_eq!(verified["ok"], true);
+    assert_eq!(rig.stored_email(user).await, "right@example.com");
+    assert!(rig.verified(user).await);
 }
 
 /// A carve-out link a resend replaced answers as an invalid verification

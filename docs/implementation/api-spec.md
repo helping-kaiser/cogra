@@ -4342,6 +4342,10 @@ input VerifyEmailInput { verificationToken: String! }
  nothing moves."
 type VerifyEmailPayload { ok: Boolean! }
 
+"email is the account's current address. While an unverified
+ carve-out change is pending, the account's verification link lives
+ at the change's new address: the resend rotates that link and mails
+ the new address, and the replaced address's link stays dead."
 input ResendVerificationEmailInput { email: String! }
 "Always succeeds, to avoid revealing whether an account exists."
 type ResendVerificationEmailPayload { ok: Boolean! }

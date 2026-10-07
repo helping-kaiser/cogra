@@ -786,8 +786,10 @@ password is still
 re-entered. The new address's verification link is the whole proof:
 opening it applies the change and verifies the email in the one step
 (step 4 of "Application"), and links sent to the replaced address stop
-working — no resend goes to the replaced address while the change is
-pending. The 7-day window keeps running from registration.
+working. While the change is pending the account's verification link
+lives at the new address: a verification resend rotates it and mails
+the new address, never the replaced one. The 7-day window keeps
+running from registration.
 
 ---
 

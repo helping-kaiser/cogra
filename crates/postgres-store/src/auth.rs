@@ -532,22 +532,14 @@ pub async fn verify_account_email(
 }
 
 /// The live, unverified account holding an email — the resend target.
-/// An account mid carve-out is not one: its address is being replaced,
-/// and a fresh link to the replaced address would revive the very link
-/// the change killed (auth.md "The unverified carve-out").
 pub async fn unverified_account_by_email(
     pool: &PgPool,
     email: &str,
     dead_before: DateTime<Utc>,
 ) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
-        "SELECT c.actor_id FROM user_credentials c
-         WHERE c.email = $1 AND c.email_verified_at IS NULL AND c.created_at >= $2
-           AND NOT EXISTS (
-               SELECT 1 FROM auth_email_changes e
-               WHERE e.user_id = c.actor_id AND NOT e.requires_code
-                 AND e.cancelled_at IS NULL AND e.applied_at IS NULL
-                 AND e.expires_at > NOW())",
+        "SELECT actor_id FROM user_credentials
+         WHERE email = $1 AND email_verified_at IS NULL AND created_at >= $2",
         email,
         dead_before,
     )

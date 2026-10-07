@@ -303,6 +303,7 @@ label.
 | `test:integration:request-with-a-malformed-address-is-bad-input`                              | request_with_a_malformed_address_is_bad_input                              |
 | `test:integration:request-with-a-wrong-password-is-invalid-credentials-and-mails-nothing`     | request_with_a_wrong_password_is_invalid_credentials_and_mails_nothing     |
 | `test:integration:rerun-is-idempotent`                                                        | rerun_is_idempotent                                                        |
+| `test:integration:resend-during-a-pending-carve-out-mails-the-new-address`                    | resend_during_a_pending_carve_out_mails_the_new_address                    |
 | `test:integration:resend-never-resets-a-confirmed-side`                                       | resend_never_resets_a_confirmed_side                                       |
 | `test:integration:resend-rotates-the-owed-secrets`                                            | resend_rotates_the_owed_secrets                                            |
 | `test:integration:resend-with-the-code-confirmed-mails-only-the-link`                         | resend_with_the_code_confirmed_mails_only_the_link                         |
