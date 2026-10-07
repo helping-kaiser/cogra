@@ -33,12 +33,15 @@
 //
 // `prefers-reduced-motion` STOPS THE AUTOPLAY. Video that starts by itself is
 // motion the reader did not ask for, and the reduced-motion preference is the
-// standing request not to be shown it. The clip still plays on a press.
+// standing request not to be shown it. The clip still plays on a press. The
+// preference is read through `autoplay-suppression.ts`, which also carries
+// the rest of the device's suppression signal for the stage.
 
 import { useEffect, useRef, useState } from "react";
 
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 
+import { prefersReducedMotion } from "./autoplay-suppression";
 import { useVeiled } from "./body-veil";
 import { isMuted, setMuted, useMuted } from "./mute";
 import { formatDuration } from "./video";
@@ -200,10 +203,7 @@ export function VideoPlayer({
       return;
     }
 
-    const reduced =
-      typeof window.matchMedia === "function" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
+    if (prefersReducedMotion()) return;
 
     const observer = new IntersectionObserver(
       (entries) => {

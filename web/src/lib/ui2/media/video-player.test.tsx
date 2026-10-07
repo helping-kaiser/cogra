@@ -83,6 +83,45 @@ describe("autoplay", () => {
   it("never carries the native transport — every card wears the sound disc instead", () => {
     expect(player()).not.toHaveAttribute("controls");
   });
+
+  it("does not start on its own where the reader asks for reduced motion", () => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: (query: string) => ({ matches: query === "(prefers-reduced-motion: reduce)" }),
+    });
+    try {
+      const video = player();
+      act(() => intersect(true));
+      expect(video.paused).toBe(true);
+      // The sound disc is still drawn — the clip is there, it only waits.
+      expect(screen.getByTestId("video-player-sound")).toBeInTheDocument();
+    } finally {
+      delete (window as unknown as Record<string, unknown>).matchMedia;
+    }
+  });
+});
+
+// N2 (the stage-law packet §2.10; RULINGS night 2d): mute and unmute stay
+// reachable by assistive technology on the playing clip. On the web that is
+// the disc itself — a native button naming what a press does, with nothing
+// over the frame hiding it from the accessibility tree.
+describe("the sound disc's accessibility (N2)", () => {
+  it("is a focusable native button whose name says what the press does", () => {
+    player();
+    const disc = screen.getByRole("button", { name: "Turn sound on" });
+    expect(disc.tagName).toBe("BUTTON");
+    expect(disc).toHaveAttribute("type", "button");
+    disc.focus();
+    expect(disc).toHaveFocus();
+  });
+
+  it("sits in no subtree hidden from assistive technology", () => {
+    player();
+    const disc = screen.getByTestId("video-player-sound");
+    expect(disc.closest("[aria-hidden='true']")).toBeNull();
+    expect(disc.closest("[inert]")).toBeNull();
+  });
 });
 
 // The sensitive veil covers its clip the same way a sheet suspends the
