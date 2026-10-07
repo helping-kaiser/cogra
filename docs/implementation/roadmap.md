@@ -176,6 +176,12 @@ event-driven and is not an MVP dependency.
   ([erasure.md](../instances/erasure.md)), a comment as well as a post
   (the comment-scale boards are drawn). Play's account-deletion policy
   mandates it; the moderation half waits.
+- **The application registry** — `appVersions` and the release rows
+  behind it ([api-spec.md](api-spec.md),
+  [data-model.md](data-model.md)), with the three boards that read it:
+  What's new, WhatsNewBehind, and FeedNewerVersion, the cold-open
+  snackbar when a newer release exists. How a release row is written
+  is chosen at implementation.
 - **The conformance workstreams W3–W8** of the 2026-09-08 UI audit,
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
@@ -194,7 +200,7 @@ event-driven and is not an MVP dependency.
 **Out until after the MVP:** slice 4 (governance), slice 5
 (collectives), slice 6 (the rail), slice 7 (tipping and the
 marketplace), slice 8's moderation half, and every staged
-workstream.
+workstream except the application registry.
 
 **The would-like-to-have list** — picked up inside the MVP window
 only if the core lands early, in this order:
@@ -217,7 +223,7 @@ only if the core lands early, in this order:
 1. W3 and W4 (slice 2.5.3's remainder rides them), then W5–W7.
 2. Slice 2.6, then slice 2.7.
 3. Slice 3 (feed + Reel), then slice 3.1.
-4. Slice 8's erasure half.
+4. Slice 8's erasure half, and the application registry.
 5. W8, the copy sweep, once the structure settles.
 6. Slice 9, then the closed test through slice 10.
 
@@ -794,11 +800,13 @@ On the roadmap but outside the slice order; each names its gate.
 - **Passkey-wrapped second unlock** — the WebAuthn-PRF unlock of the
   key-backup blob; a foreseen extension of the recovery-code posture,
   not a posture change ([auth.md](auth.md)).
-- **The application registry** — `appVersions` and the release
+- **The application registry** — pulled into the MVP (jakob
+  2026-10-07; see "In the MVP"). `appVersions` and the release
   rows behind it ([api-spec.md](api-spec.md),
   [data-model.md](data-model.md)); operational metadata any slice
-  can carry. Gate: the first release whose patch notes someone
-  needs to find.
+  can carry, read by What's new, WhatsNewBehind, and FeedNewerVersion.
+  Gate: the first release whose patch notes someone needs to find,
+  which the MVP release is.
 - **Delegated-miner standing + incentives** — parked
   ([open-questions.md Q25](../open-questions.md),
   [miner-api.md](miner-api.md)); revisit when someone actually wants
