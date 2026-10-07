@@ -2296,7 +2296,7 @@
       "status": "resolved",
       "steps": [
         "start · VouchAskUnusable",
-        "end · VouchAskUnusable · 2 «See @noor's profile» → ProfileOther — the landed case only — the person's profile, where the member can look and give an opinion (master, drawn on @ada's); the waiting case has no public profile yet and draws back alone"
+        "end · VouchAskUnusable · 2 «See @noor's profile» → ProfileOther — the person's profile, where the member can look and give an opinion (master, drawn on @ada's)"
       ],
       "boards": [
         "VouchAskUnusable",
@@ -3968,7 +3968,7 @@
       "status": "resolved",
       "steps": [
         "start · Profile · 2 «profile overflow ⋮» → ProfileOwnMenu — your own profile's sheet — the two private lists and the share row",
-        "end · ProfileOwnMenu · 2 «History» → HistoryEmpty — a new account — nothing read yet"
+        "end · ProfileOwnMenu · 2 «History» → HistoryEmpty — a new account — nothing seen yet"
       ],
       "boards": [
         "Profile",
