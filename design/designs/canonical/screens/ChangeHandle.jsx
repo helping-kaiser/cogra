@@ -27,7 +27,11 @@
    think-twice list, so `Change handle` raises `ChangeHandleConfirm`, whose
    body names the cost again at the moment of the act; the change lands only
    on its answer. The page is `ChangeHandleBody`, shared with the dialog's
-   board. */
+   board.
+
+   REGISTERED under the `changeHandle` prefix (design ⇄ impl seam 082, the
+   settings packet), the family's surface; the body names its parts. */
+export const NODE = "changeHandle";
 export function Screen() {
   return <ChangeHandleBody />;
 }

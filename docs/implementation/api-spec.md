@@ -3277,7 +3277,9 @@ input PrepareReferenceInput {
  bundle may have moved in between (another device's act staging or
  landing). The prepared `writes` are the truth; a client whose shown
  count differs re-states it before signing. A bundle that netted to
- `(0, 0)` meanwhile refuses at `target`.
+ `(0, 0)` meanwhile refuses at `target`. Every counter-record
+ declares the in-flight records it nets as dependencies, so the
+ walk-back of a citation that never lands never lands either.
 
  A citation whose target this instance cannot type is not
  addressable here: the mutation names its target by L2 id, and a

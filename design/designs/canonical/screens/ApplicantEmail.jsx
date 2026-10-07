@@ -30,11 +30,16 @@
    at rest the commit waits on both fields (`WaitingCommit`); the field errors
    are `ChangeEmail`'s drawing — a wrong password under its field, a malformed
    address under its own, and an address in use never answered at the request
-   (auth.md); and the password names the account by a hidden username. */
+   (auth.md); and the password names the account by a hidden username.
+
+   REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
+   settings packet): it is `ChangeEmail`'s form with the old side gone, so it
+   takes `ChangeEmail`'s names — `email`, `current`, `commit`. */
+export const NODE = "changeEmail";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -43,6 +48,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Change your email
         </h1>
@@ -54,13 +60,14 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Your email isn't verified yet, so the new address is all a change needs. A fresh link goes there, and the one
           sent to noor@fieldmail.org stops working.
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <TextField id="new-email" label="New email" type="email" autoComplete="email" value="" />
+          <TextField id="new-email" label="New email" type="email" autoComplete="email" value="" node="email" />
         </div>
 
         <div style={{ marginTop: 24 }}>
@@ -70,11 +77,12 @@ export function Screen() {
             autoComplete="current-password"
             account="noor@fieldmail.org"
             value=""
+            node="current"
           />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="change-email" label="Change email" reason="Waiting for a new email and your password" />
+          <WaitingCommit id="change-email" label="Change email" reason="Waiting for a new email and your password" node="commit" />
         </div>
       </div>
     </>

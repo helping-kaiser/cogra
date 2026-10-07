@@ -37,7 +37,12 @@
    the plain way on — following the words in content flow, because a landing
    is a task page and not a seal (readme §4, the two placements). `Resend the
    link` is the applicant feed's own control, taken verbatim, because it is
-   the same act asked from a different place. */
+   the same act asked from a different place.
+
+   REGISTERED under the `verify` prefix (design ⇄ impl seam 082/083, kept in
+   the settings round), the verification family's surface: `title`, `body`,
+   `resend`, and the way on `onward`, as the deletion landings name theirs. */
+export const NODE = "verify";
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>
@@ -48,6 +53,7 @@ export function Screen() {
           lineHeight: "var(--text-headline-small--line-height)",
           fontWeight: "var(--text-headline-small--font-weight)",
         }}
+        data-node="title"
       >
         This link doesn't work anymore
       </h1>
@@ -59,16 +65,17 @@ export function Screen() {
           letterSpacing: "var(--text-body-medium--letter-spacing)",
           color: "var(--text-secondary)",
         }}
+        data-node="body"
       >
         It may have expired or already been used. Send yourself a fresh one — if your account is still waiting on its
         email, the new link picks it back up.
       </p>
 
       <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
-        <Button variant="outline" style={{ width: "100%" }}>
+        <Button variant="outline" style={{ width: "100%" }} node="resend">
           Resend the link
         </Button>
-        <Button variant="text" style={{ width: "100%" }}>
+        <Button variant="text" style={{ width: "100%" }} node="onward">
           Go to the feed
         </Button>
       </div>

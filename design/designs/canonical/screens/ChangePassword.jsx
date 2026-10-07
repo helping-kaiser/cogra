@@ -21,11 +21,17 @@
    DRAWN AT REST. Validation is on submit (§13), so an untouched form has
    nothing marked; the marked states are their own boards when they are
    drawn. At rest the commit waits on both fields, disabled, its reason above
-   it (`WaitingCommit`, the disabled-until-filled law, jakob 2026-10-05). */
+   it (`WaitingCommit`, the disabled-until-filled law, jakob 2026-10-05).
+
+   REGISTERED under the `changePassword` prefix (design ⇄ impl seam 082, the
+   settings packet). The credential family names a field for what it changes
+   and the proof `current`: here `current` and `password`; the commit with its
+   reason is `commit`. */
+export const NODE = "changePassword";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -34,6 +40,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Change your password
         </h1>
@@ -45,12 +52,13 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Changing your password signs out every other device. This one stays signed in.
         </p>
 
         <div style={{ marginTop: 32 }}>
-          <PasswordField id="current-password" label="Current password" autoComplete="current-password" account="sol@solferreira.art" enterKeyHint="next" value="" />
+          <PasswordField id="current-password" label="Current password" autoComplete="current-password" account="sol@solferreira.art" enterKeyHint="next" value="" node="current" />
         </div>
 
         <div style={{ marginTop: 24 }}>
@@ -60,15 +68,16 @@ export function Screen() {
             autoComplete="new-password"
             value=""
             hint="At least 12 characters."
+            node="password"
           />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="change-password" label="Change password" reason="Waiting for both passwords" />
+          <WaitingCommit id="change-password" label="Change password" reason="Waiting for both passwords" node="commit" />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <QuietNote>
+          <QuietNote node="note">
             Your current password is asked for even though you are signed in: a live session is not
             proof enough to change the credential behind it.
           </QuietNote>

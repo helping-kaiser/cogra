@@ -1,8 +1,8 @@
 # SettingsLicense · `spec:design:behavior-settings-license`
 
-WHEN tap Default license -> the license sheet opens over settings, titled Default license AND settings stays beneath the scrim, inert AND focus moves to its title
+WHEN tap Default license -> settings.licenseSheet opens over settings, titled Default license AND settings stays beneath the scrim, inert AND focus moves to its title
 
-ALWAYS the sheet's axes and readings are the seal's own license sheet's
+ALWAYS settings.licenseSheet's axes and readings are the seal's own sheet's (ComposeLicense)
 
 ALWAYS the sheet's "?" stands on the title's row and is named License
 
