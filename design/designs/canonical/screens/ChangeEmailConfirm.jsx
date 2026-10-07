@@ -62,11 +62,18 @@
    by someone else before both sides landed (`EMAIL_IN_USE`, which keeps
    answering until the window closes, so a freed address still applies),
    takes a form-level fault line above the commitment, `SignInError`'s
-   placement — the words are copy-voice's. */
+   placement — the words are copy-voice's.
+
+   REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
+   settings packet). The inset is `pair`: its `label` and `resend`, then each
+   side's caption and reading — `codeLabel` / `codeSide`, `linkLabel` /
+   `linkSide`. The field is `code`, the commit with its reason `commit`, the
+   line under it `note`, and `Cancel the change` is `cancel`. */
+export const NODE = "changeEmail";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -75,6 +82,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Confirm the change
         </h1>
@@ -86,6 +94,7 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Two messages, two different errands — a code to type here, and a link to open at the new
           address. Your email moves when both have been answered, in either order.
@@ -101,6 +110,7 @@ export function Screen() {
             borderRadius: "var(--radius-medium)",
             padding: "var(--space-3)",
           }}
+          data-node="pair"
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <span
@@ -111,24 +121,25 @@ export function Screen() {
                 letterSpacing: "var(--text-label-small--letter-spacing, 0.5px)",
                 color: "var(--text-secondary)",
               }}
+              data-node="label"
             >
               Both have to land
             </span>
-            <InlineAction size="sm" onClick={() => {}}>
+            <InlineAction size="sm" onClick={() => {}} node="resend">
               Resend
             </InlineAction>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "64px 1fr", columnGap: "var(--space-2)", rowGap: "var(--space-1)" }}>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="codeLabel">
               Code
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }} data-node="codeSide">
               sol@solferreira.art — still waiting
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="linkLabel">
               Link
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }} data-node="linkSide">
               sol@ferreira.studio — still waiting
             </span>
           </div>
@@ -143,22 +154,23 @@ export function Screen() {
             enterKeyHint="go"
             value=""
             hint="From the message to sol@solferreira.art."
+            node="code"
           />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="email-change-code" label="Confirm the code" reason="Waiting for the code" />
+          <WaitingCommit id="email-change-code" label="Confirm the code" reason="Waiting for the code" node="commit" />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <QuietNote>
+          <QuietNote node="note">
             Until both sides land your account keeps the address it has, and a reset still goes
             there.
           </QuietNote>
         </div>
 
         <div style={{ marginTop: 16 }}>
-          <InlineAction size="sm" onClick={() => {}}>
+          <InlineAction size="sm" onClick={() => {}} node="cancel">
             Cancel the change
           </InlineAction>
         </div>

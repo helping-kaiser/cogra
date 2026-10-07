@@ -23,8 +23,8 @@ import React from "react";
    and folding a `textAlign` or a `padding` prop in here would make this the
    place layout decisions get made. */
 
-export function QuietNote({ children }) {
+export function QuietNote({ children, node }) {
   return (
-    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>{children}</p>
+    <p style={{ margin: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node}>{children}</p>
   );
 }

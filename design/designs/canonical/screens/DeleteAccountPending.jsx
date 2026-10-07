@@ -17,11 +17,15 @@
 
    CANCELLING ASKS NOTHING. It returns to settings with the canceled
    snackbar (`DeleteAccountCanceled`'s words), the band gone and the row back
-   to `Delete account`. Nothing had been deleted, so nothing is restored. */
+   to `Delete account`. Nothing had been deleted, so nothing is restored.
+
+   REGISTERED under the `deleteAccount` prefix (design ⇄ impl seam 080, the
+   deletion packet), named as the request screen names its column. */
+export const NODE = "deleteAccount";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -30,6 +34,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Delete account
         </h1>
@@ -41,13 +46,14 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Your account is deleted in 6 days, on 08.10.2026. Until then nothing has changed, and canceling keeps
           everything as it is.
         </p>
 
         <div style={{ marginTop: 24 }}>
-          <Button style={{ width: "100%" }}>Cancel</Button>
+          <Button style={{ width: "100%" }} node="cancel">Cancel</Button>
         </div>
       </div>
     </>

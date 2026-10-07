@@ -1082,6 +1082,11 @@ type User implements Node & Actor {
    and for any viewer but the account's own: the field exists only
    to drive the viewer's own prompt."
   hasReciprocated: Boolean!
+  "Whether the account dismissed the vouch-back prompt — for good,
+   on every device (auth.md \"Reciprocation is the joiner's own
+   act\"). Vouching back stays reachable from the inviter's profile.
+   Field-level: viewer-only; false for any other viewer."
+  vouchBackDismissed: Boolean!
   "The account's confirmed deletion in its grace period — the
    Settings band and the pending screen read it. Viewer-only; null
    when none is confirmed (a requested-not-confirmed deletion has no
@@ -2097,8 +2102,15 @@ type Query {
    (design/readme.md §13). An anonymous reader borrows the Genesis
    Moderator's view; an applicant keeps their approver's — the
    actor their application waits on — from the moment the account
-   exists; a landed member has their own, and null is that rule
-   rather than missing data."
+   exists, whatever they stage; a landed member keeps their
+   approver's view until their first **Opinion** is signed, toward
+   any target — landed or in flight (VouchBack.md:15); an Affinity
+   never ends it (VouchBack.md:19); a first Opinion that expires
+   with none landed returns it (VouchBack.md:17). An Opinion staged
+   during the application signs with the vouch-in batch, so a
+   member who carried one owns their view from landing on
+   (VouchBack.md:21). From then on the view is their own and the
+   field is null — that rule, not missing data."
   borrowedView: Actor
 
   "Fetch any node by id. The generic accessor for heterogeneous ids
@@ -3275,7 +3287,9 @@ input PrepareReferenceInput {
  bundle may have moved in between (another device's act staging or
  landing). The prepared `writes` are the truth; a client whose shown
  count differs re-states it before signing. A bundle that netted to
- `(0, 0)` meanwhile refuses at `target`.
+ `(0, 0)` meanwhile refuses at `target`. Every counter-record
+ declares the in-flight records it nets as dependencies, so the
+ walk-back of a citation that never lands never lands either.
 
  A citation whose target this instance cannot type is not
  addressable here: the mutation names its target by L2 id, and a
@@ -4286,7 +4300,10 @@ confirming in the mirror) flips the account to `member`; nothing
 moves, nothing is claimed. Reciprocation — the joiner's own
 Opinion toward the inviter's Profile, completing the mutual
 pair — is an ordinary graph act after landing (`prepareStance`),
-prompted at first login; auth's involvement ends at landing.
+prompted at first login; auth's involvement ends at landing. The
+prompt shows when `invitedBy` is set, `hasReciprocated` is false,
+and `vouchBackDismissed` is false; `dismissVouchBack` puts it away
+for good, as account state.
 
 The same funnel runs the other way from an applicant-held
 capability: a member who follows someone's **ask link** sees who is
@@ -4620,6 +4637,12 @@ type CancelEmailChangePayload { user: User }
 input ChangeHandleInput { handle: String! }
 type ChangeHandlePayload { user: User }
 
+"Dismiss the vouch-back prompt for good (account state; idempotent).
+ FORBIDDEN for an account with no landed application — an applicant
+ or a genesis actor: no prompt is ever shown to it, and before
+ landing there is no row to keep the dismissal on."
+type DismissVouchBackPayload { user: User }
+
 "Issue the challenge an upload must spend (auth.md \"Key
  recovery\"). Server-chosen, 32 bytes, live five minutes, one per
  account, spent on use — a client-chosen nonce would let a
@@ -4830,6 +4853,8 @@ extend type Mutation {
   resendEmailChange: ResendEmailChangePayload!
   cancelEmailChange: CancelEmailChangePayload!
   changeHandle(input: ChangeHandleInput!): ChangeHandlePayload!
+  "Dismiss the vouch-back prompt for good (account state; idempotent)."
+  dismissVouchBack: DismissVouchBackPayload!
   createKeyBackupChallenge: KeyBackupChallengePayload!
   uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!

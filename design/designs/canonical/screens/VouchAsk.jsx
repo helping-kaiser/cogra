@@ -54,25 +54,31 @@
    opens `VouchAskInvalid`. Of the three readers who cannot vouch through it,
    an applicant and the asker themselves land where app-open lands for them,
    and a member who already has the applicant in their queue lands on
-   `Invites`, where that row is (jakob 2026-10-02); a snackbar says why. */
+   `Invites`, where that row is (jakob 2026-10-02); a snackbar says why.
+
+   REGISTERED under the `vouchAsk` prefix (design ⇄ impl seam 078), the ask
+   link's landing and its three states: the card is `ask`, its way out
+   `later`, its stance control `stance`. */
+export const NODE = "vouchAsk";
 export function Screen() {
   return (
     <>
-      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back" />
+      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 16px 0", overflow: "hidden" }}>
-        <Card style={{ flex: "none" }}>
+        <Card style={{ flex: "none" }} node="ask">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <MonogramAvatar name="noor" size="lg" />
-            <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
+            <MonogramAvatar name="noor" size="lg" node="avatar" />
+            <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }} data-node="title">
               @noor is asking to be vouched in
             </h2>
           </div>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node="body">
             They have an account and can read; what they do not have yet is anyone standing for them. Your opinion is what brings them in.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-            <Button variant="text">Not now</Button>
+            <Button variant="text" node="later">Not now</Button>
             <StanceControl
+              node="stance"
               targetLabel="@noor"
               helpLabel="How vouching works"
               help={HOW_VOUCHING_WORKS_HELP}

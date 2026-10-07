@@ -14,6 +14,8 @@ export interface BorrowedViewBandProps {
       applicant or landed member. */
   actionLabel?: string;
   onAction?: () => void;
+  /** The data-node name its placer gives this band (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `avatar`, `line`, `action`. */
+  node?: string;
 }
 
 /** The borrowed-view band: names the vantage point a guest or applicant feed

@@ -1277,6 +1277,16 @@ CREATE TABLE auth_applications (
     -- The accepted back-edge is permanent (invitations.md §2), so
     -- the latch cannot diverge; rebuildable from the mirror.
     reciprocated_at TIMESTAMPTZ,
+    -- Latched derived cache of an L1 fact: set when the record
+    -- mirror confirms the member's first Opinion, toward any target —
+    -- the end of the borrowed view (api-spec.md Query.borrowedView).
+    -- Only a landed Opinion latches; an in-flight one can still
+    -- expire. Rebuildable from the mirror.
+    first_opinion_at TIMESTAMPTZ,
+    -- The member's own dismissal of the vouch-back prompt, for good
+    -- and on every device (User.vouchBackDismissed). Authoritative L2
+    -- account state, viewer-scoped; set only on the landed row.
+    vouch_back_dismissed_at TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK ((invite_link_id IS NULL) <> (ask_link_id IS NULL))
 );

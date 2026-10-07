@@ -29,7 +29,7 @@ import { buttonStyle, BUTTON_CLASS } from "../core/Button.jsx";
    *order*, the invite-link vantage and the contract field it needs, and the
    band's own line about ranking are what wait for it. */
 
-export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionLabel, onAction }) {
+export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionLabel, onAction, node }) {
   const text = line ?? `Browsing from @${handle}'s view — join to build your own.`;
   return (
     <div
@@ -39,8 +39,9 @@ export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionL
         gap: "var(--space-2)",
         padding: "0 var(--screen-gutter) var(--space-3)",
       }}
+      data-node={node}
     >
-      <MonogramAvatar name={displayName ?? handle} src={avatarSrc} />
+      <MonogramAvatar name={displayName ?? handle} src={avatarSrc} node={node && "avatar"} />
       <span
         style={{
           flex: 1,
@@ -49,6 +50,7 @@ export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionL
           letterSpacing: "var(--text-body-small--letter-spacing)",
           color: "var(--text-secondary)",
         }}
+        data-node={node && "line"}
       >
         {text}
       </span>
@@ -56,6 +58,7 @@ export function BorrowedViewBand({ handle, displayName, avatarSrc, line, actionL
         <button
           type="button"
           onClick={onAction}
+          data-node={node && "action"}
           className={BUTTON_CLASS}
           style={{ ...buttonStyle({ variant: "text", size: "sm" }), flex: "none" }}
         >

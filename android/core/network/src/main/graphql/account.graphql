@@ -11,9 +11,24 @@ query Me {
     }
     accountState
     hasReciprocated
+    vouchBackDismissed
     invitedBy {
       id
       handle
+    }
+  }
+}
+
+# Puts the vouch-back prompt away for good — account state, so it holds
+# on every device (auth.md "Reciprocation is the joiner's own act").
+mutation DismissVouchBack {
+  dismissVouchBack {
+    user {
+      id
+      vouchBackDismissed
+    }
+    userErrors {
+      ...UserErrorFields
     }
   }
 }

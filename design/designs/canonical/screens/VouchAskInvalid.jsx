@@ -18,11 +18,15 @@
 
    THE WAY BACK IS THE LAYER LAW: a link opens over whatever the reader was
    doing and back returns there, or to the feed when the link opened the app
-   cold — a guest's or a member's, the same rule. */
+   cold — a guest's or a member's, the same rule.
+
+   REGISTERED under the `vouchAsk` prefix (design ⇄ impl seam 078): the
+   landing's heading is `title`, its paragraph `body`. */
+export const NODE = "vouchAsk";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -31,6 +35,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           This ask link doesn't work
         </h1>
@@ -42,6 +47,7 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Check that the whole link came through, or ask the person who sent it for it again.
         </p>

@@ -753,6 +753,74 @@ pub async fn latch_reciprocated(pool: &PgPool, account_id: Uuid) -> Result<bool,
         == 1)
 }
 
+/// What the account's landed application row records about the
+/// vouch-back: the first-opinion latch (the borrowed view's end) and the
+/// prompt's dismissal. None for an account with no landed application —
+/// an applicant, or a genesis actor that never applied.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LandedVouchState {
+    pub first_opinion_latched: bool,
+    pub vouch_back_dismissed: bool,
+}
+
+/// Reads the account's [`LandedVouchState`].
+pub async fn landed_vouch_state(
+    pool: &PgPool,
+    account_id: Uuid,
+) -> Result<Option<LandedVouchState>, sqlx::Error> {
+    Ok(sqlx::query!(
+        r#"SELECT first_opinion_at IS NOT NULL AS "first_opinion_latched!",
+                  vouch_back_dismissed_at IS NOT NULL AS "vouch_back_dismissed!"
+           FROM auth_applications
+           WHERE account_id = $1 AND landed_at IS NOT NULL
+           ORDER BY created_at DESC LIMIT 1"#,
+        account_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|row| LandedVouchState {
+        first_opinion_latched: row.first_opinion_latched,
+        vouch_back_dismissed: row.vouch_back_dismissed,
+    }))
+}
+
+/// Sets the first-opinion latch — the derived cache of the member's
+/// first Opinion confirming in the mirror, which ends the borrowed view
+/// for good. The caller latches only on a landed Opinion: an in-flight
+/// one can still expire, and an expiry with nothing landed returns the
+/// borrowing. Idempotent; the `IS NULL` predicate is the concurrency
+/// gate.
+pub async fn latch_first_opinion(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_applications
+         SET first_opinion_at = NOW()
+         WHERE account_id = $1 AND landed_at IS NOT NULL
+           AND first_opinion_at IS NULL",
+        account_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Puts the vouch-back prompt away for good (auth.md "Reciprocation is
+/// the joiner's own act"). Idempotent: a repeat keeps the first
+/// dismissal's time. False when the account has no landed application —
+/// there is no prompt to put away.
+pub async fn dismiss_vouch_back(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_applications
+         SET vouch_back_dismissed_at = COALESCE(vouch_back_dismissed_at, NOW())
+         WHERE account_id = $1 AND landed_at IS NOT NULL",
+        account_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        > 0)
+}
+
 /// The reaper (auth.md "Reaper"): deletes never-verified accounts past
 /// their bound, whole — freeing handle and email. Verified accounts are
 /// never reaped; deletion is legitimate exactly because nothing has

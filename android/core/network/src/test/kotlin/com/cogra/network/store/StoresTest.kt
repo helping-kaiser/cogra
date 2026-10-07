@@ -122,20 +122,20 @@ class StoresTest {
 
         stores.signIn("account-a")
         stores.identity.saveActorSeed(seedA)
-        stores.identity.markReciprocationDismissed()
+        stores.identity.markStancePadTaught()
 
         // Account B sees none of A's material — the originating defect
         // was B repair-attaching A's device-global key.
         stores.signIn("account-b")
         assertThat(stores.identity.actorSeed()).isNull()
-        assertThat(stores.identity.reciprocationDismissed()).isFalse()
+        assertThat(stores.identity.stancePadTaught()).isFalse()
         val seedB = ActorKey.generate().seed()
         stores.identity.saveActorSeed(seedB)
 
         // Both slots coexist; switching back serves A's own material.
         stores.signIn("account-a")
         assertThat(stores.identity.actorSeed()).isEqualTo(seedA)
-        assertThat(stores.identity.reciprocationDismissed()).isTrue()
+        assertThat(stores.identity.stancePadTaught()).isTrue()
         stores.signIn("account-b")
         assertThat(stores.identity.actorSeed()).isEqualTo(seedB)
     }
@@ -147,7 +147,7 @@ class StoresTest {
         assertThat(stores.identity.actorSeed()).isNull()
         assertThat(stores.identity.handshakeIds()).isEmpty()
         assertThat(stores.identity.pendingBackupBlob()).isNull()
-        assertThat(stores.identity.reciprocationDismissed()).isFalse()
+        assertThat(stores.identity.stancePadTaught()).isFalse()
         assertThat(stores.identity.forgetOnSignOut()).isFalse()
 
         // The dropped write did not land in anyone's slot.
@@ -244,20 +244,20 @@ class StoresTest {
         // A pre-multi-account build left flat records behind.
         encrypted.put("actor_seed", seed)
         encrypted.put("pending_backup_blob", byteArrayOf(7))
-        encrypted.put("reciprocation_dismissed", byteArrayOf(1))
+        encrypted.put("stance_pad_taught", byteArrayOf(1))
 
         val stores = Stores(encrypted)
         stores.signIn("account-a")
         assertThat(stores.identity.actorSeed()).isEqualTo(seed)
         assertThat(stores.identity.pendingBackupBlob()).isEqualTo(byteArrayOf(7))
-        assertThat(stores.identity.reciprocationDismissed()).isTrue()
+        assertThat(stores.identity.stancePadTaught()).isTrue()
 
         // One-shot: the move consumed the flat records, so a second
         // account adopts nothing.
         stores.signIn("account-b")
         assertThat(stores.identity.actorSeed()).isNull()
         assertThat(stores.identity.pendingBackupBlob()).isNull()
-        assertThat(stores.identity.reciprocationDismissed()).isFalse()
+        assertThat(stores.identity.stancePadTaught()).isFalse()
 
         stores.signIn("account-a")
         assertThat(stores.identity.actorSeed()).isEqualTo(seed)

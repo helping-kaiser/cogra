@@ -5,6 +5,8 @@
  */
 export interface QuietNoteProps {
   children: React.ReactNode;
+  /** The data-node name its placer gives this note (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function QuietNote(props: QuietNoteProps): JSX.Element;

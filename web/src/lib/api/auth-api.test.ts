@@ -311,6 +311,7 @@ describe("fetchMe", () => {
               displayName: { __typename: "ModeratedText", value: "Ada" },
               accountState: "MEMBER",
               hasReciprocated: true,
+              vouchBackDismissed: false,
               invitedBy: null,
             },
           },

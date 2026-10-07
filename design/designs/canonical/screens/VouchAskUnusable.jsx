@@ -30,10 +30,15 @@
 export const PROPS = { case: { editor: "enum", options: ["landed", "elsewhere"], default: "landed" } };
 export const VALS = `askTitle: this.props.case === "elsewhere" ? "@noor is waiting on someone else" : "@noor is already in", askBody: this.props.case === "elsewhere" ? "Another member is deciding on their application right now. If it ends without them getting in, this same link works again." : "Someone has vouched them in already, so this ask has nothing left to do.", profileDoor: this.props.case === "elsewhere" ? "none" : "block"`;
 
+/* REGISTERED under the `vouchAsk` prefix (design ⇄ impl seam 078), named as
+   `VouchAskInvalid` names the landing; the way on is `profileDoor`. The case
+   chip changes words and whether the door shows, never draws an element
+   twice, so nothing here is keyed. */
+export const NODE = "vouchAsk";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="#" backLabel="Back" />
+      <PageHeader backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -42,6 +47,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           {"{{askTitle}}"}
         </h1>
@@ -53,12 +59,13 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           {"{{askBody}}"}
         </p>
 
         <div style={{ marginTop: 24, display: "{{profileDoor}}" }}>
-          <Button variant="text" style={{ width: "100%" }}>
+          <Button variant="text" style={{ width: "100%" }} node="profileDoor">
             See @noor's profile
           </Button>
         </div>

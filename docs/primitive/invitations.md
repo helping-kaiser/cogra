@@ -70,8 +70,9 @@ invitee's own Participant edge
 
 The pair does double duty by construction:
 
-- **The joiner's first outbound edge.** Their reciprocal Opinion
-  is their first walkable connection — the seed of their feed
+- **The joiner's walkable connection back.** Their reciprocal
+  Opinion is a walkable connection back to the inviter — one of
+  the edges their feed grows from
   ([feed-ranking.md](feed-ranking.md)).
 - **The joiner's first inbound person edge.** The inviter's
   Opinion is a Full-tier stance toward the new Profile — the

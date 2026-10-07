@@ -202,9 +202,16 @@ And it checks nodes, against `nodes.json`:
   profiles and their three menus, `FeedHidden`, `ReaderPostMenu`,
   `Settings` and `SettingsHidden`; then the History and Search packets'
   boards — `History`, `HistoryEmpty`, `HistoryFilter`, `HistoryNone` and
-  the five `Explore` boards — so far), plain words that spell one of its nodes
-  fail: "the media row" on `ComposeDetails` is written
-  `composeDetails.mediaRow`. The check knows a node by the words of a
+  the five `Explore` boards; then the invites and deletion packets' boards —
+  `Invites`, `RejectConfirm`, `RejectAllConfirm`, the four `VouchAsk`
+  boards, `ApplicantRejected`, `ProfileApplicant`, the five `DeleteAccount`
+  boards, `FeedDeleting` and `SettingsDeleting`; then the settings packet's
+  boards — `SettingsEmailPending`, `SettingsLicense`, `SettingsReading`,
+  `SignOutConfirm`, `ChangePassword`, the two `ChangeHandle` boards, the four
+  `ChangeEmail` boards, `ApplicantEmail`, `VerifyExpired` and `About` — so
+  far), plain words
+  that spell one of its nodes fail: "the media row" on `ComposeDetails` is
+  written `composeDetails.mediaRow`. The check knows a node by the words of a
   compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word
   name (`card`, `title`) is also an everyday word, so writing it as a
   plain word is caught in review, not by the lint, the way an unwritten

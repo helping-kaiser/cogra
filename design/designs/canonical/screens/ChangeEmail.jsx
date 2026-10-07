@@ -35,15 +35,23 @@
    re-checks live. AN ADDRESS ALREADY IN USE IS NEVER ANSWERED HERE:
    `requestEmailChange` stays silent so no enumeration channel opens (auth.md,
    *Email change*); the owner learns it on the confirm, after proving the
-   account (`EMAIL_IN_USE`, copy-voice). */
+   account (`EMAIL_IN_USE`, copy-voice).
+
+   REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
+   settings packet), the family's surface. The credential family names a field
+   for what it changes and the proof `current`: here `email` and `current`;
+   the commit with its reason is `commit`. The fields and the commit are drawn
+   once per `fault` value, one shown at a time, so each copy takes the same
+   paths keyed by the chip's value (the chip-drawn duplicate rule). */
+export const NODE = "changeEmail";
 export const PROPS = { fault: { editor: "enum", options: ["none", "password", "malformed"], default: "none" } };
 export const VALS = `restShown: this.props.fault === "none" ? "block" : "none", passwordShown: this.props.fault === "password" ? "block" : "none", malformedShown: this.props.fault === "malformed" ? "block" : "none"`;
 
-function ChangeEmailFields({ shown, at = "", email = "", password = "", emailError, passwordError, waiting = false }) {
+function ChangeEmailFields({ shown, fault, at = "", email = "", password = "", emailError, passwordError, waiting = false }) {
   return (
-    <div style={{ display: shown }}>
+    <div style={{ display: shown }} data-node-chip="fault" data-node-key={fault}>
       <div style={{ marginTop: 32 }}>
-        <TextField id={`new-email${at}`} label="New email" type="email" autoComplete="email" value={email} error={emailError} />
+        <TextField id={`new-email${at}`} label="New email" type="email" autoComplete="email" value={email} error={emailError} node="email" />
       </div>
 
       <div style={{ marginTop: 24 }}>
@@ -54,11 +62,12 @@ function ChangeEmailFields({ shown, at = "", email = "", password = "", emailErr
           account="sol@solferreira.art"
           value={password}
           error={passwordError}
+          node="current"
         />
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <WaitingCommit id={`change-email${at}`} label="Change email" reason="Waiting for a new email and your password" waiting={waiting} />
+        <WaitingCommit id={`change-email${at}`} label="Change email" reason="Waiting for a new email and your password" waiting={waiting} node="commit" />
       </div>
     </div>
   );
@@ -67,7 +76,7 @@ function ChangeEmailFields({ shown, at = "", email = "", password = "", emailErr
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -76,6 +85,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Change your email
         </h1>
@@ -87,14 +97,16 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           Your email signs you in, and it is the only way back if you lose your password — so a
           change is proved from both ends.
         </p>
 
-        <ChangeEmailFields shown="{{restShown}}" waiting />
+        <ChangeEmailFields shown="{{restShown}}" fault="none" waiting />
         <ChangeEmailFields
           shown="{{passwordShown}}"
+          fault="password"
           at="-password"
           email="sol@ferreira.studio"
           password="saltmarsh-tides"
@@ -102,6 +114,7 @@ export function Screen() {
         />
         <ChangeEmailFields
           shown="{{malformedShown}}"
+          fault="malformed"
           at="-malformed"
           email="sol@ferreira"
           password="saltmarsh-tides"
@@ -109,7 +122,7 @@ export function Screen() {
         />
 
         <div style={{ marginTop: 24 }}>
-          <QuietNote>
+          <QuietNote node="note">
             A code goes to sol@solferreira.art and a link to the new address. Your email is unchanged
             until both have been answered.
           </QuietNote>

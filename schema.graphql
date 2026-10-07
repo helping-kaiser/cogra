@@ -473,6 +473,11 @@ scalar DateTime
 
 scalar Dimension
 
+type DismissVouchBackPayload {
+	user: User
+	userErrors: [UserError!]!
+}
+
 """
 One shared error vocabulary across both tiers: transport faults ride
 the GraphQL errors array; expected outcomes ride `userErrors`.
@@ -1195,6 +1200,13 @@ type Mutation {
 	"""
 	changeHandle(input: ChangeHandleInput!): ChangeHandlePayload!
 	"""
+	Dismiss the vouch-back prompt for good (account state; idempotent).
+	FORBIDDEN for an account with no landed application — an applicant
+	or a genesis actor: no prompt is ever shown to it, and before
+	landing there is no row to keep the dismissal on.
+	"""
+	dismissVouchBack: DismissVouchBackPayload!
+	"""
 	Issues the challenge an upload must spend (auth.md "Key
 	recovery"). The server picks it: a client-chosen nonce would let
 	a captured upload be replayed verbatim, which is the whole attack
@@ -1881,7 +1893,9 @@ A count read earlier can differ from the batch prepared here — the
 bundle may have moved in between (another device's act staging or
 landing). The prepared `writes` are the truth; a client whose shown
 count differs re-states it before signing. A bundle that netted to
-`(0, 0)` meanwhile refuses at `target`.
+`(0, 0)` meanwhile refuses at `target`. Every counter-record declares
+the in-flight records it nets as dependencies, so the walk-back of a
+citation that never lands never lands either.
 """
 input PrepareReferenceWithdrawalInput {
 	"""
@@ -2035,10 +2049,14 @@ type Query {
 	1. An **invite-link arrival**, still signed out, borrows **the
 	inviter's** view, resolved from the link id. That resolution
 	arrives with slice 3 and its own band-line ruling.
-	2. An **applicant** borrows **their inviter's**, from the moment
-	the account exists and before either proof is in — and a
-	**landed member** keeps borrowing it until their own first
-	stance toward them exists, the vouch-back.
+	2. An **applicant** borrows **their approver's**, from the moment
+	the account exists and before either proof is in, whatever they
+	stage — and a **landed member** keeps borrowing it until their
+	first Opinion is signed, toward any target, landed or in flight.
+	An Affinity never ends it; a first Opinion that expires with
+	none landed returns it; an Opinion carried from the application
+	signs with the vouch-in batch, so that member owns their view
+	from landing on.
 	3. A **bare visitor**, with nothing more specific to go on,
 	borrows the **Genesis Moderator's** view. Strictly the
 	fallback: it is the only vantage that names no relationship
@@ -3016,6 +3034,13 @@ type User implements Node & Actor {
 	signed nothing.
 	"""
 	hasReciprocated: Boolean!
+	"""
+	Whether the account dismissed the vouch-back prompt — for good,
+	on every device (auth.md "Reciprocation is the joiner's own act").
+	Vouching back stays reachable from the inviter's profile.
+	Field-level: viewer-only; false for any other viewer.
+	"""
+	vouchBackDismissed: Boolean!
 	"""
 	The account's service state — gates acting through CoGra (auth.md
 	"Account states"). Field-level: viewer-only.

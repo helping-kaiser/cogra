@@ -259,13 +259,13 @@ class KeyCeremonyTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
         identity.seed = ActorKey.generate().seed()
         identity.pendingBlob = byteArrayOf(7)
-        identity.dismissedReciprocation = true
+        identity.stancePadTaught = true
         identity.forgetOnSignOut = true
         SignOut(offlineSessions(), EndLocalSession(identity, tokens)).signOut()
         assertThat(tokens.current()).isNull()
         assertThat(identity.seed).isNull()
         assertThat(identity.pendingBlob).isNull()
-        assertThat(identity.dismissedReciprocation).isFalse()
+        assertThat(identity.stancePadTaught).isFalse()
         assertThat(identity.handshakes).isEmpty()
     }
 }

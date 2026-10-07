@@ -19,18 +19,23 @@
    THE FEED UNDERNEATH IS UNCHANGED, AND THAT IS THE RULING DRAWN. During the
    grace period nothing is redacted and nothing is withdrawn — the request is a
    pending intent. A feed that started hiding the reader's own posts would be
-   redacting early, and would tell them the decision was already taken. */
+   redacting early, and would tell them the decision was already taken.
+
+   REGISTERED under the feed's own prefix (design ⇄ impl seam 080, the
+   deletion packet), named as `Feed` names it; the band is `deletionBand`,
+   beside the CoGra band rather than inside it, as it stands. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <DeletionBand days={6} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <DeletionBand days={6} node="deletionBand" />
       </CograBand>
       <FeedList>
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
-        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
+        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

@@ -550,19 +550,28 @@ accepted back-edge is permanent
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)) —
 and is rebuildable by re-scanning the mirror; an in-flight staged
 write answers true without latching. Clients show the prompt only
-when `invitedBy` is set and `hasReciprocated` is false. Dismissing
-the prompt is account state, never a device-local preference: the
-dismissal is for good, so the prompt stays away on every device the
-account signs in on, and vouching back stays reachable from the
-inviter's profile.
+when `invitedBy` is set, `hasReciprocated` is false, and
+`vouchBackDismissed` is false. Dismissing the prompt
+(`dismissVouchBack`) is account state, never a device-local
+preference: the dismissal is for good, so the prompt stays away on
+every device the account signs in on, and vouching back stays
+reachable from the inviter's profile.
+
+The prompt and the borrowed view are separate questions. The
+borrowed view (`Query.borrowedView`) ends on the member's first
+Opinion toward any target, the vouch-back or another; it latches
+`first_opinion_at` on the landed application row once the mirror
+shows that Opinion, and an in-flight one ends the borrowing
+without latching.
 
 **Reads may repair, never decide.** The poll's re-staging and the
-reciprocation latch are writes inside query resolvers — a
-deliberate deviation from GraphQL's rule that non-mutation fields
-stay side-effect-free. Both writes are idempotent, serialized on
-the application row, and convergent: they push stored state toward
-what the approval or the permanent back-edge already committed —
-a read never creates new intent. A failed repair only logs; the
+reciprocation and first-opinion latches are writes inside query
+resolvers — a deliberate deviation from GraphQL's rule that
+non-mutation fields stay side-effect-free. All three writes are
+idempotent, serialized on the application row, and convergent:
+they push stored state toward what the approval or a permanent
+accepted Opinion already committed — a read never creates new
+intent. A failed repair only logs; the
 next poll retries, and failing the read would turn a transient
 repair problem into a fetch error.
 

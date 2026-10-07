@@ -62,15 +62,22 @@
    (jakob 2026-10-05).
 
    THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
-   applicants included (readme §13, the feed's filter on screen). */
+   applicants included (readme §13, the feed's filter on screen).
+
+   REGISTERED under the feed's own prefix (design ⇄ impl seam 078): the shell
+   is the feed, named as `Feed` names it; the band under the CoGra band is
+   `borrowedViewBand`, and the card is `application`, its ask link `link`, as
+   on `ProfileApplicant`. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
         <BorrowedViewBand
           handle="kel"
           displayName="Kel Moreau"
           line="Browsing from @kel's view — your own starts when someone vouches you in."
+          node="borrowedViewBand"
         />
       </CograBand>
       <FeedList>
@@ -78,6 +85,7 @@ export function Screen() {
           tone="notice"
           title="@kel closed your application"
           body="That was @kel's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead."
+          node="application"
         >
           <PayoutAddress
             bare
@@ -86,12 +94,13 @@ export function Screen() {
             onCopy={() => {}}
             copyLabel="Copy your ask link"
             caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
+            node="link"
           />
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} />
-        <PostCard {...TOBIAS_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

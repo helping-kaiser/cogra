@@ -11,7 +11,12 @@
    and calm; the mark is not, because the mark is spent on the moment
    something worked (`VerifyExpired`'s rule) and nothing has yet. The way on
    is `Verified`'s text button, naming where it goes. No back arrow: a mail
-   link has no previous screen of ours. */
+   link has no previous screen of ours.
+
+   REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
+   settings packet): `title`, `body` and the way on `onward`, as
+   `ChangeEmailLinked` names them. */
+export const NODE = "changeEmail";
 export function Screen() {
   return (
     <div
@@ -33,6 +38,7 @@ export function Screen() {
           fontWeight: "var(--text-headline-small--font-weight)",
           textAlign: "center",
         }}
+        data-node="title"
       >
         Sign in to finish the change
       </h1>
@@ -46,11 +52,12 @@ export function Screen() {
           color: "var(--text-secondary)",
           textAlign: "center",
         }}
+        data-node="body"
       >
         This link confirms sol@ferreira.studio as your new address. It counts once you're signed in.
       </p>
       <div style={{ marginTop: 24 }}>
-        <Button variant="text">Sign in</Button>
+        <Button variant="text" node="onward">Sign in</Button>
       </div>
     </div>
   );

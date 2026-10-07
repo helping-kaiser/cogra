@@ -78,7 +78,10 @@ describe("KeyCeremonyView", () => {
     await screen.findByTestId("backup_code");
 
     // One entry the Back press can land on, and another put back for the next.
-    expect(pushState).toHaveBeenCalledOnce();
+    // The trap is a passive effect, flushed by React's scheduler after the
+    // code is already on screen — in Node that task races the setTimeout
+    // findBy settles with, so wait for the effect itself, not the paint.
+    await waitFor(() => expect(pushState).toHaveBeenCalledOnce());
     window.dispatchEvent(new PopStateEvent("popstate"));
     expect(pushState).toHaveBeenCalledTimes(2);
 

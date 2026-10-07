@@ -1564,8 +1564,9 @@ async fn a_citation_whose_target_never_lands_expires(pool: PgPool) {
 }
 
 /// The withdrawal's counter-records carry the same dependency the records
-/// they net carried: free of it, they could land while what they net
-/// expires, leaving a refutation nobody authored.
+/// they net carried — and the in-flight citation itself: free of either,
+/// they could land while what they net expires, leaving a refutation
+/// nobody authored.
 ///
 /// (´claim:references:a-pending-target-is-a-dependency´)
 #[sqlx::test(migrations = "../../migrations")]
@@ -1576,6 +1577,9 @@ async fn a_withdrawal_toward_a_pending_target_declares_its_mint(pool: PgPool) {
     let carrier = rig.plain_post(&token, &key, "carrier").await;
     let (cited, mint, _) = rig.pending_post(&token, &key, "still settling").await;
     let citation = rig.cite_from(&token, &carrier, &cited, json!({})).await;
+    let citation_act = proposals(&citation["prepareReference"]["writes"])[0]
+        .body
+        .act_id();
     rig.pre_sign(&token, &key, &citation["prepareReference"]["writes"])
         .await;
 
@@ -1593,8 +1597,147 @@ async fn a_withdrawal_toward_a_pending_target_declares_its_mint(pool: PgPool) {
     let counters = proposals(&withdrawal["prepareReferenceWithdrawal"]["writes"]);
     assert!(!counters.is_empty());
     for counter in counters {
-        assert_eq!(counter.deps, vec![mint.clone()]);
+        assert_eq!(counter.deps, vec![citation_act.clone(), mint.clone()]);
     }
+}
+
+/// Stages one standalone citation and stops it at its pre-commitment: in
+/// the author's pending-inclusive bundle, never approved, so it can only
+/// expire. Returns its act id.
+async fn in_flight_citation(
+    rig: &Citer,
+    token: &str,
+    key: &ActorKey,
+    artifact: &str,
+    target: &str,
+    params: Value,
+) -> ActId {
+    let prepared = rig.cite_from(token, artifact, target, params).await;
+    assert_eq!(
+        refusals(&prepared, "prepareReference"),
+        Vec::<Value>::new(),
+        "citation refused: {prepared}"
+    );
+    let writes = &prepared["prepareReference"]["writes"];
+    rig.pre_sign(token, key, writes).await;
+    proposals(writes)[0].body.act_id()
+}
+
+/// The landed half of a post's reference row, with the folded parameters.
+async fn landed_stances_of_post(rig: &Citer, token: &str, post: &str) -> Value {
+    rig.gql(
+        Some(token),
+        r#"query($id: UUID!) {
+             post(id: $id) { references(includePending: false) { targetId relevance support } }
+           }"#,
+        json!({ "id": post }),
+    )
+    .await["post"]["references"]
+        .clone()
+}
+
+/// Ruling on seam 072: the counter-records net the pending-inclusive
+/// bundle, so every still-in-flight record in it is one they net, and each
+/// is declared — the landed record is not, since it orders nothing.
+///
+/// (´claim:references:a-walk-back-lands-only-behind-what-it-nets´)
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_withdrawal_declares_the_in_flight_citations_it_nets(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let weak = json!({ "relevance": 0.2, "support": 0.2 });
+    rig.land_citation(&token, &key, &carrier, &cited, weak.clone())
+        .await;
+    let first = in_flight_citation(&rig, &token, &key, &carrier, &cited, weak.clone()).await;
+    let second = in_flight_citation(&rig, &token, &key, &carrier, &cited, weak).await;
+
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": cited }}),
+        )
+        .await;
+    assert_eq!(
+        refusals(&withdrawal, "prepareReferenceWithdrawal"),
+        Vec::<Value>::new()
+    );
+    let counters = proposals(&withdrawal["prepareReferenceWithdrawal"]["writes"]);
+    assert_eq!(counters.len(), 1, "⌈0.6⌉ counter-records");
+    assert_eq!(
+        counters[0].deps,
+        vec![first, second],
+        "both in-flight citations, in staging order, and nothing landed"
+    );
+}
+
+/// The behavior the declaration buys. The bundle stands at one landed
+/// citation plus one in flight; the withdrawal nets both, and is signed
+/// and approved. The in-flight citation never lands — so no epoch orders
+/// the counter-record either, the sweep expires the two together, and the
+/// landed bundle stays exactly where it stood before the withdrawal. A
+/// counter-record free of the dependency lands alone and drives the bundle
+/// to `(−0.5, −0.5)`: a refutation the author never made.
+///
+/// A withdrawal's counter-records land only behind the in-flight citations they net, and expire with them.
+/// ´claim:references:a-walk-back-lands-only-behind-what-it-nets´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_withdrawal_of_a_citation_that_never_lands_never_lands_either(pool: PgPool) {
+    let rig = Citer::new(pool).await;
+    let (_, key) = rig.member("alice", "alice@example.test").await;
+    let token = rig.log_in("alice@example.test").await;
+    let carrier = rig.plain_post(&token, &key, "carrier").await;
+    let cited = rig.plain_post(&token, &key, "cited").await;
+    let half = json!({ "relevance": 0.5, "support": 0.5 });
+    rig.land_citation(&token, &key, &carrier, &cited, half.clone())
+        .await;
+    let landed_bundle = || landed_stances_of_post(&rig, &token, &carrier);
+    let landed_net = landed_bundle().await;
+    assert_eq!(landed_net.as_array().expect("row").len(), 1);
+    assert_eq!(
+        (&landed_net[0]["relevance"], &landed_net[0]["support"]),
+        (&json!(0.5), &json!(0.5))
+    );
+
+    let netted = in_flight_citation(&rig, &token, &key, &carrier, &cited, half).await;
+    let withdrawal = rig
+        .gql(
+            Some(&token),
+            WITHDRAW_REFERENCE,
+            json!({ "input": { "artifact": carrier, "target": cited }}),
+        )
+        .await;
+    let writes = &withdrawal["prepareReferenceWithdrawal"]["writes"];
+    let counters = proposals(writes);
+    assert_eq!(counters.len(), 1, "⌈1.0⌉ counter-records net (1, 1)");
+    assert_eq!(counters[0].deps, vec![netted]);
+    let counter = writes[0]["id"].as_str().expect("id").to_string();
+    rig.land(&token, &key, writes).await;
+
+    assert_ne!(
+        rig.staged_state(&token, &counter).await,
+        json!("LANDED"),
+        "no epoch orders the walk-back ahead of the citation it nets"
+    );
+    assert_eq!(
+        landed_bundle().await,
+        landed_net,
+        "the landed bundle is untouched while the citation is in flight"
+    );
+
+    postgres_store::staged::expire_due(&rig.pool, 1_000, GC)
+        .await
+        .expect("expires");
+    rig.close_and_ingest().await;
+    assert_eq!(rig.staged_state(&token, &counter).await, json!("EXPIRED"));
+    assert_eq!(
+        landed_bundle().await,
+        landed_net,
+        "the bundle stays at its pre-withdrawal net, never past (0, 0)"
+    );
 }
 
 /// Seam 046.10: the count a client showed can differ from the batch

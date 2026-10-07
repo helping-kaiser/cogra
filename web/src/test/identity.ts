@@ -9,13 +9,11 @@ import type { IdentityStore } from "@/lib/identity/store";
 export function fakeIdentityStore(initial: {
   keyOnDevice?: boolean;
   seed?: Uint8Array | null;
-  reciprocationDismissed?: boolean;
   handshakeIds?: string[];
   ephemeral?: boolean;
 } = {}): IdentityStore {
   let keyOnDevice = initial.keyOnDevice ?? false;
   let seed = initial.seed ?? null;
-  let dismissed = initial.reciprocationDismissed ?? false;
   let ephemeral = initial.ephemeral ?? false;
   let pendingBlob: Uint8Array | null = null;
   const handshakes = new Set(initial.handshakeIds ?? []);
@@ -58,11 +56,6 @@ export function fakeIdentityStore(initial: {
       handshakes.clear();
       return Promise.resolve();
     },
-    reciprocationDismissed: () => Promise.resolve(dismissed),
-    markReciprocationDismissed() {
-      dismissed = true;
-      return Promise.resolve();
-    },
     setEphemeral(value) {
       ephemeral = value;
       return Promise.resolve();
@@ -73,7 +66,6 @@ export function fakeIdentityStore(initial: {
         seed = null;
         pendingBlob = null;
         handshakes.clear();
-        dismissed = false;
         ephemeral = false;
       }
       return Promise.resolve();
