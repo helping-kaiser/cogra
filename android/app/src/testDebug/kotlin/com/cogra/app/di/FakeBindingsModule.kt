@@ -21,6 +21,13 @@ import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
+import com.cogra.domain.settings.AccountEmail
+import com.cogra.domain.settings.EmailChangeLinkCheck
+import com.cogra.domain.settings.PendingEmailChange
+import com.cogra.domain.settings.SettingsAccount
+import com.cogra.domain.settings.SettingsRepository
+import com.cogra.domain.store.DevicePreferences
+import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.ThrowingMediaRepository
 import com.cogra.domain.ActorRef
 import com.cogra.domain.Outcome
@@ -54,6 +61,7 @@ import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.references.ReferenceClaim
+import com.cogra.domain.testing.ThrowingSettingsRepository
 import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
@@ -215,9 +223,57 @@ class ScriptedProfileRepository : ThrowingProfileRepository() {
 
 /** Sessions enough for the Settings destination to render and sign out. */
 class ScriptedSessionRepository : ThrowingSessionRepository() {
-    override suspend fun sessions(): Outcome<List<SessionInfo>> = Outcome.Success(emptyList())
-
     override suspend fun revokeSession(id: String?): Outcome<Unit> = Outcome.Success(Unit)
+}
+
+/**
+ * The Settings read, derived from the scripted account so a test that
+ * sets a profile gets a page that agrees with it; the rest is scriptable.
+ */
+class ScriptedSettingsRepository(private val accounts: ScriptedAccountRepository) : ThrowingSettingsRepository() {
+    var email: String = "sol@solferreira.art"
+    var actorPubkey: String? = "cGs="
+    var keyBackupCreatedAt: Instant? = null
+    var pending: PendingEmailChange? = null
+    var defaultLicense: LicenseChoice? = null
+    var linkCheck: Outcome<EmailChangeLinkCheck?> = Outcome.Success(null)
+    var confirm: Outcome<AccountEmail> = Outcome.Success(AccountEmail(email, null))
+    val confirmedTokens = mutableListOf<String>()
+    var sessions: List<SessionInfo> =
+        listOf(SessionInfo("s1", "Pixel 6", Instant.EPOCH, null, isCurrent = true))
+
+    override suspend fun settingsAccount(): Outcome<SettingsAccount?> {
+        val profile = accounts.profile ?: return Outcome.Success(null)
+        return Outcome.Success(
+            SettingsAccount(
+                id = profile.id,
+                handle = profile.handle,
+                email = email,
+                emailVerified = profile.accountState == AccountState.MEMBER,
+                accountState = profile.accountState,
+                actorPubkey = actorPubkey,
+                passwordChangedAt = Instant.EPOCH,
+                keyBackupCreatedAt = keyBackupCreatedAt,
+                pendingEmailChange = pending,
+                defaultLicense = defaultLicense,
+                sessions = sessions,
+            ),
+        )
+    }
+
+    override suspend fun defaultLicense(): Outcome<LicenseChoice?> = Outcome.Success(defaultLicense)
+
+    override suspend fun setDefaultLicense(license: LicenseChoice?): Outcome<LicenseChoice?> {
+        defaultLicense = license
+        return Outcome.Success(license)
+    }
+
+    override suspend fun confirmEmailChange(code: String): Outcome<AccountEmail> {
+        confirmedTokens += code
+        return confirm
+    }
+
+    override suspend fun emailChangeLinkCheck(token: String): Outcome<EmailChangeLinkCheck?> = linkCheck
 }
 
 /** Scriptable applicant state: tests set the me-driven status. */
@@ -500,4 +556,19 @@ object FakeBindingsModule {
 
     @Provides
     fun composeDraftStore(fake: FakeComposeDraftStore): ComposeDraftStore = fake
+
+    @Provides
+    @Singleton
+    fun scriptedSettingsRepository(accounts: ScriptedAccountRepository): ScriptedSettingsRepository =
+        ScriptedSettingsRepository(accounts)
+
+    @Provides
+    fun settingsRepository(fake: ScriptedSettingsRepository): SettingsRepository = fake
+
+    @Provides
+    @Singleton
+    fun fakeDevicePreferences(): FakeDevicePreferences = FakeDevicePreferences()
+
+    @Provides
+    fun devicePreferences(fake: FakeDevicePreferences): DevicePreferences = fake
 }
