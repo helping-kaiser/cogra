@@ -18,7 +18,6 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
 use common::l1::{crypto, key_backup, wire};
-use l1_standin::StandIn;
 use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
@@ -1430,11 +1429,10 @@ impl Mutation {
     }
 
     /// Attaches the device-minted actor identity to the viewer's account
-    /// — the key ceremony's server half. Replaceable while the viewer's
-    /// application is unapproved; FORBIDDEN once approval has bound the
-    /// address. An address binds at most one account: a key already
-    /// bound to a different account refuses with an ACTOR_KEY_IN_USE
-    /// userError.
+    /// — the key ceremony's server half. Replaceable until the address is
+    /// funded; FORBIDDEN once the admission burn has bound it. An address
+    /// binds at most one account: a key already bound to a different
+    /// account refuses with an ACTOR_KEY_IN_USE userError.
     async fn attach_actor_key(
         &self,
         ctx: &Context<'_>,
@@ -1496,8 +1494,9 @@ impl Mutation {
     }
 
     /// Approve staged applicants — the inviter's deliberate, priced act:
-    /// per applicant or in batch, with the pre-filled stance values
-    /// adjusted at will. Triggers the funding burn and the staged
+    /// per applicant or in batch, with the stance values the inviter
+    /// picks. Requests the address's funding burn — at most once per
+    /// address, however approvals and retries race — and stages the
     /// Registration backend-side, and returns the inviter's own Opinion
     /// records to sign — the vouch is the inviter's signature, not a
     /// server write. Requires an approvable application: email verified
@@ -1510,7 +1509,6 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let funding = ctx.data::<StandIn>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         let approvals: Vec<onboarding::Approval> = input
@@ -1525,7 +1523,6 @@ impl Mutation {
         match onboarding::approve_applicants(
             pool,
             boundary,
-            funding,
             cfg,
             &limits.signing,
             v.user_id,

@@ -238,6 +238,67 @@ pub async fn prepare<B: L1Boundary>(
     actor_id: Uuid,
     gesture: Gesture,
 ) -> Result<Prepared, PrepareError> {
+    prepare_under(
+        boundary,
+        pool,
+        gc_after_epochs,
+        actor_id,
+        gesture,
+        Solvency::PublishedBalance,
+    )
+    .await
+}
+
+/// Where a prepare's W1 estimate comes from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Solvency {
+    /// The published B_i read — every act but one.
+    PublishedBalance,
+    /// The caller holds a live admission funding row for the author: the
+    /// unchained admission Registration, whose solvency source is the burn
+    /// that row requested, not a balance that may not show it yet.
+    AdmissionFunded,
+}
+
+/// Prepares the unchained admission Registration, whose W1 pre-check is
+/// its address's funding row rather than the B_i read (auth.md
+/// "Funding"). Under a realization that settles a burn after a delay, the
+/// published balance reads zero until the burn pins, so the B_i read would
+/// refuse the very act the burn exists to fund — surfacing as the
+/// voucher's write-rule refusal. The funding row is an honest L2 estimate
+/// instead: θ is far below the admission burn, and the relay holds the
+/// Registration's approval leg until the burn settles, so the act is never
+/// orderable before its author can pay for it.
+///
+/// The caller must hold that row, live — claimed or found, not failed —
+/// under the account lock (`onboarding::ensure_admission_staged`); every
+/// other check of [`prepare`] runs unchanged.
+pub(crate) async fn prepare_funded_admission<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    gc_after_epochs: i64,
+    actor_id: Uuid,
+    gesture: Gesture,
+) -> Result<Prepared, PrepareError> {
+    prepare_under(
+        boundary,
+        pool,
+        gc_after_epochs,
+        actor_id,
+        gesture,
+        Solvency::AdmissionFunded,
+    )
+    .await
+}
+
+async fn prepare_under<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    gc_after_epochs: i64,
+    actor_id: Uuid,
+    gesture: Gesture,
+    solvency: Solvency,
+) -> Result<Prepared, PrepareError> {
     gesture
         .family
         .params_check(gesture.p_d, gesture.p_i)
@@ -250,13 +311,15 @@ pub async fn prepare<B: L1Boundary>(
         )));
     }
 
-    let theta = boundary.current_theta().await?;
-    let balance = boundary.balance(&gesture.author).await?;
-    if !affordable(balance.balance, theta, 1) {
-        return Err(PrepareError::WriteRule {
-            balance: balance.balance,
-            theta,
-        });
+    if solvency == Solvency::PublishedBalance {
+        let theta = boundary.current_theta().await?;
+        let balance = boundary.balance(&gesture.author).await?;
+        if !affordable(balance.balance, theta, 1) {
+            return Err(PrepareError::WriteRule {
+                balance: balance.balance,
+                theta,
+            });
+        }
     }
 
     let prepared_epoch = mirror::last_ingested_epoch(pool).await?;

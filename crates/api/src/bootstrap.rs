@@ -176,14 +176,15 @@ const SEQ_GM_ENDORSES_MODERATOR: u64 = 2;
 const SEQ_PUBLISHER_CHARTER: u64 = 1;
 const SEQ_PUBLISHER_ROLE_TAG: u64 = 2;
 
-/// Whether an address has never been credited (the funding-idempotency
-/// guard, shared by the bootstrap's genesis burn and the onboarding
-/// flow's admission burn).
+/// Whether an address has never been credited — the genesis burn's
+/// idempotency guard across bootstrap re-runs. Sound here, and only here,
+/// because the bootstrap credits synchronously (`DevSubstrate::credit_burn`),
+/// so the B_i read already shows its own earlier credit; the admission
+/// flow, whose burn settles asynchronously across the seam, is guarded by
+/// its funding row instead (`onboarding::ensure_admission_staged`).
 ///
 /// `burned_total` is an integer micro count divided by 1e6, so the
-/// comparison against zero is exact rather than approximate — but the
-/// two callers were writing that reasoning out separately, and a guard
-/// that must agree in two places is one predicate.
+/// comparison against zero is exact rather than approximate.
 pub fn never_burned(burned_total: f64) -> bool {
     burned_total == 0.0
 }
@@ -221,8 +222,9 @@ async fn ingest_or_refuse(boundary: &StandInBoundary, pool: &PgPool) -> Result<(
 /// check on, any ingested record at all means an L1 history exists that
 /// those rows should have described. The CoGra-side half is skipped when
 /// it already stands, and the genesis burn is credited at most once
-/// across re-runs by the same zero-burn funding-idempotency guard the
-/// onboarding flow uses (`ensure_admission_staged`).
+/// across re-runs by the zero-burn guard (`never_burned`); each cast
+/// address also gets its settled funding row, so the admission guard
+/// covers every funded address.
 ///
 /// The L1-side half puts money first and the genesis sequence second, so
 /// every record's preconditions already stand (network.md §2):
@@ -287,6 +289,13 @@ pub async fn run(
                 .credit_burn(&address, input.burn_per_account_micro)
                 .await?;
         }
+        postgres_store::auth::record_settled_funding(
+            pool,
+            &address,
+            None,
+            input.burn_per_account_micro,
+        )
+        .await?;
     }
 
     let host_key = standin.host_public_key().await?;

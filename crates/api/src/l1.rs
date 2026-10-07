@@ -5,25 +5,30 @@
 //!
 //! All substrate access on the request path — relaying signed records
 //! over the two handshake legs, ingesting accepted records, reading the
-//! B_i export and the published θ — flows through this trait, and nothing
+//! B_i export and the published θ, requesting the admission fund's burns
+//! and reading their settlement — flows through this trait, and nothing
 //! else on that path speaks to the substrate.
 //!
 //! The swap is this trait plus a named list beside it, not this trait
 //! alone. `l1_standin::DevSubstrate` collects the surfaces that are
 //! deliberately *not* the seam and that CoGra reaches for anyway:
-//! crediting an admission burn (a realization of the burn primitive CoGra
-//! does not run), closing an epoch (a clock the real substrate keeps
-//! itself), and reading back a sealed act (a crash-recovery affordance for
-//! the bootstrap). Each needs its own answer at the swap — a live
-//! realization, the substrate's own close, a resumable bootstrap — so "one
-//! new implementation here" is true of the request path and not of the
-//! whole system (roadmap.md "The stand-in and the swap").
+//! crediting a burn at once (the genesis bootstrap's funding of its cast),
+//! closing an epoch (a clock the real substrate keeps itself), and reading
+//! back a sealed act (a crash-recovery affordance for the bootstrap). Each
+//! needs its own answer at the swap — the bootstrap requesting its cast's
+//! burns through this seam, the substrate's own close, a resumable
+//! bootstrap — so "one new implementation here" is true of the request
+//! path and not of the whole system (roadmap.md "The stand-in and the
+//! swap").
 
 use std::future::Future;
 
-use common::l1::handshake::{AccountBalance, ApprovalWitness, EpochPackage};
+use common::l1::handshake::{
+    AccountBalance, ApprovalWitness, BurnSettlement, BurnTicket, EpochPackage,
+};
 use common::l1::{PreSignedProposal, VerifiedAct};
 use l1_standin::{StandIn, StandInError};
+use uuid::Uuid;
 
 /// Boundary failures, by contract meaning rather than transport detail.
 #[derive(Debug, thiserror::Error)]
@@ -106,6 +111,27 @@ pub trait L1Boundary: Send + Sync {
     /// pre-check reads — consume-only, like every binding constant
     /// (layer1-interface.md "Payload envelope convention (L2)").
     fn max_payload_bytes(&self) -> impl Future<Output = Result<usize, BoundaryError>> + Send;
+
+    /// Request the community-funded admission burn to `address` — CoGra
+    /// acting as the admission fund's burner on the realization
+    /// (economics.md §7.2; ledger.md "Conversion"), never a network write
+    /// (R1). Idempotent by `key`: a retried request with the same key
+    /// returns the same ticket and burns once. A returned ticket says the
+    /// request was taken, not that the burn settled.
+    fn request_admission_burn(
+        &self,
+        address: &str,
+        amount_micro: i64,
+        key: Uuid,
+    ) -> impl Future<Output = Result<BurnTicket, BoundaryError>> + Send;
+
+    /// The ticket's settlement: Pending, Settled { pinned_micro }, or
+    /// Failed(reason). Settled means pinned at or below the realization's
+    /// published settlement depth (R4(e)), so the B_i read now carries it.
+    fn burn_settlement(
+        &self,
+        ticket: &BurnTicket,
+    ) -> impl Future<Output = Result<BurnSettlement, BoundaryError>> + Send;
 }
 
 /// The stand-in behind the seam.
@@ -139,5 +165,21 @@ impl L1Boundary for StandInBoundary {
 
     async fn max_payload_bytes(&self) -> Result<usize, BoundaryError> {
         Ok(self.0.config().max_payload_bytes)
+    }
+
+    async fn request_admission_burn(
+        &self,
+        address: &str,
+        amount_micro: i64,
+        key: Uuid,
+    ) -> Result<BurnTicket, BoundaryError> {
+        Ok(self
+            .0
+            .request_admission_burn(address, amount_micro, key)
+            .await?)
+    }
+
+    async fn burn_settlement(&self, ticket: &BurnTicket) -> Result<BurnSettlement, BoundaryError> {
+        Ok(self.0.burn_settlement(ticket).await?)
     }
 }

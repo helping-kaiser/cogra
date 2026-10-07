@@ -2,12 +2,15 @@
 //!
 //! The relay legs of the write path — steps 3 and 5 of substrate.md §6:
 //! submit the device's pre-signed proposal to the seal, store the sealed
-//! verified act, relay the approval witness, and — driven off the
+//! verified act, relay the approval witness (holding an admission
+//! Registration's until its funding settles), and — driven off the
 //! ingestion pass — promote staged writes whose records land.
 //!
 //! The relay confers nothing: both signatures cover the act, so nothing
 //! here can alter or author one (architecture.md "The write path").
 
+use common::l1::census::Family;
+use common::l1::crypto::{self, tags};
 use common::l1::handshake::{ApprovalWitness, PreSignedProposal, VerifiedAct};
 use postgres_store::PgPool;
 use postgres_store::staged::{self, PreSignedParts, StagedState};
@@ -129,6 +132,14 @@ pub async fn submit_pre_signed<B: L1Boundary>(
 /// approved act is orderable. Landing stays asynchronous — the ingestion
 /// pass confirms it (architecture.md "Record ingestion"). Retry from
 /// `relaying` is accepted: the substrate's approve is idempotent.
+///
+/// The one leg the relay holds: an unchained admission Registration whose
+/// address's funding has not settled (auth.md "Funding"). Its witness is
+/// checked here, stored with the write in `relaying`, and relayed by the
+/// settlement pass once the burn settles — so the act is never orderable
+/// before its author can pay for it, and the device, which already reads
+/// `relaying` as "the backend drives it", needs nothing more. Leg 1 is
+/// never held: the seal checks no solvency (layer1-interface.md §8.2).
 pub async fn submit_approval<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -140,6 +151,19 @@ pub async fn submit_approval<B: L1Boundary>(
         StagedState::AwaitingApproval | StagedState::Relaying => {}
         other => return Err(wrong_state(id, "awaiting_approval", other)),
     }
+    if awaits_funding(pool, &write).await? {
+        check_witness(&write, &approval_signature)?;
+        staged::hold_approval(pool, id, &approval_signature).await?;
+        // The settlement pass may have settled the funding between the
+        // read above and the hold: a pass that ran in that gap found no
+        // hold to relay. Re-reading after the hold is stored closes the
+        // gap — whichever side sees both facts relays, and relaying twice
+        // is idempotent.
+        if !awaits_funding(pool, &write).await? {
+            relay_held(boundary, pool, id, approval_signature).await?;
+        }
+        return Ok(());
+    }
     let witness = ApprovalWitness {
         act_id: write.proposal.body.act_id(),
         approval_signature,
@@ -147,6 +171,65 @@ pub async fn submit_approval<B: L1Boundary>(
     match boundary.approve(witness).await {
         Ok(()) => {
             staged::record_relaying(pool, id).await?;
+            Ok(())
+        }
+        Err(BoundaryError::Authentication(m)) => Err(RelayError::SignatureInvalid(m)),
+        Err(e) => Err(RelayError::Boundary(e)),
+    }
+}
+
+/// Whether this write is an unchained admission Registration whose
+/// address's funding exists and has not settled — the one approval the
+/// relay holds. A Registration with no funding row at all (an address
+/// funded outside the admission flow) has nothing to wait on.
+async fn awaits_funding(pool: &PgPool, write: &staged::StagedWrite) -> Result<bool, RelayError> {
+    let body = &write.proposal.body;
+    if body.family != Family::Registration || !body.asserted_parents.is_empty() {
+        return Ok(false);
+    }
+    let funding = postgres_store::auth::admission_funding(pool, &body.author)
+        .await
+        .map_err(staged::StagedError::Storage)?;
+    Ok(funding.is_some_and(|f| f.settled_at.is_none()))
+}
+
+/// Verifies a witness the relay is about to hold, exactly as the host
+/// would at approve: a held witness is relayed later by a pass the device
+/// never hears from, so a bad signature must be refused now, while the
+/// device can still fix it.
+fn check_witness(write: &staged::StagedWrite, approval_signature: &[u8]) -> Result<(), RelayError> {
+    let act = write.verified_act().ok_or(RelayError::Wedged(write.id))?;
+    let key = crypto::verifying_key_from_bytes(&act.author_pubkey).ok_or_else(|| {
+        RelayError::SignatureInvalid("the sealed act's author key is malformed".into())
+    })?;
+    if crypto::verify(&key, tags::APPROVAL, &act.seal_msg(), approval_signature) {
+        Ok(())
+    } else {
+        Err(RelayError::SignatureInvalid(
+            "approval witness does not verify over the sealed act".into(),
+        ))
+    }
+}
+
+/// Relays a held approval leg and clears the hold — the settlement pass's
+/// half of the admission Registration's relay, and the hold's own re-check
+/// when the funding settled under it. Idempotent: the substrate's approve
+/// is, and the hold is cleared only for the witness that was relayed.
+pub async fn relay_held<B: L1Boundary>(
+    boundary: &B,
+    pool: &PgPool,
+    id: Uuid,
+    approval_signature: Vec<u8>,
+) -> Result<(), RelayError> {
+    let write = staged::load(pool, id).await?;
+    let witness = ApprovalWitness {
+        act_id: write.proposal.body.act_id(),
+        approval_signature: approval_signature.clone(),
+    };
+    match boundary.approve(witness).await {
+        Ok(()) => {
+            staged::release_held_approval(pool, id, &approval_signature).await?;
+            tracing::info!(staged = %id, "held admission Registration relayed after its funding settled");
             Ok(())
         }
         Err(BoundaryError::Authentication(m)) => Err(RelayError::SignatureInvalid(m)),

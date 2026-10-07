@@ -575,21 +575,32 @@ pub enum AttachOutcome {
     /// account. The unique indexes are the enforcement, so a concurrent
     /// duplicate attach cannot slip through a check-then-write gap.
     KeyInUse,
-    /// The account is not an unapproved applicant.
+    /// The account is not an applicant whose address is still unfunded.
     Refused,
 }
 
 /// Attaches the device-minted actor identity — the key ceremony's server
 /// half (auth.md §Application step 3). Replaceable while the account is
-/// an applicant with no approved application; `Refused` once approval
-/// has bound the address (or the account is not an applicant at all),
-/// `KeyInUse` when the key is bound to a different account.
+/// an applicant whose address is unfunded; `Refused` once a funding row
+/// names the account or its attached address — the burn binds the
+/// address, and swapping the key would strand it — or when the account is
+/// not an applicant at all; `KeyInUse` when the key is bound to a
+/// different account.
+///
+/// Runs under the account lock the admission staging holds
+/// ([`lock_account`]), so an attach cannot slip between the staging's
+/// read of the address and its funding claim: it waits, then finds the
+/// funding row. A funding row that outlived a deleted account names only
+/// its address, so a fresh account may attach that key — and is then
+/// bound by it, and never funded again.
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
     actor_pubkey: &[u8],
     address: &str,
 ) -> Result<AttachOutcome, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    lock_account(&mut tx, account_id).await?;
     let updated = sqlx::query!(
         "UPDATE actors a
          SET actor_pubkey = $2, realization_address = $3
@@ -598,26 +609,30 @@ pub async fn attach_actor_key(
            AND a.kind = 'user'
            AND c.account_state = 'applicant'
            AND NOT EXISTS(
-               SELECT 1 FROM auth_applications ap
-               WHERE ap.account_id = a.id AND ap.approved_at IS NOT NULL
+               SELECT 1 FROM auth_admission_fundings f
+               WHERE f.account_id = a.id OR f.address = a.realization_address
            )",
         account_id,
         actor_pubkey,
         address,
     )
-    .execute(pool)
+    .execute(&mut *tx)
     .await;
-    match updated {
-        Ok(r) if r.rows_affected() == 1 => Ok(AttachOutcome::Attached),
-        Ok(_) => Ok(AttachOutcome::Refused),
+    let outcome = match updated {
+        Ok(r) if r.rows_affected() == 1 => AttachOutcome::Attached,
+        Ok(_) => AttachOutcome::Refused,
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
             Some(constraints::ACTORS_PUBKEY | constraints::ACTORS_ADDRESS) => {
-                Ok(AttachOutcome::KeyInUse)
+                AttachOutcome::KeyInUse
             }
-            _ => Err(sqlx::Error::Database(e)),
+            _ => return Err(sqlx::Error::Database(e)),
         },
-        Err(e) => Err(e),
+        Err(e) => return Err(e),
+    };
+    if outcome == AttachOutcome::Attached {
+        tx.commit().await?;
     }
+    Ok(outcome)
 }
 
 /// Marks the inviter's priced approval — the `approved_at IS NULL`
@@ -643,19 +658,183 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
     .await
 }
 
-/// Locks the application row for the caller's transaction — the
-/// serialization point of the admission staging sequence (auth.md
-/// "Approval and landing" step 1): the approving mutation and the
-/// status-poll repair hook queue here instead of racing the funding
-/// burn. False when the row is gone.
-pub async fn lock_application(conn: &mut PgConnection, id: Uuid) -> Result<bool, sqlx::Error> {
+/// Locks the account for the caller's transaction — the serialization
+/// point of the admission staging sequence (auth.md "Funding"): every
+/// approval of any of the account's paths, the status-poll repair hook,
+/// and the key attach queue here, so the funding claim and the staged
+/// Registration happen once per account however they race. The lock is the
+/// account's credentials row, which every path of the account shares —
+/// an application-row lock would let two paths of one account stage past
+/// each other. False when the account is gone.
+pub async fn lock_account(conn: &mut PgConnection, account_id: Uuid) -> Result<bool, sqlx::Error> {
     Ok(sqlx::query_scalar!(
-        "SELECT id FROM auth_applications WHERE id = $1 FOR UPDATE",
-        id,
+        "SELECT actor_id FROM user_credentials WHERE actor_id = $1 FOR UPDATE",
+        account_id,
     )
     .fetch_optional(conn)
     .await?
     .is_some())
+}
+
+/// One address's admission funding (`auth_admission_fundings`): the
+/// guard row the first funder inserts, and how far its burn has come.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AdmissionFunding {
+    pub address: String,
+    pub account_id: Option<Uuid>,
+    pub triggered_by: Option<Uuid>,
+    pub amount_micro: i64,
+    /// The seam idempotency key every request for this burn reuses.
+    pub request_key: Uuid,
+    /// The realization's ticket, once a request was answered.
+    pub ticket: Option<String>,
+    pub requested_at: DateTime<Utc>,
+    pub attempts: i32,
+    pub settled_at: Option<DateTime<Utc>>,
+    pub failed_at: Option<DateTime<Utc>>,
+}
+
+/// Claims the admission funding of an address: inserts its guard row,
+/// answering the fresh request key to the inserter and None to everyone
+/// else. Only the inserter requests the burn — the address's one burn,
+/// whichever path, retry, poll or re-registration reaches here.
+pub async fn claim_admission_funding(
+    pool: &PgPool,
+    address: &str,
+    account_id: Uuid,
+    triggered_by: Option<Uuid>,
+    amount_micro: i64,
+) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "INSERT INTO auth_admission_fundings
+             (address, account_id, triggered_by, amount_micro, request_key)
+         VALUES ($1, $2, $3, $4, gen_random_uuid())
+         ON CONFLICT (address) DO NOTHING
+         RETURNING request_key",
+        address,
+        account_id,
+        triggered_by,
+        amount_micro,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Records a settled funding the operator credited directly — the genesis
+/// bootstrap's cast — so the guard covers every funded address. A no-op
+/// when the address already has a row.
+pub async fn record_settled_funding(
+    pool: &PgPool,
+    address: &str,
+    account_id: Option<Uuid>,
+    amount_micro: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "INSERT INTO auth_admission_fundings
+             (address, account_id, amount_micro, request_key, settled_at)
+         VALUES ($1, $2, $3, gen_random_uuid(), NOW())
+         ON CONFLICT (address) DO NOTHING",
+        address,
+        account_id,
+        amount_micro,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// The funding row of an address, if it was ever claimed.
+pub async fn admission_funding(
+    pool: &PgPool,
+    address: &str,
+) -> Result<Option<AdmissionFunding>, sqlx::Error> {
+    sqlx::query_as!(
+        AdmissionFunding,
+        "SELECT address, account_id, triggered_by, amount_micro, request_key, ticket,
+                requested_at, attempts, settled_at, failed_at
+         FROM auth_admission_fundings WHERE address = $1",
+        address,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Which of `addresses` already have a funding row — the pricing read of
+/// an approval batch, whose funding budget is spent only by the entries
+/// that would claim a fresh one.
+pub async fn funded_addresses(
+    pool: &PgPool,
+    addresses: &[String],
+) -> Result<Vec<String>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT address FROM auth_admission_fundings WHERE address = ANY($1)",
+        addresses,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// The fundings whose burn has neither settled nor failed, oldest first —
+/// the settlement pass's work list.
+pub async fn pending_admission_fundings(
+    pool: &PgPool,
+) -> Result<Vec<AdmissionFunding>, sqlx::Error> {
+    sqlx::query_as!(
+        AdmissionFunding,
+        "SELECT address, account_id, triggered_by, amount_micro, request_key, ticket,
+                requested_at, attempts, settled_at, failed_at
+         FROM auth_admission_fundings
+         WHERE settled_at IS NULL AND failed_at IS NULL
+         ORDER BY requested_at",
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Counts one burn request sent under the funding's key, recording the
+/// ticket when the realization answered with one.
+pub async fn record_funding_request(
+    pool: &PgPool,
+    address: &str,
+    ticket: Option<&str>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE auth_admission_fundings
+         SET attempts = attempts + 1, ticket = COALESCE($2, ticket)
+         WHERE address = $1",
+        address,
+        ticket,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Stamps a funding settled — once; true when this call settled it.
+pub async fn mark_funding_settled(pool: &PgPool, address: &str) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_admission_fundings SET settled_at = NOW()
+         WHERE address = $1 AND settled_at IS NULL AND failed_at IS NULL",
+        address,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Stamps a funding failed — the realization refused the burn for good.
+/// The row stays: the address is still never funded twice.
+pub async fn mark_funding_failed(pool: &PgPool, address: &str) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_admission_fundings SET failed_at = NOW()
+         WHERE address = $1 AND settled_at IS NULL AND failed_at IS NULL",
+        address,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
 }
 
 /// Lands an account whose Registration confirmed (auth.md "Approval and
