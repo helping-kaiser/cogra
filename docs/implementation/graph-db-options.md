@@ -24,7 +24,7 @@ What CoGra needs locally is:
 The heavy graph math never runs in a database: the ranking and
 attribution algorithm is exact greedy disjoint-path extraction
 ([feed-ranking.md](../primitive/feed-ranking.md)), implemented
-once in the `ranker` crate for backend, miner, and device. What a
+once in the `ranker` crate for the ranker container, miner, and device. What a
 store contributes to traversal is only **slice extraction**:
 hop-by-hop frontier expansion from the viewer, bounded by the dust
 floor χ.
