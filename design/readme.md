@@ -9461,6 +9461,13 @@ lines; quoted wordings are his.
   that confirming again applies it. `ChangePassword`'s re-auth budget
   says B7's line above its commitment. The app's three settings lines
   say `this app`.
+- **The vouch-back's edges.** The pad's Cancel closes back where it
+  bloomed, the profile included. A kept vouch-back leaves the card as it
+  is and `Vouch back` reopens the pad holding the pick; one kept from the
+  profile brings a put-away card back on the keeping device only, and
+  `Got it` drops a kept pick as Cancel does. A failed `Got it` brings the
+  card back with `That didn't go through.` and `Retry`. The feed's head
+  reads the security notice, the key card, then the vouch card.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not
