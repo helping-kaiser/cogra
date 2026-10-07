@@ -272,11 +272,6 @@ export class Stage {
     this.liftOwed = false;
   }
 
-  /** Test-only: the clip holding the stage. */
-  holderForTests(): object | null {
-    return this.holder;
-  }
-
   // ---- the machinery -----------------------------------------------------
 
   /** The surface's one observer — none where the platform has none, and so no autoplay. */

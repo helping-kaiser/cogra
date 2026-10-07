@@ -405,22 +405,18 @@ function Player({
         />
       )}
 
-      {/* THE ONE CONTROL EVERY CARD'S CLIP WEARS — no play/pause, no duration
-          pill, at both scales (design/readme.md, "the video conform round").
-          It carries the sticky decision every video shares, so pressing it
-          here changes the sound for the whole session — which is why it
-          reads the shared store rather than the element. Veiled, it is gone
-          entirely rather than merely blurred — a sound control for a clip
-          that cannot claim playback would offer a decision that does
-          nothing (backlog item 103). */}
-      {/* WHICH DISC — the control ladder (`MediaAttachment.prompt.md:17`).
+      {/* ONE CONTROL ON EVERY CARD'S CLIP — no play/pause, no duration pill,
+          at both scales (design/readme.md, "the video conform round") — and
+          WHICH ONE is the control ladder (`MediaAttachment.prompt.md:17`).
           The SOUND disc "GIVEN the device allows autoplay or its clip is
           playing" (FeedCover.md:17); the PLAY disc in its place "GIVEN the
           device suppresses autoplay and its clip is not playing"
           (FeedCover.md:21). Never both, and on every unveiled frame — not
-          only the stage holder's. Both are the master's `MediaDisc`, which
-          keeps the tap to itself: a disc inside a card's open-the-post link
-          must never open the post (FeedCover.md:27). */}
+          only the stage holder's. Veiled, neither is drawn: a control for a
+          clip that cannot take the stage would offer a decision that does
+          nothing (Feed.md:43–45, backlog item 103). Both are the master's
+          `MediaDisc`, which keeps the tap to itself: a disc inside a card's
+          open-the-post link must never open the post (FeedCover.md:27). */}
       {!transport && !veiled && suppressed && !playing && (
         <button
           type="button"
@@ -428,7 +424,10 @@ function Player({
           // Says what the tap does, the copy voice's "the only one that
           // appears beside a still frame" (`MediaAttachment.jsx:323`).
           aria-label="Play this video"
-          onClick={keepToTheDisc(startByHand)}
+          onClick={(event) => {
+            keepToTheDisc(event);
+            startByHand();
+          }}
           className={DISC_CLASS}
           style={DISC_STYLE}
         >
@@ -437,13 +436,19 @@ function Player({
           </svg>
         </button>
       )}
+      {/* The sound disc carries the sticky decision every video shares, so
+          pressing it here changes the sound for the whole session — which
+          is why it reads the shared store rather than the element. */}
       {!transport && !veiled && !(suppressed && !playing) && (
         <button
           type="button"
           {...testAttributes(soundNode, `${testId}-sound`)}
           aria-label={muted ? "Turn sound on" : "Turn sound off"}
           aria-pressed={!muted}
-          onClick={keepToTheDisc(() => setMuted(!muted))}
+          onClick={(event) => {
+            keepToTheDisc(event);
+            setMuted(!muted);
+          }}
           // `surface-snackbar` and `on-surface-snackbar` are tokens-2.css
           // SEMANTIC ALIASES (tokens-2.css:161-188), never bridged into
           // Tailwind's `@theme` the way the 1.0 palette is — by that file's
@@ -502,10 +507,7 @@ const DISC_STYLE: CSSProperties = {
  * (`MediaAttachment.jsx:151-154`): it never reaches the card's open-the-post
  * link around the frame.
  */
-function keepToTheDisc(action: () => void) {
-  return (event: MouseEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    event.preventDefault();
-    action();
-  };
+function keepToTheDisc(event: MouseEvent<HTMLButtonElement>): void {
+  event.stopPropagation();
+  event.preventDefault();
 }
