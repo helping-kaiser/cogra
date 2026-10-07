@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_email_changes\n         SET new_verified_at = COALESCE(new_verified_at, NOW())\n         WHERE id = $1 AND cancelled_at IS NULL AND applied_at IS NULL\n           AND expires_at > NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9194ce8bdb9b1e056b27b6f6a0a6d0d8c287f93770f37dffe8b4b8c1c92c4c37"
+}

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_email_changes SET original_confirmed_at = NOW() WHERE id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "db7ae1725d2f8d7c846fa8749c93f3d372abbc394a40b1e8f5f009fb91edf8a2"
+}

@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_email_changes\n             (id, user_id, new_email, requires_code, original_code_hash,\n              new_email_token_hash, expires_at)\n         VALUES ($1, $2, $3, $4, $5, $6, $7)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Bool",
+        "Bytea",
+        "Bytea",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bab0cb6cf58d03ea2b4cdd7284a35b5262514f634cfb8c6bc95fff189e7ad74c"
+}

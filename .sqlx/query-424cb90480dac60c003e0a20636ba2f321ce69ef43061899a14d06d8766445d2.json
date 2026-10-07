@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT user_id, new_email, requires_code, original_confirmed_at,\n                  new_verified_at, cancelled_at, applied_at,\n                  expires_at <= COALESCE(cancelled_at, NOW()) AS \"ran_out!\"\n           FROM auth_email_changes WHERE id = $1 FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "new_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "requires_code",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 3,
+        "name": "original_confirmed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 4,
+        "name": "new_verified_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "cancelled_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "applied_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "ran_out!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "424cb90480dac60c003e0a20636ba2f321ce69ef43061899a14d06d8766445d2"
+}

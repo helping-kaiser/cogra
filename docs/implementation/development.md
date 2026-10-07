@@ -75,6 +75,9 @@ over file values.
 | `RATE_LIMIT_RESET_PER_EMAIL` | `3` | Password-reset requests per submitted email per hour (trips silently) |
 | `RATE_LIMIT_RESEND_PER_EMAIL` | `5` | Verification resends per submitted email per hour (trips silently) |
 | `RATE_LIMIT_CONFIRM_PER_IP` | `30` | Token confirmations per IP per 15 min |
+| `RATE_LIMIT_EMAIL_CHANGE_REQUEST_PER_ACCOUNT` | `5` | Email-change requests per account per hour — the mail budget, refused visibly as `RATE_LIMITED` |
+| `RATE_LIMIT_EMAIL_CHANGE_RESEND_PER_ACCOUNT` | `5` | Email-change resends per account per hour, refused the same way |
+| `RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES` | `5` | Wrong codes before an email-change code is disabled until a resend ([auth.md "Email change"](auth.md#email-change)) |
 | `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) changes in code, not env |
 | `RATE_LIMIT_UPLOAD_PER_ACCOUNT` | `60` | Media uploads per account per hour — uploading is not an act, so this is the only cost control media has |
 | `RATE_LIMIT_SIGN_POST` | `10` | The signing budget ([api-spec.md "Conventions"](api-spec.md#conventions)), refused as `WRITE_RULE_FAILED`: Post genesis acts per account per hour |

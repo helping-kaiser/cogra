@@ -1,0 +1,94 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, user_id, new_email, requires_code, original_confirmed_at,\n                  new_verified_at, failed_attempts, code_disabled_at,\n                  cancelled_at, applied_at, created_at, expires_at,\n                  FALSE AS \"ran_out!\"\n           FROM auth_email_changes\n           WHERE user_id = $1 AND cancelled_at IS NULL AND applied_at IS NULL\n             AND expires_at > NOW()",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "new_email",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "requires_code",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "original_confirmed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 5,
+        "name": "new_verified_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "failed_attempts",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 7,
+        "name": "code_disabled_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 8,
+        "name": "cancelled_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "applied_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 11,
+        "name": "expires_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 12,
+        "name": "ran_out!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "45465fb097fe585e21bf2ba4aeb892642000e133dc0b4f1acd802753a369f40a"
+}

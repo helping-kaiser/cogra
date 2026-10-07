@@ -466,37 +466,60 @@ async fn password_resets_are_single_use_and_revoke_all_sessions(pool: PgPool) {
     ));
 }
 
+/// Opens a change for a verified account — the store half of
+/// `requestEmailChange` — answering the change's id.
+async fn open_change(
+    pool: &PgPool,
+    user: Uuid,
+    new_email: &str,
+    original: &auth::Secret,
+    new_side: &auth::Secret,
+) -> Uuid {
+    let id = Uuid::new_v4();
+    assert!(
+        store::open_email_change(
+            pool,
+            id,
+            user,
+            new_email,
+            store::EmailChangeSecrets {
+                original_code_hash: &original.hash,
+                new_email_token_hash: &new_side.hash,
+            },
+            Utc::now() + Duration::hours(1),
+        )
+        .await
+        .expect("opens"),
+        "a verified account's change needs the code"
+    );
+    id
+}
+
+fn dead_before() -> chrono::DateTime<Utc> {
+    Utc::now() - Duration::days(7)
+}
+
 /// The original side alone changes nothing; the change applies when the
-/// new side lands, and a wrong token matches nothing on the way.
-/// Re-applying afterwards is idempotent in effect and in what it
-/// reports — the second call still answers `Applied`, because the
-/// address is the proven target either way.
+/// new side lands, and a wrong code matches nothing on the way. Applying
+/// again afterwards moves nothing and reports the change as already
+/// applied.
 ///
 /// (´claim:auth:an-email-change-needs-both-sides´)
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
     let user = seed_user(&pool, "alice", "old@example.com", "a strong password").await;
-    let original = auth::new_secret();
+    let original = auth::new_code();
     let new_side = auth::new_secret();
-    store::create_email_change(
-        &pool,
-        Uuid::new_v4(),
-        user,
-        "new@example.com",
-        &original.hash,
-        &new_side.hash,
-        Utc::now() + Duration::hours(1),
-    )
-    .await
-    .expect("creates");
+    let id = open_change(&pool, user, "new@example.com", &original, &new_side).await;
 
-    assert!(
-        store::confirm_email_change_original_side(&pool, user, &original.hash)
+    assert_eq!(
+        store::submit_email_change_code(&pool, user, &original.hash, 5)
             .await
-            .expect("marks")
+            .expect("marks"),
+        store::CodeSubmission::Confirmed(id)
     );
     assert_eq!(
-        store::apply_email_change_if_complete(&pool, user)
+        store::apply_email_change(&pool, id, dead_before())
             .await
             .expect("applies nothing"),
         store::EmailChangeApply::NotReady
@@ -508,17 +531,18 @@ async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
     assert_eq!(unchanged.email, "old@example.com");
 
     assert!(
-        !store::confirm_email_change_new_side(&pool, user, &auth::new_secret().hash)
+        store::email_change_by_token(&pool, &auth::new_secret().hash)
             .await
             .expect("query")
+            .is_none()
     );
     assert!(
-        store::confirm_email_change_new_side(&pool, user, &new_side.hash)
+        store::confirm_email_change_link(&pool, id)
             .await
             .expect("marks")
     );
     assert_eq!(
-        store::apply_email_change_if_complete(&pool, user)
+        store::apply_email_change(&pool, id, dead_before())
             .await
             .expect("applies"),
         store::EmailChangeApply::Applied
@@ -529,17 +553,17 @@ async fn the_email_change_applies_only_when_both_sides_stand(pool: PgPool) {
         .expect("row");
     assert_eq!(changed.email, "new@example.com");
     assert_eq!(
-        store::apply_email_change_if_complete(&pool, user)
+        store::apply_email_change(&pool, id, dead_before())
             .await
             .expect("no-op"),
-        store::EmailChangeApply::Applied,
-        "a retried confirm reports the change it is looking at, not the \
-         absence of one"
+        store::EmailChangeApply::Ended(store::EmailChangeEnd::Applied),
+        "a change applies once; the second apply names what ended it"
     );
 }
 
-/// Another authenticated account presenting the owner's token matches
-/// nothing, and the attempt does not consume the owner's proof.
+/// The new-side token names its owner, so a session holding another
+/// account's token can be told apart from the owner — and nothing the
+/// intruder does marks the owner's proof.
 ///
 /// (´claim:auth:the-new-side-proof-is-scoped-to-its-viewer´)
 #[sqlx::test(migrations = "../../migrations")]
@@ -547,28 +571,22 @@ async fn the_new_side_token_is_scoped_to_its_account(pool: PgPool) {
     let owner = seed_user(&pool, "alice", "a@example.com", "a strong password").await;
     let intruder = seed_user(&pool, "mallory", "m@example.com", "a strong password").await;
     let new_side = auth::new_secret();
-    store::create_email_change(
+    open_change(
         &pool,
-        Uuid::new_v4(),
         owner,
         "moved@example.com",
-        &auth::new_secret().hash,
-        &new_side.hash,
-        Utc::now() + Duration::hours(1),
+        &auth::new_code(),
+        &new_side,
     )
-    .await
-    .expect("creates");
+    .await;
 
-    assert!(
-        !store::confirm_email_change_new_side(&pool, intruder, &new_side.hash)
-            .await
-            .expect("query")
-    );
-    assert!(
-        store::confirm_email_change_new_side(&pool, owner, &new_side.hash)
-            .await
-            .expect("marks")
-    );
+    let change = store::email_change_by_token(&pool, &new_side.hash)
+        .await
+        .expect("query")
+        .expect("found");
+    assert_eq!(change.user_id, owner);
+    assert_ne!(change.user_id, intruder);
+    assert!(change.new_verified_at.is_none());
 }
 
 /// The address gets registered before the change completes, so the
@@ -579,33 +597,24 @@ async fn the_new_side_token_is_scoped_to_its_account(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_proven_email_change_colliding_with_a_registered_address_reports_in_use(pool: PgPool) {
     let user = seed_user(&pool, "alice", "old@example.com", "a strong password").await;
-    let original = auth::new_secret();
+    let original = auth::new_code();
     let new_side = auth::new_secret();
-    store::create_email_change(
-        &pool,
-        Uuid::new_v4(),
-        user,
-        "wanted@example.com",
-        &original.hash,
-        &new_side.hash,
-        Utc::now() + Duration::hours(1),
-    )
-    .await
-    .expect("creates");
-    assert!(
-        store::confirm_email_change_original_side(&pool, user, &original.hash)
+    let id = open_change(&pool, user, "wanted@example.com", &original, &new_side).await;
+    assert_eq!(
+        store::submit_email_change_code(&pool, user, &original.hash, 5)
             .await
-            .expect("marks")
+            .expect("marks"),
+        store::CodeSubmission::Confirmed(id)
     );
     assert!(
-        store::confirm_email_change_new_side(&pool, user, &new_side.hash)
+        store::confirm_email_change_link(&pool, id)
             .await
             .expect("marks")
     );
 
     let squatter = seed_user(&pool, "bob", "wanted@example.com", "a strong password").await;
     assert_eq!(
-        store::apply_email_change_if_complete(&pool, user)
+        store::apply_email_change(&pool, id, dead_before())
             .await
             .expect("collides cleanly"),
         store::EmailChangeApply::EmailInUse
@@ -622,7 +631,7 @@ async fn a_proven_email_change_colliding_with_a_registered_address_reports_in_us
         .await
         .expect("frees");
     assert_eq!(
-        store::apply_email_change_if_complete(&pool, user)
+        store::apply_email_change(&pool, id, dead_before())
             .await
             .expect("applies"),
         store::EmailChangeApply::Applied

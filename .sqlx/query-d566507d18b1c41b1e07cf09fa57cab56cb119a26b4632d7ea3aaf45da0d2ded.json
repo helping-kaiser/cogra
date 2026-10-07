@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM auth_email_changes\n         WHERE expires_at < now() - make_interval(secs => $1)\n            OR applied_at < now() - make_interval(secs => $1)\n            OR cancelled_at < now() - make_interval(secs => $1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d566507d18b1c41b1e07cf09fa57cab56cb119a26b4632d7ea3aaf45da0d2ded"
+}

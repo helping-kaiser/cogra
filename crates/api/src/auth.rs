@@ -23,8 +23,8 @@ use hkdf::Hkdf;
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use postgres_store::auth::RevokedReason;
 use postgres_store::{PgPool, auth as store};
-use rand::RngCore;
 use rand::rngs::OsRng;
+use rand::{Rng, RngCore};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
@@ -144,6 +144,18 @@ pub fn new_secret() -> Secret {
     let mut raw = [0u8; 32];
     OsRng.fill_bytes(&mut raw);
     let token = URL_SAFE_NO_PAD.encode(raw);
+    Secret {
+        hash: Sha256::digest(token.as_bytes()).into(),
+        token,
+    }
+}
+
+/// A 6-digit single-use numeric code (auth.md "Email change") — typed
+/// by hand from one inbox into another device, so it trades entropy for
+/// legibility. What makes 10^6 enough is the wrong-try cap on each code,
+/// not the hash.
+pub fn new_code() -> Secret {
+    let token = format!("{:06}", OsRng.gen_range(0..1_000_000u32));
     Secret {
         hash: Sha256::digest(token.as_bytes()).into(),
         token,

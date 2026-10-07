@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, requires_code, original_confirmed_at, new_verified_at\n         FROM auth_email_changes\n         WHERE user_id = $1 AND cancelled_at IS NULL AND applied_at IS NULL\n           AND expires_at > NOW()\n         FOR UPDATE",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "requires_code",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "original_confirmed_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 3,
+        "name": "new_verified_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "27be2f7f59eb01bc6a46a46eba2ff2cf5ea0721ad588e591284cfeff5c4580c5"
+}

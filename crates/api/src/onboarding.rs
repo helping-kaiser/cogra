@@ -31,7 +31,7 @@ use crate::relay::RelayError;
 pub const UNVERIFIED_TTL_DAYS: i64 = 7;
 
 /// The moment before which a never-verified account counts as dead.
-fn dead_before() -> DateTime<Utc> {
+pub(crate) fn dead_before() -> DateTime<Utc> {
     Utc::now() - Duration::days(UNVERIFIED_TTL_DAYS)
 }
 
@@ -247,15 +247,42 @@ pub async fn register(
     })
 }
 
+/// Proves the account's address. On the unverified carve-out the token
+/// is the pending change's link, so opening it also moves the address —
+/// in one step, colliding as EmailInUse when another account took the
+/// address meanwhile (auth.md "The unverified carve-out"). A carve-out
+/// link whose change ended, or a link the change replaced, is just an
+/// invalid token: the landing never says which.
 pub async fn verify_email(pool: &PgPool, token: &str) -> Result<(), OnboardingError> {
-    store::verify_account_email(pool, &auth::hash_of(token), dead_before())
+    let hash = auth::hash_of(token);
+    if let Some(change) = store::email_change_by_token(pool, &hash).await? {
+        if change.requires_code || change.end().is_some() {
+            return Err(OnboardingError::VerificationTokenInvalid);
+        }
+        store::confirm_email_change_link(pool, change.id).await?;
+        return match store::apply_email_change(pool, change.id, dead_before()).await? {
+            store::EmailChangeApply::Applied => Ok(()),
+            store::EmailChangeApply::EmailInUse => Err(OnboardingError::EmailInUse),
+            store::EmailChangeApply::NotReady | store::EmailChangeApply::Ended(_) => {
+                Err(OnboardingError::VerificationTokenInvalid)
+            }
+        };
+    }
+    store::verify_account_email(pool, &hash, dead_before())
         .await?
         .map(|_| ())
         .ok_or(OnboardingError::VerificationTokenInvalid)
 }
 
 /// Deliberately silent: succeeds whether or not an account exists, so
-/// the verb reveals nothing (api-spec "the three silent verbs").
+/// the verb reveals nothing (api-spec "the two silent verbs").
+///
+/// While an unverified carve-out change is pending, the account's
+/// verification link lives at the new address (auth.md "The unverified
+/// carve-out"), so the resend rotates that link and mails the new
+/// address; the replaced address gets nothing and its link stays dead.
+/// The carve-out has no code side, so the code hash the store is offered
+/// is never written.
 pub async fn resend_verification(
     pool: &PgPool,
     mailer: &dyn Mailer,
@@ -265,22 +292,42 @@ pub async fn resend_verification(
     let Ok(email) = auth::normalize_email(email) else {
         return Ok(());
     };
-    if let Some(account_id) =
-        store::unverified_account_by_email(pool, &email, dead_before()).await?
-    {
-        let fresh = auth::new_secret();
-        store::rotate_verification_token(pool, account_id, &fresh.hash).await?;
-        mailer
-            .send(Mail {
-                to: email,
-                subject: "Verify your CoGra email".into(),
-                body: format!(
-                    "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}",
-                    token = fresh.token
-                ),
-            })
-            .await;
-    }
+    let Some(account_id) = store::unverified_account_by_email(pool, &email, dead_before()).await?
+    else {
+        return Ok(());
+    };
+    let fresh = auth::new_secret();
+    let to = match store::pending_email_change(pool, account_id).await? {
+        Some(change) if !change.requires_code => {
+            let sent = store::resend_email_change(
+                pool,
+                account_id,
+                store::EmailChangeSecrets {
+                    original_code_hash: &fresh.hash,
+                    new_email_token_hash: &fresh.hash,
+                },
+            )
+            .await?;
+            if !sent.link {
+                return Ok(());
+            }
+            change.new_email
+        }
+        _ => {
+            store::rotate_verification_token(pool, account_id, &fresh.hash).await?;
+            email
+        }
+    };
+    mailer
+        .send(Mail {
+            to,
+            subject: "Verify your CoGra email".into(),
+            body: format!(
+                "Verify your email: {web_origin}/verify?token={token}\nOr paste the token in the app: {token}",
+                token = fresh.token
+            ),
+        })
+        .await;
     Ok(())
 }
 

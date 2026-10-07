@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE user_credentials SET email_verification_token_hash = $2\n             WHERE actor_id = $1 AND email_verified_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "64ba61df070a137fb8c209e8755e2d7454c166bb629684977fef9a8f47252ac3"
+}
