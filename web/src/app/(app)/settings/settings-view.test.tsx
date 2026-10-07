@@ -424,6 +424,7 @@ describe("the default license", () => {
     const sheet = await screen.findByTestId("settings.licenseSheet");
     expect(within(sheet).getByTestId("settings.licenseSheet.title")).toHaveTextContent("Default license");
     expect(within(sheet).getByTestId("settings.licenseSheet.title.help")).toHaveAccessibleName("License");
+    expect(document.activeElement).toHaveTextContent("Default license");
     const chosen = byNode("settings.licenseSheet.credit.tier", "3").querySelector("input");
     expect(chosen).toBeChecked();
     expect(screen.getByTestId("settings.licenseSheet.foot.summary")).toHaveTextContent(

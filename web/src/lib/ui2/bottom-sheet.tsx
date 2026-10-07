@@ -87,7 +87,14 @@ export function BottomSheet({
   stacked = false,
   coverHeld = false,
   node,
+  focusTitle = false,
 }: {
+  /**
+   * Focus lands on the TITLE when the sheet opens, rather than on its first
+   * control — for a sheet whose sidecar says so (SettingsLicense.md: "focus
+   * moves to its title"), so a listener hears what opened before any choice.
+   */
+  focusTitle?: boolean;
   /**
    * The registered sheet node on a registered screen
    * (`settings.licenseSheet`): the sheet is the node, its grip `dragHandle`
@@ -170,6 +177,7 @@ export function BottomSheet({
   stacked?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
   // A SHEET OVER A SURFACE SUSPENDS THAT SURFACE'S STAGE (design/readme.md
   // §13; Feed.md:31). It covers from the moment it is raised to the moment
   // the reader drops it — the exit animation below is the drop already under
@@ -197,6 +205,7 @@ export function BottomSheet({
     if (!dialog) return;
     if (open) {
       if (!dialog.open) dialog.showModal();
+      if (focusTitle) titleRef.current?.focus();
       return;
     }
     if (!dialog.open) return;
@@ -205,7 +214,7 @@ export function BottomSheet({
       dialog.close();
     }, exitDuration(SHEET_OUT_MS));
     return () => clearTimeout(timer);
-  }, [open]);
+  }, [open, focusTitle]);
 
   // PULLING DOWN IS HOW A DRAWER IS DROPPED (design/readme.md: "pulling down
   // already means dismiss and one gesture may not mean two things"). The
@@ -295,7 +304,12 @@ export function BottomSheet({
           {...testAttributes(part(node, "dragHandle"))}
         />
         {titleHidden ? null : titleTrailing === undefined ? (
-          <h2 className="px-6 pt-4 pb-2 text-title-medium" {...testAttributes(part(node, "title"))}>
+          <h2
+            ref={titleRef}
+            tabIndex={-1}
+            className="px-6 pt-4 pb-2 text-title-medium outline-none"
+            {...testAttributes(part(node, "title"))}
+          >
             {title}
           </h2>
         ) : (
@@ -303,7 +317,9 @@ export function BottomSheet({
             className="flex items-center gap-2 px-6 pt-4 pb-2"
             {...testAttributes(part(node, "title"))}
           >
-            <h2 className="m-0 flex-1 text-title-medium">{title}</h2>
+            <h2 ref={titleRef} tabIndex={-1} className="m-0 flex-1 text-title-medium outline-none">
+              {title}
+            </h2>
             {titleTrailing}
           </div>
         )}

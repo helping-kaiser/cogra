@@ -116,6 +116,7 @@ export function SettingsLicenseSheet({
           <HelpDot ariaLabel="License" onOpen={() => setHelpOpen(true)} node={part(SHEET, "title.help")} />
         }
         node={SHEET}
+        focusTitle
         foot={
           <div
             className="mx-6 flex items-center gap-2 border-t border-outline-variant pt-2.5"
