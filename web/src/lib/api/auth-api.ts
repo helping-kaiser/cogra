@@ -8,6 +8,7 @@ import {
   ConfirmPasswordResetDocument,
   KeyBackupDocument,
   CreateKeyBackupChallengeDocument,
+  DismissVouchBackDocument,
   LogInDocument,
   MeDocument,
   RefreshSessionDocument,
@@ -165,6 +166,15 @@ export function uploadKeyBackup(
       }),
     (data) => data.uploadKeyBackup.userErrors,
     (data) => (data.uploadKeyBackup.ok === true ? true : null),
+  );
+}
+
+/** Puts the vouch-back prompt away for good, on every device — account state. */
+export function dismissVouchBack(client: ApolloClient): Promise<Outcome<true>> {
+  return payloadOutcome(
+    () => client.mutate({ mutation: DismissVouchBackDocument }),
+    (data) => data.dismissVouchBack.userErrors,
+    (data) => (data.dismissVouchBack.user?.vouchBackDismissed === true ? true : null),
   );
 }
 

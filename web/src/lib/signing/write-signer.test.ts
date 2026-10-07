@@ -116,6 +116,7 @@ function meAnswering(actorPubkey: string | null) {
           actorPubkey,
           accountState: "MEMBER",
           hasReciprocated: true,
+          vouchBackDismissed: false,
           invitedBy: null,
         },
       },

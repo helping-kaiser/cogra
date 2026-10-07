@@ -35,7 +35,15 @@
    THE PAGE BENEATH is `SettingsBody` for this reader — no backup, the switch
    on — scrolled to the row that was pressed, its header pinned the way a
    settings page pins it. It is inactive under the scrim and wired on
-   `Settings`. */
+   `Settings`.
+
+   REGISTERED under the `settings` prefix (design ⇄ impl seam 082, the
+   settings packet): a dialog belongs to the surface it is raised over, so the
+   page beneath keeps its `Settings` names and the dialog is `dialog`, its
+   three answers `recovery`, `lock` and `erase`. The pinned header drawn over
+   the scrolled page stays unnamed: the body's own `header` already carries
+   the name. */
+export const NODE = "settings";
 export function Screen() {
   return (
     <>
@@ -48,14 +56,15 @@ export function Screen() {
         </div>
       </div>
       <DialogSurface
+        node="dialog"
         onScrimPress={() => {}}
         title="Sign out without a backup?"
         body="This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in on this browser again. Erase them instead, and no one — including CoGra — can bring them back."
         actions={
           <>
-            <Button>Make a recovery code</Button>
-            <Button variant="text">Sign out, keep them locked</Button>
-            <Button variant="text">Erase them and sign out</Button>
+            <Button node="recovery">Make a recovery code</Button>
+            <Button variant="text" node="lock">Sign out, keep them locked</Button>
+            <Button variant="text" node="erase">Erase them and sign out</Button>
           </>
         }
       />

@@ -59,6 +59,7 @@ import com.cogra.network.graphql.ConfirmEmailChangeMutation
 import com.cogra.network.graphql.ConfirmPasswordResetMutation
 import com.cogra.network.graphql.CreateInviteLinkMutation
 import com.cogra.network.graphql.CreateKeyBackupChallengeMutation
+import com.cogra.network.graphql.DismissVouchBackMutation
 import com.cogra.network.graphql.HostPublicKeyQuery
 import com.cogra.network.graphql.InviteLinkCheckQuery
 import com.cogra.network.graphql.InviteLinksQuery
@@ -343,6 +344,7 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
                     accountState = me.accountState?.toDomain() ?: AccountState.UNKNOWN,
                     hasReciprocated = me.hasReciprocated,
                     invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
+                    vouchBackDismissed = me.vouchBackDismissed,
                 ),
             )
         }
@@ -401,6 +403,13 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
         client.mutation(ChangeHandleMutation(ChangeHandleInput(handle)))
             .payloadOutcome({ it.changeHandle.userErrors.map { e -> e.userErrorFields } }) {
                 it.changeHandle.user?.let { Unit }
+            }
+    }
+
+    override suspend fun dismissVouchBack(): Outcome<Unit> = guard.run {
+        client.mutation(DismissVouchBackMutation())
+            .payloadOutcome({ it.dismissVouchBack.userErrors.map { e -> e.userErrorFields } }) {
+                it.dismissVouchBack.user?.takeIf { user -> user.vouchBackDismissed }?.let { Unit }
             }
     }
 

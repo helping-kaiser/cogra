@@ -183,11 +183,41 @@ pub async fn bundle(
     target: &str,
     view: ReferenceView<'_>,
 ) -> Result<BundleSum, ReferencesError> {
+    Ok(netted_bundle(pool, author, artifact, target, view)
+        .await?
+        .sum)
+}
+
+/// A bundle as a withdrawal nets it: the raw sums, plus the still-in-flight
+/// records those sums count.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NettedBundle {
+    pub sum: BundleSum,
+    /// The act ids of the pending records folded into `sum`, in staging
+    /// order — empty under [`ReferenceView::Landed`].
+    pub in_flight: Vec<String>,
+}
+
+/// [`bundle`], with the act ids of the pending records it counted.
+///
+/// One read rather than two, because the counter-records a withdrawal
+/// stages net exactly the records this sum folded, and must name exactly
+/// those as dependencies: a second query could see the bundle after it
+/// moved and name a set the sum never counted.
+pub async fn netted_bundle(
+    pool: &PgPool,
+    author: &str,
+    artifact: &str,
+    target: &str,
+    view: ReferenceView<'_>,
+) -> Result<NettedBundle, ReferencesError> {
     let (with_pending, pending_actor) = view.params();
     let row = sqlx::query!(
         r#"WITH candidates AS (
                SELECT l.p_i AS relevance,
-                      l.p_d AS support
+                      l.p_d AS support,
+                      NULL::text   AS act_id,
+                      NULL::bigint AS seq
                FROM mirror_record_legs l
                JOIN mirror_records r ON r.record_id = l.record_id
                WHERE l.leg = 't' AND l.family = 'reference'
@@ -197,7 +227,7 @@ pub async fn bundle(
                  AND NOT r.payload_marked
                  AND NOT l.census_unknown
              UNION ALL
-               SELECT s.p_d, s.p_i
+               SELECT s.p_d, s.p_i, s.act_id, s.seq
                FROM staged_writes s
                WHERE $4
                  AND s.family = 'reference'
@@ -210,7 +240,11 @@ pub async fn bundle(
            )
            SELECT COALESCE(SUM(relevance), 0)::float8 AS "p_d!",
                   COALESCE(SUM(support), 0)::float8   AS "p_i!",
-                  COUNT(*)::bigint                    AS "records!"
+                  COUNT(*)::bigint                    AS "records!",
+                  COALESCE(
+                      array_agg(act_id ORDER BY seq) FILTER (WHERE act_id IS NOT NULL),
+                      '{}'
+                  )                                   AS "in_flight!: Vec<String>"
            FROM candidates"#,
         artifact,
         target,
@@ -221,9 +255,12 @@ pub async fn bundle(
     .fetch_one(pool)
     .await?;
 
-    Ok(BundleSum {
-        p_d: row.p_d,
-        p_i: row.p_i,
-        records: row.records.max(0) as u32,
+    Ok(NettedBundle {
+        sum: BundleSum {
+            p_d: row.p_d,
+            p_i: row.p_i,
+            records: row.records.max(0) as u32,
+        },
+        in_flight: row.in_flight,
     })
 }

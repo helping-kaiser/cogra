@@ -9,7 +9,12 @@
 
    IT IS AN EXEMPLAR OF `Settings` (readme §13, Canvas pages and flows): the
    page is `SettingsBody` whole, and only the Email row is this board's own
-   and carries a number; every other row is wired on `Settings`. */
+   and carries a number; every other row is wired on `Settings`.
+
+   REGISTERED under the `settings` prefix (design ⇄ impl seam 082, the
+   settings packet): the body names its parts as on `Settings`, and the Email
+   row's `Change pending` is the row's own `status`. */
+export const NODE = "settings";
 export const FRAME = { width: 390, height: 2613 };
 
 export function Screen() {

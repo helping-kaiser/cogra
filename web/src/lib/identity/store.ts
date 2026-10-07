@@ -32,11 +32,10 @@ type HandshakeRecord = {
 };
 
 type UxRecord = {
-  reciprocationDismissed: boolean;
   ephemeral: boolean;
 };
 
-const EMPTY_UX: UxRecord = { reciprocationDismissed: false, ephemeral: false };
+const EMPTY_UX: UxRecord = { ephemeral: false };
 
 export type IdentityStore = {
   /** The account's custody key, or null before the ceremony ran on this device. */
@@ -58,15 +57,6 @@ export type IdentityStore = {
   handshake(stagedWriteId: string): Promise<PreSignedProposal | null>;
   clearHandshake(stagedWriteId: string): Promise<void>;
   handshakeIds(): Promise<string[]>;
-  /**
-   * Device-local UX state: whether the first-login reciprocation
-   * prompt was dismissed on this device. Dismissal memory only —
-   * whether the pair is complete is the graph-derived
-   * User.hasReciprocated (auth.md "Reciprocation is the joiner's own
-   * act"); the offer legitimately reappears on a new device.
-   */
-  reciprocationDismissed(): Promise<boolean>;
-  markReciprocationDismissed(): Promise<void>;
   /**
    * The "don't remember me" opt-in (auth.md "Sign-out"), recorded at
    * login and restore for the active account — always written, so an
@@ -290,21 +280,13 @@ export function createIdentityStore(deps: {
     };
   }
 
-  function adoptUx(objectStore: IDBObjectStore, account: string): void {
-    const legacy = objectStore.get(LEGACY_RECIPROCATION_KEY);
-    legacy.onsuccess = () => {
-      if (legacy.result === undefined) return;
-      const dismissed = legacy.result === true;
-      const target = objectStore.get(account);
-      target.onsuccess = () => {
-        if (target.result !== undefined) return;
-        objectStore.put(
-          { reciprocationDismissed: dismissed, ephemeral: false } satisfies UxRecord,
-          account,
-        );
-        objectStore.delete(LEGACY_RECIPROCATION_KEY);
-      };
-    };
+  /**
+   * Drops the legacy device-local vouch-back dismissal. The dismissal is
+   * account state now (`User.vouchBackDismissed`), so the bit has nothing
+   * left to carry and no account to adopt it.
+   */
+  function dropLegacyUx(objectStore: IDBObjectStore): void {
+    objectStore.delete(LEGACY_RECIPROCATION_KEY);
   }
 
   function adoptHandshakes(objectStore: IDBObjectStore, account: string): void {
@@ -341,7 +323,7 @@ export function createIdentityStore(deps: {
     const landed = committed(tx);
     adoptSlot(tx.objectStore(ACTOR), account);
     adoptSlot(tx.objectStore(BACKUP), account);
-    adoptUx(tx.objectStore(UX), account);
+    dropLegacyUx(tx.objectStore(UX));
     adoptHandshakes(tx.objectStore(HANDSHAKE), account);
     await landed;
   }
@@ -373,10 +355,6 @@ export function createIdentityStore(deps: {
     if (account === null) throw new Error("custody write without an active account");
     await adopted(account);
     return account;
-  }
-
-  async function readUx(account: string): Promise<UxRecord> {
-    return (await read<UxRecord>(UX, account)) ?? EMPTY_UX;
   }
 
   return {
@@ -461,20 +439,6 @@ export function createIdentityStore(deps: {
       const account = await forRead();
       if (account === null) return [];
       return handshakeIdsOf(account);
-    },
-
-    async reciprocationDismissed() {
-      const account = await forRead();
-      if (account === null) return false;
-      return (await readUx(account)).reciprocationDismissed;
-    },
-
-    async markReciprocationDismissed() {
-      const account = await forWrite();
-      await updateRecord<UxRecord>(UX, account, (ux) => ({
-        ...(ux ?? EMPTY_UX),
-        reciprocationDismissed: true,
-      }));
     },
 
     async setEphemeral(value) {

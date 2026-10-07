@@ -284,7 +284,7 @@ write needs a landed, funded actor with a device-held key.
   prompt gated on it in both clients (decided 2026-08-07,
   superseding the earlier deferral to slice 2: the field is
   invite/auth-flow state, so it ships with the flow). The
-  device-local answered-bit stays only as the dismissal memory.
+  dismissal memory is account state (`User.vouchBackDismissed`).
 - Actor-identity uniqueness at the attach: one account per realization
   address — `attachActorKey` refuses a key already bound to a
   different account ([auth.md](auth.md#application-the-applicant-state)).

@@ -157,13 +157,13 @@ class HomeViewModel @Inject constructor(
                     // poked) for an applicant, never for a member.
                     if (applicant) registration.ensureAdvancing()
                     val member = profile?.accountState == AccountState.MEMBER
-                    // The pair's state is the graph's (hasReciprocated);
-                    // the device remembers only a dismissal.
+                    // The pair's state is the graph's (hasReciprocated),
+                    // the dismissal the account's (vouchBackDismissed).
                     val prompt = member &&
                         profile?.invitedBy != null &&
                         seedOnDevice &&
                         profile?.hasReciprocated == false &&
-                        !identity.reciprocationDismissed()
+                        profile?.vouchBackDismissed == false
                     _state.update {
                         it.copy(
                             loading = false,
@@ -280,11 +280,17 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    /** Dismissal is remembered — the prompt is an offer, not a nag. */
+    /**
+     * Dismissal is account state, for good on every device — the prompt
+     * is an offer, not a nag. The card goes only once the server keeps
+     * the dismissal: one that vanished on a failed call would come back
+     * on the next read, unexplained.
+     */
     fun onDismissReciprocation() {
         viewModelScope.launch {
-            identity.markReciprocationDismissed()
-            _state.update { it.copy(reciprocationTarget = null) }
+            if (account.dismissVouchBack() is Outcome.Success) {
+                _state.update { it.copy(reciprocationTarget = null) }
+            }
         }
     }
 

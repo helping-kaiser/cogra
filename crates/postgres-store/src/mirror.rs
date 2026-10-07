@@ -949,6 +949,22 @@ pub async fn has_opinion_toward(
     .await?)
 }
 
+/// Whether any accepted Opinion by the author is in the mirror, toward
+/// any target — the landed half of "the member's first opinion"
+/// (api-spec.md `Query.borrowedView`). Existence, like
+/// [`has_opinion_toward`]: a bundle netting to zero still holds it.
+pub async fn has_any_opinion_from(pool: &PgPool, author_source: &str) -> Result<bool, MirrorError> {
+    Ok(sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM mirror_record_legs
+               WHERE source = $1 AND family = 'opinion' AND leg = 'binary'
+           ) AS "exists!""#,
+        author_source,
+    )
+    .fetch_one(pool)
+    .await?)
+}
+
 /// Wipes the mirror and resets the cursor; used by the dev CLI's rebuild
 /// command and tests (re-ingest from the published sequence).
 pub async fn reset(pool: &PgPool) -> Result<(), MirrorError> {

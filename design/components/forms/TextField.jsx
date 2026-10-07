@@ -174,7 +174,7 @@ export function FieldCount({ value, cap, used, id }) {
    beside it. It renders nothing at all when there is nothing to say, which is
    the state every field in the product is in at rest. */
 
-export function FieldSupport({ id, countId, hint, error, value, cap, used }) {
+export function FieldSupport({ id, countId, hint, error, value, cap, used, node }) {
   const reading = countReading(value, cap, used);
   if (!error && !hint && !reading) return null;
   return (
@@ -183,6 +183,7 @@ export function FieldSupport({ id, countId, hint, error, value, cap, used }) {
         <span
           id={id}
           role={error ? "alert" : undefined}
+          data-node={node}
           style={{
             fontSize: "var(--text-body-small)",
             lineHeight: "var(--text-body-small--line-height)",
@@ -332,7 +333,7 @@ export function TextField({
           data-node={node && "input"}
         />
       )}
-      <FieldSupport id={supportId} countId={countId} hint={hint} error={error} value={value} cap={cap} used={used} />
+      <FieldSupport id={supportId} countId={countId} hint={hint} error={error} value={value} cap={cap} used={used} node={node && "support"} />
     </div>
   );
 }

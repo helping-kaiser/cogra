@@ -2705,22 +2705,25 @@ const BAND_HEIGHT = 64;
    THE DOT KEEPS THE READING'S FIRST LINE: 1px is half of what the 20px reading
    line has over an 18px dot, so the dot centres on the words that name the
    choice and a two-line consequence grows the row downward beneath it. */
-function LicenseAxisLabel({ children }) {
+/* `node` names the axis and its label where a registered board places them
+   (design ⇄ impl seam 002): the axis names each reading's row `tier`, keyed by
+   its position on the axis, with its `dot`, `label` and `hint`. */
+function LicenseAxisLabel({ children, node }) {
   return (
-    <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+    <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", fontWeight: "var(--text-label-small--font-weight)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node}>
       {children}
     </span>
   );
 }
 
-function LicenseAxis({ axis, name, tiers, chosen }) {
+function LicenseAxis({ axis, name, tiers, chosen, node }) {
   return (
-    <div role="radiogroup" style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    <div role="radiogroup" style={{ display: "flex", flexDirection: "column", gap: 6 }} data-node={node}>
       {tiers.map((tier, index) => (
         /* The ROW carries the flow number, not the input inside it: a visually
            hidden radio cannot show a badge, and the row is what a reader
            presses. */
-        <label key={tier.label} data-axis={axis} className="cg-state cg-focus" style={{ display: "flex", alignItems: "flex-start", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }}>
+        <label key={tier.label} data-axis={axis} className="cg-state cg-focus" style={{ display: "flex", alignItems: "flex-start", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }} data-node={node && "tier"} data-node-key={node && String(index + 1)}>
           <input
             type="radio"
             name={name}
@@ -2740,12 +2743,13 @@ function LicenseAxis({ axis, name, tiers, chosen }) {
               borderRadius: "var(--radius-full)",
               border: index === chosen ? "5px solid var(--primary)" : "1px solid var(--border-field)",
             }}
+            data-node={node && "dot"}
           />
           <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }}>
+            <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
               {tier.label}
             </span>
-            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+            <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
               {tier.hint}
             </span>
           </span>
@@ -2949,13 +2953,17 @@ function WhatsNewBody({ newer }) {
    wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
-   filled. */
-function WaitingCommit({ id, label, reason, waiting = true }) {
+   filled.
+
+   `node` names the pair where a registered board places it (design ⇄ impl
+   seam 002): the line is its `reason` and the button its `action`. */
+function WaitingCommit({ id, label, reason, waiting = true, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
       {waiting && (
         <span
           id={`${id}-waits`}
+          data-node={node && "reason"}
           style={{
             textAlign: "center",
             fontSize: "var(--text-label-small)",
@@ -2967,17 +2975,21 @@ function WaitingCommit({ id, label, reason, waiting = true }) {
           {reason}
         </span>
       )}
-      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined}>
+      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined} node={node && "action"}>
         {label}
       </Button>
     </div>
   );
 }
 
+/* The names are the `changeHandle` prefix's (design ⇄ impl seam 082): both
+   boards register them — the field is `handle`, named for what it changes, as
+   the credential family names its fields, and the commit with its reason is
+   `commit`. */
 function ChangeHandleBody({ value = "" } = {}) {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -2986,6 +2998,7 @@ function ChangeHandleBody({ value = "" } = {}) {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Change your handle
         </h1>
@@ -2997,6 +3010,7 @@ function ChangeHandleBody({ value = "" } = {}) {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           @sol is how people mention and find you. Everything you have published stays yours — the
           handle is a name, not the account.
@@ -3010,15 +3024,16 @@ function ChangeHandleBody({ value = "" } = {}) {
             enterKeyHint="go"
             value={value}
             hint="3 to 30 characters: letters, numbers and underscore. Handles are always lowercase."
+            node="handle"
           />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="change-handle" label="Change handle" reason="Waiting for a new handle" waiting={!value} />
+          <WaitingCommit id="change-handle" label="Change handle" reason="Waiting for a new handle" waiting={!value} node="commit" />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <QuietNote>
+          <QuietNote node="note">
             Links to your old handle stop working the moment you change it, and anyone can claim it
             afterwards.
           </QuietNote>

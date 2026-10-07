@@ -109,7 +109,6 @@ class FakeTokenStore : TokenStore {
 class FakeIdentityStore : IdentityStore {
     var seed: ByteArray? = null
     var pendingBlob: ByteArray? = null
-    var dismissedReciprocation = false
     var stancePadTaught = false
     var forgetOnSignOut = false
     val handshakes = mutableMapOf<String, PreSignedProposal>()
@@ -142,12 +141,6 @@ class FakeIdentityStore : IdentityStore {
 
     override suspend fun handshakeIds(): Set<String> = handshakes.keys.toSet()
 
-    override suspend fun reciprocationDismissed(): Boolean = dismissedReciprocation
-
-    override suspend fun markReciprocationDismissed() {
-        dismissedReciprocation = true
-    }
-
     override suspend fun stancePadTaught(): Boolean = stancePadTaught
 
     override suspend fun markStancePadTaught() {
@@ -179,7 +172,6 @@ class FakeIdentityStore : IdentityStore {
     override suspend fun purge() {
         seed = null
         pendingBlob = null
-        dismissedReciprocation = false
         stancePadTaught = false
         forgetOnSignOut = false
         inputMode.value = StanceInputMode.Default
@@ -264,6 +256,7 @@ open class ThrowingAccountRepository : AccountRepository {
     override suspend fun changePassword(currentPassword: String, newPassword: String): Outcome<Unit> =
         throw UnsupportedOperationException()
     override suspend fun changeHandle(handle: String): Outcome<Unit> = throw UnsupportedOperationException()
+    override suspend fun dismissVouchBack(): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun requestPasswordReset(email: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit> =
         throw UnsupportedOperationException()

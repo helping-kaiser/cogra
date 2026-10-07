@@ -43,7 +43,13 @@
    until the ranker lands, the default an account starts from is Newest and the
    sheet says so. The canvas draws the destination; the register carries the
    obligation, so implementation cannot read Ranked here as permission to
-   promise it. */
+   promise it.
+
+   REGISTERED under the `settings` prefix (design ⇄ impl seam 082, the
+   settings packet): the body names its parts as on `Settings`. The sheet
+   stays unnamed for now — whether its parts sit under `settings.` or reuse
+   the feed filter's names is with jakob, and they follow as pure addition. */
+export const NODE = "settings";
 export function Screen() {
   return (
     <>
