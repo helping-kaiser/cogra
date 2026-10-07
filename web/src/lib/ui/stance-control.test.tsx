@@ -10,6 +10,7 @@ import { PAD_ANCHOR_GAP_PX } from "@/lib/stance/pad-placement";
 import { writeStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceTargetRef } from "@/lib/stance/stance-data";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
+import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
 import { renderWithProviders } from "@/test/providers";
 import { PAD_PARK_INSET_PX } from "./pad-parking";
 import { NO_STANDING_LABEL, SEVERED_LABEL } from "./stance-readout";
@@ -1533,5 +1534,34 @@ describe("the pick that never happened", () => {
       await settle();
     }
     expect(data.pendingFlags).toHaveLength(1);
+  });
+});
+
+// THE OPINION PAD PAUSES, IT DOES NOT SUSPEND (Feed.md:39/41): the control
+// announces its pad — and the alternates that replace it — as a `pause`
+// layer, which is what the stage reads (`covering-layer.tsx`).
+describe("the pad as a covering layer", () => {
+  it("announces the open pad as a pause, and stops announcing it once closed", async () => {
+    alreadyTaught();
+    mount();
+    await settle();
+    expect(raisedLayersForTests()).toEqual([]);
+
+    await hold();
+    expect(raisedLayersForTests()).toEqual(["pause"]);
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: "Escape" });
+    });
+    expect(raisedLayersForTests()).toEqual([]);
+  });
+
+  it("announces the alternates as a pause too — they are the pad in its other form", async () => {
+    mount();
+    await settle();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId(`${PREFIX}-choose`));
+    });
+    expect(raisedLayersForTests()).toEqual(["pause"]);
   });
 });

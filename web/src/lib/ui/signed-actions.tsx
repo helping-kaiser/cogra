@@ -17,6 +17,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { buttonClassName } from "@/lib/ui/button";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 /** "creates 3 signed actions" — the same phrase in both places. */
 export function signedActionsLine(count: number): string {
@@ -61,6 +62,9 @@ export function MultiActionConfirm({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [stopAsking, setStopAsking] = useState(false);
+  // Mounted only while open, so it covers for as long as it is mounted: a
+  // dialog over a surface suspends its stage (Feed.md:31, `covering-layer.tsx`).
+  useCoversSurface(true, "suspend");
   useEffect(() => {
     const dialog = ref.current;
     if (dialog !== null && !dialog.open) dialog.showModal();

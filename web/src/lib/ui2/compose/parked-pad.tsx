@@ -25,6 +25,8 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
+import { useCoversSurface } from "../covering-layer";
+
 /**
  * The standoff from the bottom edge, which the two boards draw
  * differently: `ComposePad.jsx` parks at 24px, `ReplyPadBody` at 16.
@@ -55,6 +57,9 @@ export function ParkedPad({
   testId: string;
 }) {
   const ref = useRef<HTMLDialogElement | null>(null);
+  // A stance pad, so it announces itself as the pad does — a PAUSE, not a
+  // suspension (Feed.md:39/41; `covering-layer.tsx`).
+  useCoversSurface(open, "pause");
 
   useEffect(() => {
     const dialog = ref.current;

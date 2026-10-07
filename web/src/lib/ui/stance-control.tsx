@@ -90,6 +90,7 @@ import {
   type BundleState,
 } from "@/lib/ui/stance-readout";
 import { TransportError } from "@/lib/ui/transport-error";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 
 /**
  * How long a press has to be held before the pad blooms. Android's own
@@ -194,6 +195,13 @@ export function StanceControl({
   const bundleRead = useRef(0);
 
   const considered = open || alternates;
+
+  // THE OPINION PAD PAUSES, IT DOES NOT SUSPEND (Feed.md:39/41,
+  // PostDetailVideo.md:39/41): opening it pauses the playing clip on its
+  // frame and closing it resumes that same clip, with no re-election — so it
+  // announces itself as a `pause` layer (`covering-layer.tsx`). The
+  // alternates announce themselves the same way from their own dialog.
+  useCoversSurface(open, "pause");
 
   // Every host builds `target` inline, so its identity changes on each
   // render. The seam's copy is keyed on the two fields that actually
