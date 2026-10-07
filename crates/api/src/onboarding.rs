@@ -1136,6 +1136,93 @@ async fn settle_one<B: L1Boundary>(
     Ok(())
 }
 
+/// Why an account may not carry an act with its application.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CarryRefusal {
+    /// Not an applicant — a member acts directly; anyone else not at all.
+    NotApplicant,
+    /// The email is not proven yet: an unverified account is reaped whole,
+    /// and nothing is held for it before it is a person waiting on a vouch.
+    EmailNotVerified,
+    /// No key attached: the act has no author address to stage under.
+    NoKey,
+    /// The applicant already carries an act of this kind — once each.
+    AlreadyCarried(Family),
+}
+
+/// The account lock an applicant's carried staging holds from its gate to
+/// its carry, so a staging and the landing that releases the batch never
+/// interleave: the landing either sees the act carried, or the staging
+/// sees a member and refuses.
+pub struct CarryLock(sqlx::Transaction<'static, sqlx::Postgres>);
+
+/// Opens an applicant's carried staging of one act of `family` (auth.md
+/// "Application"; seam 099 rulings 68, 73): under the account lock, the
+/// account must be an applicant with a proven email and an attached key,
+/// and may carry one act of each kind — a post (its Publish, with the
+/// topics and citations it declares), an Opinion, an Affinity. The caller
+/// prepares the act through [`prepare::Carrying`] and hands the staged ids
+/// to [`close_carry`].
+pub async fn open_carry(
+    pool: &PgPool,
+    account: Uuid,
+    family: Family,
+) -> Result<CarryLock, CarryOpenError> {
+    let mut lock = pool.begin().await?;
+    if !store::lock_account(&mut lock, account).await? {
+        return Err(CarryRefusal::NotApplicant.into());
+    }
+    let credentials = store::credentials_by_actor(pool, account)
+        .await?
+        .ok_or(CarryRefusal::NotApplicant)?;
+    if credentials.account_state != store::AccountState::Applicant {
+        return Err(CarryRefusal::NotApplicant.into());
+    }
+    if credentials.email_verified_at.is_none() {
+        return Err(CarryRefusal::EmailNotVerified.into());
+    }
+    let keyed = store::actor_identity(pool, account)
+        .await?
+        .and_then(|identity| identity.realization_address)
+        .is_some();
+    if !keyed {
+        return Err(CarryRefusal::NoKey.into());
+    }
+    let carried = staged::carried_families(pool, account)
+        .await
+        .map_err(|e| CarryOpenError::Internal(e.to_string()))?;
+    if carried.iter().any(|f| f == family.as_str()) {
+        return Err(CarryRefusal::AlreadyCarried(family).into());
+    }
+    Ok(CarryLock(lock))
+}
+
+/// Carries the writes the gated prepare staged, and releases the lock.
+pub async fn close_carry(pool: &PgPool, lock: CarryLock, ids: &[Uuid]) -> Result<(), CarryOpenError> {
+    staged::carry(pool, ids)
+        .await
+        .map_err(|e| CarryOpenError::Internal(e.to_string()))?;
+    lock.0.commit().await?;
+    Ok(())
+}
+
+/// A carried staging that could not open: refused, or a fault.
+#[derive(Debug, thiserror::Error)]
+pub enum CarryOpenError {
+    #[error("{0:?}")]
+    Refused(CarryRefusal),
+    #[error(transparent)]
+    Storage(#[from] sqlx::Error),
+    #[error("internal: {0}")]
+    Internal(String),
+}
+
+impl From<CarryRefusal> for CarryOpenError {
+    fn from(r: CarryRefusal) -> Self {
+        CarryOpenError::Refused(r)
+    }
+}
+
 /// Confirm-side landing (auth.md "Approval and landing"; EC-R2): every
 /// account with a recorded vouch-Opinion newly in the mirror is put to the
 /// landing predicate (`store::evaluate_landing`) — its own Registration
@@ -1163,10 +1250,12 @@ pub async fn land_ready_accounts(pool: &PgPool) -> Vec<crate::ingest::PromotionF
             Ok(store::Landing::Landed {
                 application_id,
                 voucher_id,
+                released,
             }) => tracing::info!(
                 %account,
                 application = %application_id,
                 voucher = %voucher_id,
+                carried_acts_released = released,
                 "the entry ceremony landed"
             ),
             Ok(_) => {}

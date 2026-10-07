@@ -1109,6 +1109,9 @@ pub enum Landing {
     Landed {
         application_id: Uuid,
         voucher_id: Uuid,
+        /// How many acts carried with the application the landing
+        /// released into the batch the device now signs.
+        released: u64,
     },
     /// The account was already a member; this many later vouch-Opinions
     /// were booked as landed — ordinary Opinions now (EC-R3).
@@ -1130,7 +1133,13 @@ pub enum Landing {
 ///    or not (the GC is not final).
 ///
 /// With both, and the account still an applicant, one transaction books
-/// the winning vouch and its path landed and flips the account to member.
+/// the winning vouch and its path landed, flips the account to member, and
+/// releases the acts carried with the application as one batch (seam 099
+/// ruling 73): each gains the dependencies `[admission Registration,
+/// winning vouch]` and moves to `awaiting_pre_sign` for the device to sign
+/// without a prompt, its GC window starting now. Nothing outside this
+/// transaction can ever release them, so the batch is released exactly
+/// once, by the landing that completes the ceremony.
 /// Every other path leaves its queue by the read-side filter (seam 099
 /// ruling 67), so nothing more is written for them. Later vouch-Opinions
 /// that confirm are booked landed as ordinary Opinions. Idempotent and
@@ -1157,17 +1166,16 @@ pub async fn evaluate_landing(
     if account.account_state == "applicant"
         && let Some(address) = account.realization_address
     {
-        let registered = sqlx::query_scalar!(
-            r#"SELECT EXISTS(
-                   SELECT 1 FROM mirror_records WHERE family = $1 AND author = $2
-               ) AS "exists!""#,
+        let registration = sqlx::query_scalar!(
+            "SELECT record_id FROM mirror_records WHERE family = $1 AND author = $2
+             ORDER BY act_time, position LIMIT 1",
             registration_family,
             address,
         )
-        .fetch_one(&mut *tx)
+        .fetch_optional(&mut *tx)
         .await?;
         let first_edge = sqlx::query!(
-            "SELECT v.id, v.application_id, v.voucher_id
+            "SELECT v.id, v.application_id, v.voucher_id, v.act_id
              FROM auth_application_vouches v
              JOIN auth_applications ap ON ap.id = v.application_id
              JOIN mirror_records m ON m.record_id = v.act_id
@@ -1178,11 +1186,26 @@ pub async fn evaluate_landing(
         )
         .fetch_optional(&mut *tx)
         .await?;
-        if registered && let Some(edge) = first_edge {
+        if let (Some(registration), Some(edge)) = (registration, first_edge) {
             land_through(&mut tx, account_id, edge.application_id, Some(edge.id)).await?;
+            let released = sqlx::query!(
+                "UPDATE staged_writes
+                 SET state = 'awaiting_pre_sign',
+                     deps = deps || ARRAY[$2, $3]::TEXT[],
+                     prepared_epoch = (SELECT last_epoch FROM mirror_epoch_cursor),
+                     updated_at = NOW()
+                 WHERE actor_id = $1 AND state = 'carried'",
+                account_id,
+                registration,
+                edge.act_id,
+            )
+            .execute(&mut *tx)
+            .await?
+            .rows_affected();
             outcome = Landing::Landed {
                 application_id: edge.application_id,
                 voucher_id: edge.voucher_id,
+                released,
             };
         }
     }
