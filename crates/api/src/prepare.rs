@@ -150,7 +150,9 @@ impl<B: L1Boundary> L1Boundary for Carrying<'_, B> {
         amount_micro: i64,
         key: Uuid,
     ) -> Result<common::l1::handshake::BurnTicket, BoundaryError> {
-        self.0.request_admission_burn(address, amount_micro, key).await
+        self.0
+            .request_admission_burn(address, amount_micro, key)
+            .await
     }
 
     async fn burn_settlement(

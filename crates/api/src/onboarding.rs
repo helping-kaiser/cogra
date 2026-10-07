@@ -1198,7 +1198,11 @@ pub async fn open_carry(
 }
 
 /// Carries the writes the gated prepare staged, and releases the lock.
-pub async fn close_carry(pool: &PgPool, lock: CarryLock, ids: &[Uuid]) -> Result<(), CarryOpenError> {
+pub async fn close_carry(
+    pool: &PgPool,
+    lock: CarryLock,
+    ids: &[Uuid],
+) -> Result<(), CarryOpenError> {
     staged::carry(pool, ids)
         .await
         .map_err(|e| CarryOpenError::Internal(e.to_string()))?;

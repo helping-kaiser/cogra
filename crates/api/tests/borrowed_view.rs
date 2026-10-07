@@ -12,13 +12,17 @@
 use std::sync::Arc;
 
 use chrono::{Duration, Utc};
+use common::l1::census::Family;
 use common::l1::client::ActorKey;
-use common::l1::identifier::NodeId;
-use postgres_store::{PgPool, auth as store, genesis, mirror};
+use l1_standin::{StandIn, StandInConfig};
+use postgres_store::{PgPool, auth as store, genesis, mirror, staged};
 use serde_json::{Value, json};
 use uuid::Uuid;
 
 use api::auth::Viewer;
+use api::l1::StandInBoundary;
+use api::onboarding::{self, Approval, OnboardingConfig};
+use api::ratelimit::SigningBudget;
 use api::schema::{ApiSchema, QueryBudgets, build_with};
 
 mod rig;
@@ -191,29 +195,83 @@ fn viewer(user_id: Uuid) -> Option<Viewer> {
     })
 }
 
-/// A signed Opinion staged straight onto the row, for the acts the API
-/// surface cannot stage for an applicant: an Opinion carried from the
-/// application signs with the vouch-in batch (auth.md "Application"), so
-/// the row stands in for that batch's member. Only the probe's columns —
-/// actor, family, state — carry meaning here.
-async fn stage_signed_opinion(pool: &PgPool, account: Uuid, address: &str, target: &str) {
-    let author = NodeId::Addr(address.to_string()).to_string();
-    sqlx::query(
-        "INSERT INTO staged_writes
-             (id, actor_id, act_id, author, seq, family, target,
-              p_d, p_i, payload, prepared_epoch, state)
-         VALUES ($1, $2, $3, $4, 1, 'opinion', $5, 0.1, 0.1, ''::bytea, 0, 'relaying')",
-    )
-    .bind(Uuid::new_v4())
-    .bind(account)
-    .bind(format!("act:{author}:1:opinion"))
-    .bind(&author)
-    .bind(target)
-    .execute(pool)
-    .await
-    .expect("stage");
+/// Proves the account's email, as the verification link would.
+async fn verify_email(pool: &PgPool, account: Uuid) {
+    sqlx::query("UPDATE user_credentials SET email_verified_at = NOW() WHERE actor_id = $1")
+        .bind(account)
+        .execute(pool)
+        .await
+        .expect("verify");
 }
 
+/// A member who can vouch: keyed and funded, with the key returned.
+async fn seed_funded_inviter(pool: &PgPool, standin: &StandIn, handle: &str) -> (Uuid, ActorKey) {
+    let id = seed_inviter(pool, handle).await;
+    let key = ActorKey::generate();
+    sqlx::query("UPDATE actors SET actor_pubkey = $2, realization_address = $3 WHERE id = $1")
+        .bind(id)
+        .bind(key.public_key_bytes())
+        .bind(key.address())
+        .execute(pool)
+        .await
+        .expect("rekey");
+    standin
+        .credit_burn(&key.address(), 10_000_000)
+        .await
+        .expect("burn");
+    (id, key)
+}
+
+/// The applicant stages an opinion toward `target` the way the app does —
+/// `prepareStance` as the applicant — and it comes back carried with the
+/// application.
+async fn carry_opinion(schema: &ApiSchema, account: Uuid, target: Uuid) {
+    let response = schema
+        .execute(
+            async_graphql::Request::new(PREPARE_STANCE)
+                .variables(async_graphql::Variables::from_json(json!({ "input": {
+                    "target": target, "pDirected": 0.1, "pInterest": 0.1,
+                }})))
+                .data(viewer(account)),
+        )
+        .await;
+    assert!(response.errors.is_empty(), "{:?}", response.errors);
+    let data = response.data.into_json().expect("json");
+    assert_eq!(data["prepareStance"]["userErrors"], json!([]), "{data}");
+    assert_eq!(
+        data["prepareStance"]["writes"][0]["family"], "OPINION",
+        "{data}"
+    );
+}
+
+/// The device's two signing legs over one staged write, through the relay.
+async fn sign(
+    pool: &PgPool,
+    standin: &StandIn,
+    boundary: &StandInBoundary,
+    key: &ActorKey,
+    staged_id: Uuid,
+) {
+    let write = staged::load(pool, staged_id).await.expect("loads");
+    let pre = key.pre_sign(write.proposal.clone());
+    let sealed = api::relay::submit_pre_signed(
+        boundary,
+        pool,
+        staged_id,
+        staged::PreSignedParts {
+            author_pubkey: pre.author_pubkey.clone(),
+            nonce: pre.nonce.clone(),
+            pre_signature: pre.pre_signature.clone(),
+        },
+    )
+    .await
+    .expect("seals");
+    let host_key = standin.host_public_key().await.expect("host key");
+    let witness = key.approve(&pre, &sealed, &host_key).expect("approves");
+    api::relay::submit_approval(boundary, pool, staged_id, witness.approval_signature)
+        .await
+        .expect("relays");
+}
 /// A landed member reachable over the HTTP surface: registered through
 /// `issuer`'s link, key attached, funded, landed, logged in.
 async fn wire_member(rig: &WireRig, issuer: Uuid, handle: &str) -> (Uuid, ActorKey, String) {
@@ -563,45 +621,84 @@ async fn an_expired_first_opinion_returns_the_borrowing(pool: PgPool) {
     assert_eq!(wire_borrowed(&rig, &token).await.as_deref(), Some("mira"));
 }
 
-/// An opinion staged during the application signs with the vouch-in
-/// batch, so the borrowing is already over at landing: the band never
-/// stands (VouchBack.md:21). Before landing the same signed row ends
-/// nothing — the applicant keeps the issuer's view.
+/// An opinion staged during the application is carried with it and signs
+/// with the vouch-in batch, so the borrowing is already over at landing:
+/// the band never stands (VouchBack.md:21), even before the device has
+/// signed the released batch. Before landing the same carried opinion ends
+/// nothing — the applicant keeps the issuer's view. The opinion is staged
+/// through the real path, `prepareStance` as the applicant, and the account
+/// lands through the real ceremony.
 ///
 /// An opinion carried from the application ends the borrowing at the landing itself.
 /// ´claim:borrowed:a-carried-opinion-ends-the-borrowing-at-landing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_opinion_carried_from_the_application_ends_the_borrowing_at_landing(pool: PgPool) {
     seed_genesis_moderator(&pool, "genesis_mod").await;
-    let inviter = seed_inviter(&pool, "mira").await;
+    let standin = StandIn::new(pool.clone(), StandInConfig::default());
+    let boundary = StandInBoundary(standin.clone());
+    let (inviter, inviter_key) = seed_funded_inviter(&pool, &standin, "mira").await;
     let stranger = seed_inviter(&pool, "sol").await;
-    let stranger_address = store::actor_identity(&pool, stranger)
-        .await
-        .expect("query")
-        .expect("row")
-        .realization_address
-        .expect("address");
     let account = seed_applicant(&pool, inviter, "noa").await;
+    verify_email(&pool, account).await;
     let key = attach_key(&pool, account).await;
-    stage_signed_opinion(
-        &pool,
-        account,
-        &key.address(),
-        &NodeId::Prof(stranger_address).to_string(),
-    )
-    .await;
     let schema = schema(pool.clone());
+    carry_opinion(&schema, account, stranger).await;
     assert_eq!(
         borrowed_handle(&schema, viewer(account)).await.as_deref(),
         Some("mira")
     );
 
-    land(&pool, account).await;
+    let path = store::current_application_for(&pool, account)
+        .await
+        .expect("query")
+        .expect("path")
+        .id;
+    let vouch = onboarding::approve_applicants(
+        &pool,
+        &boundary,
+        &OnboardingConfig::default(),
+        &SigningBudget::UNLIMITED,
+        inviter,
+        &[Approval {
+            application: path,
+            p_d: 0.2,
+            p_i: 0.2,
+        }],
+    )
+    .await
+    .expect("vouches")
+    .remove(0);
+    sign(&pool, &standin, &boundary, &inviter_key, vouch.id).await;
+    let registration = staged::list_for_actor(&pool, account)
+        .await
+        .expect("lists")
+        .into_iter()
+        .find(|w| w.proposal.body.family == Family::Registration)
+        .expect("the admission Registration");
+    sign(&pool, &standin, &boundary, &key, registration.id).await;
+    standin
+        .close_epoch()
+        .await
+        .expect("closes")
+        .expect("publishes");
+    api::ingest::ingest_pending(&boundary, &pool, api::ingest::DEFAULT_GC_AFTER_EPOCHS)
+        .await
+        .expect("ingests");
+    assert_eq!(
+        store::credentials_by_actor(&pool, account)
+            .await
+            .expect("query")
+            .expect("row")
+            .account_state,
+        store::AccountState::Member
+    );
     assert_eq!(borrowed_handle(&schema, viewer(account)).await, None);
 }
 
 /// Whatever an applicant stages — the vouch-back included — the issuer's
-/// view holds until landing: the probe is never consulted before it.
+/// view holds until landing: the probe is never consulted before it. The
+/// opinion is carried through the real path, `prepareStance` as the
+/// applicant.
 ///
 /// An applicant keeps their issuer's view whatever they have staged and signed.
 /// ´claim:borrowed:an-applicant-keeps-the-issuers-view´
@@ -609,29 +706,16 @@ async fn an_opinion_carried_from_the_application_ends_the_borrowing_at_landing(p
 async fn an_applicants_staged_opinion_does_not_end_the_borrowing(pool: PgPool) {
     seed_genesis_moderator(&pool, "genesis_mod").await;
     let inviter = seed_inviter(&pool, "mira").await;
-    let inviter_address = store::actor_identity(&pool, inviter)
-        .await
-        .expect("query")
-        .expect("row")
-        .realization_address
-        .expect("address");
     let account = seed_applicant(&pool, inviter, "noa").await;
-    let key = attach_key(&pool, account).await;
-    stage_signed_opinion(
-        &pool,
-        account,
-        &key.address(),
-        &NodeId::Prof(inviter_address).to_string(),
-    )
-    .await;
-
+    verify_email(&pool, account).await;
+    attach_key(&pool, account).await;
     let schema = schema(pool);
+    carry_opinion(&schema, account, inviter).await;
     assert_eq!(
         borrowed_handle(&schema, viewer(account)).await.as_deref(),
         Some("mira")
     );
 }
-
 /// The vouch-back is an opinion like any other here: it ends the
 /// borrowing, and it is also the one that answers the prompt.
 ///

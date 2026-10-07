@@ -2867,7 +2867,13 @@ impl Mutation {
         let v = match acting {
             Acting::Member(v) => v,
             Acting::Applicant(v) => {
-                let lock = match onboarding::open_carry(pool, v.user_id, common::l1::census::Family::Publish).await {
+                let lock = match onboarding::open_carry(
+                    pool,
+                    v.user_id,
+                    common::l1::census::Family::Publish,
+                )
+                .await
+                {
                     Ok(lock) => lock,
                     Err(e) => return Ok(PrepareContentPayload::refused(vec![carry_refusal(e)?])),
                 };
