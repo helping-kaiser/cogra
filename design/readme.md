@@ -9493,6 +9493,10 @@ lines; quoted wordings are his.
   snackbar. The newer-version snackbar speaks to members, applicants and
   guests, and a version read that answers after the feed has arrived on
   a cold open announces when it arrives.
+- **No unlit bar remains.** Every drill-in board lights its originating
+  root, as `BottomNav` rules: History and Saved light Profile; the other
+  person's profile, its tabs and states, Notifications, the score's
+  drill-down and the chats pages light Feed, where the canvas opens them.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not

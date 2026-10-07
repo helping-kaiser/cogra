@@ -24,7 +24,7 @@ export function Screen() {
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 24px" }}>
         <EmptyState title="Nothing here yet. Everything you see shows up here on its own, newest first." node="empty" />
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

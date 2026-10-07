@@ -43,7 +43,7 @@ export function Screen() {
           shows you as your current opinion.
         </QuietNote>
       </ScoreColumn>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

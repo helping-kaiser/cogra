@@ -12,7 +12,7 @@ ALWAYS Message keeps its own width and the ⋮ its place in both reading modes, 
 
 ALWAYS the header bar is titled with the person's handle and carries the way back alone
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed
 
 WHEN tap the wide anchor -> the pad blooms at the lower centre of the viewport AND nothing is staged
 

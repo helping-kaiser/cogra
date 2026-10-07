@@ -18,7 +18,7 @@ ALWAYS every row carries its own Unsave, the filled bookmark alone with no word 
 
 ALWAYS the header collapses on the way down and returns on the way up
 
-ALWAYS saved.bottomBar rides with no slot lit
+ALWAYS saved.bottomBar keeps lit the slot of the root Saved was opened from, saved.bottomBar.profileSlot
 
 WHEN tap a post's row -> the post's detail opens AND its back arrow reads Back to Saved
 

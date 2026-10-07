@@ -110,7 +110,7 @@ export function Screen() {
             reads 3d, never younger than the day it was seen. */}
         <PostCard {...TOBIAS_POST} timestamp="3d" bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

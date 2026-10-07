@@ -112,7 +112,7 @@ WHEN tap Back to top -> the list goes to the top, animated AND NEVER History re-
 
 ALWAYS the header, history.searchField and history.filterTrigger collapse on the way down and return on the way up
 
-ALWAYS history.bottomBar rides with no slot lit
+ALWAYS history.bottomBar keeps lit the slot of the root History was opened from, history.bottomBar.profileSlot
 
 WHEN tap the back arrow -> the reader's own profile comes back, in the state it was left
 

@@ -4,7 +4,7 @@ ALWAYS the page reads Can't reach the server — this profile can't load right n
 
 ALWAYS the header bar keeps the profile's handle as its title, and the page's own chrome stands
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed
 
 WHEN tap Retry GIVEN the read now reaches the server -> the profile opens in the fault's place
 

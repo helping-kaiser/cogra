@@ -48,4 +48,4 @@ ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile
 
 WHEN pull down GIVEN the comments view stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed

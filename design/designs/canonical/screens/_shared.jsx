@@ -1048,7 +1048,7 @@ function ProfileOtherBody({ bundle } = {}) {
           <ContentRow variant="chronicle" chevron={false} glyph="person" title="Updated their profile" trailing="7d" inert node="act" nodeKey="5" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
@@ -1087,7 +1087,7 @@ function ProfileDeletedBody() {
           <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="21d" second="Low sun on the salt crust, and nobody else out there." onOpen={() => {}} node="act" nodeKey="4" />
         </ChronicleList>
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
