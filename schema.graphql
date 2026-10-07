@@ -53,7 +53,15 @@ type Application {
 	"""
 	keyAttached: Boolean!
 	"""
-	When the inviter's priced approval happened; null while pending.
+	The member whose queue this application sits in — the issuer of
+	the invite link it came through: whose vouch it waits on, or whose
+	vouch is in play. Visible wherever the application is.
+	"""
+	approver: Actor
+	"""
+	Since when this path has a live vouch — its approver's decision,
+	whose Opinion has not landed or lapsed; null while waiting,
+	including after a vouch lapsed. A landed path keeps it.
 	"""
 	approvedAt: DateTime
 	"""
@@ -66,8 +74,9 @@ type Application {
 	"""
 	rejectedAt: DateTime
 	"""
-	When the Registration confirmed and the account became a member;
-	null before.
+	When the ceremony completed through this path — the account's own
+	Registration and this path's vouch-Opinion both confirmed, the
+	vouch the first to land; null otherwise.
 	"""
 	landedAt: DateTime
 	createdAt: DateTime!
@@ -1105,9 +1114,13 @@ type Mutation {
 	once per address, however approvals and retries race — and stages
 	the Registration backend-side, and returns the inviter's own Opinion
 	records to sign — the vouch is the inviter's signature, not a
-	server write. Requires an approvable application: email verified
-	and key attached; an already-approved, rejected, or foreign-queue
-	application refuses with BAD_INPUT pinned to its entry.
+	server write. The account lands when its own Registration and the
+	first vouch-Opinion on any of its paths have both confirmed; a vouch
+	that never lands lapses and its path waits again. Requires an
+	approvable application: email verified and key attached; an
+	already-approved, rejected, or foreign-queue application, or one
+	whose applicant already landed, refuses with BAD_INPUT pinned to
+	its entry.
 	"""
 	approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
 	"""
@@ -2088,7 +2101,9 @@ type Query {
 	1. An **invite-link arrival**, still signed out, borrows **the
 	inviter's** view, resolved from the link id. That resolution
 	arrives with slice 3 and its own band-line ruling.
-	2. An **applicant** borrows **their approver's**, from the moment
+	2. An **applicant** borrows **the view of the issuer of the invite
+	link they registered through** — whoever's vouch lands them —
+	from the moment
 	the account exists and before either proof is in, whatever they
 	stage — and a **landed member** keeps borrowing it until their
 	first Opinion is signed, toward any target, landed or in flight.
@@ -3083,10 +3098,11 @@ type User implements Node & Actor {
 	"""
 	realizationAddress: String
 	"""
-	The actor whose invite this account came through — landing
-	provenance for the reciprocation gesture; the graph's own record
-	of the vouch is the inviter's Opinion. Field-level: viewer-only;
-	null for accounts without an application trace (genesis actors).
+	The member whose vouch-Opinion landed the account first — the
+	target of the reciprocation gesture; the graph's own record of the
+	vouch is that member's Opinion. Null before landing, and for
+	accounts without an application trace (genesis actors).
+	Field-level: viewer-only.
 	"""
 	invitedBy: Actor
 	"""
@@ -3136,11 +3152,15 @@ type User implements Node & Actor {
 	"""
 	pendingEmailChange: PendingEmailChange
 	"""
-	The account's latest application — the applicant's own view of
-	its progress; null when the account has none. Reading it is the
-	admission flow's repair hook: an approved application whose
-	staged Registration was lost re-stages here, on the poll (auth.md
-	"Approval and landing"). Field-level: viewer-only.
+	The account's current application — the applicant's own view of
+	its progress; null when the account has none. With several paths
+	the read prefers the landed path, then the approved-not-landed path
+	with the earliest live vouch, then the newest waiting path, then
+	the newest closed one. Reading it is the admission flow's repair
+	hook: while some path holds a live vouch and the account has not
+	landed, a staged Registration that was lost or collected re-stages
+	here, on the poll — the Registration only, never anyone's Opinion
+	(auth.md "Approval and landing"). Field-level: viewer-only.
 	"""
 	application: Application
 	"""

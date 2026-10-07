@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT v.id, ap.account_id\n         FROM auth_application_vouches v\n         JOIN auth_applications ap ON ap.id = v.application_id\n         WHERE v.lapsed_at IS NULL AND v.landed_at IS NULL\n           AND NOT EXISTS (SELECT 1 FROM mirror_records m WHERE m.record_id = v.act_id)\n           AND NOT EXISTS (SELECT 1 FROM staged_writes s\n                           WHERE s.act_id = v.act_id AND s.state <> 'expired')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "c4602f442aed4a4d0a932c77249a793a2adb5296560d4d7961d1236ea1651035"
+}

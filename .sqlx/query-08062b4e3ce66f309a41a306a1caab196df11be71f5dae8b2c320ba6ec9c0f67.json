@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT i.id AS \"id!\", i.kind AS \"kind!\", i.handle AS \"handle!\", i.actor_pubkey,\n                  i.realization_address, i.created_at AS \"created_at!\"\n           FROM actors i\n           WHERE i.id = COALESCE(\n               (SELECT v.voucher_id\n                FROM auth_application_vouches v\n                JOIN auth_applications ap ON ap.id = v.application_id\n                JOIN mirror_records m ON m.record_id = v.act_id\n                WHERE ap.account_id = $1\n                ORDER BY m.act_time, m.position, m.record_id\n                LIMIT 1),\n               (SELECT l.inviter_id\n                FROM auth_applications ap\n                JOIN auth_invite_links l ON l.id = ap.invite_link_id\n                WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL))\n             AND EXISTS (SELECT 1 FROM auth_applications ap\n                         WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "kind!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "handle!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "actor_pubkey",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 4,
+        "name": "realization_address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "08062b4e3ce66f309a41a306a1caab196df11be71f5dae8b2c320ba6ec9c0f67"
+}

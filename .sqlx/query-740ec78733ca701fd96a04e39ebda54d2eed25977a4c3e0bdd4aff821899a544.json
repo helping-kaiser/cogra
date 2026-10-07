@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applications ap\n         SET rejected_at = NOW()\n         FROM auth_invite_links l\n         WHERE ap.id = $1 AND l.id = ap.invite_link_id AND l.inviter_id = $2\n           AND ap.approved_at IS NULL\n           AND ap.rejected_at IS NULL\n           AND ap.landed_at IS NULL\n           AND NOT EXISTS (SELECT 1 FROM auth_applications o\n                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "740ec78733ca701fd96a04e39ebda54d2eed25977a4c3e0bdd4aff821899a544"
+}
