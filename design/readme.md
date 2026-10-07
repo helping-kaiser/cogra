@@ -9480,6 +9480,14 @@ lines; quoted wordings are his.
   reply's `on` names the thread's post; the aside drops where the title
   already names the handle. Slugs stay unique by fixture discipline, no
   suffix rule.
+- **Hidden accounts' edges.** A failed Undo or unhide brings back the
+  row the gesture was made from, carrying the line until Retry or the
+  next fresh load — in place in the sheet, or on the settings row if the
+  sheet closed; inside a `ContentRow` the line takes the second line and
+  `Retry` the trailing slot. A deleted account's row is `ContentRow`'s
+  new `redacted`: the reserved disc and `Deleted account`, no aside; its
+  unhide says `This account is unhidden — its posts can reach your feed
+  again.`
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not

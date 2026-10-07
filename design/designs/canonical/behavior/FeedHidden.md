@@ -10,4 +10,4 @@ WHEN the reader hides a person from a post detail or their profile -> the reader
 
 WHEN tap Undo on the hide's snackbar -> the person is unhidden AND their posts come back AND the feed stands as it was before the hide
 
-WHEN tap Undo on the hide's snackbar GIVEN the unhide does not go through -> the feed reverts to the person hidden AND the target's row says so with Retry
+WHEN tap Undo on the hide's snackbar GIVEN the unhide does not go through -> the feed reverts to the person hidden AND the row the hide was made from comes back AND says That didn't go through. with Retry until Retry or the next fresh load

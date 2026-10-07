@@ -2574,7 +2574,12 @@ looking.` The footnote carries the whole of what hiding means, which is
 the group anatomy's own rule. With nobody hidden the row reads `None`.
 `Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
 their posts can reach your feed again.` with `Undo` beside it (*new
-2026-10-05, blessed (jakob 2026-10-05)*).
+2026-10-05, blessed (jakob 2026-10-05)*). A deleted account's row
+reads `Deleted account` on the reserved disc, and its unhide answers
+with the nameless twin, `This account is unhidden — its posts can reach
+your feed again.` (*blessed (jakob 2026-10-07)*). A failed unhide or
+Undo says `That didn't go through.` on the row it was made from, in its
+second line, with `Retry` in the trailing slot.
 
 **The sheet is titled by the row that opened it** — `Hidden accounts` —
 and each row carries `Unhide` and the moment of the hiding in the ages
