@@ -10,7 +10,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { intersect, observedThresholds } from "@/test/media-env";
+import { intersect, liveObserverCount, observedThresholds } from "@/test/media-env";
 import { VeilContext } from "./body-veil";
 import { isMuted, resetMuteForTests, setMuted } from "./mute";
 import { VideoPlayer } from "./video-player";
@@ -165,6 +165,19 @@ describe("one clip at a time (FE-28)", () => {
 
     expect(second.paused).toBe(false);
     expect(first.paused).toBe(true);
+  });
+});
+
+// TEARDOWN HYGIENE (the stage-law packet's §6 row; seam 024's teardown-race
+// class): a player that leaves takes its observer with it, so nothing keeps
+// answering for a clip that is gone.
+describe("teardown hygiene", () => {
+  it("disconnects its observer when it unmounts", () => {
+    const before = liveObserverCount();
+    const { unmount } = render(<VideoPlayer src={CLIP} />);
+    expect(liveObserverCount()).toBe(before + 1);
+    unmount();
+    expect(liveObserverCount()).toBe(before);
   });
 });
 
