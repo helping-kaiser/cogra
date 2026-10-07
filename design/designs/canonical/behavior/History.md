@@ -4,6 +4,14 @@ ALWAYS History is the reader's seen-list, the list slice-3 ranking filters the f
 
 ALWAYS a content joins History the first time it was fully in the viewport
 
+ALWAYS only the top-layer content joins History: a post as itself, and never its author's avatar or handle, its citations or its tags
+
+ALWAYS reading a post's comments never adds the commenters' profiles to History
+
+WHEN a profile opens -> the profile joins History AND its posts join only once the reader scrolls each fully into the viewport
+
+ALWAYS a content taller than the viewport joins History once both its top and its bottom edge have been on screen, not necessarily at once
+
 WHEN the reader sees a thing already in History -> NEVER the seeing is counted AND NEVER the thing moves AND NEVER the thing stands twice
 
 ALWAYS a seeing stays in the app and never becomes a graph record
@@ -30,7 +38,7 @@ ALWAYS a history.commentCard carries no view-replies line
 
 ALWAYS a thing removed after it was seen keeps its place in History and wears its removal mark
 
-ALWAYS a hidden account's things stay out of History while the account is hidden
+ALWAYS a hidden account's posts and comments stay out of History while the account is hidden, and its own history.profileCard stays
 
 ALWAYS sensitive content in History keeps its veil, as on the feed
 
@@ -47,6 +55,8 @@ WHEN a post's media is tapped -> the post opens as it does from the feed AND its
 WHEN history.profileCard is tapped -> that person's profile opens AND its back arrow reads Back to History
 
 WHEN history.tagCard is tapped -> the tag's page opens AND its back arrow reads Back to History
+
+ALWAYS no history.tagCard.through stands GIVEN the tag reaches the reader through no one
 
 WHEN a card's Feed score is tapped -> the score's trace opens AND its back arrow reads Back to History
 

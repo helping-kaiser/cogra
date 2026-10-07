@@ -2537,9 +2537,10 @@ nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Nothing saved yet. A post, a comment or a person can be saved from its
 own menu, and it waits here.` names the gesture, because no card shows
 a saving affordance at rest and a reader who has never opened a ⋮ has
-no other way to find it. `Nothing here yet. Everything you read shows
+no other way to find it. `Nothing here yet. Everything you see shows
 up here on its own, newest first.` (*new 2026-10-05, blessed (jakob
-2026-10-05)*) says the opposite thing — that this one fills without being
+2026-10-05); `see` a draft of 2026-10-07, History being everything
+seen*) says the opposite thing — that this one fills without being
 asked — and names no kind, because the list holds every kind.
 
 **The settings group is `People`,** its row `Hidden accounts` with a

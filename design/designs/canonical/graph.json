@@ -1434,7 +1434,7 @@
     { "from": "ProfileMenu", "via": 5, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 
     { "from": "ProfileOwnMenu", "via": 1, "kind": "advance", "label": "Saved", "to": [{ "board": "Saved" }, { "board": "SavedEmpty", "case": "nothing kept yet" }] },
-    { "from": "ProfileOwnMenu", "via": 2, "kind": "advance", "label": "History", "to": [{ "board": "History" }, { "board": "HistoryEmpty", "case": "a new account — nothing read yet" }] },
+    { "from": "ProfileOwnMenu", "via": 2, "kind": "advance", "label": "History", "to": [{ "board": "History" }, { "board": "HistoryEmpty", "case": "a new account — nothing seen yet" }] },
     { "from": "ProfileOwnMenu", "via": 3, "kind": "advance", "label": "Share your profile", "to": [{ "terminal": "os", "case": "the platform's own share sheet" }] },
     { "from": "ProfileOwnMenu", "via": 4, "kind": "back", "label": "scrim — tap outside", "to": [{ "terminal": "back", "case": "the sheet closes" }] },
 

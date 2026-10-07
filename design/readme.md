@@ -9414,6 +9414,14 @@ lines; quoted wordings are his.
   over its drawn 34dp (§10).
 - **Reaching the hard top always reveals the collapsing band**
   (`FeedScrolled`; §4, *Motion*).
+- **History is everything seen, never only what was opened.** Seen is
+  the top-layer content in full viewport: the post itself, never its
+  author's avatar or handle, its citations or its tags; reading comments
+  adds no commenter's profile; opening a profile adds the profile, its
+  posts only once scrolled into. A card taller than the viewport is seen
+  once both its edges have been on screen, not necessarily at once. The
+  empty state and the menu's door say seen; the originless tag card
+  shows no why-line; a hidden account's own profile card stays.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not
