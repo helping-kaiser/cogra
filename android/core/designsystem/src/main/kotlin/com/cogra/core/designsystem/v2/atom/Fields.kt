@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -17,14 +19,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.error as markError
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.dataNode
@@ -149,6 +155,30 @@ fun CograTextField(
      * supporting row's message and counter (no board registers those).
      */
     node: DataNode? = null,
+    /**
+     * The supporting line's base state — what the field will accept
+     * (`TextField.jsx`'s `hint`). [error] replaces it rather than joining
+     * it: two lines under one input is where the eye stops knowing which
+     * is live.
+     */
+    hint: String? = null,
+    /**
+     * The field kind's keyboard, capitalization and return key
+     * (`TextField.prompt.md`'s kinds table, the K13 round).
+     */
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    /**
+     * The autofill hint the kind names — Compose's
+     * `androidx.compose.ui.autofill.ContentType` on the input's semantics
+     * (`ContentType.EmailAddress`, `Password`, `NewPassword`, `SmsOtpCode`).
+     */
+    contentType: ContentType? = null,
+    /** Read character by character — `mono` (a code). */
+    monospace: Boolean = false,
+    /** A control beside the box (the password field's reveal), outside the input. */
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val reading = fieldCountReading(value, cap, used)
@@ -159,42 +189,99 @@ fun CograTextField(
         verticalArrangement = Arrangement.spacedBy(Space.x1),
     ) {
         FieldLabelRow(label, optional, optionalLabel, fieldLabelColor(colors, hasError, enabled), node)
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            enabled = enabled,
-            singleLine = singleLine,
-            minLines = minLines,
-            textStyle = LocalTextStyle.current.merge(
-                MaterialTheme.typography.bodyLarge.copy(
-                    color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED),
-                ),
-            ),
-            cursorBrush = SolidColor(colors.primary),
-            modifier = Modifier
-                .fillMaxWidth()
-                .then(
-                    when {
-                        fillHeight -> Modifier.weight(1f)
-                        growToFit -> Modifier.weight(1f, fill = false)
-                        else -> Modifier
-                    },
-                )
-                .defaultMinSize(minHeight = Layout.FieldHeight)
-                .border(
-                    BorderStroke(1.dp, fieldOutlineColor(colors, hasError, enabled)),
-                    MaterialTheme.shapes.extraSmall,
-                )
-                .padding(horizontal = Space.x3, vertical = 10.dp)
-                .semantics {
-                    contentDescription =
-                        if (optional) "$label, ${optionalLabel.lowercase()}" else label
-                    if (error != null) markError(error)
-                }
-                .then(if (inputTag != null) Modifier.testTag(inputTag) else Modifier),
-        )
-        FieldSupportRow(error, reading, testTag)
+        val box: @Composable (Modifier) -> Unit = { boxModifier ->
+            FieldInput(
+                value = value,
+                onValueChange = onValueChange,
+                spoken = if (optional) "$label, ${optionalLabel.lowercase()}" else label,
+                enabled = enabled,
+                singleLine = singleLine,
+                minLines = minLines,
+                error = error,
+                keyboardOptions = keyboardOptions,
+                keyboardActions = keyboardActions,
+                visualTransformation = visualTransformation,
+                contentType = contentType,
+                monospace = monospace,
+                inputTag = inputTag,
+                modifier = boxModifier,
+            )
+        }
+        if (trailing == null) {
+            box(
+                Modifier
+                    .fillMaxWidth()
+                    .then(
+                        when {
+                            fillHeight -> Modifier.weight(1f)
+                            growToFit -> Modifier.weight(1f, fill = false)
+                            else -> Modifier
+                        },
+                    ),
+            )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Space.x2),
+            ) {
+                box(Modifier.weight(1f))
+                trailing()
+            }
+        }
+        FieldSupportRow(error, hint, reading, testTag, node)
     }
+}
+
+/** The box itself: the hairline field, its words, and what it tells the keyboard and autofill. */
+@Composable
+private fun FieldInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    spoken: String,
+    enabled: Boolean,
+    singleLine: Boolean,
+    minLines: Int,
+    error: String?,
+    keyboardOptions: KeyboardOptions,
+    keyboardActions: KeyboardActions,
+    visualTransformation: VisualTransformation,
+    contentType: ContentType?,
+    monospace: Boolean,
+    inputTag: String?,
+    modifier: Modifier,
+) {
+    val colors = MaterialTheme.colorScheme
+    val baseStyle = MaterialTheme.typography.bodyLarge.copy(
+        color = if (enabled) colors.onSurface else colors.onSurface.copy(alpha = DISABLED),
+    )
+    BasicTextField(
+        value = value,
+        onValueChange = onValueChange,
+        enabled = enabled,
+        singleLine = singleLine,
+        minLines = minLines,
+        textStyle = LocalTextStyle.current.merge(
+            if (monospace) baseStyle.copy(fontFamily = FontFamily.Monospace) else baseStyle,
+        ),
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        visualTransformation = visualTransformation,
+        cursorBrush = SolidColor(colors.primary),
+        modifier = modifier
+            .defaultMinSize(minHeight = Layout.FieldHeight)
+            .border(
+                BorderStroke(1.dp, fieldOutlineColor(colors, error != null, enabled)),
+                MaterialTheme.shapes.extraSmall,
+            )
+            .padding(horizontal = Space.x3, vertical = 10.dp)
+            .semantics {
+                this.contentDescription = spoken
+                if (error != null) markError(error)
+                if (contentType != null) this.contentType = contentType
+            }
+            .then(if (inputTag != null) Modifier.testTag(inputTag) else Modifier),
+    )
 }
 
 /** [error] takes the outline over the disabled state, which takes it over rest. */
@@ -248,9 +335,18 @@ private fun FieldLabelRow(
  * the row's far end (the spacer standing in for an absent message).
  */
 @Composable
-private fun FieldSupportRow(error: String?, reading: FieldCountReading?, testTag: String?) {
-    if (error == null && reading == null) return
+private fun FieldSupportRow(
+    error: String?,
+    hint: String?,
+    reading: FieldCountReading?,
+    testTag: String?,
+    node: DataNode?,
+) {
+    if (error == null && hint == null && reading == null) return
     val colors = MaterialTheme.colorScheme
+    // A registered field names its one supporting line `support`, in
+    // either state; an unregistered one keeps the `_error` tag.
+    val lineTag = node?.div("support")?.tag ?: testTag?.let { if (error != null) "${it}_error" else "${it}_hint" }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.Bottom,
@@ -264,7 +360,16 @@ private fun FieldSupportRow(error: String?, reading: FieldCountReading?, testTag
                 modifier = Modifier
                     .weight(1f)
                     .semantics { liveRegion = LiveRegionMode.Polite }
-                    .then(if (testTag != null) Modifier.testTag("${testTag}_error") else Modifier),
+                    .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
+            )
+        } else if (hint != null) {
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurfaceVariant,
+                modifier = Modifier
+                    .weight(1f)
+                    .then(if (lineTag != null) Modifier.testTag(lineTag) else Modifier),
             )
         } else {
             Spacer(Modifier.weight(1f))

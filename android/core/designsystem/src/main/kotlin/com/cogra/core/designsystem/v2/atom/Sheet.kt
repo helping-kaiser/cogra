@@ -140,6 +140,8 @@ fun CograSheetSurface(
     showHandle: Boolean = true,
     tallest: Boolean = false,
     testTag: String? = null,
+    /** The handle's data-node on a registered sheet (`settings.licenseSheet.dragHandle`). */
+    handleTestTag: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val side = if (tallest) 0.dp else Space.x6
@@ -189,7 +191,8 @@ fun CograSheetSurface(
                     .width(32.dp)
                     .height(4.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.outlineVariant),
+                    .background(MaterialTheme.colorScheme.outlineVariant)
+                    .then(if (handleTestTag != null) Modifier.testTag(handleTestTag) else Modifier),
             )
         }
         content()
