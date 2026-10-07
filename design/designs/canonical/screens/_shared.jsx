@@ -2873,14 +2873,22 @@ const UPDATE_NOW = "Update now";
    level — `RELEASES_URL` + `/tag/v<version>`. The doors are named for their
    release, because controls reading the same words a thumb apart tell a
    listener the verb and not the object (copy-voice, *The settings page*,
-   `Copy the PEM block`'s rule). */
+   `Copy the PEM block`'s rule).
+
+   REGISTERED under the `whatsNew` prefix (design ⇄ impl seam 089, the
+   release-registry packet): each release is its `dateline` and its `release`
+   card, both keyed by the version (`0.1.2` keys `0-1-2`), and the card's door
+   is `door`. The note lines are fixture, not copy, and stay unnamed inside the
+   card, as About's answer lines do inside `answer`. */
+const releaseKey = (version) => version.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
 function Release({ version, date, installed = false, newest = false, notes }) {
   const word = installed ? " · installed" : newest ? " · newest" : "";
   return (
     <>
-      <SectionLabel>{`Version ${version}${word} · ${date}`}</SectionLabel>
+      <SectionLabel node="dateline" nodeKey={releaseKey(version)}>{`Version ${version}${word} · ${date}`}</SectionLabel>
       <div style={{ padding: "0 16px" }}>
-        <Card>
+        <Card node="release" nodeKey={releaseKey(version)}>
           {notes.map((line) => (
             <p
               key={line}
@@ -2894,7 +2902,7 @@ function Release({ version, date, installed = false, newest = false, notes }) {
               {line}
             </p>
           ))}
-          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}}>
+          <InlineAction selfStart ariaLabel={`See version ${version} on GitHub`} onClick={() => {}} node="door">
             See it on GitHub
           </InlineAction>
         </Card>
@@ -2909,14 +2917,19 @@ function Release({ version, date, installed = false, newest = false, notes }) {
    release heads the list as the newest; nothing else changes: no badge, no
    banner, no nagging. `Update now` opens the store listing
    (`STORE_LISTING_URL`) in the app; on the web it reloads the page into the
-   new version. Its spoken name says which version it brings. */
+   new version. Its spoken name says which version it brings.
+
+   The page names its parts under the `whatsNew` prefix: the `header`, the
+   behind state's `newerLine` with its `update`, each `Release`'s own, and the
+   `footnote`. */
 function WhatsNewBody({ newer }) {
   return (
     <>
-      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" />
+      <PageHeader title="What's new" backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 0 16px" }}>
         {newer && (
           <p
+            data-node="newerLine"
             style={{
               margin: 0,
               padding: "8px 24px 0",
@@ -2927,7 +2940,7 @@ function WhatsNewBody({ newer }) {
             }}
           >
             {NEWER_VERSION_LINE} <span aria-hidden="true">—</span>{" "}
-            <InlineAction size="sm" ariaLabel={`Update to version ${newer.version}`} onClick={() => {}}>
+            <InlineAction size="sm" ariaLabel={`Update to version ${newer.version}`} onClick={() => {}} node="update">
               {UPDATE_NOW}
             </InlineAction>
           </p>
@@ -2936,7 +2949,7 @@ function WhatsNewBody({ newer }) {
           <Release key={release.version} {...release} />
         ))}
         <div style={{ padding: "16px 24px 0" }}>
-          <QuietNote>Newest first.</QuietNote>
+          <QuietNote node="footnote">Newest first.</QuietNote>
         </div>
       </div>
     </>
@@ -4578,10 +4591,13 @@ function PadLine({ children }) {
    IT TAKES THE HANDLE because the same pad now opens from two places — a
    queue of one's own, and an ask link a stranger to that queue sent — and the
    act is identical from both. One note, two boards: the member who answers an
-   ask link is doing exactly what the queue's own reader would have done. */
-function ApprovePadNote({ handle }) {
+   ask link is doing exactly what the queue's own reader would have done.
+
+   `node` names the note where a registered pad places it (`note`, the pad
+   tails); its lines stay unnamed inside it. */
+function ApprovePadNote({ handle, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }} data-node={node}>
       <PadLine>Vouching is the act. Set signs your opinion on {handle} and brings them in.</PadLine>
       <PadLine>It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.</PadLine>
     </div>
@@ -4699,10 +4715,10 @@ function KeptApprovalRow({ shown }) {
    `Invites` and its two closing dialogs register them, and every other board
    this page stands on renders them stripped. An application is keyed by its
    applicant's handle — a kept approval's row is an application too, at the
-   head — and a group by the id of the link its applications came through. The
-   live links' cards stay unnamed: the `revoke` chip draws the first one twice,
-   and a chip copy of a keyed card is a case the chip-key rule does not cover
-   yet. */
+   head — and a group by the id of the link its applications came through. A
+   live link's card is `link`, keyed by the same id; the `revoke` chip draws
+   the first one twice, and each copy keeps the link's own key (jakob
+   2026-10-07, ruling 39: a chip copy of a keyed instance). */
 function InvitesBody({ approving = false, kept = "none", revoke }) {
   return (
     <>
@@ -4813,7 +4829,7 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
               `revoke` chip draws that moment on the first link; a failure
               keeps the card with the standard failure answer. The two
               readings are toggled by the board's chip values. */}
-          <div style={{ display: revoke ? revoke.rest : "block" }}>
+          <div style={{ display: revoke ? revoke.rest : "block" }} {...(revoke ? { "data-node-chip": "revoke", "data-node-key": "rest" } : null)}>
             <PayoutAddress
               label="Single use · not used yet"
               address={SOL_INVITE_LINK}
@@ -4822,10 +4838,12 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
               onChange={() => {}}
               changeLabel="Revoke"
               caption="Expires in 7 days · 22.09.2026"
+              node="link"
+              nodeKey={SOL_INVITE_ID}
             />
           </div>
           {revoke && (
-            <div style={{ display: revoke.busy }}>
+            <div style={{ display: revoke.busy }} data-node-chip="revoke" data-node-key="waiting">
               <PayoutAddress
                 label="Single use · not used yet"
                 address={SOL_INVITE_LINK}
@@ -4836,6 +4854,8 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
                 changeBusy
                 changeBusyLabel="Revoking…"
                 caption="Expires in 7 days · 22.09.2026"
+                node="link"
+                nodeKey={SOL_INVITE_ID}
               />
             </div>
           )}
@@ -4847,6 +4867,8 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             onChange={() => {}}
             changeLabel="Revoke"
             caption="Expires in 2 days · 17.09.2026"
+            node="link"
+            nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)}
           />
         </div>
 

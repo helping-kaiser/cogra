@@ -86,6 +86,8 @@ export interface StanceStandingProps {
    * it is untouched. Without it the label is the plain `aria-hidden` line.
    */
   onOpenHistory?: () => void;
+  /** The data-node name its placer gives the standing (design ⇄ impl seam 002; renders as attributes only — the open pad's `standing`). Given one, it also names its two readouts, `current` and `pick`, each with its `label`, `face` and `exact` while it reads as a readout rather than a sentence. */
+  node?: string;
 }
 
 export declare function StanceStanding(props: StanceStandingProps): JSX.Element;
@@ -97,6 +99,8 @@ export interface StanceLandingLineProps {
   landing: StanceLanding | null;
   /** The record family's axis questions, for the spoken reading. */
   names?: AxisNames;
+  /** The data-node name its placer gives the readout (design ⇄ impl seam 002; renders as attributes only — the open pad's `landing`). Given one, the readout carries it, with its `label`, `face` and `exact` while it reads as a readout rather than a sentence. */
+  node?: string;
 }
 
 export declare function StanceLandingLine(props: StanceLandingLineProps): JSX.Element;
