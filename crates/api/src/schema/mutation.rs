@@ -2529,7 +2529,10 @@ impl Mutation {
     /// Prepares the viewer's stance toward a node — one new edge carrying
     /// exactly the picked values, never a delta against the bundle
     /// (design.md §8.1). Toward a Profile this is the interpersonal
-    /// stance, including the reciprocation gesture.
+    /// stance, including the reciprocation gesture. A verified applicant
+    /// with an attached key may stage one Opinion and one Affinity: each
+    /// comes back carried with the application — nothing to sign until
+    /// the landing — and a second of a family refuses with BAD_INPUT.
     async fn prepare_stance(
         &self,
         ctx: &Context<'_>,
@@ -2839,7 +2842,10 @@ impl Mutation {
     /// Prepares a new Post: one genesis Publish through the ordinary
     /// write path — the returned write pre-signs, seals, and approves
     /// like any other; `node` is the id the post serves under once the
-    /// record lands (post.md §1).
+    /// record lands (post.md §1). A verified applicant with an attached
+    /// key may stage one post: the batch comes back carried with the
+    /// application — nothing to sign until the landing — and a second
+    /// post refuses with BAD_INPUT.
     async fn prepare_post(
         &self,
         ctx: &Context<'_>,

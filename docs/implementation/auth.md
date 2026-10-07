@@ -477,11 +477,21 @@ dismissible hints — the actionable email-verification step, the
 approval wait, the landing. The first tap of a kind opens the
 real surface and stages the act; the next tap of a staged kind
 answers in place that it waits with the application. A staged
-act is visible only to its author, in their own chronicle —
-nothing is public before it is signed. It **signs at approval,
-automatically**, in the batch the vouch-in lands with; on
-rejection it waits on the device, never sent, until a member
-vouches the account in, then signs with the landing batch.
+act is **carried**: the server holds it — whether or not any path
+is open, never garbage-collected, surviving the loss of the device
+— and it is visible only to its author, in their own chronicle;
+nothing is public before it is signed. It **signs at the landing,
+automatically**: the landing that completes the ceremony releases
+the carried acts as one batch, each depending on the admission
+Registration and the winning vouch, and the device's poll signs
+them without a prompt. Never earlier: an act signed at
+registration could leave permanent graph content from someone no
+member's edge ever reached. The staging verbs are the ordinary
+`preparePost` and `prepareStance`, open to a verified applicant
+with an attached key for exactly these three kinds; the signing
+budget is spent at staging, and solvency is left to ordering — the
+applicant may hold no funds yet, and the batch cannot be orderable
+before the funded landing.
 Every other acting surface stays visible but
 locked: styled as disabled yet still tappable, with the tap
 explaining that approval unlocks it. Account management —
