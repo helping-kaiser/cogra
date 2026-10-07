@@ -95,11 +95,11 @@ function application(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function stagedRegistration() {
+function stagedRegistration(state = "AWAITING_PRE_SIGN") {
   return {
     __typename: "StagedWrite",
     id: "sw-1",
-    state: "AWAITING_PRE_SIGN",
+    state,
     family: "REGISTRATION",
     canonicalProposal: "cHJvcG9zYWw=",
     verifiedAct: null,
@@ -207,6 +207,29 @@ describe("registration signer", () => {
   it("refuses when an applicant has no application", async () => {
     server.use(statusHandler(me({ application: null })));
     expect(await signer({}).advance()).toEqual({ kind: "refused", errors: [] });
+  });
+
+  it("a landed registration with no live vouch reads waiting", async () => {
+    server.use(
+      statusHandler(
+        me({
+          application: application({ emailVerified: true, keyAttached: true }),
+          stagedWrites: {
+            __typename: "StagedWriteConnection",
+            edges: [{ __typename: "StagedWriteEdge", node: stagedRegistration("LANDED") }],
+          },
+        }),
+      ),
+    );
+    await store.saveActor(randomBytes(32), true);
+    const writeSigner = fakeWriteSigner({ kind: "done", id: "sw-1", state: "RELAYING" });
+    expect(await signer({ writeSigner }).advance()).toEqual({
+      kind: "awaitingApproval",
+      emailVerified: true,
+      keyAttached: true,
+      keyOnDevice: true,
+    });
+    expect(writeSigner.calls).toBe(0);
   });
 
   it("awaits landing once approved", async () => {

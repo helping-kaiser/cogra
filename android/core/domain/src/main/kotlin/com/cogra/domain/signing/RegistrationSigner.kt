@@ -11,6 +11,7 @@ package com.cogra.domain.signing
 import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
+import com.cogra.domain.WriteState
 import com.cogra.domain.identity.KeyCeremony
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.store.IdentityStore
@@ -70,7 +71,11 @@ class RegistrationSigner @Inject constructor(
         // waits on a milestone — flush it on every pass until it lands.
         ceremony.uploadPendingBackup()
         if (status.accountState == AccountState.MEMBER) return RegistrationProgress.Member
-        val staged = status.stagedRegistration
+        // A LANDED Registration is done: the node exists, and what the
+        // account waits on now is a vouch (auth.md "Approval and landing").
+        // Falling through to the application reads waiting again after a
+        // lapsed vouch, approved while a vouch is in play.
+        val staged = status.stagedRegistration?.takeIf { it.state != WriteState.LANDED }
         if (staged != null) {
             // The same predicate as keyOnDevice: signing with a
             // mismatched slot key would only fail server-side — a
