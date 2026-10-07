@@ -4591,10 +4591,13 @@ function PadLine({ children }) {
    IT TAKES THE HANDLE because the same pad now opens from two places — a
    queue of one's own, and an ask link a stranger to that queue sent — and the
    act is identical from both. One note, two boards: the member who answers an
-   ask link is doing exactly what the queue's own reader would have done. */
-function ApprovePadNote({ handle }) {
+   ask link is doing exactly what the queue's own reader would have done.
+
+   `node` names the note where a registered pad places it (`note`, the pad
+   tails); its lines stay unnamed inside it. */
+function ApprovePadNote({ handle, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 4 }} data-node={node}>
       <PadLine>Vouching is the act. Set signs your opinion on {handle} and brings them in.</PadLine>
       <PadLine>It is one signed, priced act — and it is theirs to answer: their opinion back completes the pair.</PadLine>
     </div>
