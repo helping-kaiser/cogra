@@ -136,6 +136,26 @@ fn forbidden() -> async_graphql::Error {
     )
 }
 
+/// The refusal for dismissing the vouch-back prompt from an account with
+/// no landed application — an applicant, or a genesis actor that never
+/// applied.
+///
+/// FORBIDDEN rather than an idempotent no-op: the dismissal lives on the
+/// landed application row, so before landing it has nowhere to live, and
+/// a no-op would answer success while the prompt came back at landing —
+/// the intent dropped silently. No such account is ever shown the prompt,
+/// so the call is a client bug, which is what the transport-tier refusal
+/// is for. Never `EMAIL_NOT_VERIFIED`: proving the address would not make
+/// the call valid.
+fn no_vouch_back_prompt() -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new("no landed application: no vouch-back prompt to dismiss").extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "FORBIDDEN");
+        },
+    )
+}
+
 /// The transport-tier refusal for an acting request whose account has
 /// not proven its email yet — the one non-member reason a client can
 /// render, because the account is a person waiting on a link rather than
@@ -1903,21 +1923,8 @@ impl Mutation {
     ) -> async_graphql::Result<DismissVouchBackPayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
-        // FORBIDDEN rather than an idempotent no-op: a no-op would answer
-        // success while the dismissal had nowhere to live, so the prompt
-        // would come back at landing and the intent would be dropped
-        // silently. The call is a client bug — no such account is shown
-        // the prompt — which is what the transport-tier refusal is for
-        // (api-spec "Authentication"). Never EMAIL_NOT_VERIFIED: proving
-        // the address would not make the call valid.
         if !store::dismiss_vouch_back(pool, v.user_id).await? {
-            use async_graphql::ErrorExtensions;
-            return Err(async_graphql::Error::new(
-                "no landed application: no vouch-back prompt to dismiss",
-            )
-            .extend_with(|_, e: &mut async_graphql::ErrorExtensionValues| {
-                e.set("code", "FORBIDDEN");
-            }));
+            return Err(no_vouch_back_prompt());
         }
         Ok(DismissVouchBackPayload {
             user: store::actor_identity(pool, v.user_id)

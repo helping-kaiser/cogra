@@ -209,8 +209,6 @@ async fn stage_signed_opinion(pool: &PgPool, account: Uuid, address: &str, targe
     .expect("stage");
 }
 
-// ---- the wire: real sessions, real handshakes, real landings ----
-
 /// A landed member reachable over the HTTP surface: registered through
 /// `approver`'s link, key attached, funded, landed, logged in.
 async fn wire_member(rig: &WireRig, approver: Uuid, handle: &str) -> (Uuid, ActorKey, String) {
@@ -307,8 +305,6 @@ async fn land_stance(rig: &WireRig, token: &str, key: &ActorKey, target: Value) 
 fn first_error_code(json: &Value) -> Value {
     json["errors"][0]["extensions"]["code"].clone()
 }
-
-// ---- the ladder ----
 
 /// The Genesis Moderator is found by the custodied key, not by handle —
 /// the handle is the operator's runtime input and the API never sees it —
@@ -674,14 +670,12 @@ async fn an_account_with_no_inviter_borrows_nobody(pool: PgPool) {
     assert_eq!(borrowed_handle(&schema, viewer(genesis_id)).await, None);
 }
 
-// ---- the vouch-back prompt's dismissal ----
-
 /// The dismissal is account state, never a device-local bit: put away on
 /// one session, it stays away on every other (VouchBack.md:27), and a
 /// repeat is harmless. The prompt's own question is untouched.
 ///
 /// Dismissing the vouch-back prompt holds on every session of the account, and dismissing again changes nothing.
-/// ´claim:vouch-back:the-dismissal-is-account-state´
+/// ´claim:vouch:the-dismissal-is-account-state´
 #[sqlx::test(migrations = "../../migrations")]
 async fn dismissing_the_vouch_back_holds_on_every_session(pool: PgPool) {
     let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
@@ -713,7 +707,7 @@ async fn dismissing_the_vouch_back_holds_on_every_session(pool: PgPool) {
 /// prompt; another viewer reads false rather than learning it.
 ///
 /// Another viewer always reads the dismissal as false.
-/// ´claim:vouch-back:the-dismissal-is-viewer-only´
+/// ´claim:vouch:the-dismissal-is-viewer-only´
 #[sqlx::test(migrations = "../../migrations")]
 async fn vouch_back_dismissed_is_viewer_only(pool: PgPool) {
     let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
@@ -736,7 +730,7 @@ async fn vouch_back_dismissed_is_viewer_only(pool: PgPool) {
 /// Dismissing is the account's own act, so it needs the account's session.
 ///
 /// Dismissing without a session is refused as unauthenticated.
-/// ´claim:vouch-back:dismissing-needs-a-session´
+/// ´claim:vouch:dismissing-needs-a-session´
 #[sqlx::test(migrations = "../../migrations")]
 async fn dismiss_without_a_session_is_unauthenticated(pool: PgPool) {
     let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
@@ -749,7 +743,7 @@ async fn dismiss_without_a_session_is_unauthenticated(pool: PgPool) {
 /// not survive landing.
 ///
 /// An applicant's dismissal is refused as forbidden and leaves nothing behind.
-/// ´claim:vouch-back:an-applicant-cannot-dismiss´
+/// ´claim:vouch:an-applicant-cannot-dismiss´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_applicant_cannot_dismiss(pool: PgPool) {
     let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
