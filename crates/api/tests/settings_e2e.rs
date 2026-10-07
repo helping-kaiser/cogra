@@ -43,7 +43,7 @@ fn breach_rig(pool: PgPool) -> WireRig {
     let (mut ctx, auth) =
         rig::api_context(pool.clone(), mailer.clone(), RateLimitConfig::unlimited());
     ctx.breach = Arc::new(OneBreachedPassword);
-    let standin = ctx.funding.clone();
+    let standin = ctx.boundary.0.clone();
     let uploads = rig::upload_routing(&ctx);
     let app = api::app(
         api::schema::build(ctx),
