@@ -419,7 +419,10 @@ async fn request_with_a_wrong_password_is_invalid_credentials_and_mails_nothing(
         .request(&token, "new@example.com", "not the password")
         .await;
     assert_eq!(codes(&refused), vec!["INVALID_CREDENTIALS"]);
-    assert_eq!(refused["userErrors"][0]["field"], json!(["currentPassword"]));
+    assert_eq!(
+        refused["userErrors"][0]["field"],
+        json!(["currentPassword"])
+    );
     assert!(refused["pendingEmailChange"].is_null());
     assert_eq!(rig.mailer.total(), 0);
     assert!(rig.me(&token).await["pendingEmailChange"].is_null());
@@ -560,7 +563,10 @@ async fn a_wrong_code_against_a_pending_change_is_token_invalid(pool: PgPool) {
     assert_eq!(codes(&refused), vec!["VERIFICATION_TOKEN_INVALID"]);
     assert_eq!(refused["userErrors"][0]["field"], json!(["code"]));
     assert_eq!(rig.stored_email(user).await, "a@example.com");
-    assert_eq!(rig.me(&token).await["pendingEmailChange"]["codeConfirmed"], false);
+    assert_eq!(
+        rig.me(&token).await["pendingEmailChange"]["codeConfirmed"],
+        false
+    );
 }
 
 /// Past its window a change answers that it ran out — to its code and
@@ -650,7 +656,10 @@ async fn a_resend_after_disabling_rearms_the_code(pool: PgPool) {
         vec!["VERIFICATION_TOKEN_INVALID"],
         "the fresh code starts a fresh count"
     );
-    assert_eq!(codes(&rig.confirm(&token, &fresh).await), Vec::<&str>::new());
+    assert_eq!(
+        codes(&rig.confirm(&token, &fresh).await),
+        Vec::<&str>::new()
+    );
     rig.confirm(&token, &rig.mailer.latest_code_for("b@example.com"))
         .await;
     assert_eq!(rig.stored_email(user).await, "b@example.com");
@@ -824,7 +833,10 @@ async fn resend_never_resets_a_confirmed_side(pool: PgPool) {
     rig.resend(&token).await;
     rig.resend(&token).await;
 
-    assert_eq!(rig.me(&token).await["pendingEmailChange"]["codeConfirmed"], true);
+    assert_eq!(
+        rig.me(&token).await["pendingEmailChange"]["codeConfirmed"],
+        true
+    );
     rig.confirm(&token, &rig.mailer.latest_code_for("b@example.com"))
         .await;
     assert_eq!(rig.stored_email(user).await, "b@example.com");
@@ -987,7 +999,10 @@ async fn email_and_pending_change_are_viewer_only(pool: PgPool) {
     }
     let own = rig.gql(Some(&owner), &query, json!({ "id": alice })).await;
     assert_eq!(own["user"]["email"], "a@example.com");
-    assert_eq!(own["user"]["pendingEmailChange"]["newEmail"], "b@example.com");
+    assert_eq!(
+        own["user"]["pendingEmailChange"]["newEmail"],
+        "b@example.com"
+    );
 }
 
 /// The new-side token names its owner first: another signed-in account
@@ -1104,7 +1119,9 @@ async fn the_replaced_addresss_link_is_verification_token_invalid(pool: PgPool) 
     assert_eq!(codes(&refused), vec!["VERIFICATION_TOKEN_INVALID"]);
     assert!(!rig.verified(user).await);
 
-    let fresh = rig.verify(&rig.mailer.latest_code_for("right@example.com")).await;
+    let fresh = rig
+        .verify(&rig.mailer.latest_code_for("right@example.com"))
+        .await;
     assert_eq!(fresh["ok"], true);
     assert_eq!(rig.stored_email(user).await, "right@example.com");
 }

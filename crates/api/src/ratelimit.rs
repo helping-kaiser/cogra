@@ -320,7 +320,9 @@ impl RateLimitConfig {
     }
 
     /// A config no test can trip by accident — for rigs exercising other
-    /// surfaces.
+    /// surfaces. The email-change code cap keeps its default: it is a
+    /// security property, not a throttle, and five wrong codes are never
+    /// incidental.
     pub fn unlimited() -> Self {
         let generous = Window::GENEROUS;
         Self {
@@ -336,8 +338,6 @@ impl RateLimitConfig {
             confirm_ip: generous,
             email_change_request_account: generous,
             email_change_resend_account: generous,
-            // The code cap is a security property, not a throttle a rig
-            // trips by accident: five wrong codes is never incidental.
             email_change_code_tries: 5,
             upload_account: generous,
             signing: SigningBudget::UNLIMITED,

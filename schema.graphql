@@ -1059,7 +1059,9 @@ type Mutation {
 	VERIFICATION_TOKEN_INVALID userError when the token is invalid or
 	the account expired. On the unverified carve-out the token is the
 	pending change's link: it moves the address and verifies in one
-	step, or answers EMAIL_IN_USE when the address was taken meanwhile.
+	step, or answers EMAIL_IN_USE when the address was taken meanwhile
+	— pinned to no field, since the address came from the pending
+	change, not this input.
 	"""
 	verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
 	"""
@@ -1175,7 +1177,8 @@ type Mutation {
 	the link landed, only the link once the code did — a proven side
 	is never reset. A fresh code re-arms the wrong-try cap. Spends the
 	account's mail budget like a request; NOT_FOUND when nothing is
-	pending.
+	pending. A fully proven change still pending is one waiting out a
+	collision: nothing is owed, so nothing is sent or charged.
 	"""
 	resendEmailChange: ResendEmailChangePayload!
 	"""

@@ -1437,7 +1437,9 @@ pub enum CodeSubmission {
 /// `Disabled`, so the reader learns the code died at the moment it did.
 ///
 /// The row is locked for the read-compare-write, so two concurrent
-/// wrong tries cannot both read the count below the cap.
+/// wrong tries cannot both read the count below the cap. Once the side
+/// is proven, a spent code is not a guess: neither a retry nor a stray
+/// press counts toward the cap.
 pub async fn submit_email_change_code(
     pool: &PgPool,
     user_id: Uuid,
@@ -1462,8 +1464,6 @@ pub async fn submit_email_change_code(
     let outcome = if row.code_disabled_at.is_some() {
         CodeSubmission::Disabled
     } else if row.original_confirmed_at.is_some() {
-        // A spent code is not a guess: neither a retry nor a stray press
-        // after the side landed counts toward the cap.
         if matches {
             CodeSubmission::AlreadyConfirmed(row.id)
         } else {

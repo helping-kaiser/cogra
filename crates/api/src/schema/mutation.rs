@@ -1371,7 +1371,9 @@ impl Mutation {
     /// VERIFICATION_TOKEN_INVALID userError when the token is invalid or
     /// the account expired. On the unverified carve-out the token is the
     /// pending change's link: it moves the address and verifies in one
-    /// step, or answers EMAIL_IN_USE when the address was taken meanwhile.
+    /// step, or answers EMAIL_IN_USE when the address was taken meanwhile
+    /// — pinned to no field, since the address came from the pending
+    /// change, not this input.
     async fn verify_email(
         &self,
         ctx: &Context<'_>,
@@ -1385,8 +1387,6 @@ impl Mutation {
                 ok: true,
                 user_errors: vec![],
             }),
-            // The carve-out's collision is about no input field: the
-            // address it names came from the pending change.
             Err(OnboardingError::EmailInUse) => Ok(VerifyEmailPayload {
                 ok: false,
                 user_errors: vec![UserError::new(
@@ -1892,7 +1892,12 @@ impl Mutation {
             mailer.send(code_mail(credentials.email, &code.token)).await;
         }
         mailer
-            .send(link_mail(new_email, requires_code, &web_origin.0, &link.token))
+            .send(link_mail(
+                new_email,
+                requires_code,
+                &web_origin.0,
+                &link.token,
+            ))
             .await;
         Ok(RequestEmailChangePayload {
             pending_email_change: store::pending_email_change(pool, v.user_id)
@@ -1959,9 +1964,8 @@ impl Mutation {
             )
             .await?
             {
-                store::CodeSubmission::Confirmed(id) | store::CodeSubmission::AlreadyConfirmed(id) => {
-                    id
-                }
+                store::CodeSubmission::Confirmed(id)
+                | store::CodeSubmission::AlreadyConfirmed(id) => id,
                 store::CodeSubmission::Wrong => return Ok(refuse(wrong_code())),
                 store::CodeSubmission::Disabled => {
                     return Ok(refuse(UserError::at(
@@ -1984,16 +1988,15 @@ impl Mutation {
                 }
             },
         };
-        let user_errors = match store::apply_email_change(pool, change_id, onboarding::dead_before())
-            .await?
-        {
-            store::EmailChangeApply::Applied | store::EmailChangeApply::NotReady => vec![],
-            store::EmailChangeApply::Ended(end) => return Ok(refuse(ended_change(end))),
-            store::EmailChangeApply::EmailInUse => vec![UserError::new(
-                ErrorCode::EmailInUse,
-                "the new address is already registered to another account",
-            )],
-        };
+        let user_errors =
+            match store::apply_email_change(pool, change_id, onboarding::dead_before()).await? {
+                store::EmailChangeApply::Applied | store::EmailChangeApply::NotReady => vec![],
+                store::EmailChangeApply::Ended(end) => return Ok(refuse(ended_change(end))),
+                store::EmailChangeApply::EmailInUse => vec![UserError::new(
+                    ErrorCode::EmailInUse,
+                    "the new address is already registered to another account",
+                )],
+            };
         let user = store::actor_identity(pool, v.user_id)
             .await?
             .map(|identity| User::from_viewer(identity, v));
@@ -2005,7 +2008,8 @@ impl Mutation {
     /// the link landed, only the link once the code did — a proven side
     /// is never reset. A fresh code re-arms the wrong-try cap. Spends the
     /// account's mail budget like a request; NOT_FOUND when nothing is
-    /// pending.
+    /// pending. A fully proven change still pending is one waiting out a
+    /// collision: nothing is owed, so nothing is sent or charged.
     async fn resend_email_change(
         &self,
         ctx: &Context<'_>,
@@ -2025,8 +2029,6 @@ impl Mutation {
         let Some(change) = store::pending_email_change(pool, v.user_id).await? else {
             return Ok(not_found());
         };
-        // A fully proven change still live is one waiting out a
-        // collision: nothing is owed, so nothing is sent or charged.
         if change.code_owed() || change.link_owed() {
             if !ratelimit::spend_mail_budget(
                 pool,
