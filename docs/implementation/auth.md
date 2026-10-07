@@ -347,6 +347,8 @@ reach, and one URL opens the app where one is installed
 - Ask: `https://<web-origin>/vouch/<link-id>`
 - Email verification: `https://<web-origin>/verify?token=<token>`
 - Password reset: `https://<web-origin>/reset?token=<token>`
+- Email change: `https://<web-origin>/email-change?token=<token>` —
+  the unverified carve-out mails the verification URL instead
 
 Native apps also accept the pasted link or bare token directly —
 the universal fallback when link verification is unavailable (and
@@ -735,14 +737,38 @@ login-recovery channel.
 3. On success the new address becomes the verified email; reset and
    notifications follow it from that point.
 
+The change lives 24 hours, and its code with it — long enough for
+mail that lags and for two inboxes on two devices, the same
+mail-outage reasoning behind the 7-day unverified window ("Expiry"
+above). One change is pending per account: a new request supersedes
+the pending one, whose secrets die. The code allows 5 wrong tries;
+the fifth disables it and already answers
+`EMAIL_CHANGE_CODE_DISABLED`, and the change stays live until Resend
+mints a fresh code with a fresh count. Resend mails only the side
+still owed — both while both wait, the code alone once the link
+landed, the link alone once the code did — and never resets a
+confirmed side. Cancel kills both secrets and keeps the address.
+
+A change ends once — applied, canceled, or run out — and its row
+outlives the end, so a link opened later answers by what ended its
+change (`EMAIL_CHANGE_ALREADY_APPLIED`, `EMAIL_CHANGE_CANCELED`,
+`EMAIL_CHANGE_EXPIRED`) rather than as an unknown token. A link
+belonging to another account answers `EMAIL_CHANGE_OTHER_ACCOUNT`
+before anything about its change. Ended rows go with the spent-secret
+sweep after its retention; past it, a stale link reads as unknown.
+
+Request and Resend mail addresses of the caller's choosing, so both
+spend a per-account mail budget ("Rate limiting" below), which
+answers visibly with `RATE_LIMITED` and sends nothing.
+
 If the new address gets registered by someone else before both sides
 land, the confirm that would apply the change surfaces `EMAIL_IN_USE`
 instead — and keeps doing so on retries until the change expires, so
 the owner always learns the real reason. The change row stays live for
 its TTL: should the address free up in that window, a retry applies
 the change. No enumeration channel opens here — the error is only
-visible after proving control of the account, and `requestEmailChange`
-stays silent.
+visible after proving control of the account, and a request to a
+taken address reads exactly like any other.
 
 The two-sided proof is deliberate: the original-address code blocks a
 hijacker holding only a live session from redirecting recovery, and
@@ -760,7 +786,8 @@ password is still
 re-entered. The new address's verification link is the whole proof:
 opening it applies the change and verifies the email in the one step
 (step 4 of "Application"), and links sent to the replaced address stop
-working.
+working — no resend goes to the replaced address while the change is
+pending. The 7-day window keeps running from registration.
 
 ---
 
@@ -957,6 +984,9 @@ limits survive restarts and hold across instances.
 - Account-deletion requests (`requestAccountDeletion`) — limited per
   account. The caller is authenticated, so the budget answers
   visibly.
+- Email-change requests and resends (`requestEmailChange`,
+  `resendEmailChange`) — one mail budget each, per account; visible
+  for the same reason.
 - Token confirmations (`verifyEmail`, `confirmPasswordReset`,
   `confirmEmailChange`, `confirmAccountDeletion`) — limited per IP. The tokens are
   high-entropy; the budget bounds guessing anyway.

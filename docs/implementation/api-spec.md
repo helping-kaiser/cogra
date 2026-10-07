@@ -508,7 +508,7 @@ enum ErrorCode {
   EMAIL_NOT_VERIFIED           # acting before the address is proven
   NOT_FOUND                    # an id resolved to nothing
   BAD_INPUT                    # malformed args, or a constraint not modeled as data
-  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget — never a signing act
+  RATE_LIMITED                 # an auth or upload endpoint's per-IP / per-account budget (incl. the email change's request and resend mail budget) — never a signing act
   INTERNAL                     # collapsed server fault; detail is logged, not surfaced
 
   # Expected business failures — carried in UserError.code
@@ -520,6 +520,11 @@ enum ErrorCode {
   EMAIL_IN_USE                 # the email already belongs to an account
   ACTOR_KEY_IN_USE             # the actor key is bound to a different account
   VERIFICATION_TOKEN_INVALID   # email verification token invalid or expired
+  EMAIL_CHANGE_EXPIRED         # the email change ran out before both sides landed
+  EMAIL_CHANGE_OTHER_ACCOUNT   # the email-change link belongs to a different account than the session's
+  EMAIL_CHANGE_CODE_DISABLED   # the current-address code was disabled after too many wrong tries; Resend sends a fresh one
+  EMAIL_CHANGE_CANCELED        # the link's email change was called off
+  EMAIL_CHANGE_ALREADY_APPLIED # the link's email change already applied
   RESET_TOKEN_INVALID          # password-reset token invalid, expired, or used
   DELETION_TOKEN_INVALID       # the account-deletion link is unknown, superseded, cancelled, expired, or spent
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
@@ -1050,6 +1055,11 @@ type User implements Node & Actor {
   "Whether the account's email is verified — one of the two
    approvability proofs while an application is pending."
   emailVerified: Boolean
+  "The account's email address. Field-level: viewer-only."
+  email: String
+  "The account's email change in flight, if any; null when none is
+   pending or the last one ran out. Field-level: viewer-only."
+  pendingEmailChange: PendingEmailChange
   "The account's latest application — the applicant's own view of
    its progress; null when the account has none."
   application: Application
@@ -2608,10 +2618,10 @@ These bind every mutation below.
   declares every named result field nullable; the bodies below show
   the populated success shape. Transport faults ride the `errors` array with an
   `extensions.code` and are never repeated per payload. The one carve-out
-  carries no `userErrors`: the three deliberately-silent verbs —
-  `resendVerificationEmail`, `requestPasswordReset`, `requestEmailChange`
-  — always report success, so surfacing a failure there would reintroduce
-  the account enumeration they exist to prevent.
+  carries no `userErrors`: the two deliberately-silent verbs —
+  `resendVerificationEmail`, `requestPasswordReset` — always report
+  success, so surfacing a failure there would reintroduce the account
+  enumeration they exist to prevent.
 
 ### The write flow
 
@@ -4323,7 +4333,13 @@ type RegisterPayload {
 
 input VerifyEmailInput { verificationToken: String! }
 "ok is false with a VERIFICATION_TOKEN_INVALID userError when the
- token is invalid or the account expired."
+ token is invalid or the account expired — a link used, replaced or
+ past its time, never saying which. On the unverified carve-out
+ (auth.md \"The unverified carve-out\") the token is the pending
+ change's link: it applies the new address and verifies in one step,
+ and success lands the ordinary Verified landing. A carve-out address
+ another account took meanwhile answers EMAIL_IN_USE, ok false, and
+ nothing moves."
 type VerifyEmailPayload { ok: Boolean! }
 
 input ResendVerificationEmailInput { email: String! }
@@ -4506,25 +4522,91 @@ input ChangePasswordInput {
 }
 type ChangePasswordPayload { ok: Boolean }
 
-"Begin an email change. Re-authenticates with currentPassword; the
- server sends a confirmation code to the current address and a
- verification link to newEmail (the two-sided proof, auth.md)."
+"Begin an email change (auth.md \"Email change\"). Re-authenticates
+ with currentPassword: a wrong one is INVALID_CREDENTIALS at
+ [\"currentPassword\"] and nothing is mailed — the caller is already
+ signed in, so the refusal leaks nothing. A malformed newEmail is
+ BAD_INPUT at [\"newEmail\"]. A newEmail already registered to another
+ account reads exactly like success. One change per account: a new
+ request supersedes a pending one, whose secrets die and whose link
+ then answers EMAIL_CHANGE_CANCELED.
+ A verified account gets the two-sided proof: a 6-digit single-use
+ numeric code to the current address and a link to newEmail. An
+ unverified account (auth.md \"The unverified carve-out\") gets no
+ code: newEmail receives the account's verification link, the
+ replaced address's verification link dies, and opening the new one
+ (verifyEmail) applies the address and verifies in one step; the
+ 7-day reap window does not restart.
+ Requests spend a per-account mail budget; a spent budget answers a
+ transport-tier RATE_LIMITED and nothing is mailed or recorded. The
+ budget is per account and says nothing about newEmail, so it leaks
+ nothing."
 input RequestEmailChangeInput {
   newEmail: String!
   currentPassword: String!
 }
-"Always succeeds for a well-formed request, to avoid revealing whether
- newEmail is already registered."
-type RequestEmailChangePayload { ok: Boolean! }
+"The change just opened."
+type RequestEmailChangePayload { pendingEmailChange: PendingEmailChange }
+
+"An email change awaiting its proofs (auth.md \"Email change\")."
+type PendingEmailChange {
+  newEmail: String!
+  "Whether this change needs the current-address code at all —
+   false on the unverified carve-out, where the new address's link
+   is the whole proof."
+  requiresCode: Boolean!
+  "The current-address code has been confirmed (always false when
+   requiresCode is false)."
+  codeConfirmed: Boolean!
+  "The new address's link has been opened."
+  linkConfirmed: Boolean!
+  expiresAt: DateTime!
+}
 
 "Complete an email change. `code` is either side's proof — the
  code mailed to the current (original) address, or the token from
- newEmail's verification link; either may arrive first. The change
- applies only once both sides have been confirmed."
+ newEmail's link; either may arrive first. The change applies only
+ once both sides have been confirmed.
+ A token answers by its owner first: another account's token is
+ EMAIL_CHANGE_OTHER_ACCOUNT, is not consumed, and never reveals its
+ change's state — holding the 256-bit token is the proof, so naming
+ the mismatch leaks nothing. The viewer's own token answers by what
+ ended its change (a change ends once): applied →
+ EMAIL_CHANGE_ALREADY_APPLIED, canceled → EMAIL_CHANGE_CANCELED,
+ ran out → EMAIL_CHANGE_EXPIRED; nothing moves, and the client
+ reads the account's current email for the landing.
+ A wrong code is VERIFICATION_TOKEN_INVALID at [\"code\"]. The fifth
+ wrong code disables the code and already answers
+ EMAIL_CHANGE_CODE_DISABLED at [\"code\"]; every later code, the
+ right one included, answers the same until resendEmailChange mints
+ a fresh one. The change stays live and its link side is
+ unaffected. A code against a change that ran out is
+ EMAIL_CHANGE_EXPIRED.
+ A fully proven change whose newEmail another account took meanwhile
+ answers EMAIL_IN_USE and stays live through its window, so a retry
+ still learns the reason, or applies once the address frees."
 input ConfirmEmailChangeInput {
   code: String!
 }
+"user carries email and pendingEmailChange, so the client reads which
+ side remains."
 type ConfirmEmailChangePayload { user: User }
+
+"Re-mail the pending change's owed side(s) with fresh secrets
+ (ChangeEmailConfirm's Resend): both while both wait; only the code
+ (to the current address) once the link's side is confirmed; only
+ the link (to the new address) once the code's side is confirmed.
+ A confirmed side is never reset. A fresh code re-arms the wrong-try
+ count. Spends the account's mail budget like a request — a
+ transport-tier RATE_LIMITED when spent, nothing sent. Refused with a
+ NOT_FOUND userError when no change is pending."
+type ResendEmailChangePayload { pendingEmailChange: PendingEmailChange }
+
+"Call off the pending change; both secrets die; the address stays.
+ The change is kept, so its link opened later answers
+ EMAIL_CHANGE_CANCELED. With nothing pending there is nothing to call
+ off, and the call answers the unchanged account."
+type CancelEmailChangePayload { user: User }
 
 "Change the viewer's handle — L2 account state (the mention
  namespace), not graph or profile payload. Subject to the global
@@ -4741,6 +4823,8 @@ extend type Mutation {
   changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
   requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
   confirmEmailChange(input: ConfirmEmailChangeInput!): ConfirmEmailChangePayload!
+  resendEmailChange: ResendEmailChangePayload!
+  cancelEmailChange: CancelEmailChangePayload!
   changeHandle(input: ChangeHandleInput!): ChangeHandlePayload!
   createKeyBackupChallenge: KeyBackupChallengePayload!
   uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!

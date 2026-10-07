@@ -1357,21 +1357,34 @@ CREATE TABLE auth_password_resets (
 );
 
 -- Email changes: the two-sided proof per auth.md §Email change —
--- a code mailed to the original address and a verification link
--- mailed to the new one. The change applies (user_credentials.email
--- updated)
--- only when both sides are confirmed before expires_at.
+-- a 6-digit code mailed to the original address and a link mailed
+-- to the new one. The change applies (user_credentials.email
+-- updated) only when both sides are confirmed before expires_at.
+-- On the unverified carve-out requires_code is false, no code
+-- exists, and the new side's token is also the account's
+-- verification token. A change ends once — applied_at, cancelled_at
+-- (cancel or supersede), or expires_at passing first — and the
+-- ended row stays until the spent-secret sweep, so a late link
+-- answers by what ended it. At most one live (unended) row per user.
 CREATE TABLE auth_email_changes (
     id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id               UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     new_email             TEXT        NOT NULL,
-    original_code_hash    BYTEA       NOT NULL,
+    requires_code         BOOLEAN     NOT NULL DEFAULT TRUE,
+    original_code_hash    BYTEA,
     new_email_token_hash  BYTEA       NOT NULL UNIQUE,
     original_confirmed_at TIMESTAMPTZ,
     new_verified_at       TIMESTAMPTZ,
+    failed_attempts       INT         NOT NULL DEFAULT 0,
+    code_disabled_at      TIMESTAMPTZ,
+    cancelled_at          TIMESTAMPTZ,
+    applied_at            TIMESTAMPTZ,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     expires_at            TIMESTAMPTZ NOT NULL
 );
+CREATE UNIQUE INDEX auth_email_changes_one_live_idx
+    ON auth_email_changes (user_id)
+    WHERE cancelled_at IS NULL AND applied_at IS NULL;
 
 -- Account deletions: the grace-period state per
 -- erasure.md §5 — requested, then confirmed by opening the mailed
