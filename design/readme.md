@@ -9488,6 +9488,11 @@ lines; quoted wordings are his.
   new `redacted`: the reserved disc and `Deleted account`, no aside; its
   unhide says `This account is unhidden — its posts can reach your feed
   again.`
+- **The release registry's edges.** A running version missing from the
+  registry is not behind: no `installed`, no newer-version line, no
+  snackbar. The newer-version snackbar speaks to members, applicants and
+  guests, and a version read that answers after the feed has arrived on
+  a cold open announces when it arrives.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not
