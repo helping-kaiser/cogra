@@ -9468,6 +9468,18 @@ lines; quoted wordings are his.
   `Got it` drops a kept pick as Cancel does. A failed `Got it` brings the
   card back with `That didn't go through.` and `Retry`. The feed's head
   reads the security notice, the key card, then the vouch card.
+- **Saved's edges.** A failed unsave or Undo leaves the row standing
+  with `That didn't go through.` and `Retry` in its second line, the
+  Unsave glyph kept; on a profile the line takes the actions row.
+  `Unsave` on any menu closes the sheet with `Removed from Saved.` and
+  `Undo`; a comment's `Save` answers `Saved.`. Rows outlive what
+  happened to their things: a removed one reads `Removed by its author`,
+  a deleted account `Deleted account` on the reserved disc, a sensitive
+  one gives its second line to the reason, and a hidden account's things
+  stay. A titleless row takes its first line, or B11's media form; a
+  reply's `on` names the thread's post; the aside drops where the title
+  already names the handle. Slugs stay unique by fixture discipline, no
+  suffix rule.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not

@@ -12,13 +12,15 @@ ALWAYS the deleted account's page stays open beneath the sheet, and nothing bene
 
 WHEN tap Save -> the account is kept in the one Saved list beside posts and comments AND the sheet closes AND the snackbar reads Saved.
 
-WHEN tap Save GIVEN the save does not go through -> the save reverts AND the target's row says That didn't go through. with Retry
+WHEN tap Save GIVEN the save does not go through -> the save reverts AND the line That didn't go through. with Retry stands in the page's actions row
+
+WHEN tap Unsave -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
 
 WHEN tap Share this profile -> the platform's own share sheet opens
 
 WHEN tap Hide this account -> the sheet closes AND the reader stays on the page AND the account's posts leave the reader's feed AND the snackbar reads This account is hidden — its posts stay out of your feed. with Undo AND NEVER a confirm step appears
 
-WHEN tap Hide this account GIVEN the hide does not go through -> the hide reverts AND the target's row says That didn't go through. with Retry
+WHEN tap Hide this account GIVEN the hide does not go through -> the hide reverts AND the line That didn't go through. with Retry stands in the page's actions row
 
 WHEN a guest taps Save or Hide this account -> the guest gate opens
 

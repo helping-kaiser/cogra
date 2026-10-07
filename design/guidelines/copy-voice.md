@@ -2169,7 +2169,8 @@ the fact they may want reversed is that it is no longer kept. The pair
 is deliberately lopsided against saving's bare `Saved.` — saving costs
 a reader nothing to repeat, and a mis-pressed unsave costs them finding
 the thing again. The same line rides the empty list when the row that
-went was the last one.
+went was the last one, and answers `Unsave` on every menu, the sheet
+closing (jakob 2026-10-07).
 
 **The hide row with no name to say.** `Hide this account`, where the
 actor is a deleted account and there is no handle to spell. It stands

@@ -8,9 +8,11 @@ ALWAYS the comment's menu carries no Hide row
 
 ALWAYS the comment's menu's first row reads Unsave GIVEN the comment is kept
 
-WHEN tap Save -> the comment is kept in the one Saved list beside posts and people AND the menu closes
+WHEN tap Save -> the comment is kept in the one Saved list beside posts and people AND the menu closes AND the snackbar reads Saved.
 
 WHEN tap Save GIVEN the save does not go through -> the save reverts AND the target's row says so with Retry
+
+WHEN tap Unsave -> the menu closes AND the snackbar reads Removed from Saved. with Undo
 
 WHEN tap Cite in a new post -> the post wizard opens fresh at its first stage AND the comment rides along unseen until the details stage
 
