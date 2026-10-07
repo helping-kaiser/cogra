@@ -65,7 +65,10 @@ export function DialogSurface({
         if (event.target === ref.current && !locked) onDismiss();
       }}
       {...testAttributes(node)}
-      className="cg-dialog-in m-auto w-[min(calc(100vw-2*var(--dialog-inset,2rem)),20rem)] rounded-extra-large border-0 bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
+      // `min(100vw − 2 × the dialog inset, the dialog's max width)`, the
+      // board's own sizing (JoinPrompt.jsx: `--dialog-inset` 32px,
+      // `--dialog-max-width` 20rem).
+      className="cg-dialog-in m-auto w-[min(calc(100vw_-_4rem),20rem)] rounded-extra-large border-0 bg-surface-container-high p-6 text-left text-on-surface backdrop:bg-scrim/50"
     >
       <h2
         id="dialog-surface-title"
