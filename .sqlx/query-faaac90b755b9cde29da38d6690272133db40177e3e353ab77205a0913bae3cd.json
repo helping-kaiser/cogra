@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_admission_fundings SET settled_at = NOW()\n         WHERE address = $1 AND settled_at IS NULL AND failed_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "faaac90b755b9cde29da38d6690272133db40177e3e353ab77205a0913bae3cd"
+}

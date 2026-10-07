@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes\n         SET state = 'relaying', held_approval_signature = $2, updated_at = NOW()\n         WHERE id = $1 AND state IN ('awaiting_approval', 'relaying')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1cb16f310c37ff2815edf45c9e4db13fb3ba92f8e5d3dc045690309b4bfc4778"
+}

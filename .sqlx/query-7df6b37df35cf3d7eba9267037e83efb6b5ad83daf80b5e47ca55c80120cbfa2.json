@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE staged_writes SET held_approval_signature = NULL, updated_at = NOW()\n         WHERE id = $1 AND held_approval_signature = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7df6b37df35cf3d7eba9267037e83efb6b5ad83daf80b5e47ca55c80120cbfa2"
+}
