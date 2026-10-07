@@ -86,7 +86,10 @@ class ChangeEmailViewModel @Inject constructor(
     }
 
     fun onNewEmail(value: String) = _state.update {
-        it.copy(newEmail = value, malformed = if (pressed && it.malformed) !looksLikeEmail(value) else it.malformed)
+        // Once the format line stands, it re-checks as the reader types.
+        val recheck = pressed && it.malformed
+        val malformed = if (recheck) looksLikeEmail(value).not() else it.malformed
+        it.copy(newEmail = value, malformed = malformed)
     }
 
     fun onPassword(value: String) = _state.update { it.copy(password = value) }

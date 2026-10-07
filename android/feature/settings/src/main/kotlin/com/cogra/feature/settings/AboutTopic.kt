@@ -28,6 +28,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -137,6 +139,12 @@ val AboutTopics = listOf(
 
 private val Page = DataNode("about")
 
+/** The open topics' keys, kept across configuration changes as a plain list. */
+private val OpenTopicsSaver = listSaver<SnapshotStateList<String>, String>(
+    save = { open -> open.toList() },
+    restore = { saved -> saved.toMutableStateList() },
+)
+
 /**
  * The pinned header reads `Back to settings` from Settings (the only door
  * Android has: the join form's "?" is not built here), and the page
@@ -144,9 +152,7 @@ private val Page = DataNode("about")
  */
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
-    val open = rememberSaveable(saver = listSaver({ it.toList() }, { mutableStateListOf(*it.toTypedArray()) })) {
-        mutableStateListOf<String>()
-    }
+    val open = rememberSaveable(saver = OpenTopicsSaver) { mutableStateListOf<String>() }
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
         topBar = {
