@@ -9400,6 +9400,20 @@ either comes into this readme or dies from the pointer.
   in its native unit and rounds on its own grid — a capability
   expression, never a per-client choice.
 
+### The packet-wave rulings executed — 2026-10-07
+
+jakob's rulings on the packet wave's gaps (seams 077–095), written as
+lines; quoted wordings are his.
+
+- **Any member who holds the ask can let an applicant in, and the first
+  vouch lands it.** The waiting card's caption reads `It does not
+  expire.`; the profile's adds `Anyone who holds their ask can let them
+  in — the first vouch lands it.`; the intro's applicant line reads `A
+  friend who's already in has to let you in. Ask around once you have
+  verified your email.` `VouchAskUnusable` keeps its landed case alone.
+- **The account lands** when its registration and the approving vouch
+  have both confirmed; the landing card's flip is that moment.
+
 ---
 
 ## 14. The canvases

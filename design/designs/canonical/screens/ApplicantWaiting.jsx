@@ -18,9 +18,9 @@
    applicant can copy it at any time, so the canvas no longer keeps it for a
    rejection. It is `ApplicantRejected`'s block — the same copy control and
    mono line, `bare` inside the card that explains it — with a label and
-   caption true for a live application: while @mira's answer is open the link
-   stages nobody new (auth.md, one live application at a time), so the card
-   says so rather than inviting a second ask that cannot start.
+   caption true for a live application. Any member who holds the ask can
+   vouch, and the first vouch lands it (jakob 2026-10-07, item 58), so the
+   caption says only that the link does not expire.
 
    THE FEED FILTER RIDES THE BAND, as on every feed view, guests and
    applicants included (readme §13, the feed's filter on screen).
@@ -46,7 +46,7 @@ export function Screen() {
             address={ASK_LINK}
             onCopy={() => {}}
             copyLabel="Copy your ask link"
-            caption="It does not expire. While @mira's answer is open, it can't start a second application."
+            caption="It does not expire."
           />
           <Button variant="outline" selfStart>
             Got it

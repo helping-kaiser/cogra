@@ -18,7 +18,7 @@ WHEN the member's first opinion, toward any target, expires instead of landing G
 
 WHEN the member signs an Affinity GIVEN no opinion of theirs is signed -> NEVER the borrowed view ends
 
-WHEN the registration lands GIVEN an opinion staged during the application signs with it -> NEVER the band stands AND NEVER the feed reloads at the flip AND the feed reads the member's own view from its next refresh
+WHEN the account lands, its registration and the approving vouch both confirmed GIVEN an opinion staged during the application signs with it -> NEVER the band stands AND NEVER the feed reloads at the flip AND the feed reads the member's own view from its next refresh
 
 WHEN tap Vouch back -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
 
@@ -30,7 +30,7 @@ ALWAYS vouching back stays open from the profile of the member who vouched the a
 
 WHEN any opinion on the member who vouched the account in is signed GIVEN the pair is incomplete -> the ceremony opens, wherever the opinion was signed
 
-WHEN the registration lands while the reader is on the landing card -> this card stands in its place where the reader stands AND NEVER the feed reloads
+WHEN the account lands, its registration and the approving vouch both confirmed, while the reader is on the landing card -> this card stands in its place where the reader stands AND NEVER the feed reloads
 
 WHEN a signed vouch-back expires instead of landing GIVEN the card was never put away -> feed.vouchCard returns AND the ordinary did-not-land notice answers
 
