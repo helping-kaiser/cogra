@@ -162,6 +162,8 @@ describe("ChangePassword", () => {
     await waitFor(() =>
       expect(screen.getByTestId("changePassword.commit.action")).toHaveTextContent("Changing password…"),
     );
+    // The delayed answer lands inside this test, never the next one's.
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=password"));
   });
 
   it("offline_press_answers_in_slot_and_keeps_both_fields", async () => {

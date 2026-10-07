@@ -166,6 +166,8 @@ describe("ChangeHandle", () => {
     await waitFor(() =>
       expect(screen.getByTestId("changeHandle.dialog.change")).toHaveTextContent("Changing handle…"),
     );
+    // The delayed answer lands inside this test, never the next one's.
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=handle"));
   });
 
   it("taken_handle_closes_the_dialog_onto_the_field_line", async () => {

@@ -176,6 +176,8 @@ describe("ChangeEmail", () => {
     await waitFor(() =>
       expect(screen.getByTestId("changeEmail.commit.action")).toHaveTextContent("Changing email…"),
     );
+    // The delayed answer lands inside this test, never the next one's.
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/settings/email/confirm"));
   });
 
   it("back_sends_nothing", () => {

@@ -304,6 +304,8 @@ describe("the settings page", () => {
     expect(revoke).not.toHaveTextContent("Revoking…");
     await waitFor(() => expect(revoke).toHaveTextContent("Revoking…"));
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+    // The delayed revoke lands inside this test, never the next one's.
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent("Signed out of Pixel 8.");
   });
 
   it("revoke_offline_opens_network_error_and_keeps_the_row", async () => {
@@ -635,12 +637,14 @@ describe("signing out", () => {
         });
       }),
     );
-    renderSettings();
+    const { tokens } = renderSettings();
     await screen.findByTestId("settings.credentials.password.status");
     fireEvent.click(screen.getByTestId("settings.leaving.leave"));
     expect(screen.getByTestId("settings.leaving.leave.label")).toHaveTextContent("Sign out");
     await waitFor(() =>
       expect(screen.getByTestId("settings.leaving.leave.label")).toHaveTextContent("Signing out…"),
     );
+    // The delayed sign-out lands inside this test, never the next one's.
+    await waitFor(() => expect(tokens.accessToken()).toBeNull());
   });
 });

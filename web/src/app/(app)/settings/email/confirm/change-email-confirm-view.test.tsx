@@ -246,6 +246,10 @@ describe("ChangeEmailConfirm", () => {
     await waitFor(() =>
       expect(screen.getByTestId("changeEmail.commit.action")).toHaveTextContent("Confirming the code…"),
     );
+    // The delayed confirm must land inside THIS test: left in flight, its
+    // `push` fires during whichever test runs next (CI caught it in
+    // cancel_offline_keeps_the_change).
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/settings?done=email"));
   });
 
   it("confirm_ip_rate_limited_line", async () => {
