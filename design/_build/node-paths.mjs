@@ -77,6 +77,7 @@ export const KEY_RULES = {
   result: "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)",
   tag: "the tag's name, without # (TopicsLine, TopicRemovable)",
   tagCard: "the tag's name, without # (the tag feed card)",
+  topic: "the topic's title, lowercased, each run of other characters one -, none leading or trailing (About's topics)",
   thumb: "the picture's position in the draft's media, counted from 1 (PickedRow)",
   tier: "the reading's position on its license axis, the least asked first, counted from 1 (LicenseAxis)",
   session: "the session's position in the list, this device first, counted from 1 (Settings' sessions)",
