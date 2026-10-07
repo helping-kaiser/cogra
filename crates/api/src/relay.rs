@@ -143,6 +143,11 @@ pub async fn submit_pre_signed<B: L1Boundary>(
 /// before its author can pay for it, and the device, which already reads
 /// `relaying` as "the backend drives it", needs nothing more. Leg 1 is
 /// never held: the seal checks no solvency (layer1-interface.md §8.2).
+///
+/// The funding is read again once the hold is stored: a settlement pass
+/// that ran between the first read and the hold found no hold to relay.
+/// Whichever side sees both facts relays, and relaying twice is
+/// idempotent, so no hold is stranded by the race.
 pub async fn submit_approval<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -157,11 +162,6 @@ pub async fn submit_approval<B: L1Boundary>(
     if waits_for_funding(boundary, pool, &write).await? {
         check_witness(&write, &approval_signature)?;
         staged::hold_approval(pool, id, &approval_signature).await?;
-        // The settlement pass may have settled the funding between the
-        // read above and the hold: a pass that ran in that gap found no
-        // hold to relay. Re-reading after the hold is stored closes the
-        // gap — whichever side sees both facts relays, and relaying twice
-        // is idempotent.
         if !waits_for_funding(boundary, pool, &write).await? {
             relay_held(boundary, pool, id, approval_signature).await?;
         }

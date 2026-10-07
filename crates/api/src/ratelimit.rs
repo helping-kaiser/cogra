@@ -121,7 +121,10 @@ pub struct SigningBudget {
     /// already-funded applicant costs the fund nothing and spends none).
     /// Priced with the approval batch, whole, before anything is staged
     /// or burned. Per voucher, never instance-global: a global cap is one
-    /// an attacker could exhaust to stall every admission.
+    /// an attacker could exhaust to stall every admission. The default,
+    /// 20 a day, sits well above inviting at a human pace (economics.md
+    /// §7.2) and below `approval`, so it is the scope that binds a bulk
+    /// voucher.
     pub admission_funding: Window,
 }
 
@@ -183,9 +186,6 @@ impl Default for SigningBudget {
                 limit: 2000,
                 window_secs: DAY,
             },
-            // Well above inviting at a human pace (economics.md §7.2) and
-            // below `approval`, so this is the scope that binds a bulk
-            // voucher.
             admission_funding: Window {
                 limit: 20,
                 window_secs: DAY,

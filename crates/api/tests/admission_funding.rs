@@ -648,7 +648,9 @@ async fn a_crash_between_request_and_record_heals_without_a_second_burn(pool: Pg
 /// The guard is keyed by address and outlives its account: an applicant
 /// funded and then deleted leaves the row behind, so a new account
 /// attaching the same key and being vouched in requests nothing — and is
-/// bound by that key from the attach on.
+/// bound by that key from the attach on. No applicant deletion verb
+/// exists yet (EC-G9), so the rows go the way the reaper deletes an
+/// account, staged writes first.
 ///
 /// An address funded once is never funded again, even after its account is deleted and the key re-registered.
 /// ´claim:onboarding:a-deleted-applicants-address-is-never-funded-twice´
@@ -663,8 +665,6 @@ async fn a_deleted_applicants_address_is_never_funded_twice(pool: PgPool) {
         .await;
     assert_eq!(rig.burns_on_l1(&address).await, 1);
 
-    // No applicant deletion verb exists yet (EC-G9); the rows go the way
-    // the reaper deletes an account, staged writes first.
     for statement in [
         "DELETE FROM staged_writes WHERE actor_id = $1",
         "DELETE FROM actor_profile_versions WHERE actor_id = $1",

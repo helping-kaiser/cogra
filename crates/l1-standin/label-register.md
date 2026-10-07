@@ -9,7 +9,10 @@ label.
 
 | Label                                                                        | Asset                                                      |
 | ---------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `test:integration:a-burn-request-is-idempotent-by-its-key`                   | a_burn_request_is_idempotent_by_its_key                    |
+| `test:integration:a-burn-settles-after-its-delay`                            | a_burn_settles_after_its_delay                             |
 | `test:integration:a-malformed-stored-act-wedges-the-close`                   | a_malformed_stored_act_wedges_the_close                    |
+| `test:integration:a-negative-settlement-delay-is-refused`                    | a_negative_settlement_delay_is_refused                     |
 | `test:integration:a-stored-hyper-act-without-a-middle-is-refused`            | a_stored_hyper_act_without_a_middle_is_refused             |
 | `test:integration:act-budget-caps-the-epoch`                                 | act_budget_caps_the_epoch                                  |
 | `test:integration:approve-verifies-the-witness`                              | approve_verifies_the_witness                               |
