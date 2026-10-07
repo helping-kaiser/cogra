@@ -8,16 +8,20 @@
    `Remove` STANDS AS THE LAST OF THE ACTS (`OWN_COMMENT_MENU`): Save and Cite
    lead, as on every menu that has them, then Remove, then the two readings, and
    the license closes it. That is the post's own menu's place for the row
-   (`RemoveMenu`), at comment scale. */
+   (`RemoveMenu`), at comment scale.
+
+   REGISTERED under the `postDetail` prefix (design ⇄ impl seam 086), named as
+   `CommentMenu` is. */
+export const NODE = "postDetail";
 export function Screen() {
   return (
     <>
       <ThreadDetail />
       <CommentsThreadSheet scrolledBy={REMOVED_COMMENT_SCROLL} />
 
-      <BottomSheet open stacked ariaLabel="Comment actions">
+      <BottomSheet open stacked ariaLabel="Comment actions" node="menuSheet">
         {OWN_COMMENT_MENU.map((item) => (
-          <SheetItem key={item.label} label={item.label} />
+          <SheetItem key={item.label} label={item.label} node={item.node} />
         ))}
       </BottomSheet>
     </>

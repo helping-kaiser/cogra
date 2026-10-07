@@ -531,12 +531,12 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "lice
    the comment's (the comment-removal round). It stands as the LAST of the acts,
    where the post's menu has always put it: the rarest act, and the one that
    takes the content away. */
-const REMOVE_ROW = { label: "Remove", onSelect: () => {} };
+const REMOVE_ROW = { label: "Remove", onSelect: () => {}, node: "remove" };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
-  { label: "Edit", onSelect: () => {} },
-  { label: "Mark as sensitive", onSelect: () => {} },
+  { label: "Edit", onSelect: () => {}, node: "edit" },
+  { label: "Mark as sensitive", onSelect: () => {}, node: "markSensitive" },
   REMOVE_ROW,
   LICENSE_ROW,
 ];
@@ -555,7 +555,7 @@ const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSel
    IT SITS AFTER THE ACTS AND BEFORE THE LICENSE. A menu leads with the acts it
    was opened for and closes on the license (`CARD_MENU`'s order); reading who
    holds an opinion is not an act, so it falls between them. */
-const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
+const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opinions" };
 /* ── WHAT CITES THIS (the topic round, 2026-09-14) ─────────────────────────
    The inbound mirror of the opinions round (backlog item 55), and the same two
    doors: a count line on the post's detail, and the comment's ⋮ — because a
@@ -571,7 +571,7 @@ const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {} };
    row's reason: reading who has pointed at this is not an act. Inbound before
    opinions, because it is a fact about the artifact and the other is a fact
    about people. */
-const CITED_BY_ROW = { label: "Cited by", onSelect: () => {} };
+const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
 
 const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
 /* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01): the reader's
@@ -926,16 +926,21 @@ function DetailColumn({ children }) {
    Both were ReplyEntry's alone until the comment's overflow menu needed the
    same thread with a second sheet over it. A body on a second screen stops
    being screen-local — so the sheet and the detail beneath it moved here whole,
-   and the two boards differ only by what is stacked on top. */
+   and the two boards differ only by what is stacked on top.
+
+   The detail's element names are the `postDetail` prefix's, as `PostDetail`
+   names them (design ⇄ impl seam 086): `CommentMenu` and `CommentMenuOwn`
+   register them, and every other board this detail stands on renders them
+   stripped. The thread's sheet stays unnamed until a board registers it. */
 
 function ThreadDetail({ menuItems = READER_POST_MENU }) {
   return (
     <>
-      <DetailHeader items={menuItems} />
+      <DetailHeader items={menuItems} node="header" />
       <DetailColumn>
-        <PostCard {...ADA_POST} variant="detail" />
+        <PostCard {...ADA_POST} variant="detail" node="card" />
       </DetailColumn>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

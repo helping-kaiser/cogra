@@ -1,6 +1,6 @@
 # CommentMenuOwn · `spec:design:behavior-comment-menu-own`
 
-ALWAYS the reader's own comment's menu reads Save or Unsave, then Cite in a new post, then Remove, then Cited by, then Opinions on this, then License terms
+ALWAYS the reader's own comment's menu reads Save or Unsave, then Cite in a new post, then Remove, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms
 
 ALWAYS the reader's own comment's menu opens stacked over the thread, the thread scrolled to the comment beneath it
 
