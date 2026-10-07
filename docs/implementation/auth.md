@@ -260,8 +260,9 @@ applicant | member`, a column on the credentials row
   landed. Reads everything; the only signing it does is its own
   admission handshake and the once-each acts that land with it
   ("Application" below).
-- **`member`** — the Registration confirmed; the account fronts a
-  full actor on the graph.
+- **`member`** — the ceremony landed: the account's own
+  Registration and a vouch-Opinion both confirmed; the account
+  fronts a full actor on the graph.
 
 The state gates *acting through CoGra* and is enforced
 server-side — an acting call from a non-member account is
@@ -528,15 +529,37 @@ backend then runs the admission sequence:
    surface ([api-spec.md](api-spec.md)) — a session exists from
    registration, so admission needs no dedicated signing
    mutations.
-3. **The inviter's Opinion** toward the new Profile — prepared
-   for the inviter, signed on their device, relayed.
-4. **Landing** — when the Registration confirms in the mirror,
-   the account state flips to `member` and the application row is
-   marked landed. Nothing moves and nothing is claimed: the
-   credentials have been the account's since registration, the
-   identity association since the attach
-   ([data-model.md](data-model.md)), and the sessions never
-   stopped being ordinary sessions.
+3. **The vouch** — the inviter's Opinion toward the new Profile,
+   depending on the Registration: prepared for the inviter, signed
+   on their device, relayed. The decision records the Opinion's act
+   id on a vouch row; only an Opinion a vouch decision prepared
+   counts toward landing, never an ordinary stance on the applicant.
+   The path reads approved (`approved_at`) while that vouch is live.
+4. **Landing** — when the account's own Registration **and** the
+   first vouch-Opinion on any of its paths have both confirmed in
+   the mirror, the account state flips to `member` and the path that
+   vouch was decided on is marked landed. The first to land, by the
+   mirror's causal key, wins; the account's other paths leave their
+   members' queues, and a later vouch-Opinion is an ordinary Opinion.
+   Nothing moves and nothing is claimed: the credentials have been
+   the account's since registration, the identity association since
+   the attach ([data-model.md](data-model.md)), and the sessions
+   never stopped being ordinary sessions.
+
+Every decision on any of the account's paths runs under the one
+account lock, so they share one funding and one admission
+Registration; their edges race only on L1.
+
+**A fallen ritual.** A vouch whose Opinion is garbage-collected
+unlanded lapses, and its path waits again: the node (a landed
+Registration) and the funding stay, and any member may vouch anew,
+through any path — no second burn, no second Registration, only a
+new edge. A lapsed vouch that lands late after all still counts:
+the collection is not final. The poll's repair re-stages the
+Registration alone, when its staged row was collected unlanded while
+some vouch is live — under a new act id, so a vouch bound to the old
+one can never land and lapses in turn; the repair never prepares
+anyone's Opinion.
 
 The flow tolerates latency at every step — an approval the
 applicant's device hasn't signed yet simply waits; staged records
@@ -545,13 +568,16 @@ that never land are garbage-collected per the write path
 
 **Reciprocation is the joiner's own act.** Membership completes
 when the joiner points back — their own client-signed Opinion
-toward the approver's Profile, prompted at first login
+toward the Profile of the member who vouched them in, prompted at
+first login
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)).
 The prompt's target comes from the viewer-only `User.invitedBy`
-field — landing provenance kept on the application row: the
-approver whose Opinion admitted the account, which on the
-ask-link side is the member who took the applicant up rather than
-whoever issued a link they once registered through. Clients name
+field: the member whose vouch-Opinion landed the account first —
+read from the mirror, so a rebuild names the same member, and null
+before landing — which on the ask-link side is the member who took
+the applicant up rather than whoever issued a link they once
+registered through. The borrowed view has its own source, that
+link's issuer. Clients name
 that person on the vouch-back surface. It is a graph act, not an
 auth step; auth's involvement ends at landing.
 

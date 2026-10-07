@@ -1060,8 +1060,11 @@ type User implements Node & Actor {
   "The account's email change in flight, if any; null when none is
    pending or the last one ran out. Field-level: viewer-only."
   pendingEmailChange: PendingEmailChange
-  "The account's latest application — the applicant's own view of
-   its progress; null when the account has none."
+  "The account's current application — the applicant's own view of
+   its progress; null when the account has none. With several paths
+   it is the landed one; else the approved-not-landed one with the
+   earliest live vouch; else the newest waiting one; else the newest
+   closed one."
   application: Application
   "The account's own ask link — the standing capability that lets
    any member it is handed take up the application (auth.md \"The
@@ -1069,10 +1072,10 @@ type User implements Node & Actor {
    resolves only for the account itself; null for accounts that
    never applied."
   askLink: UUID
-  "The actor whose vouch this account came through — landing
-   provenance for the reciprocation gesture (the graph's own record
-   of the vouch is that actor's Opinion). Null for accounts
-   without an application trace (genesis actors)."
+  "The member whose vouch-Opinion landed the account first — the
+   reciprocation gesture's target (the graph's own record of the
+   vouch is that member's Opinion). Null before landing, and for
+   accounts without an application trace (genesis actors)."
   invitedBy: Actor
   "Whether the viewer's reciprocal Opinion toward invitedBy exists —
    confirmed in the record mirror (latched on the landed application
@@ -1621,7 +1624,12 @@ type Application {
   "Whether the account has attached its device-minted key and
    address — the other approvability proof."
   keyAttached: Boolean!
-  "When the inviter's priced approval happened; null while pending."
+  "The member whose queue this application sits in — whose vouch it
+   waits on, or whose vouch is in play."
+  approver: Actor
+  "Since when this path has a live vouch — its approver's decision,
+   whose Opinion has neither landed nor lapsed; null while waiting,
+   including after a vouch lapsed. A landed path keeps it."
   approvedAt: DateTime
   "When the approver closed the application without approving it —
    on its own (rejectApplication) or with its link's whole waiting
@@ -1630,8 +1638,9 @@ type Application {
    taking up the account's ask link stages a new application
    (auth.md \"Rejection\")."
   rejectedAt: DateTime
-  "When the Registration confirmed and the account became a
-   member; null before."
+  "When the ceremony completed through this path — the account's
+   own Registration and this path's vouch-Opinion both confirmed,
+   the vouch the first to land; null otherwise."
   landedAt: DateTime
   createdAt: DateTime!
 }
@@ -2103,10 +2112,11 @@ type Query {
    in the viewer's own outgoing stances, so a reader with none is
    served someone else's, and the borrowed-view band names it
    (design/readme.md §13). An anonymous reader borrows the Genesis
-   Moderator's view; an applicant keeps their approver's — the
-   actor their application waits on — from the moment the account
-   exists, whatever they stage; a landed member keeps their
-   approver's view until their first **Opinion** is signed, toward
+   Moderator's view; an applicant keeps the view of the issuer of
+   the invite link they registered through — whoever's vouch lands
+   them — from the moment the account exists, whatever they stage; a
+   landed member keeps that issuer's view until their first
+   **Opinion** is signed, toward
    any target — landed or in flight (VouchBack.md:15); an Affinity
    never ends it (VouchBack.md:19); a first Opinion that expires
    with none landed returns it (VouchBack.md:17). An Opinion staged
@@ -4298,16 +4308,20 @@ generates the signing key and address locally and attaches
 the public halves (`attachActorKey`) — approval funds a burn to
 that address, so the attach is one of the two approvability
 proofs (the verified email is the other), and the attached key
-is replaceable until approval
+is replaceable until the address is funded
 ([auth.md "Application"](auth.md#application-the-applicant-state)).
 Progress is `me`-driven — `User.accountState`,
 `User.emailVerified`, `User.application` — and the staged
 Registration rides the ordinary staged-write surface: once
 approval stages it, the device signs with `submitProposals` /
-`approveActs` like any other write. Landing (the Registration
-confirming in the mirror) flips the account to `member`; nothing
-moves, nothing is claimed. Reciprocation — the joiner's own
-Opinion toward the inviter's Profile, completing the mutual
+`approveActs` like any other write. Landing flips the account to
+`member` once its own Registration and the first vouch-Opinion on
+any of its paths have both confirmed in the mirror — the first to
+land, by causal key, completes the ceremony and closes the other
+paths; a vouch that never lands lapses and its path waits again.
+Nothing moves, nothing is claimed. Reciprocation — the joiner's own
+Opinion toward the Profile of the member who vouched them in,
+completing the mutual
 pair — is an ordinary graph act after landing (`prepareStance`),
 prompted at first login; auth's involvement ends at landing. The
 prompt shows when `invitedBy` is set, `hasReciprocated` is false,
@@ -4416,7 +4430,11 @@ type StageApplicantPayload { application: Application }
  approval, guarded so a retried or concurrent approval, on any
  path, can never double-fund: the burn is requested once per
  address and settles asynchronously, and the Registration's relay
- waits for it. Landing waits only on the Registration confirming.
+ waits for it. Landing waits on the Registration and the first
+ vouch-Opinion to confirm, on any path; a vouch that never lands
+ lapses, the path waits again, and any member may vouch anew — no
+ second burn. An application whose applicant already landed
+ refuses with BAD_INPUT.
  An entry that funds a fresh address spends the inviter's admission
  funding budget, priced with the batch: a batch it cannot carry is
  refused whole with WRITE_RULE_FAILED before anything is burned.
