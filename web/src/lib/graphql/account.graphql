@@ -18,9 +18,24 @@ query Me {
     actorPubkey
     accountState
     hasReciprocated
+    # The vouch-back prompt's dismissal is account state, so it holds on
+    # every device (auth.md "Reciprocation is the joiner's own act").
+    vouchBackDismissed
     invitedBy {
       id
       handle
+    }
+  }
+}
+
+mutation DismissVouchBack {
+  dismissVouchBack {
+    user {
+      id
+      vouchBackDismissed
+    }
+    userErrors {
+      ...UserErrorFields
     }
   }
 }

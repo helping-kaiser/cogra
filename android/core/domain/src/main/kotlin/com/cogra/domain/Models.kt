@@ -69,6 +69,11 @@ data class UserProfile(
     val hasReciprocated: Boolean,
     /** Landing provenance — the reciprocation target; null for genesis actors. */
     val invitedBy: ActorRef?,
+    /**
+     * Whether the account put the vouch-back prompt away — for good, on
+     * every device (auth.md "Reciprocation is the joiner's own act").
+     */
+    val vouchBackDismissed: Boolean = false,
 )
 
 /** A minimal reference to another actor, as the actor chip renders it. */

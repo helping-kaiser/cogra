@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applications\n         SET vouch_back_dismissed_at = COALESCE(vouch_back_dismissed_at, NOW())\n         WHERE account_id = $1 AND landed_at IS NOT NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c016c033f19939e1ca67e069fd19b3be6f636f14ed2a45ba1e279b35c74e227f"
+}
