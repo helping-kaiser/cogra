@@ -33,8 +33,9 @@ import { InlineAction } from "../core/Button.jsx";
    ladder is a vocabulary for how long ago something happened, read beside
    content in a list where many ages compete for room; this is one sentence in
    a band with room to spare, and `6d` in a forward-looking sentence is the one
-   place the ladder's compression can genuinely mislead. AWAITING BLESSING:
-   future moments have no ruled vocabulary yet (backlog 54.1).
+   place the ladder's compression can genuinely mislead. It is copy-voice's
+   forward ladder: the nearest whole day while 24 hours or more remain, then
+   the hours, rounded up (jakob 2026-10-07).
 
    `content` SWITCHES THE LINE, not the band. Content-level redaction is the
    request's opt-in, and a reader who chose it is waiting on something larger

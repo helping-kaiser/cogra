@@ -91,7 +91,10 @@ marker*), where a date names a record rather than its age.
 
 Forward-looking moments read the same ladder forward (ruled
 2026-09-14): the relative form — `in 6 days`, `in 1 day`, then `in 5
-hours` on the last day — is the future vocabulary. A far date, where
+hours` on the last day — is the future vocabulary. Days round to the
+nearest whole day while 24 hours or more remain, then the hours count,
+rounded up (jakob 2026-10-07): a deletion confirmed this moment reads
+`in 7 days`. A far date, where
 one is also shown, spells `dd.mm.yyyy` (`08.09.2026`), never an
 abbreviated month. Blessed instances: `WalletCampaign`'s `Ends in 6
 days · 08.09.2026`, `WalletCampaigns`' `In escrow · ends in 6 days`.
@@ -489,7 +492,9 @@ nearest reason.
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
 every response, remain." — and `Removed under the platform's rules` —
-"A passed proposal removed it. The decision is public."
+"A passed proposal removed it. The decision is public." Content swept
+with its author's account deletion wears `Removed by its author` too
+(jakob 2026-10-07): the author chose the sweep.
 
 The post's own confirm (`RemoveConfirm`; *carried over — blessed by use
 (jakob 2026-10-06)*) is titled `Remove this post?` over `The words and
@@ -917,7 +922,8 @@ password…`, `Changing handle…`, `Changing email…`, `Confirming the
 code…`, `Creating a new recovery code…`, `Resending the link…`, `Adding
 it to the deletion…`, `Canceling…` — and `Sending the confirmation
 link…`, the deletion request's, recorded as the construction's own
-(jakob 2026-10-05).
+(jakob 2026-10-05), with `Deleting my account…` the applicant's
+(jakob 2026-10-07).
 
 A seal gated on its uploads keeps its commit enabled, and a press there
 swaps to the same word while it waits for the bytes — `Signing and
@@ -2815,6 +2821,13 @@ author chip on a post they wrote, a row in a list. The handle beside it
 is dropped rather than replaced; a redacted handle is a uniqueness
 device in the store, and printing anything in its place would invent a
 handle a reader could try to reach.
+
+**A sentence that names a deleted actor says `a deleted account`**
+(jakob 2026-10-07): the handle gives way to the phrase and the sentence
+keeps its shape — `Browsing from a deleted account's view while your
+application lands.`, `your opinion toward a deleted account` — never a
+blank and never the store's redacted value (*the forms a draft of
+2026-10-07*). No board prints a raw null.
 
 **The moderation variant, which must never be the same string.**
 `Removed by the network` where an actor's identity was taken by a

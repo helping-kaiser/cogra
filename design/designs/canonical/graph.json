@@ -140,7 +140,7 @@
     "ProfileNotFound": "a shared profile link whose handle resolves to nothing — a link from outside the app, not a tap; an author chip inside it always names a profile that exists",
     "ProfileUnreachable": "a profile opened and the read never reached the server — a fault, not a tap",
     "WhatsNewBehind": "What's new opened while the version running here is behind the newest release — the release state, not a different tap",
-    "SignInExpired": "the session ran out mid-use — any call answered UNAUTHENTICATED or REFRESH_TOKEN_INVALID; the server's answer, not a tap",
+    "SignInExpired": "the session ran out mid-use — any call answered UNAUTHENTICATED or REFRESH_TOKEN_INVALID; the server's answer, not a tap. A refusal naming the account's executed deletion lands on FeedBare with the snackbar Your account is deleted. instead",
     "PostNotFound": "a shared post link or a notification whose post id resolves to nothing — a link from outside the app, not a tap; a removed post keeps its place and is Removed's case",
     "CommentNotFound": "a shared comment link or a notification whose comment id resolves to nothing — a link from outside the app, not a tap; a removed comment keeps its place and is CommentRemoved's case",
     "ProfileDeleted": "an actor whose account was deleted, reached by structure that still points at it — an author chip on a post they wrote, their name in someone's chronicle; the page is the whole other-profile page with its identity placeholdered, since the actor and everything it signed are still there, and a freed handle resolving to nothing is ProfileNotFound's case, not this one",

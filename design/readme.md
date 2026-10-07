@@ -9422,6 +9422,17 @@ lines; quoted wordings are his.
   once both its edges have been on screen, not necessarily at once. The
   empty state and the menu's door say seen; the originless tag card
   shows no why-line; a hidden account's own profile card stays.
+- **The deletion's loose ends.** A spent deletion-mail budget says B7's
+  line above the commitment and sends nothing; content swept with the
+  account wears `Removed by its author`; while a confirmed deletion's
+  grace runs, the deletion band wins over the borrowed band; the count
+  rounds to the nearest whole day while 24 hours or more remain, then
+  counts hours; the member's device at the deadline lands signed out on
+  the bare view with `Your account is deleted.`, never on
+  `SignInExpired`; a sentence naming a deleted actor says `a deleted
+  account`; the applicant's commit reads `Deleting my account…` in
+  flight; and the deleted account reaches the wire as nulls with
+  REDACTED status beside `User.removal`.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not

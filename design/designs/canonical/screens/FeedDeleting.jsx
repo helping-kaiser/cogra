@@ -13,8 +13,9 @@
    its reason — the non-shrinking top block, so the band collapses and returns
    with the header instead of scrolling out of the reader's life. On an inner
    surface, where the header is `PageHeader`, it sits directly under it. The two
-   bands never appear together: a borrowed view belongs to a reader with no
-   account of their own, and this one to a reader deleting the account they have.
+   bands never appear together: for a member still borrowing a view, the
+   deletion band wins while the grace period runs (jakob 2026-10-07), because
+   it carries an act and a deadline and the borrowed band asks for nothing.
 
    THE FEED UNDERNEATH IS UNCHANGED, AND THAT IS THE RULING DRAWN. During the
    grace period nothing is redacted and nothing is withdrawn — the request is a

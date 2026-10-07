@@ -617,9 +617,11 @@ type Landing {
 interface Actor implements Node {
   # + Node fields (id, createdAt, updatedAt, outgoingRecords, incomingRecords)
   "The unique mention handle — one namespace across Users,
-   Collectives, and system actors. The one required name: an actor
-   always has it, and a profile with nothing else written is
-   presented by it."
+   Collectives, and system actors. The one required name: a live
+   actor always has it, and a profile with nothing else written is
+   presented by it. A deleted account serves it as `value: null`,
+   status REDACTED (erasure.md §2); the client composes `Deleted
+   account` and never prints a raw null."
   handle: ModeratedText!
   "The written name shown above the handle. Optional — `value` is
    null where the actor never wrote one, the same shape every
@@ -1226,8 +1228,9 @@ type Removal {
 
 "Who removed the payload. AUTHOR: `removeContent`. ACCOUNT: the
  author's account deletion with the content sweep. MODERATION: a
- passed moderation verdict (the moderation half, post-MVP). The MVP
- draws only AUTHOR's wording, `Removed by its author`."
+ passed moderation verdict (the moderation half, post-MVP). AUTHOR
+ and ACCOUNT both read `Removed by its author`; the data keeps them
+ distinct."
 enum RemovalAgent { AUTHOR ACCOUNT MODERATION }
 
 "What a Review can respond to — root content, another Comment, a

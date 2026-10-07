@@ -6,9 +6,13 @@ ALWAYS feed.vouchCard names the member whose approval landed the account
 
 ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.
 
+ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward a deleted account, and your feed grows from it. Vouching opens the opinion control, set to a gentle default. GIVEN the member who vouched the account in deleted their account
+
 ALWAYS feed.vouchCard and its band claim no order between the vouch-back and any other opinion
 
 ALWAYS the band reads Browsing from @mira's view — your first opinion starts your own. GIVEN the member has signed no opinion yet
+
+ALWAYS the band reads Browsing from a deleted account's view — your first opinion starts your own. GIVEN the member has signed no opinion yet and the issuer's account was deleted
 
 ALWAYS the band carries no Vouch back and asks for nothing
 

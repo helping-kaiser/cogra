@@ -154,10 +154,12 @@ users.username = "redacted-user-{user_id_uuid}"
 ```
 
 This preserves the column invariant, never collides, and remains
-traceable to the archive row via the embedded UUID. The
-user-facing display value is rendered as `[redacted user]` (or
-similar) at the API layer; the storage form satisfies the
-uniqueness constraint. The shared graph needs no counterpart —
+traceable to the archive row via the embedded UUID. The storage
+form satisfies the uniqueness constraint and never reaches the
+wire: the API serves the handle and every other profile field as
+`value: null` with status `REDACTED`, beside the account's
+`User.removal` mark, and the client composes `Deleted account`.
+No surface prints the storage form or a raw null. The shared graph needs no counterpart —
 no name lives on it; the actor's identifier is its address, and
 what the actor *showed* was payload, now reduced.
 
