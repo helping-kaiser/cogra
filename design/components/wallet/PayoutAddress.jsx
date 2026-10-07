@@ -70,7 +70,7 @@ export function PayoutAddressRow({ address, onOpen }) {
    and the caption are unchanged, because the reason they are shaped that way
    does not depend on what is behind them. */
 
-export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", changeBusy = false, changeBusyLabel, caption, bare = false }) {
+export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", changeBusy = false, changeBusyLabel, caption, bare = false, node }) {
   return (
     <div
       style={{
@@ -85,6 +85,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
               padding: "var(--space-3) var(--space-4)",
             }),
       }}
+      data-node={node}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         <span
@@ -96,6 +97,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
             letterSpacing: "var(--text-label-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node={node && "label"}
         >
           {label}
         </span>
@@ -104,6 +106,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
             type="button"
             aria-label={copyLabel}
             onClick={onCopy}
+            data-node={node && "copy"}
             className="cg-state cg-focus cg-hit"
             style={{
               width: "32px",
@@ -123,7 +126,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
           </button>
         )}
         {onChange && (
-          <InlineAction onClick={onChange} busy={changeBusy} busyLabel={changeBusyLabel}>
+          <InlineAction onClick={onChange} busy={changeBusy} busyLabel={changeBusyLabel} node={node && "action"}>
             {changeLabel}
           </InlineAction>
         )}
@@ -137,11 +140,12 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
           wordBreak: "break-all",
           color: "var(--on-surface)",
         }}
+        data-node={node && "address"}
       >
         {address}
       </code>
       {caption && (
-        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+        <span style={{ fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "caption"}>
           {caption}
         </span>
       )}
