@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT content_filtering_severity_level, default_license_attribution,\n                default_license_provenance, has_seen_onboarding\n         FROM user_preferences WHERE user_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_filtering_severity_level",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 1,
+        "name": "default_license_attribution",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "default_license_provenance",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "has_seen_onboarding",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "858e54afee9feadae5686b5398c3639fc3f4380bc6caf661adacff0890448305"
+}

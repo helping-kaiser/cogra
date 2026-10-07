@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_admission_fundings\n             (address, account_id, amount_micro, request_key, settled_at)\n         VALUES ($1, $2, $3, gen_random_uuid(), NOW())\n         ON CONFLICT (address) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1368ea4205f99dba13cce7ce3a59698e5dbfa8d1d95808ec39d8e9c15b3675d8"
+}

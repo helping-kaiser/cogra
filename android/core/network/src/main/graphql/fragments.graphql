@@ -10,6 +10,7 @@ fragment UserErrorFields on UserError {
 fragment StagedWriteFields on StagedWrite {
   id
   state
+  carried
   family
   canonicalProposal
   verifiedAct
@@ -33,13 +34,14 @@ fragment AuthSessionFields on AuthSession {
   }
 }
 
-fragment SessionFields on Session {
-  id
-  deviceLabel
-  createdAt
-  lastUsedAt
+# An email change in flight — which sides landed, read by the settings
+# row, the confirmation's pair and the landings.
+fragment PendingEmailChangeFields on PendingEmailChange {
+  newEmail
+  requiresCode
+  codeConfirmed
+  linkConfirmed
   expiresAt
-  isCurrent
 }
 
 fragment ApplicationFields on Application {

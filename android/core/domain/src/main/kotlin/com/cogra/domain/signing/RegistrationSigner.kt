@@ -11,6 +11,7 @@ package com.cogra.domain.signing
 import com.cogra.domain.AccountState
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
+import com.cogra.domain.WriteState
 import com.cogra.domain.identity.KeyCeremony
 import com.cogra.domain.repo.OnboardingRepository
 import com.cogra.domain.store.IdentityStore
@@ -69,8 +70,22 @@ class RegistrationSigner @Inject constructor(
         // A session exists from registration on, so a parked blob never
         // waits on a milestone — flush it on every pass until it lands.
         ceremony.uploadPendingBackup()
-        if (status.accountState == AccountState.MEMBER) return RegistrationProgress.Member
-        val staged = status.stagedRegistration
+        if (status.accountState == AccountState.MEMBER) {
+            // The landing released what the applicant carried: sign it now,
+            // without a prompt, with the vouch-in (auth.md "Application").
+            // Best-effort by design — a write left mid-handshake keeps its
+            // material for resume, and one never started is still
+            // AWAITING_PRE_SIGN on the next pass.
+            if (status.carriedBatch.isNotEmpty() && keyOnDevice(status.actorPubkey)) {
+                status.carriedBatch.forEach { writeSigner.signStaged(it) }
+            }
+            return RegistrationProgress.Member
+        }
+        // A LANDED Registration is done: the node exists, and what the
+        // account waits on now is a vouch (auth.md "Approval and landing").
+        // Falling through to the application reads waiting again after a
+        // lapsed vouch, approved while a vouch is in play.
+        val staged = status.stagedRegistration?.takeIf { it.state != WriteState.LANDED }
         if (staged != null) {
             // The same predicate as keyOnDevice: signing with a
             // mismatched slot key would only fail server-side — a

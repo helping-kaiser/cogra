@@ -82,7 +82,16 @@ import com.cogra.feature.onboarding.KeyCeremonyRoute
 import com.cogra.feature.profile.ProfileEditRoute
 import com.cogra.feature.profile.ProfileRoute
 import com.cogra.feature.profile.avatar.AvatarFlowRoute
+import com.cogra.feature.settings.AboutScreen
+import com.cogra.feature.settings.BackupRoute
+import com.cogra.feature.settings.ChangeEmailConfirmRoute
+import com.cogra.feature.settings.ChangeEmailLinkedRoute
+import com.cogra.feature.settings.ChangeEmailRoute
+import com.cogra.feature.settings.ChangeHandleRoute
+import com.cogra.feature.settings.ChangePasswordRoute
+import com.cogra.feature.settings.EmailDoor
 import com.cogra.feature.settings.KeyExportRoute
+import com.cogra.feature.settings.SettingsDoors
 import com.cogra.feature.settings.SettingsRoute
 import com.cogra.feature.stance.StanceControlRoute
 import com.cogra.feature.topics.TopicRoute
@@ -182,6 +191,33 @@ data object Settings
 @Serializable
 data object KeyExport
 
+/** The interim recovery-code route (DRIFT: the SettingsBackup* boards are the backup-replacement packet's). */
+@Serializable
+data object SettingsBackup
+
+@Serializable
+data object ChangePassword
+
+@Serializable
+data object ChangeHandle
+
+/**
+ * The email change's request. [applicant] is the unverified applicant's
+ * carve-out (`ApplicantEmail`), opened from Settings by G1/G2.
+ */
+@Serializable
+data class ChangeEmail(val applicant: Boolean = false)
+
+@Serializable
+data object ChangeEmailConfirm
+
+/** The new address's link — the App Link on `/email-change?token=`. */
+@Serializable
+data class ChangeEmailLinked(val token: String)
+
+@Serializable
+data object About
+
 /**
  * Chats — coming soon (backlog item 68, ruled 2026-09-14). Reachable from
  * every root band's chats affordance; no state of its own, so one route
@@ -189,6 +225,9 @@ data object KeyExport
  */
 @Serializable
 data object ChatsComingSoon
+
+/** The new address's link path (auth.md "Link URLs"), claimed beside `/join`. */
+private const val EMAIL_CHANGE_PATH = "/email-change"
 
 /** The app's coarse auth phase; each value owns a navigation graph root. */
 enum class AuthPhase { LOADING, SIGNED_OUT, SIGNED_IN }
@@ -211,8 +250,15 @@ private class NavResultKey<T>(val name: String, val absent: T)
  */
 private val actorRestoredKey = NavResultKey("actor_restored", false)
 
-/** The Settings→Profile result key: the handle changed, re-read. */
+/** The (ChangeHandle)→Profile result key: the handle changed, re-read. */
 private val handleChangedKey = NavResultKey("handle_changed", false)
+
+/**
+ * The subpage→Settings result key: what to say over the page on return
+ * (`Password changed — other devices are signed out.`, `Your handle is now
+ * @x.`, …). The page re-reads on every arrival; this carries the words.
+ */
+private val settingsNoticeKey = NavResultKey<String?>("settings_notice", null)
 
 /** The Compose→(Feed|PostDetail) result key: a write signed, re-read. */
 private val contentSignedKey = NavResultKey("content_signed", false)
@@ -402,13 +448,22 @@ private fun CograNavGraphContent(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val graphReady = backStackEntry != null
     var navigatedPhase by rememberSaveable { mutableStateOf(AuthPhase.LOADING) }
+    // The new address's link opened signed out, held through the sign-in
+    // it asks for (ChangeEmailLinkedSignedOut.md: "the sign-in screen opens
+    // holding the link"); applied and landed once the session exists.
+    var heldEmailLink by rememberSaveable { mutableStateOf<String?>(null) }
     LaunchedEffect(phase, graphReady) {
         if (!graphReady) return@LaunchedEffect
         if (phase == AuthPhase.LOADING) return@LaunchedEffect
         val from = navigatedPhase
         navigatedPhase = phase
+        // A cold start that opened an email-change link signed in is
+        // already where it should be: the landing is the destination.
+        val onLinkLanding = navController.currentBackStackEntry?.destination
+            ?.hasRoute(ChangeEmailLinked::class) == true
         val root: Any = when {
             from == phase -> return@LaunchedEffect
+            phase == AuthPhase.SIGNED_IN && from == AuthPhase.LOADING && onLinkLanding -> return@LaunchedEffect
             phase == AuthPhase.SIGNED_IN -> Feed
             from == AuthPhase.LOADING -> return@LaunchedEffect
             else -> Login
@@ -416,18 +471,24 @@ private fun CograNavGraphContent(
         navController.navigate(root) {
             popUpTo(0) { inclusive = true }
         }
+        val held = heldEmailLink
+        if (root == Feed && held != null) {
+            heldEmailLink = null
+            navController.navigate(ChangeEmailLinked(held))
+        }
     }
 
     // Warm-start App Links: launchMode="singleTask" delivers them via
     // onNewIntent, which Navigation does not observe by itself — the
-    // deep-link docs require forwarding to handleDeepLink. Gated on
-    // signed-out: a signed-in session ignores join links, cold and
-    // warm alike.
+    // deep-link docs require forwarding to handleDeepLink. A join link is
+    // gated on signed-out — a signed-in session ignores join links, cold
+    // and warm alike; the email change's link answers either way.
     val phaseNow by rememberUpdatedState(phase)
     val activity = LocalActivity.current as? ComponentActivity
     DisposableEffect(activity, navController) {
         val listener = Consumer<Intent> { newIntent ->
-            if (phaseNow == AuthPhase.SIGNED_OUT) {
+            val emailChange = newIntent.data?.path?.startsWith(EMAIL_CHANGE_PATH) == true
+            if (phaseNow == AuthPhase.SIGNED_OUT || (emailChange && phaseNow == AuthPhase.SIGNED_IN)) {
                 navController.handleDeepLink(newIntent)
             }
         }
@@ -952,13 +1013,129 @@ private fun CograNavGraphContent(
             composable<Invites> {
                 InvitesRoute(onBack = { navController.navigateUp() })
             }
-            composable<Settings> {
+            composable<Settings> { entry ->
+                val (notice, consumeNotice) = entry.navResult(settingsNoticeKey)
+                // No collapsing top and no key card here: the header is
+                // pinned (Settings.md) and the key card stands at the
+                // feed's head (KeyElsewhere.md :3).
                 SettingsRoute(
-                    onBack = { navController.navigateUp() },
-                    onHandleChanged = { navController.report(handleChangedKey, true) },
-                    onExportKey = { navController.navigate(KeyExport) },
-                    keyBanner = keyBanner,
+                    versionName = BuildConfig.VERSION_NAME,
+                    notice = notice,
+                    onNoticeShown = consumeNotice,
+                    doors = SettingsDoors(
+                        // The own profile — or ProfileApplicant — where the gear was.
+                        onBack = { navController.navigateUp() },
+                        onOpenBackup = { navController.navigate(SettingsBackup) },
+                        onExportKey = { navController.navigate(KeyExport) },
+                        onOpenKeyCeremony = { navController.navigate(KeyCeremony) },
+                        onChangePassword = { navController.navigate(ChangePassword) },
+                        onChangeHandle = { navController.navigate(ChangeHandle) },
+                        onOpenEmail = { door ->
+                            navController.navigate(
+                                when (door) {
+                                    EmailDoor.REQUEST -> ChangeEmail()
+                                    EmailDoor.APPLICANT -> ChangeEmail(applicant = true)
+                                    EmailDoor.CONFIRM -> ChangeEmailConfirm
+                                },
+                            )
+                        },
+                        onOpenAbout = { navController.navigate(About) },
+                    ),
                 )
+            }
+            composable<SettingsBackup> {
+                BackupRoute(
+                    onBack = { navController.navigateUp() },
+                    onExportKey = { navController.navigate(KeyExport) },
+                )
+            }
+            composable<ChangePassword> {
+                ChangePasswordRoute(
+                    onBack = { navController.navigateUp() },
+                    onDone = { notice ->
+                        navController.report(settingsNoticeKey, notice)
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<ChangeHandle> {
+                ChangeHandleRoute(
+                    onBack = { navController.navigateUp() },
+                    onDone = { notice ->
+                        // The profile two entries down re-reads the handle;
+                        // settings says it.
+                        navController.reportTo<Profile, _>(handleChangedKey, true)
+                        navController.report(settingsNoticeKey, notice)
+                        navController.popBackStack()
+                    },
+                )
+            }
+            composable<ChangeEmail> { entry ->
+                val applicant = entry.toRoute<ChangeEmail>().applicant
+                ChangeEmailRoute(
+                    applicant = applicant,
+                    // G1 (ruled): opened from Settings, back and success return there.
+                    onBack = { navController.navigateUp() },
+                    onRequested = { notice ->
+                        if (applicant) {
+                            navController.report(settingsNoticeKey, notice)
+                            navController.popBackStack()
+                        } else {
+                            // Both mails are out: the confirmation, the request
+                            // leaving the stack so Back reaches settings.
+                            navController.navigate(ChangeEmailConfirm) {
+                                popUpTo<Settings> { inclusive = false }
+                            }
+                        }
+                    },
+                )
+            }
+            composable<ChangeEmailConfirm> {
+                ChangeEmailConfirmRoute(
+                    onBack = { navController.navigateUp() },
+                    onExit = { notice ->
+                        val back = navController.popBackStack<Settings>(inclusive = false)
+                        if (!back) navController.navigate(Settings)
+                        notice?.let { navController.reportToCurrent(settingsNoticeKey, it) }
+                    },
+                )
+            }
+            composable<ChangeEmailLinked>(
+                deepLinks = listOf(
+                    // The link the change mails to the new address (auth.md
+                    // "Link URLs"; EC delta 8), on the same host rules as /join.
+                    navDeepLink { uriPattern = "${BuildConfig.WEB_ORIGIN}$EMAIL_CHANGE_PATH?token={token}" },
+                ),
+            ) { entry ->
+                val token = entry.toRoute<ChangeEmailLinked>().token
+                // Resolved before anything renders: the two readings differ.
+                signedIn?.let { signed ->
+                    ChangeEmailLinkedRoute(
+                        token = token,
+                        signedIn = signed,
+                        onEnterTheCode = {
+                            navController.navigate(ChangeEmailConfirm) {
+                                popUpTo<ChangeEmailLinked> { inclusive = true }
+                            }
+                        },
+                        onBackToSettings = {
+                            navController.navigate(Settings) {
+                                popUpTo<ChangeEmailLinked> { inclusive = true }
+                            }
+                        },
+                        onSignIn = {
+                            heldEmailLink = token
+                            // Back to the signed-out root, never a second sign-in on top of it.
+                            navController.popBackStack()
+                            if (navController.currentBackStackEntry?.destination?.hasRoute(Login::class) != true) {
+                                navController.navigate(Login)
+                            }
+                        },
+                    )
+                }
+            }
+            composable<About> {
+                AboutScreen(onBack = { navController.navigateUp() })
             }
             composable<KeyExport> {
                 // Arriving reveals nothing; the screen's own gate does.

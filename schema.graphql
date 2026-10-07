@@ -53,12 +53,30 @@ type Application {
 	"""
 	keyAttached: Boolean!
 	"""
-	When the inviter's priced approval happened; null while pending.
+	The member whose queue this application sits in — the issuer of
+	the invite link it came through: whose vouch it waits on, or whose
+	vouch is in play. Visible wherever the application is.
+	"""
+	approver: Actor
+	"""
+	Since when this path has a live vouch — its approver's decision,
+	whose Opinion has not landed or lapsed; null while waiting,
+	including after a vouch lapsed. A landed path keeps it.
 	"""
 	approvedAt: DateTime
 	"""
-	When the Registration confirmed and the account became a member;
-	null before.
+	When the approver closed the application without approving it —
+	on its own (rejectApplication) or with its link's whole waiting
+	queue (rejectLinkApplications); null otherwise. A rejection closes
+	this queue entry only: the account persists, and a member taking up
+	the account's ask link stages a new application (auth.md
+	"Rejection").
+	"""
+	rejectedAt: DateTime
+	"""
+	When the ceremony completed through this path — the account's own
+	Registration and this path's vouch-Opinion both confirmed, the
+	vouch the first to land; null otherwise.
 	"""
 	landedAt: DateTime
 	createdAt: DateTime!
@@ -479,6 +497,37 @@ type DismissVouchBackPayload {
 }
 
 """
+The anonymous view of an email change's new-address link (the
+`emailChangeLinkCheck` query). Holding the token is holding the link.
+"""
+type EmailChangeLinkCheck {
+	"""
+	The address this link confirms — the inbox the link was mailed to.
+	"""
+	newEmail: String!
+	"""
+	Where the link's change stands, by what ended it if anything did —
+	the confirm's own end-state codes (EMAIL_CHANGE_ALREADY_APPLIED /
+	_CANCELED / _EXPIRED), read without a session.
+	"""
+	state: EmailChangeLinkState!
+}
+
+"""
+PENDING: the change is live in its window (either side may already
+have landed; a taken address still reads PENDING — the collision is
+answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
+change moved the address. CANCELED: called off, or superseded by a
+newer request. EXPIRED: its window closed before both sides landed.
+"""
+enum EmailChangeLinkState {
+	PENDING
+	APPLIED
+	CANCELED
+	EXPIRED
+}
+
+"""
 One shared error vocabulary across both tiers: transport faults ride
 the GraphQL errors array; expected outcomes ride `userErrors`.
 """
@@ -686,8 +735,13 @@ type InviteLink {
 	"""
 	revokedAt: DateTime
 	"""
+	Whether the link can stage a new applicant now — the reckoning
+	inviteLinkCheck.usable reports.
+	"""
+	usable: Boolean!
+	"""
 	The inviter's approval queue: applications staged through this
-	link, with their status.
+	link, with their status, rejected ones included.
 	"""
 	applications(after: String, before: String, first: Int, last: Int): ApplicationConnection!
 }
@@ -1071,11 +1125,10 @@ type Mutation {
 	verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
 	"""
 	Attaches the device-minted actor identity to the viewer's account
-	— the key ceremony's server half. Replaceable while the viewer's
-	application is unapproved; FORBIDDEN once approval has bound the
-	address. An address binds at most one account: a key already
-	bound to a different account refuses with an ACTOR_KEY_IN_USE
-	userError.
+	— the key ceremony's server half. Replaceable until the address is
+	funded; FORBIDDEN once the admission burn has bound it. An address
+	binds at most one account: a key already bound to a different
+	account refuses with an ACTOR_KEY_IN_USE userError.
 	"""
 	attachActorKey(input: AttachActorKeyInput!): AttachActorKeyPayload!
 	"""
@@ -1087,14 +1140,44 @@ type Mutation {
 	resendVerificationEmail(input: ResendVerificationEmailInput!): ResendVerificationEmailPayload!
 	"""
 	Approve staged applicants — the inviter's deliberate, priced act:
-	per applicant or in batch, with the pre-filled stance values
-	adjusted at will. Triggers the funding burn and the staged
-	Registration backend-side, and returns the inviter's own Opinion
+	per applicant or in batch, each carrying the stance values the
+	inviter picks for it. Requests the address's funding burn — at most
+	once per address, however approvals and retries race — and stages
+	the Registration backend-side, and returns the inviter's own Opinion
 	records to sign — the vouch is the inviter's signature, not a
-	server write. Requires an approvable application: email verified
-	and key attached.
+	server write. The account lands when its own Registration and the
+	first vouch-Opinion on any of its paths have both confirmed; a vouch
+	that never lands lapses and its path waits again. Requires an
+	approvable application: email verified and key attached; an
+	already-approved, rejected, or foreign-queue application, or one
+	whose applicant already landed, refuses with BAD_INPUT pinned to
+	its entry.
 	"""
 	approveApplicants(input: ApproveApplicantsInput!): PreparePayload!
+	"""
+	Close a staged application without approving it — the approver's
+	own gesture, never a side effect of revoking the link the applicant
+	arrived through (auth.md "Rejection"). It closes this queue entry,
+	not the person: the row is marked rejected, and the account keeps
+	its login, its reads and its attached key. Nothing is deleted. One
+	person at a time; closing a whole invite link's waiting queue in
+	one gesture is rejectLinkApplications. An already-approved,
+	already-rejected, or foreign-queue application refuses with
+	BAD_INPUT pinned to `application`; an unknown and a foreign
+	application read alike.
+	"""
+	rejectApplication(input: RejectApplicationInput!): RejectApplicationPayload!
+	"""
+	Close every application waiting in the viewer's queue through one
+	invite link (auth.md "Rejection"). Each entry closes as an
+	ordinary rejection — marked rejected, the account keeping its
+	login, its reads and its attached key, nothing deleted.
+	Scoped to what is waiting: applications already approved or
+	rejected are passed over rather than refusing the call. A revoked
+	link still sweeps: revocation stops new staging and leaves the
+	queue standing.
+	"""
+	rejectLinkApplications(input: RejectLinkApplicationsInput!): RejectLinkApplicationsPayload!
 	"""
 	A session from credentials; `auth` is null with an
 	INVALID_CREDENTIALS userError when the email / password pair did
@@ -1144,7 +1227,10 @@ type Mutation {
 	confirmPasswordReset(input: ConfirmPasswordResetInput!): ConfirmPasswordResetPayload!
 	"""
 	Re-verifies the current password, rotates the hash, and revokes
-	the account's other sessions.
+	the account's other sessions. The re-proof spends the account's
+	re-authentication budget, shared with every verb that re-proves
+	the password in a live session: a run of wrong ones backs off as
+	a visible RATE_LIMITED, and a right one ends the run.
 	"""
 	changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
 	"""
@@ -1155,8 +1241,10 @@ type Mutation {
 	request supersedes a pending one. A new address already
 	registered to another account reads exactly like success; a wrong
 	password is INVALID_CREDENTIALS, which leaks nothing to a caller
-	already signed in. Spends the account's mail budget: a spent
-	budget answers RATE_LIMITED and nothing is mailed or recorded.
+	already signed in. The re-proof spends the account's
+	re-authentication budget, the one changePassword shares. Spends
+	the account's mail budget: a spent budget answers RATE_LIMITED
+	and nothing is mailed or recorded.
 	"""
 	requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
 	"""
@@ -1207,6 +1295,13 @@ type Mutation {
 	"""
 	dismissVouchBack: DismissVouchBackPayload!
 	"""
+	Writes the viewer's cross-device preferences. An absent field is
+	left as it is; an explicit null restores its default. A license
+	axis off the three published readings, or a filter level outside
+	0–10, is BAD_INPUT on that field and writes nothing.
+	"""
+	setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
+	"""
 	Issues the challenge an upload must spend (auth.md "Key
 	recovery"). The server picks it: a client-chosen nonce would let
 	a captured upload be replayed verbatim, which is the whole attack
@@ -1247,7 +1342,10 @@ type Mutation {
 	Prepares the viewer's stance toward a node — one new edge carrying
 	exactly the picked values, never a delta against the bundle
 	(design.md §8.1). Toward a Profile this is the interpersonal
-	stance, including the reciprocation gesture.
+	stance, including the reciprocation gesture. A verified applicant
+	with an attached key may stage one Opinion and one Affinity: each
+	comes back carried with the application — nothing to sign until
+	the landing — and a second of a family refuses with BAD_INPUT.
 	"""
 	prepareStance(input: PrepareStanceInput!): PreparePayload!
 	"""
@@ -1325,7 +1423,10 @@ type Mutation {
 	Prepares a new Post: one genesis Publish through the ordinary
 	write path — the returned write pre-signs, seals, and approves
 	like any other; `node` is the id the post serves under once the
-	record lands (post.md §1).
+	record lands (post.md §1). A verified applicant with an attached
+	key may stage one post: the batch comes back carried with the
+	application — nothing to sign until the landing — and a second
+	post refuses with BAD_INPUT.
 	"""
 	preparePost(input: PreparePostInput!): PrepareContentPayload!
 	"""
@@ -1996,8 +2097,18 @@ type PreparedWrite {
 	A staged write that never completes the handshake and lands is
 	garbage-collected — staged payload included — after this many
 	epochs (an operational parameter; data-model.md "Staged writes").
+	A carried write is never collected before the landing releases it;
+	its window starts then.
 	"""
 	gcAfterEpochs: Int!
+	"""
+	Whether the write is carried with the author's application rather
+	than staged for signing now: an applicant's once-each post,
+	Opinion or Affinity. A carried write is NEVER signed by the device
+	on prepare — its dependencies are completed at the account's
+	landing, and the device signs it then, with the vouch-in batch.
+	"""
+	carried: Boolean!
 }
 
 input ProposalSignatureInput {
@@ -2032,6 +2143,20 @@ type Query {
 	"""
 	inviteLinkCheck(id: UUID!): InviteLinkCheck
 	"""
+	Anonymous pre-sign-in check of an email change's new-address
+	link, so a device with no session can say what the link is for
+	before anything applies. It reads and never writes: no side is
+	confirmed, consumed or reset. Null when the token references no
+	change — unknown, malformed, an original-address code, a
+	verification-link token, or a change row a retention sweep has
+	dropped all answer null alike. Holding the 256-bit token is the
+	proof: it was mailed to `newEmail`, so its holder learns nothing
+	about an address they do not already read. For the same reason
+	the answer carries nothing about the account the change belongs
+	to — no handle, no current address, no id.
+	"""
+	emailChangeLinkCheck(token: String!): EmailChangeLinkCheck
+	"""
 	The viewer's own account, resolved from the request's auth token.
 	Null when the request is unauthenticated.
 	"""
@@ -2049,7 +2174,9 @@ type Query {
 	1. An **invite-link arrival**, still signed out, borrows **the
 	inviter's** view, resolved from the link id. That resolution
 	arrives with slice 3 and its own band-line ruling.
-	2. An **applicant** borrows **their approver's**, from the moment
+	2. An **applicant** borrows **the view of the issuer of the invite
+	link they registered through** — whoever's vouch lands them —
+	from the moment
 	the account exists and before either proof is in, whatever they
 	stage — and a **landed member** keeps borrowing it until their
 	first Opinion is signed, toward any target, landed or in flight.
@@ -2500,6 +2627,39 @@ type RegisterPayload {
 	userErrors: [UserError!]!
 }
 
+input RejectApplicationInput {
+	application: UUID!
+}
+
+"""
+The application in its closed state.
+"""
+type RejectApplicationPayload {
+	application: Application
+	userErrors: [UserError!]!
+}
+
+input RejectLinkApplicationsInput {
+	inviteLink: UUID!
+}
+
+"""
+An unknown or foreign link refuses with a NOT_FOUND userError, the
+same expected outcome revokeInviteLink names; a link with nothing
+waiting succeeds with a zero count.
+"""
+type RejectLinkApplicationsPayload {
+	"""
+	How many applications the sweep closed.
+	"""
+	rejectedCount: Int
+	"""
+	The link, for re-reading its share of the queue.
+	"""
+	inviteLink: InviteLink
+	userErrors: [UserError!]!
+}
+
 """
 Reply order within one branch of a thread (comment.md §2).
 
@@ -2614,6 +2774,32 @@ type Session {
 }
 
 """
+A preference write. Every field is optional in the GraphQL sense: an
+absent field is left as it is; an explicit null restores its default.
+"""
+input SetPreferencesInput {
+	"""
+	0 (show everything) to 10 (strictest); null restores the default.
+	"""
+	contentFilteringSeverityLevel: Int
+	"""
+	The license new posts start from; null restores public domain
+	(0/0). Both axes take the same three readings the composer
+	publishes — 0, 0.5 and 1.
+	"""
+	defaultLicense: LicenseInput
+	"""
+	Whether the account has seen the intro; null restores false.
+	"""
+	hasSeenOnboarding: Boolean
+}
+
+type SetPreferencesPayload {
+	preferences: UserPreferences
+	userErrors: [UserError!]!
+}
+
+"""
 The sign of an authored parameter, for filtering records by
 valence or by the inert (0) state. POSITIVE: > 0. NEGATIVE: < 0.
 ZERO: exactly 0.
@@ -2627,6 +2813,13 @@ enum Sign {
 type StagedWrite {
 	id: UUID!
 	state: StagedWriteState!
+	"""
+	Whether the write was carried with the author's application —
+	true from staging on. Once the landing releases it (state
+	AWAITING_PRE_SIGN) it is the vouch-in batch, which the device signs
+	without a prompt.
+	"""
+	carried: Boolean!
 	family: RecordFamily!
 	"""
 	The canonical proposal the handshake covers (base64) — the same
@@ -2675,6 +2868,13 @@ Handshake progress of a staged write (api-spec "The write flow").
 """
 enum StagedWriteState {
 	"""
+	Carried with the author's application: held by the server, seen by
+	the author alone, never signed before the account lands — the
+	landing completes its dependencies and moves it to AWAITING_PRE_SIGN
+	for the device to sign with the vouch-in batch.
+	"""
+	CARRIED
+	"""
 	Prepared; the pre-commitment not yet submitted.
 	"""
 	AWAITING_PRE_SIGN
@@ -2689,7 +2889,9 @@ enum StagedWriteState {
 	AWAITING_APPROVAL
 	"""
 	Approved and submitted for ordering; the backend drives retries
-	across epoch boundaries.
+	across epoch boundaries — including relaying the approval of an
+	admission Registration whose funding has not settled yet, once it
+	does.
 	"""
 	RELAYING
 	"""
@@ -3009,10 +3211,11 @@ type User implements Node & Actor {
 	"""
 	realizationAddress: String
 	"""
-	The actor whose invite this account came through — landing
-	provenance for the reciprocation gesture; the graph's own record
-	of the vouch is the inviter's Opinion. Field-level: viewer-only;
-	null for accounts without an application trace (genesis actors).
+	The member whose vouch-Opinion landed the account first — the
+	target of the reciprocation gesture; the graph's own record of the
+	vouch is that member's Opinion. Null before landing, and for
+	accounts without an application trace (genesis actors).
+	Field-level: viewer-only.
 	"""
 	invitedBy: Actor
 	"""
@@ -3062,11 +3265,30 @@ type User implements Node & Actor {
 	"""
 	pendingEmailChange: PendingEmailChange
 	"""
-	The account's latest application — the applicant's own view of
-	its progress; null when the account has none. Reading it is the
-	admission flow's repair hook: an approved application whose
-	staged Registration was lost re-stages here, on the poll (auth.md
-	"Approval and landing"). Field-level: viewer-only.
+	When the password was last set — at registration, a reset or a
+	change. Field-level: viewer-only.
+	"""
+	passwordChangedAt: DateTime
+	"""
+	When the stored key backup was made — the newest, the one
+	recovery serves; null when none was uploaded. Field-level:
+	viewer-only.
+	"""
+	keyBackupCreatedAt: DateTime
+	"""
+	Cross-device preferences. Field-level: viewer-only.
+	"""
+	preferences: UserPreferences
+	"""
+	The account's current application — the applicant's own view of
+	its progress; null when the account has none. With several paths
+	the read prefers the landed path, then the approved-not-landed path
+	with the earliest live vouch, then the newest waiting path, then
+	the newest closed one. Reading it is the admission flow's repair
+	hook: while some path holds a live vouch and the account has not
+	landed, a staged Registration that was lost or collected re-stages
+	here, on the poll — the Registration only, never anyone's Opinion
+	(auth.md "Approval and landing"). Field-level: viewer-only.
 	"""
 	application: Application
 	"""
@@ -3093,6 +3315,30 @@ type UserError {
 	whole-operation failure.
 	"""
 	field: [String!]
+}
+
+"""
+A User's cross-device preferences.
+"""
+type UserPreferences {
+	"""
+	Sensitive-content filter aggressiveness: 0 (show everything) to
+	10 (strictest); null when unset, so the frontend default applies.
+	"""
+	contentFilteringSeverityLevel: Int
+	"""
+	The license the composer starts a new post from; null when unset,
+	so the composer starts at public domain (0/0). It seeds the
+	authoring-time declaration and binds nothing: the license is
+	settled per post at its genesis signing, and changing this never
+	reaches a post already published.
+	"""
+	defaultLicense: License
+	"""
+	Whether the account has seen the intro — it shows once per
+	account, on whichever device signs in first. False until set.
+	"""
+	hasSeenOnboarding: Boolean!
 }
 
 input VerifyEmailInput {

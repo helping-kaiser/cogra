@@ -18,7 +18,6 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
 use common::l1::{crypto, key_backup, wire};
-use l1_standin::StandIn;
 use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
@@ -27,8 +26,8 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PendingEmailChange,
-    PreparedWrite, Session, StagedWriteType, User, UserError,
+    Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType,
+    PendingEmailChange, PreparedWrite, Session, StagedWriteType, User, UserError, UserPreferences,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -116,6 +115,30 @@ fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> 
         body: format!(
             "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}\nOr paste the token in the app: {token}"
         ),
+    }
+}
+
+/// Re-proves the current password inside a live session, spending the
+/// account's re-authentication budget (auth.md "Rate limiting"): a
+/// serving backoff refuses as a transport-tier RATE_LIMITED before the
+/// password is even checked, a wrong password counts toward the run,
+/// and a right one ends it. Answers whether the password matched.
+async fn reauthenticate(
+    pool: &PgPool,
+    limits: &RateLimitConfig,
+    account: Uuid,
+    credentials: &store::Credentials,
+    password: &str,
+) -> async_graphql::Result<bool> {
+    if ratelimit::reauth_blocked(pool, account).await?.is_some() {
+        return Err(rate_limited());
+    }
+    if auth::verify_password(&credentials.password_hash, password) {
+        ratelimit::reauth_succeeded(pool, account).await?;
+        Ok(true)
+    } else {
+        ratelimit::reauth_failed(pool, limits, account).await?;
+        Ok(false)
     }
 }
 
@@ -245,6 +268,56 @@ async fn member_viewer(ctx: &Context<'_>) -> async_graphql::Result<Viewer> {
         });
     }
     Ok(v)
+}
+
+/// Who is acting on a mutation an applicant may also use: a member acts
+/// directly; an applicant carries the act with their application
+/// (auth.md "Application").
+enum Acting {
+    Member(Viewer),
+    Applicant(Viewer),
+}
+
+/// The gate of the once-each mutations (`preparePost`, `prepareStance`):
+/// the member gate, except that a verified applicant passes as an
+/// applicant, whose act the mutation carries instead of staging for
+/// signing. An unverified account still reads EMAIL_NOT_VERIFIED.
+async fn acting_viewer(ctx: &Context<'_>) -> async_graphql::Result<Acting> {
+    let v = viewer(ctx)?;
+    let pool = ctx.data::<PgPool>()?;
+    let credentials = store::credentials_by_actor(pool, v.user_id)
+        .await?
+        .ok_or_else(unauthenticated)?;
+    match credentials.account_state {
+        store::AccountState::Member => Ok(Acting::Member(v)),
+        _ if credentials.email_verified_at.is_none() => Err(email_not_verified()),
+        store::AccountState::Applicant => Ok(Acting::Applicant(v)),
+        _ => Err(forbidden()),
+    }
+}
+
+/// A carried staging that did not open, as the mutation answers it: the
+/// account-state refusals at the transport tier, as every acting gate
+/// answers them; the once-each rule and a missing key as a userError.
+fn carry_refusal(e: onboarding::CarryOpenError) -> Result<UserError, async_graphql::Error> {
+    use onboarding::CarryRefusal;
+    match e {
+        onboarding::CarryOpenError::Refused(CarryRefusal::NotApplicant) => Err(forbidden()),
+        onboarding::CarryOpenError::Refused(CarryRefusal::EmailNotVerified) => {
+            Err(email_not_verified())
+        }
+        onboarding::CarryOpenError::Refused(CarryRefusal::NoKey) => Ok(UserError::new(
+            ErrorCode::BadInput,
+            "attach a key before staging an act with the application",
+        )),
+        onboarding::CarryOpenError::Refused(CarryRefusal::AlreadyCarried(family)) => {
+            Ok(UserError::new(
+                ErrorCode::BadInput,
+                format!("one {family} already waits with the application"),
+            ))
+        }
+        other => Ok(internal(other)),
+    }
 }
 
 fn internal(e: impl std::fmt::Display) -> UserError {
@@ -414,6 +487,35 @@ struct ApplicationApprovalInput {
 #[derive(InputObject)]
 struct ApproveApplicantsInput {
     approvals: Vec<ApplicationApprovalInput>,
+}
+
+#[derive(InputObject)]
+struct RejectApplicationInput {
+    application: Uuid,
+}
+
+/// The application in its closed state.
+#[derive(SimpleObject)]
+struct RejectApplicationPayload {
+    application: Option<Application>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct RejectLinkApplicationsInput {
+    invite_link: Uuid,
+}
+
+/// An unknown or foreign link refuses with a NOT_FOUND userError, the
+/// same expected outcome revokeInviteLink names; a link with nothing
+/// waiting succeeds with a zero count.
+#[derive(SimpleObject)]
+struct RejectLinkApplicationsPayload {
+    /// How many applications the sweep closed.
+    rejected_count: Option<i32>,
+    /// The link, for re-reading its share of the queue.
+    invite_link: Option<InviteLink>,
+    user_errors: Vec<UserError>,
 }
 
 /// Staged proposals to pre-sign, in relay order. Each is its own priced
@@ -998,6 +1100,22 @@ impl PrepareContentPayload {
         }
     }
 
+    /// An applicant's post, carried with their application: the same batch,
+    /// every write marked carried — nothing for the device to sign now.
+    fn carried(prepared: crate::content::PreparedContent) -> Self {
+        Self {
+            node: Some(prepared.node),
+            writes: Some(
+                prepared
+                    .writes
+                    .into_iter()
+                    .map(PreparedWrite::carried_write)
+                    .collect(),
+            ),
+            user_errors: vec![],
+        }
+    }
+
     fn refused(errors: Vec<UserError>) -> Self {
         Self {
             node: None,
@@ -1197,6 +1315,42 @@ struct ChangeHandlePayload {
 struct DismissVouchBackPayload {
     user: Option<User>,
     user_errors: Vec<UserError>,
+}
+
+/// A preference write. Every field is optional in the GraphQL sense: an
+/// absent field is left as it is; an explicit null restores its default.
+#[derive(InputObject)]
+struct SetPreferencesInput {
+    /// 0 (show everything) to 10 (strictest); null restores the default.
+    content_filtering_severity_level: async_graphql::MaybeUndefined<i32>,
+    /// The license new posts start from; null restores public domain
+    /// (0/0). Both axes take the same three readings the composer
+    /// publishes — 0, 0.5 and 1.
+    default_license: async_graphql::MaybeUndefined<LicenseInput>,
+    /// Whether the account has seen the intro; null restores false.
+    has_seen_onboarding: async_graphql::MaybeUndefined<bool>,
+}
+
+#[derive(SimpleObject)]
+struct SetPreferencesPayload {
+    preferences: Option<UserPreferences>,
+    user_errors: Vec<UserError>,
+}
+
+/// The three readings a license axis takes in the composer, and so in the
+/// default it starts from.
+const LICENSE_READINGS: [f64; 3] = [0.0, 0.5, 1.0];
+
+/// A license default on the three readings, or the field it fails on.
+fn default_license_pair(license: &LicenseInput) -> Result<(f64, f64), &'static str> {
+    let reading = |value: f64| LICENSE_READINGS.contains(&value);
+    if !reading(license.attribution) {
+        return Err("attribution");
+    }
+    if !reading(license.provenance) {
+        return Err("provenance");
+    }
+    Ok((license.attribution, license.provenance))
 }
 
 #[derive(InputObject)]
@@ -1430,11 +1584,10 @@ impl Mutation {
     }
 
     /// Attaches the device-minted actor identity to the viewer's account
-    /// — the key ceremony's server half. Replaceable while the viewer's
-    /// application is unapproved; FORBIDDEN once approval has bound the
-    /// address. An address binds at most one account: a key already
-    /// bound to a different account refuses with an ACTOR_KEY_IN_USE
-    /// userError.
+    /// — the key ceremony's server half. Replaceable until the address is
+    /// funded; FORBIDDEN once the admission burn has bound it. An address
+    /// binds at most one account: a key already bound to a different
+    /// account refuses with an ACTOR_KEY_IN_USE userError.
     async fn attach_actor_key(
         &self,
         ctx: &Context<'_>,
@@ -1496,12 +1649,18 @@ impl Mutation {
     }
 
     /// Approve staged applicants — the inviter's deliberate, priced act:
-    /// per applicant or in batch, with the pre-filled stance values
-    /// adjusted at will. Triggers the funding burn and the staged
-    /// Registration backend-side, and returns the inviter's own Opinion
+    /// per applicant or in batch, each carrying the stance values the
+    /// inviter picks for it. Requests the address's funding burn — at most
+    /// once per address, however approvals and retries race — and stages
+    /// the Registration backend-side, and returns the inviter's own Opinion
     /// records to sign — the vouch is the inviter's signature, not a
-    /// server write. Requires an approvable application: email verified
-    /// and key attached.
+    /// server write. The account lands when its own Registration and the
+    /// first vouch-Opinion on any of its paths have both confirmed; a vouch
+    /// that never lands lapses and its path waits again. Requires an
+    /// approvable application: email verified and key attached; an
+    /// already-approved, rejected, or foreign-queue application, or one
+    /// whose applicant already landed, refuses with BAD_INPUT pinned to
+    /// its entry.
     async fn approve_applicants(
         &self,
         ctx: &Context<'_>,
@@ -1510,7 +1669,6 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let funding = ctx.data::<StandIn>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         let approvals: Vec<onboarding::Approval> = input
@@ -1525,7 +1683,6 @@ impl Mutation {
         match onboarding::approve_applicants(
             pool,
             boundary,
-            funding,
             cfg,
             &limits.signing,
             v.user_id,
@@ -1559,6 +1716,72 @@ impl Mutation {
                     .collect(),
             }),
         }
+    }
+
+    /// Close a staged application without approving it — the approver's
+    /// own gesture, never a side effect of revoking the link the applicant
+    /// arrived through (auth.md "Rejection"). It closes this queue entry,
+    /// not the person: the row is marked rejected, and the account keeps
+    /// its login, its reads and its attached key. Nothing is deleted. One
+    /// person at a time; closing a whole invite link's waiting queue in
+    /// one gesture is rejectLinkApplications. An already-approved,
+    /// already-rejected, or foreign-queue application refuses with
+    /// BAD_INPUT pinned to `application`; an unknown and a foreign
+    /// application read alike.
+    async fn reject_application(
+        &self,
+        ctx: &Context<'_>,
+        input: RejectApplicationInput,
+    ) -> async_graphql::Result<RejectApplicationPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        match onboarding::reject_application(pool, v.user_id, input.application).await {
+            Ok(application) => Ok(RejectApplicationPayload {
+                application: Some(Application(application)),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(RejectApplicationPayload {
+                application: None,
+                user_errors: vec![UserError::from_onboarding(&e, "")],
+            }),
+        }
+    }
+
+    /// Close every application waiting in the viewer's queue through one
+    /// invite link (auth.md "Rejection"). Each entry closes as an
+    /// ordinary rejection — marked rejected, the account keeping its
+    /// login, its reads and its attached key, nothing deleted.
+    /// Scoped to what is waiting: applications already approved or
+    /// rejected are passed over rather than refusing the call. A revoked
+    /// link still sweeps: revocation stops new staging and leaves the
+    /// queue standing.
+    async fn reject_link_applications(
+        &self,
+        ctx: &Context<'_>,
+        input: RejectLinkApplicationsInput,
+    ) -> async_graphql::Result<RejectLinkApplicationsPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let Some(closed) =
+            store::reject_link_applications(pool, input.invite_link, v.user_id).await?
+        else {
+            return Ok(RejectLinkApplicationsPayload {
+                rejected_count: None,
+                invite_link: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::NotFound,
+                    "no such invite link",
+                    vec!["inviteLink".to_string()],
+                )],
+            });
+        };
+        Ok(RejectLinkApplicationsPayload {
+            rejected_count: Some(i32::try_from(closed).unwrap_or(i32::MAX)),
+            invite_link: store::invite_link(pool, input.invite_link)
+                .await?
+                .map(InviteLink),
+            user_errors: vec![],
+        })
     }
 
     /// A session from credentials; `auth` is null with an
@@ -1806,7 +2029,10 @@ impl Mutation {
     }
 
     /// Re-verifies the current password, rotates the hash, and revokes
-    /// the account's other sessions.
+    /// the account's other sessions. The re-proof spends the account's
+    /// re-authentication budget, shared with every verb that re-proves
+    /// the password in a live session: a run of wrong ones backs off as
+    /// a visible RATE_LIMITED, and a right one ends the run.
     async fn change_password(
         &self,
         ctx: &Context<'_>,
@@ -1814,10 +2040,19 @@ impl Mutation {
     ) -> async_graphql::Result<ChangePasswordPayload> {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
         let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
             return Err(unauthenticated());
         };
-        if !auth::verify_password(&credentials.password_hash, &input.current_password) {
+        if !reauthenticate(
+            pool,
+            limits,
+            v.user_id,
+            &credentials,
+            &input.current_password,
+        )
+        .await?
+        {
             return Ok(ChangePasswordPayload {
                 ok: None,
                 user_errors: vec![UserError::at(
@@ -1856,8 +2091,10 @@ impl Mutation {
     /// request supersedes a pending one. A new address already
     /// registered to another account reads exactly like success; a wrong
     /// password is INVALID_CREDENTIALS, which leaks nothing to a caller
-    /// already signed in. Spends the account's mail budget: a spent
-    /// budget answers RATE_LIMITED and nothing is mailed or recorded.
+    /// already signed in. The re-proof spends the account's
+    /// re-authentication budget, the one changePassword shares. Spends
+    /// the account's mail budget: a spent budget answers RATE_LIMITED
+    /// and nothing is mailed or recorded.
     async fn request_email_change(
         &self,
         ctx: &Context<'_>,
@@ -1875,7 +2112,15 @@ impl Mutation {
             pending_email_change: None,
             user_errors: vec![error],
         };
-        if !auth::verify_password(&credentials.password_hash, &input.current_password) {
+        if !reauthenticate(
+            pool,
+            limits,
+            v.user_id,
+            &credentials,
+            &input.current_password,
+        )
+        .await?
+        {
             return Ok(refuse(UserError::at(
                 ErrorCode::InvalidCredentials,
                 "current password did not match",
@@ -2186,6 +2431,73 @@ impl Mutation {
         })
     }
 
+    /// Writes the viewer's cross-device preferences. An absent field is
+    /// left as it is; an explicit null restores its default. A license
+    /// axis off the three published readings, or a filter level outside
+    /// 0–10, is BAD_INPUT on that field and writes nothing.
+    async fn set_preferences(
+        &self,
+        ctx: &Context<'_>,
+        input: SetPreferencesInput,
+    ) -> async_graphql::Result<SetPreferencesPayload> {
+        use async_graphql::MaybeUndefined;
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let refuse = |message: &str, field: &[&str]| SetPreferencesPayload {
+            preferences: None,
+            user_errors: vec![UserError::at(
+                ErrorCode::BadInput,
+                message,
+                field.iter().map(|f| (*f).to_string()).collect(),
+            )],
+        };
+        let level = match input.content_filtering_severity_level {
+            MaybeUndefined::Undefined => None,
+            MaybeUndefined::Null => Some(None),
+            MaybeUndefined::Value(level) => match i16::try_from(level) {
+                Ok(level) if (0..=10).contains(&level) => Some(Some(level)),
+                _ => {
+                    return Ok(refuse(
+                        "the filter level is 0 to 10",
+                        &["contentFilteringSeverityLevel"],
+                    ));
+                }
+            },
+        };
+        let license = match &input.default_license {
+            MaybeUndefined::Undefined => None,
+            MaybeUndefined::Null => Some(None),
+            MaybeUndefined::Value(license) => match default_license_pair(license) {
+                Ok(pair) => Some(Some(pair)),
+                Err(axis) => {
+                    return Ok(refuse(
+                        "a license axis takes 0, 0.5 or 1",
+                        &["defaultLicense", axis],
+                    ));
+                }
+            },
+        };
+        let onboarding = match input.has_seen_onboarding {
+            MaybeUndefined::Undefined => None,
+            MaybeUndefined::Null => Some(false),
+            MaybeUndefined::Value(seen) => Some(seen),
+        };
+        let stored = store::set_preferences(
+            pool,
+            v.user_id,
+            store::PreferencesUpdate {
+                content_filtering_severity_level: level,
+                default_license: license,
+                has_seen_onboarding: onboarding,
+            },
+        )
+        .await?;
+        Ok(SetPreferencesPayload {
+            preferences: Some(UserPreferences::from_store(stored)),
+            user_errors: vec![],
+        })
+    }
+
     /// Issues the challenge an upload must spend (auth.md "Key
     /// recovery"). The server picks it: a client-chosen nonce would let
     /// a captured upload be replayed verbatim, which is the whole attack
@@ -2366,19 +2678,64 @@ impl Mutation {
     /// Prepares the viewer's stance toward a node — one new edge carrying
     /// exactly the picked values, never a delta against the bundle
     /// (design.md §8.1). Toward a Profile this is the interpersonal
-    /// stance, including the reciprocation gesture.
+    /// stance, including the reciprocation gesture. A verified applicant
+    /// with an attached key may stage one Opinion and one Affinity: each
+    /// comes back carried with the application — nothing to sign until
+    /// the landing — and a second of a family refuses with BAD_INPUT.
     async fn prepare_stance(
         &self,
         ctx: &Context<'_>,
         input: PrepareStanceInput,
     ) -> async_graphql::Result<PreparePayload> {
-        let v = member_viewer(ctx).await?;
+        let acting = acting_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let staging = staging(ctx)?;
         let target = match stance::TargetRef::of(input.target, input.topic_name) {
             Ok(target) => target,
             Err(e) => return Ok(stance_refusal(e)),
+        };
+        let v = match acting {
+            Acting::Member(v) => v,
+            Acting::Applicant(v) => {
+                let family = match stance::resolve_target(pool, &target).await {
+                    Ok(resolved) => resolved.family,
+                    Err(e) => return Ok(stance_refusal(e)),
+                };
+                let lock = match onboarding::open_carry(pool, v.user_id, family).await {
+                    Ok(lock) => lock,
+                    Err(e) => {
+                        return Ok(PreparePayload {
+                            writes: None,
+                            user_errors: vec![carry_refusal(e)?],
+                        });
+                    }
+                };
+                let prepared = match stance::prepare_stance(
+                    pool,
+                    &crate::prepare::Carrying(boundary),
+                    staging,
+                    v.user_id,
+                    &target,
+                    input.p_directed.0,
+                    input.p_interest.0,
+                )
+                .await
+                {
+                    Ok(prepared) => prepared,
+                    Err(e) => return Ok(stance_refusal(e)),
+                };
+                if let Err(e) = onboarding::close_carry(pool, lock, &[prepared.id]).await {
+                    return Ok(PreparePayload {
+                        writes: None,
+                        user_errors: vec![carry_refusal(e)?],
+                    });
+                }
+                return Ok(PreparePayload {
+                    writes: Some(vec![PreparedWrite::carried_write(prepared)]),
+                    user_errors: vec![],
+                });
+            }
         };
         match stance::prepare_stance(
             pool,
@@ -2634,13 +2991,16 @@ impl Mutation {
     /// Prepares a new Post: one genesis Publish through the ordinary
     /// write path — the returned write pre-signs, seals, and approves
     /// like any other; `node` is the id the post serves under once the
-    /// record lands (post.md §1).
+    /// record lands (post.md §1). A verified applicant with an attached
+    /// key may stage one post: the batch comes back carried with the
+    /// application — nothing to sign until the landing — and a second
+    /// post refuses with BAD_INPUT.
     async fn prepare_post(
         &self,
         ctx: &Context<'_>,
         input: PreparePostInput,
     ) -> async_graphql::Result<PrepareContentPayload> {
-        let v = member_viewer(ctx).await?;
+        let acting = acting_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
         let staging = staging(ctx)?;
@@ -2658,6 +3018,38 @@ impl Mutation {
             references: reference_drafts(&input.references),
             attachments: attachment_drafts(&input.attachments),
             sensitive: self_mark_draft(input.sensitive, input.sensitive_reason),
+        };
+        let v = match acting {
+            Acting::Member(v) => v,
+            Acting::Applicant(v) => {
+                let lock = match onboarding::open_carry(
+                    pool,
+                    v.user_id,
+                    common::l1::census::Family::Publish,
+                )
+                .await
+                {
+                    Ok(lock) => lock,
+                    Err(e) => return Ok(PrepareContentPayload::refused(vec![carry_refusal(e)?])),
+                };
+                let prepared = match crate::content::prepare_post(
+                    pool,
+                    &crate::prepare::Carrying(boundary),
+                    staging,
+                    v.user_id,
+                    draft,
+                )
+                .await
+                {
+                    Ok(prepared) => prepared,
+                    Err(e) => return Ok(PrepareContentPayload::from_error(e)),
+                };
+                let ids: Vec<Uuid> = prepared.writes.iter().map(|w| w.id).collect();
+                if let Err(e) = onboarding::close_carry(pool, lock, &ids).await {
+                    return Ok(PrepareContentPayload::refused(vec![carry_refusal(e)?]));
+                }
+                return Ok(PrepareContentPayload::carried(prepared));
+            }
         };
         match crate::content::prepare_post(pool, boundary, staging, v.user_id, draft).await {
             Ok(prepared) => Ok(PrepareContentPayload::ok(prepared)),

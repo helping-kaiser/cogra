@@ -301,7 +301,9 @@ fn linearizes(
 /// Persisted with the accepted acts' causal keys and legs: the θ-debit and
 /// count increment, consummated at the writing epoch's price and never
 /// re-calculated (§11.7); the node state the epoch moved; and the epoch
-/// row.
+/// row. The admission burns due by this epoch settle in the same
+/// transaction, after the selection: a burn pinned by epoch k funds acts
+/// from epoch k + 1 on, never the epoch it was pinned in.
 pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage>, StandInError> {
     standin.config().check()?;
     let mut tx = standin.pool().begin().await?;
@@ -392,6 +394,7 @@ pub(crate) async fn close_epoch(standin: &StandIn) -> Result<Option<EpochPackage
     }
 
     persist(&mut tx, epoch, &selection, standin.config().theta_micro).await?;
+    crate::settle_due(&mut tx, epoch).await?;
     tx.commit().await?;
 
     Ok(Some(EpochPackage {

@@ -20,6 +20,8 @@ import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { PillButton } from "@/lib/ui2/pill-button";
 import { preparePost } from "@/lib/api/content-api";
+import { fetchDefaultLicense } from "@/lib/api/settings-api";
+import { isPublicDomain } from "@/lib/license";
 import { hasFieldErrors, partitionFieldErrors } from "@/lib/api/field-errors";
 import { firstRefusalMessage, writeRefusalMessage } from "@/lib/ui/error-messages";
 import { fetchReferenceCandidates } from "@/lib/api/references-api";
@@ -355,6 +357,29 @@ export function ComposeWizard({
       cancelled = true;
     };
   }, [client, prefill]);
+
+  // ---- the license a new post starts from -----------------------------------
+
+  // A NEW POST STARTS FROM THE ACCOUNT'S DEFAULT LICENSE (SettingsLicense.md;
+  // api-spec.md `UserPreferences.defaultLicense`, null = public domain). It
+  // seeds the fresh wizard only: a draft taken up keeps the license it was
+  // written under, and a failed read leaves public domain standing.
+  const adoptedDraft = useRef(false);
+  useEffect(() => {
+    let cancelled = false;
+    void guard.run(() => fetchDefaultLicense(client)).then((outcome) => {
+      if (cancelled || outcome.kind !== "success" || outcome.value === null) return;
+      const seed = outcome.value;
+      setState((current) =>
+        adoptedDraft.current || !isPublicDomain(current.license)
+          ? current
+          : { ...current, license: { attribution: seed.attribution, provenance: seed.provenance } },
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client, guard]);
 
   // ---- the draft on this device -------------------------------------------
 
@@ -747,6 +772,8 @@ export function ComposeWizard({
           draft={offered}
           previews={offeredPreviews}
           onContinue={() => {
+            // A taken-up draft keeps the license it was written under.
+            adoptedDraft.current = true;
             // THE CITATION CROSSES THE RESTORE. The author reached this
             // screen by asking to cite a node (D20), and the draft answers
             // a different question — what they were writing last week.

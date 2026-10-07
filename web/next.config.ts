@@ -43,6 +43,11 @@ export const UPLOAD_PROXY_TIMEOUT_MS = 900_000;
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: privateNetworkOrigins,
+  // THE VERSION RUNNING HERE — Settings' `What's new` row reads it. npm sets
+  // `npm_package_version` from package.json for every script it runs (`dev`,
+  // `build`, `prod`), and Next inlines `env` into the client bundle at build
+  // time (Next docs, `next.config.js` `env`).
+  env: { NEXT_PUBLIC_APP_VERSION: process.env.npm_package_version ?? "" },
   experimental: {
     proxyTimeout: UPLOAD_PROXY_TIMEOUT_MS,
   },

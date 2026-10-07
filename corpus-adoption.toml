@@ -2089,7 +2089,7 @@ names      = ["askLinkCheck"]
 [[api-contract.staged]]
 surface    = "mutation"
 built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
-names      = ["rejectApplication", "rejectLinkApplications", "stageApplicant"]
+names      = ["stageApplicant"]
 
 # The unbuilt applicant-deletion verb and the deletion-link error
 # code (packet contract-recon-deletion-spec, verdict SPEC-ONLY). The
@@ -2135,7 +2135,7 @@ names      = [
   "prepareProposal", "prepareRatify", "prepareReport", "prepareRescind",
   "prepareSettlement", "prepareTip", "prepareWithdraw", "removeBookmark",
   "removeContent", "requestAccountDeletion", "setBookmark",
-  "setPreferences", "unhideActor",
+  "unhideActor",
 ]
 
 # A prose paragraph on the profile field caps sits inside a graphql

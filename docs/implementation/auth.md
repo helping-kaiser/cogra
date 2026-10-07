@@ -260,13 +260,16 @@ applicant | member`, a column on the credentials row
   landed. Reads everything; the only signing it does is its own
   admission handshake and the once-each acts that land with it
   ("Application" below).
-- **`member`** — the Registration confirmed; the account fronts a
-  full actor on the graph.
+- **`member`** — the ceremony landed: the account's own
+  Registration and a vouch-Opinion both confirmed; the account
+  fronts a full actor on the graph.
 
 The state gates *acting through CoGra* and is enforced
 server-side — an acting call from a non-member account is
 `FORBIDDEN`, or `EMAIL_NOT_VERIFIED` while that is the proof
-standing in the way ([api-spec.md](api-spec.md)). It is service state,
+standing in the way ([api-spec.md](api-spec.md)) — save the
+once-each acts a verified applicant carries with their application
+("Application" below). It is service state,
 distinct from two neighbors: the mutual-pair **membership** of
 [invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)
 — a `member` account that has not yet reciprocated is a member in
@@ -283,7 +286,10 @@ and the link's expiry. The link URL carries only the row id.
 Nothing binds at this point, and the row carries no stance
 values: the inviter chooses them at approval, which is the priced
 act. Links are single-use (one applicant slot) unless the inviter
-opens them to multi-use (many applicants until expiry).
+opens them to multi-use (many applicants until expiry). A
+single-use link is used up by the account registered through it,
+and a rejection does not give it back: the inviter issues a new
+link for the next person.
 
 **Revocation stops new staging only.** Revoking a link sets
 `revoked_at`: no further applicant can register through it, and
@@ -391,10 +397,10 @@ them).
    blob on the device — or decline, with the consequence stated
    ("Key recovery" above). The sealed blob uploads immediately
    after the attach — the account it hangs off already exists.
-   The attached key is replaceable while the application is
-   unapproved — a device lost before approval costs nothing but
-   a re-run of the ceremony — and immutable from approval on,
-   when the funding burn binds the address. An address binds at
+   The attached key is replaceable until the address is funded —
+   a device lost before approval costs nothing but a re-run of
+   the ceremony — and immutable once it is, because the funding
+   burn binds the address. An address binds at
    most one account: attaching a key already bound to a
    different account is refused, because the address's
    Registration can exist on the graph only once — a duplicate
@@ -473,11 +479,21 @@ dismissible hints — the actionable email-verification step, the
 approval wait, the landing. The first tap of a kind opens the
 real surface and stages the act; the next tap of a staged kind
 answers in place that it waits with the application. A staged
-act is visible only to its author, in their own chronicle —
-nothing is public before it is signed. It **signs at approval,
-automatically**, in the batch the vouch-in lands with; on
-rejection it waits on the device, never sent, until a member
-vouches the account in, then signs with the landing batch.
+act is **carried**: the server holds it — whether or not any path
+is open, never garbage-collected, surviving the loss of the device
+— and it is visible only to its author, in their own chronicle;
+nothing is public before it is signed. It **signs at the landing,
+automatically**: the landing that completes the ceremony releases
+the carried acts as one batch, each depending on the admission
+Registration and the winning vouch, and the device's poll signs
+them without a prompt. Never earlier: an act signed at
+registration could leave permanent graph content from someone no
+member's edge ever reached. The staging verbs are the ordinary
+`preparePost` and `prepareStance`, open to a verified applicant
+with an attached key for exactly these three kinds; the signing
+budget is spent at staging, and solvency is left to ordering — the
+applicant may hold no funds yet, and the batch cannot be orderable
+before the funded landing.
 Every other acting surface stays visible but
 locked: styled as disabled yet still tappable, with the tap
 explaining that approval unlocks it. Account management —
@@ -494,13 +510,22 @@ is the deliberate, priced act that commits the inviter's vouch; the
 backend then runs the admission sequence:
 
 1. **Funding** — the community-funded admission burn to the applicant's
-   address ([economics.md](../primitive/economics.md)). Funding and
-   the staging below run inside the approval; a crash between the
-   steps heals on the applicant's next status poll. The sequence
-   is serialized per application — the approving request and the
-   poll's repair queue rather than race — and the burn is guarded
-   by the fresh address's zero burn history, so no path
-   double-funds.
+   address ([economics.md](../primitive/economics.md)), requested
+   across the seam and settled by the realization asynchronously.
+   Funding and the staging below run inside the approval; a crash
+   between the steps heals on the applicant's next status poll. The
+   sequence is serialized **per account** — every approval of any of
+   the account's applications and the poll's repair queue rather
+   than race — and the guard is the address's **funding row**, never
+   the `B_i` read: a burn still pending on the realization reads as
+   nothing burned, so a balance guard would burn again on every
+   retry. Only the approval that claims the row requests the burn;
+   a lost or refused request is re-requested under the row's own
+   idempotency key, so the realization burns once per address — an
+   address keeps its row even when its account is deleted. Every
+   ingestion pass reads the pending burns' settlement. An approval
+   that funds a fresh address also spends the inviter's admission
+   funding budget ("Rate limiting" below).
 2. **Registration** — the backend prepares the staged
    Registration; the applicant's device **runs the full signing
    handshake on next app open** — pre-commitment, then approval
@@ -508,19 +533,45 @@ backend then runs the admission sequence:
    signatures (the backend cannot sign for anyone —
    [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
    the backend relays each step and the record lands. The
-   handshake rides the ordinary session-authorized staged-write
+   approval step waits for the funding: while the burn is
+   unsettled the backend holds the signed approval — the write
+   reads `RELAYING` — and relays it on the ingestion pass that
+   sees the burn settle, so the Registration is never orderable
+   before its author can pay for it. The handshake rides the ordinary session-authorized staged-write
    surface ([api-spec.md](api-spec.md)) — a session exists from
    registration, so admission needs no dedicated signing
    mutations.
-3. **The inviter's Opinion** toward the new Profile — prepared
-   for the inviter, signed on their device, relayed.
-4. **Landing** — when the Registration confirms in the mirror,
-   the account state flips to `member` and the application row is
-   marked landed. Nothing moves and nothing is claimed: the
-   credentials have been the account's since registration, the
-   identity association since the attach
-   ([data-model.md](data-model.md)), and the sessions never
-   stopped being ordinary sessions.
+3. **The vouch** — the inviter's Opinion toward the new Profile,
+   depending on the Registration: prepared for the inviter, signed
+   on their device, relayed. The decision records the Opinion's act
+   id on a vouch row; only an Opinion a vouch decision prepared
+   counts toward landing, never an ordinary stance on the applicant.
+   The path reads approved (`approved_at`) while that vouch is live.
+4. **Landing** — when the account's own Registration **and** the
+   first vouch-Opinion on any of its paths have both confirmed in
+   the mirror, the account state flips to `member` and the path that
+   vouch was decided on is marked landed. The first to land, by the
+   mirror's causal key, wins; the account's other paths leave their
+   members' queues, and a later vouch-Opinion is an ordinary Opinion.
+   Nothing moves and nothing is claimed: the credentials have been
+   the account's since registration, the identity association since
+   the attach ([data-model.md](data-model.md)), and the sessions
+   never stopped being ordinary sessions.
+
+Every decision on any of the account's paths runs under the one
+account lock, so they share one funding and one admission
+Registration; their edges race only on L1.
+
+**A fallen ritual.** A vouch whose Opinion is garbage-collected
+unlanded lapses, and its path waits again: the node (a landed
+Registration) and the funding stay, and any member may vouch anew,
+through any path — no second burn, no second Registration, only a
+new edge. A lapsed vouch that lands late after all still counts:
+the collection is not final. The poll's repair re-stages the
+Registration alone, when its staged row was collected unlanded while
+some vouch is live — under a new act id, so a vouch bound to the old
+one can never land and lapses in turn; the repair never prepares
+anyone's Opinion.
 
 The flow tolerates latency at every step — an approval the
 applicant's device hasn't signed yet simply waits; staged records
@@ -529,13 +580,16 @@ that never land are garbage-collected per the write path
 
 **Reciprocation is the joiner's own act.** Membership completes
 when the joiner points back — their own client-signed Opinion
-toward the approver's Profile, prompted at first login
+toward the Profile of the member who vouched them in, prompted at
+first login
 ([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)).
 The prompt's target comes from the viewer-only `User.invitedBy`
-field — landing provenance kept on the application row: the
-approver whose Opinion admitted the account, which on the
-ask-link side is the member who took the applicant up rather than
-whoever issued a link they once registered through. Clients name
+field: the member whose vouch-Opinion landed the account first —
+read from the mirror, so a rebuild names the same member, and null
+before landing — which on the ask-link side is the member who took
+the applicant up rather than whoever issued a link they once
+registered through. The borrowed view has its own source, that
+link's issuer. Clients name
 that person on the vouch-back surface. It is a graph act, not an
 auth step; auth's involvement ends at landing.
 
@@ -951,11 +1005,15 @@ There is no separate "abandon application" act: a signed-out
 application keeps following its lifecycle ("Application").
 
 The one exception is the **"don't remember me" opt-in**, offered
-at login and restore: an account flagged with it has its key
-material — seed, pending backup blob, handshake material, and
-device-local flags — purged from the device at sign-out (and on
-a session invalidation that clears the tokens). For a shared or
-public device; default off.
+at login, at restore and in Settings: an account flagged with it
+has its key material — seed, pending backup blob, handshake
+material, and device-local flags — purged from the device at
+sign-out (and on a session invalidation that clears the tokens).
+An explicit sign-out clears the account's unpublished draft with
+it, and asks first when this device holds the only copy of an
+unbacked key — make a recovery code, or erase and sign out. A
+remembered account's sign-out clears nothing, its draft included.
+For a shared or public device; default off.
 
 ### Multi-account device custody
 
@@ -988,6 +1046,13 @@ limits survive restarts and hold across instances.
 - Login attempts — limited per IP and per account, with
   exponential backoff on consecutive failures; a successful
   login ends the run.
+- Re-authentication inside a session (`changePassword`,
+  `requestEmailChange`) — one per-account run of consecutive wrong
+  current passwords, shared by every verb that re-proves the
+  password, with the same exponential backoff; a right password
+  ends the run. Without it a live session could guess the password
+  it was opened with. The caller is authenticated, so the backoff
+  answers visibly.
 - Application submits (`register`) — limited
   per IP and per invite link.
 - Password-reset requests — limited per IP and per account.
@@ -1015,7 +1080,12 @@ emails, and serves no retry-after figure.
 Signing acts are not auth endpoints: their per-account budget is
 spent at prepare and refuses as a `WRITE_RULE_FAILED` userError,
 never `RATE_LIMITED` (api-spec.md "Conventions" — the signing
-budget).
+budget). The admission funding budget is priced the same way: per
+voucher, spent only by approvals that fund a fresh address — the
+community fund's outflow — and refused with the approval batch,
+whole, before anything is burned. It is per voucher rather than
+instance-wide, since a global cap is one an attacker could exhaust to
+stall every admission.
 
 The client IP is the socket peer address by default. Behind a
 reverse proxy that is the sole ingress, `CLIENT_IP_SOURCE`

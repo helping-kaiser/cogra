@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_admission_fundings\n             (address, account_id, triggered_by, amount_micro, request_key)\n         VALUES ($1, $2, $3, $4, gen_random_uuid())\n         ON CONFLICT (address) DO NOTHING\n         RETURNING request_key",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "request_key",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid",
+        "Uuid",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b64a6791997d854c8789d9b9624048baccc33c66a920856b70b173cf4868778d"
+}

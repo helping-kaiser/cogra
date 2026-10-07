@@ -58,6 +58,10 @@ pub struct IngestOutcome {
     pub epochs: u64,
     pub promoted: Vec<staged::PromotedWrite>,
     pub promotion_failures: Vec<PromotionFailure>,
+    /// Vouches this pass lapsed (`onboarding::lapse_dead_vouches`).
+    pub lapsed: u64,
+    /// The admission settlement pass that rode this ingestion pass.
+    pub funding: crate::onboarding::SettlementOutcome,
 }
 
 /// Ingests every epoch published since the cursor, promoting staged
@@ -67,11 +71,20 @@ pub struct IngestOutcome {
 /// applicant, promoting display rows) can act on them.
 ///
 /// Flow state advances here, on confirmation (architecture.md "The write
-/// path" step 5): a landed applicant Registration creates its account
-/// rows, and a landed content record promotes its payload into carriage
+/// path" step 5): an applicant's ceremony lands, and a landed content record promotes its payload into carriage
 /// and its display rows into view. Every ingestion path runs it — the
 /// live loop, the dev CLI, and rebuilds alike — so a rebuild reconstructs
-/// the same L2 state the live path produced.
+/// the same L2 state the live path produced. The entry ceremony's
+/// landing is decided here for every account whose recorded vouch newly
+/// confirmed (`onboarding::land_ready_accounts`), and after the GC its
+/// collected vouches lapse (`onboarding::lapse_dead_vouches`).
+///
+/// The admission settlement pass rides last, on every pass whether or
+/// not an epoch arrived (`onboarding::settle_admission_fundings`): a
+/// burn settles on the realization's clock, not on CoGra's ingestion,
+/// and a funding whose request was lost is re-requested there. Its own
+/// failures ride the outcome and are retried by the next pass — the
+/// mirror has already advanced by then.
 pub async fn ingest_pending<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -92,7 +105,7 @@ pub async fn ingest_pending<B: L1Boundary>(
         outcome.epochs += 1;
         outcome.promoted.extend(landed);
     }
-    let mut failures = crate::onboarding::land_promoted(pool, &outcome.promoted).await;
+    let mut failures = crate::onboarding::land_ready_accounts(pool).await;
     failures.extend(crate::content::land_promoted(pool, &outcome.promoted).await);
     failures.extend(crate::profile::land_promoted(pool, &outcome.promoted).await);
     for failure in &failures {
@@ -112,6 +125,8 @@ pub async fn ingest_pending<B: L1Boundary>(
             tracing::info!(expired, reaped, "staged-write GC pass");
         }
     }
+    outcome.lapsed = crate::onboarding::lapse_dead_vouches(pool).await;
+    outcome.funding = crate::onboarding::settle_admission_fundings(boundary, pool).await;
     Ok(outcome)
 }
 

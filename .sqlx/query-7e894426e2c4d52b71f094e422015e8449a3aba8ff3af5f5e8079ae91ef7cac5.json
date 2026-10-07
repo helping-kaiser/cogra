@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT amount_micro, settled_at FROM l1_admission_burns WHERE key = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "amount_micro",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "settled_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "7e894426e2c4d52b71f094e422015e8449a3aba8ff3af5f5e8079ae91ef7cac5"
+}

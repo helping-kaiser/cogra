@@ -32,16 +32,6 @@ mutation RefreshSession($input: RefreshSessionInput!) {
   }
 }
 
-query Sessions {
-  me {
-    id
-    sessions {
-      id
-      deviceLabel
-      isCurrent
-    }
-  }
-}
 
 mutation RevokeSession($input: RevokeSessionInput!) {
   revokeSession(input: $input) {

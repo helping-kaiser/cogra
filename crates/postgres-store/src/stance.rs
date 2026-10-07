@@ -48,7 +48,11 @@ impl BundleView {
 /// pending half, landed and expired rows are excluded — the first is
 /// already counted through the mirror, the second never existed on the
 /// graph — and an empty payload stands in for the unmarked test, since an
-/// empty payload is what makes a record unmarked once it lands.
+/// empty payload is what makes a record unmarked once it lands. A pending
+/// row counts from its pre-commitment, or from staging when it is an act
+/// carried with the author's application: the applicant's stance faces
+/// wear their carried pick (ApplicantFeed.md), and the pending half is
+/// only ever its own author's read.
 ///
 /// Census-unknown legs are excluded too. A leg the census has no spec for
 /// carries fallback domain, mask and tier that ingestion invented, so its
@@ -95,7 +99,7 @@ pub async fn bundle(
                WHERE family = $1 AND author = $2 AND target = $3
                  AND middle IS NULL
                  AND octet_length(payload) = 0
-                 AND pre_signed_at IS NOT NULL
+                 AND (pre_signed_at IS NOT NULL OR carried)
                  AND state NOT IN ('landed', 'expired')"#,
             family.as_str(),
             author_atom,

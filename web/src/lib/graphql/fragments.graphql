@@ -48,6 +48,7 @@ fragment PreparedWriteFields on PreparedWrite {
 fragment StagedWriteFields on StagedWrite {
   id
   state
+  carried
   family
   canonicalProposal
   verifiedAct
@@ -323,4 +324,14 @@ fragment StanceBundleFields on StanceBundle {
     inert
     severed
   }
+}
+
+# An email change in flight — which sides landed, read by the settings
+# row, the confirmation's pair and the landings.
+fragment PendingEmailChangeFields on PendingEmailChange {
+  newEmail
+  requiresCode
+  codeConfirmed
+  linkConfirmed
+  expiresAt
 }

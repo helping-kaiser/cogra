@@ -143,11 +143,50 @@ interface IdentityStore {
     suspend fun setForgetOnSignOut(value: Boolean)
 
     /**
-     * The opt-in's teeth: remove ALL of the active account's material —
-     * seed, pending blob, handshake material, and flags. Other
-     * accounts' slots are untouched.
+     * The opt-in's teeth on the REMOTE path (a session ended from
+     * elsewhere): remove ALL of the active account's slot — seed, pending
+     * blob, handshake material, and flags — in one atomic edit. Other
+     * accounts' slots are untouched, and the draft is deliberately NOT
+     * part of it: the remote path's custody is the sign-out custody
+     * packet's, and widening it here would move that boundary silently.
      */
     suspend fun purge()
+
+    /**
+     * The explicit sign-out's purge (Settings.md "Sign out" with the
+     * don't-remember switch on): the account's whole custody set — its
+     * slot AND its compose draft — in ONE atomic edit, so a process death
+     * can never leave a half-cleared account behind.
+     */
+    suspend fun purgeCustodySet()
+}
+
+/** The theme a reader picked on THIS device (Settings.md "Theme"). */
+enum class ThemeChoice {
+    LIGHT,
+    DARK,
+
+    /** Follows the device's own light-or-dark setting. */
+    AUTO,
+}
+
+/**
+ * Choices that belong to the device, never to the account (Settings.md
+ * "Theme"; backlog item 53's ruling on exact values): they survive a
+ * sign-out and another account's sign-in alike, and they never reach the
+ * server. Flows, because a change has to repaint surfaces already
+ * composed.
+ */
+interface DevicePreferences {
+    /** [ThemeChoice.AUTO] until the reader picks one. */
+    val theme: Flow<ThemeChoice>
+
+    suspend fun setTheme(choice: ThemeChoice)
+
+    /** Off until the reader turns it on: glyph-first is the product's default. */
+    val showExactValues: Flow<Boolean>
+
+    suspend fun setShowExactValues(value: Boolean)
 }
 
 /**

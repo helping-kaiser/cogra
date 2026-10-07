@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.R
 import com.cogra.core.designsystem.v2.token.Cogra2PreviewTheme
 import com.cogra.core.designsystem.v2.token.Layout
@@ -59,12 +60,21 @@ fun PageHeader(
     backContentDescription: String? = stringResource(R.string.page_header_back),
     action: @Composable (() -> Unit)? = null,
     testTag: String? = null,
+    /**
+     * The header's data-node on a registered screen (`settings.header`):
+     * the band, its `back` and its `title` then wear the registered paths
+     * in place of the [testTag] scheme.
+     */
+    node: DataNode? = null,
 ) {
+    val backTag = node?.div("back")?.tag ?: testTag?.let { "${it}_back" } ?: "page_header_back"
+    val titleTag = node?.div("title")?.tag ?: testTag?.let { "${it}_title" } ?: "page_header_title"
+    val rootTag = node?.tag ?: testTag
     Row(
         modifier = modifier
             .defaultMinSize(minHeight = Layout.TopBarHeight)
             .padding(horizontal = Layout.TopBarPadding)
-            .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
+            .then(if (rootTag != null) Modifier.testTag(rootTag) else Modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Space.x2),
     ) {
@@ -73,7 +83,7 @@ fun PageHeader(
                 onClick = onBack,
                 modifier = Modifier
                     .size(Layout.TouchTargetMin)
-                    .testTag(testTag?.let { "${it}_back" } ?: "page_header_back"),
+                    .testTag(backTag),
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -102,7 +112,7 @@ fun PageHeader(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = Space.x1)
-                    .testTag(testTag?.let { "${it}_title" } ?: "page_header_title"),
+                    .testTag(titleTag),
             )
         }
 

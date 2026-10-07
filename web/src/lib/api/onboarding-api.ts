@@ -39,6 +39,12 @@ export type ApplicationStatus = {
   actorPubkey: string | null;
   application: ApplicationView | null;
   stagedRegistration: StagedWriteView | null;
+  /**
+   * The acts carried with the application that the landing released —
+   * carried, awaiting the pre-signature — which the poll signs without
+   * a prompt (auth.md "Application"). Empty before the landing.
+   */
+  carriedBatch: StagedWriteView[];
 };
 
 /** null means the id references no link — the not-found rendering. */
@@ -129,14 +135,16 @@ export async function fetchApplicationStatus(
   );
   if (fetched.kind !== "success") return fetched;
   const me = fetched.value;
+  const nodes = me.stagedWrites?.edges.map((edge) => edge.node) ?? [];
   const staged =
-    me.stagedWrites?.edges
-      .map((edge) => edge.node)
-      .find((n) => n.family === "REGISTRATION" && n.state !== "EXPIRED") ?? null;
+    nodes.find((n) => n.family === "REGISTRATION" && n.state !== "EXPIRED") ?? null;
   return success({
     accountState: me.accountState,
     actorPubkey: me.actorPubkey ?? null,
     application: me.application,
     stagedRegistration: staged === null ? null : toView(staged),
+    carriedBatch: nodes
+      .filter((n) => n.carried && n.state === "AWAITING_PRE_SIGN")
+      .map(toView),
   });
 }

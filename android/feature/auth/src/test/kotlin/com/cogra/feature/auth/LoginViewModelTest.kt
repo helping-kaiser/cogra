@@ -4,7 +4,6 @@ import com.cogra.domain.AuthTokens
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.LoginGrant
 import com.cogra.domain.Outcome
-import com.cogra.domain.SessionInfo
 import com.cogra.domain.UserError
 import com.cogra.domain.identity.LogIn
 import com.cogra.domain.identity.SecurityNotices
@@ -35,7 +34,6 @@ private class ScriptedSessions : SessionRepository {
     }
 
     override suspend fun refresh(refreshToken: String): Outcome<AuthTokens> = throw UnsupportedOperationException()
-    override suspend fun sessions(): Outcome<List<SessionInfo>> = throw UnsupportedOperationException()
     override suspend fun revokeSession(id: String?): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun revokeOtherSessions(): Outcome<Int> = throw UnsupportedOperationException()
 }

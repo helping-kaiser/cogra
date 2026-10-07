@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_application_vouches v SET landed_at = NOW()\n         FROM auth_applications ap, user_credentials c\n         WHERE ap.id = v.application_id AND c.actor_id = ap.account_id\n           AND ap.account_id = $1 AND c.account_state <> 'applicant'\n           AND v.landed_at IS NULL\n           AND EXISTS (SELECT 1 FROM mirror_records m WHERE m.record_id = v.act_id)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "54ba84f9d13d724a575874d5c9ca1014a0dd0bcc0909d1a4a8f9fc41ffcf5f41"
+}

@@ -9,16 +9,19 @@
 //! table in the timeline for it. One such statement exists and is recorded
 //! below; this test is what keeps it at one.
 //!
-//! The owned table set is read out of the stand-in's own migration rather
-//! than restated here, so a table added there is covered without anyone
-//! remembering to add it.
+//! The owned table set is read out of the stand-in's own migrations rather
+//! than restated here, so a table added in one of them is covered without
+//! anyone remembering to add it; a new stand-in migration joins `OWNERS`.
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-/// The migration that creates the stand-in's tables — the only one allowed
-/// to name them freely.
-const OWNER: &str = "20260724000003_l1_standin.sql";
+/// The migrations that create the stand-in's tables — the only ones
+/// allowed to name them freely.
+const OWNERS: &[&str] = &[
+    "20260724000003_l1_standin.sql",
+    "20261007200000_l1_standin_admission_burns.sql",
+];
 
 /// The one recorded exception, with the reason it cannot be removed.
 ///
@@ -33,23 +36,26 @@ fn migrations() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../migrations")
 }
 
-/// The `l1_*` tables the stand-in's own migration creates.
+/// The `l1_*` tables the stand-in's own migrations create.
 fn owned_tables() -> BTreeSet<String> {
-    let text = std::fs::read_to_string(migrations().join(OWNER)).expect("the owning migration");
     let mut owned = BTreeSet::new();
-    for line in text.lines() {
-        let Some(rest) = line.trim().strip_prefix("CREATE TABLE ") else {
-            continue;
-        };
-        let name = rest.split(['(', ' ']).next().unwrap_or_default().trim();
-        if name.starts_with("l1_") {
-            owned.insert(name.to_string());
+    for owner in OWNERS {
+        let text = std::fs::read_to_string(migrations().join(owner)).expect("the owning migration");
+        let before = owned.len();
+        for line in text.lines() {
+            let Some(rest) = line.trim().strip_prefix("CREATE TABLE ") else {
+                continue;
+            };
+            let name = rest.split(['(', ' ']).next().unwrap_or_default().trim();
+            if name.starts_with("l1_") {
+                owned.insert(name.to_string());
+            }
         }
+        assert!(
+            owned.len() > before,
+            "the owning migration {owner} creates l1_* tables"
+        );
     }
-    assert!(
-        !owned.is_empty(),
-        "the owning migration creates l1_* tables"
-    );
     owned
 }
 
@@ -78,7 +84,7 @@ fn is_word(b: u8) -> bool {
 /// No migration outside the stand-in's own reads or writes its tables, save
 /// the one recorded case an applied checksum has frozen in place.
 ///
-/// Only the stand-in's own migration names the l1_* tables, save one recorded case.
+/// Only the stand-in's own migrations name the l1_* tables, save one recorded case.
 /// ´claim:standin:only-the-stand-ins-own-migration-names-its-tables´
 #[test]
 fn no_migration_outside_the_stand_in_reads_its_tables() {
@@ -99,7 +105,7 @@ fn no_migration_outside_the_stand_in_reads_its_tables() {
             .and_then(|n| n.to_str())
             .unwrap_or_default()
             .to_string();
-        if name == OWNER {
+        if OWNERS.contains(&name.as_str()) {
             continue;
         }
         let text = std::fs::read_to_string(&path).expect("a readable migration");

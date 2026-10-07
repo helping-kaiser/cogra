@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_application_vouches v SET lapsed_at = NOW()\n         WHERE v.id = ANY($1) AND v.lapsed_at IS NULL AND v.landed_at IS NULL\n           AND NOT EXISTS (SELECT 1 FROM mirror_records m WHERE m.record_id = v.act_id)\n           AND NOT EXISTS (SELECT 1 FROM staged_writes s\n                           WHERE s.act_id = v.act_id AND s.state <> 'expired')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ff953b40b4218a463f362aa274789b77b9071336ce807e775bbe6cc093f8bc21"
+}

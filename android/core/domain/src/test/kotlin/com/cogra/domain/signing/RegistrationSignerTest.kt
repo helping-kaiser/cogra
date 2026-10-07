@@ -64,8 +64,12 @@ private class RegistrationWrites(
         return Outcome.Success(stagedView(WriteState.AWAITING_APPROVAL, sealed))
     }
 
-    override suspend fun approveAct(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> =
-        Outcome.Success(stagedView(WriteState.RELAYING))
+    var approvals = 0
+
+    override suspend fun approveAct(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> {
+        approvals += 1
+        return Outcome.Success(stagedView(WriteState.RELAYING))
+    }
 }
 
 private class FakeAccount : ThrowingAccountRepository() {
@@ -149,6 +153,43 @@ class RegistrationSignerTest {
         // Landed: the account is a member; nothing is claimed.
         onboarding.status = status(accountState = AccountState.MEMBER, application = application(landed = true))
         assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
+    }
+
+    @Test
+    fun aMemberSignsTheBatchTheLandingReleased() = runTest {
+        // The carried acts came back from the landing awaiting the
+        // pre-signature: the member pass signs them without a prompt.
+        onboarding.status = Outcome.Success(
+            ApplicationStatus(
+                AccountState.MEMBER,
+                application(approved = true, landed = true),
+                null,
+                null,
+                carriedBatch = listOf(writes.stagedView(WriteState.AWAITING_PRE_SIGN)),
+            ),
+        )
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.Member)
+        assertThat(writes.approvals).isEqualTo(1)
+    }
+
+    @Test
+    fun aLandedRegistrationWithNoLiveVouchReadsWaiting() = runTest {
+        // The Registration landed but the vouch lapsed: the node exists,
+        // nothing is left to sign, and the account waits on a vouch again.
+        onboarding.status = status(
+            application = application(),
+            staged = writes.stagedView(WriteState.LANDED),
+        )
+        assertThat(signer.advance()).isEqualTo(
+            RegistrationProgress.AwaitingApproval(emailVerified = true, keyAttached = true, keyOnDevice = true),
+        )
+
+        // While a vouch is in play, the same landed Registration awaits the landing.
+        onboarding.status = status(
+            application = application(approved = true),
+            staged = writes.stagedView(WriteState.LANDED),
+        )
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.AwaitingLanding)
     }
 
     @Test

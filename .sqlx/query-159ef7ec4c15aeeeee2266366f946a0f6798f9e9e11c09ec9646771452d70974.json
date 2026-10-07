@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applications\n         SET landed_at = NOW(), approved_at = COALESCE(approved_at, NOW())\n         WHERE id = $1 AND landed_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "159ef7ec4c15aeeeee2266366f946a0f6798f9e9e11c09ec9646771452d70974"
+}

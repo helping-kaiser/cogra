@@ -13,7 +13,7 @@
 // `visibilitychange` when it flips
 // (https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API).
 //
-// Unused until the election PR wires it.
+// Every stage reads it (`stage-host.tsx`), hosted or private.
 
 import { useSyncExternalStore } from "react";
 

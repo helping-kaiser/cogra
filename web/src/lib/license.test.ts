@@ -4,9 +4,27 @@ import {
   ATTRIBUTION_TIERS,
   PROVENANCE_TIERS,
   PUBLIC_DOMAIN,
+  licenseName,
+  licenseReading,
   licenseTerms,
   tierOf,
 } from "./license";
+
+describe("the author's reading of a pair (copy-voice `licenseSummary`)", () => {
+  it("names the zero pair Public domain and every other by its tier names", () => {
+    expect(licenseName(PUBLIC_DOMAIN)).toBe("Public domain");
+    expect(licenseName({ attribution: 1, provenance: 0 })).toBe("Credit always · Not logged");
+  });
+
+  it("joins the name and both hints into one sentence", () => {
+    expect(licenseReading(PUBLIC_DOMAIN)).toBe(
+      "Public domain — nobody owes you a name, and uses go unlogged.",
+    );
+    expect(licenseReading({ attribution: 1, provenance: 0 })).toBe(
+      "Credit always · Not logged — every use credits you, and uses go unlogged.",
+    );
+  });
+});
 
 describe("license", () => {
   it("reads the zero corner as public domain, not as two absences", () => {

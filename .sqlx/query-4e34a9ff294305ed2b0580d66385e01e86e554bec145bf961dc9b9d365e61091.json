@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT c.account_state, a.realization_address\n         FROM user_credentials c JOIN actors a ON a.id = c.actor_id\n         WHERE c.actor_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_state",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "realization_address",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "4e34a9ff294305ed2b0580d66385e01e86e554bec145bf961dc9b9d365e61091"
+}

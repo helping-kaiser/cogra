@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO l1_admission_burns\n                 (key, address, amount_micro, requested_epoch, settles_after_epoch)\n             VALUES ($1, $2, $3, $4::BIGINT, $4::BIGINT + $5::BIGINT)\n             ON CONFLICT (key) DO NOTHING",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "45ea103c3fb6fc15d584b89a1f2bcac8fb2598dca0046cab575dfed41c30ecf2"
+}
