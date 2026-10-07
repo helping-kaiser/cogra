@@ -15,6 +15,8 @@ export interface PasswordFieldProps {
   account?: string;
   /** The return key: `go` by default (a password ends every credential form but one), `next` where a field follows. */
   enterKeyHint?: "next" | "go" | "done";
+  /** The data-node name its placer gives this field (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts as `TextField` names its own — `label`, `input`, `support` (the hint, or the error in its place) — and the show/hide toggle `reveal`. The hidden username input is not named. */
+  node?: string;
 }
 
 export declare function PasswordField(props: PasswordFieldProps): JSX.Element;
