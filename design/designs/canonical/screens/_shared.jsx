@@ -392,11 +392,12 @@ function HistoryDayDivider({ children, node, nodeKey }) {
    (4.6:1): the mark, an outlined or text button, an inline action and a
    master drawn inside the card (the ask link's block) all read in the
    panel's own pair — the reason `inverse` exists, carried to the rest. */
-function TaskCard({ title, body, tone, children }) {
+function TaskCard({ title, body, tone, children, node }) {
   const notice = tone === "notice";
   const ground = notice ? "var(--tertiary-container)" : "var(--surface-card)";
   return (
     <Card
+      node={node}
       style={{
         flex: "none",
         boxSizing: "border-box",
@@ -422,12 +423,13 @@ function TaskCard({ title, body, tone, children }) {
             lineHeight: "var(--text-title-medium--line-height)",
             fontWeight: "var(--text-title-medium--font-weight)",
           }}
+          data-node={node && "title"}
         >
           {title}
         </h2>
         <Icon name="mark" size={20} pickColor="var(--primary-container)" style={{ flex: "none", color: "var(--primary)" }} />
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>{body}</p>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node={node && "body"}>{body}</p>
       {children}
     </Card>
   );
@@ -3108,7 +3110,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
-      {deleting && <DeletionBand days={6} />}
+      {deleting && <DeletionBand days={6} node="deletionBand" />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
@@ -4424,10 +4426,11 @@ const ASK_LINK = "https://cogra.social/vouch/5d9e7a41-b062-4c38-8e5f-1a4703cbd92
    IT TAKES THE HANDLE, unlike `Unsave`, because a list of applications is a
    list of PEOPLE and four identical "Close" buttons is four chances for a
    screen reader to close the wrong one. */
-const CloseApplication = ({ handle }) => (
+const CloseApplication = ({ handle, node }) => (
   <button
     type="button"
     aria-label={`Close ${handle}'s application`}
+    data-node={node}
     className="cg-state cg-focus cg-hit"
     style={{
       display: "grid",
@@ -4471,8 +4474,8 @@ const CloseApplication = ({ handle }) => (
 
    THE COUNT IS WHAT IS WAITING, not what the link has ever let through: a
    closed application is not closed again, and an approved one is gone. */
-const ApplicationGroup = ({ label, count }) => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 4px 0" }}>
+const ApplicationGroup = ({ label, count, node, nodeKey }) => (
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "4px 4px 0" }} data-node={node} data-node-key={node && nodeKey}>
     <span
       style={{
         fontSize: "var(--text-label-medium)",
@@ -4481,11 +4484,12 @@ const ApplicationGroup = ({ label, count }) => (
         letterSpacing: "var(--text-label-medium--letter-spacing)",
         color: "var(--text-secondary)",
       }}
+      data-node={node && "label"}
     >
       {label} · {count} waiting
     </span>
     {count > 1 && (
-      <Button variant="text" size="sm" ariaLabel={`Close all ${count} applications from this link`}>
+      <Button variant="text" size="sm" ariaLabel={`Close all ${count} applications from this link`} node={node && "close"}>
         Close all
       </Button>
     )}
@@ -4655,17 +4659,27 @@ function KeptApprovalRow({ shown }) {
         title="@noor"
         second="Waiting for your key"
         trailing="2d"
-        action={<CloseApplication handle="@noor" />}
+        action={<CloseApplication handle="@noor" node="close" />}
         onOpen={() => {}}
+        node="application"
+        nodeKey="noor"
       />
     </div>
   );
 }
 
+/* The element names are the `invites` prefix's (design ⇄ impl seam 078):
+   `Invites` and its two closing dialogs register them, and every other board
+   this page stands on renders them stripped. An application is keyed by its
+   applicant's handle — a kept approval's row is an application too, at the
+   head — and a group by the id of the link its applications came through. The
+   live links' cards stay unnamed: the `revoke` chip draws the first one twice,
+   and a chip copy of a keyed card is a case the chip-key rule does not cover
+   yet. */
 function InvitesBody({ approving = false, kept = "none", revoke }) {
   return (
     <>
-      <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" />
+      <PageHeader title="Invites" backHref="/profile" backLabel="Back to your profile" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", padding: "8px 0 0" }}>
         {/* THE STANDING ENTRY POINT IS A NOUN, the empty state's action a verb
             — the product's own split, kept: the bottom bar says `New post` and
@@ -4681,13 +4695,13 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             committing action stands in the column, at its head, where a long
             queue can never bury it. */}
         <div style={{ padding: "0 16px" }}>
-          <Button style={{ width: "100%" }}>New invite</Button>
+          <Button style={{ width: "100%" }} node="create">New invite</Button>
         </div>
 
-        <SectionLabel>Applications</SectionLabel>
+        <SectionLabel node="applicationsLabel">Applications</SectionLabel>
         {kept !== "none" && <KeptApprovalRow shown={kept} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
-          <ApplicationGroup label="Many uses" count={4} />
+          <ApplicationGroup label="Many uses" count={4} node="group" nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)} />
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -4695,8 +4709,10 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             title="@imke"
             second="Not fully registered yet"
             trailing="9d"
-            action={<CloseApplication handle="@imke" />}
+            action={<CloseApplication handle="@imke" node="close" />}
             onOpen={() => {}}
+            node="application"
+            nodeKey="imke"
           />
           <ContentRow
             variant="chronicle"
@@ -4705,8 +4721,10 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             title="@vora81"
             second="Not fully registered yet"
             trailing="1d"
-            action={<CloseApplication handle="@vora81" />}
+            action={<CloseApplication handle="@vora81" node="close" />}
             onOpen={() => {}}
+            node="application"
+            nodeKey="vora81"
           />
           <ContentRow
             variant="chronicle"
@@ -4715,8 +4733,10 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             title="@vora82"
             second="Not fully registered yet"
             trailing="1d"
-            action={<CloseApplication handle="@vora82" />}
+            action={<CloseApplication handle="@vora82" node="close" />}
             onOpen={() => {}}
+            node="application"
+            nodeKey="vora82"
           />
           <ContentRow
             variant="chronicle"
@@ -4725,10 +4745,12 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             title="@vora83"
             second="Not fully registered yet"
             trailing="1d"
-            action={<CloseApplication handle="@vora83" />}
+            action={<CloseApplication handle="@vora83" node="close" />}
             onOpen={() => {}}
+            node="application"
+            nodeKey="vora83"
           />
-          <ApplicationGroup label="Single use" count={1} />
+          <ApplicationGroup label="Single use" count={1} node="group" nodeKey={SOL_INVITE_ID} />
           <ContentRow
             variant="chronicle"
             chevron={false}
@@ -4747,14 +4769,16 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
                   padNote={<ApprovePadNote handle="@rafa" />}
                 />
               ) : (
-                <CloseApplication handle="@rafa" />
+                <CloseApplication handle="@rafa" node="close" />
               )
             }
             onOpen={() => {}}
+            node="application"
+            nodeKey="rafa"
           />
         </div>
 
-        <SectionLabel>Live links</SectionLabel>
+        <SectionLabel node="linksLabel">Live links</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 16px" }}>
           {/* REVOKE WAITS (the check round's Q10, jakob 2026-10-06): a revoke is
               a consequential write, so the card holds while it is in flight and,

@@ -27,13 +27,18 @@
    AND IT IS STILL NOT A VERDICT. Every one of these people keeps the account
    they made, keeps reading, and can be vouched in by any member — the same
    sentence the single close carries, in the plural, because closing more of
-   them at once does not make it mean more. */
+   them at once does not make it mean more.
+
+   REGISTERED under the `invites` prefix (design ⇄ impl seam 078), named as
+   `RejectConfirm` names its dialog. */
+export const NODE = "invites";
 export function Screen() {
   return (
     <>
       <InvitesBody />
 
       <DialogSurface
+        node="dialog"
         onScrimPress={() => {}}
         title="Close all 4 applications from this link?"
         body={[
@@ -42,8 +47,8 @@ export function Screen() {
         ]}
         actions={
           <>
-            <Button variant="text">Close them</Button>
-            <Button>Keep them</Button>
+            <Button variant="text" node="close">Close them</Button>
+            <Button node="keep">Keep them</Button>
           </>
         }
       />

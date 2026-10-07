@@ -29,13 +29,13 @@ ALWAYS a staged opinion's card is inert
 
 WHEN tap a staged post's card -> the post's detail opens
 
-WHEN tap New post in the bottom bar GIVEN no post is staged yet -> the post wizard opens at its first stage
+WHEN tap New post in profile.bottomBar GIVEN no post is staged yet -> the post wizard opens at its first stage
 
-WHEN tap New post in the bottom bar GIVEN a post is already staged and the application is open -> the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the wizard opens
+WHEN tap New post in profile.bottomBar GIVEN a post is already staged and the application is open -> the snackbar reads Your post waits with your application — it arrives with you. AND NEVER the wizard opens
 
-WHEN tap New post in the bottom bar GIVEN a post is already staged and the application was closed -> the snackbar reads Your post waits — it arrives when someone vouches you in. AND NEVER the wizard opens
+WHEN tap New post in profile.bottomBar GIVEN a post is already staged and the application was closed -> the snackbar reads Your post waits — it arrives when someone vouches you in. AND NEVER the wizard opens
 
-WHEN tap the Feed slot -> the applicant's own feed opens
+WHEN tap profile.bottomBar.feedSlot -> the applicant's own feed opens
 
 WHEN tap the bell -> Notifications opens
 
@@ -45,12 +45,12 @@ WHEN tap the gear -> Settings opens
 
 WHEN tap the figures -> the opinions page opens on this profile
 
-WHEN tap the Posts tab -> the reader's posts stand below the tab row as post cards AND the header above stays as it was
+WHEN tap profile.tabRow.postsTab -> the reader's posts stand below profile.tabRow as post cards AND the header above stays as it was
 
-WHEN tap the Comments tab -> the reader's comments stand below the tab row as comment cards AND the header above stays as it was
+WHEN tap profile.tabRow.commentsTab -> the reader's comments stand below profile.tabRow as comment cards AND the header above stays as it was
 
-WHEN tap the Profile slot GIVEN the profile is scrolled -> the profile travels back to its top AND NEVER the profile reloads
+WHEN tap profile.bottomBar.profileSlot GIVEN the profile is scrolled -> the profile travels back to its top AND NEVER the profile reloads
 
-WHEN tap the Profile slot GIVEN the profile stands at its top -> NEVER anything happens
+WHEN tap profile.bottomBar.profileSlot GIVEN the profile stands at its top -> NEVER anything happens
 
 WHEN pull down GIVEN the profile stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows

@@ -14,10 +14,10 @@ import React from "react";
     `inline` is the phrasing form, for a marker that lands inside a row which is
     itself a button: a `<button>` takes phrasing content, so a `<p>` inside one is
     illegal markup. Same two tokens, same words — only the box changes. */
-export function PendingMarker({ label = "Still settling", inline = false }) {
+export function PendingMarker({ label = "Still settling", inline = false, node }) {
   const ink = { fontSize: "var(--text-label-small)", color: "var(--text-secondary)" };
-  if (inline) return <span style={ink}>{label}</span>;
-  return <p style={{ margin: 0, ...ink }}>{label}</p>;
+  if (inline) return <span style={ink} data-node={node}>{label}</span>;
+  return <p style={{ margin: 0, ...ink }} data-node={node}>{label}</p>;
 }
 
 /** The edit marker: a soft marker with an optional tap onto the edit history —

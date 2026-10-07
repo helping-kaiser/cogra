@@ -24,17 +24,22 @@
 
    WHAT IT SAYS IS WHAT HAPPENED. Nothing had been redacted yet — the request
    was a pending intent — so `nothing was deleted` is the literal truth and the
-   fact a reader will want most. */
+   fact a reader will want most.
+
+   REGISTERED under the feed's own prefix (design ⇄ impl seam 080, the
+   deletion packet): the surface the snackbar fires over is the feed, named as
+   `Feed` names it, as `FeedHidden`'s snackbar is. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} />
-        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
+        <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
+        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
       </FeedList>
-      <Snackbar message="Canceled — your account stays, and nothing was deleted." offset={80} />
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <Snackbar message="Canceled — your account stays, and nothing was deleted." offset={80} node="snackbar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

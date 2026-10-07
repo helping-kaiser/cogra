@@ -36,6 +36,8 @@ export interface DialogSurfaceProps {
   /** Overrides the max only — the inset still holds, so no dialog reaches the
    *  edge. Every product dialog uses the default. */
   width?: string;
+  /** The data-node name its placer gives the dialog's surface (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its `title` and `body` slots; the buttons in `actions` are named by whoever placed them, and the scrim around the surface stays unnamed. */
+  node?: string;
 }
 
 export declare function DialogSurface(props: DialogSurfaceProps): JSX.Element;
