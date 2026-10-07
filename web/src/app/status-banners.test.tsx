@@ -22,6 +22,7 @@ function meHandler(accountState: "APPLICANT" | "MEMBER", handle = "ada") {
           displayName: { __typename: "ModeratedText", value: null },
           accountState,
           hasReciprocated: true,
+          vouchBackDismissed: false,
           invitedBy: null,
         },
       },

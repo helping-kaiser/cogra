@@ -176,12 +176,6 @@ describe("identity store", () => {
     expect(await store.handshake("missing")).toBeNull();
   });
 
-  it("remembers the reciprocation dismissal one-way", async () => {
-    expect(await store.reciprocationDismissed()).toBe(false);
-    await store.markReciprocationDismissed();
-    expect(await store.reciprocationDismissed()).toBe(true);
-  });
-
   it("upgrades a v1 database in place", async () => {
     await new Promise<void>((resolve, reject) => {
       const req = indexedDB.open("cogra.identity", 1);
@@ -197,8 +191,8 @@ describe("identity store", () => {
       req.onerror = () => reject(req.error);
     });
     store = freshStore();
-    await store.markReciprocationDismissed();
-    expect(await store.reciprocationDismissed()).toBe(true);
+    // The ux store exists after the upgrade: writing to it lands.
+    await expect(store.setEphemeral(true)).resolves.toBeUndefined();
   });
 
   it("keeps two accounts' custody side by side", async () => {
@@ -206,19 +200,16 @@ describe("identity store", () => {
     const seedB = randomBytes(32);
     await store.saveActor(seedA, true);
     await store.savePendingBackupBlob(randomBytes(64));
-    await store.markReciprocationDismissed();
 
     account = ACCOUNT_B;
     await store.saveActor(seedB, true);
 
     expect(await store.actorSeed()).toEqual(seedB);
     expect(await store.pendingBackupBlob()).toBeNull();
-    expect(await store.reciprocationDismissed()).toBe(false);
 
     account = ACCOUNT_A;
     expect(await store.actorSeed()).toEqual(seedA);
     expect(await store.pendingBackupBlob()).not.toBeNull();
-    expect(await store.reciprocationDismissed()).toBe(true);
   });
 
   it("reads empty for an account that stored nothing", async () => {
@@ -250,7 +241,6 @@ describe("identity store", () => {
     expect(await store.actorSeed()).toBeNull();
     expect(await store.pendingBackupBlob()).toBeNull();
     expect(await store.handshakeIds()).toEqual([]);
-    expect(await store.reciprocationDismissed()).toBe(false);
     await expect(store.saveActor(randomBytes(32), true)).rejects.toThrow(
       "custody write without an active account",
     );
@@ -267,13 +257,11 @@ describe("identity store", () => {
     store = freshStore();
     expect(await store.actorSeed()).toEqual(seed);
     expect(await store.pendingBackupBlob()).toEqual(blob);
-    expect(await store.reciprocationDismissed()).toBe(true);
 
     // The move happened exactly once — a later account reads empty.
     account = ACCOUNT_B;
     expect(await store.actorKey()).toBeNull();
     expect(await store.pendingBackupBlob()).toBeNull();
-    expect(await store.reciprocationDismissed()).toBe(false);
   });
 
   it("adopts legacy records only into a vacant slot", async () => {
@@ -306,7 +294,6 @@ describe("identity store", () => {
     await store.saveActor(randomBytes(32), true);
     await store.savePendingBackupBlob(randomBytes(64));
     await store.saveHandshake("staged-1", pre);
-    await store.markReciprocationDismissed();
     await store.setEphemeral(true);
 
     account = ACCOUNT_B;
@@ -318,7 +305,6 @@ describe("identity store", () => {
     expect(await store.actorKey()).toBeNull();
     expect(await store.pendingBackupBlob()).toBeNull();
     expect(await store.handshakeIds()).toEqual([]);
-    expect(await store.reciprocationDismissed()).toBe(false);
 
     account = ACCOUNT_B;
     expect(await store.actorSeed()).toEqual(seedB);

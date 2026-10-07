@@ -47,6 +47,7 @@ function meHandler(accountState: "APPLICANT" | "MEMBER") {
           displayName: { __typename: "ModeratedText", value: null },
           accountState,
           hasReciprocated: true,
+          vouchBackDismissed: false,
           invitedBy: null,
         },
       },
