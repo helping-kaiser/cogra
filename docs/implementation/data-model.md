@@ -1198,7 +1198,9 @@ CREATE INDEX auth_refresh_tokens_user_idx
 -- URL carries only the row id. Time-gated and single-use (one
 -- applicant slot) unless the inviter opens it to multi-use (many
 -- applicants stage through the same link until expiry — the queue
--- scales, the vouching never does). Revocation sets revoked_at and
+-- scales, the vouching never does). A single-use link's slot is
+-- used up by the account registered through it; rejecting that
+-- application does not free it. Revocation sets revoked_at and
 -- stops new staging only: applications already staged stay
 -- approvable (auth.md "Invite-link generation").
 --

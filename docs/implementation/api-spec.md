@@ -1597,9 +1597,12 @@ type InviteLink {
   expiresAt: DateTime!
   "When the link was revoked; null if still live."
   revokedAt: DateTime
-  "Applications currently staged through this link, with their
-   status — this link's share of the issuer's approval queue, the
-   whole of which is Actor.approvalQueue."
+  "Whether the link can stage a new applicant now — the reckoning
+   inviteLinkCheck.usable reports."
+  usable: Boolean!
+  "Applications staged through this link, with their status,
+   rejected ones included — this link's share of the issuer's
+   approval queue, the whole of which is Actor.approvalQueue."
   applications(first: Int, after: String, last: Int, before: String): ApplicationConnection
 }
 
@@ -4436,7 +4439,9 @@ input ApplicationApprovalInput {
  reaches them, so the client owns the explicit confirmation;
  closing a whole invite link's waiting queue in one gesture is
  rejectLinkApplications. An already-approved, already-rejected, or
- foreign-queue application refuses with BAD_INPUT."
+ foreign-queue application refuses with a BAD_INPUT userError
+ pinned to `application`; an unknown and a foreign application
+ read alike."
 input RejectApplicationInput { application: UUID! }
 "The application in its closed state."
 type RejectApplicationPayload { application: Application }

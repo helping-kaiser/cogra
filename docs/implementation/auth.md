@@ -283,7 +283,10 @@ and the link's expiry. The link URL carries only the row id.
 Nothing binds at this point, and the row carries no stance
 values: the inviter chooses them at approval, which is the priced
 act. Links are single-use (one applicant slot) unless the inviter
-opens them to multi-use (many applicants until expiry).
+opens them to multi-use (many applicants until expiry). A
+single-use link is used up by the account registered through it,
+and a rejection does not give it back: the inviter issues a new
+link for the next person.
 
 **Revocation stops new staging only.** Revoking a link sets
 `revoked_at`: no further applicant can register through it, and
