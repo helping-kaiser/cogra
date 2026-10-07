@@ -23,7 +23,13 @@
    opened on a device that is not signed in lands on
    `ChangeEmailLinkedSignedOut` first. An expired change and an address taken
    in the meantime answer here in copy-voice's words. No back arrow: a mail
-   link has no previous screen of ours. */
+   link has no previous screen of ours.
+
+   REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
+   settings packet): `mark`, `title`, `body`, and the way on `onward`, as the
+   other landings name theirs. The `landing` chip changes their words and
+   draws no element twice, so nothing is keyed. */
+export const NODE = "changeEmail";
 export const PROPS = { landing: { editor: "enum", options: ["first", "last", "canceled", "applied"], default: "first" } };
 export const VALS = `linkedTitle: this.props.landing === "last" ? "Email changed" : this.props.landing === "canceled" || this.props.landing === "applied" ? "This link doesn't work anymore" : "New address confirmed", linkedBody: this.props.landing === "last" ? "You sign in with sol@ferreira.studio from now on, and resets go there too." : this.props.landing === "canceled" ? "The change it belonged to was canceled. Your email is still sol@solferreira.art." : this.props.landing === "applied" ? "The change it belonged to already happened. Your email is now sol@ferreira.studio." : "One side left: the code we sent to sol@solferreira.art. Your email moves once it's typed in.", linkedWay: this.props.landing === "first" ? "Enter the code" : "Back to settings"`;
 
@@ -40,7 +46,7 @@ export function Screen() {
         overflow: "hidden",
       }}
     >
-      <span style={{ display: "inline-flex", color: "var(--primary)" }}>
+      <span style={{ display: "inline-flex", color: "var(--primary)" }} data-node="mark">
         <Icon name="mark" size={56} />
       </span>
       <h1
@@ -51,6 +57,7 @@ export function Screen() {
           fontWeight: "var(--text-headline-small--font-weight)",
           textAlign: "center",
         }}
+        data-node="title"
       >
         {"{{linkedTitle}}"}
       </h1>
@@ -64,11 +71,12 @@ export function Screen() {
           color: "var(--text-secondary)",
           textAlign: "center",
         }}
+        data-node="body"
       >
         {"{{linkedBody}}"}
       </p>
       <div style={{ marginTop: 24 }}>
-        <Button variant="text">{"{{linkedWay}}"}</Button>
+        <Button variant="text" node="onward">{"{{linkedWay}}"}</Button>
       </div>
     </div>
   );

@@ -52,6 +52,8 @@ export interface FieldSupportProps {
   value?: string;
   cap?: number;
   used?: number;
+  /** The data-node name its placer gives the message line — the hint, or the error in its place (design ⇄ impl seam 002; renders as attributes only). The count is not named. */
+  node?: string;
 }
 
 export declare function FieldSupport(props: FieldSupportProps): JSX.Element | null;
@@ -103,7 +105,7 @@ export interface TextFieldProps {
   cap?: number;
   /** The whole length, where the field is drawn as the tail of a longer body. */
   used?: number;
-  /** The data-node name its placer gives this field (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `corner`, `input`. */
+  /** The data-node name its placer gives this field (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `corner`, `input`, `support` (the hint, or the error in its place). */
   node?: string;
 }
 

@@ -30,31 +30,40 @@
    `Done` COMMITS IT, the way the seal's does and the Reading row's sheet does —
    a staging sheet carries a commit, and the scrim, a swipe down, system Back and Escape discard
    (the sheet law, readme §4, *Sheets*). The foot reads `licenseSummary`, the
-   one joining rule the seal's row reads too. */
+   one joining rule the seal's row reads too.
+
+   REGISTERED under the `settings` prefix (design ⇄ impl seam 082, the
+   settings packet): the body names its parts as on `Settings`, and the sheet
+   is `licenseSheet`, named for the row that opens it as `SettingsHidden`'s is —
+   its `title` with the `help` on it, the `note`, each axis by its own name
+   (`credit`, `record`) beside its `creditLabel` / `recordLabel`, a reading's
+   row `tier` keyed by its position, and the `foot` with its `summary` and
+   `done`. */
+export const NODE = "settings";
 export function Screen() {
   return (
     <>
       <SettingsBody />
 
-      <BottomSheet open ariaLabel="Default license" maxHeight="88%">
-        <SheetTitle trailing={<HelpDot ariaLabel="License" />}>Default license</SheetTitle>
+      <BottomSheet open ariaLabel="Default license" maxHeight="88%" node="licenseSheet">
+        <SheetTitle trailing={<HelpDot ariaLabel="License" node="help" />} node="title">Default license</SheetTitle>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 24px" }}>
-          <QuietNote>
+          <QuietNote node="note">
             Where every new post starts. A post's terms settle when it is first signed, so changing
             this never reaches one you have already published.
           </QuietNote>
 
-          <LicenseAxisLabel>Credit</LicenseAxisLabel>
-          <LicenseAxis axis="credit" name="default-license-attribution" tiers={ATTRIBUTION_TIERS} chosen={0} />
+          <LicenseAxisLabel node="creditLabel">Credit</LicenseAxisLabel>
+          <LicenseAxis axis="credit" name="default-license-attribution" tiers={ATTRIBUTION_TIERS} chosen={0} node="credit" />
 
-          <LicenseAxisLabel>Public record of use</LicenseAxisLabel>
-          <LicenseAxis axis="record" name="default-license-provenance" tiers={PROVENANCE_TIERS} chosen={0} />
+          <LicenseAxisLabel node="recordLabel">Public record of use</LicenseAxisLabel>
+          <LicenseAxis axis="record" name="default-license-provenance" tiers={PROVENANCE_TIERS} chosen={0} node="record" />
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }}>
-            <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, borderTop: "1px solid var(--border-hairline)", paddingTop: 10 }} data-node="foot">
+            <span style={{ flex: 1, fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="summary">
               <LicenseSummary />
             </span>
-            <Button>Done</Button>
+            <Button node="done">Done</Button>
           </div>
         </div>
       </BottomSheet>

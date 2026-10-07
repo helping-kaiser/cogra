@@ -72,14 +72,25 @@
 
 /* One topic: the row that names it, and the words behind the row. The WHOLE
    row is the control, title and chevron together — a chevron-sized target on a
-   page of nine rows is nine chances to miss. */
+   page of nine rows is nine chances to miss.
+
+   REGISTERED under the `about` prefix (design ⇄ impl seam 082, the settings
+   packet): each topic is `topic`, keyed by its title's words, its control
+   `row` with the `title` and `chevron` in it, and the open words `answer`. */
+const topicKey = (title) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
 function Topic({ title, open = false, children }) {
   return (
-    <section style={{ display: "flex", flexDirection: "column" }}>
+    <section style={{ display: "flex", flexDirection: "column" }} data-node="topic" data-node-key={topicKey(title)}>
       <h2 style={{ margin: 0 }}>
         <button
           type="button"
           aria-expanded={open ? "true" : "false"}
+          data-node="row"
           className="cg-state cg-focus"
           style={{
             display: "flex",
@@ -100,7 +111,7 @@ function Topic({ title, open = false, children }) {
             letterSpacing: "var(--text-title-small--letter-spacing)",
           }}
         >
-          <span style={{ flex: 1, minWidth: 0 }}>{title}</span>
+          <span style={{ flex: 1, minWidth: 0 }} data-node="title">{title}</span>
           <span
             aria-hidden="true"
             style={{
@@ -109,13 +120,14 @@ function Topic({ title, open = false, children }) {
               color: "var(--text-secondary)",
               transform: open ? "rotate(180deg)" : undefined,
             }}
+            data-node="chevron"
           >
             <Icon name="expand_more" size={20} />
           </span>
         </button>
       </h2>
       {open && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 0 var(--space-4)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "0 0 var(--space-4)" }} data-node="answer">
           {children.map((line) => (
             <p
               key={line}
@@ -137,10 +149,11 @@ function Topic({ title, open = false, children }) {
   );
 }
 
+export const NODE = "about";
 export function Screen() {
   return (
     <>
-      <PageHeader title="About CoGra" backHref="#" backLabel="Back to settings" />
+      <PageHeader title="About CoGra" backHref="#" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px" }}>
         <Topic title="What this is" open>
           {[
