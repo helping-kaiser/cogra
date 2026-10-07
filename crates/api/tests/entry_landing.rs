@@ -402,6 +402,23 @@ impl Rig {
         response.data.into_json().expect("json")
     }
 
+    /// One GraphQL request as `account` (None: anonymous), returned whole.
+    async fn exec(&self, account: Option<Uuid>, query: &str, variables: Value) -> Value {
+        let viewer = account.map(|user_id| Viewer {
+            user_id,
+            session_id: Uuid::new_v4(),
+        });
+        let response = self
+            .schema
+            .execute(
+                async_graphql::Request::new(query)
+                    .variables(async_graphql::Variables::from_json(variables))
+                    .data(viewer),
+            )
+            .await;
+        serde_json::to_value(&response).expect("json")
+    }
+
     async fn queue_holds(&self, path: Uuid) -> bool {
         let link: Uuid =
             sqlx::query_scalar("SELECT invite_link_id FROM auth_applications WHERE id = $1")
@@ -1209,4 +1226,511 @@ async fn invited_by_is_null_before_landing(pool: PgPool) {
     rig.close().await;
     let me = rig.me(noa.account, "me { invitedBy { handle } }").await;
     assert_eq!(me["me"]["invitedBy"]["handle"], "mira");
+}
+
+const PREPARE_STANCE: &str = r#"mutation($input: PrepareStanceInput!) {
+  prepareStance(input: $input) {
+    writes { id family carried } userErrors { code message }
+  }
+}"#;
+
+const PREPARE_POST: &str = r#"mutation($input: PreparePostInput!) {
+  preparePost(input: $input) {
+    node writes { id family carried } userErrors { code message }
+  }
+}"#;
+
+/// The applicant carries an act through the ordinary mutation; returns
+/// the staged ids, every one of them carried.
+async fn carry(rig: &Rig, account: Uuid, mutation: &str, input: Value) -> Vec<Uuid> {
+    let answer = rig
+        .exec(
+            Some(account),
+            mutation,
+            serde_json::json!({ "input": input }),
+        )
+        .await;
+    assert!(
+        answer["errors"].as_array().is_none_or(|e| e.is_empty()),
+        "{answer}"
+    );
+    let payload = answer["data"]
+        .as_object()
+        .and_then(|data| data.values().next())
+        .expect("payload");
+    assert_eq!(payload["userErrors"], serde_json::json!([]), "{payload}");
+    payload["writes"]
+        .as_array()
+        .expect("writes")
+        .iter()
+        .map(|w| {
+            assert_eq!(w["carried"], true, "{w}");
+            w["id"].as_str().expect("id").parse().expect("uuid")
+        })
+        .collect()
+}
+
+fn post_input(text: &str) -> Value {
+    serde_json::json!({
+        "content": text,
+        "license": { "attribution": 0.0, "provenance": 0.0 },
+        "tags": [{ "name": "gardening" }],
+    })
+}
+
+async fn deps_of(rig: &Rig, id: Uuid) -> Vec<String> {
+    staged::load(&rig.pool, id)
+        .await
+        .expect("loads")
+        .proposal
+        .deps
+        .iter()
+        .map(ToString::to_string)
+        .collect()
+}
+
+/// Lands `noa` through mira's vouch: the vouch decided, both signed, one
+/// close. Returns the Registration's and the vouch's act ids.
+async fn land_through_mira(rig: &Rig, mira: &Member, noa: &Applicant) -> (String, String) {
+    let vouch = rig
+        .vouch(mira, rig.registration_path(noa.account).await)
+        .await;
+    rig.sign(&mira.key, vouch.id).await;
+    let registration = rig.sign_registration(noa).await;
+    rig.close().await;
+    assert_eq!(rig.state(noa.account).await, "member");
+    (registration.proposal.body.act_id().to_string(), act(&vouch))
+}
+
+/// An applicant carries one act of each kind — a post with the topics it
+/// declares, an Opinion, an Affinity — through the ordinary mutations:
+/// each comes back carried, held as CARRIED, and a second of a kind is
+/// refused. The device cannot sign a carried write before the landing.
+///
+/// An applicant carries one post, one Opinion and one Affinity, each held and unsignable before the landing.
+/// ´claim:onboarding:an-applicant-carries-each-kind-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_applicant_carries_each_kind_once(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+
+    let opinion = carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "target": mira.id, "pDirected": 0.3, "pInterest": 0.2,
+        }),
+    )
+    .await;
+    let affinity = carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "topicName": "gardening", "pDirected": 0.5, "pInterest": 0.5,
+        }),
+    )
+    .await;
+    let post = carry(&rig, noa.account, PREPARE_POST, post_input("a first word")).await;
+    assert_eq!(post.len(), 2, "the Publish and the Tag it declares");
+    for id in opinion.iter().chain(&affinity).chain(&post) {
+        assert_eq!(
+            staged::load(&rig.pool, *id).await.expect("loads").state,
+            StagedState::Carried
+        );
+    }
+
+    for (mutation, input) in [
+        (
+            PREPARE_STANCE,
+            serde_json::json!({ "target": mira.id, "pDirected": 0.1, "pInterest": 0.1 }),
+        ),
+        (PREPARE_POST, post_input("a second word")),
+    ] {
+        let answer = rig
+            .exec(
+                Some(noa.account),
+                mutation,
+                serde_json::json!({ "input": input }),
+            )
+            .await;
+        let payload = answer["data"]
+            .as_object()
+            .and_then(|data| data.values().next())
+            .expect("payload");
+        assert_eq!(payload["userErrors"][0]["code"], "BAD_INPUT", "{payload}");
+    }
+
+    let write = staged::load(&rig.pool, opinion[0]).await.expect("loads");
+    let pre = noa.key.pre_sign(write.proposal.clone());
+    assert!(
+        api::relay::submit_pre_signed(
+            &rig.boundary,
+            &rig.pool,
+            opinion[0],
+            PreSignedParts {
+                author_pubkey: pre.author_pubkey.clone(),
+                nonce: pre.nonce.clone(),
+                pre_signature: pre.pre_signature.clone(),
+            },
+        )
+        .await
+        .is_err(),
+        "a carried write is not the device's to sign before the landing"
+    );
+}
+
+/// A carried act is its author's alone until the landing (seam 099 ruling
+/// 70): the carried post is no content anyone — the author included — can
+/// read as a node, it is listed only in its author's own staged writes,
+/// and the carried Opinion counts only in its author's own pending stance.
+///
+/// A carried act is seen by its author alone until the landing.
+/// ´claim:onboarding:a-carried-act-is-author-only´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_carried_act_is_seen_by_its_author_alone(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "target": mira.id, "pDirected": 0.3, "pInterest": 0.2,
+        }),
+    )
+    .await;
+    let answer = rig
+        .exec(
+            Some(noa.account),
+            PREPARE_POST,
+            serde_json::json!({ "input": post_input("for my eyes") }),
+        )
+        .await;
+    let node = answer["data"]["preparePost"]["node"]
+        .as_str()
+        .expect("node")
+        .to_string();
+
+    for viewer in [Some(mira.id), Some(noa.account), None] {
+        let read = rig
+            .exec(
+                viewer,
+                "query($id: UUID!) { post(id: $id) { id } }",
+                serde_json::json!({ "id": node }),
+            )
+            .await;
+        assert!(read["data"]["post"].is_null(), "{viewer:?}: {read}");
+    }
+    let own = rig
+        .me(
+            noa.account,
+            "me { stagedWrites(first: 10) { edges { node { state carried } } } }",
+        )
+        .await;
+    assert_eq!(
+        own["me"]["stagedWrites"]["edges"]
+            .as_array()
+            .expect("edges")
+            .len(),
+        3
+    );
+    let theirs = rig
+        .exec(
+            Some(mira.id),
+            "query($id: UUID!) { user(id: $id) { stagedWrites(first: 10) { edges { node { id } } } } }",
+            serde_json::json!({ "id": noa.account }),
+        )
+        .await;
+    assert!(theirs["data"]["user"]["stagedWrites"].is_null(), "{theirs}");
+
+    let mine = api::stance::bundle(&rig.pool, noa.account, mira.id, true)
+        .await
+        .expect("bundle");
+    assert!(
+        (mine.p_d - 0.3).abs() < 1e-9,
+        "the face wears the carried pick"
+    );
+}
+
+/// At the landing the carried acts become one batch (seam 099 ruling 73):
+/// every write gains the dependencies `[admission Registration, winning
+/// vouch]`, moves to AWAITING_PRE_SIGN still marked carried, and — signed
+/// by the device without a prompt — lands at the first close after the
+/// landing. Nothing of it reached the graph before.
+///
+/// The carried acts sign at the landing as one batch depending on the Registration and the winning vouch.
+/// ´claim:onboarding:the-carried-batch-signs-at-the-landing´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_carried_batch_signs_at_the_landing(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    let mut batch = carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "target": mira.id, "pDirected": 0.3, "pInterest": 0.2,
+        }),
+    )
+    .await;
+    batch.extend(
+        carry(
+            &rig,
+            noa.account,
+            PREPARE_STANCE,
+            serde_json::json!({
+                "topicName": "gardening", "pDirected": 0.5, "pInterest": 0.5,
+            }),
+        )
+        .await,
+    );
+    batch.extend(carry(&rig, noa.account, PREPARE_POST, post_input("hello")).await);
+    let before: Vec<Vec<String>> = {
+        let mut all = Vec::new();
+        for id in &batch {
+            all.push(deps_of(&rig, *id).await);
+        }
+        all
+    };
+
+    let (registration, vouch) = land_through_mira(&rig, &mira, &noa).await;
+    for (id, old) in batch.iter().zip(before) {
+        let write = staged::load(&rig.pool, *id).await.expect("loads");
+        assert_eq!(write.state, StagedState::AwaitingPreSign);
+        assert!(write.carried);
+        let mut expected = old;
+        expected.extend([registration.clone(), vouch.clone()]);
+        assert_eq!(deps_of(&rig, *id).await, expected);
+    }
+    let on_graph: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM mirror_records WHERE author = $1")
+        .bind(noa.key.address())
+        .fetch_one(&rig.pool)
+        .await
+        .expect("count");
+    assert_eq!(on_graph, 1, "only the Registration so far");
+
+    for id in &batch {
+        rig.sign(&noa.key, *id).await;
+    }
+    rig.close().await;
+    for id in &batch {
+        assert_eq!(
+            staged::load(&rig.pool, *id).await.expect("loads").state,
+            StagedState::Landed,
+            "the batch lands at the first close after the landing"
+        );
+    }
+}
+
+/// Custody is the server's (seam 099 ruling 68): carried acts wait out any
+/// number of epochs uncollected, and the device that staged them is not
+/// needed — the author, on a new device with their key restored from its
+/// backup and no handshake material at all, signs the batch at the landing.
+///
+/// A carried act survives the GC and the loss of the device that staged it.
+/// ´claim:onboarding:a-carried-act-survives-the-loss-of-its-device´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_carried_act_survives_the_loss_of_its_device(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    let carried = carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "target": mira.id, "pDirected": 0.3, "pInterest": 0.2,
+        }),
+    )
+    .await;
+    for _ in 0..4 {
+        rig.tick_under(1).await;
+    }
+    assert_eq!(
+        staged::load(&rig.pool, carried[0])
+            .await
+            .expect("loads")
+            .state,
+        StagedState::Carried,
+        "never collected while it waits"
+    );
+
+    let restored = Applicant {
+        account: noa.account,
+        key: ActorKey::from_seed(noa.key.seed()),
+    };
+    drop(noa);
+    land_through_mira(&rig, &mira, &restored).await;
+    rig.sign(&restored.key, carried[0]).await;
+    rig.close().await;
+    assert_eq!(
+        staged::load(&rig.pool, carried[0])
+            .await
+            .expect("loads")
+            .state,
+        StagedState::Landed
+    );
+}
+
+/// A carried Opinion toward content that is itself still in flight
+/// declares that content's minting act as a dependency, like any stance
+/// on pending content; released at the landing with its two landing
+/// dependencies added, it signs and then waits on L1 for a target that
+/// never lands — the deps machinery defers it, nothing is forced.
+///
+/// A carried act toward a target that never lands defers on L1.
+/// ´claim:onboarding:a-carried-act-toward-an-unlanded-target-defers´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_carried_act_toward_a_target_that_never_lands_defers(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let sol = rig.member("sol").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+
+    let pending = crate_post(&rig, &sol).await;
+    let carried = carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "target": pending.node, "pDirected": 0.4, "pInterest": 0.4,
+        }),
+    )
+    .await;
+    let publish = pending.writes[0].proposal.body.act_id().to_string();
+    assert!(deps_of(&rig, carried[0]).await.contains(&publish));
+
+    land_through_mira(&rig, &mira, &noa).await;
+    rig.sign(&noa.key, carried[0]).await;
+    rig.tick_under(rig.cfg.gc_after_epochs).await;
+    let act_id = staged::load(&rig.pool, carried[0])
+        .await
+        .expect("loads")
+        .proposal
+        .body
+        .act_id()
+        .to_string();
+    let status: String = sqlx::query_scalar("SELECT status FROM l1_acts WHERE act_id = $1")
+        .bind(&act_id)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("status");
+    assert_eq!(
+        status, "approved",
+        "signed, and deferred on its unlanded target"
+    );
+}
+
+/// A post by `author`, pre-committed and sealed but never approved: its
+/// content is pending on screen and its record will never land.
+async fn crate_post(rig: &Rig, author: &Member) -> api::content::PreparedContent {
+    let prepared = api::content::prepare_post(
+        &rig.pool,
+        &rig.boundary,
+        api::prepare::Staging::unbudgeted(rig.cfg.gc_after_epochs),
+        author.id,
+        api::content::PostDraft {
+            title: None,
+            description: None,
+            content: Some("a draft that never lands".into()),
+            license: api::content::License::PUBLIC_DOMAIN,
+            p_directed: None,
+            tags: vec![],
+            references: vec![],
+            attachments: vec![],
+            sensitive: api::content::SelfMarkDraft::default(),
+        },
+    )
+    .await
+    .expect("prepares");
+    let write = staged::load(&rig.pool, prepared.writes[0].id)
+        .await
+        .expect("loads");
+    let pre = author.key.pre_sign(write.proposal.clone());
+    api::relay::submit_pre_signed(
+        &rig.boundary,
+        &rig.pool,
+        write.id,
+        PreSignedParts {
+            author_pubkey: pre.author_pubkey.clone(),
+            nonce: pre.nonce.clone(),
+            pre_signature: pre.pre_signature.clone(),
+        },
+    )
+    .await
+    .expect("seals");
+    prepared
+}
+
+/// The batch is released by the landing that completes the ceremony and
+/// by nothing else: evaluations racing over the same mirror facts, and
+/// evaluations after it, add the landing dependencies exactly once.
+///
+/// The carried batch is released once however often the landing is evaluated.
+/// ´claim:onboarding:the-carried-batch-is-released-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn the_carried_batch_is_released_once(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    let carried = carry(
+        &rig,
+        noa.account,
+        PREPARE_STANCE,
+        serde_json::json!({
+            "topicName": "gardening", "pDirected": 0.5, "pInterest": 0.5,
+        }),
+    )
+    .await;
+    let before = deps_of(&rig, carried[0]).await.len();
+    let vouch = rig
+        .vouch(&mira, rig.registration_path(noa.account).await)
+        .await;
+    rig.sign(&mira.key, vouch.id).await;
+    rig.sign_registration(&noa).await;
+    rig.standin
+        .close_epoch()
+        .await
+        .expect("closes")
+        .expect("publishes");
+
+    let (ingested, raced) = tokio::join!(
+        api::ingest::ingest_pending(&rig.boundary, &rig.pool, rig.cfg.gc_after_epochs),
+        onboarding::land_ready_accounts(&rig.pool),
+    );
+    ingested.expect("ingests");
+    assert!(raced.is_empty(), "{raced:?}");
+    let (a, b) = tokio::join!(
+        onboarding::land_ready_accounts(&rig.pool),
+        onboarding::land_ready_accounts(&rig.pool),
+    );
+    assert!(a.is_empty() && b.is_empty());
+    rig.ingest().await;
+    assert_eq!(rig.state(noa.account).await, "member");
+    assert_eq!(deps_of(&rig, carried[0]).await.len(), before + 2);
+}
+
+/// An applicant who carried nothing lands as before: an empty batch,
+/// nothing released, no failure.
+///
+/// An applicant who staged nothing lands with an empty batch.
+/// ´claim:onboarding:an-empty-batch-lands-cleanly´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_applicant_who_staged_nothing_lands_with_an_empty_batch(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let mira = rig.member("mira").await;
+    let noa = rig.applicant(mira.id, "noa").await;
+    land_through_mira(&rig, &mira, &noa).await;
+    let carried: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1 AND carried")
+            .bind(noa.account)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("count");
+    assert_eq!(carried, 0);
 }

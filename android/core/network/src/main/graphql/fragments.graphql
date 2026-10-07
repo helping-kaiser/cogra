@@ -10,6 +10,7 @@ fragment UserErrorFields on UserError {
 fragment StagedWriteFields on StagedWrite {
   id
   state
+  carried
   family
   canonicalProposal
   verifiedAct

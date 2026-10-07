@@ -43,6 +43,10 @@ impl From<crate::content::ContentError> for StagedError {
 /// Handshake progress, states per api-spec.md "The write flow".
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StagedState {
+    /// Carried with an application: held, author-only, until the
+    /// account's landing completes its dependencies and moves it to
+    /// `AwaitingPreSign` (auth.md "Application").
+    Carried,
     AwaitingPreSign,
     Sealing,
     AwaitingApproval,
@@ -54,6 +58,7 @@ pub enum StagedState {
 impl StagedState {
     pub fn as_str(self) -> &'static str {
         match self {
+            StagedState::Carried => "carried",
             StagedState::AwaitingPreSign => "awaiting_pre_sign",
             StagedState::Sealing => "sealing",
             StagedState::AwaitingApproval => "awaiting_approval",
@@ -65,6 +70,7 @@ impl StagedState {
 
     pub fn parse(s: &str) -> Option<Self> {
         Some(match s {
+            "carried" => StagedState::Carried,
             "awaiting_pre_sign" => StagedState::AwaitingPreSign,
             "sealing" => StagedState::Sealing,
             "awaiting_approval" => StagedState::AwaitingApproval,
@@ -84,6 +90,10 @@ pub struct StagedWrite {
     pub id: Uuid,
     pub actor_id: Uuid,
     pub state: StagedState,
+    /// Staged as an act carried with an application — true from staging
+    /// on, so the batch the landing released stays recognisable after it
+    /// leaves the `Carried` state.
+    pub carried: bool,
     pub proposal: Proposal,
     pub prepared_epoch: i64,
     /// The L2 node the payload envelope carries, for a write that mints
@@ -240,7 +250,7 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
                 target, p_d, p_i, settlement_ref, license, asserted_parents,
                 deps, payload, state, author_pubkey, nonce, pre_signature,
                 content_salt, deps_salt, content_commitment, deps_commitment,
-                host_seal, prepared_epoch, node_id, pre_signed_at
+                host_seal, prepared_epoch, node_id, pre_signed_at, carried
          FROM staged_writes WHERE id = $1",
         id,
     )
@@ -319,6 +329,7 @@ pub async fn load(pool: &PgPool, id: Uuid) -> Result<StagedWrite, StagedError> {
         id: row.id,
         actor_id: row.actor_id,
         state: StagedState::parse(&row.state).ok_or_else(|| corrupt("state"))?,
+        carried: row.carried,
         proposal,
         prepared_epoch: row.prepared_epoch,
         node_id: row.node_id,
@@ -358,6 +369,11 @@ pub async fn has_live_targeting(
 /// pre-commitment is submitted: a write still awaiting it carries no
 /// signature of the author's, so it ends nothing. A landed row counts; its
 /// record is in the mirror anyway.
+///
+/// An act carried with the application counts from the landing on, signed
+/// or not: it signs with the vouch-in batch automatically, so the member
+/// owns their view from the flip (VouchBack.md:21) rather than one poll
+/// later. Before the landing nothing here is asked.
 pub async fn has_signed_of_family(
     pool: &PgPool,
     actor_id: Uuid,
@@ -367,7 +383,8 @@ pub async fn has_signed_of_family(
         r#"SELECT EXISTS(
                SELECT 1 FROM staged_writes
                WHERE actor_id = $1 AND family = $2
-                 AND state NOT IN ('awaiting_pre_sign', 'expired')
+                 AND (state NOT IN ('awaiting_pre_sign', 'expired', 'carried')
+                      OR (carried AND state = 'awaiting_pre_sign'))
            ) AS "exists!""#,
         actor_id,
         family.as_str(),
@@ -637,6 +654,33 @@ pub async fn release_held_approval(
     Ok(())
 }
 
+/// Carries freshly prepared writes with their author's application:
+/// `awaiting_pre_sign` → `carried`. The prepare that made them ran as for
+/// any write; carrying is what holds them back from signing until the
+/// landing completes their dependencies.
+pub async fn carry(pool: &PgPool, ids: &[Uuid]) -> Result<u64, StagedError> {
+    Ok(sqlx::query!(
+        "UPDATE staged_writes SET state = 'carried', carried = TRUE, updated_at = NOW()
+         WHERE id = ANY($1) AND state = 'awaiting_pre_sign'",
+        ids,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected())
+}
+
+/// The families an actor holds carried acts of — the once-each rule's
+/// read: an applicant carries at most one post, one Opinion and one
+/// Affinity.
+pub async fn carried_families(pool: &PgPool, actor_id: Uuid) -> Result<Vec<String>, StagedError> {
+    Ok(sqlx::query_scalar!(
+        "SELECT DISTINCT family FROM staged_writes WHERE actor_id = $1 AND state = 'carried'",
+        actor_id,
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 /// One staged write promoted by an ingested epoch — the confirm hook for
 /// the flows built on top (landing an applicant, promoting display rows).
 #[derive(Debug, Clone)]
@@ -704,7 +748,9 @@ pub async fn expire_one(pool: &PgPool, id: Uuid, current_epoch: i64) -> Result<(
 }
 
 /// GC, first phase: expires every unlanded staged write prepared at least
-/// `gc_after_epochs` epochs ago, taking whatever it had on screen while
+/// `gc_after_epochs` epochs ago — never a carried act, which the server
+/// holds for its author until the landing however long that takes
+/// (auth.md "Application"), taking whatever it had on screen while
 /// pending with it in the same transaction. The content leaves every
 /// reader's view at once — on the graph nothing ever existed
 /// (substrate.md §6) — while the row itself remains until the reap: a
@@ -721,7 +767,7 @@ pub async fn expire_due(
         StagedRows,
         "UPDATE staged_writes
          SET state = 'expired', expired_epoch = $1, updated_at = NOW()
-         WHERE state NOT IN ('landed', 'expired')
+         WHERE state NOT IN ('landed', 'expired', 'carried')
            AND prepared_epoch + $2 <= $1
          RETURNING node_id, pre_signed_at",
         current_epoch,
@@ -789,6 +835,7 @@ mod state_tests {
     #[test]
     fn every_state_round_trips_through_its_column_form() {
         for state in [
+            StagedState::Carried,
             StagedState::AwaitingPreSign,
             StagedState::Sealing,
             StagedState::AwaitingApproval,

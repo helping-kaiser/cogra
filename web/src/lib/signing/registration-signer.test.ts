@@ -95,11 +95,12 @@ function application(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function stagedRegistration(state = "AWAITING_PRE_SIGN") {
+function stagedRegistration(state = "AWAITING_PRE_SIGN", carried = false) {
   return {
     __typename: "StagedWrite",
     id: "sw-1",
     state,
+    carried,
     family: "REGISTRATION",
     canonicalProposal: "cHJvcG9zYWw=",
     verifiedAct: null,
@@ -153,6 +154,37 @@ describe("registration signer", () => {
   it("maps a transport fault to failed", async () => {
     server.use(graphql.query("ApplicationStatus", () => HttpResponse.error()));
     expect((await signer({}).advance()).kind).toBe("failed");
+  });
+
+  it("signs the batch the landing released, without a prompt, once a member", async () => {
+    server.use(
+      statusHandler(
+        me({
+          accountState: "MEMBER",
+          stagedWrites: {
+            __typename: "StagedWriteConnection",
+            edges: [
+              { __typename: "StagedWriteEdge", node: stagedRegistration("LANDED") },
+              {
+                __typename: "StagedWriteEdge",
+                node: { ...stagedRegistration("AWAITING_PRE_SIGN", true), id: "sw-2", family: "OPINION" },
+              },
+            ],
+          },
+        }),
+      ),
+    );
+    await store.saveActor(randomBytes(32), true);
+    const writeSigner = fakeWriteSigner({ kind: "done", id: "sw-2", state: "RELAYING" });
+    expect(await signer({ writeSigner }).advance()).toEqual({ kind: "member" });
+    expect(writeSigner.calls).toBe(1);
+  });
+
+  it("signs nothing for a member with nothing carried", async () => {
+    server.use(statusHandler(me({ accountState: "MEMBER" })));
+    const writeSigner = fakeWriteSigner({ kind: "done", id: "sw-1", state: "RELAYING" });
+    expect(await signer({ writeSigner }).advance()).toEqual({ kind: "member" });
+    expect(writeSigner.calls).toBe(0);
   });
 
   it("flushes the parked backup on every pass, before branching", async () => {

@@ -325,9 +325,15 @@ CREATE TABLE staged_writes (
     payload          BYTEA            NOT NULL,
 
     state          TEXT        NOT NULL DEFAULT 'awaiting_pre_sign'
-        CHECK (state IN ('awaiting_pre_sign', 'sealing',
+        CHECK (state IN ('carried', 'awaiting_pre_sign', 'sealing',
                          'awaiting_approval', 'relaying', 'landed',
                          'expired')),
+    -- Staged as an act carried with an application (auth.md
+    -- "Application"): held in 'carried' until the landing appends the
+    -- admission Registration and the winning vouch to deps and moves it
+    -- to 'awaiting_pre_sign'; the flag stays, marking the batch the
+    -- device signs without a prompt.
+    carried        BOOLEAN     NOT NULL DEFAULT FALSE,
 
     -- The device's pre-commitment leg, then the host-sealed
     -- verified act, stored as the relay legs return them.
@@ -375,6 +381,10 @@ Lifecycle rules, driven off the ingestion pass:
   immediately: the salts cannot be re-fetched, so no approval can
   ever be produced — the device re-prepares under a fresh
   sequence value.
+- **A carried act waits for the landing.** An applicant's once-each
+  post, Opinion and Affinity stay `carried` — author-only, never
+  collected — until the account lands; the landing releases them as
+  one batch whose GC window starts then.
 - **An admission Registration's approval waits for its funding.**
   While the address's admission burn has not settled, the approval
   witness is held on the row and the write reads `relaying`; every

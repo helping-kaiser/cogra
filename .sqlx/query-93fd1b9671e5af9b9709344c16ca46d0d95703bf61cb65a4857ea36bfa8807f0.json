@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT record_id FROM mirror_records WHERE family = $1 AND author = $2\n             ORDER BY act_time, position LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "record_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "93fd1b9671e5af9b9709344c16ca46d0d95703bf61cb65a4857ea36bfa8807f0"
+}

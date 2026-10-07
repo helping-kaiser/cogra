@@ -135,7 +135,7 @@ class WriteSigner @Inject constructor(
                     listOf(UserError(ErrorCode.STAGED_WRITE_EXPIRED, "garbage-collected unlanded")),
                 )
             }
-            WriteState.UNKNOWN -> unsupported(staged.id, "staged-write state")
+            WriteState.CARRIED, WriteState.UNKNOWN -> unsupported(staged.id, "staged-write state")
         }
     }
 
@@ -204,7 +204,7 @@ class WriteSigner @Inject constructor(
                             listOf(UserError(ErrorCode.STAGED_WRITE_EXPIRED, "garbage-collected unlanded")),
                         )
                     }
-                    WriteState.UNKNOWN -> unsupported(id, "staged-write state")
+                    WriteState.CARRIED, WriteState.UNKNOWN -> unsupported(id, "staged-write state")
                 }
             }
         }

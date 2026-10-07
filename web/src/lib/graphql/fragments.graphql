@@ -48,6 +48,7 @@ fragment PreparedWriteFields on PreparedWrite {
 fragment StagedWriteFields on StagedWrite {
   id
   state
+  carried
   family
   canonicalProposal
   verifiedAct

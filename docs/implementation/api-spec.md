@@ -2715,8 +2715,15 @@ type PreparedWrite {
   "Epoch budget: a staged write that never completes the handshake
    and lands is garbage-collected — staged payload included — after
    this many epochs (an operational parameter; data-model.md
-   \"Staged writes\")."
+   \"Staged writes\"). A carried write is never collected before the
+   landing releases it; its window starts then."
   gcAfterEpochs: Int!
+  "Whether the write is carried with its author's application rather
+   than staged for signing now — an applicant's once-each post,
+   Opinion or Affinity. A carried write is NEVER signed on prepare:
+   the landing completes its dependencies, and the device signs it
+   then, with the vouch-in batch."
+  carried: Boolean!
 }
 
 "The shared payload of every prepare* mutation: the staged
@@ -2725,7 +2732,12 @@ type PreparePayload {
   writes: [PreparedWrite!]
 }
 
-"A staged write's lifecycle. AWAITING_PRE_SIGN: prepared, the
+"A staged write's lifecycle. CARRIED: an act an applicant staged
+ with their application, held by the server — author-only, never
+ collected, surviving the loss of the device — until the account
+ lands, when its dependencies are completed and it moves to
+ AWAITING_PRE_SIGN for the device to sign with the vouch-in batch.
+ AWAITING_PRE_SIGN: prepared, the
  pre-commitment not yet submitted. SEALING: pre-signed and
  submitted; the backend awaits the host-sealed verified act.
  AWAITING_APPROVAL: the sealed act is back and awaits the device's
@@ -2737,6 +2749,7 @@ type PreparePayload {
  promoted. EXPIRED: garbage-collected without landing — nothing
  existed on the graph."
 enum StagedWriteState {
+  CARRIED
   AWAITING_PRE_SIGN
   SEALING
   AWAITING_APPROVAL
@@ -2750,10 +2763,18 @@ enum StagedWriteState {
  session: the handshake is the author's own business. The staged
  *content* is nobody's secret — it reads through the ordinary node
  and listing surfaces from the pre-commitment onward, for every
- viewer."
+ viewer. The one exception is an act carried with an application:
+ it is its author's alone until the landing — no node or listing
+ surface serves it, only its author's own stagedWrites and
+ stance reads — and it is never pre-committed before the landing
+ releases it; from its pre-commitment on it reads like any other."
 type StagedWrite {
   id: UUID!
   state: StagedWriteState!
+  "Whether the write was carried with its author's application — true
+   from staging on. Once the landing releases it (AWAITING_PRE_SIGN)
+   it is the vouch-in batch, which the device signs without a prompt."
+  carried: Boolean!
   family: RecordFamily!
   "The canonical proposal (base64) — the same bytes prepare
    returned, re-readable after a lost response. A device that
@@ -2872,7 +2893,12 @@ authorizes the backend's stopgap signing.
  carrying exactly these values; the bundle is a read-side fold
  (conventions, design.md §8.1). Severance is its own explicit
  gesture, not a value these fields reach. Valid toward any
- passive node; ballots go through prepareBallot."
+ passive node; ballots go through prepareBallot. A verified
+ applicant with an attached key may call it too, once per family:
+ the one Opinion and the one Affinity they carry with their
+ application come back as carried writes (PreparedWrite.carried) —
+ nothing to sign until the landing — and a second of a family
+ refuses with BAD_INPUT (auth.md \"Application\")."
 input PrepareStanceInput {
   target: UUID!
   pDirected: Dimension!
@@ -3193,7 +3219,10 @@ input LicenseInput {
  records. Body fields are plain strings — moderation status is
  server-assigned. Tags and references are explicit structured
  inputs, never parsed from the body, so display content and graph
- structure stay decoupled."
+ structure stay decoupled. A verified applicant with an attached
+ key may author one post, carried with their application: the batch
+ comes back as carried writes — nothing to sign until the landing —
+ and a second post refuses with BAD_INPUT (auth.md \"Application\")."
 input PreparePostInput {
   title: String
   description: String
