@@ -166,16 +166,25 @@ event-driven and is not an MVP dependency.
   hidden actors, and view history; implementation outstanding.
 - **Slice 2.7 — search**, with the Explore surface that waits on it
   (the Explore boards are drawn).
-- **Slice 3 — the ranked feed, backend-direct only**, the Reel
-  stream included. The miner-container and on-device stages stay on
-  the contract and ship after the MVP; so do the feed's L1-view /
-  L2-view toggle and the quick-pad variant.
+- **Slice 3 — the ranked feed**, the Reel stream included. The
+  ranker is standalone and never runs inside the backend process: it
+  runs on the viewer's device or in its own container on the server,
+  and the backend API serves the ranked result either way. Which of
+  the two the MVP ships is decided in the slice's build. Delegated
+  miners ship after the MVP; so do the feed's L1-view / L2-view
+  toggle and the quick-pad variant.
 - **Slice 3.1 — notifications, the minimal cut**: implementing the
   drawn notifications list; no push channel.
 - **Slice 8's erasure half** — self-deletion of content and account
   ([erasure.md](../instances/erasure.md)), a comment as well as a post
   (the comment-scale boards are drawn). Play's account-deletion policy
   mandates it; the moderation half waits.
+- **The application registry** — `appVersions` and the release rows
+  behind it ([api-spec.md](api-spec.md),
+  [data-model.md](data-model.md)), with the three boards that read it:
+  What's new, WhatsNewBehind, and FeedNewerVersion, the cold-open
+  snackbar when a newer release exists. How a release row is written
+  is chosen at implementation.
 - **The conformance workstreams W3–W8** of the 2026-09-08 UI audit,
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
@@ -194,7 +203,7 @@ event-driven and is not an MVP dependency.
 **Out until after the MVP:** slice 4 (governance), slice 5
 (collectives), slice 6 (the rail), slice 7 (tipping and the
 marketplace), slice 8's moderation half, and every staged
-workstream.
+workstream except the application registry.
 
 **The would-like-to-have list** — picked up inside the MVP window
 only if the core lands early, in this order:
@@ -217,7 +226,7 @@ only if the core lands early, in this order:
 1. W3 and W4 (slice 2.5.3's remainder rides them), then W5–W7.
 2. Slice 2.6, then slice 2.7.
 3. Slice 3 (feed + Reel), then slice 3.1.
-4. Slice 8's erasure half.
+4. Slice 8's erasure half, and the application registry.
 5. W8, the copy sweep, once the structure settles.
 6. Slice 9, then the closed test through slice 10.
 
@@ -549,13 +558,14 @@ from the media path and carrying their own doc write-back:
   hop-by-hop in Rust ([architecture.md](architecture.md)).
 - The `ranker` crate: pure feed-ranking math, no I/O, one
   implementation for every transport stage.
-- `feedSlice` and `feed` on the backend; the `rank` operation hosted
-  **backend-direct** — the first transport stage
-  ([miner-api.md](miner-api.md)).
-- The rollout then continues along the same contract: the miner
-  container (a delegated service), then on-device via UniFFI — the
-  decentralized end state. No stage changes the slice-in,
-  ordered-list-out shape.
+- `feedSlice` and `feed` on the backend; the `rank` operation in the
+  standalone ranker, never inside the backend process: on the
+  viewer's device (the best case) or in its own container on the
+  server ([miner-api.md](miner-api.md)). The backend API serves the
+  ranked result either way.
+- The same contract also covers a delegated miner (a third party's
+  ranker service); on the device the ranker is bound in via UniFFI.
+  No deployment changes the slice-in, ordered-list-out shape.
 - **Third-party topic claims** join the chip row and the topic
   feed. A tag whose author is not the content's author reaches a
   viewer only through the tagger, at the viewer's forward-path
@@ -632,9 +642,10 @@ from the media path and carrying their own doc write-back:
   a clean feed immediately instead of an epoch later, and when the
   pending layer is being flooded the L1 view is the retreat to
   what has actually settled.
-- **Hand test:** ranked feed on the device; later, the same feed
-  ranked by the container and on-device (web ranks backend-direct
-  until the Wasm stage — [web.md](web.md)).
+- **Hand test:** ranked feed on the device; the same feed ranked by
+  the ranker container and on-device (the web app gets its ranked
+  results through the backend API until the Wasm stage —
+  [web.md](web.md)).
 - **Surfaces:** backend, API, miner transport, Android, web.
 
 ### Slice 3.1 — Notifications
@@ -794,11 +805,13 @@ On the roadmap but outside the slice order; each names its gate.
 - **Passkey-wrapped second unlock** — the WebAuthn-PRF unlock of the
   key-backup blob; a foreseen extension of the recovery-code posture,
   not a posture change ([auth.md](auth.md)).
-- **The application registry** — `appVersions` and the release
+- **The application registry** — pulled into the MVP (jakob
+  2026-10-07; see "In the MVP"). `appVersions` and the release
   rows behind it ([api-spec.md](api-spec.md),
   [data-model.md](data-model.md)); operational metadata any slice
-  can carry. Gate: the first release whose patch notes someone
-  needs to find.
+  can carry, read by What's new, WhatsNewBehind, and FeedNewerVersion.
+  Gate: the first release whose patch notes someone needs to find,
+  which the MVP release is.
 - **Delegated-miner standing + incentives** — parked
   ([open-questions.md Q25](../open-questions.md),
   [miner-api.md](miner-api.md)); revisit when someone actually wants
