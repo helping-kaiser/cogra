@@ -466,7 +466,7 @@ inventing one:
 | The scrim | 200ms linear, with the surface it belongs to |
 | The media handover, feed to detail and back | a shared element: the media frame persists in place while the chrome fades around it (M3's container transform), 300ms. A post with no media takes the forward motion |
 | The reel's squish, through the score's door | the clip, still playing, moves to the top of the screen and the post rises beneath it — a shared element, 300ms, never a new page |
-| The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns only after about a third of a screen of accumulated upward scroll |
+| The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns after about a third of a screen of accumulated upward scroll, or at once when the surface reaches its hard top |
 | In place — `More`, `View n replies`, a row leaving and the rows closing up, the veil's reveal, the face after `Set`, the snackbar coming and going | height and opacity at `--duration-short-4`, `--ease-standard`; nothing travels in from elsewhere |
 | `Back to top` | the platform's smooth scroll to the top |
 | The hold's ring | fills over the 500ms hold, linear — a reading of the time left, not a flourish |
@@ -1098,7 +1098,9 @@ header — `ActorChip`, the age and the ⋮ — keeps its geometry; platforms
 mount an invisible 48dp touch target centered on it, the back target's
 precedent. Where that target overlaps the card's one open-the-post
 surface, and the dead padding above the header, the header target wins
-inside its strip.
+inside its strip. The detail's tags line follows the same precedent
+(jakob 2026-10-07): drawn at 34dp across the card's content width, it
+answers through an invisible 48dp target centered on it.
 
 **Focus has four rules** (WCAG 2.4.3; the WAI-ARIA dialog pattern), for
 every sheet, pad and dialog — each modal (§4, *Sheets*):
@@ -9404,6 +9406,14 @@ either comes into this readme or dies from the pointer.
 
 jakob's rulings on the packet wave's gaps (seams 077–095), written as
 lines; quoted wordings are his.
+
+- **The custom mute action is android's** (`FeedCover`); on the web the
+  sound disc is a native focusable button whose label names the sound's
+  state, nothing on the frame hidden from assistive technology.
+- **The detail's tags line answers at 48dp** through an invisible target
+  over its drawn 34dp (§10).
+- **Reaching the hard top always reveals the collapsing band**
+  (`FeedScrolled`; §4, *Motion*).
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not
