@@ -152,6 +152,26 @@ class RegistrationSignerTest {
     }
 
     @Test
+    fun aLandedRegistrationWithNoLiveVouchReadsWaiting() = runTest {
+        // The Registration landed but the vouch lapsed: the node exists,
+        // nothing is left to sign, and the account waits on a vouch again.
+        onboarding.status = status(
+            application = application(),
+            staged = writes.stagedView(WriteState.LANDED),
+        )
+        assertThat(signer.advance()).isEqualTo(
+            RegistrationProgress.AwaitingApproval(emailVerified = true, keyAttached = true, keyOnDevice = true),
+        )
+
+        // While a vouch is in play, the same landed Registration awaits the landing.
+        onboarding.status = status(
+            application = application(approved = true),
+            staged = writes.stagedView(WriteState.LANDED),
+        )
+        assertThat(signer.advance()).isEqualTo(RegistrationProgress.AwaitingLanding)
+    }
+
+    @Test
     fun aMintedButUnattachedKeyIsReattachedSilently() = runTest {
         // Crash healing: the device holds a seed the server never saw.
         onboarding.status = status(application = application(keyAttached = false))

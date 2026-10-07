@@ -2,10 +2,13 @@
 //!
 //! The applicant-as-account admission flow (auth.md "Account lifecycle";
 //! invitations.md §4): link → registration (a real account + session) →
-//! the key ceremony as a logged-in attach → the admission burn requested
-//! across the seam at approval, settling asynchronously → staged
+//! the key ceremony as a logged-in attach → any number of open paths, each
+//! a member's queue entry → a vouch decision on a path: the admission burn
+//! requested across the seam, settling asynchronously, the staged
+//! Registration, and the voucher's Opinion, recorded by act id → the
 //! Registration signed on the device, its approval leg relayed once the
-//! burn settles → landing flips the account to member.
+//! burn settles → landing, when the Registration and the first
+//! vouch-Opinion have both confirmed, flips the account to member.
 //!
 //! The backend orchestrates and relays; the applicant's own signatures
 //! ground the actor, so nothing here can author for anyone.
@@ -489,15 +492,35 @@ fn still_waiting(application: &store::Application) -> Result<(), OnboardingError
     })
 }
 
+/// Refuses a path whose account already landed through another path: it
+/// left its queue at the landing (seam 099 ruling 67), and no decision on
+/// it means anything any more.
+async fn not_landed_elsewhere(
+    pool: &PgPool,
+    application: &store::Application,
+) -> Result<(), OnboardingError> {
+    if store::account_landed(pool, application.account_id).await? {
+        return Err(OnboardingError::BadInput {
+            field: "application",
+            message: "the applicant has already landed".into(),
+        });
+    }
+    Ok(())
+}
+
 /// Names why a gated mark found the row no longer waiting — the loser of
-/// a race against an approval or a rejection reads the winner's answer.
+/// a race against an approval, a rejection or a landing reads the
+/// winner's answer.
 async fn answered_meanwhile(pool: &PgPool, id: Uuid) -> OnboardingError {
     match store::application(pool, id).await {
         Ok(Some(application)) => match still_waiting(&application) {
             Err(answered) => answered,
-            Ok(()) => OnboardingError::BadInput {
-                field: "application",
-                message: "no longer approvable".into(),
+            Ok(()) => match not_landed_elsewhere(pool, &application).await {
+                Err(landed) => landed,
+                Ok(()) => OnboardingError::BadInput {
+                    field: "application",
+                    message: "no longer approvable".into(),
+                },
             },
         },
         Ok(None) => unknown_application(),
@@ -543,6 +566,7 @@ async fn validate_approval(
     }
     let application = queued_application(pool, inviter, approval.application).await?;
     still_waiting(&application)?;
+    not_landed_elsewhere(pool, &application).await?;
     if !application.email_verified {
         return Err(OnboardingError::BadInput {
             field: "application",
@@ -559,15 +583,24 @@ async fn validate_approval(
 }
 
 /// Executes one validated approval: marks it, runs the admission
-/// sequence, and prepares the inviter's vouching Opinion.
+/// sequence, prepares the inviter's vouching Opinion, and records the
+/// vouch by that Opinion's act id — the act the landing predicate waits
+/// for (EC-R2; seam 099 ruling 71).
 ///
 /// Marking is the concurrency gate — a concurrent duplicate approval or
-/// rejection loses on the waiting guard, before any burn. The Opinion the
-/// inviter then signs depends on the Registration, so it orders after
-/// the anchor it vouches for (invitations.md §2) — and it is signable at
-/// once, whether or not the burn has settled: the Registration's act id
-/// is fixed at prepare, and it is the Registration's relay, not the
-/// vouch, that waits for the funding.
+/// rejection loses on the waiting guard, before any burn. The whole
+/// sequence holds the account lock, so decisions on any of the account's
+/// paths serialize: one funding, one admission Registration, and every
+/// vouch's Opinion depends on that one Registration — the edges race only
+/// on L1, where the first to land wins. Holding the lock from mark to
+/// vouch is also what lets every other lock holder treat a mark with no
+/// vouch as dead. A sequence that fails after the mark clears it again,
+/// so the path waits rather than reading approved with nothing in play.
+///
+/// The Opinion depends on the Registration, so it orders after the anchor
+/// it vouches for (invitations.md §2), and it is signable at once whether
+/// or not the burn has settled: the Registration's relay waits for the
+/// funding, not the vouch.
 async fn approve_one<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
@@ -576,17 +609,52 @@ async fn approve_one<B: L1Boundary>(
     approval: &Approval,
     application: &store::Application,
 ) -> Result<prepare::Prepared, OnboardingError> {
+    let mut lock = pool.begin().await?;
+    if !store::lock_account(&mut lock, application.account_id).await? {
+        return Err(OnboardingError::Internal(
+            "account vanished at approval".into(),
+        ));
+    }
     let Some(account_id) = store::approve_application(pool, application.id).await? else {
         return Err(answered_meanwhile(pool, application.id).await);
     };
+    let vouched = vouch(
+        pool,
+        boundary,
+        cfg,
+        inviter,
+        approval,
+        application.id,
+        account_id,
+    )
+    .await;
+    if vouched.is_err()
+        && let Err(e) = store::unmark_unvouched(pool, application.id).await
+    {
+        tracing::error!(
+            application = %application.id,
+            error = %e,
+            "a failed approval's mark could not be cleared; the next lock holder heals it"
+        );
+    }
+    lock.commit().await?;
+    vouched
+}
 
-    let approved = store::application(pool, application.id)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("application vanished at approval".into()))?;
+/// The marked half of [`approve_one`], under its lock: stage, prepare the
+/// Opinion, record the vouch.
+async fn vouch<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    cfg: &OnboardingConfig,
+    inviter: Uuid,
+    approval: &Approval,
+    application_id: Uuid,
+    account_id: Uuid,
+) -> Result<prepare::Prepared, OnboardingError> {
     let registration =
-        ensure_admission_staged(pool, boundary, cfg, &approved, Some(inviter)).await?;
+        stage_admission_locked(pool, boundary, cfg, account_id, Some(inviter)).await?;
     let applicant_address = actor_address(pool, account_id).await?;
-
     let inviter_address = actor_address(pool, inviter).await?;
     let opinion = prepare::prepare(
         boundary,
@@ -609,9 +677,15 @@ async fn approve_one<B: L1Boundary>(
         },
     )
     .await?;
+    store::record_vouch(
+        pool,
+        application_id,
+        inviter,
+        &opinion.proposal.body.act_id().to_string(),
+    )
+    .await?;
     Ok(opinion)
 }
-
 /// The inviter's own vouches, put to the write rule as one gesture (D19):
 /// the batch's solvency, then its signing budget and its admission
 /// funding budget, charged as one.
@@ -702,28 +776,55 @@ fn registration_payload(handle: &str) -> Vec<u8> {
 /// row requests the burn; a request lost to a crash or a transient
 /// realization error leaves the row ticketless, and the settlement pass
 /// re-requests it under the same key, so the realization burns once.
+///
+/// This is the poll's entry, account-scoped (EC-R2): it runs while the
+/// account is an applicant with some path holding a live vouch, whichever
+/// path that is, and it re-stages only the Registration — it never
+/// prepares anyone's Opinion. Under the lock it first returns to waiting
+/// any path whose mark lost its vouch (an approval that died between the
+/// two). An approval stages through [`stage_admission_locked`] inside its
+/// own hold of the lock instead.
 pub async fn ensure_admission_staged<B: L1Boundary>(
     pool: &PgPool,
     boundary: &B,
     cfg: &OnboardingConfig,
-    application: &store::Application,
-    trigger: Option<Uuid>,
+    account_id: Uuid,
 ) -> Result<prepare::Prepared, OnboardingError> {
-    if application.approved_at.is_none() {
-        return Err(OnboardingError::BadInput {
-            field: "application",
-            message: "not approved".into(),
-        });
-    }
-
     let mut lock = pool.begin().await?;
-    if !store::lock_account(&mut lock, application.account_id).await? {
+    if !store::lock_account(&mut lock, account_id).await? {
         return Err(OnboardingError::Internal(
             "account vanished at staging".into(),
         ));
     }
+    store::heal_unvouched_marks(&mut lock, account_id).await?;
+    let Some(current) = store::current_application_for(pool, account_id).await? else {
+        return Err(not_vouched());
+    };
+    if current.approved_at.is_none() || current.landed_at.is_some() {
+        return Err(not_vouched());
+    }
+    let prepared = stage_admission_locked(pool, boundary, cfg, account_id, None).await?;
+    lock.commit().await?;
+    Ok(prepared)
+}
 
-    if let Some(existing) = staged::list_for_actor(pool, application.account_id)
+fn not_vouched() -> OnboardingError {
+    OnboardingError::BadInput {
+        field: "application",
+        message: "no live vouch on an applicant's path".into(),
+    }
+}
+
+/// The admission sequence proper — funding, then the staged Registration
+/// — for an account whose lock the caller holds.
+async fn stage_admission_locked<B: L1Boundary>(
+    pool: &PgPool,
+    boundary: &B,
+    cfg: &OnboardingConfig,
+    account_id: Uuid,
+    trigger: Option<Uuid>,
+) -> Result<prepare::Prepared, OnboardingError> {
+    if let Some(existing) = staged::list_for_actor(pool, account_id)
         .await
         .map_err(|e| OnboardingError::Internal(e.to_string()))?
         .into_iter()
@@ -733,7 +834,6 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
                 && w.proposal.body.asserted_parents.is_empty()
         })
     {
-        lock.commit().await?;
         return Ok(prepare::Prepared {
             id: existing.id,
             proposal: existing.proposal,
@@ -741,11 +841,15 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         });
     }
 
-    let address = actor_address(pool, application.account_id).await?;
+    let address = actor_address(pool, account_id).await?;
+    let handle = store::actor_identity(pool, account_id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("account vanished at staging".into()))?
+        .handle;
     if let Some(key) = store::claim_admission_funding(
         pool,
         &address,
-        application.account_id,
+        account_id,
         trigger,
         cfg.admission_burn_micro,
     )
@@ -769,7 +873,7 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
         boundary,
         pool,
         cfg.gc_after_epochs,
-        application.account_id,
+        account_id,
         Gesture {
             author: address.clone(),
             family: Family::Registration,
@@ -781,12 +885,11 @@ pub async fn ensure_admission_staged<B: L1Boundary>(
             license: None,
             asserted_parents: vec![],
             deps: vec![],
-            payload: registration_payload(&application.handle),
+            payload: registration_payload(&handle),
             node: None,
         },
     )
     .await?;
-    lock.commit().await?;
     Ok(prepared)
 }
 
@@ -1033,36 +1136,79 @@ async fn settle_one<B: L1Boundary>(
     Ok(())
 }
 
-/// Confirm-side landing (auth.md "Approval and landing" step 4): every
-/// promoted Registration flips its account's approved application to
-/// landed and the account state to member. Driven off the ingestion
-/// pass; a no-op for Registrations without an approved application (the
-/// genesis records on a rebuild). A failure leaves the application
-/// approved — it lands on a later pass — and is returned rather than
-/// swallowed, so the ingestion pass reports what did not follow.
-pub async fn land_promoted(
-    pool: &PgPool,
-    promoted: &[staged::PromotedWrite],
-) -> Vec<crate::ingest::PromotionFailure> {
+/// Confirm-side landing (auth.md "Approval and landing"; EC-R2): every
+/// account with a recorded vouch-Opinion newly in the mirror is put to the
+/// landing predicate (`store::evaluate_landing`) — its own Registration
+/// confirmed AND its first vouch-Opinion by causal key confirmed. The
+/// candidates come from the mirror itself, not from this pass's
+/// promotions, so a late landing, a reaped staged write and a rebuild all
+/// reach the same decision. Driven off every ingestion pass. A failure
+/// leaves the account as it was — it is decided again on a later pass —
+/// and is returned rather than swallowed; its `staged` field names the
+/// account, since a landing belongs to no single staged write.
+pub async fn land_ready_accounts(pool: &PgPool) -> Vec<crate::ingest::PromotionFailure> {
+    let failure = |account: Uuid, e: sqlx::Error| crate::ingest::PromotionFailure {
+        stage: "landing",
+        staged: account,
+        act_id: String::new(),
+        error: e.to_string(),
+    };
+    let candidates = match store::landing_candidates(pool).await {
+        Ok(candidates) => candidates,
+        Err(e) => return vec![failure(Uuid::nil(), e)],
+    };
     let mut failures = Vec::new();
-    for write in promoted {
-        if write.family != Family::Registration.as_str() {
-            continue;
-        }
-        match store::land_account(pool, write.actor_id).await {
-            Ok(true) => tracing::info!(account = %write.actor_id, "application landed"),
-            Ok(false) => {}
-            Err(e) => failures.push(crate::ingest::PromotionFailure {
-                stage: "onboarding",
-                staged: write.id,
-                act_id: write.act_id.clone(),
-                error: e.to_string(),
-            }),
+    for account in candidates {
+        match store::evaluate_landing(pool, account, Family::Registration.as_str()).await {
+            Ok(store::Landing::Landed {
+                application_id,
+                voucher_id,
+            }) => tracing::info!(
+                %account,
+                application = %application_id,
+                voucher = %voucher_id,
+                "the entry ceremony landed"
+            ),
+            Ok(_) => {}
+            Err(e) => failures.push(failure(account, e)),
         }
     }
     failures
 }
 
+/// The lapse step (EC-R2 "a fallen ritual"), run by every ingestion pass
+/// after the staged-write GC: a vouch whose Opinion was collected unlanded
+/// lapses, and its path returns to waiting — the account's node and
+/// funding stay, and any member may vouch again with no second burn. A
+/// lapsed vouch is not erased: if its Opinion lands late after all, the
+/// landing predicate still counts it. Returns the vouches lapsed;
+/// failures are logged and retried by the next pass.
+pub async fn lapse_dead_vouches(pool: &PgPool) -> u64 {
+    let dead = match store::vouches_to_lapse(pool).await {
+        Ok(dead) => dead,
+        Err(e) => {
+            tracing::error!(error = %e, "lapse scan failed; the next pass retries it");
+            return 0;
+        }
+    };
+    let mut by_account: std::collections::BTreeMap<Uuid, Vec<Uuid>> = Default::default();
+    for (vouch, account) in dead {
+        by_account.entry(account).or_default().push(vouch);
+    }
+    let mut lapsed = 0;
+    for (account, vouches) in by_account {
+        match store::lapse_vouches(pool, account, &vouches).await {
+            Ok(n) => lapsed += n,
+            Err(e) => {
+                tracing::error!(%account, error = %e, "vouch lapse failed; the next pass retries it");
+            }
+        }
+    }
+    if lapsed > 0 {
+        tracing::info!(lapsed, "vouches lapsed; their paths wait again");
+    }
+    lapsed
+}
 /// How long a revoked or expired refresh token is kept: long enough for
 /// reuse detection to still recognise a replayed one.
 const REFRESH_TOKEN_RETENTION_SECS: f64 = 30.0 * 24.0 * 60.0 * 60.0;

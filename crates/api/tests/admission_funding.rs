@@ -491,7 +491,9 @@ fn funding_budget(limit: i32) -> SigningBudget {
 /// The decisions queue on the account, not on their paths, so the
 /// account is funded once — one guard row, one burn on the realization —
 /// and one admission Registration is staged, which both vouching Opinions
-/// depend on. Before the account lock, each path's own row lock let both
+/// depend on; each decision records its own vouch. The second path is the
+/// rig's stub for PS-7's `stageApplicant` (module docs): it covers the
+/// decisions and everything after them, not how the path came to exist. Before the account lock, each path's own row lock let both
 /// decisions find no Registration and no burn, and both funded and staged.
 ///
 /// Two paths vouched at once fund the account once and stage one Registration that both vouches depend on.
@@ -524,6 +526,15 @@ async fn two_paths_vouched_at_once_fund_and_stage_once(pool: PgPool) {
     let anchor = registration.proposal.body.act_id();
     assert_eq!(a[0].proposal.deps, vec![anchor.clone()]);
     assert_eq!(b[0].proposal.deps, vec![anchor]);
+    let vouches: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM auth_application_vouches
+         WHERE application_id = ANY($1) AND lapsed_at IS NULL",
+    )
+    .bind(vec![first[0], second[0]])
+    .fetch_one(&rig.pool)
+    .await
+    .expect("count");
+    assert_eq!(vouches, 2, "each decision records its own vouch");
 }
 
 /// With the burn pending on the realization, nothing that reaches the
@@ -569,8 +580,7 @@ async fn an_unsettled_burn_is_never_requested_twice(pool: PgPool) {
         &rig.pool,
         &rig.realization,
         &rig.cfg,
-        &application,
-        None,
+        application.account_id,
     )
     .await
     .expect("the repair re-stages the Registration while the burn is pending");
@@ -703,18 +713,24 @@ async fn a_deleted_applicants_address_is_never_funded_twice(pool: PgPool) {
 /// backend drives it from here — but the witness is held: the substrate
 /// has the act sealed, not approved, so nothing can order it before its
 /// author can pay. The settlement pass relays it at the epoch the burn
-/// settles, and the Registration lands.
+/// settles, and the Registration lands — with the voucher's Opinion,
+/// signed meanwhile, so the account lands too.
 ///
 /// The admission Registration's approval leg waits for its funding to settle, then the pass relays it and it lands.
 /// ´claim:onboarding:the-registration-relay-waits-for-settlement´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_registration_relay_waits_for_settlement(pool: PgPool) {
     let rig = Rig::settling_after(pool, 2).await;
-    let (mira, _) = rig.inviter("mira").await;
+    let (mira, mira_key) = rig.inviter("mira").await;
     let link = rig.link(mira).await;
     let applicant = rig.applicant(link, "newbie").await;
-    rig.approve_one(mira, rig.registration_path(applicant.account).await)
+    let vouch = rig
+        .approve_one(mira, rig.registration_path(applicant.account).await)
         .await;
+    assert_eq!(
+        rig.sign(&mira_key, vouch.id).await,
+        Ok(StagedState::Relaying)
+    );
 
     let registration = rig.the_registration(applicant.account).await;
     let act_id = registration.proposal.body.act_id().to_string();
@@ -738,7 +754,7 @@ async fn the_registration_relay_waits_for_settlement(pool: PgPool) {
         .close_epoch()
         .await
         .expect("closes")
-        .expect("the Registration publishes");
+        .expect("the Registration and the vouch publish");
     rig.ingest().await;
     assert_eq!(
         staged::load(&rig.pool, registration.id)
@@ -753,19 +769,23 @@ async fn the_registration_relay_waits_for_settlement(pool: PgPool) {
 /// At the stand-in's default delay the burn settles at the request, and
 /// the approval reads that settlement at once: nothing is held, the
 /// applicant's approval leg relays straight through, and one close lands
-/// the Registration — the dev flow as it was before the burn crossed the
-/// seam.
+/// the Registration and the vouch — the dev flow as it was before the
+/// burn crossed the seam.
 ///
 /// At the default settlement delay nothing is held, and the Registration lands at the next close.
 /// ´claim:onboarding:at-the-default-delay-the-registration-relays-at-once´
 #[sqlx::test(migrations = "../../migrations")]
 async fn at_the_default_delay_the_registration_relays_at_once(pool: PgPool) {
     let rig = Rig::new(pool).await;
-    let (mira, _) = rig.inviter("mira").await;
+    let (mira, mira_key) = rig.inviter("mira").await;
     let link = rig.link(mira).await;
     let applicant = rig.applicant(link, "newbie").await;
-    rig.approve_one(mira, rig.registration_path(applicant.account).await)
+    let vouch = rig
+        .approve_one(mira, rig.registration_path(applicant.account).await)
         .await;
+    rig.sign(&mira_key, vouch.id)
+        .await
+        .expect("the vouch relays");
     assert!(
         rig.funding(&applicant.key.address())
             .await
@@ -784,7 +804,7 @@ async fn at_the_default_delay_the_registration_relays_at_once(pool: PgPool) {
         .close_epoch()
         .await
         .expect("closes")
-        .expect("the Registration publishes");
+        .expect("the Registration and the vouch publish");
     rig.ingest().await;
     assert_eq!(rig.account_state(applicant.account).await, "member");
 }
@@ -953,8 +973,7 @@ async fn a_failed_funding_stalls_without_refusing_the_voucher(pool: PgPool) {
             &rig.pool,
             &rig.realization,
             &rig.cfg,
-            &application,
-            None
+            application.account_id
         )
         .await
         .is_err()

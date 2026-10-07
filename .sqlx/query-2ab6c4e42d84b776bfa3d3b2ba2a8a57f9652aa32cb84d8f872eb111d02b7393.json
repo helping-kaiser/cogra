@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT voucher_id, act_id FROM auth_application_vouches\n         WHERE application_id = $1 AND lapsed_at IS NULL AND landed_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "voucher_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "act_id",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "2ab6c4e42d84b776bfa3d3b2ba2a8a57f9652aa32cb84d8f872eb111d02b7393"
+}

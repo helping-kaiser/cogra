@@ -1528,9 +1528,13 @@ impl Mutation {
     /// once per address, however approvals and retries race — and stages
     /// the Registration backend-side, and returns the inviter's own Opinion
     /// records to sign — the vouch is the inviter's signature, not a
-    /// server write. Requires an approvable application: email verified
-    /// and key attached; an already-approved, rejected, or foreign-queue
-    /// application refuses with BAD_INPUT pinned to its entry.
+    /// server write. The account lands when its own Registration and the
+    /// first vouch-Opinion on any of its paths have both confirmed; a vouch
+    /// that never lands lapses and its path waits again. Requires an
+    /// approvable application: email verified and key attached; an
+    /// already-approved, rejected, or foreign-queue application, or one
+    /// whose applicant already landed, refuses with BAD_INPUT pinned to
+    /// its entry.
     async fn approve_applicants(
         &self,
         ctx: &Context<'_>,
