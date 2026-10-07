@@ -1,8 +1,9 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { intersectEach } from "@/test/media-env";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -78,6 +79,50 @@ function hashtagDetail(name: string, taggedContent: unknown[] = []) {
 }
 
 describe("TopicView", () => {
+  // "ALWAYS at most one clip plays on the tag page, by the feed's stage law"
+  // (T01 TagPage.md:23): the tagged list stands on one stage, so the topmost
+  // qualifying clip plays (Feed.md:17) and a second one waits.
+  it("plays one clip on the tag page, the topmost that qualifies (T01 TagPage.md:23)", async () => {
+    const clipNode = (id: string) => ({
+      ...postNode(id, `Clip ${id}`),
+      attachments: [
+        {
+          __typename: "MediaAttachment",
+          id: `m-${id}`,
+          url: `https://media.test/${id}.mp4`,
+          altText: null,
+          status: "NORMAL",
+          mimeType: "video/mp4",
+          options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 12_000 },
+          coverMedia: null,
+          coverTaken: false,
+        },
+      ],
+    });
+    server.use(
+      graphql.query("HashtagDetail", () =>
+        HttpResponse.json({
+          data: hashtagDetail("rust", [
+            { relevance: 0.1, confidence: 1, pending: false, node: clipNode("p1") },
+            { relevance: 0.1, confidence: 1, pending: false, node: clipNode("p2") },
+          ]),
+        }),
+      ),
+    );
+    renderWithProviders(<TopicView name="rust" />, { writeSigner: fakeWriteSigner() });
+    await screen.findByTestId("topic-post-p2");
+    const clipOf = (id: string) =>
+      screen.getByTestId(`topic-post-${id}-media`).querySelector("video") as HTMLVideoElement;
+    act(() =>
+      intersectEach([
+        { target: clipOf("p2"), ratio: 1 },
+        { target: clipOf("p1"), ratio: 1 },
+      ]),
+    );
+    expect(clipOf("p1").paused).toBe(false);
+    expect(clipOf("p2").paused).toBe(true);
+  });
+
   it("renders the canonical name and the tagged posts, reusing PostCard", async () => {
     server.use(
       graphql.query("HashtagDetail", () =>

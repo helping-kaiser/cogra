@@ -235,6 +235,7 @@ pub async fn register(
     .await?;
     match outcome {
         store::RegisterOutcome::Created => {}
+        store::RegisterOutcome::InviteUnusable => return Err(OnboardingError::InviteUnusable),
         store::RegisterOutcome::HandleTaken => return Err(OnboardingError::HandleTaken),
         store::RegisterOutcome::EmailInUse => return Err(OnboardingError::EmailInUse),
     }
@@ -441,11 +442,94 @@ pub async fn approve_applicants<B: L1Boundary>(
     }
 }
 
-/// Checks one approval is the inviter's to make and still live.
+fn unknown_application() -> OnboardingError {
+    OnboardingError::BadInput {
+        field: "application",
+        message: "unknown application".into(),
+    }
+}
+
+/// The application, when it sits in `approver`'s queue — the queue of the
+/// invite link's issuer.
 ///
 /// The approval queue is issuer-visible only, so someone else's queue
 /// reads as an unknown application rather than a refusal — the two are
 /// deliberately indistinguishable to the caller.
+async fn queued_application(
+    pool: &PgPool,
+    approver: Uuid,
+    id: Uuid,
+) -> Result<store::Application, OnboardingError> {
+    let application = store::application(pool, id)
+        .await?
+        .ok_or_else(unknown_application)?;
+    let link = store::invite_link(pool, application.invite_link_id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("application without a link".into()))?;
+    if link.inviter_id != approver {
+        return Err(unknown_application());
+    }
+    Ok(application)
+}
+
+/// Refuses an application its approver has already answered, naming the
+/// answer: approved (landed included) or rejected (api-spec
+/// `approveApplicants`, `rejectApplication`).
+fn still_waiting(application: &store::Application) -> Result<(), OnboardingError> {
+    let answered = if application.approved_at.is_some() {
+        "already approved"
+    } else if application.rejected_at.is_some() {
+        "already rejected"
+    } else {
+        return Ok(());
+    };
+    Err(OnboardingError::BadInput {
+        field: "application",
+        message: answered.into(),
+    })
+}
+
+/// Names why a gated mark found the row no longer waiting — the loser of
+/// a race against an approval or a rejection reads the winner's answer.
+async fn answered_meanwhile(pool: &PgPool, id: Uuid) -> OnboardingError {
+    match store::application(pool, id).await {
+        Ok(Some(application)) => match still_waiting(&application) {
+            Err(answered) => answered,
+            Ok(()) => OnboardingError::BadInput {
+                field: "application",
+                message: "no longer approvable".into(),
+            },
+        },
+        Ok(None) => unknown_application(),
+        Err(e) => e.into(),
+    }
+}
+
+/// Closes one application in the approver's own queue without approving
+/// it (auth.md "Rejection"): the row is marked rejected and nothing else
+/// changes. The account keeps its login, its reads and its attached key,
+/// and a single-use invite link it came through stays used up.
+///
+/// An unknown and a foreign application read alike; an approved or
+/// already-rejected one refuses, naming which. The store's waiting
+/// predicate is the concurrency gate, so a rejection racing an approval
+/// leaves exactly one of the two marks.
+pub async fn reject_application(
+    pool: &PgPool,
+    approver: Uuid,
+    id: Uuid,
+) -> Result<store::Application, OnboardingError> {
+    let application = queued_application(pool, approver, id).await?;
+    still_waiting(&application)?;
+    if !store::reject_application(pool, application.id, approver).await? {
+        return Err(answered_meanwhile(pool, application.id).await);
+    }
+    store::application(pool, application.id)
+        .await?
+        .ok_or_else(|| OnboardingError::Internal("application vanished at rejection".into()))
+}
+
+/// Checks one approval is the inviter's to make and still live.
 async fn validate_approval(
     pool: &PgPool,
     inviter: Uuid,
@@ -457,27 +541,8 @@ async fn validate_approval(
             message: "stance parameters must lie in [-1, 1]".into(),
         });
     }
-    let application = store::application(pool, approval.application)
-        .await?
-        .ok_or(OnboardingError::BadInput {
-            field: "application",
-            message: "unknown application".into(),
-        })?;
-    let link = store::invite_link(pool, application.invite_link_id)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("application without a link".into()))?;
-    if link.inviter_id != inviter {
-        return Err(OnboardingError::BadInput {
-            field: "application",
-            message: "unknown application".into(),
-        });
-    }
-    if application.approved_at.is_some() {
-        return Err(OnboardingError::BadInput {
-            field: "application",
-            message: "already approved".into(),
-        });
-    }
+    let application = queued_application(pool, inviter, approval.application).await?;
+    still_waiting(&application)?;
     if !application.email_verified {
         return Err(OnboardingError::BadInput {
             field: "application",
@@ -496,8 +561,8 @@ async fn validate_approval(
 /// Executes one validated approval: marks it, runs the admission
 /// sequence, and prepares the inviter's vouching Opinion.
 ///
-/// Marking is the concurrency gate — a concurrent duplicate approval
-/// loses on the `approved_at` guard, before any burn. The Opinion the
+/// Marking is the concurrency gate — a concurrent duplicate approval or
+/// rejection loses on the waiting guard, before any burn. The Opinion the
 /// inviter then signs depends on the Registration, so it orders after
 /// the anchor it vouches for (invitations.md §2) — and it is signable at
 /// once, whether or not the burn has settled: the Registration's act id
@@ -511,12 +576,9 @@ async fn approve_one<B: L1Boundary>(
     approval: &Approval,
     application: &store::Application,
 ) -> Result<prepare::Prepared, OnboardingError> {
-    let account_id = store::approve_application(pool, application.id)
-        .await?
-        .ok_or(OnboardingError::BadInput {
-            field: "application",
-            message: "already approved".into(),
-        })?;
+    let Some(account_id) = store::approve_application(pool, application.id).await? else {
+        return Err(answered_meanwhile(pool, application.id).await);
+    };
 
     let approved = store::application(pool, application.id)
         .await?

@@ -18,10 +18,11 @@ import React from "react";
    that board's label differs in padding, and a spec board's job is to draw a
    specimen, not to consume the system. */
 
-export function SectionLabel({ children, node }) {
+export function SectionLabel({ children, node, nodeKey }) {
   return (
     <span
       data-node={node}
+      data-node-key={nodeKey}
       style={{
         display: "block",
         padding: "12px 24px 4px",

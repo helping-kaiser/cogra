@@ -1,13 +1,20 @@
-// One clip plays at a time (design/readme.md: "One clip plays at a time, at
-// 70% visibility or more — android's gate, blessed"). This mirrors the
-// OWNERSHIP semantics of
+// THE PLAYER LAYER — one clip plays at a time, app-wide (tmp_dev packet
+// `web-stage-law.md` §3.2 rule 15). WHICH clip a surface plays is not decided
+// here: each scroll surface's stage elects its own holder (`stage.ts`, the
+// stage law of Feed.md). This module sits beneath every stage and only keeps
+// playback single across them — a stage claims when its holder starts and
+// surrenders when the holder freezes — and it stays the backstop for clips no
+// surface hosts, so "ALWAYS at most one clip plays" (Feed.md:3) holds
+// everywhere.
+//
+// This mirrors the OWNERSHIP semantics of
 // android/core/designsystem/.../v2/media/VideoStage.kt — the most recent
-// claimant owns the stage, and claiming pauses whoever held it before — but
-// not its player-pooling: Android shares one ExoPlayer across surfaces
+// claimant owns the player layer, and claiming pauses whoever held it before —
+// but not its player-pooling: Android shares one ExoPlayer across surfaces
 // because a decoder is a scarce resource worth moving rather than
 // duplicating, and that has no web analog. Each `<video>` element here owns
 // its own decode; this module arbitrates PLAYBACK ownership only, so two
-// autoplaying clips never fight.
+// playing clips never fight.
 
 type Owner = {
   readonly token: object;

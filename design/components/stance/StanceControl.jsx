@@ -630,7 +630,17 @@ export function StanceControl({
               touchAction: "none",
               position: "fixed",
             }}
+            data-node={node && "pad"}
           >
+            {/* THE OPEN PAD'S NAMES (design ⇄ impl seam 002, the pad tails,
+                jakob 2026-10-07 ruling 40 — one anatomy for every pad board):
+                the dialog is `pad`; in it the `help` "?", the `standing`
+                (`StanceStanding`: `current`, `pick`), the `field`
+                (`StancePad`), the placer's `note` where it names one, the
+                `landing`, the help's `helpPanel` with its `back`, the write
+                rule's `notNow`, and the commit row's `sever`, `cancel` and
+                `set` — the row itself, the outside-tap layer and the notice
+                and failure masters stay unnamed. */}
             {/* The help affordance: a circled `?` in the pad's top-right corner,
                 out of the reading order of the three readouts. 48px target, 32px
                 ring. Its name is `helpLabel` (jakob's ruling A7) — the dialog's
@@ -657,6 +667,7 @@ export function StanceControl({
                 borderRadius: "var(--radius-full)",
                 cursor: "pointer",
               }}
+              data-node={node && "help"}
             >
               <span
                 aria-hidden="true"
@@ -676,12 +687,20 @@ export function StanceControl({
                 ?
               </span>
             </button>
-            <StanceStanding pick={pick} bundle={bundle} targetLabel={targetLabel} names={axes} onOpenHistory={onOpenHistory} style={{ paddingRight: "40px" }} />
+            <StanceStanding
+              pick={pick}
+              bundle={bundle}
+              targetLabel={targetLabel}
+              names={axes}
+              onOpenHistory={onOpenHistory}
+              style={{ paddingRight: "40px" }}
+              node={node && "standing"}
+            />
             {/* The help panel REPLACES the field and the readouts rather than
                 growing below them: the pad is parked, and a panel that pushes Set
                 and Cancel away from the thumb defeats the parking. */}
             {explaining ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }} data-node={node && "helpPanel"}>
                 {(help ?? padHelp(axes)).map((line) => (
                   <p key={helpKey(line)} style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)" }}>
                     <HelpLine line={line} />
@@ -692,15 +711,16 @@ export function StanceControl({
                   onClick={() => setExplaining(false)}
                   className={BUTTON_CLASS}
                   style={{ ...buttonStyle({ variant: "text", size: "sm" }), alignSelf: "flex-start" }}
+                  data-node={node && "back"}
                 >
                   Back to the pad
                 </button>
               </div>
             ) : (
               <>
-                <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} held={knobHeld} />
+                <StancePad value={pick} onChange={setPick} fieldRef={fieldRef} axes={axes} held={knobHeld} node={node && "field"} />
                 {padNote}
-                {padSigning !== "writeRule" && <StanceLandingLine landing={landing} names={axes} />}
+                {padSigning !== "writeRule" && <StanceLandingLine landing={landing} names={axes} node={node && "landing"} />}
               </>
             )}
             {/* THE WRITE RULE REFUSED SET (jakob 2026-10-01, backlog item 117):
@@ -716,7 +736,7 @@ export function StanceControl({
                 <NoticePanel title={WRITE_RULE_TITLE} helpLabel={WRITE_RULE_HELP} onHelp={() => {}}>
                   <NoticeLine>{WRITE_RULE_PAD_FACT}</NoticeLine>
                 </NoticePanel>
-                <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text" }), width: "100%" }}>
+                <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={{ ...buttonStyle({ variant: "text" }), width: "100%" }} data-node={node && "notNow"}>
                   Not now
                 </button>
               </>
@@ -739,11 +759,12 @@ export function StanceControl({
                   onClick={openSeverance}
                   className={BUTTON_CLASS}
                   style={{ ...buttonStyle({ variant: "text", size: "sm" }), marginRight: "auto" }}
+                  data-node={node && "sever"}
                 >
                   {severanceWords(axes).control}
                 </button>
               )}
-              <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })}>
+              <button type="button" onClick={closeAll} className={BUTTON_CLASS} style={buttonStyle({ variant: "text", size: "sm" })} data-node={node && "cancel"}>
                 Cancel
               </button>
               <button
@@ -759,6 +780,7 @@ export function StanceControl({
                   disabled: explaining,
                   busy: padSigning === "busy",
                 })}
+                data-node={node && "set"}
               >
                 {padSigning === "busy" ? "Setting…" : padSigning === "failed" ? "Retry" : "Set"}
               </button>

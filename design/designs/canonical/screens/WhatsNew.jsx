@@ -31,7 +31,12 @@
    the running version the newest one.
 
    A TASK PAGE: the back arrow and no bottom bar, like every page Settings
-   opens. The page is `WhatsNewBody`, shared with its behind state. */
+   opens. The page is `WhatsNewBody`, shared with its behind state.
+
+   REGISTERED under the `whatsNew` prefix (design ⇄ impl seam 089, the
+   release-registry packet), its own page's as `About`'s is `about`: the body
+   names its parts, each release keyed by its version. */
+export const NODE = "whatsNew";
 export function Screen() {
   return <WhatsNewBody />;
 }

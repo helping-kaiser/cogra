@@ -35,7 +35,8 @@
 
    REGISTERED under the `invites` prefix (design ⇄ impl seam 078, the invites
    packet): the body names its parts, and `NODE` carries them onto the built
-   board and into `nodes.json`. */
+   board and into `nodes.json`. The `revoke` chip's two copies of the first
+   link's card are one `invites.link` under the link's own id (ruling 39). */
 export const NODE = "invites";
 export const PROPS = {
   kept: { editor: "enum", options: ["none", "waiting"], default: "none" },

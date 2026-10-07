@@ -1531,6 +1531,128 @@
         "feed.snackbar.message": []
       }
     },
+    "FeedNewerVersion": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.comments": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.score": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.score.value": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.share": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.avatar": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.handle": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.name": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "sol"
+        ],
+        "feed.card.media": [
+          "sol"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "feed.card.menu": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.opener": [
+          "sol"
+        ],
+        "feed.card.tagsLine": [
+          "sol"
+        ],
+        "feed.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.title": [
+          "sol"
+        ],
+        "feed.snackbar": [],
+        "feed.snackbar.action": [],
+        "feed.snackbar.message": []
+      }
+    },
     "History": {
       "prefix": "history",
       "keys": {
@@ -1933,7 +2055,8 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
-        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)"
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
       "nodes": {
         "invites.application": [
@@ -2000,6 +2123,30 @@
         "invites.header": [],
         "invites.header.back": [],
         "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
         "invites.linksLabel": []
       }
     },
@@ -2791,7 +2938,8 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
-        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)"
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
       "nodes": {
         "invites.application": [
@@ -2857,6 +3005,30 @@
         "invites.header": [],
         "invites.header.back": [],
         "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
         "invites.linksLabel": []
       }
     },
@@ -2864,7 +3036,8 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
-        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)"
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
       "nodes": {
         "invites.application": [
@@ -2930,6 +3103,30 @@
         "invites.header": [],
         "invites.header.back": [],
         "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
         "invites.linksLabel": []
       }
     },
@@ -4063,6 +4260,42 @@
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
         "settings.ending.footnote": [],
+        "settings.feedSheet": [],
+        "settings.feedSheet.also": [],
+        "settings.feedSheet.also.hint": [],
+        "settings.feedSheet.also.label": [],
+        "settings.feedSheet.also.removedChip": [],
+        "settings.feedSheet.also.sensitiveChip": [],
+        "settings.feedSheet.also.settlingChip": [],
+        "settings.feedSheet.dragHandle": [],
+        "settings.feedSheet.foot": [],
+        "settings.feedSheet.foot.done": [],
+        "settings.feedSheet.foot.reset": [],
+        "settings.feedSheet.forms": [],
+        "settings.feedSheet.forms.hint": [],
+        "settings.feedSheet.forms.label": [],
+        "settings.feedSheet.forms.photosChip": [],
+        "settings.feedSheet.forms.textChip": [],
+        "settings.feedSheet.forms.videoChip": [],
+        "settings.feedSheet.kinds": [],
+        "settings.feedSheet.kinds.commentsChip": [],
+        "settings.feedSheet.kinds.hint": [],
+        "settings.feedSheet.kinds.label": [],
+        "settings.feedSheet.kinds.postsChip": [],
+        "settings.feedSheet.kinds.profilesChip": [],
+        "settings.feedSheet.kinds.topicsChip": [],
+        "settings.feedSheet.note": [],
+        "settings.feedSheet.order": [],
+        "settings.feedSheet.order.hint": [],
+        "settings.feedSheet.order.label": [],
+        "settings.feedSheet.order.picker": [],
+        "settings.feedSheet.order.picker.newestOption": [],
+        "settings.feedSheet.order.picker.rankedOption": [],
+        "settings.feedSheet.order.seen": [],
+        "settings.feedSheet.order.seen.box": [],
+        "settings.feedSheet.order.seen.label": [],
+        "settings.feedSheet.title": [],
+        "settings.feedSheet.title.help": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],
@@ -4352,6 +4585,30 @@
         "vouchAsk.ask.stance": [],
         "vouchAsk.ask.stance.anchor": [],
         "vouchAsk.ask.stance.anchor.face": [],
+        "vouchAsk.ask.stance.pad": [],
+        "vouchAsk.ask.stance.pad.cancel": [],
+        "vouchAsk.ask.stance.pad.field": [],
+        "vouchAsk.ask.stance.pad.field.bottom": [],
+        "vouchAsk.ask.stance.pad.field.left": [],
+        "vouchAsk.ask.stance.pad.field.right": [],
+        "vouchAsk.ask.stance.pad.field.square": [],
+        "vouchAsk.ask.stance.pad.field.square.knob": [],
+        "vouchAsk.ask.stance.pad.field.square.zeroAcross": [],
+        "vouchAsk.ask.stance.pad.field.square.zeroDown": [],
+        "vouchAsk.ask.stance.pad.field.top": [],
+        "vouchAsk.ask.stance.pad.help": [],
+        "vouchAsk.ask.stance.pad.landing": [],
+        "vouchAsk.ask.stance.pad.landing.exact": [],
+        "vouchAsk.ask.stance.pad.landing.face": [],
+        "vouchAsk.ask.stance.pad.landing.label": [],
+        "vouchAsk.ask.stance.pad.note": [],
+        "vouchAsk.ask.stance.pad.set": [],
+        "vouchAsk.ask.stance.pad.standing": [],
+        "vouchAsk.ask.stance.pad.standing.current": [],
+        "vouchAsk.ask.stance.pad.standing.pick": [],
+        "vouchAsk.ask.stance.pad.standing.pick.exact": [],
+        "vouchAsk.ask.stance.pad.standing.pick.face": [],
+        "vouchAsk.ask.stance.pad.standing.pick.label": [],
         "vouchAsk.ask.title": [],
         "vouchAsk.header": [],
         "vouchAsk.header.back": [],
@@ -4499,6 +4756,30 @@
         "feed.vouchCard.stance": [],
         "feed.vouchCard.stance.anchor": [],
         "feed.vouchCard.stance.anchor.face": [],
+        "feed.vouchCard.stance.pad": [],
+        "feed.vouchCard.stance.pad.cancel": [],
+        "feed.vouchCard.stance.pad.field": [],
+        "feed.vouchCard.stance.pad.field.bottom": [],
+        "feed.vouchCard.stance.pad.field.left": [],
+        "feed.vouchCard.stance.pad.field.right": [],
+        "feed.vouchCard.stance.pad.field.square": [],
+        "feed.vouchCard.stance.pad.field.square.knob": [],
+        "feed.vouchCard.stance.pad.field.square.zeroAcross": [],
+        "feed.vouchCard.stance.pad.field.square.zeroDown": [],
+        "feed.vouchCard.stance.pad.field.top": [],
+        "feed.vouchCard.stance.pad.help": [],
+        "feed.vouchCard.stance.pad.landing": [],
+        "feed.vouchCard.stance.pad.landing.exact": [],
+        "feed.vouchCard.stance.pad.landing.face": [],
+        "feed.vouchCard.stance.pad.landing.label": [],
+        "feed.vouchCard.stance.pad.note": [],
+        "feed.vouchCard.stance.pad.set": [],
+        "feed.vouchCard.stance.pad.standing": [],
+        "feed.vouchCard.stance.pad.standing.current": [],
+        "feed.vouchCard.stance.pad.standing.pick": [],
+        "feed.vouchCard.stance.pad.standing.pick.exact": [],
+        "feed.vouchCard.stance.pad.standing.pick.face": [],
+        "feed.vouchCard.stance.pad.standing.pick.label": [],
         "feed.vouchCard.title": []
       }
     },
@@ -4510,6 +4791,67 @@
         "vouchedIn.onward": [],
         "vouchedIn.sky": [],
         "vouchedIn.title": []
+      }
+    },
+    "WhatsNew": {
+      "prefix": "whatsNew",
+      "keys": {
+        "whatsNew.dateline": "the release's version, lowercased, each run of other characters one - (What's new's datelines)",
+        "whatsNew.release": "the release's version, lowercased, each run of other characters one - (What's new's release cards)"
+      },
+      "nodes": {
+        "whatsNew.dateline": [
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.footnote": [],
+        "whatsNew.header": [],
+        "whatsNew.header.back": [],
+        "whatsNew.header.title": [],
+        "whatsNew.release": [
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.release.door": [
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ]
+      }
+    },
+    "WhatsNewBehind": {
+      "prefix": "whatsNew",
+      "keys": {
+        "whatsNew.dateline": "the release's version, lowercased, each run of other characters one - (What's new's datelines)",
+        "whatsNew.release": "the release's version, lowercased, each run of other characters one - (What's new's release cards)"
+      },
+      "nodes": {
+        "whatsNew.dateline": [
+          "0-1-3",
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.footnote": [],
+        "whatsNew.header": [],
+        "whatsNew.header.back": [],
+        "whatsNew.header.title": [],
+        "whatsNew.newerLine": [],
+        "whatsNew.newerLine.update": [],
+        "whatsNew.release": [
+          "0-1-3",
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ],
+        "whatsNew.release.door": [
+          "0-1-3",
+          "0-1-2",
+          "0-1-1",
+          "0-1-0"
+        ]
       }
     }
   }

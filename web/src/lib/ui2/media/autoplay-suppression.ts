@@ -18,10 +18,9 @@
 //   The Network Information API is absent from several engines; where it is,
 //   the device never asks, so the clause holds vacuously.
 //
-// The live signal is not consumed yet — the suppression PR wires it to the
-// stage and the play disc. What IS consumed today is the snapshot
-// `prefersReducedMotion()`, lifted verbatim out of the player's autoplay
-// effect so the two read the preference in one place.
+// The live signal drives the stage (`stage-host.tsx`, which elects nobody on
+// its own while suppressed) and the disc every frame wears (`video-player.tsx`,
+// the play disc in the sound disc's place).
 
 import { useSyncExternalStore } from "react";
 

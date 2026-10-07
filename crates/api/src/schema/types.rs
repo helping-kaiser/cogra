@@ -1573,8 +1573,15 @@ impl InviteLink {
         self.0.revoked_at
     }
 
+    /// Whether the link can stage a new applicant now — the reckoning
+    /// inviteLinkCheck.usable reports.
+    async fn usable(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::invite_link_usable(pool, self.0.id).await?)
+    }
+
     /// The inviter's approval queue: applications staged through this
-    /// link, with their status.
+    /// link, with their status, rejected ones included.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn applications(
         &self,
@@ -1623,6 +1630,16 @@ impl Application {
     /// When the inviter's priced approval happened; null while pending.
     async fn approved_at(&self) -> Option<DateTime<Utc>> {
         self.0.approved_at
+    }
+
+    /// When the approver closed the application without approving it —
+    /// on its own (rejectApplication) or with its link's whole waiting
+    /// queue (rejectLinkApplications); null otherwise. A rejection closes
+    /// this queue entry only: the account persists, and a member taking up
+    /// the account's ask link stages a new application (auth.md
+    /// "Rejection").
+    async fn rejected_at(&self) -> Option<DateTime<Utc>> {
+        self.0.rejected_at
     }
 
     /// When the Registration confirmed and the account became a member;

@@ -8,7 +8,7 @@
 //! about any record.
 
 use chrono::{DateTime, Utc};
-use sqlx::{PgConnection, PgPool};
+use sqlx::{PgConnection, PgExecutor, PgPool};
 use uuid::Uuid;
 
 pub mod constraints {
@@ -102,6 +102,9 @@ pub struct Application {
     pub email_verified: bool,
     pub key_attached: bool,
     pub approved_at: Option<DateTime<Utc>>,
+    /// The approver's close (auth.md "Rejection"): set instead of
+    /// `approved_at`, never alongside it.
+    pub rejected_at: Option<DateTime<Utc>>,
     pub landed_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
 }
@@ -269,12 +272,17 @@ pub async fn revoke_invite_link(
 }
 
 /// Whether the link can stage a new applicant now: live, and — for a
-/// single-use link — its one slot not already held by an application
-/// through it (invitations.md §4 "Link modes"). Applications carry no
-/// timer, so a waiting one holds the slot exactly as an approved or
-/// landed one does; the reaper deleting a never-verified account is what
-/// frees it (auth.md "Expiry").
-pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::Error> {
+/// single-use link — its one slot not held by an application through it
+/// (invitations.md §4 "Link modes"). Applications carry no timer, so a
+/// waiting one holds the slot exactly as an approved, landed or rejected
+/// one does: account creation uses the link up, and only the reaper
+/// deleting a never-verified account frees it (auth.md "Expiry"). The
+/// one reckoning — registration, `inviteLinkCheck` and
+/// `InviteLink.usable` all read it here.
+pub async fn invite_link_usable<'e>(
+    executor: impl PgExecutor<'e>,
+    id: Uuid,
+) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT EXISTS(
                SELECT 1 FROM auth_invite_links l
@@ -288,7 +296,7 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
            ) AS "usable!""#,
         id,
     )
-    .fetch_one(pool)
+    .fetch_one(executor)
     .await
 }
 
@@ -297,6 +305,9 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RegisterOutcome {
     Created,
+    /// The link stopped being usable before the application row could be
+    /// written — a concurrent registration took its single-use slot.
+    InviteUnusable,
     HandleTaken,
     EmailInUse,
 }
@@ -308,6 +319,12 @@ pub enum RegisterOutcome {
 /// row against the link. A dead account — never verified and past
 /// `dead_before` — holding the handle or email is deleted first, so the
 /// experience never depends on the reaper's schedule.
+///
+/// The link row is locked for the transaction and its usability read
+/// again under the lock, so two registrations racing for one single-use
+/// slot queue there: the second reads the first's committed application
+/// and refuses (PostgreSQL "Explicit Locking", row-level locks under
+/// Read Committed).
 #[allow(clippy::too_many_arguments)]
 pub async fn register_account(
     pool: &PgPool,
@@ -321,6 +338,15 @@ pub async fn register_account(
     dead_before: DateTime<Utc>,
 ) -> Result<RegisterOutcome, sqlx::Error> {
     let mut tx = pool.begin().await?;
+    sqlx::query_scalar!(
+        "SELECT id FROM auth_invite_links WHERE id = $1 FOR UPDATE",
+        invite_link_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?;
+    if !invite_link_usable(&mut *tx, invite_link_id).await? {
+        return Ok(RegisterOutcome::InviteUnusable);
+    }
     let dead: Vec<Uuid> = sqlx::query_scalar!(
         "SELECT c.actor_id FROM user_credentials c
          JOIN actors a ON a.id = c.actor_id
@@ -432,6 +458,7 @@ macro_rules! application_from_row {
             email_verified: $r.email_verified,
             key_attached: $r.key_attached,
             approved_at: $r.approved_at,
+            rejected_at: $r.rejected_at,
             landed_at: $r.landed_at,
             created_at: $r.created_at,
         }
@@ -443,7 +470,7 @@ pub async fn application(pool: &PgPool, id: Uuid) -> Result<Option<Application>,
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at
+                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
@@ -465,7 +492,7 @@ pub async fn latest_application_for(
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at
+                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
@@ -487,7 +514,7 @@ pub async fn applications_for_link(
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at
+                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
@@ -635,12 +662,15 @@ pub async fn attach_actor_key(
     Ok(outcome)
 }
 
-/// Marks the inviter's priced approval — the `approved_at IS NULL`
-/// predicate is the concurrency gate against a duplicate approval.
-/// Refused (None) unless the application is still waiting and approvable:
-/// email verified and key attached, both enforced here as well as
-/// validated by the caller (auth.md §Application). No clock gates it — an
-/// application waits on a vouch with no timer (auth.md "Expiry").
+/// Marks the inviter's priced approval — the `approved_at IS NULL AND
+/// rejected_at IS NULL` predicate is the concurrency gate against a
+/// duplicate approval and against a concurrent rejection
+/// ([`reject_application`] gates on the same pair, so exactly one of the
+/// two marks lands). Refused (None) unless the application is still
+/// waiting and approvable: email verified and key attached, both enforced
+/// here as well as validated by the caller (auth.md §Application). No
+/// clock gates it — an application waits on a vouch with no timer
+/// (auth.md "Expiry").
 pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
         "UPDATE auth_applications ap
@@ -648,6 +678,7 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
          FROM actors a, user_credentials c
          WHERE ap.id = $1 AND a.id = ap.account_id AND c.actor_id = ap.account_id
            AND ap.approved_at IS NULL
+           AND ap.rejected_at IS NULL
            AND ap.landed_at IS NULL
            AND c.email_verified_at IS NOT NULL
            AND a.actor_pubkey IS NOT NULL
@@ -656,6 +687,77 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
     )
     .fetch_optional(pool)
     .await
+}
+
+/// Closes one application in `approver`'s queue (auth.md "Rejection"):
+/// sets `rejected_at` and nothing else — the row, the account and its
+/// key all stay. The queue is the invite link's issuer's, so ownership
+/// reads through the link. The waiting predicate is the concurrency gate
+/// against a concurrent approval or a second rejection, mirroring
+/// [`approve_application`]'s. False when the row is not waiting in that
+/// queue — unknown, foreign, approved, or already rejected alike; the
+/// caller reads the row to name which.
+pub async fn reject_application(
+    pool: &PgPool,
+    id: Uuid,
+    approver: Uuid,
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_applications ap
+         SET rejected_at = NOW()
+         FROM auth_invite_links l
+         WHERE ap.id = $1 AND l.id = ap.invite_link_id AND l.inviter_id = $2
+           AND ap.approved_at IS NULL
+           AND ap.rejected_at IS NULL
+           AND ap.landed_at IS NULL",
+        id,
+        approver,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Closes every application still waiting through one of `approver`'s
+/// invite links (auth.md "Rejection", "A flood is closed by the link"),
+/// returning how many closed; None when the link is unknown or not
+/// theirs. Approved and already-rejected rows are passed over, so a queue
+/// that moves under the sweep never defeats it, and a revoked link still
+/// sweeps — revocation stops new staging only. Each closed row is an
+/// ordinary rejection, under the same waiting predicate
+/// [`reject_application`] gates on.
+pub async fn reject_link_applications(
+    pool: &PgPool,
+    invite_link_id: Uuid,
+    approver: Uuid,
+) -> Result<Option<u64>, sqlx::Error> {
+    let owned = sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM auth_invite_links WHERE id = $1 AND inviter_id = $2
+           ) AS "owned!""#,
+        invite_link_id,
+        approver,
+    )
+    .fetch_one(pool)
+    .await?;
+    if !owned {
+        return Ok(None);
+    }
+    Ok(Some(
+        sqlx::query!(
+            "UPDATE auth_applications
+             SET rejected_at = NOW()
+             WHERE invite_link_id = $1
+               AND approved_at IS NULL
+               AND rejected_at IS NULL
+               AND landed_at IS NULL",
+            invite_link_id,
+        )
+        .execute(pool)
+        .await?
+        .rows_affected(),
+    ))
 }
 
 /// Locks the account for the caller's transaction — the serialization
