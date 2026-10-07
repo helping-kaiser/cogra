@@ -766,7 +766,7 @@
       "description": "The same link opened where no session is asks for sign-in first, since the proof counts only signed in; signed in, its side applies, and when it was the first side the code from the old address is still owed.",
       "start": { "board": "ChangeEmailLinkedSignedOut" },
       "waypoints": [
-        { "board": "ChangeEmailLinkedSignedOut", "via": 1 },
+        { "board": "ChangeEmailLinkedSignedOut", "via": 1, "case": "after sign-in the link's side applies, and its landing follows (ChangeEmailLinked)" },
         { "board": "SignIn", "via": 6, "to": "ChangeEmailLinked" }
       ],
       "end": { "board": "ChangeEmailLinked", "via": 1, "to": "ChangeEmailConfirm" }

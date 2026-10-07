@@ -1849,7 +1849,13 @@ applicant's fresh link (`ApplicantEmail`) answers a taken address the
 same way on its landing (jakob 2026-10-05). Signed
 out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
 `This link confirms sol@ferreira.studio as your new address. It counts
-once you're signed in.` · `Sign in`. Opened under a different account,
+once you're signed in.` · `Sign in`. A link whose change ran out, was
+canceled or already applied, or one the app does not know, opened signed
+out: one address-free landing (jakob 2026-10-07, ruling 38) —
+`VerifyExpired`'s heading, `This link doesn't work anymore` (blessed), over
+`The change it belonged to may have run out, been canceled or already
+happened — this link can't move your email anymore.` and `Sign in` (*new
+2026-10-07, the body drafted — its wording jakob's at review*). Opened under a different account,
 the link's side does not apply and the landing says so: `This link isn't
 for this account` · `It confirms a new address for another account, so
 nothing changed here. Open it signed in as that account to finish the

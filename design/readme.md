@@ -9400,6 +9400,20 @@ either comes into this readme or dies from the pointer.
   in its native unit and rounds on its own grid — a capability
   expression, never a per-client choice.
 
+### The five ordered draws — 2026-10-07
+
+jakob's packet-wave rulings ordered five states drawn rather than
+backlogged (the day's digest, items 23, 24, 38, 60 and 65). Each is drawn
+in an existing board's construction; the words they mint are drafted and
+wait for jakob's review (copy-voice marks each).
+
+- **The dead change link, signed out** (item 38; the settings packet's
+  G9). `ChangeEmailLinkedSignedOut` gains the `landing` chip: `pending` is
+  the live link, `dead` the one landing for every link whose change ran
+  out, was canceled or already applied, and for a link the app does not
+  know — `This link doesn't work anymore`, a body naming no address, and
+  `Sign in` holding no link.
+
 ---
 
 ## 14. The canvases
