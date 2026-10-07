@@ -1531,6 +1531,128 @@
         "feed.snackbar.message": []
       }
     },
+    "FeedNewerVersion": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.comments": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.score": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.score.value": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.share": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.avatar": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.handle": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.authorChip.name": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "sol"
+        ],
+        "feed.card.media": [
+          "sol"
+        ],
+        "feed.card.media.dots": [
+          "sol"
+        ],
+        "feed.card.media.frame": [
+          "sol/1",
+          "sol/2"
+        ],
+        "feed.card.menu": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.opener": [
+          "sol"
+        ],
+        "feed.card.tagsLine": [
+          "sol"
+        ],
+        "feed.card.tagsLine.tag": [
+          "sol/fieldnotes",
+          "sol/saltmaps"
+        ],
+        "feed.card.timestamp": [
+          "tobias",
+          "sol"
+        ],
+        "feed.card.title": [
+          "sol"
+        ],
+        "feed.snackbar": [],
+        "feed.snackbar.action": [],
+        "feed.snackbar.message": []
+      }
+    },
     "History": {
       "prefix": "history",
       "keys": {
