@@ -1,7 +1,8 @@
 //! Whose view a reader borrows (`design/readme.md` §13). A feed is rooted
 //! in the viewer's own outgoing stances, so a reader with none is served
 //! someone else's — and `borrowedView` is what the borrowed-view band
-//! reads to name it. A member borrows their approver's view until their
+//! reads to name it. A member borrows the view of the issuer of the invite
+//! link they registered through until their
 //! first Opinion is signed, toward any target (VouchBack.md:15); null is
 //! the end of the ladder on purpose.
 //!
@@ -168,15 +169,15 @@ async fn attach_key(pool: &PgPool, account: Uuid) -> ActorKey {
     key
 }
 
-/// Approves and lands the application, which is what flips the account to
-/// `member`.
+/// Lands the account through its registration path with no ceremony
+/// behind it — the rig's shortcut to the `member` state these tests start
+/// from; the ceremony itself is `tests/entry_landing.rs`'s.
 async fn land(pool: &PgPool, account: Uuid) {
-    sqlx::query("UPDATE auth_applications SET approved_at = NOW() WHERE account_id = $1")
-        .bind(account)
-        .execute(pool)
+    let path = store::current_application_for(pool, account)
         .await
-        .expect("approve");
-    assert!(store::land_account(pool, account).await.expect("land"));
+        .expect("query")
+        .expect("path");
+    assert!(store::land_path_directly(pool, path.id).await.expect("land"));
 }
 
 fn viewer(user_id: Uuid) -> Option<Viewer> {
@@ -210,10 +211,10 @@ async fn stage_signed_opinion(pool: &PgPool, account: Uuid, address: &str, targe
 }
 
 /// A landed member reachable over the HTTP surface: registered through
-/// `approver`'s link, key attached, funded, landed, logged in.
-async fn wire_member(rig: &WireRig, approver: Uuid, handle: &str) -> (Uuid, ActorKey, String) {
+/// `issuer`'s link, key attached, funded, landed, logged in.
+async fn wire_member(rig: &WireRig, issuer: Uuid, handle: &str) -> (Uuid, ActorKey, String) {
     let hash = api::auth::hash_password(MEMBER_PASSWORD).expect("hash");
-    let account = register(&rig.pool, approver, handle, &hash).await;
+    let account = register(&rig.pool, issuer, handle, &hash).await;
     let key = attach_key(&rig.pool, account).await;
     rig.standin
         .credit_burn(&key.address(), 10_000_000)
@@ -357,12 +358,12 @@ async fn an_unverified_applicant_borrows_their_inviter(pool: PgPool) {
     );
 }
 
-/// Landing is not the handover: membership is granted by the approver,
-/// while the view becomes the member's own only once they have pointed
-/// somewhere themselves (§13). Between the two the feed is still ranked
-/// from the approver's vantage, so the band must still name them.
+/// Landing is not the handover: membership is granted by a vouch, while
+/// the view becomes the member's own only once they have pointed somewhere
+/// themselves (§13). Between the two the feed is still ranked from the
+/// issuer's vantage, so the band must still name them.
 ///
-/// A member who has landed but signed no opinion is still borrowing their approver's view.
+/// A member who has landed but signed no opinion is still borrowing their issuer's view.
 /// ´claim:borrowed:a-landed-member-borrows-until-their-first-opinion´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_landed_member_borrows_until_their_first_opinion(pool: PgPool) {
@@ -390,7 +391,7 @@ async fn a_landed_member_borrows_until_their_first_opinion(pool: PgPool) {
 /// what holds while the mirror is rebuilt — the band must not flicker back
 /// over a cache catching up.
 ///
-/// A member's first opinion on someone other than their approver ends the borrowing, and the landed opinion latches.
+/// A member's first opinion on someone other than their issuer ends the borrowing, and the landed opinion latches.
 /// ´claim:borrowed:an-opinion-toward-any-target-ends-the-borrowing´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_opinion_on_a_stranger_ends_the_borrowing(pool: PgPool) {
@@ -561,7 +562,7 @@ async fn an_expired_first_opinion_returns_the_borrowing(pool: PgPool) {
 /// An opinion staged during the application signs with the vouch-in
 /// batch, so the borrowing is already over at landing: the band never
 /// stands (VouchBack.md:21). Before landing the same signed row ends
-/// nothing — the applicant keeps the approver's view.
+/// nothing — the applicant keeps the issuer's view.
 ///
 /// An opinion carried from the application ends the borrowing at the landing itself.
 /// ´claim:borrowed:a-carried-opinion-ends-the-borrowing-at-landing´
@@ -595,11 +596,11 @@ async fn an_opinion_carried_from_the_application_ends_the_borrowing_at_landing(p
     assert_eq!(borrowed_handle(&schema, viewer(account)).await, None);
 }
 
-/// Whatever an applicant stages — the vouch-back included — the approver's
+/// Whatever an applicant stages — the vouch-back included — the issuer's
 /// view holds until landing: the probe is never consulted before it.
 ///
-/// An applicant keeps their approver's view whatever they have staged and signed.
-/// ´claim:borrowed:an-applicant-keeps-the-approvers-view´
+/// An applicant keeps their issuer's view whatever they have staged and signed.
+/// ´claim:borrowed:an-applicant-keeps-the-issuers-view´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_applicants_staged_opinion_does_not_end_the_borrowing(pool: PgPool) {
     seed_genesis_moderator(&pool, "genesis_mod").await;
@@ -650,7 +651,7 @@ async fn the_vouch_back_ends_the_borrowing(pool: PgPool) {
     assert_eq!(me["me"]["hasReciprocated"], true);
     assert_eq!(me["me"]["invitedBy"]["id"], mira.to_string());
     assert!(
-        store::inviter_of(&rig.pool, account)
+        store::admitting_voucher_of(&rig.pool, account)
             .await
             .expect("query")
             .is_some()

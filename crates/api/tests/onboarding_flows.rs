@@ -145,7 +145,7 @@ impl Rig {
     }
 
     async fn application_of(&self, account: Uuid) -> store::Application {
-        store::latest_application_for(&self.pool, account)
+        store::current_application_for(&self.pool, account)
             .await
             .expect("query")
             .expect("application")
@@ -720,10 +720,13 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
         .await
         .expect("query")
         .expect("approvable");
+    store::record_vouch(&rig.pool, application.id, inviter, "act:addr:stub:0:opinion")
+        .await
+        .expect("the vouch the approval would record");
     let approved = rig.application_of(account).await;
 
     let stage =
-        || onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, &approved, None);
+        || onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id);
     let (first, second) = tokio::join!(stage(), stage());
     let (first, second) = (first.expect("stages"), second.expect("stages"));
 
@@ -787,9 +790,12 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
         .await
         .expect("query")
         .expect("approvable");
+    store::record_vouch(&rig.pool, application.id, inviter, "act:addr:stub:0:opinion")
+        .await
+        .expect("the vouch the approval would record");
     let approved = rig.application_of(account).await;
     let admission =
-        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, &approved, None)
+        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id)
             .await
             .expect("stages");
 
@@ -827,7 +833,7 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
     .expect("stages chained");
 
     let again =
-        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, &approved, None)
+        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id)
             .await
             .expect("finds admission");
     assert_eq!(again.id, admission.id);
@@ -1021,7 +1027,7 @@ async fn an_approved_application_keeps_holding_the_slot(pool: PgPool) {
     ));
 
     assert!(
-        store::land_account(&rig.pool, account)
+        store::land_path_directly(&rig.pool, application.id)
             .await
             .expect("lands")
     );
