@@ -993,10 +993,13 @@
         ],
         "explore.result.sub": [
           "2",
-          "3"
+          "3",
+          "1"
         ],
         "explore.result.value": [
-          "4"
+          "4",
+          "1",
+          "2"
         ],
         "explore.seam": [],
         "explore.seam.label": [],

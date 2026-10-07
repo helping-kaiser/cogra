@@ -207,13 +207,15 @@ Object.assign(FLOW_MARKERS, {
   ],
   /* V1.0's rows only (readme §13, the V1.0 scope cut): posts, a comment, a
      tag. The rows number in reading order, the bar follows them, and the tag
-     row keeps the last number, where the tag round appended it. */
+     row keeps the last number, where the tag round appended it. The `order`
+     chip draws the rows once per order (ruling 24), and each copy of a row
+     keeps that row's number. */
   ExploreSearch: [
-    { n: 11, find: ">saltmaps<", tag: "button" },
+    { n: 11, find: ">saltmaps<", tag: "button", all: true },
     ...searchShell("@sol salt", 6),
-    { n: 4, find: "Salt maps of the coast road", tag: "button" },
-    { n: 4, find: "First try at a rubbing", tag: "button" },
-    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button" },
+    { n: 4, find: "Salt maps of the coast road", tag: "button", all: true },
+    { n: 4, find: "First try at a rubbing", tag: "button", all: true },
+    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button", all: true },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },

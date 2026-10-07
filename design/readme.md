@@ -693,7 +693,10 @@ cards*) is never matched. `@handle <text>`
 scopes the query to one person's work, their comments found through the
 titles of what they answer; `#tag <text>` scopes it inside a tag.
 Explore searches the graph, in its ranked tiers (§13, *The search
-rulings*); History searches the reader's seen-list, newest first by
+rulings*) — under Newest, the reader's choice or what the search serves
+before the ranker exists, the tiers stay and each runs newest first, with
+no seam, every row's age on its edge and a tag row bare (§13, *The five
+ordered draws*); History searches the reader's seen-list, newest first by
 first seeing. A query that finds nothing says so in the list's place and
 offers the way back (`ExploreNone`, `HistoryNone`).
 
@@ -9413,6 +9416,13 @@ wait for jakob's review (copy-voice marks each).
   out, was canceled or already applied, and for a link the app does not
   know — `This link doesn't work anymore`, a body naming no address, and
   `Sign in` holding no link.
+- **Search under Newest** (item 24; the search packet's SG-5).
+  `ExploreSearch` gains the `order` chip: `ranked` is the board as it
+  stood, `newest` the same four results by time — no seam, full matches
+  still first, each row's age on its value edge in the one ladder, the tag
+  row bare. Newest is also the order before the ranker exists, so the
+  interim reads exactly this; when the split ships is the implementation's
+  sequencing.
 
 ---
 
