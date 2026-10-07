@@ -84,7 +84,7 @@ ever what a record *is* — that is always the L1 record itself.
 | Android app | Kotlin + Jetpack Compose ([android.md](android.md)) |
 | Web app | Next.js + React + TypeScript ([web.md](web.md)) |
 | API contract | exported `schema.graphql` → Apollo Kotlin and GraphQL Code Generator codegen |
-| Ranking core | `ranker` crate — one implementation for backend, miner, and device |
+| Ranking core | `ranker` crate — one implementation for the ranker container, miner, and device |
 | Local dev | Docker Compose |
 | CI | GitHub Actions |
 
@@ -100,7 +100,7 @@ One repository holds everything: `crates/` (the Rust backend),
 - **One docs source.** The design docs govern backend and frontend
   alike; a second repo would mean copies that drift.
 - **The `ranker` crate is a path dependency** for all three of its
-  consumers — backend, miner container, Android bindings
+  consumers — ranker container, delegated miner, Android bindings
   ([miner-api.md "Transport"](miner-api.md#transport)) — with no
   publishing step and no cross-repo versioning.
 - **Contract changes are atomic.** A spec change, its backend
@@ -235,10 +235,10 @@ contract pinned in [miner-api.md](miner-api.md). No IO, no
 connection pools, no GraphQL. It consumes raw L1 edge records and
 folds per-author net stances itself
 ([feed-ranking.md](../primitive/feed-ranking.md)). One
-implementation serves all three transport stages
-([miner-api.md "Transport"](miner-api.md#transport)): linked into
-`api` for the backend-direct stage, wrapped by the miner
-container, and bound into the Android app via UniFFI.
+implementation serves every deployment
+([miner-api.md "Transport"](miner-api.md#transport)): wrapped by the
+standalone ranker container (never run inside `api`), which a
+delegated miner also uses, and bound into the Android app via UniFFI.
 
 ### `android/`
 
@@ -357,15 +357,17 @@ user count
    returns the slice as raw L1 edge records per the slice contract
    ([miner-api.md](miner-api.md)), together with the viewer's
    seen-list.
-2. **Rank** — the client (or a delegated miner) filters and ranks
-   the slice with the `ranker` core.
+2. **Rank** — the client, the server's ranker container, or a
+   delegated miner filters and ranks the slice with the `ranker`
+   core.
 3. **Render** — the client fetches display content for the top-N
    items and batches viewed IDs back to the view log on natural
    checkpoints.
 
-The backend never ranks; ranking and filtering run on the viewing
-user's side, client by default, an optional delegate miner in the
-future, both running the same algorithm.
+The backend never ranks; ranking and filtering run in the standalone
+ranker — on the viewing user's device by default, or in the server's
+own ranker container, or at a delegated miner — all running the same
+algorithm.
 
 ---
 
