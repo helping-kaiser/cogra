@@ -92,9 +92,16 @@ mutation ConfirmPasswordReset($input: ConfirmPasswordResetInput!) {
   }
 }
 
+# A wrong password and a malformed address refuse as userErrors; a spent
+# account mail budget is a transport-tier RATE_LIMITED.
 mutation RequestEmailChange($input: RequestEmailChangeInput!) {
   requestEmailChange(input: $input) {
-    ok
+    pendingEmailChange {
+      newEmail
+    }
+    userErrors {
+      ...UserErrorFields
+    }
   }
 }
 
