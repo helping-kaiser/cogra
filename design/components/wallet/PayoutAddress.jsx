@@ -70,7 +70,7 @@ export function PayoutAddressRow({ address, onOpen }) {
    and the caption are unchanged, because the reason they are shaped that way
    does not depend on what is behind them. */
 
-export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", changeBusy = false, changeBusyLabel, caption, bare = false, node }) {
+export function PayoutAddress({ address, label = "Payouts land at", onCopy, copyLabel = "Copy the address", onChange, changeLabel = "Change", changeBusy = false, changeBusyLabel, caption, bare = false, node, nodeKey }) {
   return (
     <div
       style={{
@@ -86,6 +86,7 @@ export function PayoutAddress({ address, label = "Payouts land at", onCopy, copy
             }),
       }}
       data-node={node}
+      data-node-key={nodeKey}
     >
       <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
         <span

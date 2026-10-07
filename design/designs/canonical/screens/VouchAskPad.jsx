@@ -20,8 +20,10 @@
    which is what this board's `scanExempt` line records.
 
    REGISTERED under the `vouchAsk` prefix (design ⇄ impl seam 078), the ask
-   beneath named as on `VouchAsk`. The open pad's own parts and the wash stay
-   unnamed for now: no registered board names a pad's anatomy or a scrim yet. */
+   beneath named as on `VouchAsk`. The open pad carries `StanceControl`'s pad
+   anatomy (jakob 2026-10-07, ruling 40) under `vouchAsk.ask.stance.pad`, the
+   approval's two lines as its `note`; the wash stays unnamed — no registered
+   board names a scrim yet. */
 export const NODE = "vouchAsk";
 export function Screen() {
   return (
@@ -47,7 +49,7 @@ export function Screen() {
               help={HOW_VOUCHING_WORKS_HELP}
               defaultOpen
               defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
-              padNote={<ApprovePadNote handle="@noor" />}
+              padNote={<ApprovePadNote handle="@noor" node="note" />}
             />
           </div>
         </Card>

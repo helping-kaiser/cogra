@@ -627,12 +627,17 @@ export function useSettled(value, ms = SETTLE_MS) {
   return settled;
 }
 
-function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style, onOpenHistory }) {
+/* NAMED ONLY WHERE THE PAD IS (design ⇄ impl seam 002, the pad tails, jakob
+   2026-10-07 ruling 40): given a `node`, the block is that readout — the
+   pad's `current`, `pick` or `landing` — and, when it reads as a readout and
+   not a sentence, names its `label`, `face` and `exact` pair, the anchor's
+   own words for the face and the figure. */
+function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style, onOpenHistory, node }) {
   // Spoken once the readout rests (the K13 round); drawn at once.
   const said = useSettled(sentence !== undefined ? sentence : spoken);
   if (sentence !== undefined) {
     return (
-      <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)", ...style }}>
+      <p style={{ margin: 0, fontSize: "var(--text-body-small)", color: "var(--text-secondary)", ...style }} data-node={node}>
         <span aria-hidden="true">{sentence}</span>
         <span style={SR_ONLY}>{said}</span>
       </p>
@@ -645,7 +650,7 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
     color: "var(--text-secondary)",
   };
   return (
-    <div style={{ display: "flex", flexDirection: "column", ...style }}>
+    <div style={{ display: "flex", flexDirection: "column", ...style }} data-node={node}>
       {onOpenHistory ? (
         /* THE LABEL LINE IS THE DOOR, and it is drawn as one. A readout that
            opened a surface without saying so would be a door nobody can see, so
@@ -659,18 +664,23 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
           onClick={onOpenHistory}
           className="cg-state cg-focus cg-hit"
           style={{ ...labelInk, alignSelf: "flex-start", background: "none", border: 0, padding: 0, cursor: "pointer", fontFamily: "var(--font-sans)", textAlign: "left", textDecoration: "underline" }}
+          data-node={node && "label"}
         >
           {label}
           {HISTORY_DOOR_TAIL}
         </button>
       ) : (
-        <span aria-hidden="true" style={labelInk}>
+        <span aria-hidden="true" style={labelInk} data-node={node && "label"}>
           {label}
         </span>
       )}
       <span aria-hidden="true" style={{ display: "inline-flex", alignItems: "baseline", gap: "var(--space-2)" }}>
-        <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }}>{emoji}</span>
-        <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }}>{pair}</span>
+        <span style={{ fontSize: big ? "var(--text-title-large)" : "var(--text-title-medium)", lineHeight: 1.2 }} data-node={node && "face"}>
+          {emoji}
+        </span>
+        <span className="cg-exact" style={{ fontSize: "var(--text-body-small)", color: big ? "var(--on-surface)" : "var(--text-secondary)", whiteSpace: "nowrap" }} data-node={node && "exact"}>
+          {pair}
+        </span>
       </span>
       <span style={SR_ONLY}>{said}</span>
     </div>
@@ -678,12 +688,12 @@ function ReadoutBlock({ label, emoji, pair, spoken, sentence, big = false, style
 }
 
 /** The current opinion and the pick — everything that sits above the field. */
-export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style, onOpenHistory }) {
+export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_NAMES, style, onOpenHistory, node }) {
   const anchor = nearestAnchor(pick);
   const { anchorWord } = readoutWords(names);
   return (
-    <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }}>
-      <ReadoutBlock {...standingParts(bundle, targetLabel, names)} onOpenHistory={onOpenHistory} />
+    <div aria-live="polite" style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)", ...style }} data-node={node}>
+      <ReadoutBlock {...standingParts(bundle, targetLabel, names)} onOpenHistory={onOpenHistory} node={node && "current"} />
       {/* The pick's own readout — above the field, never under the knob, because a
           thumb on the control covers exactly where feedback would otherwise sit. */}
       <ReadoutBlock
@@ -692,16 +702,18 @@ export function StanceStanding({ pick, bundle, targetLabel, names = STANCE_AXIS_
         emoji={anchor.emoji}
         pair={formatStancePair(pick)}
         spoken={`${PICK_LABEL}: ${anchorWord ? `${anchor.label}, ` : ""}${formatStanceWords(pick, names)}`}
+        node={node && "pick"}
       />
     </div>
   );
 }
 
-/** The landing — the one readout that sits below the field. */
-export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, style }) {
+/** The landing — the one readout that sits below the field. Given a `node`,
+ *  the readout itself carries it; the live region around it stays unnamed. */
+export function StanceLandingLine({ landing, names = STANCE_AXIS_NAMES, style, node }) {
   return (
     <div aria-live="polite" style={style}>
-      <ReadoutBlock {...landingParts(landing, names)} />
+      <ReadoutBlock {...landingParts(landing, names)} node={node} />
     </div>
   );
 }

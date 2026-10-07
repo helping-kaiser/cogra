@@ -10,8 +10,10 @@
 
    REGISTERED under the feed's own prefix (design ⇄ impl seam 086), the shell
    beneath named as on `VouchBack` and the stance control `stance`, as on
-   `VouchAskPad`. The open pad's own parts and the wash stay unnamed for now: no
-   registered board names a pad's anatomy or a scrim yet. */
+   `VouchAskPad`. The open pad carries `StanceControl`'s pad anatomy (jakob
+   2026-10-07, ruling 40) under `feed.vouchCard.stance.pad`, the coaching
+   lines as its `note`; the wash stays unnamed — no registered board names a
+   scrim yet. */
 export const NODE = "feed";
 export function Screen() {
   return (
@@ -43,7 +45,7 @@ export function Screen() {
                 defaultPick={{ pDirected: 0.1, pInterest: 0.1 }}
                 padInset={80}
                 padNote={
-                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }} data-node="note">
                     <PadLine>Your vouch back. The pad is how you shape what reaches you — for or against, and how much.</PadLine>
                     <PadLine>
                       Later, tap the small face under a post to open this — press and hold it instead and a gentle{" "}
