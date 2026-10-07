@@ -565,6 +565,78 @@ pub async fn record_relaying(pool: &PgPool, id: Uuid) -> Result<(), StagedError>
     .await
 }
 
+/// Holds an approval witness instead of relaying it: the write moves to
+/// `relaying` — from the device's side the backend now drives it — with
+/// the witness stored beside it until the settlement pass relays it. The
+/// relay holds the admission Registration's leg 2 this way while its
+/// address's funding is unsettled (auth.md "Funding"). A retry replaces
+/// the stored witness.
+pub async fn hold_approval(pool: &PgPool, id: Uuid, signature: &[u8]) -> Result<(), StagedError> {
+    let updated = sqlx::query!(
+        "UPDATE staged_writes
+         SET state = 'relaying', held_approval_signature = $2, updated_at = NOW()
+         WHERE id = $1 AND state IN ('awaiting_approval', 'relaying')",
+        id,
+        signature,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected();
+    if updated == 1 {
+        return Ok(());
+    }
+    Err(missed_transition(pool, id, "awaiting_approval or relaying").await)
+}
+
+/// A held approval whose funding has settled: ready to relay.
+#[derive(Debug, Clone)]
+pub struct HeldApproval {
+    pub id: Uuid,
+    pub approval_signature: Vec<u8>,
+}
+
+/// Every held approval whose author's admission funding has settled —
+/// all of them, not only those this pass settled, so a hold stored just
+/// after a pass read the settlement is picked up by the next one. Writes
+/// the GC expired are left alone: their act can no longer land.
+pub async fn held_approvals_ready(pool: &PgPool) -> Result<Vec<HeldApproval>, StagedError> {
+    Ok(sqlx::query!(
+        r#"SELECT s.id, s.held_approval_signature AS "signature!"
+           FROM staged_writes s
+           JOIN auth_admission_fundings f ON f.address = s.author
+           WHERE s.state = 'relaying'
+             AND s.held_approval_signature IS NOT NULL
+             AND f.settled_at IS NOT NULL
+           ORDER BY s.updated_at"#,
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| HeldApproval {
+        id: r.id,
+        approval_signature: r.signature,
+    })
+    .collect())
+}
+
+/// Clears a relayed hold — only the witness that was relayed, so a retry
+/// that replaced it in the meantime keeps its own.
+pub async fn release_held_approval(
+    pool: &PgPool,
+    id: Uuid,
+    signature: &[u8],
+) -> Result<(), StagedError> {
+    sqlx::query!(
+        "UPDATE staged_writes SET held_approval_signature = NULL, updated_at = NOW()
+         WHERE id = $1 AND held_approval_signature = $2",
+        id,
+        signature,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
 /// One staged write promoted by an ingested epoch — the confirm hook for
 /// the flows built on top (landing an applicant, promoting display rows).
 #[derive(Debug, Clone)]

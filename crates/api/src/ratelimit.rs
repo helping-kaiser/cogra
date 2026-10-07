@@ -3,7 +3,8 @@
 //! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
 //! plus the login backoff (auth.md "Rate limiting"), the email-change
 //! mail budget, the media upload budget, and the per-account signing
-//! budget spent at prepare (api-spec.md "Conventions").
+//! budget spent at prepare (api-spec.md "Conventions") with the voucher's
+//! admission funding budget priced beside it.
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
 //! survive restarts and hold across instances. Auth keys that name an
@@ -47,6 +48,7 @@ pub mod scope {
     pub const SIGN_CLAIM: &str = "sign_claim";
     pub const SIGN_APPROVAL: &str = "sign_approval";
     pub const SIGN_ANY: &str = "sign_any";
+    pub const ADMISSION_FUNDING_ACCOUNT: &str = "admission_funding_account";
 }
 
 /// One fixed-window budget: at most `limit` attempts per `window_secs`.
@@ -113,6 +115,17 @@ pub struct SigningBudget {
     pub approval: Window,
     /// Every staged act, whatever its class.
     pub any: Window,
+    /// The voucher's admission funding budget — not a signing class: it
+    /// counts community-fund outflows, spent only by approval entries
+    /// whose decision claims a fresh funding row (a vouch on an
+    /// already-funded applicant costs the fund nothing and spends none).
+    /// Priced with the approval batch, whole, before anything is staged
+    /// or burned. Per voucher, never instance-global: a global cap is one
+    /// an attacker could exhaust to stall every admission. The default,
+    /// 20 a day, sits well above inviting at a human pace (economics.md
+    /// §7.2) and below `approval`, so it is the scope that binds a bulk
+    /// voucher.
+    pub admission_funding: Window,
 }
 
 impl SigningBudget {
@@ -125,6 +138,7 @@ impl SigningBudget {
         claim: Window::GENEROUS,
         approval: Window::GENEROUS,
         any: Window::GENEROUS,
+        admission_funding: Window::GENEROUS,
     };
 
     fn window(&self, class: SigningClass) -> Window {
@@ -170,6 +184,10 @@ impl Default for SigningBudget {
             },
             any: Window {
                 limit: 2000,
+                window_secs: DAY,
+            },
+            admission_funding: Window {
+                limit: 20,
                 window_secs: DAY,
             },
         }
@@ -309,6 +327,10 @@ impl RateLimitConfig {
             ("RATE_LIMIT_SIGN_CLAIM", &mut cfg.signing.claim.limit),
             ("RATE_LIMIT_SIGN_APPROVAL", &mut cfg.signing.approval.limit),
             ("RATE_LIMIT_SIGN_ANY", &mut cfg.signing.any.limit),
+            (
+                "RATE_LIMIT_ADMISSION_FUNDING",
+                &mut cfg.signing.admission_funding.limit,
+            ),
         ] {
             if let Ok(raw) = std::env::var(var) {
                 *limit = raw
@@ -357,6 +379,20 @@ pub async fn spend_signing(
     account: Uuid,
     acts: &[(SigningClass, usize)],
 ) -> Result<bool, sqlx::Error> {
+    spend_signing_and_funding(pool, budget, account, acts, 0).await
+}
+
+/// [`spend_signing`] for an approval batch, which also spends
+/// `fresh_fundings` from the voucher's admission funding budget — in the
+/// same all-or-nothing charge, so a batch either fits both budgets or
+/// spends neither.
+pub async fn spend_signing_and_funding(
+    pool: &PgPool,
+    budget: &SigningBudget,
+    account: Uuid,
+    acts: &[(SigningClass, usize)],
+    fresh_fundings: usize,
+) -> Result<bool, sqlx::Error> {
     let key = account.to_string();
     let mut per_class: Vec<(SigningClass, i32)> = Vec::new();
     for &(class, n) in acts {
@@ -369,7 +405,8 @@ pub async fn spend_signing(
     let total = per_class
         .iter()
         .fold(0i32, |sum, (_, n)| sum.saturating_add(*n));
-    if total == 0 {
+    let fresh_fundings = i32::try_from(fresh_fundings).unwrap_or(i32::MAX);
+    if total == 0 && fresh_fundings == 0 {
         return Ok(true);
     }
     let charge = |scope: &'static str, window: Window, n: i32| store::Charge {
@@ -383,7 +420,16 @@ pub async fn spend_signing(
         .iter()
         .map(|&(class, n)| charge(class.scope(), budget.window(class), n))
         .collect();
-    charges.push(charge(scope::SIGN_ANY, budget.any, total));
+    if total > 0 {
+        charges.push(charge(scope::SIGN_ANY, budget.any, total));
+    }
+    if fresh_fundings > 0 {
+        charges.push(charge(
+            scope::ADMISSION_FUNDING_ACCOUNT,
+            budget.admission_funding,
+            fresh_fundings,
+        ));
+    }
     store::charge_all_within(pool, &charges).await
 }
 

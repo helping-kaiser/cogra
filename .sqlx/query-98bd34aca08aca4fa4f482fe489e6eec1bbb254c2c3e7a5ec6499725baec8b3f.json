@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT address, account_id, triggered_by, amount_micro, request_key, ticket,\n                requested_at, attempts, settled_at, failed_at\n         FROM auth_admission_fundings WHERE address = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "address",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "account_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "triggered_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "amount_micro",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "request_key",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
+        "name": "ticket",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "requested_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "attempts",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 8,
+        "name": "settled_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 9,
+        "name": "failed_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "98bd34aca08aca4fa4f482fe489e6eec1bbb254c2c3e7a5ec6499725baec8b3f"
+}

@@ -97,7 +97,6 @@ impl Rig {
         let ctx = api::schema::ApiContext {
             pool: pool.clone(),
             boundary: api::l1::StandInBoundary(standin.clone()),
-            funding: standin,
             auth: auth.clone(),
             mailer: mailer.clone() as Arc<dyn api::mailer::Mailer>,
             web_origin: api::mailer::WebOrigin("http://localhost:3000".into()),

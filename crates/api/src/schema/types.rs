@@ -27,8 +27,6 @@ use postgres_store::{
 };
 use uuid::Uuid;
 
-use l1_standin::StandIn;
-
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
@@ -444,7 +442,8 @@ impl UserError {
             OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
             OnboardingError::WriteRule { .. }
             | OnboardingError::BatchWriteRule { .. }
-            | OnboardingError::SigningBudget => {
+            | OnboardingError::SigningBudget
+            | OnboardingError::FundingBudget => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
             OnboardingError::SignatureInvalid(_) => {
@@ -613,7 +612,9 @@ pub enum StagedWriteState {
     /// The sealed act is back and awaits the device's approval witness.
     AwaitingApproval,
     /// Approved and submitted for ordering; the backend drives retries
-    /// across epoch boundaries.
+    /// across epoch boundaries — including relaying the approval of an
+    /// admission Registration whose funding has not settled yet, once it
+    /// does.
     Relaying,
     /// The accepted act is in the mirror and the staged effects are
     /// promoted.
@@ -1453,11 +1454,9 @@ impl User {
         };
         if application.approved_at.is_some() && application.landed_at.is_none() {
             let boundary = ctx.data::<StandInBoundary>()?;
-            let funding = ctx.data::<StandIn>()?;
             let cfg = ctx.data::<OnboardingConfig>()?;
             if let Err(e) =
-                onboarding::ensure_admission_staged(pool, boundary, funding, cfg, &application)
-                    .await
+                onboarding::ensure_admission_staged(pool, boundary, cfg, &application, None).await
             {
                 tracing::error!(error = %e, "staged-registration repair failed");
             }

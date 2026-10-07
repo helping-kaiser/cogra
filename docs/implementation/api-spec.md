@@ -528,7 +528,7 @@ enum ErrorCode {
   RESET_TOKEN_INVALID          # password-reset token invalid, expired, or used
   DELETION_TOKEN_INVALID       # the account-deletion link is unknown, superseded, cancelled, expired, or spent
   REFRESH_TOKEN_INVALID        # refresh token invalid, expired, or reuse-detected
-  WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency, W2 stamps, or the signing budget
+  WRITE_RULE_FAILED            # the prepare pre-check: W1 solvency, W2 stamps, or the signing budget (with an approval's admission funding budget)
   STAGED_WRITE_EXPIRED         # the staged write was garbage-collected unlanded
   SIGNATURE_INVALID            # a submitted signature does not verify the record
   CHALLENGE_EXPIRED            # the key-backup upload challenge is unknown, expired, or spent
@@ -2544,7 +2544,11 @@ These bind every mutation below.
   already signed is never dropped by a transient limit. The
   thresholds are operational, sized so no one acting in earnest
   meets them
-  ([development.md](development.md#environment-variables)).
+  ([development.md](development.md#environment-variables)). An
+  approval batch also spends the inviter's **admission funding
+  budget** — one unit per entry that funds a fresh address, none for
+  an applicant already funded — in the same all-or-nothing charge,
+  with the same refusal.
 - **The viewer is the actor; `actAs` names a Collective acting
   through them.** No mutation takes an author argument — the
   authenticated viewer in the execution context initiates every
@@ -2693,7 +2697,9 @@ type PreparePayload {
  submitted; the backend awaits the host-sealed verified act.
  AWAITING_APPROVAL: the sealed act is back and awaits the device's
  approval witness. RELAYING: approved and submitted for ordering;
- the backend drives retries across epoch boundaries. LANDED: the
+ the backend drives retries across epoch boundaries — including an
+ admission Registration whose funding has not settled, whose
+ approval it relays once the burn settles. LANDED: the
  accepted act is in the mirror and the staged effects are
  promoted. EXPIRED: garbage-collected without landing — nothing
  existed on the graph."
@@ -4372,10 +4378,10 @@ type ResendVerificationEmailPayload { ok: Boolean! }
 
 "Attach the device-minted actor identity to the viewer's account
  — the key ceremony's server half (auth.md §Application).
- Replaceable while the viewer's application is unapproved;
- FORBIDDEN once approval has bound the address. An address binds
- at most one account: a key already bound to a different account
- refuses with an ACTOR_KEY_IN_USE userError."
+ Replaceable until the address is funded; FORBIDDEN once the
+ admission burn has bound it. An address binds at most one
+ account: a key already bound to a different account refuses with
+ an ACTOR_KEY_IN_USE userError."
 input AttachActorKeyInput {
   "The device-generated actor public key (the key never leaves the
    device; this is its public half)."
@@ -4407,8 +4413,13 @@ type StageApplicantPayload { application: Application }
  per applicant or in batch, each carrying the stance values the
  inviter picks for it. Runs the admission sequence backend-side —
  the funding burn, then the staged Registration — inside the
- approval, guarded so a retried or concurrent approval can never
- double-fund; landing waits only on the Registration confirming.
+ approval, guarded so a retried or concurrent approval, on any
+ path, can never double-fund: the burn is requested once per
+ address and settles asynchronously, and the Registration's relay
+ waits for it. Landing waits only on the Registration confirming.
+ An entry that funds a fresh address spends the inviter's admission
+ funding budget, priced with the batch: a batch it cannot carry is
+ refused whole with WRITE_RULE_FAILED before anything is burned.
  Returns the inviter's own Opinion records to sign — the vouch is
  the inviter's signature, not a server write. Approval requires an
  approvable application — email verified and key attached; an

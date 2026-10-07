@@ -15,7 +15,6 @@ pub mod types;
 use std::sync::Arc;
 
 use async_graphql::{EmptySubscription, Schema};
-use l1_standin::StandIn;
 use postgres_store::PgPool;
 
 pub use mutation::Mutation;
@@ -35,9 +34,6 @@ pub type ApiSchema = Schema<Query, Mutation, EmptySubscription>;
 pub struct ApiContext {
     pub pool: PgPool,
     pub boundary: StandInBoundary,
-    /// The stand-in burn primitive the admission funding uses —
-    /// replaced at the swap along with the crate (roadmap.md).
-    pub funding: StandIn,
     pub auth: AuthConfig,
     pub mailer: Arc<dyn Mailer>,
     pub web_origin: WebOrigin,
@@ -137,7 +133,6 @@ pub fn build_with(ctx: ApiContext, budgets: QueryBudgets) -> ApiSchema {
         .data(loaders.payload_states)
         .data(ctx.pool)
         .data(ctx.boundary)
-        .data(ctx.funding)
         .data(ctx.auth)
         .data(ctx.mailer)
         .data(ctx.web_origin)

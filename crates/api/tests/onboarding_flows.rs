@@ -363,10 +363,11 @@ async fn verification_tokens_are_single_purpose(pool: PgPool) {
 /// the ceremony — and re-attaching the account's own current key is the
 /// crash-healing repair path, never a conflict with itself. A member
 /// account cannot attach at all, since the genesis path owns its key.
-/// Approval binds the address: from then on the attach is immutable.
+/// Approval funds the address, and the funding binds it: from then on the
+/// attach is immutable.
 ///
-/// The ceremony's outputs must cohere before anything is stored, re-attaching the account's own current key is the crash-healing repair rather than a conflict, and approval binds the address for good.
-/// ´claim:onboarding:the-attach-guards-hold-until-approval-binds´
+/// The ceremony's outputs must cohere before anything is stored, re-attaching the account's own current key is the crash-healing repair rather than a conflict, and the funding approval triggers binds the address for good.
+/// ´claim:onboarding:the-attach-guards-hold-until-funding-binds´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_attach_guards_hold(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -438,7 +439,6 @@ async fn the_attach_guards_hold(pool: PgPool) {
     onboarding::approve_applicants(
         &rig.pool,
         &rig.boundary,
-        &rig.standin,
         &rig.cfg,
         &api::ratelimit::SigningBudget::UNLIMITED,
         inviter,
@@ -617,7 +617,6 @@ async fn approval_guards_hold(pool: PgPool) {
         onboarding::approve_applicants(
             &rig.pool,
             &rig.boundary,
-            &rig.standin,
             &rig.cfg,
             &api::ratelimit::SigningBudget::UNLIMITED,
             who,
@@ -696,15 +695,16 @@ async fn approval_guards_hold(pool: PgPool) {
 }
 
 /// The approving mutation and the applicant's status poll both run
-/// `ensure_admission_staged` after the approval mark is set; the row
-/// lock serializes them so the burn credits once and one Registration
-/// stages (auth.md "Approval and landing" step 1).
+/// `ensure_admission_staged` after the approval mark is set; the account
+/// lock serializes them so the burn is requested once — one burn on the
+/// realization, credited once — and one Registration stages (auth.md
+/// "Funding").
 ///
 /// The approval mark is set directly, because the race under test starts
 /// after it — between the approving request's staging and the poll's
 /// repair. The loser finds the winner's staged row, and nothing doubles.
 ///
-/// The approving mutation and the applicant's poll are serialized by the row lock, so the burn credits once and one Registration stages however they race.
+/// The approving mutation and the applicant's poll are serialized by the account lock, so the burn credits once and one Registration stages however they race.
 /// ´claim:onboarding:the-admission-burn-credits-once-under-a-race´
 #[sqlx::test(migrations = "../../migrations")]
 async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
@@ -722,15 +722,8 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
         .expect("approvable");
     let approved = rig.application_of(account).await;
 
-    let stage = || {
-        onboarding::ensure_admission_staged(
-            &rig.pool,
-            &rig.boundary,
-            &rig.standin,
-            &rig.cfg,
-            &approved,
-        )
-    };
+    let stage =
+        || onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, &approved, None);
     let (first, second) = tokio::join!(stage(), stage());
     let (first, second) = (first.expect("stages"), second.expect("stages"));
 
@@ -754,6 +747,16 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
     assert_eq!(
         (balance.burned_total * 1e6).round() as i64,
         rig.cfg.admission_burn_micro
+    );
+    let burns: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM l1_admission_burns WHERE address = $1")
+            .bind(&address)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("count");
+    assert_eq!(
+        burns, 1,
+        "one burn on the realization, not one credit of two"
     );
 }
 
@@ -785,15 +788,10 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
         .expect("query")
         .expect("approvable");
     let approved = rig.application_of(account).await;
-    let admission = onboarding::ensure_admission_staged(
-        &rig.pool,
-        &rig.boundary,
-        &rig.standin,
-        &rig.cfg,
-        &approved,
-    )
-    .await
-    .expect("stages");
+    let admission =
+        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, &approved, None)
+            .await
+            .expect("stages");
 
     let address = store::actor_identity(&rig.pool, account)
         .await
@@ -828,15 +826,10 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
     .await
     .expect("stages chained");
 
-    let again = onboarding::ensure_admission_staged(
-        &rig.pool,
-        &rig.boundary,
-        &rig.standin,
-        &rig.cfg,
-        &approved,
-    )
-    .await
-    .expect("finds admission");
+    let again =
+        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, &approved, None)
+            .await
+            .expect("finds admission");
     assert_eq!(again.id, admission.id);
     assert_ne!(again.id, chained.id);
     let staged_rows: i64 = sqlx::query_scalar(
@@ -884,7 +877,6 @@ async fn a_verified_application_stays_approvable_past_the_links_expiry(pool: PgP
     let prepared = onboarding::approve_applicants(
         &rig.pool,
         &rig.boundary,
-        &rig.standin,
         &rig.cfg,
         &api::ratelimit::SigningBudget::UNLIMITED,
         inviter,
@@ -1007,7 +999,6 @@ async fn an_approved_application_keeps_holding_the_slot(pool: PgPool) {
     onboarding::approve_applicants(
         &rig.pool,
         &rig.boundary,
-        &rig.standin,
         &rig.cfg,
         &api::ratelimit::SigningBudget::UNLIMITED,
         inviter,
@@ -1079,7 +1070,6 @@ async fn a_concurrent_reject_and_approve_resolve_to_one(pool: PgPool) {
         let approve = onboarding::approve_applicants(
             &rig.pool,
             &rig.boundary,
-            &rig.standin,
             &rig.cfg,
             &api::ratelimit::SigningBudget::UNLIMITED,
             inviter,
@@ -1126,6 +1116,13 @@ async fn a_concurrent_reject_and_approve_resolve_to_one(pool: PgPool) {
             ));
             assert_eq!(burned, 0.0, "no burn on the rejected side");
             assert_eq!(staged, 0, "nothing staged on the rejected side");
+            assert!(
+                store::admission_funding(&rig.pool, &address)
+                    .await
+                    .expect("query")
+                    .is_none(),
+                "no funding claimed on the rejected side, so the key stays replaceable"
+            );
         } else {
             assert!(matches!(
                 rejected,

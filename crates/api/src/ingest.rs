@@ -58,6 +58,8 @@ pub struct IngestOutcome {
     pub epochs: u64,
     pub promoted: Vec<staged::PromotedWrite>,
     pub promotion_failures: Vec<PromotionFailure>,
+    /// The admission settlement pass that rode this ingestion pass.
+    pub funding: crate::onboarding::SettlementOutcome,
 }
 
 /// Ingests every epoch published since the cursor, promoting staged
@@ -72,6 +74,13 @@ pub struct IngestOutcome {
 /// and its display rows into view. Every ingestion path runs it — the
 /// live loop, the dev CLI, and rebuilds alike — so a rebuild reconstructs
 /// the same L2 state the live path produced.
+///
+/// The admission settlement pass rides last, on every pass whether or
+/// not an epoch arrived (`onboarding::settle_admission_fundings`): a
+/// burn settles on the realization's clock, not on CoGra's ingestion,
+/// and a funding whose request was lost is re-requested there. Its own
+/// failures ride the outcome and are retried by the next pass — the
+/// mirror has already advanced by then.
 pub async fn ingest_pending<B: L1Boundary>(
     boundary: &B,
     pool: &PgPool,
@@ -112,6 +121,7 @@ pub async fn ingest_pending<B: L1Boundary>(
             tracing::info!(expired, reaped, "staged-write GC pass");
         }
     }
+    outcome.funding = crate::onboarding::settle_admission_fundings(boundary, pool).await;
     Ok(outcome)
 }
 

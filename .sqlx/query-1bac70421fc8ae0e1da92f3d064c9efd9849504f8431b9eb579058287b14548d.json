@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT s.id, s.held_approval_signature AS \"signature!\"\n           FROM staged_writes s\n           JOIN auth_admission_fundings f ON f.address = s.author\n           WHERE s.state = 'relaying'\n             AND s.held_approval_signature IS NOT NULL\n             AND f.settled_at IS NOT NULL\n           ORDER BY s.updated_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "signature!",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "1bac70421fc8ae0e1da92f3d064c9efd9849504f8431b9eb579058287b14548d"
+}

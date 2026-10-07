@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE actors a\n         SET actor_pubkey = $2, realization_address = $3\n         FROM user_credentials c\n         WHERE a.id = $1 AND c.actor_id = a.id\n           AND a.kind = 'user'\n           AND c.account_state = 'applicant'\n           AND NOT EXISTS(\n               SELECT 1 FROM auth_admission_fundings f\n               WHERE f.account_id = a.id OR f.address = a.realization_address\n           )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bytea",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9d8cce1eca3ccdd7d7d925277d9c12d825428785e3ca6093d8510bda53640806"
+}

@@ -339,6 +339,12 @@ CREATE TABLE staged_writes (
     deps_commitment     BYTEA,
     host_seal           BYTEA,
 
+    -- The approval witness of an admission Registration whose
+    -- funding has not settled: held here, with the write in
+    -- 'relaying', until the ingestion pass relays it (auth.md
+    -- "Approval and landing"), then cleared.
+    held_approval_signature BYTEA,
+
     -- The display rows this write owns while pending: node_id is the
     -- L2 UUID the payload envelope carries, recorded at prepare;
     -- pre_signed_at is the authoring instant the content dates from.
@@ -368,6 +374,11 @@ Lifecycle rules, driven off the ingestion pass:
   immediately: the salts cannot be re-fetched, so no approval can
   ever be produced — the device re-prepares under a fresh
   sequence value.
+- **An admission Registration's approval waits for its funding.**
+  While the address's admission burn has not settled, the approval
+  witness is held on the row and the write reads `relaying`; every
+  ingestion pass relays the held witnesses whose funding has
+  settled.
 
 The author-local act sequence `s_q`
 ([layer1-interface.md §8.1](../primitive/layer1-interface.md#8-kernel-data-model-authored-acts-projections-and-the-graph))
@@ -1298,6 +1309,37 @@ CREATE INDEX auth_applications_link_idx
     ON auth_applications (invite_link_id, approved_at);
 CREATE INDEX auth_applications_account_idx
     ON auth_applications (account_id);
+
+-- The admission funding of one realization address — the idempotent
+-- guard against funding it twice (auth.md "Approval and landing").
+-- Keyed by ADDRESS, not account: a burn is never removed, and an
+-- account deleted and re-registered with the same key must never be
+-- funded again, so the row outlives its account (no cascading FK).
+-- Only the inserter of the row requests the burn, across the seam,
+-- under request_key; every re-request reuses that key, so the
+-- realization burns once. The ingestion pass reads each pending
+-- burn's settlement and stamps settled_at — or failed_at when the
+-- realization refuses it for good, and the row still stands. A row
+-- for the account or its attached address binds the key
+-- (attachActorKey refuses from then on).
+CREATE TABLE auth_admission_fundings (
+    address       TEXT        PRIMARY KEY,
+    account_id    UUID        REFERENCES actors(id) ON DELETE SET NULL,
+    -- The voucher whose approval claimed the row (the funding budget's
+    -- audit); null for a repair or the genesis cast.
+    triggered_by  UUID        REFERENCES actors(id) ON DELETE SET NULL,
+    amount_micro  BIGINT      NOT NULL CHECK (amount_micro > 0),
+    request_key   UUID        NOT NULL UNIQUE,  -- the seam idempotency key
+    ticket        TEXT,                         -- the realization's ticket once requested
+    requested_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    attempts      INT         NOT NULL DEFAULT 0,
+    settled_at    TIMESTAMPTZ,
+    failed_at     TIMESTAMPTZ
+);
+CREATE INDEX auth_admission_fundings_pending_idx
+    ON auth_admission_fundings (requested_at) WHERE settled_at IS NULL AND failed_at IS NULL;
+CREATE INDEX auth_admission_fundings_account_idx
+    ON auth_admission_fundings (account_id) WHERE account_id IS NOT NULL;
 
 -- Key backups: client-encrypted signing-key blobs (auth.md §Key
 -- recovery). Ciphertext under the device-generated recovery code —

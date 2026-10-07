@@ -77,7 +77,15 @@ async fn main() -> anyhow::Result<()> {
         .context("running Postgres migrations")?;
     tracing::info!("PostgreSQL connected, migrations applied");
 
-    let standin = StandIn::new(pool.clone(), StandInConfig::default());
+    let settlement_delay_epochs: i64 = env_or("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS", "0")
+        .parse()
+        .context("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS must be a number of epochs")?;
+    let standin = StandIn::new(
+        pool.clone(),
+        StandInConfig::default()
+            .settling_after(settlement_delay_epochs)
+            .context("L1_STANDIN_SETTLEMENT_DELAY_EPOCHS")?,
+    );
     let boundary = StandInBoundary(standin.clone());
     let ingest_interval: u64 = env_or("L1_INGEST_INTERVAL_SECS", "2")
         .parse()
@@ -198,7 +206,6 @@ async fn main() -> anyhow::Result<()> {
     let schema = api::schema::build(ApiContext {
         pool,
         boundary,
-        funding: standin,
         auth: auth.clone(),
         mailer: Arc::new(DevMailer::new(
             std::env::var_os("DEV_MAILER_LOG").map(std::path::PathBuf::from),
