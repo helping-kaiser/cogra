@@ -154,6 +154,15 @@ export function raisedLayersForTests(): readonly CoverKind[] {
   return layers.map((layer) => layer.kind);
 }
 
+/**
+ * Test-only: hear every change to the raised layers the moment it happens —
+ * with no render in between to coalesce it, which is what a handover-gap
+ * probe has to see.
+ */
+export function onLayersChangeForTests(listener: () => void): () => void {
+  return subscribe(listener);
+}
+
 /** Test-only: how many readers are subscribed — the teardown-hygiene probe. */
 export function coverListenersForTests(): number {
   return listeners.size;

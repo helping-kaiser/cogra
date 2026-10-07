@@ -218,7 +218,9 @@ let device: { query: DevicePreference; link: DevicePreference } | null = null;
  * and `navigator.connection.saveData`, each firing `change` when it flips
  * (FeedCover.md:23; https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryList/change_event,
  * https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData).
- * jsdom ships neither, so the first call installs both.
+ * jsdom ships neither, so the first call installs both — call it before
+ * mounting, as `suppressesAutoplay({})` for a device that can ask but does
+ * not yet, for a test that flips the request while the page is up.
  */
 export function suppressesAutoplay({
   reducedMotion = false,
