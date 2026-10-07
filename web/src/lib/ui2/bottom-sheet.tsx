@@ -24,6 +24,7 @@ import {
 
 import { exitDuration, SHEET_OUT_MS } from "@/lib/ui/motion";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
+import { ScrollHostProvider } from "@/lib/ui/scroll-host";
 
 import { CoveringLayerProvider, useCoversSurface } from "./covering-layer";
 
@@ -291,8 +292,12 @@ export function BottomSheet({
           className={`flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pt-2 ${foot === undefined ? "pb-8" : "pb-3"}`}
         >
           {/* What the sheet holds stands ON the sheet: a stage inside it is
-              covered only by a layer raised over the sheet. */}
-          <CoveringLayerProvider layer={layer}>{children}</CoveringLayerProvider>
+              covered only by a layer raised over the sheet, and its scroller
+              is this body — not the page under the sheet, which never scrolls
+              while the sheet is up (`scroll-host.tsx`). */}
+          <CoveringLayerProvider layer={layer}>
+            <ScrollHostProvider value={body}>{children}</ScrollHostProvider>
+          </CoveringLayerProvider>
         </div>
         {foot !== undefined && <div className="flex-none pb-8">{foot}</div>}
       </div>
