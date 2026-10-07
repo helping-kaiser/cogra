@@ -1912,12 +1912,12 @@ impl Mutation {
         // the address would not make the call valid.
         if !store::dismiss_vouch_back(pool, v.user_id).await? {
             use async_graphql::ErrorExtensions;
-            return Err(
-                async_graphql::Error::new("no landed application: no vouch-back prompt to dismiss")
-                    .extend_with(|_, e: &mut async_graphql::ErrorExtensionValues| {
-                        e.set("code", "FORBIDDEN");
-                    }),
-            );
+            return Err(async_graphql::Error::new(
+                "no landed application: no vouch-back prompt to dismiss",
+            )
+            .extend_with(|_, e: &mut async_graphql::ErrorExtensionValues| {
+                e.set("code", "FORBIDDEN");
+            }));
         }
         Ok(DismissVouchBackPayload {
             user: store::actor_identity(pool, v.user_id)

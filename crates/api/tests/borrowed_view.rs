@@ -703,7 +703,10 @@ async fn dismissing_the_vouch_back_holds_on_every_session(pool: PgPool) {
     assert_eq!(after["me"]["hasReciprocated"], false);
 
     let again = rig.gql(Some(&laptop), DISMISS, json!({})).await;
-    assert_eq!(again["dismissVouchBack"]["user"]["vouchBackDismissed"], true);
+    assert_eq!(
+        again["dismissVouchBack"]["user"]["vouchBackDismissed"],
+        true
+    );
 }
 
 /// Like `hasReciprocated`, the field exists only for the account's own
