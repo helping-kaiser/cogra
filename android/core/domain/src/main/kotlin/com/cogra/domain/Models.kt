@@ -35,7 +35,6 @@ data class SessionInfo(
     val deviceLabel: String?,
     val createdAt: Instant,
     val lastUsedAt: Instant?,
-    val expiresAt: Instant,
     val isCurrent: Boolean,
 )
 

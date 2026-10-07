@@ -248,10 +248,11 @@ class KeyCeremonyTest {
     fun signOutClearsTokensEvenWhenRevocationFails() = runTest {
         val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
         identity.seed = ActorKey.generate().seed()
-        SignOut(offlineSessions(), EndLocalSession(identity, tokens)).signOut()
+        SignOut(offlineSessions(), identity, tokens).signOut()
         assertThat(tokens.current()).isNull()
         // Not opted out: the actor stays in its slot.
         assertThat(identity.seed).isNotNull()
+        assertThat(identity.custodyPurges).isEqualTo(0)
     }
 
     @Test
@@ -261,11 +262,33 @@ class KeyCeremonyTest {
         identity.pendingBlob = byteArrayOf(7)
         identity.stancePadTaught = true
         identity.forgetOnSignOut = true
-        SignOut(offlineSessions(), EndLocalSession(identity, tokens)).signOut()
+        SignOut(offlineSessions(), identity, tokens).signOut()
         assertThat(tokens.current()).isNull()
         assertThat(identity.seed).isNull()
         assertThat(identity.pendingBlob).isNull()
         assertThat(identity.stancePadTaught).isFalse()
         assertThat(identity.handshakes).isEmpty()
+        // The explicit path clears the whole custody set, draft included
+        // — never the remote path's slot-only purge.
+        assertThat(identity.custodyPurges).isEqualTo(1)
+        assertThat(identity.slotPurges).isEqualTo(0)
+    }
+
+    /**
+     * Pins today's REMOTE path (custody packet §1.2): a session ended from
+     * elsewhere still purges a forget account's slot — and only the slot.
+     * The draft-level pin over the real stores is
+     * `StoresTest.the_remote_end_keeps_its_purge_and_leaves_the_draft`.
+     */
+    @Test
+    fun theRemoteEndPurgesTheSlotNotTheCustodySet() = runTest {
+        val tokens = FakeTokenStore().apply { save(AuthTokens("a", "r", "u1")) }
+        identity.seed = ActorKey.generate().seed()
+        identity.forgetOnSignOut = true
+        EndLocalSession(identity, tokens).end()
+        assertThat(tokens.current()).isNull()
+        assertThat(identity.seed).isNull()
+        assertThat(identity.slotPurges).isEqualTo(1)
+        assertThat(identity.custodyPurges).isEqualTo(0)
     }
 }

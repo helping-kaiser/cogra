@@ -262,30 +262,4 @@ class RepositoriesTest {
         assertThat((writes.hostPublicKey() as Outcome.Success).value).isEqualTo(ByteArray(32) { 7 })
         assertThat(server.requestCount).isEqualTo(1)
     }
-
-    @Test
-    fun aSignedOutViewerReadRefusesWithoutReplay() = runTest {
-        val sessions = SessionRepositoryImpl(client, guard())
-        enqueue("""{"data":{"me":null}}""")
-        val refused = sessions.sessions() as Outcome.Refused
-        assertThat(refused.errors.single().code).isEqualTo(ErrorCode.UNAUTHENTICATED)
-        // No tokens → no refresh, no replay.
-        assertThat(server.requestCount).isEqualTo(1)
-    }
-
-    @Test
-    fun sessionsMapWithInstants() = runTest {
-        val sessions = SessionRepositoryImpl(client, guard())
-        tokenStore.save(AuthTokens("a", "r", "u1"))
-        enqueue(
-            """{"data":{"me":{"__typename":"User","sessions":[
-               {"__typename":"Session","id":"s1","deviceLabel":"phone",
-                "createdAt":"2026-07-24T12:00:00+00:00","lastUsedAt":null,
-                "expiresAt":"2026-08-23T12:00:00+00:00","isCurrent":true}]}}}""",
-        )
-        val list = (sessions.sessions() as Outcome.Success).value
-        assertThat(list.single().deviceLabel).isEqualTo("phone")
-        assertThat(list.single().lastUsedAt).isNull()
-        assertThat(list.single().isCurrent).isTrue()
-    }
 }

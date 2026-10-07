@@ -24,14 +24,6 @@ mutation RefreshSession($input: RefreshSessionInput!) {
   }
 }
 
-query Sessions {
-  me {
-    sessions {
-      ...SessionFields
-    }
-  }
-}
-
 mutation RevokeSession($input: RevokeSessionInput!) {
   revokeSession(input: $input) {
     session {
