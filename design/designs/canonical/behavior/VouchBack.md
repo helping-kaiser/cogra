@@ -16,7 +16,9 @@ ALWAYS the band reads Browsing from a deleted account's view — your first opin
 
 ALWAYS the band carries no Vouch back and asks for nothing
 
-WHEN the member's first opinion is signed, toward any target -> the borrowed view ends AND the feed hands over to the member's own view
+ALWAYS the band stands on the Feed root only, and never on Explore or the reader's own profile
+
+WHEN the member's first opinion is signed, toward any target -> the borrowed view ends AND the band leaves at once AND the feed reads the member's own view from its next refresh AND NEVER the feed reloads at the signing
 
 WHEN the member's first opinion, toward any target, expires instead of landing GIVEN no other opinion of theirs has landed -> the borrowed view returns AND the ordinary did-not-land notice answers alongside it
 

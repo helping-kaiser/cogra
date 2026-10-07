@@ -36,6 +36,8 @@ WHEN an unhide does not go through -> the unhide reverts AND the account's row c
 
 WHEN tap Retry on a row whose unhide did not go through -> the unhide tries again
 
+ALWAYS settings.hiddenSheet.list.account.trailing.unhide keeps the visible name Unhide, described for a listener by its row's title
+
 ALWAYS hiding and unhiding change nothing for the hidden person
 
 WHEN tap the scrim -> the sheet closes onto settings AND focus returns to the Hidden accounts row

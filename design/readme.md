@@ -3949,8 +3949,8 @@ four-rung ladder.
 - **The pull-down lives on every full-screen scrolling root** (ruled
   2026-09-10): the feed in all its views, the profile pages and the
   chronicle, the opinions page, Invites (jakob 2026-10-05), History
-  (jakob 2026-10-05), search results, the wallet's history, the tag
-  page — and
+  (jakob 2026-10-05), Saved (jakob 2026-10-07), search results, the
+  wallet's history, the tag page — and
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
@@ -5121,8 +5121,8 @@ pass: one board, one law, and two sweeps.
   `Unsave` control moved into the shared screen helpers on the way —
   it is drawn on two boards now, and a control spelled twice drifts.
 - **A hide row cannot say a name that is gone.** On a deleted author's
-  post or comment the reader's menu reads `Hide this account`;
-  everywhere else it spells the handle. The ROW stays either way —
+  post the reader's menu reads `Hide this account`; everywhere else it
+  spells the handle. The ROW stays either way —
   hiding is a read-side comfort about an ACTOR, and a redacted actor
   still ranks into the reader's feed — so only the wording gives way.
   `ActorChip` composes it (`HIDE_ACTOR_LABEL`, beside
@@ -9497,6 +9497,14 @@ lines; quoted wordings are his.
   root, as `BottomNav` rules: History and Saved light Profile; the other
   person's profile, its tabs and states, Notifications, the score's
   drill-down and the chats pages light Feed, where the canvas opens them.
+- **The blessing bundle, written.** The borrowed band leaves at once on
+  the first signed opinion and the feed reads the own view from its next
+  refresh; the band stands on the Feed root only. Saved takes the
+  pull-down, a reverted unsave clears its snackbar, the reader's own
+  unsaves elsewhere apply in place on return, and a failed next page
+  says `Couldn't load more` with `Retry`. The People footnote carries
+  feed-ranking §8.2's hint. `Unhide` keeps its visible name, described
+  by its row.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not

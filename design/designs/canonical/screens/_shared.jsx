@@ -3242,7 +3242,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
             sheet is a tap spent on nothing. */}
         <SettingsGroup
           label="People"
-          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking."
+          footnote="Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking. Your opinions on them still count in your friends' feeds until you walk them back."
           node="people"
         >
           <SettingsRow label="Hidden accounts" value="3" onOpen={() => {}} node="hidden" />

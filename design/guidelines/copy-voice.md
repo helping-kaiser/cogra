@@ -2570,8 +2570,11 @@ asked — and names no kind, because the list holds every kind.
 **The settings group is `People`,** its row `Hidden accounts` with a
 bare count, and its footnote `Hiding someone clears your own feed of
 them. Nothing changes for them, and their profile still opens if you go
-looking.` The footnote carries the whole of what hiding means, which is
-the group anatomy's own rule. With nobody hidden the row reads `None`.
+looking. Your opinions on them still count in your friends' feeds until
+you walk them back.` The footnote carries the whole of what hiding
+means, which is the group anatomy's own rule; its last sentence is
+feed-ranking §8.2's required hint (jakob 2026-10-07; *the sentence a
+draft*). With nobody hidden the row reads `None`.
 `Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
 their posts can reach your feed again.` with `Undo` beside it (*new
 2026-10-05, blessed (jakob 2026-10-05)*). A deleted account's row

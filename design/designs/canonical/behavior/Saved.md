@@ -34,6 +34,14 @@ WHEN tap a row's Unsave GIVEN the unsave does not go through -> the row comes ba
 
 WHEN tap Retry on a row's failure line -> the unsave is asked again AND the row leaves the list again
 
+WHEN an unsave reverts GIVEN its snackbar stands -> the snackbar clears
+
+WHEN pull down GIVEN Saved stands all the way at its top -> Saved re-reads AND the platform's own refresh indicator shows
+
+WHEN the reader comes back to Saved GIVEN they unsaved a thing inside a page opened from it -> that thing's row is gone AND NEVER a snackbar appears
+
+WHEN the next page of Saved does not arrive -> the rows on screen stay AND Couldn't load more with Retry ends the list
+
 WHEN tap a row's Unsave GIVEN it was the last row -> the empty Saved stands under the same snackbar, Removed from Saved. with Undo
 
 ALWAYS an unsave changes nothing about the thing itself, which still stands, still ranks and still opens
