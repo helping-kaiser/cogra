@@ -126,6 +126,69 @@
         ]
       }
     },
+    "ChangeHandle": {
+      "prefix": "changeHandle",
+      "keys": {},
+      "nodes": {
+        "changeHandle.body": [],
+        "changeHandle.commit": [],
+        "changeHandle.commit.action": [],
+        "changeHandle.commit.reason": [],
+        "changeHandle.handle": [],
+        "changeHandle.handle.input": [],
+        "changeHandle.handle.label": [],
+        "changeHandle.handle.support": [],
+        "changeHandle.header": [],
+        "changeHandle.header.back": [],
+        "changeHandle.note": [],
+        "changeHandle.title": []
+      }
+    },
+    "ChangeHandleConfirm": {
+      "prefix": "changeHandle",
+      "keys": {},
+      "nodes": {
+        "changeHandle.body": [],
+        "changeHandle.commit": [],
+        "changeHandle.commit.action": [],
+        "changeHandle.dialog": [],
+        "changeHandle.dialog.body": [],
+        "changeHandle.dialog.change": [],
+        "changeHandle.dialog.keep": [],
+        "changeHandle.dialog.title": [],
+        "changeHandle.handle": [],
+        "changeHandle.handle.input": [],
+        "changeHandle.handle.label": [],
+        "changeHandle.handle.support": [],
+        "changeHandle.header": [],
+        "changeHandle.header.back": [],
+        "changeHandle.note": [],
+        "changeHandle.title": []
+      }
+    },
+    "ChangePassword": {
+      "prefix": "changePassword",
+      "keys": {},
+      "nodes": {
+        "changePassword.body": [],
+        "changePassword.commit": [],
+        "changePassword.commit.action": [],
+        "changePassword.commit.reason": [],
+        "changePassword.current": [],
+        "changePassword.current.input": [],
+        "changePassword.current.label": [],
+        "changePassword.current.reveal": [],
+        "changePassword.header": [],
+        "changePassword.header.back": [],
+        "changePassword.note": [],
+        "changePassword.password": [],
+        "changePassword.password.input": [],
+        "changePassword.password.label": [],
+        "changePassword.password.reveal": [],
+        "changePassword.password.support": [],
+        "changePassword.title": []
+      }
+    },
     "ComposeDetails": {
       "prefix": "composeDetails",
       "keys": {

@@ -28,19 +28,26 @@
    `Change handle`'s press, and the dialog never opens.
 
    THE PAGE BENEATH is `ChangeHandleBody` with the new handle typed, inert
-   under the scrim and wired on `ChangeHandle`. */
+   under the scrim and wired on `ChangeHandle`.
+
+   REGISTERED under the `changeHandle` prefix (design ⇄ impl seam 082): a
+   dialog belongs to the surface it is raised over, so the page beneath keeps
+   its `ChangeHandle` names and the dialog is `dialog`, its two answers
+   `change` and `keep`. */
+export const NODE = "changeHandle";
 export function Screen() {
   return (
     <>
       <ChangeHandleBody value="solferreira" />
       <DialogSurface
+        node="dialog"
         onScrimPress={() => {}}
         title="Change your handle to @solferreira?"
         body="Links to @sol stop working the moment it changes, and anyone can claim @sol afterwards."
         actions={
           <>
-            <Button variant="text">Change it</Button>
-            <Button>Keep it</Button>
+            <Button variant="text" node="change">Change it</Button>
+            <Button node="keep">Keep it</Button>
           </>
         }
       />

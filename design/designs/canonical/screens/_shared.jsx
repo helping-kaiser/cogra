@@ -2953,13 +2953,17 @@ function WhatsNewBody({ newer }) {
    wait*).
 
    `waiting` false draws the live commit alone, for a state whose fields are
-   filled. */
-function WaitingCommit({ id, label, reason, waiting = true }) {
+   filled.
+
+   `node` names the pair where a registered board places it (design ⇄ impl
+   seam 002): the line is its `reason` and the button its `action`. */
+function WaitingCommit({ id, label, reason, waiting = true, node }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-node={node}>
       {waiting && (
         <span
           id={`${id}-waits`}
+          data-node={node && "reason"}
           style={{
             textAlign: "center",
             fontSize: "var(--text-label-small)",
@@ -2971,17 +2975,21 @@ function WaitingCommit({ id, label, reason, waiting = true }) {
           {reason}
         </span>
       )}
-      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined}>
+      <Button style={{ width: "100%" }} disabled={waiting} describedBy={waiting ? `${id}-waits` : undefined} node={node && "action"}>
         {label}
       </Button>
     </div>
   );
 }
 
+/* The names are the `changeHandle` prefix's (design ⇄ impl seam 082): both
+   boards register them — the field is `handle`, named for what it changes, as
+   the credential family names its fields, and the commit with its reason is
+   `commit`. */
 function ChangeHandleBody({ value = "" } = {}) {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -2990,6 +2998,7 @@ function ChangeHandleBody({ value = "" } = {}) {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Change your handle
         </h1>
@@ -3001,6 +3010,7 @@ function ChangeHandleBody({ value = "" } = {}) {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           @sol is how people mention and find you. Everything you have published stays yours — the
           handle is a name, not the account.
@@ -3014,15 +3024,16 @@ function ChangeHandleBody({ value = "" } = {}) {
             enterKeyHint="go"
             value={value}
             hint="3 to 30 characters: letters, numbers and underscore. Handles are always lowercase."
+            node="handle"
           />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="change-handle" label="Change handle" reason="Waiting for a new handle" waiting={!value} />
+          <WaitingCommit id="change-handle" label="Change handle" reason="Waiting for a new handle" waiting={!value} node="commit" />
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <QuietNote>
+          <QuietNote node="note">
             Links to your old handle stop working the moment you change it, and anyone can claim it
             afterwards.
           </QuietNote>
