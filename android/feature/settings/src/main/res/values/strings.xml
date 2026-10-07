@@ -1,14 +1,223 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Every string here is the boards' or copy-voice's, verbatim
+     (design/guidelines/copy-voice.md "The settings page", "The settings
+     subpages", "Faults by code", "Commits that wait"; the canonical
+     screens under design/designs/canonical/screens/). The three Android
+     renderings of browser-only lines are G8's, blessed as written
+     (design digest item 36). -->
 <resources>
-    <string name="settings_title">Settings</string>
     <string name="back">Back</string>
+    <string name="back_to_settings">Back to settings</string>
+    <string name="network_error">That didn\'t send. Try again.</string>
+    <string name="rate_limited">Too many tries. Wait a little, then try again.</string>
+    <string name="done">Done</string>
+    <string name="retry">Retry</string>
 
-    <string name="settings_backup_title">Key backup</string>
+    <!-- Settings (the page) -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_back">Back to your profile</string>
+
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_theme_footnote">Auto follows your device\'s own setting, and the choice stays on this device.</string>
+
+    <string name="settings_stance">Giving an opinion</string>
+    <string name="settings_stance_pad">The pad</string>
+    <!-- DRIFT (stance-pad packet; settings-surface §11.3 HELD): the drawn
+         line, "A tap opens it; drift to where it feels right.", describes
+         the inverted gesture, which has not shipped. Until it does, the
+         pad keeps the line that is true of the gesture it has. -->
+    <string name="settings_stance_pad_status">Press and hold, then drift to where you stand.</string>
+    <string name="settings_stance_sliders">Sliders</string>
+    <string name="settings_stance_sliders_status">One slider per side of the opinion.</string>
+    <string name="settings_stance_typed">Typed values</string>
+    <string name="settings_stance_typed_status">Type both numbers exactly.</string>
+    <!-- DRIFT (stance-pad packet; §11.3 HELD): the drawn footnote, "A tap
+         opens this, everywhere. Press and hold instead, and a small
+         positive one is signed on the spot.", waits for the inverted
+         gesture; this is the line true of the shipped one. -->
+    <string name="settings_stance_footnote">A tap always adds a small positive one. This is what a longer press opens, everywhere.</string>
+
+    <string name="settings_writing">Writing</string>
+    <string name="settings_writing_confirm">Confirm multi-action submits</string>
+    <string name="settings_writing_confirm_status">Ask first when one submit signs more than one action.</string>
+    <string name="settings_writing_license">Default license</string>
+    <string name="settings_writing_footnote">Every signed action is paid for separately. A post\'s license is settled when it is first signed and never changes.</string>
+    <string name="settings_save_failed">That didn\'t go through.</string>
+
+    <string name="settings_reading">Reading</string>
+    <string name="settings_reading_feed">What your feed shows</string>
+    <string name="settings_reading_feed_value">Posts</string>
+    <string name="settings_reading_exact">Show exact values</string>
+    <string name="settings_reading_exact_status">The number pairs behind the faces.</string>
+    <string name="settings_reading_footnote">Every feed starts from what it shows, and a change made inside a feed lasts until you change it back. Both choices stay on this device.</string>
+
+    <string name="settings_people">People</string>
+    <string name="settings_people_hidden">Hidden accounts</string>
+    <string name="settings_people_hidden_none">None</string>
+    <string name="settings_people_footnote">Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking.</string>
+
+    <string name="settings_backup">Key backup</string>
+    <string name="settings_backup_recovery">Recovery code</string>
+    <string name="settings_backup_recovery_made">Last created %1$s</string>
+    <string name="settings_backup_not_made">Not made yet</string>
+    <string name="settings_backup_key">Your key</string>
+    <string name="settings_backup_footnote_made">Your key signs everything you publish and lives only in this app. Your recovery code is the only way back.</string>
+    <string name="settings_backup_footnote_none">Your key signs everything you publish and lives only in this app. Until you make a recovery code, it can\'t be brought back.</string>
+
+    <string name="settings_sessions">Sessions</string>
+    <string name="settings_session_unnamed">Unnamed device</string>
+    <string name="settings_session_this_phone">This phone</string>
+    <string name="settings_session_last_used">Last used %1$s</string>
+    <string name="settings_session_revoke">Revoke</string>
+    <string name="settings_session_revoking">Revoking…</string>
+    <string name="settings_sessions_elsewhere">Sign out everywhere else</string>
+    <string name="settings_sessions_footnote">A device you sign out can stay signed in for up to 15 minutes.</string>
+    <string name="settings_session_revoked">Signed out of %1$s.</string>
+    <string name="settings_sessions_elsewhere_done">Signed out everywhere else.</string>
+
+    <string name="settings_credentials">Credentials</string>
+    <string name="settings_credentials_password">Password</string>
+    <string name="settings_credentials_password_changed">Changed %1$s</string>
+    <string name="settings_credentials_handle">Handle</string>
+    <string name="settings_credentials_handle_value">\@%1$s</string>
+    <string name="settings_credentials_email">Email</string>
+    <string name="settings_credentials_email_pending">Change pending</string>
+    <string name="settings_credentials_footnote">Changing your password signs out every other device.</string>
+
+    <string name="settings_about">About</string>
+    <string name="settings_about_intro">Watch the intro again</string>
+    <string name="settings_about_cogra">About CoGra</string>
+    <string name="settings_about_whats_new">What\'s new</string>
+    <string name="settings_about_report">Report a problem</string>
+    <string name="settings_about_contact">Contact</string>
+    <!-- A placeholder until CoGra is on a server (copy-voice "About"). -->
+    <string name="settings_about_contact_address">hello\@cogra.local</string>
+    <string name="settings_about_privacy">Privacy</string>
+    <string name="settings_about_terms">Terms</string>
+
+    <string name="settings_leaving">Sign out</string>
+    <string name="settings_leaving_forget">Don\'t remember this account on this device</string>
+    <string name="settings_leaving_forget_status">Your key, your draft and any kept picks are cleared from this app when you sign out.</string>
+    <string name="settings_leaving_leave">Sign out</string>
+    <string name="settings_leaving_signing_out">Signing out…</string>
+
+    <!-- SignOutConfirm -->
+    <string name="sign_out_confirm_title">Sign out without a backup?</string>
+    <string name="sign_out_confirm_body">This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in to this app again. Erase them instead, and no one — including CoGra — can bring them back.</string>
+    <string name="sign_out_confirm_recovery">Make a recovery code</string>
+    <string name="sign_out_confirm_erase">Erase them and sign out</string>
+
+    <!-- SettingsLicense -->
+    <string name="license_sheet_title">Default license</string>
+    <string name="license_sheet_help">License</string>
+    <string name="license_sheet_note">Where every new post starts. A post\'s terms settle when it is first signed, so changing this never reaches one you have already published.</string>
+    <string name="license_sheet_credit">Credit</string>
+    <string name="license_sheet_record">Public record of use</string>
+
+    <!-- ChangePassword -->
+    <string name="change_password_title">Change your password</string>
+    <string name="change_password_lead">Changing your password signs out every other device. This one stays signed in.</string>
+    <string name="change_password_current">Current password</string>
+    <string name="change_password_new">New password</string>
+    <string name="change_password_new_hint">At least 12 characters.</string>
+    <string name="change_password_commit">Change password</string>
+    <string name="change_password_reason">Waiting for both passwords</string>
+    <string name="change_password_in_flight">Changing password…</string>
+    <string name="change_password_note">Your current password is asked for even though you are signed in: a live session is not proof enough to change the credential behind it.</string>
+    <string name="change_password_done">Password changed — other devices are signed out.</string>
+    <string name="wrong_password">That password isn\'t right.</string>
+    <string name="password_too_short">A password is at least 12 characters.</string>
+    <string name="password_too_long">A password is at most 128 characters.</string>
+    <string name="password_breached">That password has turned up in a data breach — pick another one.</string>
+
+    <!-- ChangeHandle + ChangeHandleConfirm -->
+    <string name="change_handle_title">Change your handle</string>
+    <string name="change_handle_lead">\@%1$s is how people mention and find you. Everything you have published stays yours — the handle is a name, not the account.</string>
+    <string name="change_handle_field">New handle</string>
+    <string name="change_handle_hint">3 to 30 characters: letters, numbers and underscore. Handles are always lowercase.</string>
+    <string name="change_handle_commit">Change handle</string>
+    <string name="change_handle_reason">Waiting for a new handle</string>
+    <string name="change_handle_note">Links to your old handle stop working the moment you change it, and anyone can claim it afterwards.</string>
+    <string name="change_handle_malformed">A handle is 3–30 characters: a–z, 0–9, _.</string>
+    <string name="change_handle_taken">That handle is taken.</string>
+    <string name="change_handle_dialog_title">Change your handle to \@%1$s?</string>
+    <string name="change_handle_dialog_body">Links to \@%1$s stop working the moment it changes, and anyone can claim \@%1$s afterwards.</string>
+    <string name="change_handle_dialog_change">Change it</string>
+    <string name="change_handle_dialog_in_flight">Changing handle…</string>
+    <string name="change_handle_dialog_keep">Keep it</string>
+    <string name="change_handle_done">Your handle is now \@%1$s.</string>
+
+    <!-- ChangeEmail + ApplicantEmail -->
+    <string name="change_email_title">Change your email</string>
+    <string name="change_email_lead">Your email signs you in, and it is the only way back if you lose your password — so a change is proved from both ends.</string>
+    <string name="change_email_new">New email</string>
+    <string name="change_email_current">Current password</string>
+    <string name="change_email_commit">Change email</string>
+    <string name="change_email_reason">Waiting for a new email and your password</string>
+    <string name="change_email_in_flight">Changing email…</string>
+    <string name="change_email_note">A code goes to %1$s and a link to the new address. Your email is unchanged until both have been answered.</string>
+    <string name="change_email_malformed">That doesn\'t look like an email address.</string>
+    <string name="applicant_email_lead">Your email isn\'t verified yet, so the new address is all a change needs. A fresh link goes there, and the one sent to %1$s stops working.</string>
+    <string name="applicant_email_sent">Sent — the link is on its way to %1$s.</string>
+
+    <!-- ChangeEmailConfirm -->
+    <string name="confirm_email_title">Confirm the change</string>
+    <string name="confirm_email_lead">Two messages, two different errands — a code to type here, and a link to open at the new address. Your email moves when both have been answered, in either order.</string>
+    <string name="confirm_email_pair">Both have to land</string>
+    <string name="confirm_email_resend">Resend</string>
+    <string name="confirm_email_code_label">Code</string>
+    <string name="confirm_email_link_label">Link</string>
+    <string name="confirm_email_waiting">%1$s — still waiting</string>
+    <string name="confirm_email_confirmed">%1$s — confirmed</string>
+    <string name="confirm_email_code">Confirmation code</string>
+    <string name="confirm_email_code_hint">From the message to %1$s.</string>
+    <string name="confirm_email_commit">Confirm the code</string>
+    <string name="confirm_email_reason">Waiting for the code</string>
+    <string name="confirm_email_in_flight">Confirming the code…</string>
+    <string name="confirm_email_note">Until both sides land your account keeps the address it has, and a reset still goes there.</string>
+    <string name="confirm_email_cancel">Cancel the change</string>
+    <string name="confirm_email_wrong_code">That code doesn\'t check out.</string>
+    <string name="confirm_email_code_disabled">Too many tries — for safety we have disabled your current code. Resend sends a fresh one.</string>
+    <string name="confirm_email_ran_out">This change ran out before both sides landed. Your email stays as it is — start again from settings.</string>
+    <string name="confirm_email_taken">That address now belongs to another account. Your email stays as it is — if the address frees up before the change runs out, confirming again applies it.</string>
+    <string name="confirm_email_applied">Email changed to %1$s.</string>
+    <string name="confirm_email_resent_both">Sent again — check both inboxes.</string>
+    <string name="confirm_email_resent_code">Sent again — the code is on its way to %1$s.</string>
+    <string name="confirm_email_resent_link">Sent again — the link is on its way to %1$s.</string>
+    <string name="confirm_email_canceled">Change canceled — your email stays %1$s.</string>
+
+    <!-- ChangeEmailLinked + ChangeEmailLinkedSignedOut -->
+    <string name="linked_first_title">New address confirmed</string>
+    <string name="linked_first_body">One side left: the code we sent to %1$s. Your email moves once it\'s typed in.</string>
+    <string name="linked_first_onward">Enter the code</string>
+    <string name="linked_last_title">Email changed</string>
+    <string name="linked_last_body">You sign in with %1$s from now on, and resets go there too.</string>
+    <string name="linked_dead_title">This link doesn\'t work anymore</string>
+    <string name="linked_canceled_body">The change it belonged to was canceled. Your email is still %1$s.</string>
+    <string name="linked_applied_body">The change it belonged to already happened. Your email is now %1$s.</string>
+    <string name="linked_ran_out_body">The change it belonged to ran out before both sides landed. Your email is still %1$s.</string>
+    <string name="linked_taken_title">That address is taken now</string>
+    <string name="linked_other_title">This link isn\'t for this account</string>
+    <string name="linked_other_body">It confirms a new address for another account, so nothing changed here. Open it signed in as that account to finish the change.</string>
+    <string name="linked_signed_out_title">Sign in to finish the change</string>
+    <string name="linked_signed_out_body">This link confirms %1$s as your new address. It counts once you\'re signed in.</string>
+    <string name="linked_sign_in">Sign in</string>
+
+    <!-- About -->
+    <string name="about_title">About CoGra</string>
+
+    <!-- The interim backup route (DRIFT: the SettingsBackup* boards are the
+         backup-replacement packet's; these are today's flows, moved off the
+         page unchanged). -->
     <string name="settings_backup_body">Create or replace your recovery code. A new code re-encrypts your key and replaces the old backup — recovery always uses the newest one.</string>
     <string name="settings_backup_no_actor">Your actor key isn\'t on this phone, so there\'s nothing to back up. Restore it first from the home screen.</string>
     <string name="settings_backup_create">Create a new recovery code</string>
     <string name="settings_backup_code_explainer">Write this code down somewhere safe. It is shown only this once; any older code stops working.</string>
-    <string name="settings_export_key">Show my key</string>
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
 
     <string name="key_gate_title">Confirm it\'s you</string>
     <string name="key_gate_replace">Unlock to create a new recovery code</string>
@@ -25,55 +234,4 @@
     <string name="key_export_actor_key">Your actor key</string>
     <string name="key_export_pem">PEM (PKCS#8)</string>
     <string name="key_export_hex">Raw hex — Ed25519 private key</string>
-
-    <!-- Which surface a stance is picked on, everywhere (design.md §8.6). -->
-    <!-- The confirm a multi-record submit earns (fix round 1, F4). -->
-    <string name="settings_writing_title">Writing</string>
-    <string name="settings_confirm_multi_action">Confirm multi-action submits</string>
-    <string name="settings_confirm_multi_action_hint">Ask before signing a submit that stages more than one action.</string>
-
-    <string name="settings_stance_input_title">Taking a stance</string>
-    <string name="settings_stance_input_body">A tap always adds a small positive one. This is what a longer press opens, everywhere.</string>
-    <string name="settings_stance_input_pad">The pad</string>
-    <string name="settings_stance_input_pad_hint">Press and hold, then drift to where you stand.</string>
-    <string name="settings_stance_input_sliders">Sliders</string>
-    <string name="settings_stance_input_sliders_hint">One slider per side of the stance.</string>
-    <string name="settings_stance_input_entry">Typed values</string>
-    <string name="settings_stance_input_entry_hint">Type both numbers exactly.</string>
-
-    <string name="settings_sessions_title">Sessions</string>
-    <string name="settings_session_unnamed">Unnamed device</string>
-    <string name="settings_session_current"> (this device)</string>
-    <string name="settings_session_revoke">Revoke</string>
-    <string name="settings_revoke_others">Sign out everywhere else</string>
-    <string name="settings_session_revoked">Session revoked.</string>
-    <string name="settings_others_revoked">All other sessions signed out.</string>
-
-    <string name="settings_credentials_title">Credentials</string>
-    <string name="settings_current_password">Current password</string>
-    <string name="settings_new_password">New password</string>
-    <string name="settings_change_password">Change password</string>
-    <string name="settings_password_changed">Password changed. Other sessions were signed out.</string>
-    <string name="settings_wrong_password">Your current password didn\'t match.</string>
-    <string name="settings_new_handle">New handle</string>
-    <string name="settings_handle_rules">3–30 characters: a–z, 0–9, _</string>
-    <string name="settings_change_handle">Change handle</string>
-    <string name="settings_handle_changed">Handle changed.</string>
-    <string name="settings_handle_taken">That handle is taken.</string>
-    <string name="settings_new_email">New email</string>
-    <string name="settings_email_password">Current password</string>
-    <string name="settings_request_email">Change email</string>
-    <string name="settings_email_change_requested">Confirmation codes sent — check both inboxes.</string>
-    <string name="settings_email_requested">Check both inboxes — either message\'s code confirms the change.</string>
-    <string name="settings_email_code">Confirmation code</string>
-    <string name="settings_confirm_email">Confirm email change</string>
-    <string name="settings_email_confirmed">Email updated.</string>
-    <string name="settings_bad_input">Check the entered value.</string>
-
-    <string name="settings_sign_out">Sign out</string>
-
-    <string name="error_generic">Something went wrong. Try again.</string>
-    <string name="error_transport">Can\'t reach the server. Check your connection and try again.</string>
-    <string name="error_rate_limited">Too many attempts — wait a moment and try again.</string>
-    <string name="error_weak_password">Passwords need at least 12 characters and can\'t be a known breached password.</string>
 </resources>

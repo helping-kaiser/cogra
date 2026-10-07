@@ -3,24 +3,24 @@ package com.cogra.feature.settings
 import com.cogra.crypto.ActorKey
 import com.cogra.crypto.RecoveryCode
 import com.cogra.crypto.openKeyBackup
+import com.cogra.domain.AccountState
 import com.cogra.domain.AuthTokens
-import com.cogra.domain.ErrorCode
+import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
-import com.cogra.domain.SessionInfo
-import com.cogra.domain.UserError
 import com.cogra.domain.identity.BackupManager
-import com.cogra.domain.identity.EndLocalSession
 import com.cogra.domain.identity.SignOut
 import com.cogra.domain.stance.StanceInputMode
+import com.cogra.domain.store.ThemeChoice
+import com.cogra.domain.testing.FakeDevicePreferences
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeTokenStore
 import com.cogra.domain.testing.ThrowingAccountRepository
-import com.cogra.domain.testing.ThrowingSessionRepository
 import com.google.common.truth.Truth.assertThat
-import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -35,58 +36,9 @@ class SettingsViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val identity = FakeIdentityStore().apply { seed = ActorKey.generate().seed() }
     private val tokens = FakeTokenStore()
-
-    private val account = object : ThrowingAccountRepository() {
-        var uploaded: ByteArray? = null
-        var passwordOutcome: Outcome<Unit> = Outcome.Success(Unit)
-        var emailRequestOutcome: Outcome<Unit> = Outcome.Success(Unit)
-        var emailRequestPassword: String? = null
-
-        override suspend fun keyBackupChallenge(): Outcome<ByteArray> = Outcome.Success(ByteArray(32) { 0x71 })
-
-        override suspend fun uploadKeyBackup(
-            blob: ByteArray,
-            challenge: ByteArray,
-            signature: ByteArray,
-        ): Outcome<Unit> {
-            uploaded = blob
-            return Outcome.Success(Unit)
-        }
-
-        override suspend fun changePassword(currentPassword: String, newPassword: String): Outcome<Unit> =
-            passwordOutcome
-
-        override suspend fun changeHandle(handle: String): Outcome<Unit> = Outcome.Success(Unit)
-
-        override suspend fun requestEmailChange(newEmail: String, currentPassword: String): Outcome<Unit> {
-            emailRequestPassword = currentPassword
-            return emailRequestOutcome
-        }
-
-        override suspend fun confirmEmailChange(code: String): Outcome<Unit> = Outcome.Success(Unit)
-    }
-
-    private val sessionRepo = object : ThrowingSessionRepository() {
-        val sessions = mutableListOf(
-            SessionInfo("s1", "phone", Instant.EPOCH, null, Instant.MAX, isCurrent = true),
-            SessionInfo("s2", "old tablet", Instant.EPOCH, null, Instant.MAX, isCurrent = false),
-        )
-        var revoked: String? = null
-
-        override suspend fun sessions(): Outcome<List<SessionInfo>> = Outcome.Success(sessions.toList())
-
-        override suspend fun revokeSession(id: String?): Outcome<Unit> {
-            revoked = id
-            sessions.removeAll { it.id == id }
-            return Outcome.Success(Unit)
-        }
-
-        override suspend fun revokeOtherSessions(): Outcome<Int> {
-            val count = sessions.count { !it.isCurrent }
-            sessions.removeAll { !it.isCurrent }
-            return Outcome.Success(count)
-        }
-    }
+    private val device = FakeDevicePreferences()
+    private val settings = ScriptedSettings()
+    private val sessions = ScriptedSessions()
 
     @Before
     fun setUp() {
@@ -98,187 +50,388 @@ class SettingsViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private suspend fun signedIn() = tokens.save(AuthTokens("a", "r", "u1"))
+
     private fun viewModel() = SettingsViewModel(
-        sessionRepo,
-        account,
-        BackupManager(identity, account),
-        SignOut(sessionRepo, EndLocalSession(identity, tokens)),
+        settings,
+        sessions,
+        SignOut(sessions, identity, tokens),
         identity,
-    )
+        device,
+    ).also {
+        it.clock = { NOW }
+        it.refresh()
+    }
+
+    private fun idle() = dispatcher.scheduler.advanceUntilIdle()
+
+    // ------------------------------------------------------------ device
 
     @Test
-    fun theNewBackupCodeOpensTheUploadedBlob() = runTest(dispatcher) {
+    fun `theme_choice_repaints_and_stays_on_this_device`() = runTest(dispatcher) {
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onCreateBackup()
-        dispatcher.scheduler.advanceUntilIdle()
-        val code = checkNotNull(vm.state.value.newBackupCode)
-        val opened = openKeyBackup(checkNotNull(account.uploaded), RecoveryCode.fromInput(code))
-        assertThat(opened).isEqualTo(identity.seed)
-        vm.onBackupCodeSaved()
-        assertThat(vm.state.value.newBackupCode).isNull()
+        idle()
+        assertThat(vm.state.value.theme).isEqualTo(ThemeChoice.AUTO)
+        vm.onTheme(ThemeChoice.DARK)
+        idle()
+        // The device's store, never the account's.
+        assertThat(device.theme.first()).isEqualTo(ThemeChoice.DARK)
+        assertThat(vm.state.value.theme).isEqualTo(ThemeChoice.DARK)
     }
 
     @Test
-    fun sessionsListAndRevoke() = runTest(dispatcher) {
+    fun `exactly_one_opinion_input_stands_selected`() = runTest(dispatcher) {
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.sessions).hasSize(2)
+        idle()
+        vm.onStanceInputMode(StanceInputMode.SLIDERS)
+        idle()
+        assertThat(vm.state.value.stanceInputMode).isEqualTo(StanceInputMode.SLIDERS)
+    }
+
+    @Test
+    fun `multi_action_switch_flips_without_a_dialog`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.confirmMultiActionSubmits).isTrue()
+        vm.onConfirmMultiActionSubmits()
+        idle()
+        assertThat(identity.confirmMultiAction.value).isFalse()
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+    }
+
+    @Test
+    fun `exact_values_switch_is_device_local`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        vm.onShowExactValues()
+        idle()
+        assertThat(device.showExactValues.value).isTrue()
+        assertThat(vm.state.value.showExactValues).isTrue()
+    }
+
+    @Test
+    fun `forget_switch_flips_without_signing_out`() = runTest(dispatcher) {
+        signedIn()
+        val vm = viewModel()
+        idle()
+        vm.onForgetOnSignOut()
+        idle()
+        assertThat(identity.forgetOnSignOut).isTrue()
+        assertThat(tokens.current()).isNotNull()
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+    }
+
+    // --------------------------------------------------- default license
+
+    @Test
+    fun `done_saves_and_the_row_reads_it`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        vm.onOpenLicense()
+        assertThat(vm.state.value.licenseSheet).isEqualTo(LicenseChoice.PublicDomain)
+        vm.onStageLicense(LicenseChoice(1.0, 0.0))
+        // Staged, not saved: nothing reaches the account before Done.
+        assertThat(settings.savedLicenses).isEmpty()
+        vm.onLicenseDone()
+        // Optimistic: the row reads it at once.
+        assertThat(vm.state.value.defaultLicense).isEqualTo(LicenseChoice(1.0, 0.0))
+        idle()
+        assertThat(settings.savedLicenses).containsExactly(LicenseChoice(1.0, 0.0))
+        assertThat(vm.state.value.licenseSheet).isNull()
+        assertThat(vm.state.value.defaultLicense).isEqualTo(LicenseChoice(1.0, 0.0))
+    }
+
+    @Test
+    fun `scrim_swipe_back_escape_discard`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        vm.onOpenLicense()
+        vm.onStageLicense(LicenseChoice(0.5, 0.5))
+        vm.onDismissLicense()
+        idle()
+        assertThat(settings.savedLicenses).isEmpty()
+        assertThat(vm.state.value.defaultLicense).isEqualTo(LicenseChoice.PublicDomain)
+    }
+
+    @Test
+    fun `failed_save_reverts_with_that_didnt_go_through_and_retry`() = runTest(dispatcher) {
+        settings.saveLicense = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        idle()
+        vm.onOpenLicense()
+        vm.onStageLicense(LicenseChoice(1.0, 1.0))
+        vm.onLicenseDone()
+        idle()
+        // It reverts, and the row carries the failure with Retry.
+        assertThat(vm.state.value.defaultLicense).isEqualTo(LicenseChoice.PublicDomain)
+        assertThat(vm.state.value.licenseFailed).isEqualTo(LicenseChoice(1.0, 1.0))
+
+        settings.saveLicense = null
+        vm.onRetryLicense()
+        idle()
+        assertThat(vm.state.value.licenseFailed).isNull()
+        assertThat(vm.state.value.defaultLicense).isEqualTo(LicenseChoice(1.0, 1.0))
+    }
+
+    @Test
+    fun publicDomainIsSavedAsTheDefaultsOwnNull() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(defaultLicense = LicenseChoice(1.0, 0.0)))
+        val vm = viewModel()
+        idle()
+        vm.onOpenLicense()
+        vm.onStageLicense(LicenseChoice.PublicDomain)
+        vm.onLicenseDone()
+        idle()
+        assertThat(settings.savedLicenses).containsExactly(null)
+        assertThat(vm.state.value.defaultLicense).isEqualTo(LicenseChoice.PublicDomain)
+    }
+
+    // ---------------------------------------------------------- sessions
+
+    @Test
+    fun `revoke_removes_the_row_and_names_the_device`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        assertThat(vm.state.value.sessions.map { it.id }).containsExactly("s1", "s2", "s3").inOrder()
         vm.onRevokeSession("s2")
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(sessionRepo.revoked).isEqualTo("s2")
-        assertThat(vm.state.value.sessions).hasSize(1)
-        assertThat(vm.state.value.feedback)
-            .isEqualTo(SettingsFeedback.Done(SettingsAction.SESSION_REVOKED))
+        idle()
+        assertThat(sessions.revoked).containsExactly("s2")
+        assertThat(vm.state.value.sessions.map { it.id }).containsExactly("s1", "s3").inOrder()
+        assertThat(events).contains(
+            SettingsEvent.Snackbar(R.string.settings_session_revoked, "Pixel 8", R.string.settings_session_unnamed),
+        )
+        // Focus moves to the next row.
+        assertThat(events).contains(SettingsEvent.FocusSession("s3"))
+        collecting.cancel()
     }
 
     @Test
-    fun aWrongCurrentPasswordSurfaces() = runTest(dispatcher) {
-        account.passwordOutcome =
-            Outcome.Refused(listOf(UserError(ErrorCode.INVALID_CREDENTIALS, "no match")))
+    fun `revoke_moves_focus_to_the_next_row`() = runTest(dispatcher) {
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onCurrentPasswordChange("wrong")
-        vm.onNewPasswordChange("a new strong password")
-        vm.onChangePassword()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.feedback)
-            .isEqualTo(SettingsFeedback.Error(ErrorCode.INVALID_CREDENTIALS))
-        vm.onFeedbackShown()
-        assertThat(vm.state.value.feedback).isNull()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        // The last row has no next one: focus falls back to the previous.
+        vm.onRevokeSession("s3")
+        idle()
+        assertThat(events).contains(SettingsEvent.FocusSession("s2"))
+        collecting.cancel()
     }
 
     @Test
-    fun aSuccessfulPasswordChangeClearsTheFields() = runTest(dispatcher) {
+    fun `revoke_offline_opens_network_error_and_keeps_the_row`() = runTest(dispatcher) {
+        sessions.offline = true
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onCurrentPasswordChange("old password!")
-        vm.onNewPasswordChange("a new strong password")
-        vm.onChangePassword()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.feedback)
-            .isEqualTo(SettingsFeedback.Done(SettingsAction.PASSWORD_CHANGED))
-        assertThat(vm.state.value.currentPassword).isEmpty()
-        assertThat(vm.state.value.newPassword).isEmpty()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onRevokeSession("s2")
+        idle()
+        assertThat(vm.state.value.sessions.map { it.id }).contains("s2")
+        assertThat(vm.state.value.revokingSessionId).isNull()
+        assertThat(events).contains(SettingsEvent.Snackbar(R.string.network_error))
+        collecting.cancel()
     }
 
     @Test
-    fun aRefusedEmailChangeRequestSurfacesAndStaysClosed() = runTest(dispatcher) {
-        account.emailRequestOutcome =
-            Outcome.Refused(listOf(UserError(ErrorCode.INVALID_CREDENTIALS, "no match")))
+    fun `sign_out_everywhere_else_keeps_this_device`() = runTest(dispatcher) {
+        signedIn()
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onNewEmailChange("new@example.org")
-        vm.onEmailChangePasswordChange("wrong")
-        vm.onRequestEmailChange()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.feedback)
-            .isEqualTo(SettingsFeedback.Error(ErrorCode.INVALID_CREDENTIALS))
-        assertThat(vm.state.value.emailChangeRequested).isFalse()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onRevokeOthers()
+        idle()
+        assertThat(sessions.othersRevoked).isEqualTo(1)
+        assertThat(vm.state.value.sessions.map { it.id }).containsExactly("s1")
+        assertThat(tokens.current()).isNotNull()
+        assertThat(events).contains(SettingsEvent.Snackbar(R.string.settings_sessions_elsewhere_done))
+        collecting.cancel()
+    }
+
+    // ---------------------------------------------------------- the email row
+
+    @Test
+    fun `email_row_opens_the_confirmation_on_the_owed_side`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(pendingEmailChange = pending()))
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.pendingEmailChange).isNotNull()
+        assertThat(vm.state.value.emailDoor).isEqualTo(EmailDoor.CONFIRM)
     }
 
     @Test
-    fun anEmailChangeRequestUsesItsOwnPasswordAndOpensTheConfirmStep() = runTest(dispatcher) {
+    fun `email_row_opens_the_request_after_a_change_ran_out`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(pendingEmailChange = pending(expiresAt = NOW.minusSeconds(1))))
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onNewEmailChange("new@example.org")
-        vm.onEmailChangePasswordChange("the password")
-        vm.onRequestEmailChange()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(account.emailRequestPassword).isEqualTo("the password")
-        assertThat(vm.state.value.emailChangeRequested).isTrue()
-        assertThat(vm.state.value.emailChangePassword).isEmpty()
-        assertThat(vm.state.value.feedback)
-            .isEqualTo(SettingsFeedback.Done(SettingsAction.EMAIL_CHANGE_REQUESTED))
+        idle()
+        assertThat(vm.state.value.pendingEmailChange).isNull()
+        assertThat(vm.state.value.emailDoor).isEqualTo(EmailDoor.REQUEST)
     }
 
     @Test
-    fun aConfirmedEmailChangeResetsTheFlow() = runTest(dispatcher) {
+    fun `email_row_opens_the_applicant_change_for_an_unverified_applicant`() = runTest(dispatcher) {
+        // G2: even with the carve-out pending, the applicant's own change opens.
+        settings.read = Outcome.Success(
+            account(
+                state = AccountState.APPLICANT,
+                emailVerified = false,
+                pendingEmailChange = pending(requiresCode = false),
+            ),
+        )
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onNewEmailChange("new@example.org")
-        vm.onEmailChangePasswordChange("the password")
-        vm.onRequestEmailChange()
-        dispatcher.scheduler.advanceUntilIdle()
-        vm.onEmailChangeCodeChange("123456")
-        vm.onConfirmEmailChange()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.feedback)
-            .isEqualTo(SettingsFeedback.Done(SettingsAction.EMAIL_CONFIRMED))
-        assertThat(vm.state.value.emailChangeRequested).isFalse()
-        assertThat(vm.state.value.newEmail).isEmpty()
-        assertThat(vm.state.value.emailChangeCode).isEmpty()
+        idle()
+        assertThat(vm.state.value.emailDoor).isEqualTo(EmailDoor.APPLICANT)
     }
 
+    // ---------------------------------------------------------- sign out
+
     @Test
-    fun signOutClearsTokensButKeepsTheActor() = runTest(dispatcher) {
-        tokens.save(AuthTokens("a", "r", "u1"))
+    fun `sign_out_remembered_keeps_the_key_and_offers_the_account`() = runTest(dispatcher) {
+        signedIn()
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
+        idle()
         vm.onSignOut()
-        dispatcher.scheduler.advanceUntilIdle()
+        idle()
         assertThat(tokens.current()).isNull()
+        assertThat(identity.seed).isNotNull()
+        assertThat(identity.custodyPurges).isEqualTo(0)
+        assertThat(sessions.revoked).containsExactly(null)
+    }
+
+    @Test
+    fun `sign_out_forgotten_with_a_backup_clears_without_asking`() = runTest(dispatcher) {
+        signedIn()
+        identity.forgetOnSignOut = true
+        val vm = viewModel()
+        idle()
+        vm.onSignOut()
+        idle()
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+        assertThat(identity.custodyPurges).isEqualTo(1)
+        assertThat(identity.seed).isNull()
+        assertThat(tokens.current()).isNull()
+    }
+
+    @Test
+    fun signOutForgottenWithNoKeyHereClearsWithoutAsking() = runTest(dispatcher) {
+        signedIn()
+        identity.seed = null
+        identity.forgetOnSignOut = true
+        settings.read = Outcome.Success(account(keyBackupCreatedAt = null))
+        val vm = viewModel()
+        idle()
+        vm.onSignOut()
+        idle()
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+        assertThat(tokens.current()).isNull()
+    }
+
+    @Test
+    fun `sign_out_forgotten_with_the_only_key_asks_first`() = runTest(dispatcher) {
+        signedIn()
+        identity.forgetOnSignOut = true
+        settings.read = Outcome.Success(account(keyBackupCreatedAt = null))
+        val vm = viewModel()
+        idle()
+        vm.onSignOut()
+        idle()
+        assertThat(vm.state.value.signOutConfirmOpen).isTrue()
+        // Nothing ends and nothing is cleared before an answer.
+        assertThat(tokens.current()).isNotNull()
+        assertThat(identity.seed).isNotNull()
+        assertThat(identity.custodyPurges).isEqualTo(0)
+    }
+
+    @Test
+    fun anUnknownBackupStateAsksFirstToo() = runTest(dispatcher) {
+        signedIn()
+        identity.forgetOnSignOut = true
+        settings.read = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        idle()
+        vm.onSignOut()
+        idle()
+        assertThat(vm.state.value.signOutConfirmOpen).isTrue()
+        assertThat(tokens.current()).isNotNull()
+    }
+
+    @Test
+    fun `erase_purges_and_signs_out`() = runTest(dispatcher) {
+        signedIn()
+        identity.forgetOnSignOut = true
+        settings.read = Outcome.Success(account(keyBackupCreatedAt = null))
+        val vm = viewModel()
+        idle()
+        vm.onSignOut()
+        idle()
+        vm.onEraseAndSignOut()
+        idle()
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+        assertThat(identity.custodyPurges).isEqualTo(1)
+        assertThat(identity.seed).isNull()
+        assertThat(tokens.current()).isNull()
+    }
+
+    @Test
+    fun `make_a_recovery_code_stays_signed_in`() = runTest(dispatcher) {
+        signedIn()
+        identity.forgetOnSignOut = true
+        settings.read = Outcome.Success(account(keyBackupCreatedAt = null))
+        val vm = viewModel()
+        idle()
+        vm.onSignOut()
+        idle()
+        vm.onMakeRecoveryCode()
+        idle()
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+        assertThat(tokens.current()).isNotNull()
         assertThat(identity.seed).isNotNull()
     }
 
     @Test
-    fun signOutPurgesAnAccountThatOptedOutOfBeingRemembered() = runTest(dispatcher) {
-        tokens.save(AuthTokens("a", "r", "u1"))
+    fun `scrim_and_back_close_still_signed_in_focus_on_sign_out`() = runTest(dispatcher) {
+        signedIn()
         identity.forgetOnSignOut = true
+        settings.read = Outcome.Success(account(keyBackupCreatedAt = null))
         val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
         vm.onSignOut()
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(tokens.current()).isNull()
-        assertThat(identity.seed).isNull()
+        idle()
+        vm.onDismissSignOutConfirm()
+        idle()
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+        assertThat(tokens.current()).isNotNull()
+        assertThat(identity.seed).isNotNull()
+        assertThat(events).contains(SettingsEvent.FocusSignOut)
+        collecting.cancel()
     }
 
-    // -- The stance input preference (design.md §8.6) --
+    // ------------------------------------------------- the interim backup
 
     @Test
-    fun thePadIsTheStoredDefault() = runTest(dispatcher) {
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
+    fun theNewBackupCodeOpensTheUploadedBlob() = runTest(dispatcher) {
+        signedIn()
+        val account = object : ThrowingAccountRepository() {
+            var uploaded: ByteArray? = null
 
-        assertThat(vm.state.value.stanceInputMode).isEqualTo(StanceInputMode.PAD)
-    }
+            override suspend fun keyBackupChallenge(): Outcome<ByteArray> = Outcome.Success(ByteArray(32) { 0x71 })
 
-    @Test
-    fun pickingAnAlternateStoresItAndShowsItAsChosen() = runTest(dispatcher) {
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        vm.onStanceInputMode(StanceInputMode.ENTRY)
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(vm.state.value.stanceInputMode).isEqualTo(StanceInputMode.ENTRY)
-        // Stored, not screen state: the choice replaces the pad on every
-        // other surface too.
-        assertThat(identity.stanceInputMode.first()).isEqualTo(StanceInputMode.ENTRY)
-    }
-
-    // -- The multi-action confirm (F4) --
-
-    @Test
-    fun theConfirmIsOnUntilTheReaderSaysOtherwise() = runTest(dispatcher) {
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        assertThat(vm.state.value.confirmMultiActionSubmits).isTrue()
-    }
-
-    @Test
-    fun turningTheConfirmOffAndOnAgainIsStored() = runTest(dispatcher) {
-        val vm = viewModel()
-        dispatcher.scheduler.advanceUntilIdle()
-
-        vm.onConfirmMultiActionSubmits(false)
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(vm.state.value.confirmMultiActionSubmits).isFalse()
-        assertThat(identity.confirmMultiActionSubmits.first()).isFalse()
-
-        vm.onConfirmMultiActionSubmits(true)
-        dispatcher.scheduler.advanceUntilIdle()
-        assertThat(identity.confirmMultiActionSubmits.first()).isTrue()
+            override suspend fun uploadKeyBackup(blob: ByteArray, challenge: ByteArray, signature: ByteArray) =
+                Outcome.Success(Unit).also { uploaded = blob }
+        }
+        val vm = BackupViewModel(BackupManager(identity, account), identity)
+        idle()
+        assertThat(vm.state.value.actorPresent).isTrue()
+        vm.onCreateBackup()
+        idle()
+        val code = checkNotNull(vm.state.value.newBackupCode)
+        assertThat(openKeyBackup(checkNotNull(account.uploaded), RecoveryCode.fromInput(code))).isEqualTo(identity.seed)
+        vm.onBackupCodeSaved()
+        assertThat(vm.state.value.newBackupCode).isNull()
     }
 }
