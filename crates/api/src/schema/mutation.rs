@@ -1101,6 +1101,12 @@ struct ChangeHandlePayload {
     user_errors: Vec<UserError>,
 }
 
+#[derive(SimpleObject)]
+struct DismissVouchBackPayload {
+    user: Option<User>,
+    user_errors: Vec<UserError>,
+}
+
 #[derive(InputObject)]
 struct UploadKeyBackupInput {
     /// The client-encrypted key-backup blob (base64) — ciphertext under
@@ -1880,6 +1886,40 @@ impl Mutation {
             });
         }
         Ok(ChangeHandlePayload {
+            user: store::actor_identity(pool, v.user_id)
+                .await?
+                .map(|identity| User::from_viewer(identity, v)),
+            user_errors: vec![],
+        })
+    }
+
+    /// Dismiss the vouch-back prompt for good (account state; idempotent).
+    ///
+    /// FORBIDDEN, not a no-op, for an account with no landed application —
+    /// an applicant, or a genesis actor that never applied. The dismissal
+    /// lives on the landed application row, so before landing there is
+    /// nowhere to keep it: a no-op would answer success while the prompt
+    /// came back at landing, silently dropping the intent. And no such
+    /// account is ever shown the prompt, so the call is a client bug — the
+    /// transport-tier refusal the acting gate uses for the same reason
+    /// (api-spec "Authentication"). Not `EMAIL_NOT_VERIFIED` even when
+    /// the address is unproven: proving it would not make the call valid.
+    async fn dismiss_vouch_back(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<DismissVouchBackPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        if !store::dismiss_vouch_back(pool, v.user_id).await? {
+            use async_graphql::ErrorExtensions;
+            return Err(
+                async_graphql::Error::new("no landed application: no vouch-back prompt to dismiss")
+                    .extend_with(|_, e: &mut async_graphql::ErrorExtensionValues| {
+                        e.set("code", "FORBIDDEN");
+                    }),
+            );
+        }
+        Ok(DismissVouchBackPayload {
             user: store::actor_identity(pool, v.user_id)
                 .await?
                 .map(|identity| User::from_viewer(identity, v)),
