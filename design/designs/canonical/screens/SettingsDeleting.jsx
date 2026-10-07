@@ -15,7 +15,12 @@
    IT IS AN EXEMPLAR OF `Settings` (readme §13, Canvas pages and flows): the
    page is `SettingsBody` whole; the band's Cancel and the Delete-account row
    are this board's own and carry numbers, every other row is wired on
-   `Settings`. */
+   `Settings`.
+
+   REGISTERED under the `settings` prefix (design ⇄ impl seam 080, the
+   deletion packet): the body names its parts as on `Settings`, and the band
+   under the header is `deletionBand`. */
+export const NODE = "settings";
 export const FRAME = { width: 390, height: 2660 };
 
 export function Screen() {

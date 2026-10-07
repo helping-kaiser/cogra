@@ -72,6 +72,188 @@
         "composeDetails.title.label": []
       }
     },
+    "DeleteAccount": {
+      "prefix": "deleteAccount",
+      "keys": {
+        "deleteAccount.commit": "the reader chip's value — the board draws this once per value, one shown at a time (a chip-drawn state duplicate)"
+      },
+      "nodes": {
+        "deleteAccount.body": [],
+        "deleteAccount.commit": [
+          "member",
+          "applicant"
+        ],
+        "deleteAccount.goes": [],
+        "deleteAccount.goes.label": [],
+        "deleteAccount.header": [],
+        "deleteAccount.header.back": [],
+        "deleteAccount.note": [],
+        "deleteAccount.stays": [],
+        "deleteAccount.stays.label": [],
+        "deleteAccount.sweep": [],
+        "deleteAccount.sweep.box": [],
+        "deleteAccount.sweep.label": [],
+        "deleteAccount.sweepHint": [],
+        "deleteAccount.title": []
+      }
+    },
+    "DeleteAccountCanceled": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.snackbar": [],
+        "feed.snackbar.message": []
+      }
+    },
+    "DeleteAccountConfirmed": {
+      "prefix": "deleteAccount",
+      "keys": {},
+      "nodes": {
+        "deleteAccount.add": [],
+        "deleteAccount.body": [],
+        "deleteAccount.onward": [],
+        "deleteAccount.sweep": [],
+        "deleteAccount.sweep.box": [],
+        "deleteAccount.sweep.label": [],
+        "deleteAccount.sweepHint": [],
+        "deleteAccount.title": []
+      }
+    },
+    "DeleteAccountMail": {
+      "prefix": "deleteAccount",
+      "keys": {},
+      "nodes": {
+        "deleteAccount.body": [],
+        "deleteAccount.header": [],
+        "deleteAccount.header.back": [],
+        "deleteAccount.note": [],
+        "deleteAccount.resend": [],
+        "deleteAccount.title": []
+      }
+    },
+    "DeleteAccountPending": {
+      "prefix": "deleteAccount",
+      "keys": {},
+      "nodes": {
+        "deleteAccount.body": [],
+        "deleteAccount.cancel": [],
+        "deleteAccount.header": [],
+        "deleteAccount.header.back": [],
+        "deleteAccount.title": []
+      }
+    },
     "Explore": {
       "prefix": "explore",
       "keys": {
@@ -531,6 +713,127 @@
         "feed.card.title": [
           "tobias"
         ]
+      }
+    },
+    "FeedDeleting": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.deletionBand": [],
+        "feed.deletionBand.cancel": [],
+        "feed.deletionBand.line": []
       }
     },
     "FeedHidden": {
@@ -1928,6 +2231,157 @@
         "settings.ending.delete.chevron": [],
         "settings.ending.delete.label": [],
         "settings.ending.footnote": [],
+        "settings.header": [],
+        "settings.header.back": [],
+        "settings.header.title": [],
+        "settings.leaving": [],
+        "settings.leaving.forget": [],
+        "settings.leaving.forget.label": [],
+        "settings.leaving.forget.status": [],
+        "settings.leaving.forget.switch": [],
+        "settings.leaving.leave": [],
+        "settings.leaving.leave.label": [],
+        "settings.people": [],
+        "settings.people.footnote": [],
+        "settings.people.hidden": [],
+        "settings.people.hidden.chevron": [],
+        "settings.people.hidden.label": [],
+        "settings.people.hidden.value": [],
+        "settings.people.label": [],
+        "settings.reading": [],
+        "settings.reading.exact": [],
+        "settings.reading.exact.label": [],
+        "settings.reading.exact.status": [],
+        "settings.reading.exact.switch": [],
+        "settings.reading.feed": [],
+        "settings.reading.feed.chevron": [],
+        "settings.reading.feed.label": [],
+        "settings.reading.feed.value": [],
+        "settings.reading.footnote": [],
+        "settings.reading.label": [],
+        "settings.sessions": [],
+        "settings.sessions.elsewhere": [],
+        "settings.sessions.elsewhere.label": [],
+        "settings.sessions.footnote": [],
+        "settings.sessions.label": [],
+        "settings.sessions.session": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.label": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.revoke": [
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.status": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.stance": [],
+        "settings.stance.footnote": [],
+        "settings.stance.label": [],
+        "settings.stance.pad": [],
+        "settings.stance.pad.choice": [],
+        "settings.stance.pad.label": [],
+        "settings.stance.pad.status": [],
+        "settings.stance.sliders": [],
+        "settings.stance.sliders.choice": [],
+        "settings.stance.sliders.label": [],
+        "settings.stance.sliders.status": [],
+        "settings.stance.typed": [],
+        "settings.stance.typed.choice": [],
+        "settings.stance.typed.label": [],
+        "settings.stance.typed.status": [],
+        "settings.theme": [],
+        "settings.theme.footnote": [],
+        "settings.theme.label": [],
+        "settings.theme.picker": [],
+        "settings.theme.picker.autoOption": [],
+        "settings.theme.picker.darkOption": [],
+        "settings.theme.picker.lightOption": [],
+        "settings.writing": [],
+        "settings.writing.confirm": [],
+        "settings.writing.confirm.label": [],
+        "settings.writing.confirm.status": [],
+        "settings.writing.confirm.switch": [],
+        "settings.writing.footnote": [],
+        "settings.writing.label": [],
+        "settings.writing.license": [],
+        "settings.writing.license.chevron": [],
+        "settings.writing.license.label": [],
+        "settings.writing.license.value": []
+      }
+    },
+    "SettingsDeleting": {
+      "prefix": "settings",
+      "keys": {
+        "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
+      },
+      "nodes": {
+        "settings.about": [],
+        "settings.about.aboutCogra": [],
+        "settings.about.aboutCogra.chevron": [],
+        "settings.about.aboutCogra.label": [],
+        "settings.about.contact": [],
+        "settings.about.contact.chevron": [],
+        "settings.about.contact.label": [],
+        "settings.about.contact.value": [],
+        "settings.about.intro": [],
+        "settings.about.intro.chevron": [],
+        "settings.about.intro.label": [],
+        "settings.about.label": [],
+        "settings.about.privacy": [],
+        "settings.about.privacy.chevron": [],
+        "settings.about.privacy.label": [],
+        "settings.about.report": [],
+        "settings.about.report.chevron": [],
+        "settings.about.report.label": [],
+        "settings.about.terms": [],
+        "settings.about.terms.chevron": [],
+        "settings.about.terms.label": [],
+        "settings.about.whatsNew": [],
+        "settings.about.whatsNew.chevron": [],
+        "settings.about.whatsNew.label": [],
+        "settings.about.whatsNew.value": [],
+        "settings.backup": [],
+        "settings.backup.footnote": [],
+        "settings.backup.key": [],
+        "settings.backup.key.chevron": [],
+        "settings.backup.key.label": [],
+        "settings.backup.label": [],
+        "settings.backup.recovery": [],
+        "settings.backup.recovery.chevron": [],
+        "settings.backup.recovery.label": [],
+        "settings.backup.recovery.status": [],
+        "settings.credentials": [],
+        "settings.credentials.email": [],
+        "settings.credentials.email.chevron": [],
+        "settings.credentials.email.label": [],
+        "settings.credentials.email.value": [],
+        "settings.credentials.footnote": [],
+        "settings.credentials.handle": [],
+        "settings.credentials.handle.chevron": [],
+        "settings.credentials.handle.label": [],
+        "settings.credentials.handle.value": [],
+        "settings.credentials.label": [],
+        "settings.credentials.password": [],
+        "settings.credentials.password.chevron": [],
+        "settings.credentials.password.label": [],
+        "settings.credentials.password.status": [],
+        "settings.deletionBand": [],
+        "settings.deletionBand.cancel": [],
+        "settings.deletionBand.line": [],
+        "settings.ending": [],
+        "settings.ending.delete": [],
+        "settings.ending.delete.chevron": [],
+        "settings.ending.delete.label": [],
+        "settings.ending.delete.status": [],
         "settings.header": [],
         "settings.header.back": [],
         "settings.header.title": [],

@@ -3108,7 +3108,7 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
   return (
     <>
       <PageHeader title="Settings" backHref="/profile" backLabel="Back to your profile" node="header" />
-      {deleting && <DeletionBand days={6} />}
+      {deleting && <DeletionBand days={6} node="deletionBand" />}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "var(--space-6)", padding: "24px 24px 32px" }}>
         <SettingsGroup
           bare
