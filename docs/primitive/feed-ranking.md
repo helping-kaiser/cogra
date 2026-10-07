@@ -89,8 +89,8 @@ Adopting rather than re-deriving buys the proven structure:
   authoritative act order `𝒬_k` and the constants alone
   (``lem:graph:ordered-replay-determinism``) — every consumer
   holding the same ordered history computes the same value.
-- **One formula, three consumers.** Backend, miner, and on-device
-  ranker all evaluate this same primitive; there is no CoGra-side
+- **One formula, three consumers.** The ranker container, the miner,
+  and the on-device ranker all evaluate this same primitive; there is no CoGra-side
   variant to trust.
 
 **Invariant: zero is inert.** If either effective parameter is zero, `ε(e)`
@@ -797,11 +797,12 @@ centrally nor deserves central trust. The split:
   any ranking claim from public records and the certificates.
   Pre-folded aggregates are permitted only as a wire optimization
   that changes nothing observable.
-- **Ranking runs on the viewer's device by default**, or on a
-  delegated miner (battery, bandwidth); the viewer's client keeps
-  authority over filters and overrides either way. One ranker
-  implementation serves backend, miner, and device — one formula,
-  three consumers, no divergent math to audit.
+- **Ranking runs on the viewer's device by default**, or in the
+  server's own ranker container or on a delegated miner (battery,
+  bandwidth); the viewer's client keeps authority over filters and
+  overrides either way. One ranker implementation serves the ranker
+  container, miner, and device — one formula, three consumers, no
+  divergent math to audit.
 
 ---
 
