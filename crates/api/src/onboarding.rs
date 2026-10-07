@@ -59,7 +59,7 @@ impl Default for OnboardingConfig {
 /// Flow refusals, named by their api-spec `ErrorCode`.
 #[derive(Debug, thiserror::Error)]
 pub enum OnboardingError {
-    #[error("invite link invalid, expired, revoked, or its single-use slot held")]
+    #[error("invite link invalid, expired, revoked, or consumed")]
     InviteUnusable,
     #[error("handle already taken")]
     HandleTaken,
@@ -511,9 +511,9 @@ async fn answered_meanwhile(pool: &PgPool, id: Uuid) -> OnboardingError {
 }
 
 /// Closes one application in the approver's own queue without approving
-/// it (auth.md "Rejection"): the row is marked rejected — which frees its
-/// single-use invite link's slot — and nothing else changes. The account
-/// keeps its login, its reads and its attached key.
+/// it (auth.md "Rejection"): the row is marked rejected and nothing else
+/// changes. The account keeps its login, its reads and its attached key,
+/// and a single-use invite link it came through stays used up.
 ///
 /// An unknown and a foreign application read alike; an approved or
 /// already-rejected one refuses, naming which. The store's waiting

@@ -274,11 +274,11 @@ pub async fn revoke_invite_link(
 /// Whether the link can stage a new applicant now: live, and — for a
 /// single-use link — its one slot not held by an application through it
 /// (invitations.md §4 "Link modes"). Applications carry no timer, so a
-/// waiting one holds the slot exactly as an approved or landed one does.
-/// Two things free it: the approver rejecting that application, and the
-/// reaper deleting a never-verified account (auth.md "Invite-link
-/// generation", "Expiry"). The one reckoning — registration,
-/// `inviteLinkCheck` and `InviteLink.usable` all read it here.
+/// waiting one holds the slot exactly as an approved, landed or rejected
+/// one does: account creation uses the link up, and only the reaper
+/// deleting a never-verified account frees it (auth.md "Expiry"). The
+/// one reckoning — registration, `inviteLinkCheck` and
+/// `InviteLink.usable` all read it here.
 pub async fn invite_link_usable<'e>(
     executor: impl PgExecutor<'e>,
     id: Uuid,
@@ -292,7 +292,6 @@ pub async fn invite_link_usable<'e>(
                  AND (NOT l.single_use OR NOT EXISTS(
                      SELECT 1 FROM auth_applications a
                      WHERE a.invite_link_id = l.id
-                       AND a.rejected_at IS NULL
                  ))
            ) AS "usable!""#,
         id,

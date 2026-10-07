@@ -28,8 +28,7 @@ use uuid::Uuid;
 
 use super::types::{
     Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType,
-    PendingEmailChange,
-    PreparedWrite, Session, StagedWriteType, User, UserError,
+    PendingEmailChange, PreparedWrite, Session, StagedWriteType, User, UserError,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -1595,13 +1594,13 @@ impl Mutation {
     /// Close a staged application without approving it — the approver's
     /// own gesture, never a side effect of revoking the link the applicant
     /// arrived through (auth.md "Rejection"). It closes this queue entry,
-    /// not the person: the row is marked rejected — which frees its
-    /// single-use invite link's slot — and the account keeps its login,
-    /// its reads and its attached key. Nothing is deleted. One person at a
-    /// time; closing a whole invite link's waiting queue in one gesture is
-    /// rejectLinkApplications. An already-approved, already-rejected, or
-    /// foreign-queue application refuses with BAD_INPUT pinned to
-    /// `application`; an unknown and a foreign application read alike.
+    /// not the person: the row is marked rejected, and the account keeps
+    /// its login, its reads and its attached key. Nothing is deleted. One
+    /// person at a time; closing a whole invite link's waiting queue in
+    /// one gesture is rejectLinkApplications. An already-approved,
+    /// already-rejected, or foreign-queue application refuses with
+    /// BAD_INPUT pinned to `application`; an unknown and a foreign
+    /// application read alike.
     async fn reject_application(
         &self,
         ctx: &Context<'_>,
@@ -1623,8 +1622,8 @@ impl Mutation {
 
     /// Close every application waiting in the viewer's queue through one
     /// invite link (auth.md "Rejection"). Each entry closes as an
-    /// ordinary rejection — marked rejected, freeing its slot, the account
-    /// keeping its login, its reads and its attached key, nothing deleted.
+    /// ordinary rejection — marked rejected, the account keeping its
+    /// login, its reads and its attached key, nothing deleted.
     /// Scoped to what is waiting: applications already approved or
     /// rejected are passed over rather than refusing the call. A revoked
     /// link still sweeps: revocation stops new staging and leaves the

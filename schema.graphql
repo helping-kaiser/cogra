@@ -62,8 +62,7 @@ type Application {
 	queue (rejectLinkApplications); null otherwise. A rejection closes
 	this queue entry only: the account persists, and a member taking up
 	the account's ask link stages a new application (auth.md
-	"Rejection"). A rejection frees the single-use slot the application
-	held on its invite link.
+	"Rejection").
 	"""
 	rejectedAt: DateTime
 	"""
@@ -528,7 +527,7 @@ enum ErrorCode {
 	"""
 	INVALID_CREDENTIALS
 	"""
-	Invite link invalid, expired, revoked, or its single-use slot held.
+	Invite link invalid, expired, revoked, or consumed.
 	"""
 	INVITE_UNUSABLE
 	"""
@@ -715,9 +714,7 @@ and to show who is vouching. Holding the id is holding the link.
 type InviteLinkCheck {
 	"""
 	Whether the link can stage a new applicant now — live, unexpired,
-	unrevoked, and (single-use) its one slot free: no application
-	through it that is waiting, approved or landed. A rejected
-	application frees the slot.
+	unrevoked, and (single-use) its one slot free.
 	"""
 	usable: Boolean!
 	"""
@@ -1117,20 +1114,20 @@ type Mutation {
 	Close a staged application without approving it — the approver's
 	own gesture, never a side effect of revoking the link the applicant
 	arrived through (auth.md "Rejection"). It closes this queue entry,
-	not the person: the row is marked rejected — which frees its
-	single-use invite link's slot — and the account keeps its login,
-	its reads and its attached key. Nothing is deleted. One person at a
-	time; closing a whole invite link's waiting queue in one gesture is
-	rejectLinkApplications. An already-approved, already-rejected, or
-	foreign-queue application refuses with BAD_INPUT pinned to
-	`application`; an unknown and a foreign application read alike.
+	not the person: the row is marked rejected, and the account keeps
+	its login, its reads and its attached key. Nothing is deleted. One
+	person at a time; closing a whole invite link's waiting queue in
+	one gesture is rejectLinkApplications. An already-approved,
+	already-rejected, or foreign-queue application refuses with
+	BAD_INPUT pinned to `application`; an unknown and a foreign
+	application read alike.
 	"""
 	rejectApplication(input: RejectApplicationInput!): RejectApplicationPayload!
 	"""
 	Close every application waiting in the viewer's queue through one
 	invite link (auth.md "Rejection"). Each entry closes as an
-	ordinary rejection — marked rejected, freeing its slot, the account
-	keeping its login, its reads and its attached key, nothing deleted.
+	ordinary rejection — marked rejected, the account keeping its
+	login, its reads and its attached key, nothing deleted.
 	Scoped to what is waiting: applications already approved or
 	rejected are passed over rather than refusing the call. A revoked
 	link still sweeps: revocation stops new staging and leaves the

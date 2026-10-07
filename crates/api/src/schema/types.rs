@@ -301,7 +301,7 @@ pub enum ErrorCode {
     Internal,
     /// The email / password pair did not match.
     InvalidCredentials,
-    /// Invite link invalid, expired, revoked, or its single-use slot held.
+    /// Invite link invalid, expired, revoked, or consumed.
     InviteUnusable,
     /// The handle is already held in the one actor namespace.
     HandleTaken,
@@ -1522,9 +1522,7 @@ impl PendingEmailChange {
 #[derive(SimpleObject)]
 pub struct InviteLinkCheck {
     /// Whether the link can stage a new applicant now — live, unexpired,
-    /// unrevoked, and (single-use) its one slot free: no application
-    /// through it that is waiting, approved or landed. A rejected
-    /// application frees the slot.
+    /// unrevoked, and (single-use) its one slot free.
     pub usable: bool,
     /// The issuing actor's handle.
     pub inviter_handle: String,
@@ -1640,8 +1638,7 @@ impl Application {
     /// queue (rejectLinkApplications); null otherwise. A rejection closes
     /// this queue entry only: the account persists, and a member taking up
     /// the account's ask link stages a new application (auth.md
-    /// "Rejection"). A rejection frees the single-use slot the application
-    /// held on its invite link.
+    /// "Rejection").
     async fn rejected_at(&self) -> Option<DateTime<Utc>> {
         self.0.rejected_at
     }
