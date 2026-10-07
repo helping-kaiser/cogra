@@ -25,6 +25,21 @@ export const HANDLE_PATTERN = /^[a-z0-9_]+$/;
 /** `registration.passwordMinChars`. */
 export const PASSWORD_MIN_CHARS = 12;
 
+/** `registration.passwordMaxChars`, in Unicode scalar values. */
+export const PASSWORD_MAX_CHARS = 128;
+
+/**
+ * Where a new password stands against the length rule, counted in Unicode
+ * scalar values as the server counts them — `[...password]`, never
+ * `.length`, which counts UTF-16 units.
+ */
+export function passwordLength(password: string): "short" | "long" | "ok" {
+  const chars = [...password].length;
+  if (chars < PASSWORD_MIN_CHARS) return "short";
+  if (chars > PASSWORD_MAX_CHARS) return "long";
+  return "ok";
+}
+
 /**
  * Whether a handle is one the server would take.
  *

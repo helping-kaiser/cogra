@@ -6,12 +6,13 @@
 // — saved on this device, for now" and the expiry notice's "nothing was spent"
 // lean on. It is a BEST-EFFORT promise, not a durable one: a browser may evict
 // its storage, a private window discards it at the end of the session, and a
-// signed-out account's draft is cleared on purpose.
+// sign-out that forgets the account clears it on purpose.
 //
 // PER ACCOUNT, not per browser. A single global record meant a reader who
 // signed out left their unpublished words and pictures sitting in the composer
-// for whoever signed in next; the key is the account id, and sign-out clears
-// the account's own.
+// for whoever signed in next; the key is the account id, so a remembered
+// account's draft waits for it unseen by anyone else, and a sign-out with
+// "don't remember" on clears the account's own (Settings.md:117).
 //
 // ONE DRAFT, not a list. The wizard offers "Continue" or "Discard" over a single
 // saved draft; a drafts inbox is a surface nobody has designed.

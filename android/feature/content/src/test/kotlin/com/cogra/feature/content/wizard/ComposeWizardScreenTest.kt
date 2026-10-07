@@ -218,6 +218,10 @@ class ComposeWizardScreenTest {
                 SealingWriteRepository(actor),
                 FakeIdentityStore().apply { seed = actor.seed() },
             ),
+            settings = object : com.cogra.domain.testing.ThrowingSettingsRepository() {
+                override suspend fun defaultLicense(): com.cogra.domain.Outcome<com.cogra.domain.LicenseChoice?> =
+                    com.cogra.domain.Outcome.Success(null)
+            },
         )
     }
 

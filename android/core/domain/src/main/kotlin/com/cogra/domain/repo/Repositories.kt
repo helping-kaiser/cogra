@@ -28,7 +28,6 @@ import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.ReferenceCandidateView
 import com.cogra.domain.SelfMarkView
-import com.cogra.domain.SessionInfo
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
@@ -76,8 +75,6 @@ interface SessionRepository {
 
     /** Consumes the current refresh token; the caller replaces the stored pair. */
     suspend fun refresh(refreshToken: String): Outcome<AuthTokens>
-
-    suspend fun sessions(): Outcome<List<SessionInfo>>
 
     /** Revokes the given session, or the current one when null. */
     suspend fun revokeSession(id: String?): Outcome<Unit>
@@ -154,10 +151,6 @@ interface AccountRepository {
     suspend fun requestPasswordReset(email: String): Outcome<Unit>
 
     suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit>
-
-    suspend fun requestEmailChange(newEmail: String, currentPassword: String): Outcome<Unit>
-
-    suspend fun confirmEmailChange(code: String): Outcome<Unit>
 
     // The inviter surface.
     suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>>

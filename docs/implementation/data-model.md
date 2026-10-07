@@ -641,12 +641,16 @@ CREATE UNIQUE INDEX actors_realization_address_key ON actors (realization_addres
 -- "Registration collision"). reuse_detected_at is the pending
 -- security notice — stamped by refresh-token reuse detection,
 -- read-and-cleared by the next successful login (auth.md "Reuse
--- detection"). Nothing references this row; it is a pure bolt-on
+-- detection"). password_changed_at is when the password was last
+-- set — registration, a reset or a change — stamped in the
+-- statement that rotates the hash; Settings reads it as the
+-- password's age. Nothing references this row; it is a pure bolt-on
 -- keyed by the actor.
 CREATE TABLE user_credentials (
     actor_id                      UUID        PRIMARY KEY REFERENCES actors(id),
     email                         TEXT        NOT NULL UNIQUE,
     password_hash                 TEXT        NOT NULL,
+    password_changed_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     account_state                 TEXT        NOT NULL CHECK (account_state IN ('guest', 'applicant', 'member')),
     email_verified_at             TIMESTAMPTZ,
     email_verification_token_hash BYTEA       UNIQUE,
@@ -1175,12 +1179,27 @@ means the central backend has to be the source of truth.
 -- 10 = strictest. NULL = unset (frontend default applies).
 -- Sensitive-content classification itself is community-moderated;
 -- the moderation mechanism lives in instances/moderation.md.
+--
+-- default_license_*: the license the composer starts a new post
+-- from, set or unset as a pair, each axis on the composer's three
+-- readings. NULL = unset (public domain). It seeds the authoring-time
+-- declaration and binds nothing.
+--
+-- has_seen_onboarding: whether the intro was shown — once per
+-- account, whichever device signs in first.
+--
+-- No row = every preference at its default; the first write creates
+-- it.
 CREATE TABLE user_preferences (
     user_id                          UUID     PRIMARY KEY REFERENCES actors(id) ON DELETE CASCADE,
     content_filtering_severity_level SMALLINT CHECK (
         content_filtering_severity_level IS NULL OR
         (content_filtering_severity_level BETWEEN 0 AND 10)
-    )
+    ),
+    default_license_attribution      DOUBLE PRECISION CHECK (default_license_attribution IN (0, 0.5, 1)),
+    default_license_provenance       DOUBLE PRECISION CHECK (default_license_provenance IN (0, 0.5, 1)),
+    has_seen_onboarding              BOOLEAN  NOT NULL DEFAULT FALSE,
+    CHECK ((default_license_attribution IS NULL) = (default_license_provenance IS NULL))
 );
 ```
 

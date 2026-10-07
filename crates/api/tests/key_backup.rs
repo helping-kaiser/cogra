@@ -502,3 +502,63 @@ async fn the_challenge_needs_a_session(pool: PgPool) {
         "{issued}"
     );
 }
+
+/// The backup's date reads the newest upload: null before any, then the
+/// first upload's moment, then a replacement's — never an older one.
+///
+/// The backup's date is the newest upload's, restamped by every replacement.
+/// ´claim:keys:the-backup-date-reads-the-newest-upload´
+#[sqlx::test(migrations = "../../migrations")]
+async fn key_backup_created_at_reads_the_newest_backup(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let account = rig.logged_in_user().await;
+    let date = |read: Value| -> chrono::DateTime<chrono::Utc> {
+        read["data"]["me"]["keyBackupCreatedAt"]
+            .as_str()
+            .expect("date")
+            .parse()
+            .expect("timestamp")
+    };
+    const READ: &str = "{ me { keyBackupCreatedAt } }";
+    let none = rig.gql(Some(&account.token), READ, json!({})).await;
+    assert!(none["data"]["me"]["keyBackupCreatedAt"].is_null());
+
+    rig.upload(&account, b"ciphertext one").await;
+    sqlx::query("UPDATE auth_key_backups SET created_at = NOW() - INTERVAL '40 days'")
+        .execute(&rig.pool)
+        .await
+        .expect("backdates");
+    let first = date(rig.gql(Some(&account.token), READ, json!({})).await);
+    rig.upload(&account, b"ciphertext two").await;
+    let second = date(rig.gql(Some(&account.token), READ, json!({})).await);
+    assert!(second > first + chrono::Duration::days(30));
+}
+
+/// A reader who is not the account reads no backup date; the account
+/// itself reads it through the same field.
+///
+/// The backup's date resolves only for the account's own viewer.
+/// ´claim:keys:the-backup-date-is-viewer-only´
+#[sqlx::test(migrations = "../../migrations")]
+async fn key_backup_created_at_is_viewer_only(pool: PgPool) {
+    let rig = Rig::new(pool);
+    let account = rig.logged_in_user().await;
+    rig.upload(&account, b"ciphertext one").await;
+
+    let anonymous = rig
+        .gql(
+            None,
+            "{ user(handle: \"alice\") { keyBackupCreatedAt } }",
+            json!({}),
+        )
+        .await;
+    assert!(anonymous["data"]["user"]["keyBackupCreatedAt"].is_null());
+    let own = rig
+        .gql(
+            Some(&account.token),
+            "{ user(handle: \"alice\") { keyBackupCreatedAt } }",
+            json!({}),
+        )
+        .await;
+    assert!(own["data"]["user"]["keyBackupCreatedAt"].is_string());
+}

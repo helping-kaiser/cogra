@@ -42,8 +42,7 @@ class ComposeDraftStoreImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     /** Null with no session: a draft belongs to whoever was writing it. */
-    private suspend fun key(): String? =
-        tokens.current()?.accountId?.let { "$KEY_PREFIX$it" }
+    private suspend fun key(): String? = tokens.current()?.accountId?.let(::composeDraftKey)
 
     override suspend fun draft(): ComposeDraft? {
         val bytes = store.get(key() ?: return null) ?: return null
@@ -92,8 +91,11 @@ class ComposeDraftStoreImpl @Inject constructor(
     override suspend fun clear() {
         store.remove(key() ?: return)
     }
-
-    private companion object {
-        const val KEY_PREFIX = "compose_draft:"
-    }
 }
+
+/**
+ * Where an account's draft lives. Named once, because the explicit
+ * sign-out's custody purge (`IdentityStoreImpl.purgeCustodySet`) has to
+ * find the same record this store writes.
+ */
+internal fun composeDraftKey(account: String): String = "compose_draft:$account"

@@ -497,6 +497,37 @@ type DismissVouchBackPayload {
 }
 
 """
+The anonymous view of an email change's new-address link (the
+`emailChangeLinkCheck` query). Holding the token is holding the link.
+"""
+type EmailChangeLinkCheck {
+	"""
+	The address this link confirms — the inbox the link was mailed to.
+	"""
+	newEmail: String!
+	"""
+	Where the link's change stands, by what ended it if anything did —
+	the confirm's own end-state codes (EMAIL_CHANGE_ALREADY_APPLIED /
+	_CANCELED / _EXPIRED), read without a session.
+	"""
+	state: EmailChangeLinkState!
+}
+
+"""
+PENDING: the change is live in its window (either side may already
+have landed; a taken address still reads PENDING — the collision is
+answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
+change moved the address. CANCELED: called off, or superseded by a
+newer request. EXPIRED: its window closed before both sides landed.
+"""
+enum EmailChangeLinkState {
+	PENDING
+	APPLIED
+	CANCELED
+	EXPIRED
+}
+
+"""
 One shared error vocabulary across both tiers: transport faults ride
 the GraphQL errors array; expected outcomes ride `userErrors`.
 """
@@ -1196,7 +1227,10 @@ type Mutation {
 	confirmPasswordReset(input: ConfirmPasswordResetInput!): ConfirmPasswordResetPayload!
 	"""
 	Re-verifies the current password, rotates the hash, and revokes
-	the account's other sessions.
+	the account's other sessions. The re-proof spends the account's
+	re-authentication budget, shared with every verb that re-proves
+	the password in a live session: a run of wrong ones backs off as
+	a visible RATE_LIMITED, and a right one ends the run.
 	"""
 	changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
 	"""
@@ -1207,8 +1241,10 @@ type Mutation {
 	request supersedes a pending one. A new address already
 	registered to another account reads exactly like success; a wrong
 	password is INVALID_CREDENTIALS, which leaks nothing to a caller
-	already signed in. Spends the account's mail budget: a spent
-	budget answers RATE_LIMITED and nothing is mailed or recorded.
+	already signed in. The re-proof spends the account's
+	re-authentication budget, the one changePassword shares. Spends
+	the account's mail budget: a spent budget answers RATE_LIMITED
+	and nothing is mailed or recorded.
 	"""
 	requestEmailChange(input: RequestEmailChangeInput!): RequestEmailChangePayload!
 	"""
@@ -1258,6 +1294,13 @@ type Mutation {
 	landing there is no row to keep the dismissal on.
 	"""
 	dismissVouchBack: DismissVouchBackPayload!
+	"""
+	Writes the viewer's cross-device preferences. An absent field is
+	left as it is; an explicit null restores its default. A license
+	axis off the three published readings, or a filter level outside
+	0–10, is BAD_INPUT on that field and writes nothing.
+	"""
+	setPreferences(input: SetPreferencesInput!): SetPreferencesPayload!
 	"""
 	Issues the challenge an upload must spend (auth.md "Key
 	recovery"). The server picks it: a client-chosen nonce would let
@@ -2100,6 +2143,20 @@ type Query {
 	"""
 	inviteLinkCheck(id: UUID!): InviteLinkCheck
 	"""
+	Anonymous pre-sign-in check of an email change's new-address
+	link, so a device with no session can say what the link is for
+	before anything applies. It reads and never writes: no side is
+	confirmed, consumed or reset. Null when the token references no
+	change — unknown, malformed, an original-address code, a
+	verification-link token, or a change row a retention sweep has
+	dropped all answer null alike. Holding the 256-bit token is the
+	proof: it was mailed to `newEmail`, so its holder learns nothing
+	about an address they do not already read. For the same reason
+	the answer carries nothing about the account the change belongs
+	to — no handle, no current address, no id.
+	"""
+	emailChangeLinkCheck(token: String!): EmailChangeLinkCheck
+	"""
 	The viewer's own account, resolved from the request's auth token.
 	Null when the request is unauthenticated.
 	"""
@@ -2717,6 +2774,32 @@ type Session {
 }
 
 """
+A preference write. Every field is optional in the GraphQL sense: an
+absent field is left as it is; an explicit null restores its default.
+"""
+input SetPreferencesInput {
+	"""
+	0 (show everything) to 10 (strictest); null restores the default.
+	"""
+	contentFilteringSeverityLevel: Int
+	"""
+	The license new posts start from; null restores public domain
+	(0/0). Both axes take the same three readings the composer
+	publishes — 0, 0.5 and 1.
+	"""
+	defaultLicense: LicenseInput
+	"""
+	Whether the account has seen the intro; null restores false.
+	"""
+	hasSeenOnboarding: Boolean
+}
+
+type SetPreferencesPayload {
+	preferences: UserPreferences
+	userErrors: [UserError!]!
+}
+
+"""
 The sign of an authored parameter, for filtering records by
 valence or by the inert (0) state. POSITIVE: > 0. NEGATIVE: < 0.
 ZERO: exactly 0.
@@ -3182,6 +3265,21 @@ type User implements Node & Actor {
 	"""
 	pendingEmailChange: PendingEmailChange
 	"""
+	When the password was last set — at registration, a reset or a
+	change. Field-level: viewer-only.
+	"""
+	passwordChangedAt: DateTime
+	"""
+	When the stored key backup was made — the newest, the one
+	recovery serves; null when none was uploaded. Field-level:
+	viewer-only.
+	"""
+	keyBackupCreatedAt: DateTime
+	"""
+	Cross-device preferences. Field-level: viewer-only.
+	"""
+	preferences: UserPreferences
+	"""
 	The account's current application — the applicant's own view of
 	its progress; null when the account has none. With several paths
 	the read prefers the landed path, then the approved-not-landed path
@@ -3217,6 +3315,30 @@ type UserError {
 	whole-operation failure.
 	"""
 	field: [String!]
+}
+
+"""
+A User's cross-device preferences.
+"""
+type UserPreferences {
+	"""
+	Sensitive-content filter aggressiveness: 0 (show everything) to
+	10 (strictest); null when unset, so the frontend default applies.
+	"""
+	contentFilteringSeverityLevel: Int
+	"""
+	The license the composer starts a new post from; null when unset,
+	so the composer starts at public domain (0/0). It seeds the
+	authoring-time declaration and binds nothing: the license is
+	settled per post at its genesis signing, and changing this never
+	reaches a post already published.
+	"""
+	defaultLicense: License
+	"""
+	Whether the account has seen the intro — it shows once per
+	account, on whichever device signs in first. False until set.
+	"""
+	hasSeenOnboarding: Boolean!
 }
 
 input VerifyEmailInput {

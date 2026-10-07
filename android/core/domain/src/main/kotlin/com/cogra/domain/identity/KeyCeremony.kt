@@ -193,11 +193,18 @@ class ActorRestorer @Inject constructor(
 }
 
 /**
- * The local half of ending a session, shared by sign-out and the
- * refresh machinery's reuse-detected token clear: purge the account's
- * identity material when it opted out of being remembered (auth.md
- * "Sign-out"), then forget the tokens — in that order, because the
- * purge needs the tokens to know which account's slot to clear.
+ * The local half of a session ended from ELSEWHERE — the refresh
+ * machinery's reuse-detected token clear (`REFRESH_TOKEN_INVALID`):
+ * purge the account's identity slot when it opted out of being
+ * remembered (auth.md "Sign-out"), then forget the tokens — in that
+ * order, because the purge needs the tokens to know which account's
+ * slot to clear.
+ *
+ * THE REMOTE PATH IS THE SIGN-OUT CUSTODY PACKET'S, and this keeps it
+ * exactly as it stands: the slot purge, never the draft. The explicit
+ * sign-out is [SignOut]'s and purges the whole custody set; the two
+ * diverge on purpose, and widening this one would move the custody
+ * boundary without that packet's lock behind it.
  */
 class EndLocalSession @Inject constructor(
     private val identity: IdentityStore,
@@ -210,18 +217,26 @@ class EndLocalSession @Inject constructor(
 }
 
 /**
- * Sign-out: revoke the current session server-side (best effort — a
- * dead network must not trap the user signed in) and forget the local
- * tokens. The actor key stays in its account's slot — signing out is
- * not losing the actor — unless the account opted into "don't remember
- * me", which purges its material.
+ * The explicit sign-out (Settings.md "Sign out"): revoke the current
+ * session server-side (best effort — a dead network must not trap the
+ * reader signed in), then end it locally. The actor key stays in its
+ * account's slot — signing out is not losing the actor — unless the
+ * account opted into "don't remember me", which clears the account's
+ * whole custody set: the key, the draft and every other piece of its
+ * slot, in one edit.
+ *
+ * Whether a forgetting sign-out may run without asking first — the only
+ * copy of an unbacked key — is the caller's question (SignOutConfirm);
+ * by the time this runs, the reader has answered it.
  */
 class SignOut @Inject constructor(
     private val sessions: SessionRepository,
-    private val endLocalSession: EndLocalSession,
+    private val identity: IdentityStore,
+    private val tokens: TokenStore,
 ) {
     suspend fun signOut() {
         sessions.revokeSession(null)
-        endLocalSession.end()
+        if (identity.forgetOnSignOut()) identity.purgeCustodySet()
+        tokens.clear()
     }
 }

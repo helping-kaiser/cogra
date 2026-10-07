@@ -326,6 +326,15 @@ describe("identity store", () => {
     expect(await store.actorKey()).not.toBeNull();
   });
 
+  it("reads the don't-remember flag back, per account", async () => {
+    expect(await store.isEphemeral()).toBe(false);
+    await store.setEphemeral(true);
+    expect(await store.isEphemeral()).toBe(true);
+    account = null;
+    expect(await store.isEphemeral()).toBe(false);
+    account = ACCOUNT_A;
+  });
+
   it("purges nothing without an active account", async () => {
     await store.saveActor(randomBytes(32), true);
     await store.setEphemeral(true);

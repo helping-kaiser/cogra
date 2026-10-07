@@ -61,7 +61,11 @@ import com.cogra.domain.RecordRow
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
 import com.cogra.domain.SelfMarkView
-import com.cogra.domain.SessionInfo
+import com.cogra.domain.settings.AccountEmail
+import com.cogra.domain.settings.EmailChangeLinkCheck
+import com.cogra.domain.settings.PendingEmailChange
+import com.cogra.domain.settings.SettingsAccount
+import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
@@ -82,8 +86,10 @@ import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
+import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.IdentityStore
 import com.cogra.domain.store.StorageHealth
+import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.store.TokenStore
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.topics.TagClaim
@@ -169,7 +175,23 @@ class FakeIdentityStore : IdentityStore {
         forgetOnSignOut = value
     }
 
+    /** How many times the remote path's slot purge ran. */
+    var slotPurges = 0
+
+    /** How many times the explicit sign-out's custody-set purge ran. */
+    var custodyPurges = 0
+
     override suspend fun purge() {
+        slotPurges++
+        clearSlot()
+    }
+
+    override suspend fun purgeCustodySet() {
+        custodyPurges++
+        clearSlot()
+    }
+
+    private fun clearSlot() {
         seed = null
         pendingBlob = null
         stancePadTaught = false
@@ -177,6 +199,20 @@ class FakeIdentityStore : IdentityStore {
         inputMode.value = StanceInputMode.Default
         confirmMultiAction.value = true
         handshakes.clear()
+    }
+}
+
+class FakeDevicePreferences : DevicePreferences {
+    override val theme = MutableStateFlow(ThemeChoice.AUTO)
+
+    override suspend fun setTheme(choice: ThemeChoice) {
+        theme.value = choice
+    }
+
+    override val showExactValues = MutableStateFlow(false)
+
+    override suspend fun setShowExactValues(value: Boolean) {
+        showExactValues.value = value
     }
 }
 
@@ -260,9 +296,6 @@ open class ThrowingAccountRepository : AccountRepository {
     override suspend fun requestPasswordReset(email: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun confirmPasswordReset(resetToken: String, newPassword: String): Outcome<Unit> =
         throw UnsupportedOperationException()
-    override suspend fun requestEmailChange(newEmail: String, currentPassword: String): Outcome<Unit> =
-        throw UnsupportedOperationException()
-    override suspend fun confirmEmailChange(code: String): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun inviteLinks(): Outcome<List<InviteLinkInfo>> = throw UnsupportedOperationException()
     override suspend fun createInviteLink(
         expiresAt: Instant,
@@ -280,9 +313,23 @@ open class ThrowingSessionRepository : SessionRepository {
     override suspend fun logIn(email: String, password: String, deviceLabel: String?): Outcome<LoginGrant> =
         throw UnsupportedOperationException()
     override suspend fun refresh(refreshToken: String): Outcome<AuthTokens> = throw UnsupportedOperationException()
-    override suspend fun sessions(): Outcome<List<SessionInfo>> = throw UnsupportedOperationException()
     override suspend fun revokeSession(id: String?): Outcome<Unit> = throw UnsupportedOperationException()
     override suspend fun revokeOtherSessions(): Outcome<Int> = throw UnsupportedOperationException()
+}
+
+open class ThrowingSettingsRepository : SettingsRepository {
+    override suspend fun settingsAccount(): Outcome<SettingsAccount?> = throw UnsupportedOperationException()
+    override suspend fun defaultLicense(): Outcome<LicenseChoice?> = throw UnsupportedOperationException()
+    override suspend fun setDefaultLicense(license: LicenseChoice?): Outcome<LicenseChoice?> =
+        throw UnsupportedOperationException()
+    override suspend fun requestEmailChange(newEmail: String, currentPassword: String): Outcome<PendingEmailChange> =
+        throw UnsupportedOperationException()
+    override suspend fun confirmEmailChange(code: String): Outcome<AccountEmail> =
+        throw UnsupportedOperationException()
+    override suspend fun resendEmailChange(): Outcome<PendingEmailChange> = throw UnsupportedOperationException()
+    override suspend fun cancelEmailChange(): Outcome<AccountEmail> = throw UnsupportedOperationException()
+    override suspend fun emailChangeLinkCheck(token: String): Outcome<EmailChangeLinkCheck?> =
+        throw UnsupportedOperationException()
 }
 
 open class ThrowingOnboardingRepository : OnboardingRepository {

@@ -1005,11 +1005,15 @@ There is no separate "abandon application" act: a signed-out
 application keeps following its lifecycle ("Application").
 
 The one exception is the **"don't remember me" opt-in**, offered
-at login and restore: an account flagged with it has its key
-material — seed, pending backup blob, handshake material, and
-device-local flags — purged from the device at sign-out (and on
-a session invalidation that clears the tokens). For a shared or
-public device; default off.
+at login, at restore and in Settings: an account flagged with it
+has its key material — seed, pending backup blob, handshake
+material, and device-local flags — purged from the device at
+sign-out (and on a session invalidation that clears the tokens).
+An explicit sign-out clears the account's unpublished draft with
+it, and asks first when this device holds the only copy of an
+unbacked key — make a recovery code, or erase and sign out. A
+remembered account's sign-out clears nothing, its draft included.
+For a shared or public device; default off.
 
 ### Multi-account device custody
 
@@ -1042,6 +1046,13 @@ limits survive restarts and hold across instances.
 - Login attempts — limited per IP and per account, with
   exponential backoff on consecutive failures; a successful
   login ends the run.
+- Re-authentication inside a session (`changePassword`,
+  `requestEmailChange`) — one per-account run of consecutive wrong
+  current passwords, shared by every verb that re-proves the
+  password, with the same exponential backoff; a right password
+  ends the run. Without it a live session could guess the password
+  it was opened with. The caller is authenticated, so the backoff
+  answers visibly.
 - Application submits (`register`) — limited
   per IP and per invite link.
 - Password-reset requests — limited per IP and per account.

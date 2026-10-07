@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_preferences AS p\n               (user_id, content_filtering_severity_level, default_license_attribution,\n                default_license_provenance, has_seen_onboarding)\n           VALUES ($1, $3, $5, $6, COALESCE($7, FALSE))\n           ON CONFLICT (user_id) DO UPDATE SET\n               content_filtering_severity_level = CASE WHEN $2\n                   THEN EXCLUDED.content_filtering_severity_level\n                   ELSE p.content_filtering_severity_level END,\n               default_license_attribution = CASE WHEN $4\n                   THEN EXCLUDED.default_license_attribution\n                   ELSE p.default_license_attribution END,\n               default_license_provenance = CASE WHEN $4\n                   THEN EXCLUDED.default_license_provenance\n                   ELSE p.default_license_provenance END,\n               has_seen_onboarding = COALESCE($7, p.has_seen_onboarding)\n           RETURNING content_filtering_severity_level, default_license_attribution,\n                     default_license_provenance, has_seen_onboarding",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "content_filtering_severity_level",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 1,
+        "name": "default_license_attribution",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 2,
+        "name": "default_license_provenance",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 3,
+        "name": "has_seen_onboarding",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Bool",
+        "Int2",
+        "Bool",
+        "Float8",
+        "Float8",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "e09287b32cd4f494e14a6df2e3d92fb6031010c233afec55479a8d3669d3a008"
+}

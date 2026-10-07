@@ -18,6 +18,7 @@ import com.cogra.domain.media.VideoProcessor
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.ReferenceRepository
+import com.cogra.domain.settings.SettingsRepository
 import com.cogra.domain.signing.NoActorKeyException
 import com.cogra.domain.signing.WriteResult
 import com.cogra.domain.signing.WriteSigner
@@ -71,7 +72,18 @@ class ComposeWizardViewModel @Inject constructor(
     private val deviceMedia: DeviceMediaSource,
     private val drafts: ComposeDraftStore,
     private val signer: WriteSigner,
+    private val settings: SettingsRepository,
 ) : ViewModel() {
+
+    /**
+     * The license a new post starts from — the account's default
+     * (`SettingsLicense.md` "a new post starts from the account's default
+     * license"), public domain until it is read or when none is set.
+     */
+    private var startingLicense: LicenseChoice = LicenseChoice.PublicDomain
+
+    /** Whether the author has touched the license; a late read never overrides their pick. */
+    private var licenseTouched = false
 
     private val _state = MutableStateFlow(ComposeWizardState())
     val state = _state.asStateFlow()
@@ -159,6 +171,16 @@ class ComposeWizardViewModel @Inject constructor(
         // two taps loses nothing (fix-round-2 ruling).
         viewModelScope.launch { _state.collect { rememberDraft() } }
         prefillReference(referenceTargetId)
+        seedLicense()
+    }
+
+    /** Reads the account's default license and starts the seal there, unless the author already chose. */
+    private fun seedLicense() {
+        viewModelScope.launch {
+            val default = settings.defaultLicense().valueOrNull() ?: return@launch
+            startingLicense = default
+            if (!licenseTouched) _state.update { it.copy(license = default) }
+        }
     }
 
     // -- The draft offer (`ComposeDraft`) --
@@ -180,9 +202,12 @@ class ComposeWizardViewModel @Inject constructor(
         // opened the wizard, or `Cite in a new post` silently opens an
         // ordinary composer. A draft carries no citations of its own
         // (`ComposeDraft`), so nothing is overwritten by keeping it.
+        // A draft carries no license; the restored post starts from the
+        // default like any new one, or from the author's pick already made.
         _state.value = ComposeWizardState.from(held).copy(
             deviceMedia = current.deviceMedia,
             referenceSection = current.referenceSection,
+            license = if (licenseTouched) current.license else startingLicense,
         )
         armed = true
         // A restored media draft re-reads every asset's shape: the crop
@@ -621,7 +646,10 @@ class ComposeWizardViewModel @Inject constructor(
         }
     }
 
-    fun onLicenseChange(license: LicenseChoice) = _state.update { it.copy(license = license) }
+    fun onLicenseChange(license: LicenseChoice) {
+        licenseTouched = true
+        _state.update { it.copy(license = license) }
+    }
 
     /** A drag on the pad's field: staged, not set (`ComposePad`). */
     fun onPDirectedChange(value: Double) = _state.update { it.copy(stagedPDirected = value) }

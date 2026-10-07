@@ -97,6 +97,26 @@ class EncryptedStore(
         dataStore.edit { it.remove(stringPreferencesKey(name)) }
     }
 
+    /**
+     * Removes every value whose name [matches], in ONE `DataStore.edit`
+     * — the documented atomic read-modify-write — so a purge either
+     * happened whole or not at all. A loop of [remove]s commits each name
+     * on its own, and a process death between two of them leaves an
+     * account half-cleared (custody packet F3).
+     *
+     * The names are chosen inside the same transaction they are removed
+     * in, so a value written concurrently cannot slip between the read
+     * and the removal.
+     */
+    suspend fun removeAll(matches: (String) -> Boolean) {
+        dataStore.edit { prefs ->
+            prefs.asMap().keys
+                .filter { matches(it.name) }
+                .toList()
+                .forEach { prefs.remove(it) }
+        }
+    }
+
     fun watch(name: String): Flow<ByteArray?> = dataStore.data.map { prefs ->
         (openOrMark(prefs, name) as? StoredValue.Present)?.bytes
     }

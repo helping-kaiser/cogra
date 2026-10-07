@@ -1,7 +1,8 @@
 //! ´mod:module:ratelimit´
 //!
 //! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
-//! plus the login backoff (auth.md "Rate limiting"), the email-change
+//! plus the login and re-authentication backoffs (auth.md "Rate
+//! limiting"), the email-change
 //! mail budget, the media upload budget, and the per-account signing
 //! budget spent at prepare (api-spec.md "Conventions") with the voucher's
 //! admission funding budget priced beside it.
@@ -38,6 +39,7 @@ pub mod scope {
     pub const RESET_EMAIL: &str = "reset_email";
     pub const RESEND_EMAIL: &str = "resend_email";
     pub const CONFIRM_IP: &str = "confirm_ip";
+    pub const REAUTH_ACCOUNT: &str = "reauth_account";
     pub const EMAIL_CHANGE_REQUEST_ACCOUNT: &str = "email_change_request_account";
     pub const EMAIL_CHANGE_RESEND_ACCOUNT: &str = "email_change_resend_account";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
@@ -221,6 +223,15 @@ pub struct RateLimitConfig {
     /// Token confirmations (verifyEmail, confirmPasswordReset,
     /// confirmEmailChange) per IP.
     pub confirm_ip: Window,
+    /// Consecutive wrong current passwords per account before the
+    /// re-authentication backoff bites — every verb that re-proves the
+    /// password inside a live session shares the one run, so a session
+    /// holder cannot guess the password through any of them.
+    pub reauth_backoff_threshold: i32,
+    /// First re-authentication delay, doubling per further failure.
+    pub reauth_backoff_base_secs: f64,
+    /// The re-authentication backoff ceiling.
+    pub reauth_backoff_cap_secs: f64,
     /// Email-change requests per account — the mail budget. The caller
     /// is authenticated, so it answers visibly; each request mails an
     /// address of the caller's choosing, which is the spam vector.
@@ -272,6 +283,9 @@ impl Default for RateLimitConfig {
                 limit: 30,
                 window_secs: 900.0,
             },
+            reauth_backoff_threshold: 10,
+            reauth_backoff_base_secs: 1.0,
+            reauth_backoff_cap_secs: 900.0,
             email_change_request_account: Window {
                 limit: 5,
                 window_secs: 3600.0,
@@ -358,6 +372,9 @@ impl RateLimitConfig {
             reset_email: generous,
             resend_email: generous,
             confirm_ip: generous,
+            reauth_backoff_threshold: i32::MAX,
+            reauth_backoff_base_secs: 0.0,
+            reauth_backoff_cap_secs: 0.0,
             email_change_request_account: generous,
             email_change_resend_account: generous,
             email_change_code_tries: 5,
@@ -501,6 +518,40 @@ pub async fn login_failed(
 /// A successful login ends the consecutive-failure run.
 pub async fn login_succeeded(pool: &PgPool, email: &str) -> Result<(), sqlx::Error> {
     store::clear(pool, scope::LOGIN_EMAIL, email).await
+}
+
+/// The re-authentication backoff's gate: Some(unblock time) while the
+/// account is serving a delay. Keyed by the authenticated account — the
+/// caller already holds a session, so naming the account leaks nothing.
+pub async fn reauth_blocked(
+    pool: &PgPool,
+    account: Uuid,
+) -> Result<Option<DateTime<Utc>>, sqlx::Error> {
+    store::blocked_until(pool, scope::REAUTH_ACCOUNT, &account.to_string()).await
+}
+
+/// One consecutive wrong current password for the account; from the
+/// threshold on, each failure doubles the delay.
+pub async fn reauth_failed(
+    pool: &PgPool,
+    cfg: &RateLimitConfig,
+    account: Uuid,
+) -> Result<(), sqlx::Error> {
+    store::record_failure(
+        pool,
+        scope::REAUTH_ACCOUNT,
+        &account.to_string(),
+        cfg.reauth_backoff_threshold,
+        cfg.reauth_backoff_base_secs,
+        cfg.reauth_backoff_cap_secs,
+    )
+    .await?;
+    Ok(())
+}
+
+/// A right current password ends the consecutive-failure run.
+pub async fn reauth_succeeded(pool: &PgPool, account: Uuid) -> Result<(), sqlx::Error> {
+    store::clear(pool, scope::REAUTH_ACCOUNT, &account.to_string()).await
 }
 
 /// Throttle rows idle this long (and not blocking) are swept.

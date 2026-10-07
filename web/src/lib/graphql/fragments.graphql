@@ -325,3 +325,13 @@ fragment StanceBundleFields on StanceBundle {
     severed
   }
 }
+
+# An email change in flight — which sides landed, read by the settings
+# row, the confirmation's pair and the landings.
+fragment PendingEmailChangeFields on PendingEmailChange {
+  newEmail
+  requiresCode
+  codeConfirmed
+  linkConfirmed
+  expiresAt
+}

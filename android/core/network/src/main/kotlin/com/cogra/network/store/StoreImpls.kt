@@ -256,8 +256,22 @@ class IdentityStoreImpl @Inject constructor(
 
     override suspend fun purge() {
         val account = account() ?: return
-        // The whole slot goes: every key of this account, no other's.
-        for (name in store.names(scoped(account, ""))) store.remove(name)
+        // The whole slot goes: every key of this account, no other's —
+        // one edit, never a loop of them (custody packet F3). The draft
+        // stays: this is the remote path's purge, and the custody packet
+        // owns what that path does with it.
+        val slot = scoped(account, "")
+        store.removeAll { it.startsWith(slot) }
+    }
+
+    override suspend fun purgeCustodySet() {
+        val account = account() ?: return
+        // The explicit sign-out's set: the slot AND the account's draft
+        // (custody packet F2 — the draft lives under its own prefix, so a
+        // walk of the slot alone left it behind), together in one edit.
+        val slot = scoped(account, "")
+        val draft = composeDraftKey(account)
+        store.removeAll { it.startsWith(slot) || it == draft }
     }
 
     private companion object {
