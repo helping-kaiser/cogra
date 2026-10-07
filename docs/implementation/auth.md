@@ -267,7 +267,9 @@ applicant | member`, a column on the credentials row
 The state gates *acting through CoGra* and is enforced
 server-side — an acting call from a non-member account is
 `FORBIDDEN`, or `EMAIL_NOT_VERIFIED` while that is the proof
-standing in the way ([api-spec.md](api-spec.md)). It is service state,
+standing in the way ([api-spec.md](api-spec.md)) — save the
+once-each acts a verified applicant carries with their application
+("Application" below). It is service state,
 distinct from two neighbors: the mutual-pair **membership** of
 [invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)
 — a `member` account that has not yet reciprocated is a member in
