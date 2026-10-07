@@ -202,6 +202,11 @@ class OnboardingRepositoryImpl @Inject constructor(private val client: ApolloCli
                             it.family == Family.REGISTRATION && it.state != WriteState.EXPIRED
                         },
                     actorPubkey = me.actorPubkey,
+                    carriedBatch = me.stagedWrites?.edges.orEmpty()
+                        .map { it.node.stagedWriteFields }
+                        .filter { it.carried }
+                        .map { it.toDomain() }
+                        .filter { it.state == WriteState.AWAITING_PRE_SIGN },
                 ),
             )
         }
