@@ -13,6 +13,7 @@ import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import type { ReplyTarget } from "@/lib/compose/reply-wizard";
+import { raisedLayersForTests } from "@/lib/ui2/covering-layer";
 import { ReplyWizard } from "./reply-wizard-view";
 
 const push = vi.fn();
@@ -711,5 +712,14 @@ describe("the reply wizard", () => {
       await waitFor(() => expect(sheet).not.toHaveAttribute("open"));
       expect(screen.getByTestId("reply-seal")).toBeInTheDocument();
     });
+  });
+});
+
+// A modal dialog over the thread's surface, so it announces itself as one
+// (`covering-layer.tsx`; Feed.md:31) for as long as it is mounted.
+describe("the reply wizard as a covering layer", () => {
+  it("suspends the surface beneath it while it is up", () => {
+    draw();
+    expect(raisedLayersForTests()).toEqual(["suspend"]);
   });
 });

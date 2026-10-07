@@ -4,11 +4,12 @@ The ranking surface. The backend API ([api-spec.md](api-spec.md))
 deliberately does not rank: it serves each viewer their `χ`-bounded
 subgraph slice (`Query.feedSlice`) and hydrates an ordered id list back
 into a feed (`Query.feed`). Between those two calls sits **ranking**, and
-ranking runs off the backend's hot path — on the viewer's own device or a
-delegated miner ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)). This
+ranking runs off the backend's hot path — on the viewer's own device, in
+the server's own ranker container, or on a delegated miner ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)). This
 doc specifies that intermediate surface: slice in, ordered list out.
 
-- **Runner**: the viewer's device (default) or a chosen miner.
+- **Runner**: the viewer's device (default), the server's own ranker
+  container, or a chosen miner.
 - **Never the central backend.** Ranking is per-viewer and personalized;
   it does not scale as a central realtime service, and centralizing it
   would route the graph's signal through one party.
@@ -391,14 +392,14 @@ type RedemptionStatus {
 
 ## Transport
 
-The contract above is fixed; where it runs moves along a rollout
-path: first the `rank` operation runs on the **backend directly**
-(simplest to exercise against real slices), then in a **separate miner
-container** (a delegated service), then **on the viewer's own device**
-(the decentralized end state — proving a phone can rank its own
-slice). No stage changes the slice-in, ordered-list-out shape, and the
-`ranker` crate is the one implementation at every stage — one formula,
-three consumers.
+The contract above is fixed; where it runs is a deployment choice that
+never includes the backend process: **on the viewer's own device**
+(the best case — a phone ranks its own slice) or in a **separate ranker
+container** on the server, standalone even on the same physical machine
+as the backend; a delegated miner is the same container run by a third
+party. No deployment changes the slice-in, ordered-list-out shape, and
+the `ranker` crate is the one implementation everywhere — one formula,
+every deployment.
 
 ### Wire form — GraphQL everywhere, in-process on-device
 
@@ -407,9 +408,9 @@ doc and the types above, verbatim. `FeedSlice`, `RankParams`, and
 `FeedEntry` travel as written — the ranker already speaks the
 backend's type vocabulary, and a second wire encoding (JSON-RPC,
 protobuf) would be a parallel serialization of the same types, kept in
-lockstep by hand. The backend-direct rollout stage hosts the same
-operations in the backend's own schema; on the viewer's device the
-contract is an in-process call over the same types, no wire at all.
+lockstep by hand. The ranker container serves the same operations in
+its own schema; on the viewer's device the contract is an in-process
+call over the same types, no wire at all.
 
 ### The slice path — the miner re-fetches
 

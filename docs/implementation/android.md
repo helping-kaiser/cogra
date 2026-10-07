@@ -30,9 +30,9 @@ compile error, not as a runtime surprise.
 
 ## The Rust core — ranking on the device
 
-[miner-api.md "Transport"](miner-api.md#transport) pins the rollout
-path: `rank` runs on the backend first, then in a miner container,
-then on the viewer's own device. The math lives once, in the
+[miner-api.md "Transport"](miner-api.md#transport) pins where `rank`
+runs: never in the backend, but in a standalone ranker container on
+the server or on the viewer's own device. The math lives once, in the
 `ranker` crate ([architecture.md](architecture.md#cratesranker));
 the device stage binds that crate into the app through
 UniFFI-generated Kotlin bindings, and the in-process call uses the

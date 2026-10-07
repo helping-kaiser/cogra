@@ -21,6 +21,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { useCoversSurface } from "../covering-layer";
 import { PillButton } from "../pill-button";
 
 export function DiscardConfirm({
@@ -35,6 +36,8 @@ export function DiscardConfirm({
   testId?: string;
 }) {
   const dialog = useRef<HTMLDialogElement | null>(null);
+  // A dialog over a surface suspends its stage (Feed.md:31, `covering-layer.tsx`).
+  useCoversSurface(open, "suspend");
 
   // A NATIVE `dialog`, opened with `showModal`, so the platform supplies the
   // focus trap, the backdrop and the Escape key rather than this component

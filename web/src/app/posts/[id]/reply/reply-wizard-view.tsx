@@ -57,6 +57,7 @@ import {
   type ReplyTarget,
 } from "@/lib/compose/reply-wizard";
 import type { StancePair } from "@/lib/stance/model";
+import { useCoversSurface } from "@/lib/ui2/covering-layer";
 import { HeaderBar, HelpButton } from "@/lib/ui2/header-bar";
 import { HelpDialog, HELP_TOPICS, type HelpTopic } from "@/lib/ui2/help-dialog";
 import { DescribeSheet } from "@/lib/ui2/compose/describe-sheet";
@@ -102,6 +103,12 @@ export function ReplyWizard({
   const guard = useAuthGuard();
   const signer = useWriteSigner();
   const keyOnDevice = useKeyOnDevice(store);
+
+  // A modal dialog over the surface that raised it, so it announces itself as
+  // one: the stage beneath it is suspended while it is up (Feed.md:31,
+  // `covering-layer.tsx`). Mounted only while open, so it covers for as long
+  // as it is mounted.
+  useCoversSurface(true, "suspend");
 
   const [state, setState] = useState<ReplyState>(() => emptyReply(target));
   const dispatch = useCallback(
