@@ -88,9 +88,11 @@ WHEN the reader types in history.searchField -> History narrows to what matches 
 
 ALWAYS history.searchField matches by the one search rule Explore uses: names and titles, and never a body, a description or a bio
 
-WHEN the query starts with @handle -> the remainder matches that person's own things in History, a comment through the title of what it answers
+WHEN the query starts with @handle -> the remainder matches that person's own things in History, a comment through the title of what it answers and a reply through its thread's root post's title
 
-WHEN the query starts with #tag -> the remainder matches the things in History that carry that tag
+WHEN the query starts with #tag -> the remainder matches the things in History that carry that tag, a carried post through its title and a carried comment through its target's title
+
+WHEN the query is a bare @handle or #tag with no text after it -> History narrows to the profiles or tags in it whose name starts with what is typed AND NEVER anyone's contents are listed
 
 WHEN the reader types a query nothing in History carries -> History stands narrowed to nothing, with Show everything
 

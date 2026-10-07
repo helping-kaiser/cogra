@@ -691,7 +691,12 @@ never a body, a description or a bio. Matching is titles only (jakob
 2026-10-06): an untitled post's stand-in (copy-voice, *The feed
 cards*) is never matched. `@handle <text>`
 scopes the query to one person's work, their comments found through the
-titles of what they answer; `#tag <text>` scopes it inside a tag.
+titles of what they answer, a reply through its thread's root post, and
+the tags they tagged with; `#tag <text>` scopes it to the things that
+carry the tag. A bare `@x` or `#x` is a lookup in progress: it proposes
+people or tags by prefix and never lists anyone's contents — the text
+after it is what makes it a content search (jakob 2026-10-07). A result
+becomes seen only by being opened, never by standing in the viewport.
 Explore searches the graph, in its ranked tiers (§13, *The search
 rulings*); History searches the reader's seen-list, newest first by
 first seeing. A query that finds nothing says so in the list's place and
@@ -1721,8 +1726,8 @@ as Q46 in docs/open-questions.md):
 - **Order**: full match, then partial match, each tier ordered by
   the viewer's ranker — never newest by default. What the ranker
   cannot score falls to newest behind a **visible seam**; past the
-  seam a row's rank gives way to its age (relative to one year, an
-  absolute date after).
+  seam a row's rank gives way to its age, in copy-voice's one ladder
+  (*Ages*).
 - **Controls**: an order swap (Ranked / Newest) and a "show already
   seen" toggle — default off since the feed-filter session
   (2026-08-28, flipping this session's first call): what you've
@@ -9433,6 +9438,19 @@ lines; quoted wordings are his.
   account`; the applicant's commit reads `Deleting my account…` in
   flight; and the deleted account reaches the wire as nulls with
   REDACTED status beside `User.removal`.
+- **Search, settled** (§4, *Search*). The scope operators reach what
+  carries the tag and what the person made or tagged with; a bare scope
+  only proposes; results are seen only when opened. Searching is a state
+  of Explore's root — a trailing ×, Back to rest first, the query and
+  scroll kept on return. Recents keep ten, newest first, deduplicated
+  case-insensitively, per account and cleared at sign-out, with no
+  per-row ×; the action key only dismisses the keyboard. Stale rows stay
+  readable until the 200ms ladder; a failed refine keeps them under
+  `Couldn't load more`. A guest searches with the bare band, no Your
+  topics, Newest with ages and no seen toggle; an applicant as a member.
+  A sensitive result wears the text tile; a full match is equality; a
+  still-settling result shows nothing extra; the mixed unscoped state
+  says the search-scope line after the last row.
 
 - **Any member who holds the ask can let an applicant in, and the first
   vouch lands it.** The waiting card's caption reads `It does not
