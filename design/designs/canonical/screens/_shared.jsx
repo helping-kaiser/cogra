@@ -4523,12 +4523,16 @@ const ApplicationGroup = ({ label, count, node, nodeKey }) => (
    because a `primary` word on the olive is a second colour family arguing with
    the panel's own, the same reason the filled button turns over. `body` and
    `actions` are what the two boards differ in: the closed card says what the
-   button opens, and its row holds the buttons rather than the pad's anchor. */
-function VouchBackCard({ body, actions }) {
+   button opens, and its row holds the buttons rather than the pad's anchor.
+
+   Named by its placer, as a master is: given `node`, it names its `avatar`,
+   `title` and `body`, and the buttons `actions` hands it are named where they
+   are placed. */
+function VouchBackCard({ body, actions, node }) {
   return (
-    <Card style={{ flex: "none", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }}>
+    <Card style={{ flex: "none", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)" }} node={node}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <MonogramAvatar name="Mira Voss" src="inviter.jpg" size="lg" />
+        <MonogramAvatar name="Mira Voss" src="inviter.jpg" size="lg" node={node && "avatar"} />
         <h2
           style={{
             margin: 0,
@@ -4536,11 +4540,14 @@ function VouchBackCard({ body, actions }) {
             lineHeight: "var(--text-title-medium--line-height)",
             fontWeight: "var(--text-title-medium--font-weight)",
           }}
+          data-node={node && "title"}
         >
           @mira vouched you in
         </h2>
       </div>
-      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }}>{body}</p>
+      <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)" }} data-node={node && "body"}>
+        {body}
+      </p>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>{actions}</div>
     </Card>
   );

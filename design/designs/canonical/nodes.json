@@ -4080,6 +4080,149 @@
         "vouchAsk.profileDoor": [],
         "vouchAsk.title": []
       }
+    },
+    "VouchBack": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.borrowedViewBand": [],
+        "feed.borrowedViewBand.avatar": [],
+        "feed.borrowedViewBand.line": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada"
+        ],
+        "feed.card.actionRow": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "feed.card.actionRow.score": [
+          "ada"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada"
+        ],
+        "feed.card.actionRow.share": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "feed.card.authorChip": [
+          "ada"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada"
+        ],
+        "feed.card.authorChip.name": [
+          "ada"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.vouchCard": [],
+        "feed.vouchCard.avatar": [],
+        "feed.vouchCard.body": [],
+        "feed.vouchCard.dismiss": [],
+        "feed.vouchCard.title": [],
+        "feed.vouchCard.vouch": []
+      }
+    },
+    "VouchBackPad": {
+      "prefix": "feed",
+      "keys": {},
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.borrowedViewBand": [],
+        "feed.borrowedViewBand.avatar": [],
+        "feed.borrowedViewBand.line": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.vouchCard": [],
+        "feed.vouchCard.avatar": [],
+        "feed.vouchCard.body": [],
+        "feed.vouchCard.dismiss": [],
+        "feed.vouchCard.stance": [],
+        "feed.vouchCard.stance.anchor": [],
+        "feed.vouchCard.stance.anchor.face": [],
+        "feed.vouchCard.title": []
+      }
+    },
+    "VouchedIn": {
+      "prefix": "vouchedIn",
+      "keys": {},
+      "nodes": {
+        "vouchedIn.body": [],
+        "vouchedIn.onward": [],
+        "vouchedIn.sky": [],
+        "vouchedIn.title": []
+      }
     }
   }
 }
