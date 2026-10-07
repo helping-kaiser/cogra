@@ -2055,7 +2055,8 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
-        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)"
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
       "nodes": {
         "invites.application": [
@@ -2122,6 +2123,30 @@
         "invites.header": [],
         "invites.header.back": [],
         "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
         "invites.linksLabel": []
       }
     },
@@ -2913,7 +2938,8 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
-        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)"
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
       "nodes": {
         "invites.application": [
@@ -2979,6 +3005,30 @@
         "invites.header": [],
         "invites.header.back": [],
         "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
         "invites.linksLabel": []
       }
     },
@@ -2986,7 +3036,8 @@
       "prefix": "invites",
       "keys": {
         "invites.application": "the applicant's handle, without @ (Invites' applications, a kept approval's row among them)",
-        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)"
+        "invites.group": "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+        "invites.link": "the invite link's id, the link's last path segment (Invites' live links)"
       },
       "nodes": {
         "invites.application": [
@@ -3052,6 +3103,30 @@
         "invites.header": [],
         "invites.header.back": [],
         "invites.header.title": [],
+        "invites.link": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.action": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.address": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.caption": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.copy": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
+        "invites.link.label": [
+          "8f3c1d2a-5b47-4e90-9a61-2d7fbc084e15",
+          "c47b19e0-3a52-4f68-b1d9-6e0a85f37c24"
+        ],
         "invites.linksLabel": []
       }
     },

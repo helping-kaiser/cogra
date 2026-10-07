@@ -42,6 +42,19 @@
 // instance's, and the copy's outermost nodes record the chip rule as their key
 // rule. The marker itself never reaches the built board.
 //
+// A CHIP COPY OF A KEYED INSTANCE carries the same path with the INSTANCE'S
+// OWN key (jakob 2026-10-07, ruling 39). Where the element a chip draws once
+// per value is itself a keyed instance — `Invites`' `revoke` chip drawing the
+// first live link's card at rest and again in flight — the copies are that one
+// instance in two states, so each copy's keyed node takes its own key and not
+// the chip's value: `invites.link` under the link's id in both copies, one
+// shown at a time. The marker is the same and so is everything else; only
+// this case changes, three ways. The keyed node sits DIRECTLY in the copy (a
+// node between them keeps the chip's value as above), records its own key
+// rule, and its (path, key) may repeat once per value of that one chip and
+// nowhere else — a second copy under the same value, or a repeat outside the
+// chip's copies, still fails. The registry lists such a key once.
+//
 // Because a path follows the annotated ancestry, two rules keep paths stable
 // once registered. A wrapper that holds named nodes is named when they are, or
 // never: naming it later renames every node inside it, which render-screens'
@@ -78,6 +91,7 @@ export const KEY_RULES = {
   entry: "the saved thing's title, or an untitled post's stand-in (a words post's first line, a media post's kind and author's handle: Pictures by @ada, A video by @ada), lowercased, each run of other characters one - (Saved)",
   frame: "the picture's position in the post's media, counted from 1 (MediaGallery)",
   group: "the id of the invite link its applications came through, the link's last path segment (Invites' application groups)",
+  link: "the invite link's id, the link's last path segment (Invites' live links)",
   profileCard: "the person's handle, without @ (the profile feed card)",
   recent: "the recent query's words, lowercased, each run of other characters one -, none leading or trailing (Explore's recents)",
   release: "the release's version, lowercased, each run of other characters one - (What's new's release cards)",
@@ -113,7 +127,11 @@ export function joinNodePaths(markup, prefix, board, chips = null) {
     throw new Error(`data-node join, ${board}: ${why}`);
   };
   if (!SEGMENT.test(prefix)) fail(`NODE "${prefix}" is not a camelCase segment`);
-  const stack = [{ tag: null, path: [prefix], keys: [], chipRule: null }];
+  // A frame's `copy` is the chip copy it sits in with no node between (its chip,
+  // value, and the keys outside it); `ownCopy` marks everything inside a keyed
+  // instance that sits directly in a copy — the one place a (path, key) may
+  // repeat, once per value of that chip.
+  const stack = [{ tag: null, path: [prefix], keys: [], chipRule: null, copy: null, ownCopy: null }];
   const nodes = [];
   const seen = new Map();
   let out = "";
@@ -136,7 +154,7 @@ export function joinNodePaths(markup, prefix, board, chips = null) {
       else if (name === "data-node-key") key = value;
       else if (name === "data-node-chip") chip = value;
     }
-    let frame = { tag, path: parent.path, keys: parent.keys, chipRule: parent.chipRule };
+    let frame = { tag, path: parent.path, keys: parent.keys, chipRule: parent.chipRule, copy: parent.copy, ownCopy: parent.ownCopy };
     if (chip !== undefined) {
       // A chip-drawn copy: no segment, its chip's value as the key of all inside.
       if (seg !== undefined) fail(`<${tag}> carries data-node-chip="${chip}" and data-node="${seg}" — a chip-drawn copy adds no segment`);
@@ -147,34 +165,48 @@ export function joinNodePaths(markup, prefix, board, chips = null) {
       if (parent.chipRule !== null) fail(`the ${chip} chip's copy sits inside another chip's copy with no node between them`);
       out += markup.slice(last, m.index) + `<${tag}${attrs.replace(STRIP, "")}${selfClose ? "/" : ""}>`;
       last = m.index + whole.length;
-      frame = { tag, path: parent.path, keys: [...parent.keys, key], chipRule: chipKeyRule(chip) };
+      frame = {
+        tag,
+        path: parent.path,
+        keys: [...parent.keys, key],
+        chipRule: chipKeyRule(chip),
+        copy: { chip, value: key, keys: parent.keys },
+        ownCopy: parent.ownCopy,
+      };
     } else if (seg !== undefined || key !== undefined) {
       if (seg === undefined) fail(`<${tag}> carries data-node-key="${key}" and no data-node`);
       if (!SEGMENT.test(seg)) fail(`data-node="${seg}" is not one camelCase segment`);
       if (key !== undefined && !KEY.test(key)) fail(`data-node-key="${key}" on ${seg} — a key is lowercase letters, digits, - and _`);
       if (key !== undefined && !(seg in KEY_RULES)) fail(`${seg} is keyed but KEY_RULES names no rule for it`);
+      // A keyed instance directly in a chip copy keeps its own key, not the
+      // chip's value (ruling 39, above).
+      const ownKeyed = key !== undefined && parent.chipRule !== null;
+      const ownCopy = ownKeyed ? { chip: parent.copy.chip, value: parent.copy.value } : parent.ownCopy;
       const path = [...parent.path, seg];
-      const keys = key === undefined ? parent.keys : [...parent.keys, key];
+      const keys = key === undefined ? parent.keys : [...(ownKeyed ? parent.copy.keys : parent.keys), key];
       const full = path.join(".");
       const chain = keys.join("/");
       const identity = `${full}\u0000${chain}`;
       if (seen.has(identity)) {
-        fail(
-          chain
-            ? `two nodes share path ${full} and key ${chain} — the instances' key rule does not tell them apart`
-            : `two nodes share path ${full} with no key — a repeated instance needs a data-node-key`,
-        );
-      }
-      seen.set(identity, true);
-      if (key !== undefined && parent.chipRule !== null) {
-        fail(`keyed ${seg} sits directly in a chip-drawn copy — one path cannot record two key rules; name a node around it`);
+        const prior = seen.get(identity);
+        const repeats = ownCopy !== null && prior !== null && prior.chip === ownCopy.chip && !prior.values.has(ownCopy.value);
+        if (!repeats) {
+          fail(
+            chain
+              ? `two nodes share path ${full} and key ${chain} — the instances' key rule does not tell them apart`
+              : `two nodes share path ${full} with no key — a repeated instance needs a data-node-key`,
+          );
+        }
+        prior.values.add(ownCopy.value);
+      } else {
+        seen.set(identity, ownCopy === null ? null : { chip: ownCopy.chip, values: new Set([ownCopy.value]) });
       }
       nodes.push({ path: full, key: chain || null, rule: key === undefined ? parent.chipRule : KEY_RULES[seg] });
       const rest = attrs.replace(STRIP, "");
       const rewritten = `<${tag}${rest} data-node="${full}"${chain ? ` data-node-key="${chain}"` : ""}${selfClose ? "/" : ""}>`;
       out += markup.slice(last, m.index) + rewritten;
       last = m.index + whole.length;
-      frame = { tag, path, keys, chipRule: null };
+      frame = { tag, path, keys, chipRule: null, copy: null, ownCopy };
     }
     if (!selfClose && !VOID.has(tag)) stack.push(frame);
   }
@@ -184,7 +216,8 @@ export function joinNodePaths(markup, prefix, board, chips = null) {
 
 /**
  * The registry entry for one board: the key rule of every keyed instance, and
- * every path in sorted order with the keys it renders under (document order;
+ * every path in sorted order with the keys it renders under (document order,
+ * each once — a chip copy of a keyed instance renders its key once per value;
  * empty for a node outside any keyed instance).
  */
 export function boardEntry(prefix, nodes) {
@@ -192,7 +225,7 @@ export function boardEntry(prefix, nodes) {
   const rules = new Map();
   for (const { path, key, rule } of nodes) {
     if (!byPath.has(path)) byPath.set(path, []);
-    if (key !== null) byPath.get(path).push(key);
+    if (key !== null && !byPath.get(path).includes(key)) byPath.get(path).push(key);
     if (rule !== null) rules.set(path, rule);
   }
   const sorted = (map) => Object.fromEntries([...map.keys()].sort().map((p) => [p, map.get(p)]));

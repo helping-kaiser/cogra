@@ -4712,10 +4712,10 @@ function KeptApprovalRow({ shown }) {
    `Invites` and its two closing dialogs register them, and every other board
    this page stands on renders them stripped. An application is keyed by its
    applicant's handle — a kept approval's row is an application too, at the
-   head — and a group by the id of the link its applications came through. The
-   live links' cards stay unnamed: the `revoke` chip draws the first one twice,
-   and a chip copy of a keyed card is a case the chip-key rule does not cover
-   yet. */
+   head — and a group by the id of the link its applications came through. A
+   live link's card is `link`, keyed by the same id; the `revoke` chip draws
+   the first one twice, and each copy keeps the link's own key (jakob
+   2026-10-07, ruling 39: a chip copy of a keyed instance). */
 function InvitesBody({ approving = false, kept = "none", revoke }) {
   return (
     <>
@@ -4826,7 +4826,7 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
               `revoke` chip draws that moment on the first link; a failure
               keeps the card with the standard failure answer. The two
               readings are toggled by the board's chip values. */}
-          <div style={{ display: revoke ? revoke.rest : "block" }}>
+          <div style={{ display: revoke ? revoke.rest : "block" }} {...(revoke ? { "data-node-chip": "revoke", "data-node-key": "rest" } : null)}>
             <PayoutAddress
               label="Single use · not used yet"
               address={SOL_INVITE_LINK}
@@ -4835,10 +4835,12 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
               onChange={() => {}}
               changeLabel="Revoke"
               caption="Expires in 7 days · 22.09.2026"
+              node="link"
+              nodeKey={SOL_INVITE_ID}
             />
           </div>
           {revoke && (
-            <div style={{ display: revoke.busy }}>
+            <div style={{ display: revoke.busy }} data-node-chip="revoke" data-node-key="waiting">
               <PayoutAddress
                 label="Single use · not used yet"
                 address={SOL_INVITE_LINK}
@@ -4849,6 +4851,8 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
                 changeBusy
                 changeBusyLabel="Revoking…"
                 caption="Expires in 7 days · 22.09.2026"
+                node="link"
+                nodeKey={SOL_INVITE_ID}
               />
             </div>
           )}
@@ -4860,6 +4864,8 @@ function InvitesBody({ approving = false, kept = "none", revoke }) {
             onChange={() => {}}
             changeLabel="Revoke"
             caption="Expires in 2 days · 17.09.2026"
+            node="link"
+            nodeKey={SOL_INVITE_LINK_OPEN.split("/").at(-1)}
           />
         </div>
 
