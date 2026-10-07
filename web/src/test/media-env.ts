@@ -29,7 +29,9 @@
 // - `refusesPlay` makes `play()` reject with `NotAllowedError`, the way a
 //   browser refuses unmuted playback without a user gesture
 //   (https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/play);
-// - `currentTime` is per-element state, so a clip keeps the frame it reached.
+// - `currentTime` is per-element state, so a clip keeps the frame it reached;
+// - `suppressesAutoplay` stands in the device's reduced-motion and data-saver
+//   requests, live.
 //
 // Everything a test changes here is put back by `resetMediaEnvironmentForTests`,
 // which the shared setup runs after every test.
@@ -196,10 +198,66 @@ export function refusesPlay(policy: PlayPolicy): void {
   playPolicy = policy;
 }
 
+// ---- the device's autoplay suppression -------------------------------------
+
+/** A preference the platform publishes, which fires `change` when it flips. */
+class DevicePreference extends EventTarget {
+  constructor(
+    public matches: boolean,
+    public saveData: boolean,
+  ) {
+    super();
+  }
+}
+
+let device: { query: DevicePreference; link: DevicePreference } | null = null;
+
+/**
+ * The device asks for reduced motion and/or data saver — or stops asking — the
+ * way the platform says it: `matchMedia("(prefers-reduced-motion: reduce)")`
+ * and `navigator.connection.saveData`, each firing `change` when it flips
+ * (FeedCover.md:23; https://developer.mozilla.org/en-US/docs/Web/API/MediaQueryList/change_event,
+ * https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData).
+ * jsdom ships neither, so the first call installs both.
+ */
+export function suppressesAutoplay({
+  reducedMotion = false,
+  saveData = false,
+}: { reducedMotion?: boolean; saveData?: boolean }): void {
+  if (device === null) {
+    const query = new DevicePreference(false, false);
+    const link = new DevicePreference(false, false);
+    device = { query, link };
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: (text: string) =>
+        text === "(prefers-reduced-motion: reduce)" ? query : new DevicePreference(false, false),
+    });
+    Object.defineProperty(navigator, "connection", { configurable: true, value: link });
+  }
+  if (device.query.matches !== reducedMotion) {
+    device.query.matches = reducedMotion;
+    device.query.dispatchEvent(new Event("change"));
+  }
+  if (device.link.saveData !== saveData) {
+    device.link.saveData = saveData;
+    device.link.dispatchEvent(new Event("change"));
+  }
+}
+
+function resetDevice(): void {
+  if (device === null) return;
+  device = null;
+  delete (window as unknown as Record<string, unknown>).matchMedia;
+  delete (navigator as unknown as Record<string, unknown>).connection;
+}
+
 /** Put back everything a test changed in the environment; run after every test. */
 export function resetMediaEnvironmentForTests(): void {
   playPolicy = "never";
   if (typeof document !== "undefined") resetPageVisibility();
+  if (typeof window !== "undefined") resetDevice();
 }
 
 export function installMediaEnvironment(): void {

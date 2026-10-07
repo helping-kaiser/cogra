@@ -27,6 +27,7 @@ import { instance, part, type DataNode } from "@/lib/ui/data-node";
 import { tileRatio } from "./aspect";
 import { MediaTile, type MediaTileProps } from "./media-tile";
 import { PagerDots } from "./pager-dots";
+import { OnStage } from "./stage-host";
 import type { PlayerSurface } from "./video-player";
 
 /**
@@ -166,74 +167,79 @@ export function MediaGallery({
 
   const frameRatio = ratio ?? tileRatio(items[0].sourceRatio);
 
+  // A GALLERY NO SURFACE HOSTS IS ITS OWN STAGE (android: `MediaGallery.kt:88`),
+  // so its pages succeed each other by the law's incumbency rather than each
+  // clip electing itself; inside a host it joins the host's.
   return (
-    <div className="flex flex-col">
-      <div
-        ref={stripRef}
-        data-testid={`${testId}-strip`}
-        // A scroll container is only reachable by keyboard if it can take
-        // focus; `group` names it so the reader is told what they entered
-        // rather than landing in an unlabelled box.
-        role="group"
-        aria-label={`${items.length} pictures`}
-        tabIndex={0}
-        onKeyDown={(event) => {
-          if (event.key === "ArrowRight") {
-            event.preventDefault();
-            goTo(page + 1);
-          } else if (event.key === "ArrowLeft") {
-            event.preventDefault();
-            goTo(page - 1);
-          } else if (event.key === "Home") {
-            event.preventDefault();
-            goTo(0);
-          } else if (event.key === "End") {
-            event.preventDefault();
-            goTo(items.length - 1);
-          }
-        }}
-        // `scrollbar-width: none` keeps the strip's own bar off a surface that
-        // is already telling the reader where they are with the dots.
-        style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
-        className="cg-focus flex overflow-x-auto"
-      >
-        {items.map((item, index) => (
-          <div
-            // The same asset can be attached twice, so the src alone is not an
-            // identity; the position is what distinguishes the two frames.
-            key={`${index}:${item.src ?? ""}`}
-            style={{ scrollSnapAlign: "start" }}
-            className="w-full flex-none"
-          >
-            <MediaTile
-              {...item}
-              ratio={frameRatio}
-              fit={fit ?? fitInFrame(item.sourceRatio, frameRatio)}
-              radius={radius}
-              maxHeight={maxHeight}
-              preload={index === 0 && preloadLead}
-              surface={surface}
-              testId={`${testId}-page-${index}`}
-              node={instance(node, "frame", String(index + 1))}
-              onOpen={onOpen ? () => onOpen(index) : undefined}
-            />
-          </div>
-        ))}
+    <OnStage>
+      <div className="flex flex-col">
+        <div
+          ref={stripRef}
+          data-testid={`${testId}-strip`}
+          // A scroll container is only reachable by keyboard if it can take
+          // focus; `group` names it so the reader is told what they entered
+          // rather than landing in an unlabelled box.
+          role="group"
+          aria-label={`${items.length} pictures`}
+          tabIndex={0}
+          onKeyDown={(event) => {
+            if (event.key === "ArrowRight") {
+              event.preventDefault();
+              goTo(page + 1);
+            } else if (event.key === "ArrowLeft") {
+              event.preventDefault();
+              goTo(page - 1);
+            } else if (event.key === "Home") {
+              event.preventDefault();
+              goTo(0);
+            } else if (event.key === "End") {
+              event.preventDefault();
+              goTo(items.length - 1);
+            }
+          }}
+          // `scrollbar-width: none` keeps the strip's own bar off a surface that
+          // is already telling the reader where they are with the dots.
+          style={{ scrollSnapType: "x mandatory", scrollbarWidth: "none" }}
+          className="cg-focus flex overflow-x-auto"
+        >
+          {items.map((item, index) => (
+            <div
+              // The same asset can be attached twice, so the src alone is not an
+              // identity; the position is what distinguishes the two frames.
+              key={`${index}:${item.src ?? ""}`}
+              style={{ scrollSnapAlign: "start" }}
+              className="w-full flex-none"
+            >
+              <MediaTile
+                {...item}
+                ratio={frameRatio}
+                fit={fit ?? fitInFrame(item.sourceRatio, frameRatio)}
+                radius={radius}
+                maxHeight={maxHeight}
+                preload={index === 0 && preloadLead}
+                surface={surface}
+                testId={`${testId}-page-${index}`}
+                node={instance(node, "frame", String(index + 1))}
+                onOpen={onOpen ? () => onOpen(index) : undefined}
+              />
+            </div>
+          ))}
+        </div>
+        {/* The dots are a READOUT, not ten targets — the gesture is the swipe and
+            the keys are the route. THE ROW IS WINDOWED at seven (item 67, ruled
+            2026-09-14: "ten dots under a gallery card is too much"), and it is
+            the same row the viewer draws, in the card's tone — one marker for one
+            position, in both pagers. */}
+        <div className="flex justify-center pt-2">
+          <PagerDots
+            count={items.length}
+            current={page}
+            tone="card"
+            testId={`${testId}-dots`}
+            node={part(node, "dots")}
+          />
+        </div>
       </div>
-      {/* The dots are a READOUT, not ten targets — the gesture is the swipe and
-          the keys are the route. THE ROW IS WINDOWED at seven (item 67, ruled
-          2026-09-14: "ten dots under a gallery card is too much"), and it is
-          the same row the viewer draws, in the card's tone — one marker for one
-          position, in both pagers. */}
-      <div className="flex justify-center pt-2">
-        <PagerDots
-          count={items.length}
-          current={page}
-          tone="card"
-          testId={`${testId}-dots`}
-          node={part(node, "dots")}
-        />
-      </div>
-    </div>
+    </OnStage>
   );
 }
