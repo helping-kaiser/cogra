@@ -111,7 +111,7 @@ export interface StanceControlProps {
   holdProgress?: number;
   /** The pad's knob under the finger, for a board: `StancePad`'s pressed layer (a 40px disc at 10 %) drawn around the knob. Absent, the layer is the drag's own. */
   knobHeld?: boolean;
-  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`. */
+  /** The data-node name its placer gives this control (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `anchor`, the resting control, with its `face` and `exact`; and the open pad (ruling 40, one anatomy for every pad board): `pad`, the dialog, holding `help`, `standing` (`current` and `pick`, each with `label`, `face`, `exact`), `field` (`StancePad`'s `left`, `right`, `top`, `bottom` and `square` with `zeroAcross`, `zeroDown`, `knob`, `knobLayer`), `landing` (`label`, `face`, `exact`), `helpPanel` with its `back`, `notNow`, `sever`, `cancel` and `set`. A `padNote` is the placer's, named `note` by it. */
   node?: string;
 }
 

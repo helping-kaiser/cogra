@@ -23,17 +23,22 @@
    confirmation of a completed act; this one is jakob's deliberate second use,
    one quiet message per release. He flags that a snackbar is easy to miss
    ("it just takes a couple of seconds looking away") and may want something
-   more obvious later — backlog item 121. */
+   more obvious later — backlog item 121.
+
+   REGISTERED under the feed's own prefix (design ⇄ impl seam 089, the
+   release-registry packet), named as `FeedHidden` names it; the snackbar is
+   `snackbar`, so the plate carries `FeedHidden`'s paths and no new ones. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />} />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band" />
       <FeedList>
-        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} />
-        <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} />
+        <PostCard {...TOBIAS_POST} bundle={mkBundle(0.1, 0.1)} node="card" />
+        <PostCard {...SOL_POST} bundle={mkBundle(0.3, 0.45)} node="card" />
       </FeedList>
-      <Snackbar message={NEWER_VERSION_SNACKBAR} action={UPDATE_NOW} offset={80} />
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <Snackbar message={NEWER_VERSION_SNACKBAR} action={UPDATE_NOW} offset={80} node="snackbar" />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

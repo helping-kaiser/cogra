@@ -33,6 +33,8 @@ export interface StancePadProps {
   ranges?: PadRanges;
   /** Draws the knob under the finger for a board: M3's pressed state layer, a 40px disc in the knob's colour at 10 %, around the knob. A live drag draws it on its own while the pointer is down. Never a scale. */
   held?: boolean;
+  /** The data-node name its placer gives this field (design ⇄ impl seam 002; renders as attributes only — the open pad's `field`). Given one, it also names its parts: the pole words `left`, `right`, `top` and `bottom`, and the `square` — the value space — with its dead-ground lines `zeroAcross` and `zeroDown`, the `knob`, and the knob's pressed `knobLayer` while it is held. */
+  node?: string;
 }
 
 /**

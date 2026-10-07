@@ -142,7 +142,14 @@ function zeroPercentOf(range) {
    below API 34). Nothing else in the drag vibrates, and the web gives none. */
 const KNOB_LAYER_PX = 40;
 
-export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true, axes = STANCE_AXES, ranges = STANCE_RANGES, held = false }) {
+/* NAMED ONLY WHERE ITS PLACER NAMES IT (design ⇄ impl seam 002, the pad
+   tails, jakob 2026-10-07 ruling 40): the whole field with its words is the
+   placer's name, the four pole words `left`, `right`, `top` and `bottom` by
+   the side they stand on, and the `square` — the value space — holds the
+   dead-ground lines `zeroAcross` and `zeroDown`, the `knob`, and its pressed
+   `knobLayer`. The words' ring and the knob's travel box are layout and stay
+   unnamed. */
+export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true, axes = STANCE_AXES, ranges = STANCE_RANGES, held = false, node }) {
   const localRef = React.useRef(null);
   const ref = fieldRef ?? localRef;
   const drag = React.useRef(null);
@@ -185,6 +192,7 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
         boxSizing: "border-box",
         padding: showAxes ? `${AXIS_GUTTER_Y_PX}px ${AXIS_GUTTER_X_PX}px` : 0,
       }}
+      data-node={node}
     >
       {/* THE AXES ARE NAMED AROUND THE FIELD. A blank square says nothing about
          which direction means what, and for a stance the words are the same
@@ -198,10 +206,18 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
           aria-hidden="true"
           style={{ position: "absolute", inset: 0, fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}
         >
-          <span style={{ position: "absolute", left: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "right", whiteSpace: "nowrap" }}>{axes.left}</span>
-          <span style={{ position: "absolute", right: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "left", whiteSpace: "nowrap" }}>{axes.right}</span>
-          <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap" }}>{axes.top}</span>
-          <span style={{ position: "absolute", left: "50%", bottom: 0, transform: "translateX(-50%)", whiteSpace: "nowrap" }}>{axes.bottom}</span>
+          <span style={{ position: "absolute", left: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "right", whiteSpace: "nowrap" }} data-node={node && "left"}>
+            {axes.left}
+          </span>
+          <span style={{ position: "absolute", right: 0, top: "50%", width: `${AXIS_GUTTER_X_PX - 6}px`, transform: "translateY(-50%)", textAlign: "left", whiteSpace: "nowrap" }} data-node={node && "right"}>
+            {axes.right}
+          </span>
+          <span style={{ position: "absolute", left: "50%", top: 0, transform: "translateX(-50%)", whiteSpace: "nowrap" }} data-node={node && "top"}>
+            {axes.top}
+          </span>
+          <span style={{ position: "absolute", left: "50%", bottom: 0, transform: "translateX(-50%)", whiteSpace: "nowrap" }} data-node={node && "bottom"}>
+            {axes.bottom}
+          </span>
         </div>
       )}
       <div
@@ -218,12 +234,21 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
           borderRadius: "var(--radius-large)",
           background: "var(--surface-container-highest)",
         }}
+        data-node={node && "square"}
       >
         {zeroAcross !== null && (
-          <div aria-hidden="true" style={{ position: "absolute", left: 0, top: `${zeroAcross}%`, height: "1px", width: "100%", background: "var(--border-hairline)" }} />
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", left: 0, top: `${zeroAcross}%`, height: "1px", width: "100%", background: "var(--border-hairline)" }}
+            data-node={node && "zeroAcross"}
+          />
         )}
         {zeroDown !== null && (
-          <div aria-hidden="true" style={{ position: "absolute", left: `${zeroDown}%`, top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }} />
+          <div
+            aria-hidden="true"
+            style={{ position: "absolute", left: `${zeroDown}%`, top: 0, width: "1px", height: "100%", background: "var(--border-hairline)" }}
+            data-node={node && "zeroDown"}
+          />
         )}
         <div aria-hidden="true" style={{ position: "absolute", inset: `${KNOB_TRAVEL_INSET_PX}px` }}>
           {layered && (
@@ -239,6 +264,7 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
                 background: "var(--surface-loud)",
                 opacity: "var(--state-press)",
               }}
+              data-node={node && "knobLayer"}
             />
           )}
           <div
@@ -252,6 +278,7 @@ export function StancePad({ value = ORIGIN, onChange, fieldRef, showAxes = true,
               borderRadius: "var(--radius-full)",
               background: "var(--surface-loud)",
             }}
+            data-node={node && "knob"}
           />
         </div>
       </div>

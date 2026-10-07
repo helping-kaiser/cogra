@@ -77,7 +77,7 @@ export type MediaTileProps = {
   testId?: string;
   /**
    * The registered frame node (`….media.frame`): it names the frame instead of
-   * `testId`, and a clip's sound control is its `soundDisc`.
+   * `testId`, and a clip's discs are its `soundDisc` and `playDisc`.
    */
   node?: DataNode;
   onOpen?: () => void;
@@ -173,6 +173,7 @@ export function MediaTile({
         onOpenViewer={onOpen}
         testId={testId}
         soundNode={part(node, "soundDisc")}
+        playNode={part(node, "playDisc")}
       />
     );
     return (

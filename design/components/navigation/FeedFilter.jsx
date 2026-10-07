@@ -300,8 +300,14 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    below the fold — the one control that must always be reachable, reachable
    only by scrolling. So the sections scroll inside the sheet and the foot is
    pinned under them, which is the anatomy `BottomSheet`'s own `height` exists
-   for. A sheet with no foot is sized by its content. */
-export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics }) {
+   for. A sheet with no foot is sized by its content.
+
+   `node` NAMES THE SHEET AND ITS PARTS where a registered placer gives it one
+   (design ⇄ impl seam 002): the sections as the search and history sheets
+   name theirs — `kinds`, `forms`, `order`, `also` — each chip `<value>Chip`,
+   and the corner "?" `help`. The feed's own `FeedFilter` passes none, so its
+   sheet stays unnamed until a drawn feed-hosted state registers it. */
+export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics, node }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
     const list = value[key] || [];
@@ -311,23 +317,23 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
 
   const sections = (
     <>
-      <FilterSection label="Kinds" hint="Everything that can reach your feed. Combine as many as you like.">
+      <FilterSection label="Kinds" hint="Everything that can reach your feed. Combine as many as you like." node={node && "kinds"}>
         {FEED_KINDS.map((kind) => (
-          <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} />
+          <Chip key={kind.value} label={kind.label} selected={(value.kinds || []).includes(kind.value)} onToggle={() => toggle("kinds", kind.value)} node={node && `${kind.value}Chip`} />
         ))}
       </FilterSection>
-      <FilterSection label="Kinds of post" hint={postsish ? "Combine them: photos and video with no text posts is a legitimate feed." : "Applies once posts or comments are in."}>
+      <FilterSection label="Kinds of post" hint={postsish ? "Combine them: photos and video with no text posts is a legitimate feed." : "Applies once posts or comments are in."} node={node && "forms"}>
         {FEED_FORMS.map((form) => (
-          <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} />
+          <Chip key={form.value} label={form.label} selected={(value.forms || []).includes(form.value)} onToggle={() => toggle("forms", form.value)} disabled={!postsish} node={node && `${form.value}Chip`} />
         ))}
       </FilterSection>
-      <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} />
+      <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} node={node && "order"} />
       {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
           the default is the feed as it has always been, and off is the
           landed-only view. */}
-      <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content.">
+      <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content." node={node && "also"}>
         {FEED_ALSO.map((entry) => (
-          <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} />
+          <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} node={node && `${entry.value}Chip`} />
         ))}
       </FilterSection>
       {/* THE TOPIC FEED IS JUST ANOTHER FEED SETTING (jakob, 2026-09-14), so it
@@ -378,10 +384,10 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
        filter opens taller so the whole control is present; it still scrolls
        on shorter screens. The sheet carries its own "?" (like the pads):
        the dialog explains the filter and names the settings default. */
-    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot ? { height: "88%" } : { maxHeight: "88%" })}>
+    <BottomSheet open={open} onClose={onClose} ariaLabel={ariaLabel} {...(foot ? { height: "88%" } : { maxHeight: "88%" })} node={node}>
       {lead ?? (
         <div style={{ position: "absolute", top: "var(--space-1)", right: "var(--space-2)" }}>
-          <HelpDot ariaLabel="How the filter works" onOpen={onHelp} />
+          <HelpDot ariaLabel="How the filter works" onOpen={onHelp} node={node && "help"} />
         </div>
       )}
       {foot ? (

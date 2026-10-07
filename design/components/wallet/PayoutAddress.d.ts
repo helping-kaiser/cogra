@@ -26,6 +26,8 @@ export interface PayoutAddressProps {
   bare?: boolean;
   /** The data-node name its placer gives this card (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `copy`, `action` (the one inline act — Change, Revoke), `address`, `caption`. */
   node?: string;
+  /** The card's content key when it is a repeated instance (an invite link's id). */
+  nodeKey?: string;
 }
 
 export declare function PayoutAddress(props: PayoutAddressProps): JSX.Element;

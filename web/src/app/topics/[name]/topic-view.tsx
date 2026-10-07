@@ -43,6 +43,7 @@ import { StanceControl } from "@/lib/ui/stance-control";
 import { AFFINITY_AXES } from "@/lib/ui/stance-format";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError } from "@/lib/ui/transport-error";
+import { StageHost } from "@/lib/ui2/media/stage-host";
 
 export function TopicView({ name }: { name: string }) {
   const client = useApolloClient();
@@ -149,56 +150,61 @@ export function TopicView({ name }: { name: string }) {
       {hashtag.taggedContent.length === 0 && (
         <p data-testid="topic-empty">Nothing tagged here yet.</p>
       )}
-      <ul className="flex flex-col gap-3" data-testid="topic-content-list">
-        {hashtag.taggedContent.map((item) => {
-          const node = item.node;
-          if (node.__typename === "Post") {
-            return (
-              <li key={node.id}>
-                <PostCard
-                  post={node}
-                  href={`/posts/${node.id}`}
-                  testId={`topic-post-${node.id}`}
-                  authorTestId={`topic-author-${node.id}`}
-                  stanceTestId={`topic-stance-${node.id}`}
-                  comments={node.comments.totalCount}
-                  onLinkCopied={() => setLinkCopied(true)}
-                />
-              </li>
-            );
-          }
-          if (node.__typename === "Comment") {
-            const parentPost = node.target?.__typename === "Post" ? node.target : null;
-            return (
-              <li key={node.id}>
-                <Card testId={`topic-comment-${node.id}`}>
-                  {node.author && (
-                    <ActorChip
-                      handle={node.author.handle}
-                      displayName={node.author.displayName.value}
-                      avatarUrl={node.author.avatar?.url}
-                      testId={`topic-comment-author-${node.id}`}
-                    />
-                  )}
-                  <p className="text-body-medium">{node.content.value}</p>
-                  {parentPost && (
-                    <Link
-                      href={`/posts/${parentPost.id}`}
-                      data-testid={`topic-comment-post-${node.id}`}
-                      className="text-body-small text-on-surface-variant underline"
-                    >
-                      Open the post
-                    </Link>
-                  )}
-                </Card>
-              </li>
-            );
-          }
-          // Future Taggable node kinds (Item, Chat) join without a
-          // dedicated card yet — skip rather than guess a rendering.
-          return null;
-        })}
-      </ul>
+      {/* THE TAG PAGE'S ONE STAGE: "ALWAYS at most one clip plays on the tag
+          page, by the feed's stage law" (TagPage.md:23), re-electing at the
+          page's own hard top (TagPage.md:25/27). */}
+      <StageHost>
+        <ul className="flex flex-col gap-3" data-testid="topic-content-list">
+          {hashtag.taggedContent.map((item) => {
+            const node = item.node;
+            if (node.__typename === "Post") {
+              return (
+                <li key={node.id}>
+                  <PostCard
+                    post={node}
+                    href={`/posts/${node.id}`}
+                    testId={`topic-post-${node.id}`}
+                    authorTestId={`topic-author-${node.id}`}
+                    stanceTestId={`topic-stance-${node.id}`}
+                    comments={node.comments.totalCount}
+                    onLinkCopied={() => setLinkCopied(true)}
+                  />
+                </li>
+              );
+            }
+            if (node.__typename === "Comment") {
+              const parentPost = node.target?.__typename === "Post" ? node.target : null;
+              return (
+                <li key={node.id}>
+                  <Card testId={`topic-comment-${node.id}`}>
+                    {node.author && (
+                      <ActorChip
+                        handle={node.author.handle}
+                        displayName={node.author.displayName.value}
+                        avatarUrl={node.author.avatar?.url}
+                        testId={`topic-comment-author-${node.id}`}
+                      />
+                    )}
+                    <p className="text-body-medium">{node.content.value}</p>
+                    {parentPost && (
+                      <Link
+                        href={`/posts/${parentPost.id}`}
+                        data-testid={`topic-comment-post-${node.id}`}
+                        className="text-body-small text-on-surface-variant underline"
+                      >
+                        Open the post
+                      </Link>
+                    )}
+                  </Card>
+                </li>
+              );
+            }
+            // Future Taggable node kinds (Item, Chat) join without a
+            // dedicated card yet — skip rather than guess a rendering.
+            return null;
+          })}
+        </ul>
+      </StageHost>
       {/* One region for the list: a card that copied a link says so here. */}
       <Snackbar
         testId="topic-link-copied"
