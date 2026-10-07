@@ -31,7 +31,7 @@ use crate::relay::RelayError;
 pub const UNVERIFIED_TTL_DAYS: i64 = 7;
 
 /// The moment before which a never-verified account counts as dead.
-fn dead_before() -> DateTime<Utc> {
+pub(crate) fn dead_before() -> DateTime<Utc> {
     Utc::now() - Duration::days(UNVERIFIED_TTL_DAYS)
 }
 
@@ -247,15 +247,35 @@ pub async fn register(
     })
 }
 
+/// Proves the account's address. On the unverified carve-out the token
+/// is the pending change's link, so opening it also moves the address —
+/// in one step, colliding as EmailInUse when another account took the
+/// address meanwhile (auth.md "The unverified carve-out"). A carve-out
+/// link whose change ended, or a link the change replaced, is just an
+/// invalid token: the landing never says which.
 pub async fn verify_email(pool: &PgPool, token: &str) -> Result<(), OnboardingError> {
-    store::verify_account_email(pool, &auth::hash_of(token), dead_before())
+    let hash = auth::hash_of(token);
+    if let Some(change) = store::email_change_by_token(pool, &hash).await? {
+        if change.requires_code || change.end().is_some() {
+            return Err(OnboardingError::VerificationTokenInvalid);
+        }
+        store::confirm_email_change_link(pool, change.id).await?;
+        return match store::apply_email_change(pool, change.id, dead_before()).await? {
+            store::EmailChangeApply::Applied => Ok(()),
+            store::EmailChangeApply::EmailInUse => Err(OnboardingError::EmailInUse),
+            store::EmailChangeApply::NotReady | store::EmailChangeApply::Ended(_) => {
+                Err(OnboardingError::VerificationTokenInvalid)
+            }
+        };
+    }
+    store::verify_account_email(pool, &hash, dead_before())
         .await?
         .map(|_| ())
         .ok_or(OnboardingError::VerificationTokenInvalid)
 }
 
 /// Deliberately silent: succeeds whether or not an account exists, so
-/// the verb reveals nothing (api-spec "the three silent verbs").
+/// the verb reveals nothing (api-spec "the two silent verbs").
 pub async fn resend_verification(
     pool: &PgPool,
     mailer: &dyn Mailer,

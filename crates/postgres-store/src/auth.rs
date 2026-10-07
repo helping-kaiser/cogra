@@ -505,6 +505,11 @@ pub async fn applications_for_link(
 /// Marks the email channel proven (auth.md §Application step 4).
 /// Single-use, and dead accounts — past `dead_before`, never verified —
 /// cannot verify: they are already replaceable.
+///
+/// A carve-out change's link is never an ordinary verification token,
+/// even though it sits in the same column: it was mailed to the new
+/// address, so it must not verify the old one — whatever state its
+/// change is in (`apply_email_change` is its only way in).
 pub async fn verify_account_email(
     pool: &PgPool,
     verification_token_hash: &[u8],
@@ -516,6 +521,8 @@ pub async fn verify_account_email(
          WHERE email_verification_token_hash = $1
            AND email_verified_at IS NULL
            AND created_at >= $2
+           AND NOT EXISTS (SELECT 1 FROM auth_email_changes
+                           WHERE new_email_token_hash = $1)
          RETURNING actor_id",
         verification_token_hash,
         dead_before,
@@ -525,14 +532,22 @@ pub async fn verify_account_email(
 }
 
 /// The live, unverified account holding an email — the resend target.
+/// An account mid carve-out is not one: its address is being replaced,
+/// and a fresh link to the replaced address would revive the very link
+/// the change killed (auth.md "The unverified carve-out").
 pub async fn unverified_account_by_email(
     pool: &PgPool,
     email: &str,
     dead_before: DateTime<Utc>,
 ) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
-        "SELECT actor_id FROM user_credentials
-         WHERE email = $1 AND email_verified_at IS NULL AND created_at >= $2",
+        "SELECT c.actor_id FROM user_credentials c
+         WHERE c.email = $1 AND c.email_verified_at IS NULL AND c.created_at >= $2
+           AND NOT EXISTS (
+               SELECT 1 FROM auth_email_changes e
+               WHERE e.user_id = c.actor_id AND NOT e.requires_code
+                 AND e.cancelled_at IS NULL AND e.applied_at IS NULL
+                 AND e.expires_at > NOW())",
         email,
         dead_before,
     )
@@ -786,17 +801,18 @@ impl SweptSecrets {
 ///
 /// Three tables here store a token hash and keep the row after the token
 /// stops being usable: a refresh token past expiry or revocation, a reset
-/// link past use or expiry, an email change past its last proof or
-/// expiry. None of them is evidence of anything once the window closes,
-/// and a hash that no longer answers any question is only a hash left
-/// lying around, so the row goes.
+/// link past use or expiry, an email change once it ended — applied,
+/// canceled, or run out. None of them is evidence of anything once the
+/// window closes, and a hash that no longer answers any question is only
+/// a hash left lying around, so the row goes.
 ///
 /// The two windows are different because the tables are. A refresh
 /// token's revoked row is what reuse detection recognises a replayed
 /// token by (auth.md "Refresh rotation"), so it is kept long enough for
-/// that answer to still be worth giving — 30 days. A reset link and an
-/// email change prove nothing once consumed, so they go on the short
-/// window.
+/// that answer to still be worth giving — 30 days. A reset link proves
+/// nothing once consumed, and an ended email change only tells a late
+/// link what ended it, so both go on the short window; after it, a
+/// stale change link reads as unknown.
 ///
 /// `auth_invite_links` and `auth_applications` are deliberately not
 /// swept: neither declares a secret column, and both are the provenance
@@ -830,7 +846,8 @@ pub async fn sweep_spent_secrets(
     let email_changes = sqlx::query!(
         "DELETE FROM auth_email_changes
          WHERE expires_at < now() - make_interval(secs => $1)
-            OR new_verified_at < now() - make_interval(secs => $1)",
+            OR applied_at < now() - make_interval(secs => $1)
+            OR cancelled_at < now() - make_interval(secs => $1)",
         single_use_grace_secs,
     )
     .execute(&mut *tx)
@@ -1170,70 +1187,226 @@ pub async fn consume_password_reset(
     .await
 }
 
-/// Opens an email change, arming both halves of the two-sided proof
-/// (auth.md "Email change").
-pub async fn create_email_change(
+/// One email change (data-model.md `auth_email_changes`) — the two-sided
+/// proof of auth.md "Email change", or the unverified carve-out's
+/// one-sided one.
+#[derive(Debug, Clone)]
+pub struct EmailChange {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub new_email: String,
+    /// False on the unverified carve-out: no code exists, and the new
+    /// address's verification link is the whole proof.
+    pub requires_code: bool,
+    pub original_confirmed_at: Option<DateTime<Utc>>,
+    pub new_verified_at: Option<DateTime<Utc>>,
+    pub failed_attempts: i32,
+    pub code_disabled_at: Option<DateTime<Utc>>,
+    pub cancelled_at: Option<DateTime<Utc>>,
+    pub applied_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    /// Whether the change ran out before anything else ended it — read
+    /// against the database clock, the one the guards below use.
+    pub ran_out: bool,
+}
+
+/// What ended a change. A change ends once, so at most one holds; a
+/// cancel stamped on an already run-out change (a supersede) still
+/// reads as run out, because that is what ended it first.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EmailChangeEnd {
+    Applied,
+    Canceled,
+    RanOut,
+}
+
+impl EmailChange {
+    /// None while the change is live.
+    pub fn end(&self) -> Option<EmailChangeEnd> {
+        if self.applied_at.is_some() {
+            Some(EmailChangeEnd::Applied)
+        } else if self.ran_out {
+            Some(EmailChangeEnd::RanOut)
+        } else if self.cancelled_at.is_some() {
+            Some(EmailChangeEnd::Canceled)
+        } else {
+            None
+        }
+    }
+
+    /// The current-address code is still owed.
+    pub fn code_owed(&self) -> bool {
+        self.requires_code && self.original_confirmed_at.is_none()
+    }
+
+    /// The new address's link is still owed.
+    pub fn link_owed(&self) -> bool {
+        self.new_verified_at.is_none()
+    }
+}
+
+/// Maps one auth_email_changes row onto the struct — the queries all
+/// select the same field set.
+macro_rules! email_change_from_row {
+    ($r:expr) => {
+        EmailChange {
+            id: $r.id,
+            user_id: $r.user_id,
+            new_email: $r.new_email,
+            requires_code: $r.requires_code,
+            original_confirmed_at: $r.original_confirmed_at,
+            new_verified_at: $r.new_verified_at,
+            failed_attempts: $r.failed_attempts,
+            code_disabled_at: $r.code_disabled_at,
+            cancelled_at: $r.cancelled_at,
+            applied_at: $r.applied_at,
+            created_at: $r.created_at,
+            expires_at: $r.expires_at,
+            ran_out: $r.ran_out,
+        }
+    };
+}
+
+/// The fresh secrets a request arms.
+#[derive(Debug, Clone, Copy)]
+pub struct EmailChangeSecrets<'a> {
+    pub original_code_hash: &'a [u8],
+    pub new_email_token_hash: &'a [u8],
+}
+
+/// Opens an email change, ending any change still standing as canceled
+/// (one per account), and answers whether the change needs the
+/// current-address code.
+///
+/// Which path a change takes is read here, under the account's row lock,
+/// not by the caller: a verify landing between the caller's read and
+/// this write would otherwise open a codeless change on a verified
+/// account. On the unverified carve-out the code is not stored, and the
+/// new address's token becomes the account's verification token — the
+/// replaced address's link dies in the same write (auth.md "The
+/// unverified carve-out").
+pub async fn open_email_change(
     pool: &PgPool,
     id: Uuid,
     user_id: Uuid,
     new_email: &str,
-    original_code_hash: &[u8],
-    new_email_token_hash: &[u8],
+    secrets: EmailChangeSecrets<'_>,
     expires_at: DateTime<Utc>,
-) -> Result<(), sqlx::Error> {
+) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let verified = sqlx::query_scalar!(
+        r#"SELECT email_verified_at IS NOT NULL AS "verified!"
+           FROM user_credentials WHERE actor_id = $1 FOR UPDATE"#,
+        user_id,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    sqlx::query!(
+        "UPDATE auth_email_changes SET cancelled_at = NOW()
+         WHERE user_id = $1 AND cancelled_at IS NULL AND applied_at IS NULL",
+        user_id,
+    )
+    .execute(&mut *tx)
+    .await?;
+    let code_hash = verified.then_some(secrets.original_code_hash);
     sqlx::query!(
         "INSERT INTO auth_email_changes
-             (id, user_id, new_email, original_code_hash,
+             (id, user_id, new_email, requires_code, original_code_hash,
               new_email_token_hash, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6)",
+         VALUES ($1, $2, $3, $4, $5, $6, $7)",
         id,
         user_id,
         new_email,
-        original_code_hash,
-        new_email_token_hash,
+        verified,
+        code_hash,
+        secrets.new_email_token_hash,
         expires_at,
     )
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
-    Ok(())
+    if !verified {
+        sqlx::query!(
+            "UPDATE user_credentials SET email_verification_token_hash = $2
+             WHERE actor_id = $1 AND email_verified_at IS NULL",
+            user_id,
+            secrets.new_email_token_hash,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    tx.commit().await?;
+    Ok(verified)
 }
 
-/// Marks the new address verified via its link. Scoped to the account
-/// that requested the change — another account's token never matches,
-/// and never consumes the owner's proof. Returns whether a live change
-/// matched.
-pub async fn confirm_email_change_new_side(
+/// The change a new-side token belongs to, whatever its state and
+/// whoever owns it — the caller answers ownership first.
+pub async fn email_change_by_token(
     pool: &PgPool,
-    user_id: Uuid,
     new_email_token_hash: &[u8],
-) -> Result<bool, sqlx::Error> {
+) -> Result<Option<EmailChange>, sqlx::Error> {
     Ok(sqlx::query!(
-        "UPDATE auth_email_changes SET new_verified_at = NOW()
-         WHERE user_id = $1 AND new_email_token_hash = $2
-           AND new_verified_at IS NULL AND expires_at > NOW()",
-        user_id,
+        r#"SELECT id, user_id, new_email, requires_code, original_confirmed_at,
+                  new_verified_at, failed_attempts, code_disabled_at,
+                  cancelled_at, applied_at, created_at, expires_at,
+                  expires_at <= COALESCE(cancelled_at, NOW()) AS "ran_out!"
+           FROM auth_email_changes WHERE new_email_token_hash = $1"#,
         new_email_token_hash,
     )
-    .execute(pool)
+    .fetch_optional(pool)
     .await?
-    .rows_affected()
-        == 1)
+    .map(|r| email_change_from_row!(r)))
 }
 
-/// Submits the original-address code, marking that side proven. Returns
-/// whether a live change matched; the change applies via
-/// `apply_email_change_if_complete`.
-pub async fn confirm_email_change_original_side(
+/// The account's newest change, whatever its state.
+pub async fn latest_email_change(
     pool: &PgPool,
     user_id: Uuid,
-    original_code_hash: &[u8],
-) -> Result<bool, sqlx::Error> {
+) -> Result<Option<EmailChange>, sqlx::Error> {
     Ok(sqlx::query!(
-        "UPDATE auth_email_changes SET original_confirmed_at = NOW()
-         WHERE user_id = $1 AND original_code_hash = $2
-           AND original_confirmed_at IS NULL AND expires_at > NOW()",
+        r#"SELECT id, user_id, new_email, requires_code, original_confirmed_at,
+                  new_verified_at, failed_attempts, code_disabled_at,
+                  cancelled_at, applied_at, created_at, expires_at,
+                  expires_at <= COALESCE(cancelled_at, NOW()) AS "ran_out!"
+           FROM auth_email_changes WHERE user_id = $1
+           ORDER BY created_at DESC, id DESC LIMIT 1"#,
         user_id,
-        original_code_hash,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| email_change_from_row!(r)))
+}
+
+/// The account's live change — unended and inside its window — if any.
+pub async fn pending_email_change(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> Result<Option<EmailChange>, sqlx::Error> {
+    Ok(sqlx::query!(
+        r#"SELECT id, user_id, new_email, requires_code, original_confirmed_at,
+                  new_verified_at, failed_attempts, code_disabled_at,
+                  cancelled_at, applied_at, created_at, expires_at,
+                  FALSE AS "ran_out!"
+           FROM auth_email_changes
+           WHERE user_id = $1 AND cancelled_at IS NULL AND applied_at IS NULL
+             AND expires_at > NOW()"#,
+        user_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| email_change_from_row!(r)))
+}
+
+/// Marks a live change's new address proven. Idempotent: an already
+/// proven side keeps its first stamp. False when the change is no
+/// longer live.
+pub async fn confirm_email_change_link(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_email_changes
+         SET new_verified_at = COALESCE(new_verified_at, NOW())
+         WHERE id = $1 AND cancelled_at IS NULL AND applied_at IS NULL
+           AND expires_at > NOW()",
+        id,
     )
     .execute(pool)
     .await?
@@ -1241,73 +1414,265 @@ pub async fn confirm_email_change_original_side(
         == 1)
 }
 
-/// The outcome of attempting to apply a fully-proven email change
-/// against the email uniqueness constraint (auth.md "Email change").
+/// What one code submission did to a live change's code side.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CodeSubmission {
+    /// The code matched and the change's code side is now proven.
+    Confirmed(Uuid),
+    /// The change's code side was already proven by this same code — a
+    /// retry.
+    AlreadyConfirmed(Uuid),
+    /// The code did not match; the wrong-try count is not yet at the cap.
+    Wrong,
+    /// The code is disabled — by this wrong try reaching the cap, or by
+    /// an earlier one. Even the right code answers this until a fresh
+    /// code is minted.
+    Disabled,
+    /// No live change with a code is pending.
+    NotLive,
+}
+
+/// Submits a code against the account's live change, counting a wrong
+/// one; the try that reaches `cap` disables the code and already answers
+/// `Disabled`, so the reader learns the code died at the moment it did.
+///
+/// The row is locked for the read-compare-write, so two concurrent
+/// wrong tries cannot both read the count below the cap.
+pub async fn submit_email_change_code(
+    pool: &PgPool,
+    user_id: Uuid,
+    code_hash: &[u8],
+    cap: i32,
+) -> Result<CodeSubmission, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let Some(row) = sqlx::query!(
+        "SELECT id, original_code_hash, original_confirmed_at, code_disabled_at
+         FROM auth_email_changes
+         WHERE user_id = $1 AND requires_code
+           AND cancelled_at IS NULL AND applied_at IS NULL AND expires_at > NOW()
+         FOR UPDATE",
+        user_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        return Ok(CodeSubmission::NotLive);
+    };
+    let matches = row.original_code_hash.as_deref() == Some(code_hash);
+    let outcome = if row.code_disabled_at.is_some() {
+        CodeSubmission::Disabled
+    } else if row.original_confirmed_at.is_some() {
+        // A spent code is not a guess: neither a retry nor a stray press
+        // after the side landed counts toward the cap.
+        if matches {
+            CodeSubmission::AlreadyConfirmed(row.id)
+        } else {
+            CodeSubmission::Wrong
+        }
+    } else if matches {
+        sqlx::query!(
+            "UPDATE auth_email_changes SET original_confirmed_at = NOW() WHERE id = $1",
+            row.id,
+        )
+        .execute(&mut *tx)
+        .await?;
+        CodeSubmission::Confirmed(row.id)
+    } else {
+        let disabled = sqlx::query_scalar!(
+            r#"UPDATE auth_email_changes
+               SET failed_attempts = failed_attempts + 1,
+                   code_disabled_at = CASE WHEN failed_attempts + 1 >= $2
+                                           THEN NOW() END
+               WHERE id = $1
+               RETURNING code_disabled_at IS NOT NULL AS "disabled!""#,
+            row.id,
+            cap,
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+        if disabled {
+            CodeSubmission::Disabled
+        } else {
+            CodeSubmission::Wrong
+        }
+    };
+    tx.commit().await?;
+    Ok(outcome)
+}
+
+/// The fresh secrets a resend offers; only the owed sides take theirs.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ResentSides {
+    /// A fresh code replaced the old one and re-armed the wrong-try count.
+    pub code: bool,
+    /// A fresh link token replaced the old one.
+    pub link: bool,
+}
+
+/// Re-arms a live change's owed sides with fresh secrets; a proven side
+/// is never reset (auth.md "Email change" — Resend mails the owed
+/// side only). A fresh code clears the wrong-try count and the disable.
+/// On the carve-out the fresh link token is the account's verification
+/// token too, so the previous link dies with it. Answers which sides
+/// took a fresh secret — none when no live change is pending.
+pub async fn resend_email_change(
+    pool: &PgPool,
+    user_id: Uuid,
+    secrets: EmailChangeSecrets<'_>,
+) -> Result<ResentSides, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let Some(row) = sqlx::query!(
+        "SELECT id, requires_code, original_confirmed_at, new_verified_at
+         FROM auth_email_changes
+         WHERE user_id = $1 AND cancelled_at IS NULL AND applied_at IS NULL
+           AND expires_at > NOW()
+         FOR UPDATE",
+        user_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        return Ok(ResentSides::default());
+    };
+    let sides = ResentSides {
+        code: row.requires_code && row.original_confirmed_at.is_none(),
+        link: row.new_verified_at.is_none(),
+    };
+    if sides.code {
+        sqlx::query!(
+            "UPDATE auth_email_changes
+             SET original_code_hash = $2, failed_attempts = 0, code_disabled_at = NULL
+             WHERE id = $1",
+            row.id,
+            secrets.original_code_hash,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+    if sides.link {
+        sqlx::query!(
+            "UPDATE auth_email_changes SET new_email_token_hash = $2 WHERE id = $1",
+            row.id,
+            secrets.new_email_token_hash,
+        )
+        .execute(&mut *tx)
+        .await?;
+        if !row.requires_code {
+            sqlx::query!(
+                "UPDATE user_credentials SET email_verification_token_hash = $2
+                 WHERE actor_id = $1 AND email_verified_at IS NULL",
+                user_id,
+                secrets.new_email_token_hash,
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+    }
+    tx.commit().await?;
+    Ok(sides)
+}
+
+/// Calls off the account's live change: both secrets die with it, the
+/// address stays, and the row stays so a later link names the cancel.
+/// False when nothing was pending.
+pub async fn cancel_email_change(pool: &PgPool, user_id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_email_changes SET cancelled_at = NOW()
+         WHERE user_id = $1 AND cancelled_at IS NULL AND applied_at IS NULL
+           AND expires_at > NOW()",
+        user_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// The outcome of applying a change against the email uniqueness
+/// constraint (auth.md "Email change").
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EmailChangeApply {
-    /// The account's address is the proven change's target — whether
-    /// this call moved it or an earlier one did.
+    /// This call moved the address.
     Applied,
-    /// No fully-proven, unexpired change is pending.
+    /// The change is live but a side is still owed.
     NotReady,
+    /// The change already ended — applied, canceled, or run out.
+    Ended(EmailChangeEnd),
     /// The proven change collides with another account's email; the
-    /// change row stays live, so a retry within the TTL can still apply
-    /// if the address frees up.
+    /// change stays live, so a retry within the window can still apply
+    /// it if the address frees up.
     EmailInUse,
 }
 
-/// Applies the account's newest fully-proven, unexpired email change —
-/// `user_credentials.email` updates only when both sides hold (auth.md
-/// "Email change").
-///
-/// Idempotent in effect and in what it reports. The update is guarded by
-/// `email IS DISTINCT FROM`, so a second call moves no row; that alone
-/// cannot be read as failure, because "already at the target" and "no
-/// proven change exists" are the same zero-row answer. The statement
-/// therefore reports whether a proven change *exists*, and the address
-/// is the proven target either way — so a retried confirm answers
-/// `Applied` rather than `NotReady`.
-pub async fn apply_email_change_if_complete(
+/// Applies a change once every side it needs is proven: the address
+/// moves, the change is stamped applied, and — on the carve-out, where
+/// the new address's link is the verification link — the account is
+/// verified in the same step. A carve-out change on an account already
+/// past its unverified bound (`dead_before`) does not apply: that
+/// account can no longer verify, as `verify_account_email` holds.
+pub async fn apply_email_change(
     pool: &PgPool,
-    user_id: Uuid,
+    id: Uuid,
+    dead_before: DateTime<Utc>,
 ) -> Result<EmailChangeApply, sqlx::Error> {
-    let result = sqlx::query_scalar!(
-        r#"
-        WITH proven AS (
-            SELECT new_email FROM auth_email_changes
-            WHERE user_id = $1
-              AND original_confirmed_at IS NOT NULL
-              AND new_verified_at IS NOT NULL
-              AND expires_at > NOW()
-            ORDER BY created_at DESC LIMIT 1
-        ), moved AS (
-            UPDATE user_credentials c
-            SET email = p.new_email
-            FROM proven p
-            WHERE c.actor_id = $1 AND c.email IS DISTINCT FROM p.new_email
-            RETURNING c.actor_id
-        )
-        SELECT (EXISTS (SELECT 1 FROM proven)
-                AND (EXISTS (SELECT 1 FROM moved)
-                     OR EXISTS (SELECT 1 FROM user_credentials c, proven p
-                                WHERE c.actor_id = $1 AND c.email = p.new_email)))
-               AS "applied!"
-        "#,
-        user_id,
+    let mut tx = pool.begin().await?;
+    let Some(row) = sqlx::query!(
+        r#"SELECT user_id, new_email, requires_code, original_confirmed_at,
+                  new_verified_at, cancelled_at, applied_at,
+                  expires_at <= COALESCE(cancelled_at, NOW()) AS "ran_out!"
+           FROM auth_email_changes WHERE id = $1 FOR UPDATE"#,
+        id,
     )
-    .fetch_one(pool)
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        return Ok(EmailChangeApply::NotReady);
+    };
+    if row.applied_at.is_some() {
+        return Ok(EmailChangeApply::Ended(EmailChangeEnd::Applied));
+    }
+    if row.ran_out {
+        return Ok(EmailChangeApply::Ended(EmailChangeEnd::RanOut));
+    }
+    if row.cancelled_at.is_some() {
+        return Ok(EmailChangeApply::Ended(EmailChangeEnd::Canceled));
+    }
+    let code_side = !row.requires_code || row.original_confirmed_at.is_some();
+    if !code_side || row.new_verified_at.is_none() {
+        return Ok(EmailChangeApply::NotReady);
+    }
+    let moved = sqlx::query!(
+        "UPDATE user_credentials
+         SET email = $2,
+             email_verified_at = COALESCE(email_verified_at, NOW())
+         WHERE actor_id = $1
+           AND ($3 OR (email_verified_at IS NULL AND created_at >= $4))",
+        row.user_id,
+        row.new_email,
+        row.requires_code,
+        dead_before,
+    )
+    .execute(&mut *tx)
     .await;
-    match result {
-        Ok(true) => Ok(EmailChangeApply::Applied),
-        Ok(false) => Ok(EmailChangeApply::NotReady),
+    match moved {
+        Ok(r) if r.rows_affected() == 1 => {}
+        Ok(_) => return Ok(EmailChangeApply::NotReady),
         Err(sqlx::Error::Database(e))
             if e.is_unique_violation()
                 && e.constraint() == Some(constraints::CREDENTIALS_EMAIL) =>
         {
-            Ok(EmailChangeApply::EmailInUse)
+            return Ok(EmailChangeApply::EmailInUse);
         }
-        Err(e) => Err(e),
+        Err(e) => return Err(e),
     }
+    sqlx::query!(
+        "UPDATE auth_email_changes SET applied_at = NOW() WHERE id = $1",
+        id,
+    )
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(EmailChangeApply::Applied)
 }
 
 /// Renames the account in the one actor namespace. False on a uniqueness

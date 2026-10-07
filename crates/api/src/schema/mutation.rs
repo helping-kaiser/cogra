@@ -4,7 +4,7 @@
 //! write flow"): registration and the session-authorized admission
 //! steps, sessions and credentials, invite links, and the generic
 //! write-path relay legs. Conventions: one `input` argument, a dedicated
-//! payload, `userErrors` empty exactly on success — except the three
+//! payload, `userErrors` empty exactly on success — except the two
 //! deliberately-silent verbs, which carry no `userErrors` at all.
 //! Acting mutations require the MEMBER account state — a transport
 //! fault otherwise, never a userError: `EMAIL_NOT_VERIFIED` while the
@@ -27,8 +27,8 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PreparedWrite, Session,
-    StagedWriteType, User, UserError,
+    AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PendingEmailChange,
+    PreparedWrite, Session, StagedWriteType, User, UserError,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -43,10 +43,11 @@ use crate::references::ReferencesError;
 use crate::relay::{self, RelayError};
 use crate::stance::{self, StanceError};
 
-/// Email-change proofs stay live this long (auth.md "Email change" —
-/// single-use, short-lived; long enough to open a mailbox on another
-/// device).
-const EMAIL_CHANGE_TTL_HOURS: i64 = 1;
+/// An email change stays live this long, and its code with it (auth.md
+/// "Email change"). A day, not an hour: mail can lag, and the two sides
+/// may be proven from two inboxes on two devices — the same outage
+/// reasoning that gives an unverified account its 7 days.
+const EMAIL_CHANGE_TTL_HOURS: i64 = 24;
 /// Password-reset tokens stay live this long (auth.md default).
 const PASSWORD_RESET_TTL_MINUTES: i64 = 15;
 /// Key-backup blob cap (auth.md "Blob format (v1)"): the v1 container is
@@ -83,6 +84,57 @@ fn rate_limited() -> async_graphql::Error {
             e.set("code", "RATE_LIMITED");
         },
     )
+}
+
+/// The current-address half of an email change. The code ends the body
+/// after the last `: `, where the dev mailer's reader finds bare tokens.
+fn code_mail(to: String, code: &str) -> Mail {
+    Mail {
+        to,
+        subject: "Confirm your CoGra email change".into(),
+        body: format!("Your confirmation code (valid {EMAIL_CHANGE_TTL_HOURS} h): {code}"),
+    }
+}
+
+/// The new-address half of an email change: the change link, or — on the
+/// unverified carve-out — the account's verification link, which is the
+/// carve-out's whole proof (auth.md "Link URLs"). The bare token rides
+/// beside the URL, the fallback native apps accept as a paste.
+fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> Mail {
+    let (subject, line, path) = if requires_code {
+        (
+            "Confirm your new CoGra address",
+            "Confirm your new address",
+            "email-change",
+        )
+    } else {
+        ("Verify your CoGra email", "Verify your email", "verify")
+    };
+    Mail {
+        to,
+        subject: subject.into(),
+        body: format!(
+            "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}\nOr paste the token in the app: {token}"
+        ),
+    }
+}
+
+/// What a link to an ended email change answers — by what ended it.
+fn ended_change(end: store::EmailChangeEnd) -> UserError {
+    match end {
+        store::EmailChangeEnd::Applied => UserError::new(
+            ErrorCode::EmailChangeAlreadyApplied,
+            "the change this link belonged to already applied",
+        ),
+        store::EmailChangeEnd::Canceled => UserError::new(
+            ErrorCode::EmailChangeCanceled,
+            "the change this link belonged to was canceled",
+        ),
+        store::EmailChangeEnd::RanOut => UserError::new(
+            ErrorCode::EmailChangeExpired,
+            "the change ran out before both sides landed",
+        ),
+    }
 }
 
 /// Counts the attempt against a per-IP or per-key window and refuses
@@ -293,7 +345,8 @@ struct VerifyEmailInput {
 #[derive(SimpleObject)]
 struct VerifyEmailPayload {
     /// False with a VERIFICATION_TOKEN_INVALID userError when the token
-    /// is invalid or the account expired.
+    /// is invalid or the account expired, and with EMAIL_IN_USE when the
+    /// unverified carve-out's address was taken meanwhile.
     ok: bool,
     user_errors: Vec<UserError>,
 }
@@ -304,7 +357,7 @@ struct ResendVerificationEmailInput {
 }
 
 /// Always succeeds, to avoid revealing whether an application exists —
-/// one of the three deliberately-silent verbs, so no `userErrors`.
+/// one of the two deliberately-silent verbs, so no `userErrors`.
 #[derive(SimpleObject)]
 struct ResendVerificationEmailPayload {
     ok: bool,
@@ -1068,12 +1121,12 @@ struct RequestEmailChangeInput {
     current_password: String,
 }
 
-/// Always succeeds for a well-formed request, to avoid revealing whether
-/// the new address is already registered — a silent verb, no
-/// `userErrors`.
+/// The change just opened. A new address already registered to another
+/// account reads exactly like success.
 #[derive(SimpleObject)]
 struct RequestEmailChangePayload {
-    ok: bool,
+    pending_email_change: Option<PendingEmailChange>,
+    user_errors: Vec<UserError>,
 }
 
 #[derive(InputObject)]
@@ -1084,8 +1137,25 @@ struct ConfirmEmailChangeInput {
     code: String,
 }
 
+/// `user` carries `email` and `pendingEmailChange`, so the client reads
+/// which side remains.
 #[derive(SimpleObject)]
 struct ConfirmEmailChangePayload {
+    user: Option<User>,
+    user_errors: Vec<UserError>,
+}
+
+/// The pending change after its owed sides went out again.
+#[derive(SimpleObject)]
+struct ResendEmailChangePayload {
+    pending_email_change: Option<PendingEmailChange>,
+    user_errors: Vec<UserError>,
+}
+
+/// The account after the cancel — its address unchanged and no change
+/// pending.
+#[derive(SimpleObject)]
+struct CancelEmailChangePayload {
     user: Option<User>,
     user_errors: Vec<UserError>,
 }
@@ -1299,7 +1369,9 @@ impl Mutation {
 
     /// Proves the login channel. `ok` is false with a
     /// VERIFICATION_TOKEN_INVALID userError when the token is invalid or
-    /// the account expired.
+    /// the account expired. On the unverified carve-out the token is the
+    /// pending change's link: it moves the address and verifies in one
+    /// step, or answers EMAIL_IN_USE when the address was taken meanwhile.
     async fn verify_email(
         &self,
         ctx: &Context<'_>,
@@ -1312,6 +1384,15 @@ impl Mutation {
             Ok(()) => Ok(VerifyEmailPayload {
                 ok: true,
                 user_errors: vec![],
+            }),
+            // The carve-out's collision is about no input field: the
+            // address it names came from the pending change.
+            Err(OnboardingError::EmailInUse) => Ok(VerifyEmailPayload {
+                ok: false,
+                user_errors: vec![UserError::new(
+                    ErrorCode::EmailInUse,
+                    "the new address is already registered to another account",
+                )],
             }),
             Err(e) => Ok(VerifyEmailPayload {
                 ok: false,
@@ -1740,12 +1821,15 @@ impl Mutation {
         })
     }
 
-    /// Re-authenticates with the current password, then runs the
-    /// two-sided proof: a confirmation code to the current address, a
-    /// verification link to the new one. Always succeeds for a
-    /// well-formed request, to avoid revealing whether the new address
-    /// is already registered. A wrong current password is silent for the
-    /// same reason: it too reads as success.
+    /// Re-authenticates with the current password, then opens the change
+    /// (auth.md "Email change"): a 6-digit code to the current address
+    /// and a link to the new one — or, on an unverified account, the
+    /// account's verification link to the new address alone. A new
+    /// request supersedes a pending one. A new address already
+    /// registered to another account reads exactly like success; a wrong
+    /// password is INVALID_CREDENTIALS, which leaks nothing to a caller
+    /// already signed in. Spends the account's mail budget: a spent
+    /// budget answers RATE_LIMITED and nothing is mailed or recorded.
     async fn request_email_change(
         &self,
         ctx: &Context<'_>,
@@ -1754,62 +1838,84 @@ impl Mutation {
         let v = viewer(ctx)?;
         let pool = ctx.data::<PgPool>()?;
         let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let web_origin = ctx.data::<WebOrigin>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
         let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
             return Err(unauthenticated());
         };
-        if !auth::verify_password(&credentials.password_hash, &input.current_password) {
-            return Ok(RequestEmailChangePayload { ok: true });
-        }
-        let Ok(new_email) = auth::normalize_email(&input.new_email) else {
-            return Ok(RequestEmailChangePayload { ok: true });
+        let refuse = |error: UserError| RequestEmailChangePayload {
+            pending_email_change: None,
+            user_errors: vec![error],
         };
-        let original_code = auth::new_secret();
-        let new_token = auth::new_secret();
-        store::create_email_change(
+        if !auth::verify_password(&credentials.password_hash, &input.current_password) {
+            return Ok(refuse(UserError::at(
+                ErrorCode::InvalidCredentials,
+                "current password did not match",
+                vec!["currentPassword".to_string()],
+            )));
+        }
+        let new_email = match auth::normalize_email(&input.new_email) {
+            Ok(email) => email,
+            Err(m) => {
+                return Ok(refuse(UserError::at(
+                    ErrorCode::BadInput,
+                    m,
+                    vec!["newEmail".to_string()],
+                )));
+            }
+        };
+        if !ratelimit::spend_mail_budget(
+            pool,
+            scope::EMAIL_CHANGE_REQUEST_ACCOUNT,
+            v.user_id,
+            limits.email_change_request_account,
+        )
+        .await?
+        {
+            return Err(rate_limited());
+        }
+        let code = auth::new_code();
+        let link = auth::new_secret();
+        let requires_code = store::open_email_change(
             pool,
             Uuid::new_v4(),
             v.user_id,
             &new_email,
-            &original_code.hash,
-            &new_token.hash,
+            store::EmailChangeSecrets {
+                original_code_hash: &code.hash,
+                new_email_token_hash: &link.hash,
+            },
             Utc::now() + Duration::hours(EMAIL_CHANGE_TTL_HOURS),
         )
         .await?;
+        if requires_code {
+            mailer.send(code_mail(credentials.email, &code.token)).await;
+        }
         mailer
-            .send(Mail {
-                to: credentials.email,
-                subject: "Confirm your CoGra email change".into(),
-                body: format!(
-                    "Your confirmation code (valid {EMAIL_CHANGE_TTL_HOURS} h): {}",
-                    original_code.token
-                ),
-            })
+            .send(link_mail(new_email, requires_code, &web_origin.0, &link.token))
             .await;
-        mailer
-            .send(Mail {
-                to: new_email,
-                subject: "Verify your new CoGra address".into(),
-                body: format!(
-                    "Your verification token (valid {EMAIL_CHANGE_TTL_HOURS} h): {}",
-                    new_token.token
-                ),
-            })
-            .await;
-        Ok(RequestEmailChangePayload { ok: true })
+        Ok(RequestEmailChangePayload {
+            pending_email_change: store::pending_email_change(pool, v.user_id)
+                .await?
+                .map(PendingEmailChange::from_store),
+            user_errors: vec![],
+        })
     }
 
     /// Submits either side's proof; the change applies — and the account
     /// email updates — only once both the original-address code and the
-    /// new-address verification have been confirmed. A fully-proven
-    /// change whose new address was registered by someone else in the
-    /// meantime surfaces EMAIL_IN_USE, on this call and on retries,
-    /// until the change expires.
+    /// new-address link have been confirmed.
     ///
-    /// Either side's proof may arrive first, so both are tried and the
-    /// apply step runs even when the code matched neither. That is what
-    /// keeps a collided change answerable: its row stays alive, so a
-    /// retry with an already-consumed code still learns the real reason
-    /// instead of a token error.
+    /// The new-side token is looked up first, by itself: whose it is
+    /// answers before what state its change is in, so another account's
+    /// token never reveals that state (EMAIL_CHANGE_OTHER_ACCOUNT, not
+    /// consumed). Its own change answers by what ended it — applied,
+    /// canceled, run out. Anything else is a code against the viewer's
+    /// live change: a wrong one counts toward the cap, and the try that
+    /// reaches it already answers EMAIL_CHANGE_CODE_DISABLED. A fully
+    /// proven change whose address another account took meanwhile
+    /// answers EMAIL_IN_USE and stays live, so a retry inside the window
+    /// still learns the real reason, or applies once the address frees.
     async fn confirm_email_change(
         &self,
         ctx: &Context<'_>,
@@ -1819,22 +1925,70 @@ impl Mutation {
         let pool = ctx.data::<PgPool>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
+        let refuse = |error: UserError| ConfirmEmailChangePayload {
+            user: None,
+            user_errors: vec![error],
+        };
+        let wrong_code = || {
+            UserError::at(
+                ErrorCode::VerificationTokenInvalid,
+                "code invalid, expired, or already used",
+                vec!["code".to_string()],
+            )
+        };
         let hash = auth::hash_of(&input.code);
-        let matched = store::confirm_email_change_new_side(pool, v.user_id, &hash).await?
-            || store::confirm_email_change_original_side(pool, v.user_id, &hash).await?;
-        let user_errors = match store::apply_email_change_if_complete(pool, v.user_id).await? {
-            store::EmailChangeApply::Applied => vec![],
-            store::EmailChangeApply::NotReady if matched => vec![],
-            store::EmailChangeApply::NotReady => {
-                return Ok(ConfirmEmailChangePayload {
-                    user: None,
-                    user_errors: vec![UserError::at(
-                        ErrorCode::VerificationTokenInvalid,
-                        "code invalid, expired, or already used",
-                        vec!["code".to_string()],
-                    )],
-                });
+        let change_id = match store::email_change_by_token(pool, &hash).await? {
+            Some(change) if change.requires_code => {
+                if change.user_id != v.user_id {
+                    return Ok(refuse(UserError::new(
+                        ErrorCode::EmailChangeOtherAccount,
+                        "the link belongs to another account",
+                    )));
+                }
+                if let Some(end) = change.end() {
+                    return Ok(refuse(ended_change(end)));
+                }
+                store::confirm_email_change_link(pool, change.id).await?;
+                change.id
             }
+            _ => match store::submit_email_change_code(
+                pool,
+                v.user_id,
+                &hash,
+                limits.email_change_code_tries,
+            )
+            .await?
+            {
+                store::CodeSubmission::Confirmed(id) | store::CodeSubmission::AlreadyConfirmed(id) => {
+                    id
+                }
+                store::CodeSubmission::Wrong => return Ok(refuse(wrong_code())),
+                store::CodeSubmission::Disabled => {
+                    return Ok(refuse(UserError::at(
+                        ErrorCode::EmailChangeCodeDisabled,
+                        "the code was disabled after too many wrong tries; resend for a fresh one",
+                        vec!["code".to_string()],
+                    )));
+                }
+                store::CodeSubmission::NotLive => {
+                    let ran_out = store::latest_email_change(pool, v.user_id)
+                        .await?
+                        .is_some_and(|c| {
+                            c.requires_code && c.end() == Some(store::EmailChangeEnd::RanOut)
+                        });
+                    return Ok(refuse(if ran_out {
+                        ended_change(store::EmailChangeEnd::RanOut)
+                    } else {
+                        wrong_code()
+                    }));
+                }
+            },
+        };
+        let user_errors = match store::apply_email_change(pool, change_id, onboarding::dead_before())
+            .await?
+        {
+            store::EmailChangeApply::Applied | store::EmailChangeApply::NotReady => vec![],
+            store::EmailChangeApply::Ended(end) => return Ok(refuse(ended_change(end))),
             store::EmailChangeApply::EmailInUse => vec![UserError::new(
                 ErrorCode::EmailInUse,
                 "the new address is already registered to another account",
@@ -1844,6 +1998,100 @@ impl Mutation {
             .await?
             .map(|identity| User::from_viewer(identity, v));
         Ok(ConfirmEmailChangePayload { user, user_errors })
+    }
+
+    /// Re-mails the pending change's owed sides with fresh secrets
+    /// (auth.md "Email change"): both while both wait, only the code once
+    /// the link landed, only the link once the code did — a proven side
+    /// is never reset. A fresh code re-arms the wrong-try cap. Spends the
+    /// account's mail budget like a request; NOT_FOUND when nothing is
+    /// pending.
+    async fn resend_email_change(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<ResendEmailChangePayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let web_origin = ctx.data::<WebOrigin>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let not_found = || ResendEmailChangePayload {
+            pending_email_change: None,
+            user_errors: vec![UserError::new(
+                ErrorCode::NotFound,
+                "no email change is pending",
+            )],
+        };
+        let Some(change) = store::pending_email_change(pool, v.user_id).await? else {
+            return Ok(not_found());
+        };
+        // A fully proven change still live is one waiting out a
+        // collision: nothing is owed, so nothing is sent or charged.
+        if change.code_owed() || change.link_owed() {
+            if !ratelimit::spend_mail_budget(
+                pool,
+                scope::EMAIL_CHANGE_RESEND_ACCOUNT,
+                v.user_id,
+                limits.email_change_resend_account,
+            )
+            .await?
+            {
+                return Err(rate_limited());
+            }
+            let code = auth::new_code();
+            let link = auth::new_secret();
+            let sent = store::resend_email_change(
+                pool,
+                v.user_id,
+                store::EmailChangeSecrets {
+                    original_code_hash: &code.hash,
+                    new_email_token_hash: &link.hash,
+                },
+            )
+            .await?;
+            if sent.code {
+                let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
+                    return Err(unauthenticated());
+                };
+                mailer.send(code_mail(credentials.email, &code.token)).await;
+            }
+            if sent.link {
+                mailer
+                    .send(link_mail(
+                        change.new_email.clone(),
+                        change.requires_code,
+                        &web_origin.0,
+                        &link.token,
+                    ))
+                    .await;
+            }
+        }
+        match store::pending_email_change(pool, v.user_id).await? {
+            Some(change) => Ok(ResendEmailChangePayload {
+                pending_email_change: Some(PendingEmailChange::from_store(change)),
+                user_errors: vec![],
+            }),
+            None => Ok(not_found()),
+        }
+    }
+
+    /// Calls off the pending change: both secrets die, the address
+    /// stays. The change is kept, so a link opened later says it was
+    /// canceled. With nothing pending there is nothing to call off, and
+    /// the answer is the same account.
+    async fn cancel_email_change(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<CancelEmailChangePayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        store::cancel_email_change(pool, v.user_id).await?;
+        Ok(CancelEmailChangePayload {
+            user: store::actor_identity(pool, v.user_id)
+                .await?
+                .map(|identity| User::from_viewer(identity, v)),
+            user_errors: vec![],
+        })
     }
 
     /// Renames the account in the one actor namespace — L2 account
