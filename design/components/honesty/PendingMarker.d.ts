@@ -7,6 +7,8 @@ export interface PendingMarkerProps {
    * phrasing content, so the block form's `<p>` cannot nest inside one.
    */
   inline?: boolean;
+  /** The data-node name its placer gives this marker (design ⇄ impl seam 002; renders as attributes only). */
+  node?: string;
 }
 
 export declare function PendingMarker(props: PendingMarkerProps): JSX.Element;

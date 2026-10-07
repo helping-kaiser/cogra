@@ -17,25 +17,31 @@
 
    THE WASH IS OVER THE SHELL AND THE PAD IS ABOVE IT, the parked-pad drawing
    every other pad board uses; the shell's own controls go inactive under it,
-   which is what this board's `scanExempt` line records. */
+   which is what this board's `scanExempt` line records.
+
+   REGISTERED under the `vouchAsk` prefix (design ⇄ impl seam 078), the ask
+   beneath named as on `VouchAsk`. The open pad's own parts and the wash stay
+   unnamed for now: no registered board names a pad's anatomy or a scrim yet. */
+export const NODE = "vouchAsk";
 export function Screen() {
   return (
     <>
-      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back" />
+      <PageHeader title="A vouch, asked for" backHref="#" backLabel="Back" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12, padding: "8px 16px 0", overflow: "hidden" }}>
-        <Card style={{ flex: "none" }}>
+        <Card style={{ flex: "none" }} node="ask">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <MonogramAvatar name="noor" size="lg" />
-            <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }}>
+            <MonogramAvatar name="noor" size="lg" node="avatar" />
+            <h2 style={{ margin: 0, fontSize: "var(--text-title-medium)", lineHeight: "var(--text-title-medium--line-height)", fontWeight: "var(--text-title-medium--font-weight)" }} data-node="title">
               @noor is asking to be vouched in
             </h2>
           </div>
-          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }}>
+          <p style={{ margin: 0, fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", color: "var(--text-secondary)" }} data-node="body">
             They have an account and can read; what they do not have yet is anyone standing for them. Your opinion is what brings them in.
           </p>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-            <Button variant="text">Not now</Button>
+            <Button variant="text" node="later">Not now</Button>
             <StanceControl
+              node="stance"
               targetLabel="@noor"
               helpLabel="How vouching works"
               help={HOW_VOUCHING_WORKS_HELP}

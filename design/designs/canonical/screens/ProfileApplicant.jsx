@@ -29,17 +29,24 @@
    `ApplicantRejected`'s blessed words and its olive (the card now asks for
    the reader's action), the ask link takes that card's label and caption,
    and the chronicle's line says what the staged acts wait for: `These wait
-   — they arrive when someone vouches you in.` */
+   — they arrive when someone vouches you in.`
+
+   REGISTERED under the `profile` prefix (design ⇄ impl seam 078), named as
+   `Profile` names your own page; the card is `application`, its ask link
+   `link`. The `application` chip draws the card once per value, one shown at
+   a time, so both copies take the card's one path, keyed by the chip's value
+   (the chip-drawn duplicate rule). */
+export const NODE = "profile";
 export const PROPS = { application: { editor: "enum", options: ["waiting", "closed"], default: "waiting" } };
 export const VALS = `waitingShown: this.props.application === "closed" ? "none" : "block", closedShown: this.props.application === "closed" ? "block" : "none", stagedLine: this.props.application === "closed" ? "These wait — they arrive when someone vouches you in." : "These wait with your application and arrive with you."`;
 
 export function Screen() {
   return (
     <>
-      <ProfileBand />
+      <ProfileBand node="band" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <div style={{ padding: "8px 16px 0", display: "{{waitingShown}}" }}>
-          <TaskCard title="Waiting on @mira" body="What you post now arrives with you.">
+        <div style={{ padding: "8px 16px 0", display: "{{waitingShown}}" }} data-node-chip="application" data-node-key="waiting">
+          <TaskCard title="Waiting on @mira" body="What you post now arrives with you." node="application">
             <PayoutAddress
               bare
               label="Your ask link"
@@ -47,14 +54,16 @@ export function Screen() {
               onCopy={() => {}}
               copyLabel="Copy your ask link"
               caption="It does not expire. While @mira's answer is open, it can't start a second application."
+              node="link"
             />
           </TaskCard>
         </div>
-        <div style={{ padding: "8px 16px 0", display: "{{closedShown}}" }}>
+        <div style={{ padding: "8px 16px 0", display: "{{closedShown}}" }} data-node-chip="application" data-node-key="closed">
           <TaskCard
             tone="notice"
             title="@mira closed your application"
             body="That was @mira's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead."
+            node="application"
           >
             <PayoutAddress
               bare
@@ -63,11 +72,13 @@ export function Screen() {
               onCopy={() => {}}
               copyLabel="Copy your ask link"
               caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
+              node="link"
             />
           </TaskCard>
         </div>
         <div style={{ padding: "0 16px" }}>
           <ProfileHeader
+            node="identity"
             handle="juno"
             displayName="Juno Baptiste"
             posts={1}
@@ -82,17 +93,17 @@ export function Screen() {
             menu={ownProfileMenu()}
           />
         </div>
-        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} />
-        <ChronicleList>
-          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1h" second="First light over the flats — brought the wrong lens, kept the picture anyway." pending onOpen={() => {}} />
-          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.1, pInterest: 0.1 }} title="Gave an opinion" titleAside="on @mira" trailing="2h" pending inert />
-          <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }}>
+        <TabBar ariaLabel={CHRONICLE_TABS_LABEL} value="everything" tabs={CHRONICLE_TABS} node="tabRow" />
+        <ChronicleList node="chronicle">
+          <ContentRow variant="chronicle" chevron={false} glyph="dynamic_feed" title="Published a post" trailing="1h" second="First light over the flats — brought the wrong lens, kept the picture anyway." pending onOpen={() => {}} node="act" nodeKey="1" />
+          <ContentRow variant="chronicle" chevron={false} face={{ pDirected: 0.1, pInterest: 0.1 }} title="Gave an opinion" titleAside="on @mira" trailing="2h" pending inert node="act" nodeKey="2" />
+          <p style={{ margin: 0, padding: "4px 0", fontSize: "var(--text-label-small)", lineHeight: "var(--text-label-small--line-height)", letterSpacing: "var(--text-label-small--letter-spacing)", color: "var(--text-secondary)" }} data-node="stagedLine">
             {"{{stagedLine}}"}
           </p>
         </ChronicleList>
       </div>
-      <Snackbar message="You can invite once you're in." />
-      <BottomNav active="profile" slots={ALL_SLOTS} inline />
+      <Snackbar message="You can invite once you're in." node="snackbar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

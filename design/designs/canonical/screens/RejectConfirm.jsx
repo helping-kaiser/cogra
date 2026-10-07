@@ -29,13 +29,20 @@
    IT NAMES THE PERSON, and it names `@imke` — the row whose application is
    not even ready yet, which is the one a reader is likeliest to close. One
    dialog serves both rows; the close control is one control drawn twice, so
-   one edge covers it. */
+   one edge covers it.
+
+   REGISTERED under the `invites` prefix (design ⇄ impl seam 078): a dialog
+   belongs to the surface it is raised over, so the page beneath keeps its
+   `Invites` names and the dialog is `dialog`, its two answers `close` and
+   `keep`. */
+export const NODE = "invites";
 export function Screen() {
   return (
     <>
       <InvitesBody />
 
       <DialogSurface
+        node="dialog"
         onScrimPress={() => {}}
         title="Close @imke's application?"
         body={[
@@ -44,8 +51,8 @@ export function Screen() {
         ]}
         actions={
           <>
-            <Button variant="text">Close it</Button>
-            <Button>Keep it</Button>
+            <Button variant="text" node="close">Close it</Button>
+            <Button node="keep">Keep it</Button>
           </>
         }
       />

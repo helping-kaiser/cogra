@@ -31,7 +31,12 @@
    Revoke — the card holds and the word reads `Revoking…`, inert and never
    dimmed, because a revoke is a consequential write and waits like one. When
    it lands the card leaves with `Invite revoked`; a failure keeps the card
-   with the standard failure answer. */
+   with the standard failure answer.
+
+   REGISTERED under the `invites` prefix (design ⇄ impl seam 078, the invites
+   packet): the body names its parts, and `NODE` carries them onto the built
+   board and into `nodes.json`. */
+export const NODE = "invites";
 export const PROPS = {
   kept: { editor: "enum", options: ["none", "waiting"], default: "none" },
   revoke: { editor: "enum", options: ["rest", "waiting"], default: "rest" },

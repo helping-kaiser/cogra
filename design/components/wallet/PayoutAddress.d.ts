@@ -24,6 +24,8 @@ export interface PayoutAddressProps {
    *  already inside a card (the ask link in the rejected applicant's card).
    *  Never for a string that is the surface's own subject. */
   bare?: boolean;
+  /** The data-node name its placer gives this card (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: `label`, `copy`, `action` (the one inline act — Change, Revoke), `address`, `caption`. */
+  node?: string;
 }
 
 export declare function PayoutAddress(props: PayoutAddressProps): JSX.Element;
