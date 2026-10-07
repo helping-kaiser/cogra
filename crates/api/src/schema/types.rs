@@ -27,8 +27,6 @@ use postgres_store::{
 };
 use uuid::Uuid;
 
-use l1_standin::StandIn;
-
 use crate::auth::Viewer;
 use crate::l1::StandInBoundary;
 use crate::loaders::{
@@ -162,14 +160,16 @@ impl StanceBundle {
 }
 
 /// The actor whose view this account still borrows (`design/readme.md`
-/// §13, api-spec.md `Query.borrowedView`): the approver their application
-/// came through, until the member's first Opinion is signed — toward any
-/// target — and nobody after. Vacuously nobody without an approver, which
-/// is the genesis account's case.
+/// §13, api-spec.md `Query.borrowedView`): the issuer of the invite link
+/// the account registered through, until the member's first Opinion is
+/// signed — toward any target — and nobody after. The lender is the
+/// issuer for the whole ladder, whoever's vouch landed the account (G2).
+/// Vacuously nobody without an issuer, which is the genesis account's
+/// case.
 ///
 /// The ladder, rung by rung:
 ///
-/// - An **applicant** keeps the approver's view whatever they stage: the
+/// - An **applicant** keeps the issuer's view whatever they stage: the
 ///   probe is not consulted before landing (VouchBack.md:21's carried
 ///   opinion signs with the vouch-in batch, so it ends the borrowing at
 ///   landing, not before).
@@ -194,17 +194,17 @@ pub(crate) async fn borrowed_vantage(
     account: &store::ActorIdentity,
 ) -> async_graphql::Result<Option<store::ActorIdentity>> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(approver) = store::inviter_of(pool, account.id).await? else {
+    let Some(issuer) = store::link_issuer_of(pool, account.id).await? else {
         return Ok(None);
     };
     let Some(landed) = store::landed_vouch_state(pool, account.id).await? else {
-        return Ok(Some(approver));
+        return Ok(Some(issuer));
     };
     if landed.first_opinion_latched {
         return Ok(None);
     }
     let Some(account_address) = &account.realization_address else {
-        return Ok(Some(approver));
+        return Ok(Some(issuer));
     };
     let source = NodeId::Addr(account_address.clone()).to_string();
     if mirror::has_any_opinion_from(pool, &source).await? {
@@ -214,14 +214,15 @@ pub(crate) async fn borrowed_vantage(
     if staged::has_signed_of_family(pool, account.id, Family::Opinion).await? {
         return Ok(None);
     }
-    Ok(Some(approver))
+    Ok(Some(issuer))
 }
 
-/// Whether the account's reciprocal Opinion toward its inviter exists —
-/// confirmed in the mirror (latched on the landed application row) or in
-/// flight as one of its staged writes (auth.md "Reciprocation is the
-/// joiner's own act"). True without an inviter: there is nothing to
-/// reciprocate.
+/// Whether the account's reciprocal Opinion toward the member who vouched
+/// it in exists — confirmed in the mirror (latched on the landed
+/// application row) or in flight as one of its staged writes (auth.md
+/// "Reciprocation is the joiner's own act"). True with no admitting voucher
+/// — before landing, or for the genesis account: there is nothing to
+/// reciprocate yet.
 ///
 /// A missing address answers false: no Opinion can exist without both,
 /// because a keyless account has signed nothing.
@@ -230,7 +231,7 @@ pub(crate) async fn has_reciprocated(
     account: &store::ActorIdentity,
 ) -> async_graphql::Result<bool> {
     let pool = ctx.data::<PgPool>()?;
-    let Some(inviter) = store::inviter_of(pool, account.id).await? else {
+    let Some(inviter) = store::admitting_voucher_of(pool, account.id).await? else {
         return Ok(true);
     };
     if store::reciprocation_latched(pool, account.id).await? {
@@ -444,7 +445,8 @@ impl UserError {
             OnboardingError::Forbidden => UserError::new(ErrorCode::Forbidden, e.to_string()),
             OnboardingError::WriteRule { .. }
             | OnboardingError::BatchWriteRule { .. }
-            | OnboardingError::SigningBudget => {
+            | OnboardingError::SigningBudget
+            | OnboardingError::FundingBudget => {
                 UserError::new(ErrorCode::WriteRuleFailed, e.to_string())
             }
             OnboardingError::SignatureInvalid(_) => {
@@ -613,7 +615,9 @@ pub enum StagedWriteState {
     /// The sealed act is back and awaits the device's approval witness.
     AwaitingApproval,
     /// Approved and submitted for ordering; the backend drives retries
-    /// across epoch boundaries.
+    /// across epoch boundaries — including relaying the approval of an
+    /// admission Registration whose funding has not settled yet, once it
+    /// does.
     Relaying,
     /// The accepted act is in the mirror and the staged effects are
     /// promoted.
@@ -1322,16 +1326,17 @@ impl User {
         self.identity.realization_address.clone()
     }
 
-    /// The actor whose invite this account came through — landing
-    /// provenance for the reciprocation gesture; the graph's own record
-    /// of the vouch is the inviter's Opinion. Field-level: viewer-only;
-    /// null for accounts without an application trace (genesis actors).
+    /// The member whose vouch-Opinion landed the account first — the
+    /// target of the reciprocation gesture; the graph's own record of the
+    /// vouch is that member's Opinion. Null before landing, and for
+    /// accounts without an application trace (genesis actors).
+    /// Field-level: viewer-only.
     async fn invited_by(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
         if !self.is_viewer(ctx) {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        Ok(store::inviter_of(pool, self.identity.id)
+        Ok(store::admitting_voucher_of(pool, self.identity.id)
             .await?
             .map(|identity| {
                 Actor::User(User {
@@ -1479,26 +1484,29 @@ impl User {
         )))
     }
 
-    /// The account's latest application — the applicant's own view of
-    /// its progress; null when the account has none. Reading it is the
-    /// admission flow's repair hook: an approved application whose
-    /// staged Registration was lost re-stages here, on the poll (auth.md
-    /// "Approval and landing"). Field-level: viewer-only.
+    /// The account's current application — the applicant's own view of
+    /// its progress; null when the account has none. With several paths
+    /// the read prefers the landed path, then the approved-not-landed path
+    /// with the earliest live vouch, then the newest waiting path, then
+    /// the newest closed one. Reading it is the admission flow's repair
+    /// hook: while some path holds a live vouch and the account has not
+    /// landed, a staged Registration that was lost or collected re-stages
+    /// here, on the poll — the Registration only, never anyone's Opinion
+    /// (auth.md "Approval and landing"). Field-level: viewer-only.
     async fn application(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Application>> {
         if !self.is_viewer(ctx) {
             return Ok(None);
         }
         let pool = ctx.data::<PgPool>()?;
-        let Some(application) = store::latest_application_for(pool, self.identity.id).await? else {
+        let Some(application) = store::current_application_for(pool, self.identity.id).await?
+        else {
             return Ok(None);
         };
         if application.approved_at.is_some() && application.landed_at.is_none() {
             let boundary = ctx.data::<StandInBoundary>()?;
-            let funding = ctx.data::<StandIn>()?;
             let cfg = ctx.data::<OnboardingConfig>()?;
             if let Err(e) =
-                onboarding::ensure_admission_staged(pool, boundary, funding, cfg, &application)
-                    .await
+                onboarding::ensure_admission_staged(pool, boundary, cfg, self.identity.id).await
             {
                 tracing::error!(error = %e, "staged-registration repair failed");
             }
@@ -1686,8 +1694,15 @@ impl InviteLink {
         self.0.revoked_at
     }
 
+    /// Whether the link can stage a new applicant now — the reckoning
+    /// inviteLinkCheck.usable reports.
+    async fn usable(&self, ctx: &Context<'_>) -> async_graphql::Result<bool> {
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::invite_link_usable(pool, self.0.id).await?)
+    }
+
     /// The inviter's approval queue: applications staged through this
-    /// link, with their status.
+    /// link, with their status, rejected ones included.
     #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
     async fn applications(
         &self,
@@ -1733,13 +1748,44 @@ impl Application {
         self.0.key_attached
     }
 
-    /// When the inviter's priced approval happened; null while pending.
+    /// The member whose queue this application sits in — the issuer of
+    /// the invite link it came through: whose vouch it waits on, or whose
+    /// vouch is in play. Visible wherever the application is.
+    async fn approver(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let Some(link) = store::invite_link(pool, self.0.invite_link_id).await? else {
+            return Ok(None);
+        };
+        Ok(store::actor_identity(pool, link.inviter_id)
+            .await?
+            .map(|identity| {
+                Actor::User(User {
+                    identity,
+                    viewer_session: None,
+                })
+            }))
+    }
+
+    /// Since when this path has a live vouch — its approver's decision,
+    /// whose Opinion has not landed or lapsed; null while waiting,
+    /// including after a vouch lapsed. A landed path keeps it.
     async fn approved_at(&self) -> Option<DateTime<Utc>> {
         self.0.approved_at
     }
 
-    /// When the Registration confirmed and the account became a member;
-    /// null before.
+    /// When the approver closed the application without approving it —
+    /// on its own (rejectApplication) or with its link's whole waiting
+    /// queue (rejectLinkApplications); null otherwise. A rejection closes
+    /// this queue entry only: the account persists, and a member taking up
+    /// the account's ask link stages a new application (auth.md
+    /// "Rejection").
+    async fn rejected_at(&self) -> Option<DateTime<Utc>> {
+        self.0.rejected_at
+    }
+
+    /// When the ceremony completed through this path — the account's own
+    /// Registration and this path's vouch-Opinion both confirmed, the
+    /// vouch the first to land; null otherwise.
     async fn landed_at(&self) -> Option<DateTime<Utc>> {
         self.0.landed_at
     }

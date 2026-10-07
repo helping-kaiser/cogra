@@ -285,8 +285,9 @@ confirm copies them into the carriage tables, which own permanent
 payload storage. A content write's display rows appear earlier, at
 the pre-commitment signature, carrying a pending mark ("Content
 nodes" below); promotion on confirm drops that mark and drives the
-flows built on landing (an applicant's Registration confirming
-flips their account to member — [auth.md](auth.md)). Staged state
+flows built on landing (an applicant's Registration and a
+vouch-Opinion both confirming flip their account to member —
+[auth.md](auth.md)). Staged state
 is L2-operational: it is exempt from append-only history and
 leaves no trace once reaped — nothing existed on the graph.
 
@@ -339,6 +340,12 @@ CREATE TABLE staged_writes (
     deps_commitment     BYTEA,
     host_seal           BYTEA,
 
+    -- The approval witness of an admission Registration whose
+    -- funding has not settled: held here, with the write in
+    -- 'relaying', until the ingestion pass relays it (auth.md
+    -- "Approval and landing"), then cleared.
+    held_approval_signature BYTEA,
+
     -- The display rows this write owns while pending: node_id is the
     -- L2 UUID the payload envelope carries, recorded at prepare;
     -- pre_signed_at is the authoring instant the content dates from.
@@ -368,6 +375,11 @@ Lifecycle rules, driven off the ingestion pass:
   immediately: the salts cannot be re-fetched, so no approval can
   ever be produced — the device re-prepares under a fresh
   sequence value.
+- **An admission Registration's approval waits for its funding.**
+  While the address's admission burn has not settled, the approval
+  witness is held on the row and the write reads `relaying`; every
+  ingestion pass relays the held witnesses whose funding has
+  settled.
 
 The author-local act sequence `s_q`
 ([layer1-interface.md §8.1](../primitive/layer1-interface.md#8-kernel-data-model-authored-acts-projections-and-the-graph))
@@ -1217,7 +1229,9 @@ CREATE INDEX auth_refresh_tokens_user_idx
 -- URL carries only the row id. Time-gated and single-use (one
 -- applicant slot) unless the inviter opens it to multi-use (many
 -- applicants stage through the same link until expiry — the queue
--- scales, the vouching never does). Revocation sets revoked_at and
+-- scales, the vouching never does). A single-use link's slot is
+-- used up by the account registered through it; rejecting that
+-- application does not free it. Revocation sets revoked_at and
 -- stops new staging only: applications already staged stay
 -- approvable (auth.md "Invite-link generation").
 --
@@ -1252,11 +1266,16 @@ CREATE TABLE auth_ask_links (
 -- provenance and the approval/landing bookkeeping for an account
 -- in the applicant state (auth.md §Application). The account
 -- itself (actors + user_credentials) exists from registration;
--- this row carries only what is application-scoped. approved_at
--- marks the inviter's priced approval (which runs funding + the
--- staged Registration inside the approval, and prepares the
--- inviter's Opinion); landed_at is set when the Registration
--- confirms in the mirror and account_state flips to 'member'.
+-- this row carries only what is application-scoped. An account may
+-- have several rows open at once, each a path in one member's queue.
+-- approved_at is "this path has a live vouch since": set by the
+-- approver's priced decision (which runs funding + the staged
+-- Registration and prepares their Opinion, recorded in
+-- auth_application_vouches) and cleared when that vouch lapses;
+-- landed_at is set on the one path whose vouch-Opinion confirmed
+-- first, once the account's Registration has confirmed too, as
+-- account_state flips to 'member'. The account's other paths then
+-- leave their queues by a read-side filter — nothing marks them.
 -- The joiner's reciprocation is their own client-signed act after
 -- landing, not application state.
 --
@@ -1315,6 +1334,59 @@ CREATE INDEX auth_applications_link_idx
     ON auth_applications (invite_link_id, approved_at);
 CREATE INDEX auth_applications_account_idx
     ON auth_applications (account_id);
+CREATE UNIQUE INDEX auth_applications_one_landed_idx
+    ON auth_applications (account_id) WHERE landed_at IS NOT NULL;
+
+-- One vouch decision on one path and the act id of the
+-- voucher-signed Opinion it prepared — the only Opinions the landing
+-- predicate counts (auth.md "Approval and landing"). History is kept:
+-- a vouch whose staged Opinion was collected unlanded lapses
+-- (lapsed_at) and its path waits again, but a lapsed vouch that lands
+-- late still counts, because the collection is not final.
+CREATE TABLE auth_application_vouches (
+    id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+    application_id  UUID        NOT NULL REFERENCES auth_applications(id) ON DELETE CASCADE,
+    voucher_id      UUID        NOT NULL REFERENCES actors(id),
+    act_id          TEXT        NOT NULL UNIQUE,   -- the prepared Opinion's L1 act id
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    lapsed_at       TIMESTAMPTZ,
+    landed_at       TIMESTAMPTZ                    -- the Opinion confirmed in the mirror
+);
+CREATE UNIQUE INDEX auth_application_vouches_live_idx
+    ON auth_application_vouches (application_id) WHERE lapsed_at IS NULL AND landed_at IS NULL;
+CREATE INDEX auth_application_vouches_application_idx
+    ON auth_application_vouches (application_id);
+
+-- The admission funding of one realization address — the idempotent
+-- guard against funding it twice (auth.md "Approval and landing").
+-- Keyed by ADDRESS, not account: a burn is never removed, and an
+-- account deleted and re-registered with the same key must never be
+-- funded again, so the row outlives its account (no cascading FK).
+-- Only the inserter of the row requests the burn, across the seam,
+-- under request_key; every re-request reuses that key, so the
+-- realization burns once. The ingestion pass reads each pending
+-- burn's settlement and stamps settled_at — or failed_at when the
+-- realization refuses it for good, and the row still stands. A row
+-- for the account or its attached address binds the key
+-- (attachActorKey refuses from then on).
+CREATE TABLE auth_admission_fundings (
+    address       TEXT        PRIMARY KEY,
+    account_id    UUID        REFERENCES actors(id) ON DELETE SET NULL,
+    -- The voucher whose approval claimed the row (the funding budget's
+    -- audit); null for a repair or the genesis cast.
+    triggered_by  UUID        REFERENCES actors(id) ON DELETE SET NULL,
+    amount_micro  BIGINT      NOT NULL CHECK (amount_micro > 0),
+    request_key   UUID        NOT NULL UNIQUE,  -- the seam idempotency key
+    ticket        TEXT,                         -- the realization's ticket once requested
+    requested_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    attempts      INT         NOT NULL DEFAULT 0,
+    settled_at    TIMESTAMPTZ,
+    failed_at     TIMESTAMPTZ
+);
+CREATE INDEX auth_admission_fundings_pending_idx
+    ON auth_admission_fundings (requested_at) WHERE settled_at IS NULL AND failed_at IS NULL;
+CREATE INDEX auth_admission_fundings_account_idx
+    ON auth_admission_fundings (account_id) WHERE account_id IS NOT NULL;
 
 -- Key backups: client-encrypted signing-key blobs (auth.md §Key
 -- recovery). Ciphertext under the device-generated recovery code —

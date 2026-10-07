@@ -153,7 +153,9 @@ impl Query {
     /// 1. An **invite-link arrival**, still signed out, borrows **the
     ///    inviter's** view, resolved from the link id. That resolution
     ///    arrives with slice 3 and its own band-line ruling.
-    /// 2. An **applicant** borrows **their approver's**, from the moment
+    /// 2. An **applicant** borrows **the view of the issuer of the invite
+    ///    link they registered through** — whoever's vouch lands them —
+    ///    from the moment
     ///    the account exists and before either proof is in, whatever they
     ///    stage — and a **landed member** keeps borrowing it until their
     ///    first Opinion is signed, toward any target, landed or in flight.

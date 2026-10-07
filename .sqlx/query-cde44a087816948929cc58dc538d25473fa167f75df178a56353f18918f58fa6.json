@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT ap.account_id FROM auth_applications ap\n         JOIN user_credentials c ON c.actor_id = ap.account_id\n         WHERE ap.id = $1 AND c.account_state = 'applicant'\n           AND NOT EXISTS (SELECT 1 FROM auth_applications o\n                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "cde44a087816948929cc58dc538d25473fa167f75df178a56353f18918f58fa6"
+}

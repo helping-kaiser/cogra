@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_applications ap SET approved_at = NULL\n         WHERE ap.id = $1 AND ap.approved_at IS NOT NULL AND ap.landed_at IS NULL\n           AND NOT EXISTS (SELECT 1 FROM auth_application_vouches v\n                           WHERE v.application_id = ap.id AND v.lapsed_at IS NULL)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "49c1183f7e6451b9edf4912d8026a24b3842dc2841df5b985af3d4e40121daa1"
+}

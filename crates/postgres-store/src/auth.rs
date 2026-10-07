@@ -8,7 +8,7 @@
 //! about any record.
 
 use chrono::{DateTime, Utc};
-use sqlx::{PgConnection, PgPool};
+use sqlx::{PgConnection, PgExecutor, PgPool};
 use uuid::Uuid;
 
 pub mod constraints {
@@ -102,6 +102,9 @@ pub struct Application {
     pub email_verified: bool,
     pub key_attached: bool,
     pub approved_at: Option<DateTime<Utc>>,
+    /// The approver's close (auth.md "Rejection"): set instead of
+    /// `approved_at`, never alongside it.
+    pub rejected_at: Option<DateTime<Utc>>,
     pub landed_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
 }
@@ -269,12 +272,17 @@ pub async fn revoke_invite_link(
 }
 
 /// Whether the link can stage a new applicant now: live, and — for a
-/// single-use link — its one slot not already held by an application
-/// through it (invitations.md §4 "Link modes"). Applications carry no
-/// timer, so a waiting one holds the slot exactly as an approved or
-/// landed one does; the reaper deleting a never-verified account is what
-/// frees it (auth.md "Expiry").
-pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::Error> {
+/// single-use link — its one slot not held by an application through it
+/// (invitations.md §4 "Link modes"). Applications carry no timer, so a
+/// waiting one holds the slot exactly as an approved, landed or rejected
+/// one does: account creation uses the link up, and only the reaper
+/// deleting a never-verified account frees it (auth.md "Expiry"). The
+/// one reckoning — registration, `inviteLinkCheck` and
+/// `InviteLink.usable` all read it here.
+pub async fn invite_link_usable<'e>(
+    executor: impl PgExecutor<'e>,
+    id: Uuid,
+) -> Result<bool, sqlx::Error> {
     sqlx::query_scalar!(
         r#"SELECT EXISTS(
                SELECT 1 FROM auth_invite_links l
@@ -288,7 +296,7 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
            ) AS "usable!""#,
         id,
     )
-    .fetch_one(pool)
+    .fetch_one(executor)
     .await
 }
 
@@ -297,6 +305,9 @@ pub async fn invite_link_usable(pool: &PgPool, id: Uuid) -> Result<bool, sqlx::E
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RegisterOutcome {
     Created,
+    /// The link stopped being usable before the application row could be
+    /// written — a concurrent registration took its single-use slot.
+    InviteUnusable,
     HandleTaken,
     EmailInUse,
 }
@@ -308,6 +319,12 @@ pub enum RegisterOutcome {
 /// row against the link. A dead account — never verified and past
 /// `dead_before` — holding the handle or email is deleted first, so the
 /// experience never depends on the reaper's schedule.
+///
+/// The link row is locked for the transaction and its usability read
+/// again under the lock, so two registrations racing for one single-use
+/// slot queue there: the second reads the first's committed application
+/// and refuses (PostgreSQL "Explicit Locking", row-level locks under
+/// Read Committed).
 #[allow(clippy::too_many_arguments)]
 pub async fn register_account(
     pool: &PgPool,
@@ -321,6 +338,15 @@ pub async fn register_account(
     dead_before: DateTime<Utc>,
 ) -> Result<RegisterOutcome, sqlx::Error> {
     let mut tx = pool.begin().await?;
+    sqlx::query_scalar!(
+        "SELECT id FROM auth_invite_links WHERE id = $1 FOR UPDATE",
+        invite_link_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?;
+    if !invite_link_usable(&mut *tx, invite_link_id).await? {
+        return Ok(RegisterOutcome::InviteUnusable);
+    }
     let dead: Vec<Uuid> = sqlx::query_scalar!(
         "SELECT c.actor_id FROM user_credentials c
          JOIN actors a ON a.id = c.actor_id
@@ -432,6 +458,7 @@ macro_rules! application_from_row {
             email_verified: $r.email_verified,
             key_attached: $r.key_attached,
             approved_at: $r.approved_at,
+            rejected_at: $r.rejected_at,
             landed_at: $r.landed_at,
             created_at: $r.created_at,
         }
@@ -443,7 +470,7 @@ pub async fn application(pool: &PgPool, id: Uuid) -> Result<Option<Application>,
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at
+                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
@@ -455,9 +482,17 @@ pub async fn application(pool: &PgPool, id: Uuid) -> Result<Option<Application>,
     .map(|r| application_from_row!(r)))
 }
 
-/// The account's newest application — the applicant's own view of its
+/// The account's current application — the applicant's own view of its
 /// progress (`User.application`); None when the account has none.
-pub async fn latest_application_for(
+///
+/// With several paths open the precedence decides which one the account
+/// reads (seam 099 ruling 66): the landed path; else the approved-not-
+/// landed path with the earliest live vouch; else the newest waiting path;
+/// else the newest closed one. A member reads the path the ceremony
+/// completed through; an applicant reads the vouch in play when there is
+/// one, the newest open queue entry when there is not, and the latest
+/// close only when nothing else is left.
+pub async fn current_application_for(
     pool: &PgPool,
     account_id: Uuid,
 ) -> Result<Option<Application>, sqlx::Error> {
@@ -465,12 +500,19 @@ pub async fn latest_application_for(
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at
+                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
            WHERE ap.account_id = $1
-           ORDER BY ap.created_at DESC LIMIT 1"#,
+           ORDER BY
+               CASE WHEN ap.landed_at IS NOT NULL THEN 0
+                    WHEN ap.approved_at IS NOT NULL THEN 1
+                    WHEN ap.rejected_at IS NULL THEN 2
+                    ELSE 3 END,
+               CASE WHEN ap.landed_at IS NULL THEN ap.approved_at END ASC NULLS LAST,
+               ap.created_at DESC
+           LIMIT 1"#,
         account_id,
     )
     .fetch_optional(pool)
@@ -478,7 +520,9 @@ pub async fn latest_application_for(
     .map(|r| application_from_row!(r)))
 }
 
-/// The inviter's approval queue for one link, newest first.
+/// The inviter's approval queue for one link, newest first. A row whose
+/// account landed through another path has left the queue (seam 099
+/// ruling 67): it is filtered here, at the read, and nothing marks it.
 pub async fn applications_for_link(
     pool: &PgPool,
     invite_link_id: Uuid,
@@ -487,11 +531,14 @@ pub async fn applications_for_link(
         r#"SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,
                   (c.email_verified_at IS NOT NULL) AS "email_verified!",
                   (a.actor_pubkey IS NOT NULL) AS "key_attached!",
-                  ap.approved_at, ap.landed_at, ap.created_at
+                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at
            FROM auth_applications ap
            JOIN actors a ON a.id = ap.account_id
            JOIN user_credentials c ON c.actor_id = ap.account_id
            WHERE ap.invite_link_id = $1
+             AND NOT EXISTS (SELECT 1 FROM auth_applications o
+                             WHERE o.account_id = ap.account_id
+                               AND o.landed_at IS NOT NULL AND o.id <> ap.id)
            ORDER BY ap.created_at DESC"#,
         invite_link_id,
     )
@@ -575,21 +622,32 @@ pub enum AttachOutcome {
     /// account. The unique indexes are the enforcement, so a concurrent
     /// duplicate attach cannot slip through a check-then-write gap.
     KeyInUse,
-    /// The account is not an unapproved applicant.
+    /// The account is not an applicant whose address is still unfunded.
     Refused,
 }
 
 /// Attaches the device-minted actor identity — the key ceremony's server
 /// half (auth.md §Application step 3). Replaceable while the account is
-/// an applicant with no approved application; `Refused` once approval
-/// has bound the address (or the account is not an applicant at all),
-/// `KeyInUse` when the key is bound to a different account.
+/// an applicant whose address is unfunded; `Refused` once a funding row
+/// names the account or its attached address — the burn binds the
+/// address, and swapping the key would strand it — or when the account is
+/// not an applicant at all; `KeyInUse` when the key is bound to a
+/// different account.
+///
+/// Runs under the account lock the admission staging holds
+/// ([`lock_account`]), so an attach cannot slip between the staging's
+/// read of the address and its funding claim: it waits, then finds the
+/// funding row. A funding row that outlived a deleted account names only
+/// its address, so a fresh account may attach that key — and is then
+/// bound by it, and never funded again.
 pub async fn attach_actor_key(
     pool: &PgPool,
     account_id: Uuid,
     actor_pubkey: &[u8],
     address: &str,
 ) -> Result<AttachOutcome, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    lock_account(&mut tx, account_id).await?;
     let updated = sqlx::query!(
         "UPDATE actors a
          SET actor_pubkey = $2, realization_address = $3
@@ -598,34 +656,47 @@ pub async fn attach_actor_key(
            AND a.kind = 'user'
            AND c.account_state = 'applicant'
            AND NOT EXISTS(
-               SELECT 1 FROM auth_applications ap
-               WHERE ap.account_id = a.id AND ap.approved_at IS NOT NULL
+               SELECT 1 FROM auth_admission_fundings f
+               WHERE f.account_id = a.id OR f.address = a.realization_address
            )",
         account_id,
         actor_pubkey,
         address,
     )
-    .execute(pool)
+    .execute(&mut *tx)
     .await;
-    match updated {
-        Ok(r) if r.rows_affected() == 1 => Ok(AttachOutcome::Attached),
-        Ok(_) => Ok(AttachOutcome::Refused),
+    let outcome = match updated {
+        Ok(r) if r.rows_affected() == 1 => AttachOutcome::Attached,
+        Ok(_) => AttachOutcome::Refused,
         Err(sqlx::Error::Database(e)) if e.is_unique_violation() => match e.constraint() {
             Some(constraints::ACTORS_PUBKEY | constraints::ACTORS_ADDRESS) => {
-                Ok(AttachOutcome::KeyInUse)
+                AttachOutcome::KeyInUse
             }
-            _ => Err(sqlx::Error::Database(e)),
+            _ => return Err(sqlx::Error::Database(e)),
         },
-        Err(e) => Err(e),
+        Err(e) => return Err(e),
+    };
+    if outcome == AttachOutcome::Attached {
+        tx.commit().await?;
     }
+    Ok(outcome)
 }
 
-/// Marks the inviter's priced approval — the `approved_at IS NULL`
-/// predicate is the concurrency gate against a duplicate approval.
-/// Refused (None) unless the application is still waiting and approvable:
-/// email verified and key attached, both enforced here as well as
-/// validated by the caller (auth.md §Application). No clock gates it — an
-/// application waits on a vouch with no timer (auth.md "Expiry").
+/// Marks the inviter's priced approval — the `approved_at IS NULL AND
+/// rejected_at IS NULL` predicate is the concurrency gate against a
+/// duplicate approval and against a concurrent rejection
+/// ([`reject_application`] gates on the same pair, so exactly one of the
+/// two marks lands). Refused (None) unless the application is still
+/// waiting and approvable: email verified and key attached, both enforced
+/// here as well as validated by the caller (auth.md §Application). No
+/// clock gates it — an application waits on a vouch with no timer
+/// (auth.md "Expiry"). A path whose account already landed — through any
+/// path — is past every decision: it left its queue at the landing.
+///
+/// `approved_at` means "this path has a live vouch since": the caller
+/// records the vouch ([`record_vouch`]) under the account lock before
+/// releasing it, and clears the mark ([`unmark_unvouched`]) if the
+/// sequence fails before the vouch exists.
 pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>, sqlx::Error> {
     sqlx::query_scalar!(
         "UPDATE auth_applications ap
@@ -633,9 +704,13 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
          FROM actors a, user_credentials c
          WHERE ap.id = $1 AND a.id = ap.account_id AND c.actor_id = ap.account_id
            AND ap.approved_at IS NULL
+           AND ap.rejected_at IS NULL
            AND ap.landed_at IS NULL
+           AND c.account_state = 'applicant'
            AND c.email_verified_at IS NOT NULL
            AND a.actor_pubkey IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM auth_applications o
+                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)
          RETURNING ap.account_id",
         id,
     )
@@ -643,66 +718,564 @@ pub async fn approve_application(pool: &PgPool, id: Uuid) -> Result<Option<Uuid>
     .await
 }
 
-/// Locks the application row for the caller's transaction — the
-/// serialization point of the admission staging sequence (auth.md
-/// "Approval and landing" step 1): the approving mutation and the
-/// status-poll repair hook queue here instead of racing the funding
-/// burn. False when the row is gone.
-pub async fn lock_application(conn: &mut PgConnection, id: Uuid) -> Result<bool, sqlx::Error> {
-    Ok(sqlx::query_scalar!(
-        "SELECT id FROM auth_applications WHERE id = $1 FOR UPDATE",
+/// Closes one application in `approver`'s queue (auth.md "Rejection"):
+/// sets `rejected_at` and nothing else — the row, the account and its
+/// key all stay. The queue is the invite link's issuer's, so ownership
+/// reads through the link. The waiting predicate is the concurrency gate
+/// against a concurrent approval or a second rejection, mirroring
+/// [`approve_application`]'s. False when the row is not waiting in that
+/// queue — unknown, foreign, approved, already rejected, or left the
+/// queue when its account landed through another path alike; the caller
+/// reads the row to name which.
+pub async fn reject_application(
+    pool: &PgPool,
+    id: Uuid,
+    approver: Uuid,
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_applications ap
+         SET rejected_at = NOW()
+         FROM auth_invite_links l
+         WHERE ap.id = $1 AND l.id = ap.invite_link_id AND l.inviter_id = $2
+           AND ap.approved_at IS NULL
+           AND ap.rejected_at IS NULL
+           AND ap.landed_at IS NULL
+           AND NOT EXISTS (SELECT 1 FROM auth_applications o
+                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
         id,
+        approver,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Closes every application still waiting through one of `approver`'s
+/// invite links (auth.md "Rejection", "A flood is closed by the link"),
+/// returning how many closed; None when the link is unknown or not
+/// theirs. Approved, already-rejected and landed-elsewhere rows are
+/// passed over, so a queue
+/// that moves under the sweep never defeats it, and a revoked link still
+/// sweeps — revocation stops new staging only. Each closed row is an
+/// ordinary rejection, under the same waiting predicate
+/// [`reject_application`] gates on.
+pub async fn reject_link_applications(
+    pool: &PgPool,
+    invite_link_id: Uuid,
+    approver: Uuid,
+) -> Result<Option<u64>, sqlx::Error> {
+    let owned = sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM auth_invite_links WHERE id = $1 AND inviter_id = $2
+           ) AS "owned!""#,
+        invite_link_id,
+        approver,
+    )
+    .fetch_one(pool)
+    .await?;
+    if !owned {
+        return Ok(None);
+    }
+    Ok(Some(
+        sqlx::query!(
+            "UPDATE auth_applications ap
+             SET rejected_at = NOW()
+             WHERE ap.invite_link_id = $1
+               AND ap.approved_at IS NULL
+               AND ap.rejected_at IS NULL
+               AND ap.landed_at IS NULL
+               AND NOT EXISTS (SELECT 1 FROM auth_applications o
+                               WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
+            invite_link_id,
+        )
+        .execute(pool)
+        .await?
+        .rows_affected(),
+    ))
+}
+
+/// Locks the account for the caller's transaction — the serialization
+/// point of the admission staging sequence (auth.md "Funding"): every
+/// approval of any of the account's paths, the status-poll repair hook,
+/// and the key attach queue here, so the funding claim and the staged
+/// Registration happen once per account however they race. The lock is the
+/// account's credentials row, which every path of the account shares —
+/// an application-row lock would let two paths of one account stage past
+/// each other. False when the account is gone.
+pub async fn lock_account(conn: &mut PgConnection, account_id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query_scalar!(
+        "SELECT actor_id FROM user_credentials WHERE actor_id = $1 FOR UPDATE",
+        account_id,
     )
     .fetch_optional(conn)
     .await?
     .is_some())
 }
 
-/// Lands an account whose Registration confirmed (auth.md "Approval and
-/// landing" step 4): flips the account state to member and marks the
-/// approved application landed. Nothing moves — the credentials have
-/// been the account's since registration. True when an application
-/// landed (false for actors with no approved application, e.g. a
-/// genesis Registration re-ingested on rebuild).
-pub async fn land_account(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
+/// One address's admission funding (`auth_admission_fundings`): the
+/// guard row the first funder inserts, and how far its burn has come.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AdmissionFunding {
+    pub address: String,
+    pub account_id: Option<Uuid>,
+    pub triggered_by: Option<Uuid>,
+    pub amount_micro: i64,
+    /// The seam idempotency key every request for this burn reuses.
+    pub request_key: Uuid,
+    /// The realization's ticket, once a request was answered.
+    pub ticket: Option<String>,
+    pub requested_at: DateTime<Utc>,
+    pub attempts: i32,
+    pub settled_at: Option<DateTime<Utc>>,
+    pub failed_at: Option<DateTime<Utc>>,
+}
+
+/// Claims the admission funding of an address: inserts its guard row,
+/// answering the fresh request key to the inserter and None to everyone
+/// else. Only the inserter requests the burn — the address's one burn,
+/// whichever path, retry, poll or re-registration reaches here.
+pub async fn claim_admission_funding(
+    pool: &PgPool,
+    address: &str,
+    account_id: Uuid,
+    triggered_by: Option<Uuid>,
+    amount_micro: i64,
+) -> Result<Option<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "INSERT INTO auth_admission_fundings
+             (address, account_id, triggered_by, amount_micro, request_key)
+         VALUES ($1, $2, $3, $4, gen_random_uuid())
+         ON CONFLICT (address) DO NOTHING
+         RETURNING request_key",
+        address,
+        account_id,
+        triggered_by,
+        amount_micro,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Records a settled funding the operator credited directly — the genesis
+/// bootstrap's cast — so the guard covers every funded address. A no-op
+/// when the address already has a row.
+pub async fn record_settled_funding(
+    pool: &PgPool,
+    address: &str,
+    account_id: Option<Uuid>,
+    amount_micro: i64,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "INSERT INTO auth_admission_fundings
+             (address, account_id, amount_micro, request_key, settled_at)
+         VALUES ($1, $2, $3, gen_random_uuid(), NOW())
+         ON CONFLICT (address) DO NOTHING",
+        address,
+        account_id,
+        amount_micro,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// The funding row of an address, if it was ever claimed.
+pub async fn admission_funding(
+    pool: &PgPool,
+    address: &str,
+) -> Result<Option<AdmissionFunding>, sqlx::Error> {
+    sqlx::query_as!(
+        AdmissionFunding,
+        "SELECT address, account_id, triggered_by, amount_micro, request_key, ticket,
+                requested_at, attempts, settled_at, failed_at
+         FROM auth_admission_fundings WHERE address = $1",
+        address,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Which of `addresses` already have a funding row — the pricing read of
+/// an approval batch, whose funding budget is spent only by the entries
+/// that would claim a fresh one.
+pub async fn funded_addresses(
+    pool: &PgPool,
+    addresses: &[String],
+) -> Result<Vec<String>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "SELECT address FROM auth_admission_fundings WHERE address = ANY($1)",
+        addresses,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// The fundings whose burn has neither settled nor failed, oldest first —
+/// the settlement pass's work list.
+pub async fn pending_admission_fundings(
+    pool: &PgPool,
+) -> Result<Vec<AdmissionFunding>, sqlx::Error> {
+    sqlx::query_as!(
+        AdmissionFunding,
+        "SELECT address, account_id, triggered_by, amount_micro, request_key, ticket,
+                requested_at, attempts, settled_at, failed_at
+         FROM auth_admission_fundings
+         WHERE settled_at IS NULL AND failed_at IS NULL
+         ORDER BY requested_at",
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// Counts one burn request sent under the funding's key, recording the
+/// ticket when the realization answered with one.
+pub async fn record_funding_request(
+    pool: &PgPool,
+    address: &str,
+    ticket: Option<&str>,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "UPDATE auth_admission_fundings
+         SET attempts = attempts + 1, ticket = COALESCE($2, ticket)
+         WHERE address = $1",
+        address,
+        ticket,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
+}
+
+/// Stamps a funding settled — once; true when this call settled it.
+pub async fn mark_funding_settled(pool: &PgPool, address: &str) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_admission_fundings SET settled_at = NOW()
+         WHERE address = $1 AND settled_at IS NULL AND failed_at IS NULL",
+        address,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Stamps a funding failed — the realization refused the burn for good.
+/// The row stays: the address is still never funded twice.
+pub async fn mark_funding_failed(pool: &PgPool, address: &str) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_admission_fundings SET failed_at = NOW()
+         WHERE address = $1 AND settled_at IS NULL AND failed_at IS NULL",
+        address,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Records one vouch decision on a path: the act id of the Opinion the
+/// decision prepared for the voucher to sign (seam 099 ruling 71 — the
+/// vouch is recognised by recorded act id only). Runs under the account
+/// lock, after [`approve_application`] marked the path, so the mark and
+/// its live vouch are never seen apart by another lock holder.
+pub async fn record_vouch(
+    pool: &PgPool,
+    application_id: Uuid,
+    voucher_id: Uuid,
+    act_id: &str,
+) -> Result<Uuid, sqlx::Error> {
+    sqlx::query_scalar!(
+        "INSERT INTO auth_application_vouches (application_id, voucher_id, act_id)
+         VALUES ($1, $2, $3)
+         RETURNING id",
+        application_id,
+        voucher_id,
+        act_id,
+    )
+    .fetch_one(pool)
+    .await
+}
+
+/// Clears the approval mark of one path that has no live or landed vouch
+/// — an approval whose sequence failed after the mark. The path waits
+/// again. True when it cleared.
+pub async fn unmark_unvouched(pool: &PgPool, application_id: Uuid) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_applications ap SET approved_at = NULL
+         WHERE ap.id = $1 AND ap.approved_at IS NOT NULL AND ap.landed_at IS NULL
+           AND NOT EXISTS (SELECT 1 FROM auth_application_vouches v
+                           WHERE v.application_id = ap.id AND v.lapsed_at IS NULL)",
+        application_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
+}
+
+/// Clears every approval mark of the account whose path holds no live or
+/// landed vouch — a lapse, or an approval that died between its mark and
+/// its vouch. Sound only under the account lock: an approval in flight
+/// holds that lock from its mark to its vouch, so a lock holder never
+/// sees a mark whose vouch is merely late.
+pub async fn heal_unvouched_marks(
+    conn: &mut PgConnection,
+    account_id: Uuid,
+) -> Result<u64, sqlx::Error> {
+    Ok(sqlx::query!(
+        "UPDATE auth_applications ap SET approved_at = NULL
+         WHERE ap.account_id = $1 AND ap.approved_at IS NOT NULL AND ap.landed_at IS NULL
+           AND NOT EXISTS (SELECT 1 FROM auth_application_vouches v
+                           WHERE v.application_id = ap.id AND v.lapsed_at IS NULL)",
+        account_id,
+    )
+    .execute(conn)
+    .await?
+    .rows_affected())
+}
+
+/// Live vouches whose Opinion can no longer land: its staged write was
+/// collected (expired, or reaped) and the mirror does not hold it. Paired
+/// with the account each belongs to, for [`lapse_vouches`].
+pub async fn vouches_to_lapse(pool: &PgPool) -> Result<Vec<(Uuid, Uuid)>, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT v.id, ap.account_id
+         FROM auth_application_vouches v
+         JOIN auth_applications ap ON ap.id = v.application_id
+         WHERE v.lapsed_at IS NULL AND v.landed_at IS NULL
+           AND NOT EXISTS (SELECT 1 FROM mirror_records m WHERE m.record_id = v.act_id)
+           AND NOT EXISTS (SELECT 1 FROM staged_writes s
+                           WHERE s.act_id = v.act_id AND s.state <> 'expired')",
+    )
+    .fetch_all(pool)
+    .await?
+    .into_iter()
+    .map(|r| (r.id, r.account_id))
+    .collect())
+}
+
+/// Lapses the account's vouches among `vouch_ids` that still cannot land,
+/// then returns their paths to waiting (`approved_at` cleared) where no
+/// live vouch remains — under the account lock, so a lapse never races an
+/// approval of the same account. Returns the vouches lapsed.
+pub async fn lapse_vouches(
+    pool: &PgPool,
+    account_id: Uuid,
+    vouch_ids: &[Uuid],
+) -> Result<u64, sqlx::Error> {
     let mut tx = pool.begin().await?;
-    let landed = sqlx::query!(
-        "UPDATE auth_applications
-         SET landed_at = NOW()
-         WHERE account_id = $1 AND approved_at IS NOT NULL AND landed_at IS NULL",
+    if !lock_account(&mut tx, account_id).await? {
+        return Ok(0);
+    }
+    let lapsed = sqlx::query!(
+        "UPDATE auth_application_vouches v SET lapsed_at = NOW()
+         WHERE v.id = ANY($1) AND v.lapsed_at IS NULL AND v.landed_at IS NULL
+           AND NOT EXISTS (SELECT 1 FROM mirror_records m WHERE m.record_id = v.act_id)
+           AND NOT EXISTS (SELECT 1 FROM staged_writes s
+                           WHERE s.act_id = v.act_id AND s.state <> 'expired')",
+        vouch_ids,
+    )
+    .execute(&mut *tx)
+    .await?
+    .rows_affected();
+    heal_unvouched_marks(&mut tx, account_id).await?;
+    tx.commit().await?;
+    Ok(lapsed)
+}
+
+/// Accounts with a vouch whose Opinion is in the mirror but not yet
+/// booked as landed — every account the landing predicate has something
+/// new to decide for. Read from the mirror rather than from this pass's
+/// promotions, so a late landing, a reaped staged write, or a rebuild is
+/// never missed.
+pub async fn landing_candidates(pool: &PgPool) -> Result<Vec<Uuid>, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT DISTINCT ap.account_id AS "account_id!"
+           FROM auth_application_vouches v
+           JOIN auth_applications ap ON ap.id = v.application_id
+           JOIN mirror_records m ON m.record_id = v.act_id
+           WHERE v.landed_at IS NULL"#,
+    )
+    .fetch_all(pool)
+    .await
+}
+
+/// What one landing evaluation did.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Landing {
+    /// The ceremony completed: the account is a member, through this path,
+    /// on this voucher's edge.
+    Landed {
+        application_id: Uuid,
+        voucher_id: Uuid,
+    },
+    /// The account was already a member; this many later vouch-Opinions
+    /// were booked as landed — ordinary Opinions now (EC-R3).
+    Recorded(u64),
+    /// A fact is still missing: the Registration, or a confirmed vouch.
+    Waiting,
+}
+
+/// The landing predicate for one account (EC-R2, EC-R3), decided from
+/// mirror facts and recorded act ids alone, under the account lock:
+///
+/// 1. **Registration fact:** a `registration_family` record by the
+///    account's address is in the mirror. Any such record will do: a
+///    chained Registration (a profile update) asserts the admission one
+///    as its parent and cannot land before it.
+/// 2. **Vouch fact:** among the account's recorded vouch acts in the
+///    mirror, the earliest by causal key `(act_time, position)` is the
+///    first edge, and it wins — whichever path it was decided on, lapsed
+///    or not (the GC is not final).
+///
+/// With both, and the account still an applicant, one transaction books
+/// the winning vouch and its path landed and flips the account to member.
+/// Every other path leaves its queue by the read-side filter (seam 099
+/// ruling 67), so nothing more is written for them. Later vouch-Opinions
+/// that confirm are booked landed as ordinary Opinions. Idempotent and
+/// safe under concurrent ingestion: the lock serializes evaluations, the
+/// second finds the member, and the one-landed-path index is the backstop.
+pub async fn evaluate_landing(
+    pool: &PgPool,
+    account_id: Uuid,
+    registration_family: &str,
+) -> Result<Landing, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    if !lock_account(&mut tx, account_id).await? {
+        return Ok(Landing::Waiting);
+    }
+    let account = sqlx::query!(
+        "SELECT c.account_state, a.realization_address
+         FROM user_credentials c JOIN actors a ON a.id = c.actor_id
+         WHERE c.actor_id = $1",
+        account_id,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    let mut outcome = Landing::Waiting;
+    if account.account_state == "applicant"
+        && let Some(address) = account.realization_address
+    {
+        let registered = sqlx::query_scalar!(
+            r#"SELECT EXISTS(
+                   SELECT 1 FROM mirror_records WHERE family = $1 AND author = $2
+               ) AS "exists!""#,
+            registration_family,
+            address,
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+        let first_edge = sqlx::query!(
+            "SELECT v.id, v.application_id, v.voucher_id
+             FROM auth_application_vouches v
+             JOIN auth_applications ap ON ap.id = v.application_id
+             JOIN mirror_records m ON m.record_id = v.act_id
+             WHERE ap.account_id = $1
+             ORDER BY m.act_time, m.position, m.record_id
+             LIMIT 1",
+            account_id,
+        )
+        .fetch_optional(&mut *tx)
+        .await?;
+        if registered && let Some(edge) = first_edge {
+            land_through(&mut tx, account_id, edge.application_id, Some(edge.id)).await?;
+            outcome = Landing::Landed {
+                application_id: edge.application_id,
+                voucher_id: edge.voucher_id,
+            };
+        }
+    }
+    let recorded = sqlx::query!(
+        "UPDATE auth_application_vouches v SET landed_at = NOW()
+         FROM auth_applications ap, user_credentials c
+         WHERE ap.id = v.application_id AND c.actor_id = ap.account_id
+           AND ap.account_id = $1 AND c.account_state <> 'applicant'
+           AND v.landed_at IS NULL
+           AND EXISTS (SELECT 1 FROM mirror_records m WHERE m.record_id = v.act_id)",
         account_id,
     )
     .execute(&mut *tx)
     .await?
-    .rows_affected()
-        == 1;
-    if !landed {
-        return Ok(false);
+    .rows_affected();
+    tx.commit().await?;
+    if outcome == Landing::Waiting && recorded > 0 {
+        outcome = Landing::Recorded(recorded);
     }
+    Ok(outcome)
+}
+
+/// The landing write: books `vouch` and its path landed — the path keeps
+/// an approval mark, since a lapsed vouch landing late lands a path whose
+/// mark was cleared — and flips the account to member. Nothing moves; the
+/// credentials have been the account's since registration.
+async fn land_through(
+    conn: &mut PgConnection,
+    account_id: Uuid,
+    application_id: Uuid,
+    vouch: Option<Uuid>,
+) -> Result<(), sqlx::Error> {
+    if let Some(vouch) = vouch {
+        sqlx::query!(
+            "UPDATE auth_application_vouches SET landed_at = NOW()
+             WHERE id = $1 AND landed_at IS NULL",
+            vouch,
+        )
+        .execute(&mut *conn)
+        .await?;
+    }
+    sqlx::query!(
+        "UPDATE auth_applications
+         SET landed_at = NOW(), approved_at = COALESCE(approved_at, NOW())
+         WHERE id = $1 AND landed_at IS NULL",
+        application_id,
+    )
+    .execute(&mut *conn)
+    .await?;
     sqlx::query!(
         "UPDATE user_credentials SET account_state = 'member'
          WHERE actor_id = $1 AND account_state = 'applicant'",
         account_id,
     )
-    .execute(&mut *tx)
+    .execute(&mut *conn)
     .await?;
+    Ok(())
+}
+
+/// Lands an account through one path with no vouch fact behind it — for
+/// rigs that put an account in the landed state without running the
+/// ceremony. Production landing is [`evaluate_landing`]'s alone. False
+/// when the account is not an applicant or another path already landed.
+pub async fn land_path_directly(pool: &PgPool, application_id: Uuid) -> Result<bool, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    let Some(account_id) = sqlx::query_scalar!(
+        "SELECT ap.account_id FROM auth_applications ap
+         JOIN user_credentials c ON c.actor_id = ap.account_id
+         WHERE ap.id = $1 AND c.account_state = 'applicant'
+           AND NOT EXISTS (SELECT 1 FROM auth_applications o
+                           WHERE o.account_id = ap.account_id AND o.landed_at IS NOT NULL)",
+        application_id,
+    )
+    .fetch_optional(&mut *tx)
+    .await?
+    else {
+        return Ok(false);
+    };
+    lock_account(&mut tx, account_id).await?;
+    land_through(&mut tx, account_id, application_id, None).await?;
     tx.commit().await?;
     Ok(true)
 }
 
-/// The actor that issued the invite link this account's newest
-/// application came through — the provenance behind the borrowed view an
-/// applicant is shown and behind the reciprocation gesture a member
-/// makes; None for accounts without an application trace (genesis
-/// actors).
+/// The issuer of the invite link the account registered through — the
+/// lender of the borrowed view (G2), for the whole ladder: applicant days
+/// and member-until-first-Opinion. None for accounts without an
+/// application trace (genesis actors).
 ///
-/// The newest row is the account's current application, the same rule
-/// [`latest_application_for`] reads `User.application` by, and it answers
-/// both states with one ordering: an applicant's newest row is the one it
-/// waits on, and a landed member's last row is the one they landed
-/// through — registration writes an application only for the fresh
-/// account it creates, so no row can be created after the landing.
-pub async fn inviter_of(
+/// The registration path is the account's first application row:
+/// `register` writes it with the account, and every later path is staged
+/// after.
+pub async fn link_issuer_of(
     pool: &PgPool,
     account_id: Uuid,
 ) -> Result<Option<ActorIdentity>, sqlx::Error> {
@@ -713,10 +1286,72 @@ pub async fn inviter_of(
          JOIN auth_invite_links l ON l.id = ap.invite_link_id
          JOIN actors i ON i.id = l.inviter_id
          WHERE ap.account_id = $1
-         ORDER BY ap.created_at DESC LIMIT 1",
+         ORDER BY ap.created_at ASC, ap.id ASC LIMIT 1",
         account_id,
     )
     .fetch_optional(pool)
+    .await
+}
+
+/// The member whose vouch-Opinion admitted the account — the first edge
+/// by the mirror's causal key, the same fact the landing predicate decided
+/// on, so a rebuild names the same member. None before landing. An account
+/// landed before vouches were recorded names its landed path's issuer.
+/// Feeds `invitedBy` and the reciprocation question: the vouch-back
+/// target is whoever actually vouched.
+pub async fn admitting_voucher_of(
+    pool: &PgPool,
+    account_id: Uuid,
+) -> Result<Option<ActorIdentity>, sqlx::Error> {
+    sqlx::query_as!(
+        ActorIdentity,
+        r#"SELECT i.id AS "id!", i.kind AS "kind!", i.handle AS "handle!", i.actor_pubkey,
+                  i.realization_address, i.created_at AS "created_at!"
+           FROM actors i
+           WHERE i.id = COALESCE(
+               (SELECT v.voucher_id
+                FROM auth_application_vouches v
+                JOIN auth_applications ap ON ap.id = v.application_id
+                JOIN mirror_records m ON m.record_id = v.act_id
+                WHERE ap.account_id = $1
+                ORDER BY m.act_time, m.position, m.record_id
+                LIMIT 1),
+               (SELECT l.inviter_id
+                FROM auth_applications ap
+                JOIN auth_invite_links l ON l.id = ap.invite_link_id
+                WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL))
+             AND EXISTS (SELECT 1 FROM auth_applications ap
+                         WHERE ap.account_id = $1 AND ap.landed_at IS NOT NULL)"#,
+        account_id,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// The live vouch of one path, if any: the voucher and the act id.
+pub async fn live_vouch(
+    pool: &PgPool,
+    application_id: Uuid,
+) -> Result<Option<(Uuid, String)>, sqlx::Error> {
+    Ok(sqlx::query!(
+        "SELECT voucher_id, act_id FROM auth_application_vouches
+         WHERE application_id = $1 AND lapsed_at IS NULL AND landed_at IS NULL",
+        application_id,
+    )
+    .fetch_optional(pool)
+    .await?
+    .map(|r| (r.voucher_id, r.act_id)))
+}
+
+/// Whether the account landed — through any path.
+pub async fn account_landed(pool: &PgPool, account_id: Uuid) -> Result<bool, sqlx::Error> {
+    sqlx::query_scalar!(
+        r#"SELECT EXISTS(
+               SELECT 1 FROM auth_applications WHERE account_id = $1 AND landed_at IS NOT NULL
+           ) AS "exists!""#,
+        account_id,
+    )
+    .fetch_one(pool)
     .await
 }
 

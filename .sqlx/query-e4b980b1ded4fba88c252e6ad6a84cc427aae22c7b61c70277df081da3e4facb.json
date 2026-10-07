@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT v.id, v.application_id, v.voucher_id\n             FROM auth_application_vouches v\n             JOIN auth_applications ap ON ap.id = v.application_id\n             JOIN mirror_records m ON m.record_id = v.act_id\n             WHERE ap.account_id = $1\n             ORDER BY m.act_time, m.position, m.record_id\n             LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "application_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "voucher_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e4b980b1ded4fba88c252e6ad6a84cc427aae22c7b61c70277df081da3e4facb"
+}

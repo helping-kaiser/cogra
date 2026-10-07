@@ -30,6 +30,7 @@ fn standin(pool: PgPool) -> StandIn {
             theta_micro: THETA,
             epoch_target_acts: 10_000,
             max_payload_bytes: 1024,
+            ..StandInConfig::default()
         },
     )
 }
@@ -336,6 +337,134 @@ async fn insolvent_authors_defer_until_funded(pool: PgPool) {
     assert_eq!(package.records.len(), 1);
 }
 
+/// Burns requested through the seam, as a count of `l1_admission_burns`
+/// rows — the realization-side proof that a burn happened once.
+async fn burn_rows(pool: &PgPool, address: &str) -> i64 {
+    sqlx::query_scalar("SELECT COUNT(*) FROM l1_admission_burns WHERE address = $1")
+        .bind(address)
+        .fetch_one(pool)
+        .await
+        .expect("count")
+}
+
+/// An admission burn request is idempotent by its key: a retry returns
+/// the same ticket, keeps one burn and credits once, and a zero-delay
+/// burn has settled by the time the request returns. The same key naming
+/// another amount is not a retry and is refused.
+///
+/// A retried burn request with the same key is the same burn: one row, one credit, one ticket.
+/// ´claim:standin:a-burn-request-is-idempotent-by-its-key´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_burn_request_is_idempotent_by_its_key(pool: PgPool) {
+    use common::l1::handshake::BurnSettlement;
+    let host = standin(pool.clone());
+    let actor = ActorKey::generate();
+    let key = sqlx::types::Uuid::new_v4();
+
+    let first = host
+        .request_admission_burn(&actor.address(), 5 * THETA, key)
+        .await
+        .expect("requests");
+    let again = host
+        .request_admission_burn(&actor.address(), 5 * THETA, key)
+        .await
+        .expect("a retry is answered");
+    assert_eq!(first, again);
+    assert_eq!(burn_rows(&pool, &actor.address()).await, 1);
+    assert_eq!(
+        host.burn_settlement(&first).await.expect("reads"),
+        BurnSettlement::Settled {
+            pinned_micro: 5 * THETA
+        }
+    );
+    let balance = host.balance(&actor.address()).await.expect("balance");
+    assert!((balance.burned_total - 5.0).abs() < 1e-9, "credited once");
+
+    assert!(matches!(
+        host.request_admission_burn(&actor.address(), 6 * THETA, key)
+            .await,
+        Err(StandInError::Conflict(_))
+    ));
+    assert!(matches!(
+        host.burn_settlement(&common::l1::handshake::BurnTicket("not-a-ticket".into()))
+            .await,
+        Err(StandInError::UnknownAct(_))
+    ));
+}
+
+/// With a settlement delay, a burn reads pending and B_i stays untouched
+/// until that many epochs have closed; the close that reaches the due
+/// epoch settles it and credits B_i, and the act it funds lands at the
+/// close after. Idle closes publish nothing and so count nothing.
+///
+/// A burn under a settlement delay stays pending, B_i untouched, until the delay's epochs have closed.
+/// ´claim:standin:a-burn-settles-after-its-delay´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_burn_settles_after_its_delay(pool: PgPool) {
+    use common::l1::handshake::BurnSettlement;
+    let host = StandIn::new(
+        pool.clone(),
+        StandInConfig::new(THETA, 10_000, 1024)
+            .and_then(|c| c.settling_after(2))
+            .expect("config"),
+    );
+    let applicant = ActorKey::generate();
+    let ticket = host
+        .request_admission_burn(&applicant.address(), 3 * THETA, sqlx::types::Uuid::new_v4())
+        .await
+        .expect("requests");
+    assert_eq!(
+        host.burn_settlement(&ticket).await.expect("reads"),
+        BurnSettlement::Pending
+    );
+    assert_eq!(
+        host.balance(&applicant.address())
+            .await
+            .expect("balance")
+            .burned_total,
+        0.0
+    );
+    submit(&host, &applicant, registration(&applicant)).await;
+    assert!(
+        host.close_epoch().await.expect("ok").is_none(),
+        "the funded act is insolvent while the burn is pending, and an idle close counts nothing"
+    );
+
+    let ticker = funded_actor(&host, 10 * THETA).await;
+    submit(&host, &ticker, registration(&ticker)).await;
+    host.close_epoch().await.expect("ok").expect("epoch 0");
+    assert_eq!(
+        host.burn_settlement(&ticket).await.expect("reads"),
+        BurnSettlement::Pending,
+        "requested before epoch 0 with a delay of 2: due at epoch 1"
+    );
+    submit(&host, &ticker, opinion(&ticker, 1, "bob", vec![])).await;
+    let epoch_1 = host.close_epoch().await.expect("ok").expect("epoch 1");
+    assert!(
+        epoch_1.records.iter().all(|r| r.author == ticker.address()),
+        "the burn settles at this close, after its selection"
+    );
+    assert_eq!(
+        host.burn_settlement(&ticket).await.expect("reads"),
+        BurnSettlement::Settled {
+            pinned_micro: 3 * THETA
+        }
+    );
+    let package = host.close_epoch().await.expect("ok").expect("epoch 2");
+    assert_eq!(package.records[0].author, applicant.address());
+}
+
+/// A negative settlement delay is refused at the config, like every
+/// degenerate operating value.
+/// ´claim:standin:a-negative-settlement-delay-is-refused´
+#[test]
+fn a_negative_settlement_delay_is_refused() {
+    assert!(matches!(
+        StandInConfig::default().settling_after(-1),
+        Err(StandInError::Host(_))
+    ));
+}
+
 /// An act depending on a never-submitted act defers indefinitely. An act
 /// depending on a same-close act lands after it, at a strictly greater
 /// Lamport time, whatever the approval order — here the dependent is
@@ -623,6 +752,7 @@ async fn act_budget_caps_the_epoch(pool: PgPool) {
             theta_micro: THETA,
             epoch_target_acts: 1,
             max_payload_bytes: 1024,
+            ..StandInConfig::default()
         },
     );
     let alice = funded_actor(&host, 10 * THETA).await;
@@ -649,6 +779,7 @@ async fn approving_does_not_close_an_epoch(pool: PgPool) {
             theta_micro: THETA,
             epoch_target_acts: 1,
             max_payload_bytes: 1024,
+            ..StandInConfig::default()
         },
     );
     let alice = funded_actor(&host, 10 * THETA).await;

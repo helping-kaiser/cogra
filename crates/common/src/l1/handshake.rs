@@ -244,6 +244,23 @@ pub struct AccountBalance {
     pub action_count: i64,
 }
 
+/// The realization's handle on one admission burn request — what a
+/// settlement read is asked about. Opaque to CoGra: stored as the
+/// realization returned it and handed back unchanged.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BurnTicket(pub String);
+
+/// Where one admission burn stands on the realization (layer1-interface.md
+/// R4(e)): requested and not yet pinned, pinned at or below the published
+/// settlement depth — so the B_i read now carries it — or refused for
+/// good.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BurnSettlement {
+    Pending,
+    Settled { pinned_micro: i64 },
+    Failed(String),
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

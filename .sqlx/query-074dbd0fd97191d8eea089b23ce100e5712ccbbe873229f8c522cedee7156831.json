@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT DISTINCT ap.account_id AS \"account_id!\"\n           FROM auth_application_vouches v\n           JOIN auth_applications ap ON ap.id = v.application_id\n           JOIN mirror_records m ON m.record_id = v.act_id\n           WHERE v.landed_at IS NULL",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "account_id!",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "074dbd0fd97191d8eea089b23ce100e5712ccbbe873229f8c522cedee7156831"
+}

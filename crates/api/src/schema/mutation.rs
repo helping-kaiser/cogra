@@ -18,7 +18,6 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
 use common::l1::{crypto, key_backup, wire};
-use l1_standin::StandIn;
 use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
@@ -27,8 +26,8 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType, PendingEmailChange,
-    PreparedWrite, Session, StagedWriteType, User, UserError, UserPreferences,
+    Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType,
+    PendingEmailChange, PreparedWrite, Session, StagedWriteType, User, UserError, UserPreferences,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -438,6 +437,35 @@ struct ApplicationApprovalInput {
 #[derive(InputObject)]
 struct ApproveApplicantsInput {
     approvals: Vec<ApplicationApprovalInput>,
+}
+
+#[derive(InputObject)]
+struct RejectApplicationInput {
+    application: Uuid,
+}
+
+/// The application in its closed state.
+#[derive(SimpleObject)]
+struct RejectApplicationPayload {
+    application: Option<Application>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct RejectLinkApplicationsInput {
+    invite_link: Uuid,
+}
+
+/// An unknown or foreign link refuses with a NOT_FOUND userError, the
+/// same expected outcome revokeInviteLink names; a link with nothing
+/// waiting succeeds with a zero count.
+#[derive(SimpleObject)]
+struct RejectLinkApplicationsPayload {
+    /// How many applications the sweep closed.
+    rejected_count: Option<i32>,
+    /// The link, for re-reading its share of the queue.
+    invite_link: Option<InviteLink>,
+    user_errors: Vec<UserError>,
 }
 
 /// Staged proposals to pre-sign, in relay order. Each is its own priced
@@ -1490,11 +1518,10 @@ impl Mutation {
     }
 
     /// Attaches the device-minted actor identity to the viewer's account
-    /// — the key ceremony's server half. Replaceable while the viewer's
-    /// application is unapproved; FORBIDDEN once approval has bound the
-    /// address. An address binds at most one account: a key already
-    /// bound to a different account refuses with an ACTOR_KEY_IN_USE
-    /// userError.
+    /// — the key ceremony's server half. Replaceable until the address is
+    /// funded; FORBIDDEN once the admission burn has bound it. An address
+    /// binds at most one account: a key already bound to a different
+    /// account refuses with an ACTOR_KEY_IN_USE userError.
     async fn attach_actor_key(
         &self,
         ctx: &Context<'_>,
@@ -1556,12 +1583,18 @@ impl Mutation {
     }
 
     /// Approve staged applicants — the inviter's deliberate, priced act:
-    /// per applicant or in batch, with the pre-filled stance values
-    /// adjusted at will. Triggers the funding burn and the staged
-    /// Registration backend-side, and returns the inviter's own Opinion
+    /// per applicant or in batch, each carrying the stance values the
+    /// inviter picks for it. Requests the address's funding burn — at most
+    /// once per address, however approvals and retries race — and stages
+    /// the Registration backend-side, and returns the inviter's own Opinion
     /// records to sign — the vouch is the inviter's signature, not a
-    /// server write. Requires an approvable application: email verified
-    /// and key attached.
+    /// server write. The account lands when its own Registration and the
+    /// first vouch-Opinion on any of its paths have both confirmed; a vouch
+    /// that never lands lapses and its path waits again. Requires an
+    /// approvable application: email verified and key attached; an
+    /// already-approved, rejected, or foreign-queue application, or one
+    /// whose applicant already landed, refuses with BAD_INPUT pinned to
+    /// its entry.
     async fn approve_applicants(
         &self,
         ctx: &Context<'_>,
@@ -1570,7 +1603,6 @@ impl Mutation {
         let v = member_viewer(ctx).await?;
         let pool = ctx.data::<PgPool>()?;
         let boundary = ctx.data::<StandInBoundary>()?;
-        let funding = ctx.data::<StandIn>()?;
         let cfg = ctx.data::<OnboardingConfig>()?;
         let limits = ctx.data::<RateLimitConfig>()?;
         let approvals: Vec<onboarding::Approval> = input
@@ -1585,7 +1617,6 @@ impl Mutation {
         match onboarding::approve_applicants(
             pool,
             boundary,
-            funding,
             cfg,
             &limits.signing,
             v.user_id,
@@ -1619,6 +1650,72 @@ impl Mutation {
                     .collect(),
             }),
         }
+    }
+
+    /// Close a staged application without approving it — the approver's
+    /// own gesture, never a side effect of revoking the link the applicant
+    /// arrived through (auth.md "Rejection"). It closes this queue entry,
+    /// not the person: the row is marked rejected, and the account keeps
+    /// its login, its reads and its attached key. Nothing is deleted. One
+    /// person at a time; closing a whole invite link's waiting queue in
+    /// one gesture is rejectLinkApplications. An already-approved,
+    /// already-rejected, or foreign-queue application refuses with
+    /// BAD_INPUT pinned to `application`; an unknown and a foreign
+    /// application read alike.
+    async fn reject_application(
+        &self,
+        ctx: &Context<'_>,
+        input: RejectApplicationInput,
+    ) -> async_graphql::Result<RejectApplicationPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        match onboarding::reject_application(pool, v.user_id, input.application).await {
+            Ok(application) => Ok(RejectApplicationPayload {
+                application: Some(Application(application)),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(RejectApplicationPayload {
+                application: None,
+                user_errors: vec![UserError::from_onboarding(&e, "")],
+            }),
+        }
+    }
+
+    /// Close every application waiting in the viewer's queue through one
+    /// invite link (auth.md "Rejection"). Each entry closes as an
+    /// ordinary rejection — marked rejected, the account keeping its
+    /// login, its reads and its attached key, nothing deleted.
+    /// Scoped to what is waiting: applications already approved or
+    /// rejected are passed over rather than refusing the call. A revoked
+    /// link still sweeps: revocation stops new staging and leaves the
+    /// queue standing.
+    async fn reject_link_applications(
+        &self,
+        ctx: &Context<'_>,
+        input: RejectLinkApplicationsInput,
+    ) -> async_graphql::Result<RejectLinkApplicationsPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        let Some(closed) =
+            store::reject_link_applications(pool, input.invite_link, v.user_id).await?
+        else {
+            return Ok(RejectLinkApplicationsPayload {
+                rejected_count: None,
+                invite_link: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::NotFound,
+                    "no such invite link",
+                    vec!["inviteLink".to_string()],
+                )],
+            });
+        };
+        Ok(RejectLinkApplicationsPayload {
+            rejected_count: Some(i32::try_from(closed).unwrap_or(i32::MAX)),
+            invite_link: store::invite_link(pool, input.invite_link)
+                .await?
+                .map(InviteLink),
+            user_errors: vec![],
+        })
     }
 
     /// A session from credentials; `auth` is null with an

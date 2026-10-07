@@ -63,6 +63,7 @@ over file values.
 | `L1_INGEST_INTERVAL_SECS` | `2` | Mirror-ingestion poll interval of the API server |
 | `L1_EPOCH_CLOSE_INTERVAL_SECS` | *(unset)* | Dev epoch clock: the API host closes a stand-in epoch on this interval, so writes land without a manual `l1-dev close`; unset, epochs close only on `l1-dev close` and nothing a client writes lands |
 | `STAGED_WRITE_GC_EPOCHS` | `8` | Epochs before an unlanded staged write is collected ([data-model.md "Staged writes"](data-model.md#staged-writes)) |
+| `L1_STANDIN_SETTLEMENT_DELAY_EPOCHS` | `0` | Epoch closes a stand-in admission burn waits before it settles; `0` settles at the request. Above zero it opens the pending window a real realization's settlement depth has — the applicant's Registration then reads `RELAYING` until the burn settles ([auth.md "Approval and landing"](auth.md#approval-and-landing)) |
 | `SESSION_SIGNING_SEED` | *(unset)* | 32-byte hex seed of the Ed25519 session-signing key ([auth.md](auth.md#tokens)); unset in dev, an ephemeral key is generated and sessions die with the process |
 | `DEV_MAILER_LOG` | *(unset)* | Dev mailer log file (`tmp_dev/mailer.log` in `.env.example`, gitignored): every outbound message is also appended there, so hand tests read out-of-band secrets from one file; unset, no file logging |
 | `WEB_ORIGIN` | `http://localhost:3000` | The per-environment web origin emailed links ride on ([auth.md "Link URLs"](auth.md#link-urls)) |
@@ -87,6 +88,7 @@ over file values.
 | `RATE_LIMIT_SIGN_CLAIM` | `300` | Tag and Reference acts — withdrawal counter-records and a creation batch's topics and citations included — per account per hour |
 | `RATE_LIMIT_SIGN_APPROVAL` | `50` | Applicant approvals per account per day |
 | `RATE_LIMIT_SIGN_ANY` | `2000` | The backstop: every staged act per account per day |
+| `RATE_LIMIT_ADMISSION_FUNDING` | `20` | Fresh admission fundings per voucher per day — approvals of an already-funded applicant spend none; refused with the approval batch as `WRITE_RULE_FAILED` ([auth.md "Rate limiting"](auth.md#rate-limiting)) |
 | `MEDIA_S3_ENDPOINT` | `http://localhost:9000` | The media service's S3 API endpoint. `stamp-net.sh` stamps it to the machine's LAN address like `DATABASE_URL` — the API and the store can live in separate WSL distros, where cross-distro localhost is dead — while the host firewall keeps the port closed to other devices; a phone reaches media through the web origin's `/media` proxy, never the store itself |
 | `MEDIA_BUCKET` | `cogra-media` | Bucket the media objects live in; created by the `media-init` one-shot |
 | `MEDIA_ACCESS_KEY_ID` | `cogra_media` | Media store access key (also the store's root user in compose) |

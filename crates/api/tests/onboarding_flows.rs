@@ -145,7 +145,7 @@ impl Rig {
     }
 
     async fn application_of(&self, account: Uuid) -> store::Application {
-        store::latest_application_for(&self.pool, account)
+        store::current_application_for(&self.pool, account)
             .await
             .expect("query")
             .expect("application")
@@ -363,10 +363,11 @@ async fn verification_tokens_are_single_purpose(pool: PgPool) {
 /// the ceremony — and re-attaching the account's own current key is the
 /// crash-healing repair path, never a conflict with itself. A member
 /// account cannot attach at all, since the genesis path owns its key.
-/// Approval binds the address: from then on the attach is immutable.
+/// Approval funds the address, and the funding binds it: from then on the
+/// attach is immutable.
 ///
-/// The ceremony's outputs must cohere before anything is stored, re-attaching the account's own current key is the crash-healing repair rather than a conflict, and approval binds the address for good.
-/// ´claim:onboarding:the-attach-guards-hold-until-approval-binds´
+/// The ceremony's outputs must cohere before anything is stored, re-attaching the account's own current key is the crash-healing repair rather than a conflict, and the funding approval triggers binds the address for good.
+/// ´claim:onboarding:the-attach-guards-hold-until-funding-binds´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_attach_guards_hold(pool: PgPool) {
     let rig = Rig::new(pool).await;
@@ -438,7 +439,6 @@ async fn the_attach_guards_hold(pool: PgPool) {
     onboarding::approve_applicants(
         &rig.pool,
         &rig.boundary,
-        &rig.standin,
         &rig.cfg,
         &api::ratelimit::SigningBudget::UNLIMITED,
         inviter,
@@ -617,7 +617,6 @@ async fn approval_guards_hold(pool: PgPool) {
         onboarding::approve_applicants(
             &rig.pool,
             &rig.boundary,
-            &rig.standin,
             &rig.cfg,
             &api::ratelimit::SigningBudget::UNLIMITED,
             who,
@@ -696,15 +695,16 @@ async fn approval_guards_hold(pool: PgPool) {
 }
 
 /// The approving mutation and the applicant's status poll both run
-/// `ensure_admission_staged` after the approval mark is set; the row
-/// lock serializes them so the burn credits once and one Registration
-/// stages (auth.md "Approval and landing" step 1).
+/// `ensure_admission_staged` after the approval mark is set; the account
+/// lock serializes them so the burn is requested once — one burn on the
+/// realization, credited once — and one Registration stages (auth.md
+/// "Funding").
 ///
 /// The approval mark is set directly, because the race under test starts
 /// after it — between the approving request's staging and the poll's
 /// repair. The loser finds the winner's staged row, and nothing doubles.
 ///
-/// The approving mutation and the applicant's poll are serialized by the row lock, so the burn credits once and one Registration stages however they race.
+/// The approving mutation and the applicant's poll are serialized by the account lock, so the burn credits once and one Registration stages however they race.
 /// ´claim:onboarding:the-admission-burn-credits-once-under-a-race´
 #[sqlx::test(migrations = "../../migrations")]
 async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
@@ -720,16 +720,18 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
         .await
         .expect("query")
         .expect("approvable");
+    store::record_vouch(
+        &rig.pool,
+        application.id,
+        inviter,
+        "act:addr:stub:0:opinion",
+    )
+    .await
+    .expect("the vouch the approval would record");
     let approved = rig.application_of(account).await;
 
     let stage = || {
-        onboarding::ensure_admission_staged(
-            &rig.pool,
-            &rig.boundary,
-            &rig.standin,
-            &rig.cfg,
-            &approved,
-        )
+        onboarding::ensure_admission_staged(&rig.pool, &rig.boundary, &rig.cfg, approved.account_id)
     };
     let (first, second) = tokio::join!(stage(), stage());
     let (first, second) = (first.expect("stages"), second.expect("stages"));
@@ -754,6 +756,16 @@ async fn concurrent_approval_and_poll_fund_the_burn_once(pool: PgPool) {
     assert_eq!(
         (balance.burned_total * 1e6).round() as i64,
         rig.cfg.admission_burn_micro
+    );
+    let burns: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM l1_admission_burns WHERE address = $1")
+            .bind(&address)
+            .fetch_one(&rig.pool)
+            .await
+            .expect("count");
+    assert_eq!(
+        burns, 1,
+        "one burn on the realization, not one credit of two"
     );
 }
 
@@ -784,13 +796,20 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
         .await
         .expect("query")
         .expect("approvable");
+    store::record_vouch(
+        &rig.pool,
+        application.id,
+        inviter,
+        "act:addr:stub:0:opinion",
+    )
+    .await
+    .expect("the vouch the approval would record");
     let approved = rig.application_of(account).await;
     let admission = onboarding::ensure_admission_staged(
         &rig.pool,
         &rig.boundary,
-        &rig.standin,
         &rig.cfg,
-        &approved,
+        approved.account_id,
     )
     .await
     .expect("stages");
@@ -831,9 +850,8 @@ async fn admission_idempotency_ignores_chained_registrations(pool: PgPool) {
     let again = onboarding::ensure_admission_staged(
         &rig.pool,
         &rig.boundary,
-        &rig.standin,
         &rig.cfg,
-        &approved,
+        approved.account_id,
     )
     .await
     .expect("finds admission");
@@ -884,7 +902,6 @@ async fn a_verified_application_stays_approvable_past_the_links_expiry(pool: PgP
     let prepared = onboarding::approve_applicants(
         &rig.pool,
         &rig.boundary,
-        &rig.standin,
         &rig.cfg,
         &api::ratelimit::SigningBudget::UNLIMITED,
         inviter,
@@ -986,4 +1003,205 @@ async fn the_reaper_deletes_only_never_verified_accounts(pool: PgPool) {
         rig.application_of(survivor).await.landed_at.is_none(),
         "the surviving application rides the account untouched"
     );
+}
+
+/// Approval and landing hold the slot just as waiting does: account
+/// creation uses a single-use link up, and only the reaper frees it —
+/// never an account that verified, let alone one that was approved or
+/// landed. An approved application is also past its approver's close.
+///
+/// An approved or landed application keeps holding its single-use slot, and its approver can no longer close it.
+/// ´claim:onboarding:approval-and-landing-hold-the-slot´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_approved_application_keeps_holding_the_slot(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    let link = rig.link(inviter, true).await;
+    let account = rig
+        .ceremony_done_account(link, "newbie", "n@example.com")
+        .await;
+    let application = rig.application_of(account).await;
+    onboarding::approve_applicants(
+        &rig.pool,
+        &rig.boundary,
+        &rig.cfg,
+        &api::ratelimit::SigningBudget::UNLIMITED,
+        inviter,
+        &[Approval {
+            application: application.id,
+            p_d: 0.1,
+            p_i: 0.1,
+        }],
+    )
+    .await
+    .expect("approves");
+    assert!(
+        !store::invite_link_usable(&rig.pool, link)
+            .await
+            .expect("query")
+    );
+    assert!(matches!(
+        onboarding::reject_application(&rig.pool, inviter, application.id).await,
+        Err(OnboardingError::BadInput { message, .. }) if message == "already approved"
+    ));
+
+    assert!(
+        store::land_path_directly(&rig.pool, application.id)
+            .await
+            .expect("lands")
+    );
+    assert!(
+        !store::invite_link_usable(&rig.pool, link)
+            .await
+            .expect("query"),
+        "a landed application holds the slot for good"
+    );
+    assert!(matches!(
+        rig.register(rig.form(link, "second", "second@example.com"))
+            .await,
+        Err(OnboardingError::InviteUnusable)
+    ));
+}
+
+/// A rejection and an approval of one application, racing: both pass
+/// their validation on the same waiting row, and the store's shared
+/// waiting predicate lets exactly one mark land. The row ends with exactly
+/// one of approved_at and rejected_at, the losing call refuses naming the
+/// winner's answer, and when the rejection won nothing was burned or
+/// staged — the approval loses at its mark, before the admission
+/// sequence. Run over several fresh applications so both orders occur.
+///
+/// A rejection racing an approval resolves to exactly one of the two marks, and a won rejection leaves no burn and no staged Registration behind.
+/// ´claim:onboarding:reject-and-approve-resolve-to-one´
+#[sqlx::test(migrations = "../../migrations")]
+async fn a_concurrent_reject_and_approve_resolve_to_one(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    let link = rig.link(inviter, false).await;
+    for n in 0..6 {
+        let account = rig
+            .ceremony_done_account(
+                link,
+                &format!("racer_{n}"),
+                &format!("racer{n}@example.com"),
+            )
+            .await;
+        let application = rig.application_of(account).await;
+        let approval = [Approval {
+            application: application.id,
+            p_d: 0.1,
+            p_i: 0.1,
+        }];
+        let approve = onboarding::approve_applicants(
+            &rig.pool,
+            &rig.boundary,
+            &rig.cfg,
+            &api::ratelimit::SigningBudget::UNLIMITED,
+            inviter,
+            &approval,
+        );
+        let reject = onboarding::reject_application(&rig.pool, inviter, application.id);
+        let (approved, rejected) = if n % 2 == 0 {
+            tokio::join!(approve, reject)
+        } else {
+            let (r, a) = tokio::join!(reject, approve);
+            (a, r)
+        };
+        assert_ne!(
+            approved.is_ok(),
+            rejected.is_ok(),
+            "exactly one of the two lands (round {n})"
+        );
+        let row = rig.application_of(account).await;
+        assert_ne!(row.approved_at.is_some(), row.rejected_at.is_some());
+        let address = store::actor_identity(&rig.pool, account)
+            .await
+            .expect("query")
+            .expect("actor")
+            .realization_address
+            .expect("attached");
+        let burned = rig
+            .standin
+            .balance(&address)
+            .await
+            .expect("balance")
+            .burned_total;
+        let staged: i64 = sqlx::query_scalar(
+            "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1 AND family = 'registration'",
+        )
+        .bind(account)
+        .fetch_one(&rig.pool)
+        .await
+        .expect("count");
+        if rejected.is_ok() {
+            let refused = approved.expect_err("the approval lost");
+            assert!(matches!(
+                &refused[0].1,
+                OnboardingError::BadInput { message, .. } if message == "already rejected"
+            ));
+            assert_eq!(burned, 0.0, "no burn on the rejected side");
+            assert_eq!(staged, 0, "nothing staged on the rejected side");
+            assert!(
+                store::admission_funding(&rig.pool, &address)
+                    .await
+                    .expect("query")
+                    .is_none(),
+                "no funding claimed on the rejected side, so the key stays replaceable"
+            );
+        } else {
+            assert!(matches!(
+                rejected,
+                Err(OnboardingError::BadInput { ref message, .. }) if message == "already approved"
+            ));
+            assert_eq!((burned * 1e6).round() as i64, rig.cfg.admission_burn_micro);
+            assert_eq!(staged, 1);
+        }
+    }
+}
+
+/// The registration form reads the slot before hashing the password, so
+/// two registrations through one single-use link can both pass that early
+/// read; the link row is locked inside the insert transaction and the
+/// slot read again there, so exactly one takes it and the other refuses
+/// as INVITE_UNUSABLE, creating nothing. Run over several fresh links.
+///
+/// Two registrations racing for one single-use slot take it once: the slot is re-read under the link's row lock, and the loser creates nothing.
+/// ´claim:onboarding:a-raced-single-use-slot-is-taken-once´
+#[sqlx::test(migrations = "../../migrations")]
+async fn two_concurrent_registrations_take_one_single_use_slot(pool: PgPool) {
+    let rig = Rig::new(pool).await;
+    let inviter = rig.inviter("inviter").await;
+    for n in 0..4 {
+        let link = rig.link(inviter, true).await;
+        let (a, b) = tokio::join!(
+            rig.register(rig.form(link, &format!("left_{n}"), &format!("left{n}@example.com"))),
+            rig.register(rig.form(
+                link,
+                &format!("right_{n}"),
+                &format!("right{n}@example.com")
+            )),
+        );
+        assert_ne!(
+            a.is_ok(),
+            b.is_ok(),
+            "exactly one takes the slot (round {n})"
+        );
+        let loser = if a.is_ok() { b } else { a };
+        assert!(matches!(loser, Err(OnboardingError::InviteUnusable)));
+        let rows: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM auth_applications WHERE invite_link_id = $1")
+                .bind(link)
+                .fetch_one(&rig.pool)
+                .await
+                .expect("count");
+        assert_eq!(rows, 1);
+        let accounts: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM actors WHERE handle IN ($1, $2)")
+                .bind(format!("left_{n}"))
+                .bind(format!("right_{n}"))
+                .fetch_one(&rig.pool)
+                .await
+                .expect("count");
+        assert_eq!(accounts, 1, "the loser creates nothing");
+    }
 }

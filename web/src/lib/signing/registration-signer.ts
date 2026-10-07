@@ -74,7 +74,11 @@ export function createRegistrationSigner(deps: {
       const { accountState, actorPubkey, application, stagedRegistration } = status.value;
       if (accountState === "MEMBER") return { kind: "member" };
 
-      if (stagedRegistration !== null) {
+      // A LANDED Registration is done: the node exists, and what the
+      // account waits on now is a vouch (auth.md "Approval and landing").
+      // Falling through to the application reads waiting again after a
+      // lapsed vouch, approved while a vouch is in play.
+      if (stagedRegistration !== null && stagedRegistration.state !== "LANDED") {
         if (!keyUsable(await devicePubkey(), actorPubkey)) {
           return { kind: "awaitingSigningKey" };
         }

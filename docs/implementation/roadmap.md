@@ -134,7 +134,8 @@ behind the interface boundary: an implementation of the
 [layer1-interface.md](../primitive/layer1-interface.md) contract with
 two named simplifications. **Money** — the `B_i` surface and θ-debits
 honored as numbers, with no realization of the burn primitive
-behind them.
+behind them; an admission burn settles after a configurable number
+of epochs (default immediately).
 **Standing** — formation, the admission handshake, ordering, causal
 keys, maturity, and the θ-ledger are implemented in full, but the
 conserved standing solve (layer1-interface.md §11.3–11.5) is not: every
