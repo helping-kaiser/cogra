@@ -16,7 +16,7 @@ ALWAYS the heading reads @noor is already in and the way on is See @noor's profi
 
 ALWAYS the heading reads @noor is waiting on someone else and the back arrow is the only way out GIVEN the person's one live application waits on another member
 
-ALWAYS no profile door stands GIVEN the person has not landed
+ALWAYS no vouchAsk.profileDoor stands GIVEN the person has not landed
 
 WHEN tap See @noor's profile -> the person's profile opens
 

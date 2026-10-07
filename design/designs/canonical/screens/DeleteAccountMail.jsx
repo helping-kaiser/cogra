@@ -26,11 +26,15 @@
    not have. `Resend the link` covers the mail that never arrived.
 
    NO DELETION BAND. Nothing is confirmed, so there is nothing to count down —
-   the band begins at the confirmation and not a moment earlier. */
+   the band begins at the confirmation and not a moment earlier.
+
+   REGISTERED under the `deleteAccount` prefix (design ⇄ impl seam 080, the
+   deletion packet), named as the request screen names its column. */
+export const NODE = "deleteAccount";
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -39,6 +43,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Check your mail
         </h1>
@@ -50,20 +55,21 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           We sent a link to sol@solferreira.art. Opening it confirms the deletion and starts the seven
           days.
         </p>
 
         <div style={{ marginTop: 24 }}>
-          <QuietNote>
+          <QuietNote node="note">
             Until you open it nothing is scheduled and nothing has changed. Closing this screen
             changes nothing either — the link is the whole of it.
           </QuietNote>
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <Button variant="outline" style={{ width: "100%" }}>
+          <Button variant="outline" style={{ width: "100%" }} node="resend">
             Resend the link
           </Button>
         </div>

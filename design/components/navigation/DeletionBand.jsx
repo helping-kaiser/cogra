@@ -41,7 +41,7 @@ import { InlineAction } from "../core/Button.jsx";
    than a reader who did not — so the line names what is going. Nothing else
    about the band changes: two states of one sentence, never two bands. */
 
-export function DeletionBand({ days = 7, content = false, line, actionLabel = "Cancel", onCancel }) {
+export function DeletionBand({ days = 7, content = false, line, actionLabel = "Cancel", onCancel, node }) {
   const unit = days === 1 ? "day" : "days";
   const text =
     line ??
@@ -58,6 +58,7 @@ export function DeletionBand({ days = 7, content = false, line, actionLabel = "C
         background: "var(--surface-bar)",
         borderBottom: "1px solid var(--border-hairline)",
       }}
+      data-node={node}
     >
       <span
         style={{
@@ -67,10 +68,11 @@ export function DeletionBand({ days = 7, content = false, line, actionLabel = "C
           letterSpacing: "var(--text-body-small--letter-spacing)",
           color: "var(--on-surface)",
         }}
+        data-node={node && "line"}
       >
         {text}
       </span>
-      <InlineAction size="sm" onClick={onCancel} style={{ flex: "none" }}>
+      <InlineAction size="sm" onClick={onCancel} style={{ flex: "none" }} node={node && "cancel"}>
         {actionLabel}
       </InlineAction>
     </div>

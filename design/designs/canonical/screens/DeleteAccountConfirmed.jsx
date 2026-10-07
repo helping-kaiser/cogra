@@ -27,7 +27,12 @@
    one, because this landing carries a form control. The way on is the plain
    text button. Signed out the confirmation applies all the same, since the
    link is the proof, and the page says so in one quiet line above the way
-   on, which then reads `Sign in`. */
+   on, which then reads `Sign in`.
+
+   REGISTERED under the `deleteAccount` prefix (design ⇄ impl seam 080, the
+   deletion packet): the request screen's sweep, its checkbox and its line,
+   keep their names here, and the way on is `onward`. */
+export const NODE = "deleteAccount";
 export function Screen() {
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "32px 24px", overflow: "hidden" }}>
@@ -38,6 +43,7 @@ export function Screen() {
           lineHeight: "var(--text-headline-small--line-height)",
           fontWeight: "var(--text-headline-small--font-weight)",
         }}
+        data-node="title"
       >
         Your account is deleted in 7 days
       </h1>
@@ -49,12 +55,13 @@ export function Screen() {
           letterSpacing: "var(--text-body-medium--letter-spacing)",
           color: "var(--text-secondary)",
         }}
+        data-node="body"
       >
         That's 08.10.2026. Until then nothing changes, and you can cancel from any device.
       </p>
 
       <div style={{ marginTop: 24 }}>
-        <Checkbox id="delete-content" label="Also remove what I posted" />
+        <Checkbox id="delete-content" label="Also remove what I posted" node="sweep" />
         <p
           style={{
             margin: "var(--space-1) 0 0",
@@ -64,6 +71,7 @@ export function Screen() {
             letterSpacing: "var(--text-body-small--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="sweepHint"
         >
           The words and pictures go out of your posts and comments, each leaving its mark. Leave this off and they stay
           as you wrote them.
@@ -71,13 +79,13 @@ export function Screen() {
       </div>
 
       <div style={{ marginTop: 16 }}>
-        <Button variant="outline" style={{ width: "100%" }}>
+        <Button variant="outline" style={{ width: "100%" }} node="add">
           Add it to the deletion
         </Button>
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <Button variant="text" style={{ width: "100%" }}>
+        <Button variant="text" style={{ width: "100%" }} node="onward">
           Go to the feed
         </Button>
       </div>

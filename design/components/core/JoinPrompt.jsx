@@ -77,7 +77,7 @@ const asParagraphs = (body) =>
     ),
   );
 
-export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "var(--dialog-max-width)", title, body, actions }) {
+export function DialogSurface({ children, ariaLabel, inline = false, onScrimPress, width = "var(--dialog-max-width)", title, body, actions, node }) {
   const surfaceRef = React.useRef(null);
   useModalFocus(surfaceRef, !inline, onScrimPress);
   const slotted = title !== undefined || body !== undefined || actions !== undefined;
@@ -97,11 +97,12 @@ export function DialogSurface({ children, ariaLabel, inline = false, onScrimPres
         textAlign: "left",
         outline: "none",
       }}
+      data-node={node}
     >
       {slotted ? (
         <>
-          {title !== undefined && <h2 style={DIALOG_TITLE_STYLE}>{title}</h2>}
-          {body !== undefined && <div style={{ ...DIALOG_BODY_STYLE, marginTop: title !== undefined ? "var(--space-4)" : 0 }}>{asParagraphs(body)}</div>}
+          {title !== undefined && <h2 style={DIALOG_TITLE_STYLE} data-node={node && "title"}>{title}</h2>}
+          {body !== undefined && <div style={{ ...DIALOG_BODY_STYLE, marginTop: title !== undefined ? "var(--space-4)" : 0 }} data-node={node && "body"}>{asParagraphs(body)}</div>}
           {actions !== undefined && (
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", alignItems: "center", gap: "var(--space-2)", marginTop: "var(--space-6)" }}>{actions}</div>
           )}

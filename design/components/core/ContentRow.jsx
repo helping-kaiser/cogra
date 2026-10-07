@@ -256,7 +256,7 @@ export function ContentRow({
           >
             {trailing}
           </span>
-          {pending && <PendingMarker />}
+          {pending && <PendingMarker node={node && "pending"} />}
           {/* The shell's unread mark, the bell's own dot at row scale: the one
               drawing the product uses for "this arrived and you have not
               opened it". A dot and not a weight change, so a list of eight

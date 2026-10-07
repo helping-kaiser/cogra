@@ -48,7 +48,14 @@
    link's note all speak of landed records and the mailed link, so the
    applicant's case draws none of them; the mail, the grace boards and
    `DeleteAccountConfirmed` stay the member's. Here `Delete my account` is the
-   true sentence for the press. */
+   true sentence for the press.
+
+   REGISTERED under the `deleteAccount` prefix (design ⇄ impl seam 080, the
+   deletion packet), the family's surface. The one commitment is drawn once
+   per `reader` value, one shown at a time, so its two copies take one path,
+   `commit`, keyed by the chip's value (the chip-drawn duplicate rule); what
+   only the member's case draws is named once and unkeyed. */
+export const NODE = "deleteAccount";
 export const PROPS = { reader: { editor: "enum", options: ["member", "applicant"], default: "member" } };
 export const VALS = `deleteBody: this.props.reader === "applicant" ? "Nothing has landed yet — deleting removes your application and your account right away." : "This takes your name off CoGra. What you signed stays on the graph, because it is other people's record as much as yours — what goes is everything that says it was you.", memberShown: this.props.reader === "applicant" ? "none" : "block", applicantShown: this.props.reader === "applicant" ? "block" : "none"`;
 
@@ -80,7 +87,7 @@ const LINE = {
 export function Screen() {
   return (
     <>
-      <PageHeader backHref="/settings" backLabel="Back to settings" />
+      <PageHeader backHref="/settings" backLabel="Back to settings" node="header" />
       <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "8px 24px 32px", overflow: "hidden" }}>
         <h1
           style={{
@@ -89,6 +96,7 @@ export function Screen() {
             lineHeight: "var(--text-headline-small--line-height)",
             fontWeight: "var(--text-headline-small--font-weight)",
           }}
+          data-node="title"
         >
           Delete account
         </h1>
@@ -100,20 +108,21 @@ export function Screen() {
             letterSpacing: "var(--text-body-medium--letter-spacing)",
             color: "var(--text-secondary)",
           }}
+          data-node="body"
         >
           {"{{deleteBody}}"}
         </p>
 
         <div style={{ display: "{{memberShown}}" }}>
-          <div style={INSET}>
-            <span style={CAPTION}>What goes</span>
+          <div style={INSET} data-node="goes">
+            <span style={CAPTION} data-node="label">What goes</span>
             <p style={LINE}>Your profile — display name, bio and picture.</p>
             <p style={LINE}>The link between you and this account. Nothing left here points back to you.</p>
             <p style={LINE}>Your sessions, and what this account kept for you alone: saved items, hidden accounts, what you have read.</p>
           </div>
 
-          <div style={INSET}>
-            <span style={CAPTION}>What stays</span>
+          <div style={INSET} data-node="stays">
+            <span style={CAPTION} data-node="label">What stays</span>
             <p style={LINE}>
               Everything you signed, and everything others signed about you. Your posts still route and
               still credit their author; what is removed leaves a mark saying so.
@@ -121,27 +130,27 @@ export function Screen() {
           </div>
 
           <div style={{ marginTop: 24 }}>
-            <Checkbox id="delete-content" label="Also remove what I posted" />
-            <p style={{ ...LINE, marginTop: "var(--space-1)", paddingLeft: 30, color: "var(--text-secondary)" }}>
+            <Checkbox id="delete-content" label="Also remove what I posted" node="sweep" />
+            <p style={{ ...LINE, marginTop: "var(--space-1)", paddingLeft: 30, color: "var(--text-secondary)" }} data-node="sweepHint">
               The words and pictures go out of your posts and comments, each leaving its mark.
               Leave this off and they stay as you wrote them.
             </p>
           </div>
 
-          <div style={{ marginTop: 24 }}>
-            <Button style={{ width: "100%" }}>Send the confirmation link</Button>
+          <div style={{ marginTop: 24 }} data-node-chip="reader" data-node-key="member">
+            <Button style={{ width: "100%" }} node="commit">Send the confirmation link</Button>
           </div>
 
           <div style={{ marginTop: 24 }}>
-            <QuietNote>
+            <QuietNote node="note">
               Nothing is deleted until you open that link. After that it runs in seven days, and you can
               cancel from any device until it does.
             </QuietNote>
           </div>
         </div>
 
-        <div style={{ marginTop: 24, display: "{{applicantShown}}" }}>
-          <Button style={{ width: "100%" }}>Delete my account</Button>
+        <div style={{ marginTop: 24, display: "{{applicantShown}}" }} data-node-chip="reader" data-node-key="applicant">
+          <Button style={{ width: "100%" }} node="commit">Delete my account</Button>
         </div>
       </div>
     </>
