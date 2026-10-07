@@ -46,9 +46,12 @@
    promise it.
 
    REGISTERED under the `settings` prefix (design ⇄ impl seam 082, the
-   settings packet): the body names its parts as on `Settings`. The sheet
-   stays unnamed for now — whether its parts sit under `settings.` or reuse
-   the feed filter's names is with jakob, and they follow as pure addition. */
+   settings packet): the body names its parts as on `Settings`. The sheet is
+   `feedSheet`, under `settings.` and named for the row that opens it, as
+   `SettingsHidden`'s and `SettingsLicense`'s are — never sharing a path with
+   the feed filter's (jakob 2026-10-07, ruling 37): its `title` with the
+   `help` on its row, the `note`, the sections as the search and history
+   sheets name theirs, and the `foot`. */
 export const NODE = "settings";
 export function Screen() {
   return (
@@ -58,15 +61,18 @@ export function Screen() {
       <FeedFilterSheet
         open
         ariaLabel="What your feed shows"
+        node="feedSheet"
         lead={
           <>
-            <SheetTitle trailing={<HelpDot ariaLabel="How the filter works" />}>What your feed shows</SheetTitle>
+            <SheetTitle trailing={<HelpDot ariaLabel="How the filter works" node="help" />} node="title">
+              What your feed shows
+            </SheetTitle>
             <div style={{ padding: "0 var(--space-6) var(--space-4)" }}>
-              <QuietNote>Every feed starts from this.</QuietNote>
+              <QuietNote node="note">Every feed starts from this.</QuietNote>
             </div>
           </>
         }
-        foot={<FilterFoot />}
+        foot={<FilterFoot node="foot" />}
       />
     </>
   );

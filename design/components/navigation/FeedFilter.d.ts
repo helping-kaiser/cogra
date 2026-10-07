@@ -80,6 +80,8 @@ export interface FeedFilterSheetProps {
   topics?: readonly string[];
   /** Opens the full "Your topics" list. */
   onOpenTopics?: () => void;
+  /** The data-node name its placer gives this sheet (design ⇄ impl seam 002; renders as attributes only). Given one, it also names its parts: the corner `help` (when no `lead` is given), the sections `kinds`, `forms`, `order` and `also`, and each chip `<value>Chip` (`postsChip`, `textChip`, `settlingChip`). A `lead` and a `foot` are the placer's and named by it. The feed's own `FeedFilter` passes none. */
+  node?: string;
 }
 
 export declare function FeedFilterSheet(props: FeedFilterSheetProps): JSX.Element;
