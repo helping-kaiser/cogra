@@ -9,11 +9,11 @@ package com.cogra.network.store
 
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.ThemeChoice
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
 class DevicePreferencesImpl @Inject constructor(

@@ -1,10 +1,10 @@
 package com.cogra.domain
 
 import com.google.common.truth.Truth.assertThat
+import org.junit.Test
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
-import org.junit.Test
 
 class AgesTest {
     private val now = Instant.parse("2026-10-07T12:00:00Z")
