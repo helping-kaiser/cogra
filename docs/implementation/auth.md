@@ -391,10 +391,10 @@ them).
    blob on the device — or decline, with the consequence stated
    ("Key recovery" above). The sealed blob uploads immediately
    after the attach — the account it hangs off already exists.
-   The attached key is replaceable while the application is
-   unapproved — a device lost before approval costs nothing but
-   a re-run of the ceremony — and immutable from approval on,
-   when the funding burn binds the address. An address binds at
+   The attached key is replaceable until the address is funded —
+   a device lost before approval costs nothing but a re-run of
+   the ceremony — and immutable once it is, because the funding
+   burn binds the address. An address binds at
    most one account: attaching a key already bound to a
    different account is refused, because the address's
    Registration can exist on the graph only once — a duplicate
@@ -494,13 +494,22 @@ is the deliberate, priced act that commits the inviter's vouch; the
 backend then runs the admission sequence:
 
 1. **Funding** — the community-funded admission burn to the applicant's
-   address ([economics.md](../primitive/economics.md)). Funding and
-   the staging below run inside the approval; a crash between the
-   steps heals on the applicant's next status poll. The sequence
-   is serialized per application — the approving request and the
-   poll's repair queue rather than race — and the burn is guarded
-   by the fresh address's zero burn history, so no path
-   double-funds.
+   address ([economics.md](../primitive/economics.md)), requested
+   across the seam and settled by the realization asynchronously.
+   Funding and the staging below run inside the approval; a crash
+   between the steps heals on the applicant's next status poll. The
+   sequence is serialized **per account** — every approval of any of
+   the account's applications and the poll's repair queue rather
+   than race — and the guard is the address's **funding row**, never
+   the `B_i` read: a burn still pending on the realization reads as
+   nothing burned, so a balance guard would burn again on every
+   retry. Only the approval that claims the row requests the burn;
+   a lost or refused request is re-requested under the row's own
+   idempotency key, so the realization burns once per address — an
+   address keeps its row even when its account is deleted. Every
+   ingestion pass reads the pending burns' settlement. An approval
+   that funds a fresh address also spends the inviter's admission
+   funding budget ("Rate limiting" below).
 2. **Registration** — the backend prepares the staged
    Registration; the applicant's device **runs the full signing
    handshake on next app open** — pre-commitment, then approval
@@ -508,7 +517,11 @@ backend then runs the admission sequence:
    signatures (the backend cannot sign for anyone —
    [substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission));
    the backend relays each step and the record lands. The
-   handshake rides the ordinary session-authorized staged-write
+   approval step waits for the funding: while the burn is
+   unsettled the backend holds the signed approval — the write
+   reads `RELAYING` — and relays it on the ingestion pass that
+   sees the burn settle, so the Registration is never orderable
+   before its author can pay for it. The handshake rides the ordinary session-authorized staged-write
    surface ([api-spec.md](api-spec.md)) — a session exists from
    registration, so admission needs no dedicated signing
    mutations.
@@ -1015,7 +1028,12 @@ emails, and serves no retry-after figure.
 Signing acts are not auth endpoints: their per-account budget is
 spent at prepare and refuses as a `WRITE_RULE_FAILED` userError,
 never `RATE_LIMITED` (api-spec.md "Conventions" — the signing
-budget).
+budget). The admission funding budget is priced the same way: per
+voucher, spent only by approvals that fund a fresh address — the
+community fund's outflow — and refused with the approval batch,
+whole, before anything is burned. It is per voucher rather than
+instance-wide, since a global cap is one an attacker could exhaust to
+stall every admission.
 
 The client IP is the socket peer address by default. Behind a
 reverse proxy that is the sole ingress, `CLIENT_IP_SOURCE`

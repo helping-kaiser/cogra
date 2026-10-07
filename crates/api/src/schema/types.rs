@@ -612,7 +612,9 @@ pub enum StagedWriteState {
     /// The sealed act is back and awaits the device's approval witness.
     AwaitingApproval,
     /// Approved and submitted for ordering; the backend drives retries
-    /// across epoch boundaries.
+    /// across epoch boundaries — including relaying the approval of an
+    /// admission Registration whose funding has not settled yet, once it
+    /// does.
     Relaying,
     /// The accepted act is in the mirror and the staged effects are
     /// promoted.

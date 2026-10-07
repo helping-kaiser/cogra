@@ -3,7 +3,8 @@
 //! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
 //! plus the login backoff (auth.md "Rate limiting"), the email-change
 //! mail budget, the media upload budget, and the per-account signing
-//! budget spent at prepare (api-spec.md "Conventions").
+//! budget spent at prepare (api-spec.md "Conventions") with the voucher's
+//! admission funding budget priced beside it.
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
 //! survive restarts and hold across instances. Auth keys that name an
