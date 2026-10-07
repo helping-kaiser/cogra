@@ -28,8 +28,16 @@
 // suspend the feed under it while a join prompt raised over the thread
 // suspends the thread in turn.
 //
-// Behaviour-neutral on its own: nothing reads the signal until a stage host
-// does (the election PR).
+// Every hosted stage reads it where it stands (`stage-host.tsx`).
+//
+// THE GAP IN A HANDOVER. A layer that gives way to another — a sheet whose
+// action opens a second sheet, the comment thread yielding to its composer —
+// drops one layer and raises the next. Inside one commit that is invisible to
+// a reader of the rendered value: both happen in one effects flush, and
+// `useSyncExternalStore` reads the store again only after it. A handover that
+// can span commits must not let the surface beneath read the instant between
+// as the suspension lifting, so the layer handing over HOLDS its cover until
+// the next one stands (`BottomSheet`'s `coverHeld`).
 
 import {
   createContext,
