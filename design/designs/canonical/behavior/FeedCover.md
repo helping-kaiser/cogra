@@ -34,7 +34,9 @@ WHEN tap feed.card.media.frame.soundDisc GIVEN sound is off -> sound turns on fo
 
 WHEN tap feed.card.media.frame.soundDisc GIVEN sound is on -> sound turns off for every clip on every surface
 
-ALWAYS assistive technology reaches mute and unmute as a custom action on feed.card.media.frame, the traversal inside feed.card.media staying cleared, GIVEN feed.card.media.frame's clip is playing
+ALWAYS assistive technology reaches mute and unmute as a custom action on feed.card.media.frame, the traversal inside feed.card.media staying cleared, GIVEN android and feed.card.media.frame's clip is playing
+
+ALWAYS assistive technology reaches mute and unmute as feed.card.media.frame.soundDisc, a native focusable button whose label names the sound's state, with no aria-hidden and no inert on feed.card.media.frame's subtree GIVEN the web and feed.card.media.frame's clip is playing
 
 ALWAYS a clip starts muted GIVEN the reader has not turned sound on
 

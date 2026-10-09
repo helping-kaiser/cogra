@@ -8,9 +8,9 @@ WHEN tap Saved GIVEN the reader has kept something -> Saved opens
 
 WHEN tap Saved GIVEN the reader has kept nothing -> Saved opens on its empty state
 
-WHEN tap History GIVEN the reader has read a post -> History opens
+WHEN tap History GIVEN the reader has seen anything -> History opens
 
-WHEN tap History GIVEN the reader has read no post yet -> History opens on its empty state
+WHEN tap History GIVEN the reader has seen nothing yet -> History opens on its empty state
 
 WHEN tap Share your profile -> the platform's own share sheet opens
 

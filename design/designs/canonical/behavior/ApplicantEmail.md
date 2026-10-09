@@ -6,7 +6,9 @@ ALWAYS the paragraph names the address the standing link was sent to
 
 WHEN tap reveal password -> the current password shows
 
-WHEN press Change email -> a fresh verification link goes to the new address AND the link sent to the old address stops working AND the applicant's feed comes back with the verify card printing the new address AND the snackbar reads Sent — the link is on its way to noor@fieldnotes.org. AND NEVER a code goes to the old address
+WHEN press Change email GIVEN the change opened from the applicant's feed -> a fresh verification link goes to the new address AND the link sent to the old address stops working AND the applicant's feed comes back with the verify card printing the new address AND the snackbar reads Sent — the link is on its way to noor@fieldnotes.org. AND NEVER a code goes to the old address
+
+WHEN press Change email GIVEN the change opened from settings -> a fresh verification link goes to the new address AND the link sent to the old address stops working AND settings comes back AND the snackbar reads Sent — the link is on its way to noor@fieldnotes.org. AND NEVER a code goes to the old address
 
 WHEN the fresh link is opened -> the address moves to the new one AND the account is verified in the same step
 
@@ -18,7 +20,9 @@ WHEN press Change email GIVEN the account's mail budget is spent -> the line Too
 
 WHEN the address changes -> NEVER the seven days restart AND NEVER the screen speaks of them
 
-WHEN tap the back arrow -> the applicant's feed comes back at the verify card AND nothing is sent AND the address on file stands
+WHEN tap the back arrow GIVEN the change opened from the applicant's feed -> the applicant's feed comes back at the verify card AND nothing is sent AND the address on file stands
+
+WHEN tap the back arrow GIVEN the change opened from settings -> settings comes back AND nothing is sent AND the address on file stands
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
@@ -36,6 +40,6 @@ WHEN typing in Current password GIVEN the field reads That password isn't right.
 
 WHEN press Change email GIVEN the new address already belongs to another account -> NEVER the request says so
 
-WHEN the fresh link is opened GIVEN the new address belongs to another account -> the landing reads That address is taken now over the address-taken line AND NEVER the address moves
+WHEN the fresh link is opened GIVEN the new address belongs to another account -> the landing reads That address is taken now over That address now belongs to another account. Your email stays as it is. AND its way on reads Go to the feed with a session on this device and Sign in without one AND NEVER the address moves AND NEVER the landing promises that confirming again applies it
 
 ALWAYS the Current password field names the account by a hidden username carrying the address on file

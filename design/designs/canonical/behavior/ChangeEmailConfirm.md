@@ -6,7 +6,9 @@ ALWAYS a side reads still waiting until it lands, and confirmed once it has
 
 ALWAYS the account keeps its current address until both sides land, in either order
 
-ALWAYS the confirmation carries one field, for the code from the current address
+ALWAYS the confirmation carries one field, for the code from the current address GIVEN the code's side is still owed
+
+ALWAYS the confirmation carries no field and no Confirm the code, the pair reading the code's side confirmed and Resend sending the link alone GIVEN the code's side is confirmed and the link's side is still owed
 
 ALWAYS the confirmation keeps its back arrow, and nothing is lost by leaving it
 

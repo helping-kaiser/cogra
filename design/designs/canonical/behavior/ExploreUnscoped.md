@@ -4,7 +4,7 @@ ALWAYS the results region reads Found through people and tags — start with @ha
 
 ALWAYS no result row stands GIVEN Comments alone is the search filter's kind and the query names no @handle or #tag
 
-ALWAYS the other kinds' results stand with the line Found through people and tags — start with @handle or #tag. under them GIVEN Comments is on beside another kind and the query names no @handle or #tag
+ALWAYS the other kinds' results stand, and explore.empty reads Found through people and tags — start with @handle or #tag. after the last row GIVEN Comments is on beside another kind and the query names no @handle or #tag
 
 ALWAYS explore.filterTrigger reads Comments GIVEN Comments alone is the search filter's kind
 

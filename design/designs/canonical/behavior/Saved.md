@@ -12,13 +12,13 @@ ALWAYS a post's cover is never a row's disc
 
 ALWAYS Saved carries no kind label, no filter and no section headings
 
-ALWAYS a comment's row names the post it answers on its second line, as on with the post's title
+ALWAYS a comment's row names its thread's post on its second line, as on with the post's title, a reply's included
 
 ALWAYS every row carries its own Unsave, the filled bookmark alone with no word on screen, in the chevron's slot outboard of the age
 
 ALWAYS the header collapses on the way down and returns on the way up
 
-ALWAYS saved.bottomBar rides with no slot lit
+ALWAYS saved.bottomBar keeps lit the slot of the root Saved was opened from, saved.bottomBar.profileSlot
 
 WHEN tap a post's row -> the post's detail opens AND its back arrow reads Back to Saved
 
@@ -30,11 +30,45 @@ WHEN tap a row's Unsave -> the row leaves the list AND the rows behind it move u
 
 WHEN a row's Unsave lands -> focus moves to the next row, else the previous, else the empty state
 
-WHEN tap a row's Unsave GIVEN the unsave does not go through -> the row comes back AND the target's row says That didn't go through. with Retry
+WHEN tap a row's Unsave GIVEN the unsave does not go through -> the row comes back AND saved.list.entry.second reads That didn't go through. with Retry AND saved.list.entry.unsave stays
+
+WHEN tap Retry on a row's failure line -> the unsave is asked again AND the row leaves the list again
+
+WHEN an unsave reverts GIVEN its snackbar stands -> the snackbar clears
+
+WHEN pull down GIVEN Saved stands all the way at its top -> Saved re-reads AND the platform's own refresh indicator shows
+
+WHEN the reader comes back to Saved GIVEN they unsaved a thing inside a page opened from it -> that thing's row is gone AND NEVER a snackbar appears
+
+WHEN the next page of Saved does not arrive -> the rows on screen stay AND Couldn't load more with Retry ends the list
 
 WHEN tap a row's Unsave GIVEN it was the last row -> the empty Saved stands under the same snackbar, Removed from Saved. with Undo
 
 ALWAYS an unsave changes nothing about the thing itself, which still stands, still ranks and still opens
+
+ALWAYS a removed post's or comment's row stays, saved.list.entry.title reading Removed by its author in the system's voice GIVEN its author removed it or it was redacted
+
+WHEN tap a removed thing's row -> the removed page opens AND its back arrow reads Back to Saved
+
+ALWAYS a deleted account's row wears the reserved disc and reads Deleted account, with no saved.list.entry.aside
+
+ALWAYS a sensitive thing's row keeps saved.list.entry.title readable, and saved.list.entry.second gives way to its sensitive reason
+
+ALWAYS a hidden account's things and profile stay in Saved
+
+ALWAYS a comment's row takes the comment's first line as saved.list.entry.title
+
+ALWAYS a comment with no words takes Pictures by @ada or A video by @ada as saved.list.entry.title, as a media post is named
+
+ALWAYS a titled media post's saved.list.entry.second reads its description, and drops when it has none
+
+ALWAYS an untitled words post's saved.list.entry.second reads the rest of its words, and an untitled media post's row carries no saved.list.entry.second
+
+ALWAYS saved.list.entry.aside drops GIVEN saved.list.entry.title already names the handle
+
+ALWAYS a person with no display name takes the handle as saved.list.entry.title, with no saved.list.entry.aside
+
+ALWAYS a person with no bio carries no saved.list.entry.second
 
 WHEN tap the back arrow -> the reader's own profile comes back, in the state it was left
 

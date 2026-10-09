@@ -4,6 +4,8 @@ ALWAYS the feed reads from the view of the issuer of the invite link the applica
 
 ALWAYS the band reads Browsing from @mira's view while your application lands. naming that issuer
 
+ALWAYS the band reads Browsing from a deleted account's view while your application lands. GIVEN the issuer's account was deleted
+
 ALWAYS the application rides the feed as task cards above the posts
 
 ALWAYS the verify card stands GIVEN the email is not verified yet

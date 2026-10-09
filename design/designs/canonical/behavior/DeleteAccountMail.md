@@ -12,6 +12,8 @@ ALWAYS no deletion band stands GIVEN the deletion is requested and not yet confi
 
 WHEN tap Resend the link -> a fresh message goes to the same address, carrying the request's recorded content-sweep choice AND NEVER anything is scheduled
 
+WHEN tap Resend the link GIVEN the deletion's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Resend the link AND Resend the link stays AND NEVER a message is sent
+
 ALWAYS the settings Delete account row carries no status GIVEN a deletion is requested and not yet confirmed
 
 WHEN tap Delete account in settings GIVEN a deletion is requested and not yet confirmed -> the request screen opens again

@@ -20,6 +20,8 @@ WHEN press Send the confirmation link GIVEN the reader is a member -> the reques
 
 WHEN press Send the confirmation link GIVEN no answer reaches the device -> the content-sweep choice stays as it was AND the line That didn't send. Try again. stands above Send the confirmation link AND Send the confirmation link stays, the retry AND NEVER a link is mailed
 
+WHEN press Send the confirmation link GIVEN the deletion's mail budget is spent -> the line Too many tries. Wait a little, then try again. stands above Send the confirmation link AND Send the confirmation link stays AND NEVER a link is mailed
+
 WHEN press the header back arrow -> settings returns AND NEVER a link is mailed AND NEVER anything is deleted
 
 WHEN the board opens GIVEN the reader is an applicant -> the body reads Nothing has landed yet — deleting removes your application and your account right away. AND Delete my account stands as the one commitment AND NEVER Send the confirmation link stands AND NEVER Also remove what I posted stands
@@ -31,3 +33,5 @@ WHEN press Delete my account GIVEN the reader is an applicant and no answer reac
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach
 
 WHEN the request has not answered 200ms after Send the confirmation link GIVEN the reader is a member -> Send the confirmation link reads Sending the confirmation link… in its own place AND NEVER a spinner appears
+
+WHEN the deletion has not answered 200ms after Delete my account GIVEN the reader is an applicant -> Delete my account reads Deleting my account… in its own place AND NEVER a spinner appears

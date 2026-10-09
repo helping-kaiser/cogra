@@ -182,7 +182,7 @@ export function Screen() {
       lines={["You are here because @mira invited you. Her link is your first way in to everyone else, and theirs to you."]}
       note={
         <div style={{ paddingTop: 12 }}>
-          <QuietNote>The friend who sent you this invite has to let you in. Ask them once you have verified your email.</QuietNote>
+          <QuietNote>A friend who's already in has to let you in. Ask around once you have verified your email.</QuietNote>
         </div>
       }
     >

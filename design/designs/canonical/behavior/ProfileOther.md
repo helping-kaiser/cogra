@@ -14,7 +14,7 @@ ALWAYS the wide anchor wears the muted no-opinion face GIVEN the reader holds no
 
 ALWAYS the header collapses on the way down and returns on the way up
 
-ALWAYS profile.bottomBar rides with no slot lit
+ALWAYS profile.bottomBar keeps lit the slot of the root the profile was opened from, profile.bottomBar.feedSlot from the feed
 
 ALWAYS the chronicle stands one act to a card, newest first, each card leading with its act's disc, then its verb and snippet, its age on the trailing edge
 

@@ -28,7 +28,7 @@ export function Screen() {
         <ScoreOrigin score="0.00" />
         <QuietNote>The paths that carried it here have moved on.</QuietNote>
       </ScoreColumn>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

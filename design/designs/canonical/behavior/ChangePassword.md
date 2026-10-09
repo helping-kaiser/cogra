@@ -32,6 +32,8 @@ WHEN the change has not answered 200ms after the press -> Change password reads 
 
 WHEN press Change password GIVEN no answer reaches the device -> the fields keep what was typed AND the line That didn't send. Try again. stands above Change password AND Change password stays, the retry AND NEVER the password changes
 
+WHEN press Change password GIVEN the account's re-auth budget is spent -> the line Too many tries. Wait a little, then try again. stands above Change password AND Change password stays AND NEVER the password changes
+
 WHEN press the header back arrow -> settings returns AND NEVER the password changes
 
 ALWAYS the page scrolls when its content outgrows the screen at any width or text size, so its action stays within reach

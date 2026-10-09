@@ -42,6 +42,8 @@ WHEN tap Set GIVEN the key is on another device -> the pick waits as PadKeyAbsen
 
 WHEN the key comes back GIVEN a vouch-back was kept -> the kept vouch-back surfaces as its own card and signs through this pad, its ceremony kept AND NEVER it joins the kept picks' review
 
-WHEN tap Cancel GIVEN the pad opened as the vouch-back -> the pad closes onto feed.vouchCard AND nothing is staged
+WHEN tap Cancel GIVEN the pad opened as the vouch-back from feed.vouchCard -> the pad closes onto feed.vouchCard AND nothing is staged
+
+WHEN tap Cancel GIVEN the pad opened as the vouch-back from the profile of the member who vouched the account in -> the pad closes onto that profile AND nothing is staged
 
 WHEN tap the scrim -> the pad closes onto what it bloomed over AND nothing is staged

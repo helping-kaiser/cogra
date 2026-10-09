@@ -4,6 +4,8 @@ WHEN the deletion mail's link is opened -> the deletion is confirmed AND the sev
 
 WHEN the deletion mail's link is opened again GIVEN the deletion is in its grace -> the same landing opens AND its heading counts the days left AND NEVER the grace restarts
 
+ALWAYS the heading's days left round to the nearest whole day while 24 hours or more remain, then it counts the hours left, rounded up
+
 WHEN the deletion mail's link is opened GIVEN the deletion was canceled -> the spent link's landing opens, This link doesn't work anymore AND NEVER the deletion is confirmed again
 
 ALWAYS the landing carries no back arrow

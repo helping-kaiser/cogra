@@ -6,31 +6,51 @@ ALWAYS feed.vouchCard names the member whose approval landed the account
 
 ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward @mira, and your feed grows from it. Vouching opens the opinion control, set to a gentle default.
 
+ALWAYS feed.vouchCard reads Vouch back to open the way from your side — your opinion toward a deleted account, and your feed grows from it. Vouching opens the opinion control, set to a gentle default. GIVEN the member who vouched the account in deleted their account
+
 ALWAYS feed.vouchCard and its band claim no order between the vouch-back and any other opinion
 
 ALWAYS the band reads Browsing from @mira's view — your first opinion starts your own. GIVEN the member has signed no opinion yet
 
+ALWAYS the band reads Browsing from a deleted account's view — your first opinion starts your own. GIVEN the member has signed no opinion yet and the issuer's account was deleted
+
 ALWAYS the band carries no Vouch back and asks for nothing
 
-WHEN the member's first opinion is signed, toward any target -> the borrowed view ends AND the feed hands over to the member's own view
+ALWAYS the band stands on the Feed root only, and never on Explore or the reader's own profile
+
+WHEN the member's first opinion is signed, toward any target -> the borrowed view ends AND the band leaves at once AND the feed reads the member's own view from its next refresh AND NEVER the feed reloads at the signing
 
 WHEN the member's first opinion, toward any target, expires instead of landing GIVEN no other opinion of theirs has landed -> the borrowed view returns AND the ordinary did-not-land notice answers alongside it
 
 WHEN the member signs an Affinity GIVEN no opinion of theirs is signed -> NEVER the borrowed view ends
 
-WHEN the registration lands GIVEN an opinion staged during the application signs with it -> NEVER the band stands AND NEVER the feed reloads at the flip AND the feed reads the member's own view from its next refresh
+WHEN the account lands, its registration and the approving vouch both confirmed GIVEN an opinion staged during the application signs with it -> NEVER the band stands AND NEVER the feed reloads at the flip AND the feed reads the member's own view from its next refresh
 
-WHEN tap Vouch back -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
+WHEN tap Vouch back GIVEN no vouch-back is kept -> the vouch-back pad blooms at the gentle default +0.10 / +0.10
 
-WHEN tap Got it -> feed.vouchCard is put away for good AND NEVER a snackbar appears AND NEVER a reminder appears AND NEVER anything stands in its place
+WHEN tap Vouch back GIVEN a vouch-back is kept on this device -> the vouch-back pad blooms holding the kept pick
 
-ALWAYS feed.vouchCard stays away on every device the account signs in on GIVEN it was put away
+ALWAYS feed.vouchCard reads as it does with nothing kept GIVEN a vouch-back is kept on this device
+
+WHEN tap Got it GIVEN the put-away goes through -> feed.vouchCard is put away for good AND NEVER a snackbar appears AND NEVER a reminder appears AND NEVER anything stands in its place
+
+WHEN tap Got it GIVEN the put-away does not go through -> feed.vouchCard comes back into its place AND the line That didn't go through. with Retry stands in its row of controls
+
+WHEN tap Retry on feed.vouchCard -> feed.vouchCard steps aside AND the put-away is asked again
+
+WHEN tap Got it GIVEN a vouch-back is kept on this device -> the kept pick is dropped, as Cancel drops one, AND feed.vouchCard is put away
+
+ALWAYS feed.vouchCard stays away on every device the account signs in on GIVEN it was put away and that device keeps no vouch-back
+
+WHEN a vouch-back is kept from the profile of the member who vouched the account in GIVEN feed.vouchCard was put away -> feed.vouchCard returns on the device that kept it AND NEVER it returns on another device
+
+ALWAYS the security notice stands first, then the key card, then feed.vouchCard GIVEN two or more of them stand at the feed's head
 
 ALWAYS vouching back stays open from the profile of the member who vouched the account in GIVEN the pair is incomplete, the card put away or not
 
 WHEN any opinion on the member who vouched the account in is signed GIVEN the pair is incomplete -> the ceremony opens, wherever the opinion was signed
 
-WHEN the registration lands while the reader is on the landing card -> this card stands in its place where the reader stands AND NEVER the feed reloads
+WHEN the account lands, its registration and the approving vouch both confirmed, while the reader is on the landing card -> this card stands in its place where the reader stands AND NEVER the feed reloads
 
 WHEN a signed vouch-back expires instead of landing GIVEN the card was never put away -> feed.vouchCard returns AND the ordinary did-not-land notice answers
 

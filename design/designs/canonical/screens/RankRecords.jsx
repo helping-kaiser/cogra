@@ -54,7 +54,7 @@ export function Screen() {
           These records are public. Anyone can run the same sum and land on the same number.
         </QuietNote>
       </ScoreColumn>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

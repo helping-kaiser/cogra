@@ -1,6 +1,6 @@
 import React from "react";
 import { Icon } from "../navigation/Icon.jsx";
-import { MonogramAvatar } from "../people/ActorChip.jsx";
+import { MonogramAvatar, REDACTED_ACTOR_NAME } from "../people/ActorChip.jsx";
 import { PendingMarker } from "../honesty/PendingMarker.jsx";
 import { StanceValue } from "../stance/StanceReadout.jsx";
 
@@ -79,7 +79,8 @@ const TONES = {
    to read it, so a door into the topics is marked the way every topic on every
    other surface already is — and nothing new was invented to mark it. It sits
    where the glyph sits, in the same 40px disc, at the disc's own tone. */
-function Disc({ image, imageShape, name, face, letter, glyph, tone }) {
+function Disc({ redacted, image, imageShape, name, face, letter, glyph, tone }) {
+  if (redacted) return <MonogramAvatar redacted size={40} />;
   if (image) {
     return (
       <img
@@ -130,8 +131,8 @@ function Disc({ image, imageShape, name, face, letter, glyph, tone }) {
 
 export function ContentRow({
   variant = "ledger",
-  title,
-  titleAside,
+  title: titleGiven,
+  titleAside: asideGiven,
   second,
   trailing,
   pending = false,
@@ -148,8 +149,15 @@ export function ContentRow({
   onOpen,
   node,
   nodeKey,
+  redacted = false,
 }) {
   const shape = VARIANTS[variant] ?? VARIANTS.ledger;
+  /* A DELETED ACCOUNT'S ROW (jakob 2026-10-07, HA-3): the reserved disc and
+     `REDACTED_ACTOR_NAME` in the system's voice, the aside dropped — the
+     handle a row would print is gone, and anything in its place would invent
+     one. `ActorChip`'s law, at row scale. */
+  const title = redacted ? REDACTED_ACTOR_NAME : titleGiven;
+  const titleAside = redacted ? undefined : asideGiven;
   /* A row is a control unless it is declared not to be. `inert` is the
      chronicle's case: a record of something that happened, which has no
      destination — the same card, with nothing to press. */
@@ -161,6 +169,7 @@ export function ContentRow({
         fontSize: "var(--text-label-large)",
         lineHeight: "var(--text-label-large--line-height)",
         fontWeight: "var(--text-label-large--font-weight)",
+        ...(redacted ? { color: "var(--text-secondary)" } : null),
         ...ellipsis,
       }}
       data-node={node && "title"}
@@ -198,7 +207,7 @@ export function ContentRow({
       data-node-key={action ? undefined : node && nodeKey}
     >
       <span style={{ position: "relative", flex: "none", width: "40px", height: "40px" }} data-node={node && "disc"}>
-        <Disc image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
+        <Disc redacted={redacted} image={image} imageShape={shape.image} name={name} face={face} letter={letter} glyph={glyph} tone={shape.disc} />
         {direction && (
           <span
             aria-hidden="true"

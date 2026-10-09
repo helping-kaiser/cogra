@@ -2,21 +2,19 @@
    auth.md, *The ask link*).
 
    AN ASK LINK TRAVELS BY HAND, so it reaches people the happy path never
-   drew. Two of them open a link that cannot stage anyone: the applicant has
-   already landed — "landing retires it" — or their one live application is
-   already waiting on somebody else, and an applicant asks one person at a
-   time. `askLinkCheck` says so before the reader commits to anything, and this
-   board is what it says.
+   drew. One of them opens a link that cannot stage anyone: the applicant has
+   already landed — "landing retires it". `askLinkCheck` says so before the
+   reader commits to anything, and this board is what it says. A live
+   application waiting on another member blocks nobody: any member who holds
+   the ask can vouch, and the first vouch lands it (jakob 2026-10-07, item 58).
 
    `JoinInvalid`'S IDIOM, the product's dead-link landing: the fact said out
-   loud in the heading, what it means and whether the link comes back in the
-   paragraph, and the way on. It is not a failure of the reader's, so it
-   carries no error colour; and neither case is the end of the person — a
-   landed applicant is simply in, and a waiting one may come back to this very
-   link. The case chip flips between the two.
+   loud in the heading, what it means in the paragraph, and the way on. It is
+   not a failure of the reader's, so it carries no error colour; and it is not
+   the end of the person — a landed applicant is simply in.
 
-   IT NAMES NOBODY ELSE. Who is deciding on @noor is @noor's and that member's
-   business, `VouchAsk`'s own rule; "someone else" is all this reader needs.
+   IT NAMES NOBODY ELSE. Who vouched @noor in is @noor's and that member's
+   business, `VouchAsk`'s own rule.
 
    THE WAY BACK IS THE LAYER LAW: a link opens over whatever the reader was
    doing and back returns there, or to the feed when the link opened the app
@@ -25,15 +23,11 @@
    THE LANDED CASE OPENS THEIR PROFILE (jakob 2026-10-02). @noor has a full
    profile now, and the member who opened the ask came to vouch for them — they
    will want to look, and most likely give an opinion. So the way on is `See
-   @noor's profile`, not the feed. The waiting case keeps the back arrow alone:
-   an applicant who has not landed has no public profile yet. */
-export const PROPS = { case: { editor: "enum", options: ["landed", "elsewhere"], default: "landed" } };
-export const VALS = `askTitle: this.props.case === "elsewhere" ? "@noor is waiting on someone else" : "@noor is already in", askBody: this.props.case === "elsewhere" ? "Another member is deciding on their application right now. If it ends without them getting in, this same link works again." : "Someone has vouched them in already, so this ask has nothing left to do.", profileDoor: this.props.case === "elsewhere" ? "none" : "block"`;
+   @noor's profile`, not the feed. */
 
 /* REGISTERED under the `vouchAsk` prefix (design ⇄ impl seam 078), named as
-   `VouchAskInvalid` names the landing; the way on is `profileDoor`. The case
-   chip changes words and whether the door shows, never draws an element
-   twice, so nothing here is keyed. */
+   `VouchAskInvalid` names the landing; the way on is `profileDoor`. Nothing
+   here is keyed. */
 export const NODE = "vouchAsk";
 export function Screen() {
   return (
@@ -49,7 +43,7 @@ export function Screen() {
           }}
           data-node="title"
         >
-          {"{{askTitle}}"}
+          @noor is already in
         </h1>
         <p
           style={{
@@ -61,10 +55,10 @@ export function Screen() {
           }}
           data-node="body"
         >
-          {"{{askBody}}"}
+          Someone has vouched them in already, so this ask has nothing left to do.
         </p>
 
-        <div style={{ marginTop: 24, display: "{{profileDoor}}" }}>
+        <div style={{ marginTop: 24 }}>
           <Button variant="text" style={{ width: "100%" }} node="profileDoor">
             See @noor's profile
           </Button>
