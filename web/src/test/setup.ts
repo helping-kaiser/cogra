@@ -3,7 +3,9 @@ import "@testing-library/jest-dom/vitest";
 // registration runtime mounts.
 import "fake-indexeddb/auto";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, beforeEach } from "vitest";
+
+import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
 
 import { installMediaEnvironment, resetMediaEnvironmentForTests } from "./media-env";
 
@@ -14,6 +16,12 @@ afterEach(cleanup);
 // the page's visibility, the autoplay policy — is put back after it.
 installMediaEnvironment();
 afterEach(resetMediaEnvironmentForTests);
+
+// The reading session's clip memory is module state: a clip one test played
+// would otherwise reach the next test's frame without its still. Cleared
+// BEFORE each test rather than after, because the unmounting `cleanup` above
+// is itself a writer — players record where they stood on the way out.
+beforeEach(resetClipMemoryForTests);
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,
