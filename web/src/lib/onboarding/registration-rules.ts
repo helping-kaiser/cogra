@@ -63,13 +63,21 @@ export function passwordValid(password: string): boolean {
 }
 
 /**
- * The address check is deliberately "has an `@`", not a grammar.
+ * The address check is the browser's own `<input type="email">` check —
+ * the WHATWG HTML standard's "valid email address" — asked of a detached
+ * input, so the page carries no grammar of its own (ruling 94; Android
+ * ports the same standard's regular expression for parity). Setting the
+ * value runs the input's sanitization (newlines stripped, then the ends
+ * trimmed), and an empty value is never an address. The server keeps its
+ * lenient `@` floor, and the verification mail stays the real proof.
  *
- * Every regex short of RFC 5322 rejects a deliverable address someone
- * actually has, and the only proof an address exists is the
- * verification mail the server sends anyway. So the form checks the one
- * thing a typo always breaks and leaves the verdict to delivery.
+ * Outside a document (the server's render) nothing can be asked, and no
+ * address is valid yet: every caller's field starts empty there.
  */
-export function emailPlausible(email: string): boolean {
-  return email.includes("@");
+export function emailValid(email: string): boolean {
+  if (typeof document === "undefined") return false;
+  const probe = document.createElement("input");
+  probe.type = "email";
+  probe.value = email;
+  return probe.value !== "" && !probe.validity.typeMismatch;
 }
