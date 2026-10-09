@@ -13,7 +13,7 @@ use postgres_store::{PgPool, auth as store, content as content_store, genesis, m
 use uuid::Uuid;
 
 use super::types::{
-    Actor, CommentType, EmailChangeLinkCheck, EmailChangeLinkState, HashtagType, InviteLinkCheck,
+    Actor, AskLinkCheck, CommentType, EmailChangeLinkCheck, EmailChangeLinkState, HashtagType, InviteLinkCheck,
     KeysetConnection, MediaAttachmentType, Node, PostType, Record, RecordConnection, RecordFamily,
     RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType, User, borrowed_vantage,
     connection_cost, content_cursor, content_cursor_key, keyset_connection, keyset_page, list_cost,
@@ -98,6 +98,26 @@ impl Query {
             inviter_handle: inviter.handle,
             expires_at: link.expires_at,
         }))
+    }
+
+    /// Anonymous pre-stage check of an ask link, so a member following
+    /// one sees who is asking before anything is written, and the app can
+    /// gate the staging call. Null when the id references no link. It
+    /// reads and never writes; with a viewer, `usable` and `reason` answer
+    /// for that viewer's own queue (WAITING_ON_VIEWER).
+    async fn ask_link_check(
+        &self,
+        ctx: &Context<'_>,
+        id: Uuid,
+    ) -> async_graphql::Result<Option<AskLinkCheck>> {
+        let pool = ctx.data::<PgPool>()?;
+        let viewer = match ctx.data_opt::<Option<Viewer>>() {
+            Some(Some(v)) => Some(v.user_id),
+            _ => None,
+        };
+        Ok(store::ask_link_state(pool, id, viewer)
+            .await?
+            .map(AskLinkCheck::from_store))
     }
 
     /// Anonymous pre-sign-in check of an email change's new-address

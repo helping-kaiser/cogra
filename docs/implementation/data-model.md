@@ -1314,7 +1314,7 @@ CREATE TABLE auth_applications (
     account_id      UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
     approver_id     UUID        NOT NULL REFERENCES actors(id),
     invite_link_id  UUID        REFERENCES auth_invite_links(id),
-    ask_link_id     UUID        REFERENCES auth_ask_links(id),
+    ask_link_id     UUID        REFERENCES auth_ask_links(id) ON DELETE CASCADE,
     approved_at     TIMESTAMPTZ,
     -- The approver's own close, of this row or of the link's whole
     -- waiting queue (auth.md "Rejection") — set instead of
