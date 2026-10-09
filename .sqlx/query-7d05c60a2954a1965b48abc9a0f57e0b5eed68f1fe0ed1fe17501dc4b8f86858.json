@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT account_state = 'member' AS \"member!\"\n           FROM user_credentials WHERE actor_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "member!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7d05c60a2954a1965b48abc9a0f57e0b5eed68f1fe0ed1fe17501dc4b8f86858"
+}

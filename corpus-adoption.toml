@@ -2073,24 +2073,6 @@ names      = [
   "CommentTarget.User",
 ]
 
-# The unbuilt ask-link and rejection surface (packet
-# contract-recon-ask-link-spec, verdict SPEC-ONLY); its error code
-# ships with it (seam 045.3a).
-[[api-contract.staged]]
-surface    = "error-code"
-built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
-names      = ["ASK_LINK_UNUSABLE"]
-
-[[api-contract.staged]]
-surface    = "query"
-built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
-names      = ["askLinkCheck"]
-
-[[api-contract.staged]]
-surface    = "mutation"
-built_by   = "packet contract-recon-ask-link-spec, then the entry-funnel feature packet that builds it"
-names      = ["stageApplicant"]
-
 # The unbuilt applicant-deletion verb and the deletion-link error
 # code (packet contract-recon-deletion-spec, verdict SPEC-ONLY). The
 # oracle compares only the roots, unions and ErrorCode, so the

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO auth_ask_links (account_id) VALUES ($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "986a77a3ff5b5f8b96ef2bfdca44c6865f20d40c294cddbf067bae6ff10d8a73"
+}
