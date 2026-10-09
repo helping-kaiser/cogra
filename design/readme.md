@@ -9636,16 +9636,17 @@ and two spots on the transport's bar could not grow to 48dp.
   live in their sheet (§4, *Sheets*), so nothing stands below the post on
   its detail but the post itself; a clip held on screen would take the
   room the post is read in. `DetailClip` heads the detail's column,
-  flush on the card. The header still pins (§4, *Browse collapses,
-  task pins*).
+  flush on the card. The detail's header pins (§4, *Spacing and
+  layout*).
 - **Opening the detail starts the clip.** The open is the deliberate
   act, so no share of the screen gates it on the detail; the device's
-  suppression — reduced motion, data saver — still holds it back. The
-  feed's 70% gate and its stage law govern the feed alone.
+  suppression — reduced motion, data saver — holds it back. The 70% gate
+  and the stage law govern every other scroll surface.
 - **Scroll never stops it.** Scrolled out of view the clip plays on,
-  and scrolling it back into view never starts a paused one — scroll
-  governs starts in a feed and nothing on the detail (ruling 96's
-  spirit). There is no mini-player: the reader scrolls back up to it.
+  and scrolling it back into view never starts a paused one: scroll
+  governs starts, never stops (ruling 96's spirit), and on the detail
+  the open is the only start. There is no mini-player: the reader
+  scrolls back up to it.
 - **No target on the transport's bar falls below 48dp.** Sound and
   fullscreen stand 20px apart, their 28px boxes' centres 48px apart, so
   their targets meet without overlapping. The timeline's target hangs
