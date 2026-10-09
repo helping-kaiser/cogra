@@ -7126,5 +7126,10 @@
       "endpoint": []
     }
   },
-  "gapsOnFlows": []
+  "gapsOnFlows": [
+    "Join/10: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed",
+    "Join/9: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
+    "JoinErrors/8: the Terms page — the door stands in the accept sentence (ruling 76); the page it opens is design still owed",
+    "JoinErrors/9: the Privacy Policy page — the notice's door stands at the form's foot (ruling 76); the page it opens is design still owed"
+  ]
 }

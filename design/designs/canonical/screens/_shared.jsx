@@ -301,6 +301,54 @@ function ApkLine() {
   );
 }
 
+/* THE REGISTRATION'S TWO LEGAL LINES (jakob 2026-10-09, ruling 76; §305(2)
+   BGB needs a conspicuous reference and readable terms, not a checkbox).
+   The accept sentence stands DIRECTLY ABOVE the commit — the one place a
+   reader's eye crosses on the way to `Create account` — with `Terms` as a
+   door, and no checkbox anywhere: ticking a box is ceremony the law does not
+   ask for and the form does not need. The sentence is blessed verbatim.
+
+   THE PRIVACY POLICY IS A NOTICE, NEVER PART OF THE ACCEPTANCE (the same
+   ruling; GDPR's information duty is owed, not agreed to). It stands as its
+   own linked line at the form's foot, apart from the accept sentence, so
+   nothing reads as if a reader consented to data handling by registering.
+
+   Both live here because `Join` and `JoinErrors` draw one form, and a legal
+   line spelled twice is a legal line that drifts. */
+function JoinTermsLine() {
+  return (
+    <p
+      style={{
+        margin: 0,
+        textAlign: "center",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      By creating your account you accept the <a href="#">Terms</a>.
+    </p>
+  );
+}
+
+function JoinPrivacyNotice() {
+  return (
+    <p
+      style={{
+        margin: 0,
+        textAlign: "center",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      How CoGra handles your data: the <a href="#">Privacy Policy</a>.
+    </p>
+  );
+}
+
 /* The feed column: full-width rounded cards, 8px of surface as the seam. */
 function FeedList({ children }) {
   return (

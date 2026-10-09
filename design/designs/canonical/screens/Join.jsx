@@ -32,7 +32,12 @@
    system's "?" — one per screen, top-right of the header, 32px of ring inside
    the 48px target — so the About page arrives on this board without the board
    growing a line of text. Its accessible name says where it goes, because a
-   ring drawn round a question mark says only that something is explained. */
+   ring drawn round a question mark says only that something is explained.
+
+   THE TWO LEGAL LINES ride the commit stack (jakob 2026-10-09, ruling 76):
+   `JoinTermsLine` directly above `Create account`, `Terms` a door and no
+   checkbox, and the Privacy Policy as its own linked notice at the foot —
+   never inside the accept sentence. The reasons live on the helpers. */
 export function Screen() {
   return (
     <>
@@ -70,10 +75,12 @@ export function Screen() {
         </div>
 
         <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+          <JoinTermsLine />
           <WaitingCommit id="join" label="Create account" reason="Waiting for a handle, your email and a password" />
           <Button variant="text" style={{ width: "100%" }}>
             Already have an account? Sign in
           </Button>
+          <JoinPrivacyNotice />
         </div>
       </div>
     </>

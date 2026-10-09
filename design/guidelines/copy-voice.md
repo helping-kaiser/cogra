@@ -1549,6 +1549,14 @@ Every other line here is **carried over — blessed by use (jakob
   you` and its caption) and `Got it` (*new 2026-10-07, the title and the
   body drafted — their wording jakob's at review*).
 
+- **The registration's two legal lines** (`Join`, `JoinErrors`; jakob
+  2026-10-09, ruling 76) — the accept sentence `By creating your account
+  you accept the Terms.` directly above `Create account`, `Terms` a door
+  and no checkbox (**blessed**); and the Privacy Policy as its own linked
+  notice at the form's foot, never inside the accept sentence: `How CoGra
+  handles your data: the Privacy Policy.` (*new 2026-10-09, the notice
+  drafted — its wording jakob's at review*).
+
 ## The settings page
 
 Drawn on `Settings`, `SettingsBackup` and `YourKey`, blessed with the

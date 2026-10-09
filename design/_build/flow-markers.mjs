@@ -1698,6 +1698,10 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+    // The two legal doors (jakob 2026-10-09, ruling 76): the accept
+    // sentence's Terms above the commit, the privacy notice at the foot.
+    { n: 9, find: ">Terms</a>", tag: "a" },
+    { n: 10, find: ">Privacy Policy</a>", tag: "a" },
   ],
   SignIn: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
@@ -1751,6 +1755,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: 'aria-label="Show password"', tag: "button" },
     { n: 6, find: ">Create account</button>", tag: "button" },
     { n: 7, find: ">Already have an account? Sign in</button>", tag: "button" },
+    // The two legal doors, as on Join (jakob 2026-10-09, ruling 76).
+    { n: 8, find: ">Terms</a>", tag: "a" },
+    { n: 9, find: ">Privacy Policy</a>", tag: "a" },
   ],
   SignInError: [
     { n: 1, find: 'aria-label="Back"', tag: "a" },
