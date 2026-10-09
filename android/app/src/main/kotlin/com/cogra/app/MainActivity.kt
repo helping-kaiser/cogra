@@ -2,10 +2,12 @@ package com.cogra.app
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.getValue
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.app.navigation.CograNavGraph
+import com.cogra.app.ui.StatusBarClearance
 import com.cogra.app.ui.theme.CograTheme
 import com.cogra.domain.store.DevicePreferences
 import com.cogra.domain.store.ThemeChoice
@@ -23,6 +25,10 @@ class MainActivity : FragmentActivity() {
     lateinit var devicePreferences: DevicePreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // The system-bar law (`ui/SystemBars.kt`): the bars' icons follow the
+        // SYSTEM's light or dark theme — enableEdgeToEdge's documented
+        // default — and never the theme picked in Settings.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         // App Links (cold and warm) are the nav graph's concern: the
         // NavController reads the launch intent, and the graph listens
@@ -30,10 +36,13 @@ class MainActivity : FragmentActivity() {
         setContent {
             val theme by devicePreferences.theme.collectAsStateWithLifecycle(ThemeChoice.AUTO)
             CograTheme(choice = theme) {
-                // The graph publishes its own snackbar host, so the
-                // surface a leaf confirms through is the one the shell
-                // actually draws (design.md §8.3).
-                CograNavGraph()
+                // Nothing the app draws reaches under the status bar.
+                StatusBarClearance {
+                    // The graph publishes its own snackbar host, so the
+                    // surface a leaf confirms through is the one the shell
+                    // actually draws (design.md §8.3).
+                    CograNavGraph()
+                }
             }
         }
     }

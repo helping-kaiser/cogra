@@ -540,7 +540,33 @@ The input/output is a string in RFC3339 format.
 """
 scalar DateTime
 
+"""
+The server half of a device lock (auth.md "Device lock"): a 32-byte
+secret that encrypts one device's custody for this account while it is
+signed out. Viewer-only; never on a refusal.
+"""
+type DeviceLock {
+	"""
+	The lock's name, held by the device; unguessable, so it doubles as
+	the capability to discard it.
+	"""
+	id: UUID!
+	"""
+	The secret (base64).
+	"""
+	secret: String!
+}
+
 scalar Dimension
+
+input DiscardDeviceLockInput {
+	lock: UUID!
+}
+
+type DiscardDeviceLockPayload {
+	ok: Boolean
+	userErrors: [UserError!]!
+}
 
 type DismissVouchBackPayload {
 	user: User
@@ -569,7 +595,8 @@ PENDING: the change is live in its window (either side may already
 have landed; a taken address still reads PENDING — the collision is
 answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
 change moved the address. CANCELED: called off, or superseded by a
-newer request. EXPIRED: its window closed before both sides landed.
+newer request, while live. EXPIRED: its window closed before both
+sides landed.
 """
 enum EmailChangeLinkState {
 	PENDING
@@ -843,6 +870,11 @@ type InviteLinkEdge {
 	A cursor for use in pagination
 	"""
 	cursor: String!
+}
+
+type IssueDeviceLockPayload {
+	lock: DeviceLock
+	userErrors: [UserError!]!
 }
 
 type KeyBackupChallengePayload {
@@ -1400,6 +1432,32 @@ type Mutation {
 	attempt for no security gain.
 	"""
 	uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
+	"""
+	Mints a device lock for the signed-in account (auth.md "Device
+	lock"): a fresh 32-byte secret the device locks this account's
+	custody under while it is signed out. Issuing writes a row, so it
+	spends the account's issue budget and is held under the account's
+	live-lock cap; either refusal is a visible RATE_LIMITED, since the
+	caller is authenticated, and stores nothing.
+	"""
+	issueDeviceLock: IssueDeviceLockPayload!
+	"""
+	Releases one of the viewer's locks behind the account's current
+	password (auth.md "Device lock"). The order is the login's: the
+	re-authentication budget answers first, then the password, and only
+	a proven password reaches the lock — so without the password, which
+	locks exist cannot be probed. A wrong password is
+	INVALID_CREDENTIALS and spends the budget changePassword shares;
+	another account's or an unknown lock is NOT_FOUND. Idempotent: a
+	release never spends the lock, so a lost response costs nothing.
+	"""
+	releaseDeviceLock(input: ReleaseDeviceLockInput!): ReleaseDeviceLockPayload!
+	"""
+	Deletes one of the viewer's locks (auth.md "Device lock").
+	Idempotent and silent: an unknown id, or another account's, answers
+	exactly like a deleted one and touches nothing.
+	"""
+	discardDeviceLock(input: DiscardDeviceLockInput!): DiscardDeviceLockPayload!
 	"""
 	Issues an invite link — pure service-side staging UX; its id is
 	the shareable capability. Nothing binds at issue and the link
@@ -2737,6 +2795,23 @@ type RejectLinkApplicationsPayload {
 	The link, for re-reading its share of the queue.
 	"""
 	inviteLink: InviteLink
+	userErrors: [UserError!]!
+}
+
+input ReleaseDeviceLockInput {
+	lock: UUID!
+	"""
+	The account's current password, re-verified against the stored
+	hash.
+	"""
+	password: String!
+}
+
+type ReleaseDeviceLockPayload {
+	"""
+	The lock's secret (base64); null with a refusal.
+	"""
+	secret: String
 	userErrors: [UserError!]!
 }
 

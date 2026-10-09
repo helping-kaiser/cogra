@@ -18,7 +18,7 @@ import { useApolloClient } from "@apollo/client/react";
 
 import { hasCode } from "@/lib/api/outcome";
 import { requestEmailChange, type PendingEmailChange } from "@/lib/api/settings-api";
-import { emailPlausible } from "@/lib/onboarding/registration-rules";
+import { emailValid } from "@/lib/onboarding/registration-rules";
 import { useAuthGuard } from "@/lib/session/runtime";
 import type { DataNode } from "@/lib/ui/data-node";
 import { FormPasswordField, FormTextField } from "@/lib/ui2/form-fields";
@@ -59,14 +59,14 @@ export function EmailRequestForm({
 
   const onEmail = (next: string) => {
     setEmail(next);
-    if (fault === "malformed" && emailPlausible(next.trim())) setFault("none");
+    if (fault === "malformed" && emailValid(next.trim())) setFault("none");
   };
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (busy || email === "" || password === "") return;
     setActLine(null);
-    if (!emailPlausible(email.trim())) {
+    if (!emailValid(email.trim())) {
       setFault("malformed");
       return;
     }

@@ -68,10 +68,31 @@ class SettingsScreenTest {
         render()
         val order = listOf(
             "theme", "stance", "writing", "reading", "people", "backup", "sessions", "credentials", "about", "leaving",
+            "ending",
         ).map { top("settings.$it") }
         assertThat(order).isInStrictOrder()
-        // The `ending` group is the erasure-deletion packet's: no row here.
-        assertThat(compose.onAllNodesWithTag("settings.ending").fetchSemanticsNodes()).isEmpty()
+    }
+
+    @Test
+    fun `delete_account_is_the_last_row_quiet_with_the_members_footnote`() {
+        render()
+        node("settings.ending.delete").performScrollTo().assertHasClickAction()
+        node("settings.ending.delete.label").assertTextEquals("Delete account")
+        node("settings.ending.delete.chevron").assertExists()
+        node("settings.ending.footnote").assertTextEquals(
+            "Nothing is deleted here. The next screen says what goes and what stays, " +
+                "and the deletion is confirmed by a link we email you.",
+        )
+        // DRIFT (erasure-deletion packet): the request screen is not built,
+        // so the press opens nothing and nothing is deleted.
+        node("settings.ending.delete").performClick()
+    }
+
+    @Test
+    fun `an_applicants_delete_footnote_drops_the_mailed_link`() {
+        render(SettingsUiState(account = account(state = AccountState.APPLICANT, actorPubkey = null), now = NOW))
+        node("settings.ending.footnote").performScrollTo()
+            .assertTextEquals("Nothing is deleted here. The next screen says what goes and what stays.")
     }
 
     @Test
@@ -333,7 +354,7 @@ class SettingsScreenTest {
         node("settings.dialog.title").assertTextEquals("Sign out without a backup?")
         node("settings.dialog.body").assertTextEquals(
             "This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions " +
-                "you kept pending here, locked until you sign in to this app again. Erase them instead, and no " +
+                "you kept pending here, locked until you sign in again. Erase them instead, and no " +
                 "one — including CoGra — can bring them back.",
         )
         node("settings.dialog.title").assertIsFocused()

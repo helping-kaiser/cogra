@@ -17,7 +17,7 @@ use async_graphql::{Context, InputObject, Object, SimpleObject, Upload};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use chrono::{DateTime, Duration, Utc};
-use common::l1::{crypto, key_backup, wire};
+use common::l1::{crypto, device_lock, key_backup, wire};
 use postgres_store::auth::RevokedReason;
 use postgres_store::staged::PreSignedParts;
 use postgres_store::{PgPool, auth as store, staged};
@@ -1393,6 +1393,50 @@ struct KeyBackupChallengePayload {
     user_errors: Vec<UserError>,
 }
 
+/// The server half of a device lock (auth.md "Device lock"): a 32-byte
+/// secret that encrypts one device's custody for this account while it is
+/// signed out. Viewer-only; never on a refusal.
+#[derive(SimpleObject)]
+struct DeviceLock {
+    /// The lock's name, held by the device; unguessable, so it doubles as
+    /// the capability to discard it.
+    id: Uuid,
+    /// The secret (base64).
+    secret: String,
+}
+
+#[derive(SimpleObject)]
+struct IssueDeviceLockPayload {
+    lock: Option<DeviceLock>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct ReleaseDeviceLockInput {
+    lock: Uuid,
+    /// The account's current password, re-verified against the stored
+    /// hash.
+    password: String,
+}
+
+#[derive(SimpleObject)]
+struct ReleaseDeviceLockPayload {
+    /// The lock's secret (base64); null with a refusal.
+    secret: Option<String>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct DiscardDeviceLockInput {
+    lock: Uuid,
+}
+
+#[derive(SimpleObject)]
+struct DiscardDeviceLockPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
 /// Issue a time-gated invite link. It carries no stance values — the
 /// inviter picks those at approval, the priced act. expiresAt must lie in
 /// the future and has no floor: it bounds registration through the link
@@ -2654,6 +2698,105 @@ impl Mutation {
                 .await;
         }
         Ok(UploadKeyBackupPayload {
+            ok: Some(true),
+            user_errors: vec![],
+        })
+    }
+
+    /// Mints a device lock for the signed-in account (auth.md "Device
+    /// lock"): a fresh 32-byte secret the device locks this account's
+    /// custody under while it is signed out. Issuing writes a row, so it
+    /// spends the account's issue budget and is held under the account's
+    /// live-lock cap; either refusal is a visible RATE_LIMITED, since the
+    /// caller is authenticated, and stores nothing.
+    async fn issue_device_lock(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<IssueDeviceLockPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        if !ratelimit::spend_device_lock_issue(pool, limits, v.user_id).await? {
+            return Err(rate_limited());
+        }
+        let id = Uuid::new_v4();
+        let secret = device_lock::generate_secret();
+        match store::issue_device_lock(
+            pool,
+            v.user_id,
+            id,
+            &secret,
+            i64::from(limits.device_lock_live_cap),
+        )
+        .await?
+        {
+            store::IssueLockOutcome::Issued => Ok(IssueDeviceLockPayload {
+                lock: Some(DeviceLock {
+                    id,
+                    secret: B64.encode(secret),
+                }),
+                user_errors: vec![],
+            }),
+            store::IssueLockOutcome::AtCap => Err(rate_limited()),
+            store::IssueLockOutcome::NoAccount => Err(unauthenticated()),
+        }
+    }
+
+    /// Releases one of the viewer's locks behind the account's current
+    /// password (auth.md "Device lock"). The order is the login's: the
+    /// re-authentication budget answers first, then the password, and only
+    /// a proven password reaches the lock — so without the password, which
+    /// locks exist cannot be probed. A wrong password is
+    /// INVALID_CREDENTIALS and spends the budget changePassword shares;
+    /// another account's or an unknown lock is NOT_FOUND. Idempotent: a
+    /// release never spends the lock, so a lost response costs nothing.
+    async fn release_device_lock(
+        &self,
+        ctx: &Context<'_>,
+        input: ReleaseDeviceLockInput,
+    ) -> async_graphql::Result<ReleaseDeviceLockPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
+            return Err(unauthenticated());
+        };
+        let refuse = |error: UserError| ReleaseDeviceLockPayload {
+            secret: None,
+            user_errors: vec![error],
+        };
+        if !reauthenticate(pool, limits, v.user_id, &credentials, &input.password).await? {
+            return Ok(refuse(UserError::at(
+                ErrorCode::InvalidCredentials,
+                "password did not match",
+                vec!["password".to_string()],
+            )));
+        }
+        let Some(secret) = store::release_device_lock(pool, v.user_id, input.lock).await? else {
+            return Ok(refuse(UserError::at(
+                ErrorCode::NotFound,
+                "no such device lock",
+                vec!["lock".to_string()],
+            )));
+        };
+        Ok(ReleaseDeviceLockPayload {
+            secret: Some(B64.encode(secret)),
+            user_errors: vec![],
+        })
+    }
+
+    /// Deletes one of the viewer's locks (auth.md "Device lock").
+    /// Idempotent and silent: an unknown id, or another account's, answers
+    /// exactly like a deleted one and touches nothing.
+    async fn discard_device_lock(
+        &self,
+        ctx: &Context<'_>,
+        input: DiscardDeviceLockInput,
+    ) -> async_graphql::Result<DiscardDeviceLockPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        store::discard_device_lock(pool, v.user_id, input.lock).await?;
+        Ok(DiscardDeviceLockPayload {
             ok: Some(true),
             user_errors: vec![],
         })

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- A bare no-action-bar base; all real theming is done in Compose
      (CograTheme). Uses a framework parent so the app needs no XML theming
-     dependency. -->
+     dependency.
+
+     The window's own background is the device's, light or dark by the
+     SYSTEM's theme (this file and values-night/), never by the theme picked
+     in Settings: it is the ground the transparent status bar shows, and the
+     system-bar law keeps that strip the system's (ui/SystemBars.kt). -->
 <resources>
-    <style name="Theme.CoGra" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.CoGra" parent="android:Theme.DeviceDefault.Light.NoActionBar" />
 </resources>

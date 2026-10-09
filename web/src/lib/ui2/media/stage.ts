@@ -156,6 +156,17 @@ export class Stage {
     this.decide();
   }
 
+  /**
+   * Whether the clip's frame was last reported on screen at all. A question
+   * only — it decides nothing here. A player leaving pictures its frame for
+   * the next presentation only where a reader could be looking at it
+   * (`handover-still.tsx`), so a long feed of played clips does not copy
+   * every one of their frames on the way out.
+   */
+  inView(key: object): boolean {
+    return (this.places.get(key)?.ratio ?? 0) > 0;
+  }
+
   /** One observer batch: every ratio first, then one decision (rule 3). */
   measure(entries: readonly { target: Element; intersectionRatio: number }[]): void {
     for (const entry of entries) {

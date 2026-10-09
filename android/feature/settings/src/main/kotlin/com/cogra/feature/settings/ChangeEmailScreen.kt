@@ -31,6 +31,7 @@ import com.cogra.core.designsystem.v2.atom.QuietNote
 import com.cogra.core.designsystem.v2.atom.WaitingCommit
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.sanitizedEmail
 import com.cogra.domain.settings.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -105,7 +106,7 @@ class ChangeEmailViewModel @Inject constructor(
         }
         _state.update { it.copy(malformed = false, wrongPassword = false, fault = null, inFlight = true) }
         viewModelScope.launch {
-            val outcome = settings.requestEmailChange(s.newEmail.trim(), s.password)
+            val outcome = settings.requestEmailChange(sanitizedEmail(s.newEmail), s.password)
             _state.update {
                 when {
                     outcome is Outcome.Success -> it.copy(inFlight = false, sentTo = outcome.value.newEmail)

@@ -25,6 +25,7 @@ import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.v2.atom.PageHeader
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
+import com.cogra.domain.emailValid
 import com.cogra.domain.has
 
 /**
@@ -87,14 +88,14 @@ internal fun TaskPage(
 }
 
 /**
- * The malformed-address check New email answers on the press. One `@`
- * with something on each side and a dot in the domain — the board's own
- * malformed example is `sol@ferreira` (`ChangeEmail.jsx`, the `fault`
- * chip). The server's `BAD_INPUT@newEmail` maps to the same line.
+ * The malformed-address check New email answers on the press: the WHATWG
+ * standard's, which registration and the web's `type="email"` share
+ * (ruling 94, [com.cogra.domain.emailValid]). The server's
+ * `BAD_INPUT@newEmail` maps to the same line — which is how the board's own
+ * malformed example, `sol@ferreira`, reads it: the standard takes a
+ * single-label domain, the server's normalization asks for a dotted one.
  */
-internal fun looksLikeEmail(value: String): Boolean = EMAIL.matches(value.trim())
-
-private val EMAIL = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+internal fun looksLikeEmail(value: String): Boolean = emailValid(value)
 
 /** The password ceiling (auth.md "Credentials"); the floor is the domain's [com.cogra.domain.MIN_PASSWORD_LENGTH]. */
 internal const val PASSWORD_MAX = 128
