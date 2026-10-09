@@ -333,7 +333,7 @@ class SettingsScreenTest {
         node("settings.dialog.title").assertTextEquals("Sign out without a backup?")
         node("settings.dialog.body").assertTextEquals(
             "This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions " +
-                "you kept pending here, locked until you sign in to this app again. Erase them instead, and no " +
+                "you kept pending here, locked until you sign in again. Erase them instead, and no " +
                 "one — including CoGra — can bring them back.",
         )
         node("settings.dialog.title").assertIsFocused()

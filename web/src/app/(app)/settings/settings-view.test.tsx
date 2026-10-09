@@ -560,6 +560,10 @@ describe("signing out", () => {
     expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
       "This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here",
     );
+    // Item 87 (ruled): the custody sentence ends without the locality, both twins.
+    expect(within(dialog).getByTestId("settings.dialog.body")).toHaveTextContent(
+      "kept pending here, locked until you sign in again. Erase them instead",
+    );
     expect(within(dialog).getByTestId("settings.dialog.recovery")).toHaveTextContent("Make a recovery code");
     expect(within(dialog).getByTestId("settings.dialog.erase")).toHaveTextContent("Erase them and sign out");
     // The lock answer waits for the device lock (sign-out custody packet).
