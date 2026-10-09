@@ -693,7 +693,10 @@ cards*) is never matched. `@handle <text>`
 scopes the query to one person's work, their comments found through the
 titles of what they answer; `#tag <text>` scopes it inside a tag.
 Explore searches the graph, in its ranked tiers (§13, *The search
-rulings*); History searches the reader's seen-list, newest first by
+rulings*) — under Newest, the reader's choice or what the search serves
+before the ranker exists, the tiers stay and each runs newest first, with
+no seam, every row's age on its edge and a tag row bare (§13, *The five
+ordered draws*); History searches the reader's seen-list, newest first by
 first seeing. A query that finds nothing says so in the list's place and
 offers the way back (`ExploreNone`, `HistoryNone`).
 
@@ -8291,6 +8294,7 @@ the rest as recommended. Both laws stand in §4.
   | Saved | `Back to Saved` |
   | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
+  | Explore, mid-query (jakob 2026-10-07) | `Back to the search` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
 
@@ -9399,6 +9403,55 @@ either comes into this readme or dies from the pointer.
 - **Tracking is one value** (§4, *Type*): each platform expresses it
   in its native unit and rounds on its own grid — a capability
   expression, never a per-client choice.
+
+### The five ordered draws — 2026-10-07
+
+jakob's packet-wave rulings ordered five states drawn rather than
+backlogged (the day's digest, items 23, 24, 38, 60 and 65). Each is drawn
+in an existing board's construction; the words they mint are drafted and
+wait for jakob's review (copy-voice marks each).
+
+- **The dead change link, signed out** (item 38; the settings packet's
+  G9). `ChangeEmailLinkedSignedOut` gains the `landing` chip: `pending` is
+  the live link, `dead` the one landing for every link whose change ran
+  out, was canceled or already applied, and for a link the app does not
+  know — `This link doesn't work anymore`, a body naming no address, and
+  `Sign in` holding no link.
+- **Search under Newest** (item 24; the search packet's SG-5).
+  `ExploreSearch` gains the `order` chip: `ranked` is the board as it
+  stood, `newest` the same four results by time — no seam, full matches
+  still first, each row's age on its value edge in the one ladder, the tag
+  row bare. Newest is also the order before the ranker exists, so the
+  interim reads exactly this; when the split ships is the implementation's
+  sequencing.
+- **The Profiles row** (item 23; SG-4). `ExplorePerson`: an unscoped
+  query, `salt`, reaching `Sal Torres` through the handle — the picker's
+  own person row (`ReferencePicker`), avatar, display name over `@handle`,
+  the rank on its edge. It is a board of its own because a scoped query
+  never returns a person (jakob 2026-10-07), so `ExploreSearch`'s `@sol
+  salt` cannot hold one. Another person's row opens their profile under
+  `Back to the search`, now in the profile's noun table; the reader's own
+  opens their own.
+- **The hide's three other landings** (item 65; the hidden-actors
+  packet's registration ask). `FeedHidden`'s shape — the surface the tap
+  was made on, unchanged, with the snackbar over it — drawn where the
+  feed's board could not stand in: `PostDetailHidden` (the post being
+  read, `ReaderPostMenu`'s detail case), `ProfileOtherHidden` (the
+  person's profile, `ProfileMenu`'s; a deleted account's page answers in
+  the same shape with its nameless line) and `SettingsUnhidden` (the
+  Hidden accounts sheet a moment after `Unhide`, the row gone and the
+  rows behind it moved up, the snackbar raised above the sheet at the
+  screen's foot). Their snackbars register under each surface's own
+  prefix.
+- **The approval that fell through** (item 60; seam 090.4).
+  `ApplicantFellThrough`: `ApplicantWaiting`'s shell with the card flipped
+  once more, the way `ApplicantLanding` and `ApplicantRejected` are — the
+  landing card goes back to waiting when its approval lapses before the
+  reader is in and no other is live. It wears the waiting card's dress and
+  `Got it`, names no member (which open application the account shows next
+  is not the card's to say), and carries `ApplicantRejected`'s ask-link
+  block, since anyone already in can now vouch. It registers with the
+  applicant boards' own round.
 
 ---
 

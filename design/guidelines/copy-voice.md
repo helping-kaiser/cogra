@@ -1535,6 +1535,14 @@ Every other line here is **carried over — blessed by use (jakob
   expire. While @mira's answer is open, it can't start a second
   application.` (`ProfileApplicant` too).
 
+- **The approval that fell through** (`ApplicantFellThrough`, jakob
+  2026-10-07, ruling 60) — the landing card flipped back to waiting, naming
+  nobody: `The approval didn't land` over `You're waiting again — anyone
+  who's already in can vouch you in, and the first vouch lands it.`, with
+  `ApplicantRejected`'s ask-link block (`Ask someone you know to vouch for
+  you` and its caption) and `Got it` (*new 2026-10-07, the title and the
+  body drafted — their wording jakob's at review*).
+
 ## The settings page
 
 Drawn on `Settings`, `SettingsBackup` and `YourKey`, blessed with the
@@ -1849,7 +1857,13 @@ applicant's fresh link (`ApplicantEmail`) answers a taken address the
 same way on its landing (jakob 2026-10-05). Signed
 out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
 `This link confirms sol@ferreira.studio as your new address. It counts
-once you're signed in.` · `Sign in`. Opened under a different account,
+once you're signed in.` · `Sign in`. A link whose change ran out, was
+canceled or already applied, or one the app does not know, opened signed
+out: one address-free landing (jakob 2026-10-07, ruling 38) —
+`VerifyExpired`'s heading, `This link doesn't work anymore` (blessed), over
+`The change it belonged to may have run out, been canceled or already
+happened — this link can't move your email anymore.` and `Sign in` (*new
+2026-10-07, the body drafted — its wording jakob's at review*). Opened under a different account,
 the link's side does not apply and the landing says so: `This link isn't
 for this account` · `It confirms a new address for another account, so
 nothing changed here. Open it signed in as that account to finish the
@@ -2505,6 +2519,9 @@ they will look for again in settings. The pair on the other side is
 `@ada is hidden — their posts stay out of your feed.` with `Undo`
 beside it. It says what changed and how far it reaches, which is what
 stops a reader wondering whether they have done something to someone.
+It lands wherever the tap was made, in the same words: over the feed
+(`FeedHidden`), over the post being read (`PostDetailHidden`) and over
+the person's profile (`ProfileOtherHidden`).
 A deleted account has no handle to spell, so hiding one answers `This
 account is hidden — its posts stay out of your feed.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
@@ -2549,7 +2566,8 @@ looking.` The footnote carries the whole of what hiding means, which is
 the group anatomy's own rule. With nobody hidden the row reads `None`.
 `Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
 their posts can reach your feed again.` with `Undo` beside it (*new
-2026-10-05, blessed (jakob 2026-10-05)*).
+2026-10-05, blessed (jakob 2026-10-05)*), raised over the sheet while
+others stay hidden (`SettingsUnhidden`).
 
 **The sheet is titled by the row that opened it** — `Hidden accounts` —
 and each row carries `Unhide` and the moment of the hiding in the ages
