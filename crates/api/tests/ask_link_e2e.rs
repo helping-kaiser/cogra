@@ -310,7 +310,9 @@ async fn the_ask_link_reads_for_its_account_only(pool: PgPool) {
         let read = rig.gql(token, query, json!({ "h": "noa" })).await;
         assert!(read["user"]["askLink"].is_null(), "{read}");
     }
-    let own = rig.gql(Some(&noa.token), query, json!({ "h": "noa" })).await;
+    let own = rig
+        .gql(Some(&noa.token), query, json!({ "h": "noa" }))
+        .await;
     assert_eq!(own["user"]["askLink"], noa.ask_link.as_str());
 }
 
@@ -322,7 +324,9 @@ async fn the_ask_link_reads_for_its_account_only(pool: PgPool) {
 async fn a_genesis_account_has_no_ask_link(pool: PgPool) {
     let rig = unlimited(pool);
     let mira = member(&rig, "mira").await;
-    let me = rig.gql(Some(&mira.token), "query { me { askLink } }", json!({})).await;
+    let me = rig
+        .gql(Some(&mira.token), "query { me { askLink } }", json!({}))
+        .await;
     assert!(me["me"]["askLink"].is_null(), "{me}");
 }
 
@@ -353,7 +357,11 @@ async fn ask_link_of_a_landed_member_reads_landed(pool: PgPool) {
     let kel = member(&rig, "kel").await;
     let noa = applicant(&rig, &mira, "noa").await;
     let path: Uuid = noa.application.parse().expect("uuid");
-    assert!(store::land_path_directly(&rig.pool, path).await.expect("lands"));
+    assert!(
+        store::land_path_directly(&rig.pool, path)
+            .await
+            .expect("lands")
+    );
 
     for token in [Some(kel.token.as_str()), Some(mira.token.as_str()), None] {
         let read = check(&rig, token, &noa.ask_link).await;
@@ -384,10 +392,10 @@ async fn ask_link_already_in_my_queue_reads_waiting_on_viewer(pool: PgPool) {
         check(&rig, Some(&kel.token), &noa.ask_link).await,
         json!({ "usable": false, "applicantHandle": "noa", "reason": "WAITING_ON_VIEWER" })
     );
-    // The registration path is the issuer's own open row: mira reads it too.
     assert_eq!(
         check(&rig, Some(&mira.token), &noa.ask_link).await["reason"],
-        "WAITING_ON_VIEWER"
+        "WAITING_ON_VIEWER",
+        "the registration path is the issuer's own open row"
     );
 }
 
@@ -456,7 +464,11 @@ async fn stage_applicant_refuses_a_landed_asker(pool: PgPool) {
     let kel = member(&rig, "kel").await;
     let noa = applicant(&rig, &mira, "noa").await;
     let path: Uuid = noa.application.parse().expect("uuid");
-    assert!(store::land_path_directly(&rig.pool, path).await.expect("lands"));
+    assert!(
+        store::land_path_directly(&rig.pool, path)
+            .await
+            .expect("lands")
+    );
     let refused = stage(&rig, &kel.token, &noa.ask_link).await;
     assert_eq!(codes(&refused), vec!["ASK_LINK_UNUSABLE"], "{refused}");
     assert_eq!(open_rows_with(&rig, noa.id, kel.id).await, 0);
@@ -478,9 +490,12 @@ async fn stage_applicant_refuses_an_asker_already_in_my_queue(pool: PgPool) {
     let refused = stage(&rig, &kel.token, &noa.ask_link).await;
     assert_eq!(codes(&refused), vec!["ASK_LINK_UNUSABLE"], "{refused}");
     assert_eq!(open_rows_with(&rig, noa.id, kel.id).await, 1);
-    // The registration path's issuer holds the asker already, too.
     let issuer = stage(&rig, &mira.token, &noa.ask_link).await;
-    assert_eq!(codes(&issuer), vec!["ASK_LINK_UNUSABLE"], "{issuer}");
+    assert_eq!(
+        codes(&issuer),
+        vec!["ASK_LINK_UNUSABLE"],
+        "the registration path's issuer holds the asker already: {issuer}"
+    );
 }
 
 /// EC-R3's positive pin: an asker waiting in another member's queue is
@@ -582,9 +597,11 @@ async fn an_ask_link_application_is_approved_by_the_member_who_staged_it(pool: P
     }
     let approved = approve(&rig, &kel.token, &kels).await;
     assert_eq!(approved["userErrors"], json!([]), "{approved}");
-    // And mira's own registration path stays hers alone.
     let foreign = approve(&rig, &kel.token, &noa.application).await;
-    assert_eq!(foreign["userErrors"][0]["message"], "unknown application");
+    assert_eq!(
+        foreign["userErrors"][0]["message"], "unknown application",
+        "mira's own registration path stays hers alone"
+    );
 }
 
 /// A member who closed their ask-link row can take the asker up again:
@@ -753,7 +770,10 @@ async fn the_queue_spans_both_ends_of_the_funnel(pool: PgPool) {
     let rows = queue(&rig, &kel.token).await;
     assert_eq!(ids(&rows), vec![ivo.application.clone(), noas]);
     assert!(rows.iter().all(|r| r["approver"]["handle"] == "kel"));
-    assert!(rows[0]["inviteLink"]["id"].is_string(), "the link row names its link");
+    assert!(
+        rows[0]["inviteLink"]["id"].is_string(),
+        "the link row names its link"
+    );
     assert!(rows[1]["inviteLink"].is_null(), "the ask-link row has none");
 }
 
@@ -811,7 +831,11 @@ async fn a_row_whose_applicant_landed_elsewhere_leaves_the_queue(pool: PgPool) {
     prove(&rig, &noa).await;
     let kels = staged(&rig, &kel.token, &noa.ask_link).await;
     let path: Uuid = noa.application.parse().expect("uuid");
-    assert!(store::land_path_directly(&rig.pool, path).await.expect("lands"));
+    assert!(
+        store::land_path_directly(&rig.pool, path)
+            .await
+            .expect("lands")
+    );
 
     assert!(queue(&rig, &kel.token).await.is_empty());
     let row = store::application(&rig.pool, kels.parse().expect("uuid"))

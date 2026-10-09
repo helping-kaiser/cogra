@@ -1754,6 +1754,13 @@ pub struct AskLinkCheck {
 impl AskLinkCheck {
     /// The check's answer from the link's state — one predicate with
     /// `stageApplicant`'s refusals, so the check gates the call exactly.
+    ///
+    /// DRIFT(EC-R3): `VouchAskUnusable.md:17` is drawn but unreachable —
+    /// no WAITING_ELSEWHERE value exists; retired by design item 58.
+    ///
+    /// DRIFT(#126 lapse): `VouchAsk.md:17` draws WAITING_ON_VIEWER as a row
+    /// standing in Invites; a row approved with the caller's vouch still
+    /// in flight reads it too, but stands in no queue — undrawn.
     pub fn from_store(state: store::AskLinkState) -> Self {
         let reason = if state.landed {
             Some(AskLinkUnusableReason::Landed)
@@ -1777,11 +1784,6 @@ impl AskLinkCheck {
 /// approved with the caller's vouch still in flight — the client opens
 /// that row. WAITING_ON_VIEWER is viewer-relative; an anonymous call never
 /// reads it.
-// DRIFT(EC-R3): VouchAskUnusable.md:17 drawn, unreachable — no
-// WAITING_ELSEWHERE value exists; retired by design item 58.
-// DRIFT(#126 lapse): VouchAsk.md:17 draws WAITING_ON_VIEWER as a row
-// standing in Invites; a row approved with the caller's vouch in flight
-// reads it too but stands in no queue — undrawn.
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
 pub enum AskLinkUnusableReason {
