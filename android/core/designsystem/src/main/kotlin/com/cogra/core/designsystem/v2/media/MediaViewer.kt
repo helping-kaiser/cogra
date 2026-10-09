@@ -1,5 +1,9 @@
 package com.cogra.core.designsystem.v2.media
 
+import android.os.Build
+import android.view.Window
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -8,11 +12,14 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +37,7 @@ import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -37,6 +46,8 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
+import androidx.core.view.WindowCompat
 import androidx.media3.common.util.UnstableApi
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.R
@@ -64,12 +75,17 @@ import net.engawapg.lib.zoomable.zoomable
  * the viewer restores." `ViewerLandscape.jsx:5-9` states the same rule for the
  * rotated case: a 16:9 clip fills the height and leaves ground at the sides.
  *
- * **The black reaches the edges; the chrome does not** (jakob 2026-09-15, hand
- * test). The window draws under the system bars so the ground is edge to edge,
- * and everything the reader has to *press* is then placed inside
- * [WindowInsets.safeDrawing] — the X was landing behind the status bar's clock,
- * which is a way out nobody can reach. Insets rather than a drawn offset because
- * the size of the bars is the device's answer, not a number a board can hold
+ * **The black reaches the edges — all but the status bar's; the chrome does
+ * not** (jakob 2026-09-15, hand test; amended 2026-10-09, q-fx1a). The window
+ * draws under the system bars so the ground is edge to edge at the bottom, the
+ * gesture area included, and at the sides. The STATUS BAR'S STRIP is the one
+ * edge it never reaches: the system-bar law (`app/ui/SystemBars.kt`) hands that
+ * strip to the system, so the black starts below it and the viewer's window
+ * leaves the strip as it found it — see [LeaveTheStatusBarAlone]. Everything the
+ * reader has to *press* is then placed inside [WindowInsets.safeDrawing] — the
+ * X was landing behind the status bar's clock, which is a way out nobody can
+ * reach. Insets rather than a drawn offset because the size of the bars is the
+ * device's answer, not a number a board can hold
  * (developer.android.com/develop/ui/compose/layouts/insets).
  *
  * **A tap is not a way out** (jakob 2026-09-15, hand test; the behaviour web
@@ -97,6 +113,8 @@ import net.engawapg.lib.zoomable.zoomable
  *   inset and check the chrome moved off the bars without a device. It is read
  *   INSIDE the dialog deliberately — the dialog is its own window, and the
  *   screen that opened the viewer has usually consumed its insets already.
+ * @param statusBar the status bar's own inset, the strip the black stops short
+ *   of. Null asks the window; a parameter for the same reason as [insets].
  */
 @UnstableApi
 @Composable
@@ -106,11 +124,15 @@ fun MediaViewer(
     modifier: Modifier = Modifier,
     index: Int = 0,
     insets: WindowInsets? = null,
+    statusBar: WindowInsets? = null,
     testTag: String = VIEWER_TAG,
 ) {
     if (items.isEmpty()) return
     val start = index.coerceIn(0, items.size - 1)
     val pagerState = rememberPagerState(initialPage = start) { items.size }
+    // Read OUTSIDE the dialog: the app's own window, whose bar the viewer's
+    // window takes its reading from.
+    val appWindow = LocalActivity.current?.window
 
     Dialog(
         // THE SYSTEM BACK CLOSES IT, which is the platform's own way out of a
@@ -119,16 +141,25 @@ fun MediaViewer(
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             // The viewer IS the screen: the window draws under the system bars
-            // so the black ground reaches the edges, which is what makes the
-            // frame's own edges the only ones on the surface. What that costs
-            // is the chrome's placement, and `safeArea` below is what pays it.
+            // so the black ground reaches the bottom and side edges, which is
+            // what makes the frame's own edges the only ones on the surface.
+            // What that costs is the chrome's placement, and `safeArea` below
+            // is what pays it — and the status bar's strip, which the black
+            // then has to stop short of by itself.
             decorFitsSystemWindows = false,
         ),
     ) {
-        val safeArea = (insets ?: WindowInsets.safeDrawing).asPaddingValues()
+        LeaveTheStatusBarAlone(appWindow)
+        val bar = statusBar ?: WindowInsets.statusBars
+        // The black already starts below the bar, so the chrome's safe area
+        // is what is left of the device's once the bar is taken out.
+        val safeArea = (insets ?: WindowInsets.safeDrawing).exclude(bar).asPaddingValues()
         Box(
             modifier = modifier
                 .fillMaxSize()
+                // THE STATUS BAR'S STRIP IS NOT OURS (the system-bar law): the
+                // ground starts below it, every other edge stays black.
+                .windowInsetsPadding(bar)
                 .background(Color.Black)
                 .testTag(testTag),
         ) {
@@ -269,6 +300,46 @@ private fun ViewerStage(
                         scrollGesturePropagation = ScrollGesturePropagation.NotZoomed,
                     ),
             )
+        }
+    }
+}
+
+/**
+ * THE VIEWER'S WINDOW LEAVES THE STATUS BAR AS IT FOUND IT (the system-bar law,
+ * `app/ui/SystemBars.kt`; jakob 2026-10-09, q-fx1a).
+ *
+ * The viewer is a separate window, so the app root's clearance does not reach
+ * it, and a platform dialog window would touch the strip in two ways of its
+ * own even with no content laid out there:
+ * - it DIMS what is behind it — a dialog theme's `backgroundDimEnabled`,
+ *   `FLAG_DIM_BEHIND` — which darkens the strip; the dim is cleared
+ *   (developer.android.com/reference/android/view/WindowManager.LayoutParams#FLAG_DIM_BEHIND);
+ * - it gives the bar ICONS a reading of its own; it takes the app window's
+ *   instead, which follows the system theme, so the icons read exactly as they
+ *   did before the viewer opened. Below Android 15 a window also paints its own
+ *   `statusBarColor`, so the strip is made transparent the way
+ *   `enableEdgeToEdge()` makes the app's (androidx.activity `EdgeToEdge`); from
+ *   15 on that colour has no effect.
+ *
+ * The window is the dialog's own ([DialogWindowProvider], Compose's documented
+ * handle on it).
+ */
+@Composable
+private fun LeaveTheStatusBarAlone(appWindow: Window?) {
+    val window = (LocalView.current.parent as? DialogWindowProvider)?.window ?: return
+    SideEffect {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+        window.setDimAmount(0f)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // Deprecated at 35 precisely because edge-to-edge made it inert;
+            // below 35 it is still the window's own paint in the strip.
+            @Suppress("DEPRECATION")
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+        }
+        if (appWindow != null) {
+            val app = WindowCompat.getInsetsController(appWindow, appWindow.decorView)
+            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars =
+                app.isAppearanceLightStatusBars
         }
     }
 }
