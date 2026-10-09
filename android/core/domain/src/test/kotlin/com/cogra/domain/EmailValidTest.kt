@@ -30,7 +30,8 @@ class EmailValidTest {
 
     @Test
     fun sanitizingStripsNewlinesThenTrims() {
-        assertWithMessage("sanitized").that(sanitizedEmail(" sol@ferr\neira.studio\r\n")).isEqualTo("sol@ferreira.studio")
+        val sanitized = sanitizedEmail(" sol@ferr\neira.studio\r\n")
+        assertWithMessage("sanitized").that(sanitized).isEqualTo("sol@ferreira.studio")
     }
 
     companion object {
