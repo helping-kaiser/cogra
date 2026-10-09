@@ -10,7 +10,7 @@
 // dismissal rule is pinned here, under "the viewer's carry".
 
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { JoinPrompt } from "@/lib/ui/join-prompt";
@@ -23,7 +23,7 @@ import {
 } from "@/test/media-env";
 
 import { BottomSheet } from "../bottom-sheet";
-import { useCoversSurface } from "../covering-layer";
+import { useCoversSurface, type CoverKind } from "../covering-layer";
 import { RemoveConfirm } from "../remove-confirm";
 import { MediaViewer } from "./media-viewer";
 import { resetMuteForTests } from "./mute";
@@ -56,11 +56,15 @@ type Raised = {
   remove?: boolean;
   /** The opinion pad over the post (`StanceControl`'s own `"pause"` layer). */
   pad?: boolean;
+  /** The comments sheet's handover frame (`BottomSheet`'s `coverHeld`). */
+  held?: boolean;
+  /** A full-focus takeover the thread yields to: the reply wizard, the comment editor. */
+  takeover?: boolean;
 };
 
-/** The pad's announcement, as `stance-control.tsx` makes it. */
-function Pad({ open }: { open: boolean }) {
-  useCoversSurface(open, "pause");
+/** A layer's announcement, as the pad (`"pause"`) and a takeover (`"suspend"`) make it. */
+function Layer({ open, kind }: { open: boolean; kind: CoverKind }) {
+  useCoversSurface(open, kind);
   return null;
 }
 
@@ -72,12 +76,10 @@ function Detail({
   raised = {},
   sensitive = false,
   thread = [],
-  children,
 }: {
   raised?: Raised;
   sensitive?: boolean;
   thread?: readonly string[];
-  children?: ReactNode;
 }) {
   return (
     <>
@@ -87,7 +89,12 @@ function Detail({
       <BodyRegion veiled={sensitive} nodeId="post-1" signature={SIGNATURE} testId="card">
         <p>The post&apos;s body.</p>
       </BodyRegion>
-      <BottomSheet open={raised.comments ?? false} onClose={noop} title="Comments">
+      <BottomSheet
+        open={raised.comments ?? false}
+        coverHeld={raised.held ?? false}
+        onClose={noop}
+        title="Comments"
+      >
         <StageHost>
           {thread.map((id) => (
             <VideoPlayer key={id} src={CLIP} surface="reading" testId={id} />
@@ -99,8 +106,8 @@ function Detail({
       </BottomSheet>
       <JoinPrompt open={raised.join ?? false} onClose={noop} />
       <RemoveConfirm open={raised.remove ?? false} onClose={noop} onRemove={noop} />
-      <Pad open={raised.pad ?? false} />
-      {children}
+      <Layer open={raised.pad ?? false} kind="pause" />
+      <Layer open={raised.takeover ?? false} kind="suspend" />
     </>
   );
 }
@@ -185,6 +192,27 @@ describe("a sheet or a dialog over the post (PostDetailVideo.md:29–37)", () =>
     expect(pinned().paused).toBe(true);
 
     rerender(<Detail />);
+    expect(pinned().paused).toBe(false);
+  });
+
+  it("the thread yielding to its composer and taking the screen back is one cover, not a dismissal — the clip resumes once, at the real drop (SL-1 flag c)", () => {
+    const { rerender } = render(<Detail />);
+    onScreen("pinned-media");
+    rerender(<Detail raised={{ comments: true }} />);
+    let starts = 0;
+    pinned().addEventListener("play", () => {
+      starts += 1;
+    });
+
+    // The sheet drops holding its cover, the takeover stands, the sheet rises
+    // again — each in a commit of its own.
+    rerender(<Detail raised={{ held: true }} />);
+    rerender(<Detail raised={{ held: true, takeover: true }} />);
+    rerender(<Detail raised={{ comments: true }} />);
+    expect(starts).toBe(0);
+
+    rerender(<Detail />);
+    expect(starts).toBe(1);
     expect(pinned().paused).toBe(false);
   });
 
