@@ -1696,7 +1696,8 @@ pub struct EmailChangeLinkCheck {
 /// have landed; a taken address still reads PENDING — the collision is
 /// answered only by the signed-in confirm, EMAIL_IN_USE). APPLIED: the
 /// change moved the address. CANCELED: called off, or superseded by a
-/// newer request. EXPIRED: its window closed before both sides landed.
+/// newer request, while live. EXPIRED: its window closed before both
+/// sides landed.
 #[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
 pub enum EmailChangeLinkState {
