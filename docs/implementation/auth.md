@@ -29,6 +29,8 @@ In scope:
 - Rate limiting on auth endpoints.
 - Key-recovery backup — storing client-encrypted signing-key
   blobs the server cannot decrypt (see "Key recovery").
+- Device locks — the server-held secret a "don't remember me"
+  device's signed-out custody is locked under (see "Device lock").
 - The custody stores for the documented exceptions: the backend's
   co-signing halves for Collective members
   ([collectives.md §2](../instances/collectives.md#2-custody)) and
@@ -58,10 +60,13 @@ Out of scope:
 ## Server-stored credentials vs. user-owned keys
 
 The server stores **password hashes** — credentials it can
-verify but not reverse — and, for accounts that opt into key
+verify but not reverse — for accounts that opt into key
 backup, **client-encrypted key blobs** it cannot decrypt (see
-"Key recovery"). Neither puts a user-owned secret in CoGra's
-hands: the signing key itself is client-held
+"Key recovery"), and for "don't remember me" accounts, the
+**device-lock secrets** each device locks its signed-out custody
+under, which open nothing without that device's ciphertext (see
+"Device lock"). None puts a user-owned secret in CoGra's hands:
+the signing key itself is client-held
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission))
 and never enters custody.
 
