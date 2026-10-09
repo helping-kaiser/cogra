@@ -1,7 +1,9 @@
+import { gql, InMemoryCache } from "@apollo/client";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PostsDocument, type PostsQuery } from "@/__generated__/graphql";
 import { COMMENT_BODY_MAX_CHARS } from "@/lib/compose/reply-wizard";
 import { SENSITIVE_REASON_MAX_CHARS } from "@/lib/compose/wizard";
 import { createTokenStore } from "@/lib/session/token-store";
@@ -2505,5 +2507,228 @@ describe("PostView — references", () => {
       // otherwise fit whole inside the square with bars at the sides.
       expect(within(frame).getByAltText("a salt flat")).toHaveStyle({ objectFit: "cover" });
     });
+  });
+});
+
+// OPENED FROM THE FEED (jakob 2026-10-09): the post the reader just tapped is
+// already in the cache, so the page paints it at once and the detail read lands
+// over it. A post the cache does not hold whole loads exactly as before.
+describe("PostView — opened from the feed", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    forgetReveals();
+  });
+
+  /** The card the feed drew: the detail fixture's post with the feed's count. */
+  function feedNode(data: PostPayload, totalCount: number) {
+    return {
+      ...data.post,
+      comments: { __typename: "CommentConnection", totalCount },
+    };
+  }
+
+  /** A cache holding what the feed's own read wrote. */
+  function feedCache(...nodes: Record<string, unknown>[]) {
+    const cache = new InMemoryCache();
+    cache.writeQuery({
+      query: PostsDocument,
+      variables: { first: 20, after: null, includePending: true },
+      data: {
+        posts: {
+          __typename: "PostConnection",
+          edges: nodes.map((node) => ({ __typename: "PostEdge", node })),
+          pageInfo: { __typename: "PageInfo", hasNextPage: false, endCursor: null },
+        },
+      } as unknown as PostsQuery,
+    });
+    return cache;
+  }
+
+  /**
+   * The detail read, held until the test lets it land — so the page can be
+   * measured BEFORE its read answers. Every test releases it and waits for it
+   * to land inside its own body: nothing is left in flight for the next.
+   */
+  function heldDetail(answer: () => Response) {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let asked = 0;
+    return {
+      release,
+      asked: () => asked,
+      handler: graphql.query("PostDetail", async () => {
+        asked += 1;
+        await held;
+        return answer();
+      }),
+    };
+  }
+
+  function retitled(data: PostPayload, title: string): PostPayload {
+    return { post: { ...data.post, title: moderated(title) } };
+  }
+
+  it("paints the post the feed holds at once, with no loading page", async () => {
+    const data = detail("u1", [{ id: "c1", body: "First!" }]);
+    // The answer differs from the paint only so its landing can be seen.
+    const read = heldDetail(() => HttpResponse.json({ data: retitled(data, "The title, read") }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 1)),
+    });
+
+    // The FIRST render is the card — no read has answered yet.
+    expect(screen.queryByTestId("post-loading")).not.toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toHaveAccessibleName(
+      "1 comment",
+    );
+    // The detail read still goes out behind the paint …
+    await waitFor(() => expect(read.asked()).toBe(1));
+    // … and the paint wears no refresh line while it does.
+    expect(screen.queryByTestId("post-refreshing")).not.toBeInTheDocument();
+
+    read.release();
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title, read"),
+    );
+    expect(screen.queryByTestId("post-loading")).not.toBeInTheDocument();
+  });
+
+  it("lands the fresh answer over the cached card", async () => {
+    const fresh = retitled(detail("u1", [{ id: "c1", body: "First!" }, { id: "c2", body: "Two" }]), "Edited title");
+    const read = heldDetail(() => HttpResponse.json({ data: fresh }));
+    server.use(read.handler);
+    const stale = detail("u1", [{ id: "c1", body: "First!" }]);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(stale, 1)),
+    });
+
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    read.release();
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited title"),
+    );
+    // The count the card states is the detail read's own whole-thread count now.
+    expect(screen.getByTestId(byNode("postDetail.card.actionRow.comments"))).toHaveAccessibleName(
+      "2 comments",
+    );
+  });
+
+  it("still loads a post the cache does not hold", async () => {
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.json({ data }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+    expect(screen.getByTestId("post-loading")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card"))).not.toBeInTheDocument();
+    read.release();
+    expect(await screen.findByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.queryByTestId("post-loading")).not.toBeInTheDocument();
+  });
+
+  // ALL OR NOTHING: a post the cache knows only in part — here only as a
+  // citation's target, which carries its title and body and nothing else —
+  // loads like an uncached one. Never a card with holes, never a crash.
+  it("loads, rather than half-drawing, a post the cache holds only in part", async () => {
+    const cache = new InMemoryCache();
+    cache.writeFragment({
+      id: "Post:p1",
+      fragment: gql`
+        fragment CitedPost on Post {
+          id
+          title {
+            value
+          }
+          content {
+            value
+          }
+        }
+      `,
+      data: {
+        __typename: "Post",
+        id: "p1",
+        title: { __typename: "ModeratedText", value: "The title" },
+        content: { __typename: "ModeratedText", value: "The body" },
+      },
+    });
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.json({ data }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner(), cache });
+
+    expect(screen.getByTestId("post-loading")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card"))).not.toBeInTheDocument();
+    read.release();
+    expect(await screen.findByTestId(byNode("postDetail.card.body"))).toHaveTextContent("The body");
+  });
+
+  // Over a card the reader can already see, a failed read is a failed refresh
+  // (HT-10's shared rule): the card stays and the banner says so — never the
+  // nothing-loaded page.
+  it("keeps the cached card when its read fails, and says the refresh failed", async () => {
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.error());
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 0)),
+    });
+
+    read.release();
+    expect(await screen.findByTestId("post-thread-transport-error")).toBeInTheDocument();
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
+    expect(screen.queryByTestId("post-transport-error")).not.toBeInTheDocument();
+  });
+
+  it("turns the cached card to not-found when the post no longer resolves", async () => {
+    const data = detail("u1", []);
+    const read = heldDetail(() => HttpResponse.json({ data: { post: null } }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 0)),
+    });
+
+    expect(screen.getByTestId(byNode("postDetail.card.title"))).toBeInTheDocument();
+    read.release();
+    expect(await screen.findByTestId("post-not-found")).toBeInTheDocument();
+    expect(screen.queryByTestId(byNode("postDetail.card"))).not.toBeInTheDocument();
+  });
+
+  // THE PINNED CLIP MOUNTS WITH THE PAINT — which is what lets the handover
+  // still (#137) begin at once rather than one read later — and the fresh
+  // answer landing over it keeps the same element: nothing remounts.
+  it("pins a cached video post's clip on the first render and keeps it through the fresh answer", async () => {
+    const clip = {
+      __typename: "MediaAttachment",
+      id: "m1",
+      url: "https://media.test/m1.mp4",
+      altText: null,
+      status: "NORMAL",
+      mimeType: "video/mp4",
+      options: { __typename: "MediaOptions", aspectRatio: "9:16", durationMs: 41_000 },
+      coverMedia: null,
+      coverTaken: false,
+    };
+    const data = detail("u1", [], undefined, false, [], [], { content: null, attachments: [clip] });
+    const read = heldDetail(() => HttpResponse.json({ data: retitled(data, "Edited title") }));
+    server.use(read.handler);
+    renderWithProviders(<PostView postId="p1" />, {
+      writeSigner: fakeWriteSigner(),
+      cache: feedCache(feedNode(data, 0)),
+    });
+
+    const media = screen.getByTestId("post-pinned-clip-media");
+    read.release();
+    await waitFor(() =>
+      expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited title"),
+    );
+    expect(screen.getByTestId("post-pinned-clip-media")).toBe(media);
   });
 });
