@@ -2,7 +2,7 @@
 
 ALWAYS the viewer is the whole screen on black with nothing behind it
 
-WHEN the viewer opens on the post's pinned clip -> the clip stands at the position the pinned clip reached AND NEVER it starts over
+WHEN the viewer opens on the post's clip -> the clip stands at the position the detail's clip reached AND NEVER it starts over
 
 ALWAYS the clip stands whole at its own ratio, never cut
 

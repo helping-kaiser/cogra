@@ -432,7 +432,7 @@
     },
     {
       "name": "reel-to-detail",
-      "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the pinned clip expands it back into the stream, the reader's place held.",
+      "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the clip there expands it back into the stream, the reader's place held.",
       "start": { "board": "Reel", "via": 7 }
     },
     {
@@ -1308,7 +1308,7 @@
     },
     {
       "name": "reveal-a-sensitive-video-post",
-      "description": "A sensitive video post opens unrevealed; Show on the card unveils the pinned clip and the card together.",
+      "description": "A sensitive video post opens unrevealed; Show on the card unveils the clip and the card together.",
       "start": { "board": "PostDetailVideoSensitive" },
       "end": { "board": "PostDetailVideoSensitive", "via": 5 }
     },
