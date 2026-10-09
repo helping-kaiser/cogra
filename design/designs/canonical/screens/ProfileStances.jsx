@@ -26,7 +26,7 @@ export function Screen() {
         <StanceRow name="Mira Voss" handle="mira" src="inviter.jpg" pDirected={0.4} pInterest={0.5} />
         <StanceRow name="Juno Baptiste" handle="juno" pDirected={-0.2} pInterest={0.1} />
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline />
     </>
   );
 }

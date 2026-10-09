@@ -2,6 +2,8 @@
 
 WHEN tap the Delete account row GIVEN the account's confirmed deletion is in its grace period -> the grace page opens, titled Delete account, with the deadline in days and its date AND Cancel as its one commitment
 
+ALWAYS the days left round to the nearest whole day while 24 hours or more remain, then the page counts the hours left, rounded up
+
 ALWAYS the grace page says nothing has changed until the deadline and canceling keeps everything as it is
 
 ALWAYS the deletion band does not stand on the grace page

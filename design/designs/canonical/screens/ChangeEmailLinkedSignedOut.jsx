@@ -13,10 +13,28 @@
    is `Verified`'s text button, naming where it goes. No back arrow: a mail
    link has no previous screen of ours.
 
+   A LINK THAT NO LONGER WORKS, OR ONE NOBODY KNOWS (jakob 2026-10-07, ruling
+   38; the settings packet's G9 — the `landing` chip's `dead`). Signed out,
+   the device holds nothing but the token, and the read it asks answers with
+   the change's state and never the account's address; a swept or mistyped
+   token answers nothing at all. So every answer but a waiting change lands on
+   ONE address-free landing: `VerifyExpired`'s heading, `This link doesn't
+   work anymore`, the possibilities said in `ChangeEmailLinked`'s own
+   construction (`The change it belonged to …`) without the address clause
+   those signed-in bodies end on, and `Sign in` — `VerifyExpired`'s way on
+   with no session. One landing for all of them, as `VerifyExpired` answers a
+   used link and an expired one alike: nothing a signed-out reader could act
+   on differs between them. Signing in holds no link here; the signed-in
+   settings say where the email stands. The body is drafted for jakob.
+
    REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
    settings packet): `title`, `body` and the way on `onward`, as
-   `ChangeEmailLinked` names them. */
+   `ChangeEmailLinked` names them. The `landing` chip changes their words and
+   draws no element twice, so nothing is keyed. */
 export const NODE = "changeEmail";
+export const PROPS = { landing: { editor: "enum", options: ["pending", "dead"], default: "pending" } };
+export const VALS = `signedOutTitle: this.props.landing === "dead" ? "This link doesn't work anymore" : "Sign in to finish the change", signedOutBody: this.props.landing === "dead" ? "The change it belonged to may have run out, been canceled or already happened — this link can't move your email anymore." : "This link confirms sol@ferreira.studio as your new address. It counts once you're signed in."`;
+
 export function Screen() {
   return (
     <div
@@ -40,7 +58,7 @@ export function Screen() {
         }}
         data-node="title"
       >
-        Sign in to finish the change
+        {"{{signedOutTitle}}"}
       </h1>
       <p
         style={{
@@ -54,7 +72,7 @@ export function Screen() {
         }}
         data-node="body"
       >
-        This link confirms sol@ferreira.studio as your new address. It counts once you're signed in.
+        {"{{signedOutBody}}"}
       </p>
       <div style={{ marginTop: 24 }}>
         <Button variant="text" node="onward">Sign in</Button>

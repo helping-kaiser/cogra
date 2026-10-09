@@ -1100,6 +1100,51 @@
       "page": "feed"
     },
     {
+      "file": "ApplicantFellThrough.dc.html",
+      "title": "Applicant · fell through, waiting again",
+      "x": 3840,
+      "y": 3180,
+      "w": 390,
+      "h": 844,
+      "page": "entry"
+    },
+    {
+      "file": "PostDetailHidden.dc.html",
+      "title": "Post · its author just hidden",
+      "x": 3840,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
+      "file": "ProfileOtherHidden.dc.html",
+      "title": "Profile · someone else's, just hidden",
+      "x": 4320,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsUnhidden.dc.html",
+      "title": "Settings · hidden accounts, one just unhidden",
+      "x": 3840,
+      "y": 4661,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "ExplorePerson.dc.html",
+      "title": "Explore · a person found",
+      "x": 1920,
+      "y": 5736,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "Feed.dc.html",
       "title": "Feed · signed in",
       "x": 0,
@@ -1572,7 +1617,7 @@
       "x": -5640,
       "y": 0,
       "w": 5220,
-      "h": 5140,
+      "h": 5308,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -1635,7 +1680,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 7704,
+      "h": 7730,
       "page": "profile",
       "title": "Profile · flow map"
     },

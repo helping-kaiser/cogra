@@ -91,7 +91,10 @@ marker*), where a date names a record rather than its age.
 
 Forward-looking moments read the same ladder forward (ruled
 2026-09-14): the relative form — `in 6 days`, `in 1 day`, then `in 5
-hours` on the last day — is the future vocabulary. A far date, where
+hours` on the last day — is the future vocabulary. Days round to the
+nearest whole day while 24 hours or more remain, then the hours count,
+rounded up (jakob 2026-10-07): a deletion confirmed this moment reads
+`in 7 days`. A far date, where
 one is also shown, spells `dd.mm.yyyy` (`08.09.2026`), never an
 abbreviated month. Blessed instances: `WalletCampaign`'s `Ends in 6
 days · 08.09.2026`, `WalletCampaigns`' `In escrow · ends in 6 days`.
@@ -489,7 +492,9 @@ nearest reason.
 Two removal marks, never interchangeable: `Removed by its author` —
 "The words and pictures are gone. The post's place in the thread, and
 every response, remain." — and `Removed under the platform's rules` —
-"A passed proposal removed it. The decision is public."
+"A passed proposal removed it. The decision is public." Content swept
+with its author's account deletion wears `Removed by its author` too
+(jakob 2026-10-07): the author chose the sweep.
 
 The post's own confirm (`RemoveConfirm`; *carried over — blessed by use
 (jakob 2026-10-06)*) is titled `Remove this post?` over `The words and
@@ -917,7 +922,8 @@ password…`, `Changing handle…`, `Changing email…`, `Confirming the
 code…`, `Creating a new recovery code…`, `Resending the link…`, `Adding
 it to the deletion…`, `Canceling…` — and `Sending the confirmation
 link…`, the deletion request's, recorded as the construction's own
-(jakob 2026-10-05).
+(jakob 2026-10-05), with `Deleting my account…` the applicant's
+(jakob 2026-10-07).
 
 A seal gated on its uploads keeps its commit enabled, and a press there
 swaps to the same word while it waits for the bytes — `Signing and
@@ -1535,6 +1541,14 @@ Every other line here is **carried over — blessed by use (jakob
   expire. While @mira's answer is open, it can't start a second
   application.` (`ProfileApplicant` too).
 
+- **The approval that fell through** (`ApplicantFellThrough`, jakob
+  2026-10-07, ruling 60) — the landing card flipped back to waiting, naming
+  nobody: `The approval didn't land` over `You're waiting again — anyone
+  who's already in can vouch you in, and the first vouch lands it.`, with
+  `ApplicantRejected`'s ask-link block (`Ask someone you know to vouch for
+  you` and its caption) and `Got it` (*new 2026-10-07, the title and the
+  body drafted — their wording jakob's at review*).
+
 ## The settings page
 
 Drawn on `Settings`, `SettingsBackup` and `YourKey`, blessed with the
@@ -1600,6 +1614,11 @@ shipped *Create a new recovery code* and *Show my key* were controls
 standing where a name belongs; the act keeps its words on the screen it
 happens on. The group's footnote: `Your key signs everything you publish
 and lives only in this browser. Your recovery code is the only way back.`
+— in the app `Your key signs everything you publish and lives only in
+this app. Your recovery code is the only way back.`, and with no code
+yet `Until you make a recovery code, it can't be brought back.` in the
+second sentence's place (*the app's lines blessed (jakob
+2026-10-07)*).
 
 **Sessions** keeps `Revoke` and `Sign out everywhere else`, and says the
 delay before it happens rather than only after:
@@ -1674,7 +1693,11 @@ below), and a session whose device gave no name reads `Unnamed device`
 **Sign out** carries the login form's own line verbatim —
 `Don't remember this account on this device` — with what it decides
 underneath: `Your key, your draft and any kept picks are cleared from
-this browser when you sign out.` (*blessed (jakob 2026-10-05)*).
+this browser when you sign out.` (*blessed (jakob 2026-10-05)*); in the
+app, `Your key, your draft and any kept picks are cleared from this app
+when you sign out.` (*blessed (jakob 2026-10-07)*). The three app lines
+say `this app`, never `this phone`, since the app runs on tablets and
+emulators too; Sessions' `This phone` stays its own case.
 
 **A new recovery code** (`SettingsBackup`): the heading, then
 `A new code re-encrypts your key and replaces the old backup — recovery
@@ -1844,12 +1867,22 @@ sol@solferreira.art.`; opened again after the change applied, `The
 change it belonged to already happened. Your email is now
 sol@ferreira.studio.` (*new 2026-10-06, blessed (jakob 2026-10-06)*).
 With the address taken,
-`That address is taken now` over the `EMAIL_IN_USE` line above — an
-applicant's fresh link (`ApplicantEmail`) answers a taken address the
-same way on its landing (jakob 2026-10-05). Signed
+`That address is taken now` over the `EMAIL_IN_USE` line above, and
+`Back to settings`. An applicant's fresh link (`ApplicantEmail`) answers
+a taken address on its landing under the same heading (jakob
+2026-10-05) with `That address now belongs to another account. Your
+email stays as it is.` (*a draft of 2026-10-07*) and `VerifyExpired`'s
+way on, `Go to the feed` with a session and `Sign in` without (jakob
+2026-10-07). Signed
 out (`ChangeEmailLinkedSignedOut`): `Sign in to finish the change` ·
 `This link confirms sol@ferreira.studio as your new address. It counts
-once you're signed in.` · `Sign in`. Opened under a different account,
+once you're signed in.` · `Sign in`. A link whose change ran out, was
+canceled or already applied, or one the app does not know, opened signed
+out: one address-free landing (jakob 2026-10-07, ruling 38) —
+`VerifyExpired`'s heading, `This link doesn't work anymore` (blessed), over
+`The change it belonged to may have run out, been canceled or already
+happened — this link can't move your email anymore.` and `Sign in` (*new
+2026-10-07, the body drafted — its wording jakob's at review*). Opened under a different account,
 the link's side does not apply and the landing says so: `This link isn't
 for this account` · `It confirms a new address for another account, so
 nothing changed here. Open it signed in as that account to finish the
@@ -1994,8 +2027,12 @@ CoGra — can bring them back.` — `Make a recovery code` ·
 `Sign out, keep them locked` · `Erase them and sign out` (the plurals
 blessed, jakob 2026-10-05). The body names all three things the opt-in
 would clear — the key, the draft, the picks kept pending (jakob's
-ruling) — and the answers name them as one plural. The app renders the platform noun as
-`This app` and `in this app`.
+ruling) — and the answers name them as one plural. The app's body
+reads `This app holds the only copy of your key. Signing out leaves
+your key, your draft and any opinions you kept pending here, locked
+until you sign in to this app again. Erase them instead, and no one —
+including CoGra — can bring them back.` (*blessed (jakob
+2026-10-07)*).
 
 **No screen lock** (Android, in front of every reveal or replace):
 `This phone has no screen lock` / `Anyone who picks it up could see your
@@ -2146,7 +2183,8 @@ the fact they may want reversed is that it is no longer kept. The pair
 is deliberately lopsided against saving's bare `Saved.` — saving costs
 a reader nothing to repeat, and a mis-pressed unsave costs them finding
 the thing again. The same line rides the empty list when the row that
-went was the last one.
+went was the last one, and answers `Unsave` on every menu, the sheet
+closing (jakob 2026-10-07).
 
 **The hide row with no name to say.** `Hide this account`, where the
 actor is a deleted account and there is no handle to spell. It stands
@@ -2505,6 +2543,9 @@ they will look for again in settings. The pair on the other side is
 `@ada is hidden — their posts stay out of your feed.` with `Undo`
 beside it. It says what changed and how far it reaches, which is what
 stops a reader wondering whether they have done something to someone.
+It lands wherever the tap was made, in the same words: over the feed
+(`FeedHidden`), over the post being read (`PostDetailHidden`) and over
+the person's profile (`ProfileOtherHidden`).
 A deleted account has no handle to spell, so hiding one answers `This
 account is hidden — its posts stay out of your feed.`, with the same
 `Undo` (`ProfileDeletedMenu`; *blessed (jakob 2026-10-05)*).
@@ -2537,19 +2578,29 @@ nothing seen read `Nothing you've seen is of that kind.`; and both offer
 `Nothing saved yet. A post, a comment or a person can be saved from its
 own menu, and it waits here.` names the gesture, because no card shows
 a saving affordance at rest and a reader who has never opened a ⋮ has
-no other way to find it. `Nothing here yet. Everything you read shows
+no other way to find it. `Nothing here yet. Everything you see shows
 up here on its own, newest first.` (*new 2026-10-05, blessed (jakob
-2026-10-05)*) says the opposite thing — that this one fills without being
+2026-10-05); `see` a draft of 2026-10-07, History being everything
+seen*) says the opposite thing — that this one fills without being
 asked — and names no kind, because the list holds every kind.
 
 **The settings group is `People`,** its row `Hidden accounts` with a
 bare count, and its footnote `Hiding someone clears your own feed of
 them. Nothing changes for them, and their profile still opens if you go
-looking.` The footnote carries the whole of what hiding means, which is
-the group anatomy's own rule. With nobody hidden the row reads `None`.
+looking. Your opinions on them still count in your friends' feeds until
+you walk them back.` The footnote carries the whole of what hiding
+means, which is the group anatomy's own rule; its last sentence is
+feed-ranking §8.2's required hint (jakob 2026-10-07; *the sentence a
+draft*). With nobody hidden the row reads `None`.
 `Unhide` answers in the hiding snackbar's shape, `@juno is unhidden —
 their posts can reach your feed again.` with `Undo` beside it (*new
-2026-10-05, blessed (jakob 2026-10-05)*).
+2026-10-05, blessed (jakob 2026-10-05)*), raised over the sheet while
+others stay hidden (`SettingsUnhidden`). A deleted account's row
+reads `Deleted account` on the reserved disc, and its unhide answers
+with the nameless twin, `This account is unhidden — its posts can reach
+your feed again.` (*blessed (jakob 2026-10-07)*). A failed unhide or
+Undo says `That didn't go through.` on the row it was made from, in its
+second line, with `Retry` in the trailing slot.
 
 **The sheet is titled by the row that opened it** — `Hidden accounts` —
 and each row carries `Unhide` and the moment of the hiding in the ages
@@ -2814,6 +2865,13 @@ author chip on a post they wrote, a row in a list. The handle beside it
 is dropped rather than replaced; a redacted handle is a uniqueness
 device in the store, and printing anything in its place would invent a
 handle a reader could try to reach.
+
+**A sentence that names a deleted actor says `a deleted account`**
+(jakob 2026-10-07): the handle gives way to the phrase and the sentence
+keeps its shape — `Browsing from a deleted account's view while your
+application lands.`, `your opinion toward a deleted account` — never a
+blank and never the store's redacted value (*the forms a draft of
+2026-10-07*). No board prints a raw null.
 
 **The moderation variant, which must never be the same string.**
 `Removed by the network` where an actor's identity was taken by a

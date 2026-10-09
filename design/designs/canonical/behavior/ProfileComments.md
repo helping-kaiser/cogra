@@ -42,10 +42,10 @@ WHEN a guest taps the profile's stance anchor -> the guest gate opens
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 
-ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list and Back to with the tag's name from a tag's page
+ALWAYS the back arrow reads Back to feed from the feed in any of its states, Back to the post from a post's author chip, opinions or references, Back to the comments from the comments sheet, Back to the stream from the stream, Back to Notifications from Notifications, Back to Saved from Saved, Back to History from History, Back to the opinions from a profile's opinions list, Back to the search from Explore mid-query and Back to with the tag's name from a tag's page
 
 ALWAYS the back arrow reads Back to feed and leads to the feed GIVEN the profile was entered with no history behind it
 
 WHEN pull down GIVEN the comments view stands all the way at its top -> the profile refreshes AND the platform's own refresh indicator shows
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed

@@ -55,7 +55,7 @@ export function Screen() {
         />
         <PostCard {...ADA_POST} bundle={mkBundle(0.55, 0.2)} node="card" />
       </FeedList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
 
       <BottomSheet open ariaLabel="What your history shows" node="filterSheet">
         <SheetTitle node="title">What your history shows</SheetTitle>

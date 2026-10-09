@@ -18,6 +18,8 @@ ALWAYS postDetail.card.citedBy counts what cites the post, apart from postDetail
 
 ALWAYS postDetail.card.tagsLine's count counts the post's references only, as many as the References section's rows in the tags-and-references sheet
 
+ALWAYS postDetail.card.tagsLine draws at 34dp and answers through an invisible 48dp touch target centred on it, the line spanning the card's content width as drawn
+
 WHEN tap postDetail.card.media.frame -> the fullscreen viewer opens on that frame AND NEVER the post reopens
 
 WHEN a press-and-hold on postDetail.card.actionRow.stance.anchor signs -> postDetail.card.actionRow.stance.anchor refuses a second press-and-hold until the signing answers AND NEVER postDetail.card.actionRow.stance.anchor.face moves before the signature is taken

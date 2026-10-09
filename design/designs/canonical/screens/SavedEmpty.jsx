@@ -32,7 +32,7 @@ export function Screen() {
           node="empty"
         />
       </div>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

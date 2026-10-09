@@ -10,7 +10,7 @@ ALWAYS the inviter's face is the actual link-issuer's avatar, and their monogram
 
 ALWAYS the card's words say invited and never vouched
 
-ALWAYS the applicant's line The friend who sent you this invite has to let you in. Ask them once you have verified your email. stands under the card's words GIVEN the reader is an applicant whose application is live
+ALWAYS the applicant's line A friend who's already in has to let you in. Ask around once you have verified your email. stands under the card's words GIVEN the reader is an applicant whose application is live
 
 ALWAYS no applicant's line stands GIVEN the reader is a member, or an applicant whose application was closed
 

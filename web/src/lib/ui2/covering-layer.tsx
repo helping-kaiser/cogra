@@ -91,12 +91,21 @@ export type SurfaceCover = "suspended" | "paused" | null;
  * What covers the surface that stands on `surface` — a layer's token, or null
  * for the page beneath every layer.
  *
- * A surface whose layer is not raised is read as the page beneath every
- * layer: it is not on screen at all, so counting it covered stops nothing a
- * reader could see.
+ * A SURFACE WHOSE LAYER IS NOT RAISED IS NOT ON SCREEN, and it reads as
+ * suspended: the comment thread of a sheet the reader dropped (or has not
+ * raised yet). "A clip behind a sheet is not on screen in the law's sense"
+ * (design/readme.md §13), and a clip in a dropped sheet is less on screen
+ * still — its exit animation is "the drop already under way"
+ * (`bottom-sheet.tsx`). Read as the page instead, its stage would keep its
+ * holder until the observer reported the closed dialog at 0, and a clip the
+ * surface beneath then started would pause it through the player layer
+ * behind the stage's back — a holder standing paused, which the sheet's next
+ * rising would never start again. Suspended, the stage holds nobody and
+ * decides from empty when the sheet rises again, as a dismissal does.
  */
 export function coverOf(surface: object | null): SurfaceCover {
   const index = surface === null ? -1 : layers.findIndex((layer) => layer.token === surface);
+  if (surface !== null && index === -1) return "suspended";
   const above = layers.slice(index + 1);
   if (above.some((layer) => layer.kind === "suspend")) return "suspended";
   if (above.some((layer) => layer.kind === "pause")) return "paused";

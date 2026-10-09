@@ -10,7 +10,7 @@ ALWAYS the page carries no ⋮
 
 ALWAYS the page never takes the error colour
 
-ALWAYS the bottom bar rides with no slot lit
+ALWAYS the bottom bar keeps lit the slot of the root the profile was opened from, Feed from the feed
 
 WHEN tap the back arrow -> the reader returns to where they came from, in the state they left it AND the arrow's label names that origin
 

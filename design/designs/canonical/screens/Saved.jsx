@@ -87,7 +87,7 @@ export function Screen() {
           nodeKey="sunday-at-the-tide-market"
         />
       </ChronicleList>
-      <BottomNav active={null} slots={ALL_SLOTS} inline node="bottomBar" />
+      <BottomNav active="profile" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }

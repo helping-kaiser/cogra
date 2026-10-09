@@ -4,7 +4,9 @@ ALWAYS the reader's own comment's menu reads Save or Unsave, then Cite in a new 
 
 ALWAYS the reader's own comment's menu opens stacked over the thread, the thread scrolled to the comment beneath it
 
-WHEN tap Save -> the reader's own comment is kept in the one Saved list beside posts and people
+WHEN tap Save -> the reader's own comment is kept in the one Saved list beside posts and people AND the menu closes AND the snackbar reads Saved.
+
+WHEN tap Unsave -> the menu closes AND the snackbar reads Removed from Saved. with Undo
 
 WHEN tap Remove -> the menu closes AND the think-twice dialog comes up over the thread
 

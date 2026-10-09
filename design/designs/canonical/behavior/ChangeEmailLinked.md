@@ -16,7 +16,7 @@ WHEN the new address's link is opened GIVEN the change was canceled -> the landi
 
 WHEN the new address's link is opened again GIVEN the change already applied -> the landing reads This link doesn't work anymore AND says The change it belonged to already happened. Your email is now sol@ferreira.studio. AND its way on reads Back to settings AND NEVER the change applies a second time
 
-WHEN the new address's link is opened GIVEN the new address was registered by another account meanwhile -> the landing reads That address is taken now over the address-taken line AND NEVER the address moves
+WHEN the new address's link is opened GIVEN the new address was registered by another account meanwhile -> the landing reads That address is taken now over the address-taken line AND its way on reads Back to settings AND NEVER the address moves
 
 ALWAYS the landing carries no back arrow
 

@@ -466,7 +466,7 @@ inventing one:
 | The scrim | 200ms linear, with the surface it belongs to |
 | The media handover, feed to detail and back | a shared element: the media frame persists in place while the chrome fades around it (M3's container transform), 300ms. A post with no media takes the forward motion |
 | The reel's squish, through the score's door | the clip, still playing, moves to the top of the screen and the post rises beneath it — a shared element, 300ms, never a new page |
-| The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns only after about a third of a screen of accumulated upward scroll |
+| The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns after about a third of a screen of accumulated upward scroll, or at once when the surface reaches its hard top |
 | In place — `More`, `View n replies`, a row leaving and the rows closing up, the veil's reveal, the face after `Set`, the snackbar coming and going | height and opacity at `--duration-short-4`, `--ease-standard`; nothing travels in from elsewhere |
 | `Back to top` | the platform's smooth scroll to the top |
 | The hold's ring | fills over the 500ms hold, linear — a reading of the time left, not a flourish |
@@ -691,9 +691,17 @@ never a body, a description or a bio. Matching is titles only (jakob
 2026-10-06): an untitled post's stand-in (copy-voice, *The feed
 cards*) is never matched. `@handle <text>`
 scopes the query to one person's work, their comments found through the
-titles of what they answer; `#tag <text>` scopes it inside a tag.
+titles of what they answer, a reply through its thread's root post, and
+the tags they tagged with; `#tag <text>` scopes it to the things that
+carry the tag. A bare `@x` or `#x` is a lookup in progress: it proposes
+people or tags by prefix and never lists anyone's contents — the text
+after it is what makes it a content search (jakob 2026-10-07). A result
+becomes seen only by being opened, never by standing in the viewport.
 Explore searches the graph, in its ranked tiers (§13, *The search
-rulings*); History searches the reader's seen-list, newest first by
+rulings*) — under Newest, the reader's choice or what the search serves
+before the ranker exists, the tiers stay and each runs newest first, with
+no seam, every row's age on its edge and a tag row bare (§13, *The five
+ordered draws*); History searches the reader's seen-list, newest first by
 first seeing. A query that finds nothing says so in the list's place and
 offers the way back (`ExploreNone`, `HistoryNone`).
 
@@ -1098,7 +1106,9 @@ header — `ActorChip`, the age and the ⋮ — keeps its geometry; platforms
 mount an invisible 48dp touch target centered on it, the back target's
 precedent. Where that target overlaps the card's one open-the-post
 surface, and the dead padding above the header, the header target wins
-inside its strip.
+inside its strip. The detail's tags line follows the same precedent
+(jakob 2026-10-07): drawn at 34dp across the card's content width, it
+answers through an invisible 48dp target centered on it.
 
 **Focus has four rules** (WCAG 2.4.3; the WAI-ARIA dialog pattern), for
 every sheet, pad and dialog — each modal (§4, *Sheets*):
@@ -1719,8 +1729,8 @@ as Q46 in docs/open-questions.md):
 - **Order**: full match, then partial match, each tier ordered by
   the viewer's ranker — never newest by default. What the ranker
   cannot score falls to newest behind a **visible seam**; past the
-  seam a row's rank gives way to its age (relative to one year, an
-  absolute date after).
+  seam a row's rank gives way to its age, in copy-voice's one ladder
+  (*Ages*).
 - **Controls**: an order swap (Ranked / Newest) and a "show already
   seen" toggle — default off since the feed-filter session
   (2026-08-28, flipping this session's first call): what you've
@@ -3942,8 +3952,8 @@ four-rung ladder.
 - **The pull-down lives on every full-screen scrolling root** (ruled
   2026-09-10): the feed in all its views, the profile pages and the
   chronicle, the opinions page, Invites (jakob 2026-10-05), History
-  (jakob 2026-10-05), search results, the wallet's history, the tag
-  page — and
+  (jakob 2026-10-05), Saved (jakob 2026-10-07), search results, the
+  wallet's history, the tag page — and
   **never inside a bottom sheet**, where pulling down already means
   dismiss and one gesture may not mean two things. The re-tap refresh
   stays the feed's alone; the pull-down is the gesture every root
@@ -5114,8 +5124,8 @@ pass: one board, one law, and two sweeps.
   `Unsave` control moved into the shared screen helpers on the way —
   it is drawn on two boards now, and a control spelled twice drifts.
 - **A hide row cannot say a name that is gone.** On a deleted author's
-  post or comment the reader's menu reads `Hide this account`;
-  everywhere else it spells the handle. The ROW stays either way —
+  post the reader's menu reads `Hide this account`; everywhere else it
+  spells the handle. The ROW stays either way —
   hiding is a read-side comfort about an ACTOR, and a redacted actor
   still ranks into the reader's feed — so only the wording gives way.
   `ActorChip` composes it (`HIDE_ACTOR_LABEL`, beside
@@ -8291,6 +8301,7 @@ the rest as recommended. Both laws stand in §4.
   | Saved | `Back to Saved` |
   | History (jakob 2026-10-05) | `Back to History` |
   | a profile's opinions list | `Back to the opinions` |
+  | Explore, mid-query (jakob 2026-10-07) | `Back to the search` |
   | a tag's page | `Back to #<thattag>` |
   | nowhere — a link | `Back to feed` |
 
@@ -9399,6 +9410,163 @@ either comes into this readme or dies from the pointer.
 - **Tracking is one value** (§4, *Type*): each platform expresses it
   in its native unit and rounds on its own grid — a capability
   expression, never a per-client choice.
+
+### The packet-wave rulings executed — 2026-10-07
+
+jakob's rulings on the packet wave's gaps (seams 077–095), written as
+lines; quoted wordings are his.
+
+- **The custom mute action is android's** (`FeedCover`); on the web the
+  sound disc is a native focusable button whose label names the sound's
+  state, nothing on the frame hidden from assistive technology.
+- **The detail's tags line answers at 48dp** through an invisible target
+  over its drawn 34dp (§10).
+- **Reaching the hard top always reveals the collapsing band**
+  (`FeedScrolled`; §4, *Motion*).
+- **History is everything seen, never only what was opened.** Seen is
+  the top-layer content in full viewport: the post itself, never its
+  author's avatar or handle, its citations or its tags; reading comments
+  adds no commenter's profile; opening a profile adds the profile, its
+  posts only once scrolled into. A card taller than the viewport is seen
+  once both its edges have been on screen, not necessarily at once. The
+  empty state and the menu's door say seen; the originless tag card
+  shows no why-line; a hidden account's own profile card stays.
+- **The deletion's loose ends.** A spent deletion-mail budget says B7's
+  line above the commitment and sends nothing; content swept with the
+  account wears `Removed by its author`; while a confirmed deletion's
+  grace runs, the deletion band wins over the borrowed band; the count
+  rounds to the nearest whole day while 24 hours or more remain, then
+  counts hours; the member's device at the deadline lands signed out on
+  the bare view with `Your account is deleted.`, never on
+  `SignInExpired`; a sentence naming a deleted actor says `a deleted
+  account`; the applicant's commit reads `Deleting my account…` in
+  flight; and the deleted account reaches the wire as nulls with
+  REDACTED status beside `User.removal`.
+- **Search, settled** (§4, *Search*). The scope operators reach what
+  carries the tag and what the person made or tagged with; a bare scope
+  only proposes; results are seen only when opened. Searching is a state
+  of Explore's root — a trailing ×, Back to rest first, the query and
+  scroll kept on return. Recents keep ten, newest first, deduplicated
+  case-insensitively, per account and cleared at sign-out, with no
+  per-row ×; the action key only dismisses the keyboard. Stale rows stay
+  readable until the 200ms ladder; a failed refine keeps them under
+  `Couldn't load more`. A guest searches with the bare band, no Your
+  topics, Newest with ages and no seen toggle; an applicant as a member.
+  A sensitive result wears the text tile; a full match is equality; a
+  still-settling result shows nothing extra; the mixed unscoped state
+  says the search-scope line after the last row.
+- **Settings' loose ends.** `ApplicantEmail` opened from Settings returns
+  there, on back and on success with the same snackbar; an unverified
+  applicant's pending change keeps the row's `Change pending` and the
+  tap opens their own address change. Once the code's side is
+  confirmed, `ChangeEmailConfirm` drops its field and commitment. The
+  address-taken landing goes `Back to settings` for a member and takes
+  `VerifyExpired`'s way on for an applicant, whose body never promises
+  that confirming again applies it. `ChangePassword`'s re-auth budget
+  says B7's line above its commitment. The app's three settings lines
+  say `this app`.
+- **The vouch-back's edges.** The pad's Cancel closes back where it
+  bloomed, the profile included. A kept vouch-back leaves the card as it
+  is and `Vouch back` reopens the pad holding the pick; one kept from the
+  profile brings a put-away card back on the keeping device only, and
+  `Got it` drops a kept pick as Cancel does. A failed `Got it` brings the
+  card back with `That didn't go through.` and `Retry`. The feed's head
+  reads the security notice, the key card, then the vouch card.
+- **Saved's edges.** A failed unsave or Undo leaves the row standing
+  with `That didn't go through.` and `Retry` in its second line, the
+  Unsave glyph kept; on a profile the line takes the actions row.
+  `Unsave` on any menu closes the sheet with `Removed from Saved.` and
+  `Undo`; a comment's `Save` answers `Saved.`. Rows outlive what
+  happened to their things: a removed one reads `Removed by its author`,
+  a deleted account `Deleted account` on the reserved disc, a sensitive
+  one gives its second line to the reason, and a hidden account's things
+  stay. A titleless row takes its first line, or B11's media form; a
+  reply's `on` names the thread's post; the aside drops where the title
+  already names the handle. Slugs stay unique by fixture discipline, no
+  suffix rule.
+- **Hidden accounts' edges.** A failed Undo or unhide brings back the
+  row the gesture was made from, carrying the line until Retry or the
+  next fresh load — in place in the sheet, or on the settings row if the
+  sheet closed; inside a `ContentRow` the line takes the second line and
+  `Retry` the trailing slot. A deleted account's row is `ContentRow`'s
+  new `redacted`: the reserved disc and `Deleted account`, no aside; its
+  unhide says `This account is unhidden — its posts can reach your feed
+  again.`
+- **The release registry's edges.** A running version missing from the
+  registry is not behind: no `installed`, no newer-version line, no
+  snackbar. The newer-version snackbar speaks to members, applicants and
+  guests, and a version read that answers after the feed has arrived on
+  a cold open announces when it arrives.
+- **No unlit bar remains.** Every drill-in board lights its originating
+  root, as `BottomNav` rules: History and Saved light Profile; the other
+  person's profile, its tabs and states, Notifications, the score's
+  drill-down and the chats pages light Feed, where the canvas opens them.
+- **The blessing bundle, written.** The borrowed band leaves at once on
+  the first signed opinion and the feed reads the own view from its next
+  refresh; the band stands on the Feed root only. Saved takes the
+  pull-down, a reverted unsave clears its snackbar, the reader's own
+  unsaves elsewhere apply in place on return, and a failed next page
+  says `Couldn't load more` with `Retry`. The People footnote carries
+  feed-ranking §8.2's hint. `Unhide` keeps its visible name, described
+  by its row.
+
+- **Any member who holds the ask can let an applicant in, and the first
+  vouch lands it.** The waiting card's caption reads `It does not
+  expire.`; the profile's adds `Anyone who holds their ask can let them
+  in — the first vouch lands it.`; the intro's applicant line reads `A
+  friend who's already in has to let you in. Ask around once you have
+  verified your email.` `VouchAskUnusable` keeps its landed case alone.
+- **The account lands** when its registration and the approving vouch
+  have both confirmed; the landing card's flip is that moment.
+
+### The five ordered draws — 2026-10-07
+
+jakob's packet-wave rulings ordered five states drawn rather than
+backlogged (the day's digest, items 23, 24, 38, 60 and 65). Each is drawn
+in an existing board's construction; the words they mint are drafted and
+wait for jakob's review (copy-voice marks each).
+
+- **The dead change link, signed out** (item 38; the settings packet's
+  G9). `ChangeEmailLinkedSignedOut` gains the `landing` chip: `pending` is
+  the live link, `dead` the one landing for every link whose change ran
+  out, was canceled or already applied, and for a link the app does not
+  know — `This link doesn't work anymore`, a body naming no address, and
+  `Sign in` holding no link.
+- **Search under Newest** (item 24; the search packet's SG-5).
+  `ExploreSearch` gains the `order` chip: `ranked` is the board as it
+  stood, `newest` the same four results by time — no seam, full matches
+  still first, each row's age on its value edge in the one ladder, the tag
+  row bare. Newest is also the order before the ranker exists, so the
+  interim reads exactly this; when the split ships is the implementation's
+  sequencing.
+- **The Profiles row** (item 23; SG-4). `ExplorePerson`: an unscoped
+  query, `salt`, reaching `Sal Torres` through the handle — the picker's
+  own person row (`ReferencePicker`), avatar, display name over `@handle`,
+  the rank on its edge. It is a board of its own because a scoped query
+  never returns a person (jakob 2026-10-07), so `ExploreSearch`'s `@sol
+  salt` cannot hold one. Another person's row opens their profile under
+  `Back to the search`, now in the profile's noun table; the reader's own
+  opens their own.
+- **The hide's three other landings** (item 65; the hidden-actors
+  packet's registration ask). `FeedHidden`'s shape — the surface the tap
+  was made on, unchanged, with the snackbar over it — drawn where the
+  feed's board could not stand in: `PostDetailHidden` (the post being
+  read, `ReaderPostMenu`'s detail case), `ProfileOtherHidden` (the
+  person's profile, `ProfileMenu`'s; a deleted account's page answers in
+  the same shape with its nameless line) and `SettingsUnhidden` (the
+  Hidden accounts sheet a moment after `Unhide`, the row gone and the
+  rows behind it moved up, the snackbar raised above the sheet at the
+  screen's foot). Their snackbars register under each surface's own
+  prefix.
+- **The approval that fell through** (item 60; seam 090.4).
+  `ApplicantFellThrough`: `ApplicantWaiting`'s shell with the card flipped
+  once more, the way `ApplicantLanding` and `ApplicantRejected` are — the
+  landing card goes back to waiting when its approval lapses before the
+  reader is in and no other is live. It wears the waiting card's dress and
+  `Got it`, names no member (which open application the account shows next
+  is not the card's to say), and carries `ApplicantRejected`'s ask-link
+  block, since anyone already in can now vouch. It registers with the
+  applicant boards' own round.
 
 ---
 

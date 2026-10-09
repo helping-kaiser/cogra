@@ -1,6 +1,6 @@
 # ApplicantLanding · `spec:design:behavior-applicant-landing`
 
-ALWAYS the landing card stands GIVEN the application is approved and its registration has not landed
+ALWAYS the landing card stands GIVEN the application is approved and the account has not landed
 
 ALWAYS the landing card is titled Approved — your registration is landing
 
@@ -14,7 +14,7 @@ ALWAYS the band reads Browsing from @mira's view while your application lands. n
 
 WHEN the app opens GIVEN the application is approved and the key is on this device -> the device signs the registration's handshake AND NEVER the reader is asked to act
 
-WHEN the registration lands -> the landing card flips live to the vouch card where the reader stands AND NEVER the feed reloads AND NEVER a tap is needed
+WHEN the account lands, its registration and the approving vouch both confirmed -> the landing card flips live to the vouch card where the reader stands AND NEVER the feed reloads AND NEVER a tap is needed
 
 WHEN tap Restore the key GIVEN the key is on another device -> the restore opens
 
