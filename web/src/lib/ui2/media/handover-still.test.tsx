@@ -233,7 +233,72 @@ describe("detail → back: the card wears the pinned clip's frame", () => {
     expect(over).toHaveAttribute("height", "1280");
     expect(video("card").currentTime).toBe(9);
   });
+
+  // THE WAY BACK RENDERS LONG BEFORE IT COMMITS (FX-7, jakob's hand test
+  // 2026-10-09: back from the detail "reads as a fresh player reloading").
+  // React creates a host element, `src` and all, while it renders; the feed's
+  // render runs well ahead of its commit, so its card's element arrives having
+  // loaded the clip's opening frame, detached — measured in Chromium:
+  // readyState 4 at 0 s by the commit. Its still must stand anyway: the moment
+  // that element can paint is not the moment the card is pointed at.
+  it("covers the card's element even when it arrived having loaded the clip's opening frame while the feed rendered", async () => {
+    const view = render(<Route at="detail" />);
+    onScreen("pinned-media");
+    pinned().currentTime = 9;
+    decoded(pinned());
+    const pinnedElement = pinned();
+
+    videosArriveLoaded();
+    view.rerender(<Route at="card" />);
+
+    // The card reads the pinned clip's goodbye — the newest word on the clip.
+    expect(clipMemory.read(ID)?.time).toBe(9);
+    expect(video("card").currentTime).toBe(9);
+    expect(video("card").readyState).toBe(2);
+    const over = still("card");
+    expect(over).not.toBeNull();
+    const taken = draws.find((d) => d.source === pinnedElement)?.into;
+    expect(draws).toContainEqual({ into: over, source: taken });
+
+    // It goes as the forward handover's does: two frames after the seek lands.
+    seekLanded(video("card"));
+    expect(still("card")).not.toBeNull();
+    await waitFor(() => expect(still("card")).toBeNull());
+  });
+
+  it("an element that arrives already standing at the pictured moment, with its data, wears no still", () => {
+    const view = render(<Route at="detail" />);
+    onScreen("pinned-media");
+    pinned().currentTime = 9;
+    decoded(pinned());
+
+    videosArriveLoaded(9);
+    view.rerender(<Route at="card" />);
+
+    expect(video("card").currentTime).toBe(9);
+    expect(still("card")).toBeNull();
+  });
 });
+
+/**
+ * Every `<video>` created from here on arrives with data — decoded, at `at` —
+ * the way an element React created while rendering a route has loaded by the
+ * time that route commits.
+ */
+function videosArriveLoaded(at = 0): void {
+  const create = document.createElement.bind(document);
+  vi.spyOn(document, "createElement").mockImplementation(((
+    tag: string,
+    options?: ElementCreationOptions,
+  ) => {
+    const element = create(tag, options);
+    if (element instanceof HTMLVideoElement) {
+      decoded(element);
+      if (at > 0) element.currentTime = at;
+    }
+    return element;
+  }) as typeof document.createElement);
+}
 
 describe("pinned clip → viewer: the viewer opens on the pinned clip's frame", () => {
   it("lays the handed-over frame under the viewer's own fit", () => {
