@@ -63,7 +63,12 @@ internal class ScriptedSettings : ThrowingSettingsRepository() {
     var checks = 0
     val confirmed = mutableListOf<String>()
 
-    override suspend fun settingsAccount(): Outcome<SettingsAccount?> = read
+    var reads = 0
+
+    override suspend fun settingsAccount(): Outcome<SettingsAccount?> {
+        reads++
+        return read
+    }
 
     override suspend fun setDefaultLicense(license: LicenseChoice?): Outcome<LicenseChoice?> {
         savedLicenses += license

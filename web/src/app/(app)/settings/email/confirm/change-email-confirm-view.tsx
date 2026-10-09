@@ -18,7 +18,7 @@
 // its snackbar names that inbox — chosen from the sides owed before the press.
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { hasCode } from "@/lib/api/outcome";
@@ -31,6 +31,7 @@ import {
 } from "@/lib/api/settings-api";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
+import { usePageVisible } from "@/lib/ui/page-visibility";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { FormTextField } from "@/lib/ui2/form-fields";
 import { InlineAction } from "@/lib/ui2/inline-action";
@@ -79,10 +80,26 @@ export function ChangeEmailConfirmView() {
   /** Nothing pending any more — the settings row is where that reads. */
   const [gone, setGone] = useState(false);
 
-  // One read on arrival.
+  // A confirm or a cancel in flight answers for itself; a read landing under
+  // it could route to settings ahead of the confirm's own `Email changed`.
+  // Set by the handlers themselves, so it holds from the press on.
+  const answering = useRef(false);
+
+  // A READ ON ARRIVAL, AND ON EVERY RETURN. The link's side lands in another
+  // tab or app — the mail client, the browser it opens — so coming back is
+  // exactly when the change may have moved: the page then opens on the side
+  // still owed, each side as it stands, and a change that applied, ran out or
+  // was called off meanwhile routes to settings, whose Email row reads it
+  // (`ChangeEmailConfirm.md` "the reader comes back"; `Settings.md` Email
+  // row). A return is the Page Visibility API's `visibilitychange` back to
+  // visible (https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API),
+  // read through `usePageVisible`.
+  const visible = usePageVisible();
   useEffect(() => {
+    if (!visible || answering.current) return;
+    let live = true;
     void guard.run(() => fetchSettingsAccount(client)).then((outcome) => {
-      if (outcome.kind !== "success") return;
+      if (!live || outcome.kind !== "success" || answering.current) return;
       if (outcome.value.pendingEmailChange == null) {
         setGone(true);
         return;
@@ -90,7 +107,10 @@ export function ChangeEmailConfirmView() {
       setEmail(outcome.value.email ?? null);
       setPending(outcome.value.pendingEmailChange);
     });
-  }, [client, guard]);
+    return () => {
+      live = false;
+    };
+  }, [client, guard, visible]);
 
   // Applied, canceled or run out elsewhere: settings says which.
   useEffect(() => {
@@ -105,13 +125,20 @@ export function ChangeEmailConfirmView() {
     setFault(null);
     if (fieldError?.kind === "wrong") setFieldError(null);
     setBusy(true);
+    answering.current = true;
     const outcome = await guard.run(() => confirmEmailChange(client, code));
+    answering.current = false;
     setBusy(false);
     if (outcome.kind === "success") {
       if (outcome.value.pending === null) {
         router.push("/settings?done=email");
         return;
       }
+      // DRIFT (seam 115.3): `ChangeEmailConfirm.md` draws this state as the
+      // pair alone — `Code — confirmed`, no field, no commit (G3) — and no
+      // line saying the page's errand is done and the link at the new address
+      // is what is left. That line is asked of design; nothing is drawn here
+      // until its words land.
       setPending(outcome.value.pending);
       setCode("");
       setFieldError(null);
@@ -159,7 +186,9 @@ export function ChangeEmailConfirmView() {
   const onCancel = async () => {
     if (canceling) return;
     setCanceling(true);
+    answering.current = true;
     const outcome = await guard.run(() => cancelEmailChange(client));
+    answering.current = false;
     setCanceling(false);
     if (outcome.kind === "success") {
       router.push("/settings?done=canceled");

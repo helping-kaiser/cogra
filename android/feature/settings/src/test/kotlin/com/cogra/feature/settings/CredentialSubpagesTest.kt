@@ -331,7 +331,74 @@ class CredentialSubpagesTest {
 
     // ------------------------------------------------ ChangeEmailConfirm
 
-    private fun confirm() = ChangeEmailConfirmViewModel(settings)
+    /** The page as the route opens it: its first ON_RESUME is the arrival's read. */
+    private fun confirm() = ChangeEmailConfirmViewModel(settings).also { it.refresh() }
+
+    @Test
+    fun `coming_back_with_the_change_open_reads_each_side_as_it_stands`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(pendingEmailChange = pending()))
+        val vm = confirm()
+        idle()
+        // The link's side landed in the browser while the page was away.
+        settings.read = Outcome.Success(account(pendingEmailChange = pending(linkConfirmed = true)))
+        vm.refresh()
+        idle()
+        assertThat(vm.state.value.pending?.linkConfirmed).isTrue()
+        assertThat(vm.state.value.codeOwed).isTrue()
+    }
+
+    @Test
+    fun `coming_back_after_the_link_finished_the_change_returns_to_settings_once`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(pendingEmailChange = pending(codeConfirmed = true)))
+        val vm = confirm()
+        idle()
+        val events = mutableListOf<ConfirmEmailEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        // Applied elsewhere: nothing pending, the new address on the account.
+        settings.read = Outcome.Success(account().copy(email = "sol@ferreira.studio"))
+        vm.refresh()
+        vm.refresh()
+        idle()
+        vm.refresh()
+        idle()
+        assertThat(events).containsExactly(ConfirmEmailEvent.Exit(ConfirmEmailExit.Ended))
+        collecting.cancel()
+    }
+
+    @Test
+    fun `coming_back_after_the_change_ran_out_returns_to_settings`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(pendingEmailChange = pending()))
+        val vm = confirm()
+        idle()
+        val events = mutableListOf<ConfirmEmailEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        // Ran out: the API answers no pending change, the address as it was.
+        settings.read = Outcome.Success(account())
+        vm.refresh()
+        idle()
+        assertThat(events).containsExactly(ConfirmEmailEvent.Exit(ConfirmEmailExit.Ended))
+        collecting.cancel()
+    }
+
+    @Test
+    fun `a_return_mid_confirm_leaves_the_answer_to_the_confirm`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(pendingEmailChange = pending(linkConfirmed = true)))
+        settings.confirm = Outcome.Success(AccountEmail("sol@ferreira.studio", null))
+        val vm = confirm()
+        idle()
+        val events = mutableListOf<ConfirmEmailEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        val before = settings.reads
+        vm.onCode("123456")
+        vm.onConfirm()
+        // A resume while the confirm is out reads nothing, so it cannot route
+        // to settings ahead of the confirm's own `Email changed to` exit.
+        vm.refresh()
+        idle()
+        assertThat(settings.reads).isEqualTo(before)
+        assertThat(events).containsExactly(ConfirmEmailEvent.Exit(ConfirmEmailExit.Applied("sol@ferreira.studio")))
+        collecting.cancel()
+    }
 
     @Test
     fun `reopen_lands_on_the_owed_side`() = runTest(dispatcher) {
