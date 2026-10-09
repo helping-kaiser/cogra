@@ -1599,8 +1599,8 @@ and both take it.
 
 **Group headings** — short noun phrases, sentence case, naming what a
 reader came for rather than what the system calls it: `Theme` ·
-`Giving an opinion` · `Writing` · `Reading` · `Key backup` · `Sessions` ·
-`Credentials`. The sign-out group carries no heading; it is the end of
+`Giving an opinion` · `Writing` · `Reading` · `Sensitive content` ·
+`Key backup` · `Sessions` · `Credentials`. The sign-out group carries no heading; it is the end of
 the page, not a subject. `Writing` is the settled title — Android said
 Writing, web said Signing, and the setting is about what a submit does,
 not about the key.
@@ -1648,6 +1648,18 @@ through the trigger's own words (`Posts`). Under the group: `Every feed
 starts from what it shows, and a change made inside a feed lasts until
 you change it back. Both choices stay on this device.` *(The drawn
 sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
+
+**Sensitive content**: one switch, `Always unveil sensitive content`
+(jakob's own wording, 2026-10-09 — never a sheet, never a pair of
+rows), off by default, with the switch-exception second line
+`Off, the veil stays until you tap it.` and the group footnote
+`This choice follows your account to every device.` — the one settings
+group whose value travels (the People group's hiding travels too, but
+its rows are doors, not switches). The account-travel sentence is the
+footnote's whole job: this is the choice a future iOS build may only
+honor, never offer, so the words promise the travel, not the control.
+(*The second line and the footnote drafted 2026-10-09 — wording
+jakob's at review.*)
 
 **Key backup**: `Recovery code` and `Your key` are rows, not verbs — and,
 only while kept picks wait unsigned with the key here, `3 kept picks
