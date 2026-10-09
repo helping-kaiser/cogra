@@ -1303,8 +1303,10 @@ CREATE TABLE auth_ask_links (
 -- expiry bounds only registration through it. A rejected
 -- application (rejected_at) stops being approvable but deletes
 -- nothing; a member taking up the account's ask link stages a new
--- row (stageApplicant, api-spec.md). At most one live application
--- per account is enforced at that mutation, not by constraint.
+-- row (stageApplicant, api-spec.md). At most one open application
+-- per account and approver — waiting, or approved with its vouch
+-- in flight — enforced by a partial unique index; a lapse that
+-- returns a path to waiting keeps it open, so it never collides.
 -- Never-verified accounts are deleted whole by the reaper,
 -- applications included (auth.md "Expiry").
 CREATE TABLE auth_applications (
@@ -1344,6 +1346,9 @@ CREATE INDEX auth_applications_link_idx
     ON auth_applications (invite_link_id, approved_at);
 CREATE INDEX auth_applications_account_idx
     ON auth_applications (account_id);
+CREATE UNIQUE INDEX auth_applications_one_open_per_approver_idx
+    ON auth_applications (account_id, approver_id)
+    WHERE rejected_at IS NULL AND landed_at IS NULL;
 CREATE UNIQUE INDEX auth_applications_one_landed_idx
     ON auth_applications (account_id) WHERE landed_at IS NOT NULL;
 
