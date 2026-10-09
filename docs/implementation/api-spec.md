@@ -180,7 +180,8 @@ Reads need no authentication. When a request *does* carry an auth
 token, the resolved viewer lives in the GraphQL execution context
 — never passed as a field argument. Its only two jobs are the
 field-level authorization above and `me` resolution, plus the one
-viewer-relative value `AskLinkCheck.reason`; it never scopes an
+viewer-relative read, `AskLinkCheck`'s `usable` and `reason`
+(through WAITING_ON_VIEWER); it never scopes an
 ordinary read. The same query is valid authenticated or
 anonymous — authentication only changes what the gated fields
 yield. The auth model (staged-applicant admission, JWT access +
@@ -514,7 +515,7 @@ enum ErrorCode {
   # Expected business failures — carried in UserError.code
   INVALID_CREDENTIALS          # email / password pair did not match
   INVITE_UNUSABLE              # invite link invalid, expired, revoked, or consumed
-  ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed, already staged elsewhere, or already waiting in your own queue
+  ASK_LINK_UNUSABLE            # ask link unknown, or its applicant is landed or already waiting in your own queue
   HANDLE_TAKEN                 # the requested handle is already in use
   WEAK_PASSWORD                # under the length floor or in the breach corpus
   EMAIL_IN_USE                 # the email already belongs to an account
@@ -649,9 +650,13 @@ interface Actor implements Node {
   "Applications waiting on this actor's vouch — the approval queue
    itself, spanning both ends of the funnel: applicants staged
    through this actor's invite links, and applicants this actor
-   took up from an ask link (auth.md). Field-level like inviteLinks:
-   resolves only for the approving actor (or, for a Collective, its
-   authorized members); null otherwise."
+   took up from an ask link (auth.md). Waiting applications only —
+   neither approved nor rejected — oldest first. An application
+   whose applicant has landed through another member's vouch leaves
+   the queue at that landing: the row is filtered out on read,
+   nothing is written, and approving it is BAD_INPUT. Field-level
+   like inviteLinks: resolves only for the approving actor (or, for
+   a Collective, its authorized members); null otherwise."
   approvalQueue(first: Int, after: String, last: Int, before: String): ApplicationConnection
 }
 
@@ -1635,8 +1640,15 @@ type Application {
    address — the other approvability proof."
   keyAttached: Boolean!
   "The member whose queue this application sits in — whose vouch it
-   waits on, or whose vouch is in play."
+   waits on, or whose vouch is in play: the invite link's issuer for
+   the registration application, the member who took it up for an
+   ask-link staging (auth.md \"The ask link\"). An account may have
+   several open applications, each with its own approver."
   approver: Actor
+  "The invite link it came through; null when a member took it up
+   through the account's ask link. Field-level: resolves only for
+   the link's issuer — its id is the link capability."
+  inviteLink: InviteLink
   "Since when this path has a live vouch — its approver's decision,
    whose Opinion has neither landed nor lapsed; null while waiting,
    including after a vouch lapsed. A landed path keeps it."
@@ -4465,9 +4477,12 @@ type AttachActorKeyPayload { user: User }
  ordinary approveApplicants act, with the stance values chosen
  there, and the entry waits with no timer (auth.md \"Expiry\").
  ASK_LINK_UNUSABLE when the id is unknown, the applicant has
- already landed, or a live application is already waiting, in
- another member's queue or the viewer's own; the client names the
- case by re-reading askLinkCheck, whose reason carries it."
+ already landed, or an application of theirs already waits in the
+ caller's own queue — or sits there approved, the caller's vouch
+ still in flight; a live application in another member's queue
+ never refuses (several members may be asked at once). The client
+ names the case by re-reading askLinkCheck, whose reason carries
+ it."
 input StageApplicantInput {
   askLink: UUID!
   "Act as this Collective; null = the viewer stages."
@@ -4816,10 +4831,13 @@ type InviteLinkCheck {
  query) — who is asking, and whether they can be taken up right
  now. Holding the id is holding the link."
 type AskLinkCheck {
-  "Whether the link can stage its applicant now — the account is
-   still an applicant and has no live application already waiting
-   in any queue (auth.md \"The ask link\"). An ask link itself
-   never expires."
+  "Whether the link can stage its applicant for this caller now —
+   the account is still an applicant and, for an authenticated
+   caller, has no application already waiting in the caller's own
+   queue, or approved there with the caller's vouch still in flight
+   (auth.md \"The ask link\"). A live application in another
+   member's queue never blocks it. An ask link itself never
+   expires."
   usable: Boolean!
   "The asking account's handle. The profile door for LANDED
    resolves by it."
@@ -4830,14 +4848,14 @@ type AskLinkCheck {
   reason: AskLinkUnusableReason
 }
 
-"Why an ask link stages nobody right now (auth.md \"The ask
- link\"). LANDED: the account is a member — the profile door
- replaces the ask. WAITING_ELSEWHERE: its one live application
- waits on another member. WAITING_ON_VIEWER: its one live
- application already sits in the authenticated viewer's own queue
- — the client opens that row. WAITING_ON_VIEWER is
- viewer-relative; an anonymous call never reads it."
-enum AskLinkUnusableReason { LANDED WAITING_ELSEWHERE WAITING_ON_VIEWER }
+"Why an ask link stages nobody for this caller right now (auth.md
+ \"The ask link\"). LANDED: the account is a member — the profile
+ door replaces the ask. WAITING_ON_VIEWER: an application of the
+ account already waits in the authenticated caller's own queue, or
+ sits there approved with the caller's vouch still in flight — the
+ client opens that row. WAITING_ON_VIEWER is viewer-relative; an
+ anonymous call never reads it."
+enum AskLinkUnusableReason { LANDED WAITING_ON_VIEWER }
 
 "The anonymous view of an email change's new-address link (the
  `emailChangeLinkCheck` query). Holding the token is holding the link."

@@ -490,6 +490,18 @@ struct ApproveApplicantsInput {
 }
 
 #[derive(InputObject)]
+struct StageApplicantInput {
+    ask_link: Uuid,
+}
+
+/// The staged application, waiting in the caller's queue.
+#[derive(SimpleObject)]
+struct StageApplicantPayload {
+    application: Option<Application>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
 struct RejectApplicationInput {
     application: Uuid,
 }
@@ -1646,6 +1658,38 @@ impl Mutation {
             tracing::error!(error = %e, "resend failed silently by design");
         }
         Ok(ResendVerificationEmailPayload { ok: true })
+    }
+
+    /// Take up an ask link: stage its applicant as an application in the
+    /// caller's own approval queue — the ask direction's answer to
+    /// register, and a deliberate call rather than a side effect of
+    /// opening the link (auth.md "The ask link"). The account already
+    /// exists, so this writes only the queue entry; approving it is the
+    /// ordinary approveApplicants act, with the stance values chosen
+    /// there, and the entry waits with no timer. ASK_LINK_UNUSABLE when
+    /// the id is unknown, the applicant has already landed, or an
+    /// application of theirs already waits in the caller's own queue — or
+    /// sits there approved, the caller's vouch still in flight; a live
+    /// application in another member's queue never refuses (several
+    /// members may be asked at once). The client names the case by
+    /// re-reading askLinkCheck, whose reason carries it.
+    async fn stage_applicant(
+        &self,
+        ctx: &Context<'_>,
+        input: StageApplicantInput,
+    ) -> async_graphql::Result<StageApplicantPayload> {
+        let v = member_viewer(ctx).await?;
+        let pool = ctx.data::<PgPool>()?;
+        match onboarding::stage_applicant(pool, v.user_id, input.ask_link).await {
+            Ok(application) => Ok(StageApplicantPayload {
+                application: Some(Application(application)),
+                user_errors: vec![],
+            }),
+            Err(e) => Ok(StageApplicantPayload {
+                application: None,
+                user_errors: vec![UserError::from_onboarding(&e, "")],
+            }),
+        }
     }
 
     /// Approve staged applicants — the inviter's deliberate, priced act:

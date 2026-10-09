@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT ap.id, ap.account_id, ap.invite_link_id, a.handle,\n                  (c.email_verified_at IS NOT NULL) AS \"email_verified!\",\n                  (a.actor_pubkey IS NOT NULL) AS \"key_attached!\",\n                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at\n           FROM auth_applications ap\n           JOIN actors a ON a.id = ap.account_id\n           JOIN user_credentials c ON c.actor_id = ap.account_id\n           WHERE ap.id = $1",
+  "query": "SELECT ap.id, ap.account_id, ap.approver_id, ap.invite_link_id, ap.ask_link_id,\n                  a.handle,\n                  (c.email_verified_at IS NOT NULL) AS \"email_verified!\",\n                  (a.actor_pubkey IS NOT NULL) AS \"key_attached!\",\n                  ap.approved_at, ap.rejected_at, ap.landed_at, ap.created_at\n           FROM auth_applications ap\n           JOIN actors a ON a.id = ap.account_id\n           JOIN user_credentials c ON c.actor_id = ap.account_id\n           WHERE ap.id = $1",
   "describe": {
     "columns": [
       {
@@ -15,41 +15,51 @@
       },
       {
         "ordinal": 2,
-        "name": "invite_link_id",
+        "name": "approver_id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 3,
+        "name": "invite_link_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 4,
+        "name": "ask_link_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 5,
         "name": "handle",
         "type_info": "Text"
       },
       {
-        "ordinal": 4,
+        "ordinal": 6,
         "name": "email_verified!",
         "type_info": "Bool"
       },
       {
-        "ordinal": 5,
+        "ordinal": 7,
         "name": "key_attached!",
         "type_info": "Bool"
       },
       {
-        "ordinal": 6,
+        "ordinal": 8,
         "name": "approved_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 7,
+        "ordinal": 9,
         "name": "rejected_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 8,
+        "ordinal": 10,
         "name": "landed_at",
         "type_info": "Timestamptz"
       },
       {
-        "ordinal": 9,
+        "ordinal": 11,
         "name": "created_at",
         "type_info": "Timestamptz"
       }
@@ -63,6 +73,8 @@
       false,
       false,
       false,
+      true,
+      true,
       false,
       null,
       null,
@@ -72,5 +84,5 @@
       false
     ]
   },
-  "hash": "a0c581e19bb4df311e50d7df8d13abc8a6fd25fdaf38260dfda6b5c72656957f"
+  "hash": "e860b17e00ec3212d1dcec257791d84285a17ba581baffac1290de9cb00c9585"
 }
