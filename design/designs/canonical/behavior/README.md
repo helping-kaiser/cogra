@@ -214,7 +214,7 @@ And it checks nodes, against `nodes.json`:
   `VouchedIn`, `CommentMenu`, `CommentMenuOwn` and `RemoveMenu`; then the
   release-registry packet's boards — `WhatsNew`, `WhatsNewBehind` and
   `FeedNewerVersion`; then the fabric-2 round's boards — `ReportConfirm`,
-  `FeedPostMenu`, `HistoryHidden` and `TagPageHidden` —
+  `FeedPostMenu`, `HistoryHidden`, `TagPageHidden` and `DeleteLinkExpired` —
   so far), plain words
   that spell one of its nodes fail: "the media row" on `ComposeDetails` is
   written `composeDetails.mediaRow`. The check knows a node by the words of a

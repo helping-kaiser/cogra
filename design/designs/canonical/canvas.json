@@ -1883,6 +1883,15 @@
       "page": "profile"
     },
     {
+      "file": "DeleteLinkExpired.dc.html",
+      "title": "Deletion link · already used or replaced",
+      "x": 6720,
+      "y": 2988,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ChangeHandleConfirm.dc.html",
       "title": "Settings · changing your handle, asked first",
       "x": 6240,

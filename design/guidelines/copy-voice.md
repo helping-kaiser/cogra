@@ -1370,6 +1370,14 @@ Blessed with the audit-states round:
   two existing words, so nothing new to bless; `Verified`'s `Back to
   CoGra` keeps its words and opens `SignIn`. `VerifiedApp`'s way on reads
   `Sign in` the same way (jakob 2026-10-05).
+- **The dead deletion link** (`DeleteLinkExpired`; ER-G1, jakob
+  2026-10-07, drawn 2026-10-09): the family's heading `This link doesn't
+  work anymore` over `It may have been used already, or a newer request
+  replaced it. If you still mean to delete your account, ask again from
+  settings.` (*the body drafted 2026-10-09 — its wording jakob's at
+  review*), no Resend, and the one way on session-dependent —
+  `Back to settings` with a session, `Sign in` without. The body claims
+  no expiry, because the deletion mail claims none.
 
 ## The entry funnel's round
 
@@ -1914,7 +1922,12 @@ out: one address-free landing (jakob 2026-10-07, ruling 38) —
 `VerifyExpired`'s heading, `This link doesn't work anymore` (blessed), over
 `The change it belonged to may have run out, been canceled or already
 happened — this link can't move your email anymore.` and `Sign in` (*new
-2026-10-07, the body drafted — its wording jakob's at review*). Opened under a different account,
+2026-10-07, the body drafted — its wording jakob's at review*). Signed IN,
+a token the app does not know lands in the same family (jakob 2026-10-09,
+item 98): the dead-link heading over `It isn't a link CoGra knows — it
+may be mistyped, or from a change long gone. Your email stays as it is.`
+and `Back to settings` (*new 2026-10-09, the body drafted — its wording
+jakob's at review*). Opened under a different account,
 the link's side does not apply and the landing says so: `This link isn't
 for this account` · `It confirms a new address for another account, so
 nothing changed here. Open it signed in as that account to finish the

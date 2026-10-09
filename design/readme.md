@@ -9615,6 +9615,16 @@ each).
   `FeedSheet` and `SettingsReading` carry it together; the paths register
   under `settings.feedSheet.people` (the feed's own sheet stays
   unregistered until its drawn state does).
+- **The dead-link family grows two members** (items 98 and ER-G1). The
+  signed-in unknown-token /email-change state joins `ChangeEmailLinked`'s
+  landing chip as `unknown` — the dead-link heading, a body naming no
+  address, `Back to settings` — one family with ruling 38's signed-out
+  landing. And the deletion link's dead landing is drawn,
+  `DeleteLinkExpired`: `ResetExpired`'s construction with no Resend (the
+  ask-again lives in settings, with its own content-sweep choice), a body
+  claiming no expiry because the deletion mail claims none, and the way on
+  session-dependent per the G9/38 family — `Back to settings` with a
+  session, `Sign in` without, the `session` chip swapping the one label.
 
 ---
 

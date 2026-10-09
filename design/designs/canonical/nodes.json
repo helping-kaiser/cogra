@@ -828,6 +828,15 @@
         "deleteAccount.title": []
       }
     },
+    "DeleteLinkExpired": {
+      "prefix": "deleteAccount",
+      "keys": {},
+      "nodes": {
+        "deleteAccount.body": [],
+        "deleteAccount.onward": [],
+        "deleteAccount.title": []
+      }
+    },
     "Explore": {
       "prefix": "explore",
       "keys": {

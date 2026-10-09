@@ -1966,6 +1966,9 @@ Object.assign(FLOW_MARKERS, {
   // reads by the side chip, so it is found by its hole.
   ChangeEmailLinked: [{ n: 1, find: ">{{linkedWay}}</button>", tag: "button" }],
   ChangeEmailLinkedSignedOut: [{ n: 1, find: ">Sign in</button>", tag: "button" }],
+  // The deletion link's dead landing (ER-G1): one way on, its label the
+  // session chip's hole.
+  DeleteLinkExpired: [{ n: 1, find: ">{{deadWay}}</button>", tag: "button" }],
   SettingsEmailPending: [{ n: 1, find: ">Email</span>", tag: "button" }],
   // The deletion's confirmation landing, its grace on settings, and the
   // screen the row then opens.
