@@ -28,6 +28,10 @@ ALWAYS Posts is the one kind on, Ranked is the order, Show what you've already s
 
 ALWAYS the feed admits content not yet landed, wearing Still settling GIVEN the feed's filter has Still settling on
 
+ALWAYS content not yet landed leads the ranked feed, before every scored row GIVEN the feed's filter has Still settling on and the order is Ranked
+
+ALWAYS a row not yet landed wears Still settling and carries no score, its score slot bare
+
 ALWAYS the feed admits only what has landed GIVEN the feed's filter has Still settling off
 
 ALWAYS the topic section is the last section of the sheet's body

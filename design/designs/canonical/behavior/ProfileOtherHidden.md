@@ -6,4 +6,8 @@ ALWAYS nothing on the profile marks that the person is hidden, and every part of
 
 WHEN tap Undo on profile.snackbar -> the person is unhidden AND the feed stands as it was before the hide
 
+WHEN tap Undo on profile.snackbar GIVEN the unhide does not go through -> the person stays hidden AND the line That didn't go through. with Retry stands in profile.identity.actionRow until Retry or the next fresh load
+
+WHEN tap Retry in profile.identity.actionRow -> the unhide is asked again
+
 WHEN the reader returns to the feed GIVEN the hide stands -> the feed holds none of that person's rows

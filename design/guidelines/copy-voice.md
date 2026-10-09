@@ -1538,8 +1538,12 @@ Every other line here is **carried over — blessed by use (jakob
 - **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
   @mira`, `Their approval brings you in. Nothing else is needed from
   you.`; its ask link labelled `Your ask link`, captioned `It does not
-  expire. While @mira's answer is open, it can't start a second
-  application.` (`ProfileApplicant` too).
+  expire.` (jakob 2026-10-07, item 58). On the applicant's own profile
+  (`ProfileApplicant`) the caption goes on in the second person: `It does
+  not expire. Anyone who holds your ask can let you in — the first vouch
+  lands it.` (*the twin drafted 2026-10-09, item 91 — its wording jakob's
+  at review; the third-person form, blessed with item 58, stays wherever
+  another reader meets the fact*).
 
 - **The approval that fell through** (`ApplicantFellThrough`, jakob
   2026-10-07, ruling 60) — the landing card flipped back to waiting, naming
@@ -2030,17 +2034,20 @@ recovery code is 26 characters.` (jakob 2026-10-05). Either copy on `YourKey` an
 switch on and no recovery code): `Sign out without a backup?` / `This
 browser holds the only copy of your key. Signing out leaves your key,
 your draft and any opinions you kept pending here, locked until you sign
-in on this browser again. Erase them instead, and no one — including
+in again. Erase them instead, and no one — including
 CoGra — can bring them back.` — `Make a recovery code` ·
 `Sign out, keep them locked` · `Erase them and sign out` (the plurals
-blessed, jakob 2026-10-05). The body names all three things the opt-in
+blessed, jakob 2026-10-05; the custody clause `…locked until you sign in
+again.` on both twins, the locality carried by the opening noun and by
+`kept pending here` — jakob 2026-10-09, item 87). The body names all
+three things the opt-in
 would clear — the key, the draft, the picks kept pending (jakob's
 ruling) — and the answers name them as one plural. The app's body
 reads `This app holds the only copy of your key. Signing out leaves
 your key, your draft and any opinions you kept pending here, locked
-until you sign in to this app again. Erase them instead, and no one —
+until you sign in again. Erase them instead, and no one —
 including CoGra — can bring them back.` (*blessed (jakob
-2026-10-07)*).
+2026-10-07; the custody clause jakob 2026-10-09)*).
 
 **No screen lock** (Android, in front of every reveal or replace):
 `This phone has no screen lock` / `Anyone who picks it up could see your
