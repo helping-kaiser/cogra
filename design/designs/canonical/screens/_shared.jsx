@@ -3309,6 +3309,29 @@ function SettingsBody({ backup = "made", forget = false, keptPicks = 0, emailPen
           <SettingsRow label="Hidden accounts" value={hidden} onOpen={() => {}} node="hidden" />
         </SettingsGroup>
 
+        {/* THE VEIL IS AN ACCOUNT PREFERENCE, NOT THIS DEVICE'S (jakob
+            2026-10-09): a value set on the web must reach every app — the
+            iOS guideline for sensitive user content allows the unveil only
+            when it is turned on via the website, so the choice travels with
+            the account; Android carries the switch itself (Play has no
+            web-only rule). One switch, off by default — never a sheet
+            (jakob's shape). It stands in a group of its own for the same
+            reason hiding does: the Reading footnote's this-device promise
+            is not true of it. */}
+        <SettingsGroup
+          label="Sensitive content"
+          footnote="This choice follows your account to every device."
+          node="sensitive"
+        >
+          <SettingsRow
+            checked={false}
+            label="Always unveil sensitive content"
+            status="Off, the veil stays until you tap it."
+            onOpen={() => {}}
+            node="unveil"
+          />
+        </SettingsGroup>
+
         <SettingsGroup
           label="Key backup"
           footnote={
