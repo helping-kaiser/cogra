@@ -29,6 +29,15 @@
 // it unmounts write where they stood on their way out, AFTER the forgetting.
 // So each forgetting opens a new era, a writer says which era it was born in,
 // and a write from a player born before its clip was forgotten is dropped.
+//
+// AND THE PICTURE OF THAT FRAME, FOR THE HANDOVER (`handover-still.tsx`). A new
+// `<video>` cannot show the reached frame until it has decoded its way there
+// from the keyframe before it — up to the encoder's keyframe interval of
+// frames — so the goodbye also keeps a picture of the frame, and the next
+// presentation shows it while its element prepares. A picture is only ever
+// handed out for EXACTLY the moment the memory says the clip stands at: a
+// later write that moves the clip without a picture retires it, so the still
+// can never show a frame the clip is not at.
 
 /** What the session remembers of one clip. */
 export type ClipMemory = {
@@ -77,6 +86,47 @@ export function write(mediaId: string, entry: ClipMemory, since: number = era): 
   });
 }
 
+/** A picture of the frame a clip stood at, taken as its presentation left. */
+export type ClipFrame = {
+  /** The moment pictured, in seconds — the `time` of the write it was kept with. */
+  readonly time: number;
+  /** The frame, drawn. Only ever displayed, never read back: it may be cross-origin. */
+  readonly picture: HTMLCanvasElement;
+};
+
+/**
+ * How many pictures the session holds. A picture is only for the presentation
+ * that comes next, so the few most recent goodbyes are all a handover reads —
+ * and each one is a decoded frame's worth of memory.
+ */
+export const FRAMES_KEPT = 3;
+
+const frames = new Map<string, ClipFrame>();
+
+/**
+ * Keep a picture of where a clip stands, beside the write that remembers it
+ * there. Heard under the same era rule as {@link write}.
+ */
+export function keepFrame(mediaId: string, frame: ClipFrame, since: number = era): void {
+  if ((forgottenIn.get(mediaId) ?? -1) > since) return;
+  // Re-inserted, so the Map's insertion order is the order of recency.
+  frames.delete(mediaId);
+  frames.set(mediaId, frame);
+  for (const oldest of frames.keys()) {
+    if (frames.size <= FRAMES_KEPT) break;
+    frames.delete(oldest);
+  }
+}
+
+/**
+ * The picture of the frame the clip stands at now — or undefined when there is
+ * none, or the one kept pictures a moment the clip has since moved from.
+ */
+export function frameOf(mediaId: string): ClipFrame | undefined {
+  const frame = frames.get(mediaId);
+  return frame !== undefined && memory.get(mediaId)?.time === frame.time ? frame : undefined;
+}
+
 /**
  * A list refreshed: its clips wear their stored stills again
  * (FeedCover.md:13; RULINGS "pull-to-refresh RESETS the reached-frame
@@ -86,6 +136,7 @@ export function forgetList(mediaIds: Iterable<string>): void {
   era += 1;
   for (const id of mediaIds) {
     memory.delete(id);
+    frames.delete(id);
     forgottenIn.set(id, era);
   }
 }
@@ -93,6 +144,7 @@ export function forgetList(mediaIds: Iterable<string>): void {
 /** Test seam: nothing in the app clears the whole session's memory. */
 export function resetClipMemoryForTests(): void {
   memory.clear();
+  frames.clear();
   forgottenIn.clear();
   era = 0;
 }

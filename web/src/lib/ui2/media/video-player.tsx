@@ -68,6 +68,7 @@ import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 import { useAutoplaySuppressed } from "./autoplay-suppression";
 import { useVeiled } from "./body-veil";
 import * as clipMemory from "./clip-memory";
+import { HandoverStill, pictureOf } from "./handover-still";
 import { setMuted, useMuted } from "./mute";
 import { startPlayback } from "./playback";
 import { OnStage, useStage } from "./stage-host";
@@ -310,7 +311,7 @@ function Player({
       const played = playedHere.current || remembered?.everPlayed === true;
       // A clip that never moved has nothing to say: its still is still right.
       if (!played && video.currentTime === 0) return;
-      clipMemory.write(mediaId, standing(video, played), bornIn);
+      remember(video, mediaId, played, bornIn);
     };
   }, [mediaId, remembered, bornIn]);
 
@@ -360,7 +361,7 @@ function Player({
           const video = ref.current;
           if (video && mediaId) {
             const played = playedHere.current || remembered?.everPlayed === true;
-            clipMemory.write(mediaId, standing(video, played), bornIn);
+            remember(video, mediaId, played, bornIn);
           }
           onOpenViewer();
         };
@@ -518,6 +519,13 @@ function Player({
         ].join(" ")}
       />
 
+      {/* THE REACHED FRAME OVER AN ELEMENT STILL PREPARING IT
+          (`handover-still.tsx`): a played clip's new presentation wears the
+          picture its last one left, never the frame's ground or frame 0. */}
+      {mediaId && remembered?.everPlayed === true && (
+        <HandoverStill video={ref} mediaId={mediaId} fit={fit} testId={`${testId}-still`} />
+      )}
+
       {/* THE LADDER'S SECOND RUNG, and it REPLACES the disc rather than
           joining it: the sound decision moves into the bar, because "a disc
           beside a bar is two pieces of chrome for one clip"
@@ -644,6 +652,23 @@ function Player({
       )}
     </span>
   );
+}
+
+/**
+ * Remember where a clip stands — and keep a picture of that frame for the
+ * presentation that comes next (`handover-still.tsx`), taken in the same
+ * moment so the picture is of exactly the time remembered.
+ */
+function remember(
+  video: HTMLVideoElement,
+  mediaId: string,
+  everPlayed: boolean,
+  bornIn: number,
+): void {
+  const entry = standing(video, everPlayed);
+  clipMemory.write(mediaId, entry, bornIn);
+  const picture = pictureOf(video);
+  if (picture) clipMemory.keepFrame(mediaId, { time: entry.time, picture }, bornIn);
 }
 
 /** Where a clip stands, as the session's memory keeps it. */
