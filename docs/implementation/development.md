@@ -79,6 +79,8 @@ over file values.
 | `RATE_LIMIT_EMAIL_CHANGE_REQUEST_PER_ACCOUNT` | `5` | Email-change requests per account per hour — the mail budget, refused visibly as `RATE_LIMITED` |
 | `RATE_LIMIT_EMAIL_CHANGE_RESEND_PER_ACCOUNT` | `5` | Email-change resends per account per hour, refused the same way |
 | `RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES` | `5` | Wrong codes before an email-change code is disabled until a resend ([auth.md "Email change"](auth.md#email-change)) |
+| `RATE_LIMIT_DEVICE_LOCK_ISSUE_PER_ACCOUNT` | `10` | Device-lock issues per account per hour, refused visibly as `RATE_LIMITED` ([auth.md "Device lock"](auth.md#device-lock)) |
+| `RATE_LIMIT_DEVICE_LOCK_LIVE_CAP` | `32` | Live device locks one account may hold at once, refused the same way |
 | `RATE_LIMIT_GC_INTERVAL_SECS` | `3600` | Sweep interval of the idle throttle-row GC; the login backoff's shape (threshold 5, 1 s doubling, 15 min cap) and the re-authentication backoff's (threshold 10, same doubling and cap) change in code, not env |
 | `RATE_LIMIT_UPLOAD_PER_ACCOUNT` | `60` | Media uploads per account per hour — uploading is not an act, so this is the only cost control media has |
 | `RATE_LIMIT_SIGN_POST` | `10` | The signing budget ([api-spec.md "Conventions"](api-spec.md#conventions)), refused as `WRITE_RULE_FAILED`: Post genesis acts per account per hour |

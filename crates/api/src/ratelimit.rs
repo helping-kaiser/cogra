@@ -5,7 +5,8 @@
 //! limiting"), the email-change
 //! mail budget, the media upload budget, and the per-account signing
 //! budget spent at prepare (api-spec.md "Conventions") with the voucher's
-//! admission funding budget priced beside it.
+//! admission funding budget priced beside it, and the device-lock issue
+//! budget.
 //!
 //! The state is Postgres-held (`postgres_store::rate_limit`), so limits
 //! survive restarts and hold across instances. Auth keys that name an
@@ -42,6 +43,7 @@ pub mod scope {
     pub const REAUTH_ACCOUNT: &str = "reauth_account";
     pub const EMAIL_CHANGE_REQUEST_ACCOUNT: &str = "email_change_request_account";
     pub const EMAIL_CHANGE_RESEND_ACCOUNT: &str = "email_change_resend_account";
+    pub const DEVICE_LOCK_ACCOUNT: &str = "device_lock_account";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
     pub const SIGN_POST: &str = "sign_post";
     pub const SIGN_COMMENT: &str = "sign_comment";
@@ -241,6 +243,14 @@ pub struct RateLimitConfig {
     /// Wrong codes against one email-change code before it is disabled
     /// until a resend mints a fresh one (auth.md "Email change").
     pub email_change_code_tries: i32,
+    /// Device-lock issues per account (auth.md "Device lock"). Issuing
+    /// writes a row, so a stolen session could otherwise grow storage
+    /// without bound; the caller is authenticated, so it answers visibly.
+    pub device_lock_issue_account: Window,
+    /// Live device locks one account may hold at once: the same storage
+    /// bound, held whatever the issue window says. Refusing at the cap
+    /// destroys nothing and hurts only the account it bounds.
+    pub device_lock_live_cap: i32,
     /// Media uploads per account. Uploading is not an act, so θ prices
     /// nothing about it and an insolvent actor can still fill the store —
     /// this is the only cost control media has.
@@ -295,6 +305,11 @@ impl Default for RateLimitConfig {
                 window_secs: 3600.0,
             },
             email_change_code_tries: 5,
+            device_lock_issue_account: Window {
+                limit: 10,
+                window_secs: 3600.0,
+            },
+            device_lock_live_cap: 32,
             upload_account: Window {
                 limit: 60,
                 window_secs: 3600.0,
@@ -329,6 +344,14 @@ impl RateLimitConfig {
             (
                 "RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES",
                 &mut cfg.email_change_code_tries,
+            ),
+            (
+                "RATE_LIMIT_DEVICE_LOCK_ISSUE_PER_ACCOUNT",
+                &mut cfg.device_lock_issue_account.limit,
+            ),
+            (
+                "RATE_LIMIT_DEVICE_LOCK_LIVE_CAP",
+                &mut cfg.device_lock_live_cap,
             ),
             (
                 "RATE_LIMIT_UPLOAD_PER_ACCOUNT",
@@ -378,6 +401,8 @@ impl RateLimitConfig {
             email_change_request_account: generous,
             email_change_resend_account: generous,
             email_change_code_tries: 5,
+            device_lock_issue_account: generous,
+            device_lock_live_cap: i32::MAX,
             upload_account: generous,
             signing: SigningBudget::UNLIMITED,
         }
@@ -470,6 +495,23 @@ pub async fn spend_mail_budget(
             n: 1,
             limit: window.limit,
         }],
+    )
+    .await
+}
+
+/// Spends one unit of the account's device-lock issue budget, answering
+/// whether it fit. A refusal spends nothing, as with the mail budget: a
+/// refused issue stores nothing, so it is not an attempt worth counting.
+pub async fn spend_device_lock_issue(
+    pool: &PgPool,
+    cfg: &RateLimitConfig,
+    account: Uuid,
+) -> Result<bool, sqlx::Error> {
+    spend_mail_budget(
+        pool,
+        scope::DEVICE_LOCK_ACCOUNT,
+        account,
+        cfg.device_lock_issue_account,
     )
     .await
 }
