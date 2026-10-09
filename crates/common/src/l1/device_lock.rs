@@ -164,7 +164,7 @@ mod tests {
     }
 
     /// A record locked under a secret opens back to itself under that secret and the same binding.
-    /// ´claim:device-lock:a-locked-record-opens-under-its-own-lock´
+    /// ´claim:custody:a-locked-record-opens-under-its-own-lock´
     #[test]
     fn device_lock_round_trips() {
         let secret = generate_secret();
@@ -179,7 +179,7 @@ mod tests {
     /// secret refuses exactly as a tampered tag does.
     ///
     /// A locked record does not open under any other secret.
-    /// ´claim:device-lock:another-secret-does-not-open-a-record´
+    /// ´claim:custody:another-secret-does-not-open-a-record´
     #[test]
     fn another_secret_does_not_open() {
         let record = sealed(&generate_secret());
@@ -194,7 +194,7 @@ mod tests {
     /// split a bare concatenation would have confused.
     ///
     /// A locked record opens only in its own account's slot, as its own kind and key.
-    /// ´claim:device-lock:a-record-is-bound-to-its-account-and-record´
+    /// ´claim:custody:a-record-is-bound-to-its-account-and-record´
     #[test]
     fn lock_ciphertext_is_bound_to_its_account_and_record() {
         let secret = generate_secret();
@@ -223,9 +223,9 @@ mod tests {
     /// truncation are told apart from that refusal.
     ///
     /// A flipped bit anywhere in a locked record refuses to open, and a bad version or a truncation is told apart from that refusal.
-    /// ´claim:device-lock:a-flipped-bit-anywhere-refuses-to-open´
+    /// ´claim:custody:a-flipped-bit-anywhere-refuses-to-open´
     #[test]
-    fn tampering_anywhere_refuses() {
+    fn a_tampered_lock_record_refuses() {
         let secret = generate_secret();
         let record = sealed(&secret);
         let at = binding("identity", "actor");
@@ -254,7 +254,7 @@ mod tests {
     /// neither format's ciphertext can stand in for the other's.
     ///
     /// The device lock derives under its own info string, apart from the key backup's.
-    /// ´claim:device-lock:the-lock-key-is-domain-separated´
+    /// ´claim:custody:the-lock-key-is-domain-separated´
     #[test]
     fn the_lock_key_is_domain_separated_from_the_key_backup() {
         let secret = [9u8; SECRET_LEN];

@@ -144,7 +144,7 @@ async fn log_in_whole(rig: &WireRig, email: &str, password: &str) -> (String, St
 /// out.
 ///
 /// Issuing a device lock hands the device a fresh 32-byte secret under its own id, and the server keeps exactly that secret.
-/// ´claim:device-lock:an-issue-returns-a-fresh-32-byte-secret´
+/// ´claim:custody:an-issue-returns-a-fresh-32-byte-secret´
 #[sqlx::test(migrations = "../../migrations")]
 async fn issuing_a_device_lock_returns_a_fresh_32_byte_secret(pool: PgPool) {
     let rig = rig(pool);
@@ -174,7 +174,7 @@ async fn issuing_a_device_lock_returns_a_fresh_32_byte_secret(pool: PgPool) {
 /// at the transport tier and nothing is written.
 ///
 /// Each device-lock verb refuses UNAUTHENTICATED without a session.
-/// ´claim:device-lock:the-verbs-need-a-session´
+/// ´claim:custody:the-verbs-need-a-session´
 #[sqlx::test(migrations = "../../migrations")]
 async fn device_lock_verbs_need_a_session(pool: PgPool) {
     let rig = rig(pool);
@@ -201,7 +201,7 @@ async fn device_lock_verbs_need_a_session(pool: PgPool) {
 /// RATE_LIMITED and stores nothing, while another account still issues.
 ///
 /// Device-lock issues past the account's budget answer RATE_LIMITED and store nothing, and the budget is per account.
-/// ´claim:device-lock:issues-trip-the-account-budget´
+/// ´claim:custody:issues-trip-the-account-budget´
 #[sqlx::test(migrations = "../../migrations")]
 async fn device_lock_issues_trip_the_account_budget(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -227,7 +227,7 @@ async fn device_lock_issues_trip_the_account_budget(pool: PgPool) {
 /// makes room again.
 ///
 /// An account at its live-lock cap is refused RATE_LIMITED until one of its locks is discarded.
-/// ´claim:device-lock:the-live-cap-answers-rate-limited´
+/// ´claim:custody:the-live-cap-answers-rate-limited´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_live_lock_cap_answers_rate_limited(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -251,7 +251,7 @@ async fn the_live_lock_cap_answers_rate_limited(pool: PgPool) {
 /// on the account, so exactly the cap's worth land and the rest refuse.
 ///
 /// Concurrent issues never carry an account past its live-lock cap.
-/// ´claim:device-lock:the-live-cap-holds-under-concurrent-issues´
+/// ´claim:custody:the-live-cap-holds-under-concurrent-issues´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_live_lock_cap_holds_under_concurrent_issues(pool: PgPool) {
     let mut limits = RateLimitConfig::unlimited();
@@ -278,7 +278,7 @@ async fn the_live_lock_cap_holds_under_concurrent_issues(pool: PgPool) {
 /// The current password releases exactly the secret the issue handed out.
 ///
 /// A device lock releases its own secret behind the account's current password.
-/// ´claim:device-lock:the-current-password-releases-the-secret´
+/// ´claim:custody:the-current-password-releases-the-secret´
 #[sqlx::test(migrations = "../../migrations")]
 async fn releasing_a_lock_with_the_current_password_returns_its_secret(pool: PgPool) {
     let rig = rig(pool);
@@ -294,7 +294,7 @@ async fn releasing_a_lock_with_the_current_password_returns_its_secret(pool: PgP
 /// secret rides the refusal.
 ///
 /// A wrong password never releases a lock's secret and answers INVALID_CREDENTIALS at the password.
-/// ´claim:device-lock:a-wrong-password-never-releases´
+/// ´claim:custody:a-wrong-password-never-releases´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_wrong_password_never_releases_and_is_invalid_credentials(pool: PgPool) {
     let rig = rig(pool);
@@ -317,7 +317,7 @@ async fn a_wrong_password_never_releases_and_is_invalid_credentials(pool: PgPool
 /// one does.
 ///
 /// After a password reset the old password cannot release a device lock and the new one can.
-/// ´claim:device-lock:the-old-password-cannot-release-after-a-reset´
+/// ´claim:custody:the-old-password-cannot-release-after-a-reset´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_old_password_cannot_release_after_a_reset(pool: PgPool) {
     let rig = rig(pool);
@@ -357,7 +357,7 @@ async fn the_old_password_cannot_release_after_a_reset(pool: PgPool) {
 /// this device holds answers only the password as it now stands.
 ///
 /// After a password change on another device the old password cannot release a device lock and the new one can.
-/// ´claim:device-lock:the-old-password-cannot-release-after-a-change´
+/// ´claim:custody:the-old-password-cannot-release-after-a-change´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_old_password_cannot_release_after_a_change_elsewhere(pool: PgPool) {
     let rig = rig(pool);
@@ -389,7 +389,7 @@ async fn the_old_password_cannot_release_after_a_change_elsewhere(pool: PgPool) 
 /// password, reads someone else's lock as NOT_FOUND at the lock field.
 ///
 /// Another account's device lock is NOT_FOUND, even behind that caller's own right password.
-/// ´claim:device-lock:another-accounts-lock-is-not-found´
+/// ´claim:custody:another-accounts-lock-is-not-found´
 #[sqlx::test(migrations = "../../migrations")]
 async fn another_accounts_lock_is_not_found(pool: PgPool) {
     let rig = rig(pool);
@@ -409,7 +409,7 @@ async fn another_accounts_lock_is_not_found(pool: PgPool) {
 /// Once discarded a lock is gone: its release is NOT_FOUND.
 ///
 /// A discarded device lock is NOT_FOUND at release.
-/// ´claim:device-lock:a-discarded-lock-is-not-found´
+/// ´claim:custody:a-discarded-lock-is-not-found´
 #[sqlx::test(migrations = "../../migrations")]
 async fn a_discarded_lock_is_not_found(pool: PgPool) {
     let rig = rig(pool);
@@ -430,7 +430,7 @@ async fn a_discarded_lock_is_not_found(pool: PgPool) {
 /// is someone else's, or never existed.
 ///
 /// A wrong password answers INVALID_CREDENTIALS before any lock is looked up, so lock existence cannot be probed.
-/// ´claim:device-lock:no-probe-without-the-password´
+/// ´claim:custody:no-probe-without-the-password´
 #[sqlx::test(migrations = "../../migrations")]
 async fn an_unknown_lock_with_a_wrong_password_is_invalid_credentials_not_not_found(pool: PgPool) {
     let rig = rig(pool);
@@ -456,7 +456,7 @@ async fn an_unknown_lock_with_a_wrong_password_is_invalid_credentials_not_not_fo
 /// secret every time, and the row stays.
 ///
 /// Releasing a device lock is idempotent and never spends it, concurrent releases included.
-/// ´claim:device-lock:release-is-idempotent´
+/// ´claim:custody:release-is-idempotent´
 #[sqlx::test(migrations = "../../migrations")]
 async fn release_is_idempotent_and_never_spends_the_lock(pool: PgPool) {
     let rig = rig(pool);
@@ -480,7 +480,7 @@ async fn release_is_idempotent_and_never_spends_the_lock(pool: PgPool) {
 /// a visible RATE_LIMITED, answered before the lock is reached.
 ///
 /// Consecutive wrong release passwords trip the account's re-authentication backoff, visibly.
-/// ´claim:device-lock:wrong-release-passwords-spend-the-reauth-budget´
+/// ´claim:custody:wrong-release-passwords-spend-the-reauth-budget´
 #[sqlx::test(migrations = "../../migrations")]
 async fn wrong_release_passwords_spend_the_reauth_budget(pool: PgPool) {
     let rig = reauth_rig(pool);
@@ -504,7 +504,7 @@ async fn wrong_release_passwords_spend_the_reauth_budget(pool: PgPool) {
 /// guesses for the other — whichever comes last is the one refused.
 ///
 /// The re-authentication budget is one per account, shared by releaseDeviceLock and changePassword.
-/// ´claim:device-lock:the-reauth-budget-is-shared-with-change-password´
+/// ´claim:custody:the-reauth-budget-is-shared-with-change-password´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_reauth_budget_is_shared_by_release_and_change_password(pool: PgPool) {
     let rig = reauth_rig(pool);
@@ -549,7 +549,7 @@ async fn the_reauth_budget_is_shared_by_release_and_change_password(pool: PgPool
 /// never-issued id answer exactly like the first.
 ///
 /// Discarding a device lock is idempotent and answers an unknown id exactly like a known one.
-/// ´claim:device-lock:discard-is-idempotent-and-silent´
+/// ´claim:custody:discard-is-idempotent-and-silent´
 #[sqlx::test(migrations = "../../migrations")]
 async fn discarding_a_lock_is_idempotent_and_silent_for_unknown_ids(pool: PgPool) {
     let rig = rig(pool);
@@ -570,7 +570,7 @@ async fn discarding_a_lock_is_idempotent_and_silent_for_unknown_ids(pool: PgPool
 /// it: another account's lock survives, still releasable by its owner.
 ///
 /// A discard never reaches another account's device lock.
-/// ´claim:device-lock:discard-never-reaches-another-account´
+/// ´claim:custody:discard-never-reaches-another-account´
 #[sqlx::test(migrations = "../../migrations")]
 async fn discard_never_reaches_another_accounts_lock(pool: PgPool) {
     let rig = rig(pool);
@@ -593,14 +593,13 @@ async fn discard_never_reaches_another_accounts_lock(pool: PgPool) {
 /// releases afterwards behind the password as it then stands.
 ///
 /// No session revocation of any kind touches a device lock.
-/// ´claim:device-lock:session-revocations-never-touch-locks´
+/// ´claim:custody:session-revocations-never-touch-locks´
 #[sqlx::test(migrations = "../../migrations")]
 async fn session_revocations_never_touch_device_locks(pool: PgPool) {
     let rig = rig(pool);
     let (alice, _) = rig.seed_member("alice", "alice@example.com").await;
     let email = "alice@example.com";
 
-    // The owner's own revoke, and revoke-others.
     let (one, _) = log_in_whole(&rig, email, MEMBER_PASSWORD).await;
     let (two, _) = log_in_whole(&rig, email, MEMBER_PASSWORD).await;
     let first = issue(&rig, &one).await;
@@ -619,7 +618,6 @@ async fn session_revocations_never_touch_device_locks(pool: PgPool) {
     .await;
     assert_eq!(lock_rows(&rig.pool, alice).await, 2);
 
-    // A password change revokes the others.
     let (three, _) = log_in_whole(&rig, email, MEMBER_PASSWORD).await;
     let changed = rig
         .gql(
@@ -631,7 +629,6 @@ async fn session_revocations_never_touch_device_locks(pool: PgPool) {
     assert_eq!(changed["changePassword"]["ok"], json!(true));
     assert_eq!(lock_rows(&rig.pool, alice).await, 2);
 
-    // A reset revokes all.
     rig.gql(
         None,
         "mutation($input: RequestPasswordResetInput!) { requestPasswordReset(input: $input) { ok } }",
@@ -649,7 +646,6 @@ async fn session_revocations_never_touch_device_locks(pool: PgPool) {
     .await;
     assert_eq!(lock_rows(&rig.pool, alice).await, 2);
 
-    // Reuse detection revokes all: a rotated token replayed past grace.
     let (four, refresh) = log_in_whole(&rig, email, MEMBER_PASSWORD).await;
     let third = issue(&rig, &four).await;
     let rotated = rig
@@ -700,7 +696,7 @@ async fn session_revocations_never_touch_device_locks(pool: PgPool) {
 /// permanently unopenable.
 ///
 /// Reaping a never-verified account deletes its device locks with it.
-/// ´claim:device-lock:the-reaper-deletes-device-locks´
+/// ´claim:custody:the-reaper-deletes-device-locks´
 #[sqlx::test(migrations = "../../migrations")]
 async fn the_reaper_deletes_device_locks(pool: PgPool) {
     let rig = rig(pool);
