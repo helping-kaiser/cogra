@@ -386,6 +386,22 @@ rather than the largest.
   device serial — is gone before upload, and the server strips
   again rather than trusting it.
 
+## Installing to the home screen
+
+The app is installable: `src/app/manifest.ts` (Next's manifest file
+convention) carries exactly Chromium's install criteria — a name, a
+192px and a 512px icon, `start_url`, `display: standalone` — and
+nothing more; install needs no service worker. The icons are rendered
+from existing assets, never redrawn: the tile (`icon.svg`) for the
+`any` icons, and Android's adaptive launcher icon for the `maskable`
+one, so the installed web app wears the native app's icon.
+
+**No theme colour, anywhere.** On a phone the theme colour is painted
+into the status bar, and the app never colours the system status bar —
+so the manifest has no `theme_color` and the head no `theme-color`
+meta. `background_color` (the launch splash) is the light theme's
+`background` role, pinned to the token file by `manifest.test.ts`.
+
 ## Accessibility
 
 Part of the bar from day one, never retrofitted: every page
