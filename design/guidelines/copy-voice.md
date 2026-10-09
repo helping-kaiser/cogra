@@ -283,15 +283,17 @@ carry, `ExploreFilter`, `HistoryFilter`):
 - `Order` — `Ranked puts what's closest to you first — your view, no one
   else's. Newest ignores it and lists by time.` — with `Ranked` ·
   `Newest` and the checkbox `Show what you've already seen`.
-- `Also show` — `Sensitive content stays veiled until you tap it. A
-  removed post keeps its place — author, time, and where it sat in the
-  thread — never the content.` — with `Sensitive` · `Removed` · `Still
-  settling`.
+- `Also show` — `How sensitive content is veiled is set in Settings.` —
+  with `Sensitive` · `Removed` · `Still settling`. The hint carries the
+  one thing the chips don't say themselves — where the veil behavior is
+  changed — and explains nothing else (jakob 2026-10-09: tapping a veil
+  and reading a removed post's husk explain themselves).
 - `People` — `Whose things reach this feed.` — the rows `Everyone` over
-  `The whole feed, as far as your walks reach.` and `Your people` over
+  `The whole feed, as far as your eyes reach.` and `Your people` over
   `Only the people you hold an opinion for — the same rank, narrowed to
-  them.` (the pair's labels blessed, jakob 2026-10-09, ruling 77; *the
-  section word and the three support lines drafted 2026-10-09 — their
+  them.` (the pair's labels blessed, jakob 2026-10-09, ruling 77; the
+  Everyone line's wording jakob's own, 2026-10-09; *the section word,
+  the Your-people line and the Also-show pointer drafted — their
   wording jakob's at review*).
 
 ## Platform nouns

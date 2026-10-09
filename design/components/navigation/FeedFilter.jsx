@@ -345,7 +345,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
       {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
           the default is the feed as it has always been, and off is the
           landed-only view. */}
-      <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content." node={node && "also"}>
+      <FilterSection label="Also show" hint="How sensitive content is veiled is set in Settings." node={node && "also"}>
         {FEED_ALSO.map((entry) => (
           <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} node={node && `${entry.value}Chip`} />
         ))}
@@ -389,7 +389,7 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
                     {entry.label}
                   </span>
                   <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
-                    {entry.value === "everyone" ? "The whole feed, as far as your walks reach." : "Only the people you hold an opinion for — the same rank, narrowed to them."}
+                    {entry.value === "everyone" ? "The whole feed, as far as your eyes reach." : "Only the people you hold an opinion for — the same rank, narrowed to them."}
                   </span>
                 </span>
               </label>
