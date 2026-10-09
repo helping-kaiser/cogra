@@ -13,7 +13,7 @@ import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
-import { intersectEach } from "@/test/media-env";
+import { intersectEach, whenObserved } from "@/test/media-env";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
@@ -2285,10 +2285,9 @@ describe("PostView — references", () => {
         await screen.findByTestId("post-pinned-clip");
         await waitFor(() => expect(counted).toBe(true));
         const pinned = screen.getByTestId("post-pinned-clip-media") as HTMLVideoElement;
-        await waitFor(() => {
-          act(() => intersectEach([{ target: pinned, ratio: 1 }]));
-          expect(pinned.paused).toBe(false);
-        });
+        await whenObserved(pinned);
+        act(() => intersectEach([{ target: pinned, ratio: 1 }]));
+        expect(pinned.paused).toBe(false);
         pinned.currentTime = 6;
 
         fireEvent.click(screen.getByTestId("post-pinned-clip-media-transport-fullscreen"));

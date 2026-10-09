@@ -7,7 +7,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
-import { intersect, intersectEach } from "@/test/media-env";
+import { intersect, intersectEach, whenObserved } from "@/test/media-env";
 import { FeedView } from "./feed-view";
 import { forgetFeed, recallFeed } from "./feed-memory";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
@@ -341,6 +341,9 @@ describe("FeedView", () => {
       );
       renderWithProviders(<FeedView />);
       await screen.findByTestId(byNode("feed.card.media.frame", "p2/1"));
+      // The stage watches its clips from a passive effect; report their places
+      // only once it does (`whenObserved`).
+      await whenObserved(frameOf("p1"), frameOf("p2"));
       act(() =>
         intersectEach([
           { target: frameOf("p2"), ratio: 1 },
@@ -369,6 +372,7 @@ describe("FeedView", () => {
       });
       await screen.findByTestId(byNode("feed.card.media.frame", "p1/1"));
       const video = frameOf("p1");
+      await whenObserved(video);
       act(() => intersectEach([{ target: video, ratio: 1 }]));
       expect(video.paused).toBe(false);
 
@@ -431,6 +435,7 @@ describe("FeedView", () => {
       await screen.findByTestId(byNode("feed.card.media.frame", "p1/1"));
       const played = frameOf("p1");
       expect(played).toHaveAttribute("poster", COVER);
+      await whenObserved(played);
       act(() => intersectEach([{ target: played, ratio: 1 }]));
       expect(played.paused).toBe(false);
       played.currentTime = 4;
