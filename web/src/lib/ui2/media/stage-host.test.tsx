@@ -250,6 +250,32 @@ describe("a clip started by its play disc", () => {
   });
 });
 
+// RULED 2026-10-09 (jakob, seam 109 item 96): "no clip starts on its own …
+// GIVEN the device suppresses autoplay" (FeedCover.md:25) governs STARTS only.
+describe("suppression arriving while a clip plays", () => {
+  it("never stops the playing clip, which keeps its sound disc (C10 FeedCover.md:25, C06 FeedCover.md:17)", () => {
+    suppressesAutoplay({});
+    render(<List ids={["a", "b"]} />);
+    frame({ a: 1, b: 0.3 });
+    expect(playing("a", "b")).toEqual(["a"]);
+
+    act(() => suppressesAutoplay({ reducedMotion: true }));
+
+    expect(playing("a", "b")).toEqual(["a"]);
+    expect(screen.getByTestId("a-sound")).toBeInTheDocument();
+    expect(screen.queryByTestId("a-play")).toBeNull();
+  });
+
+  it("still governs the next start: when the clip loses the stage, nothing starts in its place (C10, F07 Feed.md:15)", () => {
+    suppressesAutoplay({});
+    render(<List ids={["a", "b"]} />);
+    frame({ a: 1, b: 0.3 });
+    act(() => suppressesAutoplay({ saveData: true }));
+    frame({ a: 0.2, b: 1 });
+    expect(playing("a", "b")).toEqual([]);
+  });
+});
+
 /** A hard-top surface, as each host stands in the app. */
 type Surface = {
   name: string;

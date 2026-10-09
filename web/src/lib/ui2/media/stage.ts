@@ -251,7 +251,9 @@ export class Stage {
    * Whether the device allows autoplay (FeedCover.md:23). Allowing again is
    * the standing rule 3 applying once more: an empty stage goes to the
    * topmost qualifying clip. Suppressing stops nothing already playing — "no
-   * clip STARTS on its own" (FeedCover.md:25) is a rule about starts.
+   * clip STARTS on its own" (FeedCover.md:25) is a rule about starts, ruled so
+   * by jakob 2026-10-09 (seam 109, item 96): a mid-play suppression flip never
+   * stops a playing clip.
    */
   setAllowed(allowed: boolean): void {
     if (this.allowed === allowed) return;
