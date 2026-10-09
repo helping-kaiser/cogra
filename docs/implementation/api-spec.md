@@ -4415,6 +4415,14 @@ and drops the kept values. A key held elsewhere composes the same
 way: `stageApplicant`, values kept on the device until the key is
 back.
 
+A "don't remember me" account's custody on a shared device is held
+under a **device lock** ([auth.md "Device lock"](auth.md#device-lock)):
+the server mints a secret per device slot (`issueDeviceLock`),
+releases it only behind the account's current password
+(`releaseDeviceLock`), and forgets it on request
+(`discardDeviceLock`). The device does the locking; the server
+never sees what the secret protects.
+
 ```graphql
 "Register through an invite link. Creates the account — the
  actor row (no key yet) and its credentials, in the applicant
@@ -4812,9 +4820,9 @@ type CreateInviteLinkPayload {
  \"Invite-link generation\")."
 input RevokeInviteLinkInput { inviteLink: UUID! }
 "An unknown, foreign, or already-revoked link refuses with a
- NOT_FOUND userError — the one place NOT_FOUND rides the userError
- tier rather than the transport tier, because a stale share sheet
- makes it an expected outcome, not a client bug."
+ NOT_FOUND userError — the userError tier rather than the transport
+ tier, because a stale share sheet makes it an expected outcome,
+ not a client bug."
 type RevokeInviteLinkPayload { inviteLink: InviteLink }
 
 "The anonymous pre-registration view of an invite link (the
@@ -4962,6 +4970,32 @@ type AccountDeletion {
  hard delete, chosen by account state, would be a hidden mode."
 type DeleteApplicantAccountPayload { ok: Boolean }
 
+"The server half of a device lock (auth.md \"Device lock\"): a
+ 32-byte secret (base64) that encrypts one device's custody for
+ this account while it is signed out. Viewer-only; never on a
+ refusal."
+type DeviceLock {
+  "The lock's name, held by the device; unguessable, so it doubles
+   as the capability to discard it."
+  id: UUID!
+  secret: String!
+}
+"A refused issue stores nothing; RATE_LIMITED rides the transport
+ tier."
+type IssueDeviceLockPayload { lock: DeviceLock }
+
+input ReleaseDeviceLockInput {
+  lock: UUID!
+  "The account's current password, re-verified against the stored
+   hash."
+  password: String!
+}
+"The lock's secret (base64)."
+type ReleaseDeviceLockPayload { secret: String }
+
+input DiscardDeviceLockInput { lock: UUID! }
+type DiscardDeviceLockPayload { ok: Boolean }
+
 extend type Mutation {
   register(input: RegisterInput!): RegisterPayload!
   verifyEmail(input: VerifyEmailInput!): VerifyEmailPayload!
@@ -4989,6 +5023,23 @@ extend type Mutation {
   dismissVouchBack: DismissVouchBackPayload!
   createKeyBackupChallenge: KeyBackupChallengePayload!
   uploadKeyBackup(input: UploadKeyBackupInput!): UploadKeyBackupPayload!
+  "Mint a device lock for the signed-in account. RATE_LIMITED past
+   the account's issue budget or its live-lock cap (auth.md \"Rate
+   limiting\")."
+  issueDeviceLock: IssueDeviceLockPayload!
+  "Release a lock's secret behind the current password. The
+   re-authentication budget answers first, then the password, then
+   the lock — so lock existence is not probeable without the
+   password. A wrong password is an INVALID_CREDENTIALS userError at
+   [\"password\"] and spends the re-authentication budget
+   changePassword shares; another account's or an unknown lock is a
+   NOT_FOUND userError at [\"lock\"]. Idempotent; never spends the
+   lock."
+  releaseDeviceLock(input: ReleaseDeviceLockInput!): ReleaseDeviceLockPayload!
+  "Delete one of the viewer's locks. Idempotent and silent: an
+   unknown id, or another account's, answers the same and touches
+   nothing."
+  discardDeviceLock(input: DiscardDeviceLockInput!): DiscardDeviceLockPayload!
   createInviteLink(input: CreateInviteLinkInput!): CreateInviteLinkPayload!
   revokeInviteLink(input: RevokeInviteLinkInput!): RevokeInviteLinkPayload!
   removeContent(input: RemoveContentInput!): RemoveContentPayload!

@@ -1431,6 +1431,25 @@ CREATE TABLE auth_key_backup_challenges (
     expires_at TIMESTAMPTZ NOT NULL
 );
 
+-- Device locks (auth.md "Device lock"): the server half of a
+-- signed-out device's locked custody, one row per (account, device
+-- slot), named by a random id the device holds. Stored as given — it
+-- must be released, so it cannot be hashed; a row alone opens nothing
+-- without the device's ciphertext. Released behind the current
+-- password, never spent by a release, never touched by session
+-- revocation; account deletion deletes the rows (crypto-erasure of
+-- any slot still locked). released_at is diagnostic only (the last
+-- release) and decides nothing. Issues are budgeted, and the live
+-- rows per account capped, at the API (auth.md "Rate limiting").
+CREATE TABLE auth_device_locks (
+    id          UUID        PRIMARY KEY,
+    user_id     UUID        NOT NULL REFERENCES actors(id) ON DELETE CASCADE,
+    secret      BYTEA       NOT NULL CHECK (octet_length(secret) = 32),
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    released_at TIMESTAMPTZ
+);
+CREATE INDEX auth_device_locks_user_idx ON auth_device_locks (user_id);
+
 -- System-actor key custody: the backend-custodied signing seeds of
 -- the system actors (substrate.md §8 — custody by design), seeded
 -- at genesis (network.md §2). The Genesis Moderator's seed sits
@@ -1703,7 +1722,7 @@ that is still there.
 Every user-scoped table (`auth_refresh_tokens`,
 `auth_password_resets`, `auth_email_changes`,
 `auth_account_deletions`, `auth_key_backups`,
-`auth_key_backup_challenges`, `user_view_log`,
+`auth_key_backup_challenges`, `auth_device_locks`, `user_view_log`,
 `user_hidden_actors`, `chat_read_state`, `user_bookmarks`,
 `user_preferences`) carries
 `user_id REFERENCES actors(id) ON DELETE CASCADE`. That these
@@ -1712,7 +1731,11 @@ rows exist only for user-kind actors is a service-layer fact
 does **not** remove the `actors` row or its credentials — PII
 is redacted in place per
 [erasure.md §2](../instances/erasure.md#2-account-deletion-two-redaction-levels)
-— so `ON DELETE CASCADE` does not fire in any normal flow. The FK
+— so `ON DELETE CASCADE` does not fire on account deletion, which
+deletes the user-scoped rows it means to delete explicitly. The one
+flow that deletes an `actors` row is the reaper's sweep of
+never-verified accounts ([auth.md "Reaper"](auth.md#approval-and-landing)), where
+the cascade is the whole-account delete it intends. The FK
 exists to prevent orphans from buggy code paths and to give an
 operator running an explicit `DELETE` (e.g. emergency cleanup) a
 single command that takes the user's private state with them.

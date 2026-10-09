@@ -1,8 +1,9 @@
 //! Exports `client-crypto-vectors.json` (repo root) — the cross-language
 //! golden vectors pinning the client-side crypto the Kotlin and TypeScript
 //! apps re-implement: the deterministic CBOR subset, the tagged hashing and
-//! Ed25519 signing, the admission-handshake messages (l1::client), and the
-//! key-backup blob format (auth.md "Blob format (v1)").
+//! Ed25519 signing, the admission-handshake messages (l1::client), the
+//! key-backup blob format (auth.md "Blob format (v1)"), and the device-lock
+//! record format (auth.md "Device lock").
 //!
 //! The default run asserts the committed file matches this crate, so drift
 //! fails `cargo test`; `make vectors` (UPDATE_CLIENT_VECTORS=1) rewrites it.
@@ -13,6 +14,7 @@ use std::path::Path;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
 use common::l1::crypto::{self, tags};
+use common::l1::device_lock::{self, Binding};
 use common::l1::encoding::Encoder;
 use common::l1::handshake::{canonical_deps, pre_commitment_msg};
 use common::l1::key_backup::{self, RecoveryCode};
@@ -38,6 +40,60 @@ fn cbor(build: impl FnOnce(&mut Encoder)) -> String {
     let mut e = Encoder::new();
     build(&mut e);
     hx(&e.finish())
+}
+
+/// One locked record under a fixed secret, salt and nonce, every step
+/// exported, plus the bindings the same record must refuse to open under —
+/// another account, another kind, another key, and the kind/key split a
+/// bare concatenation would have read as the same binding.
+fn device_lock_vectors(plaintext: &[u8]) -> Value {
+    let secret: [u8; device_lock::SECRET_LEN] = seq_bytes(0x81, device_lock::SECRET_LEN)
+        .try_into()
+        .expect("secret bytes");
+    let salt: [u8; device_lock::HKDF_SALT_LEN] = seq_bytes(0x91, device_lock::HKDF_SALT_LEN)
+        .try_into()
+        .expect("salt bytes");
+    let nonce: [u8; device_lock::AES_NONCE_LEN] = seq_bytes(0xa1, device_lock::AES_NONCE_LEN)
+        .try_into()
+        .expect("nonce bytes");
+    let account = uuid::Uuid::from_slice(&seq_bytes(0xb1, 16)).expect("16 bytes");
+    let binding = Binding {
+        account,
+        kind: "identity",
+        key: "actor",
+    };
+    let record = device_lock::seal_with(&secret, &salt, &nonce, &binding, plaintext);
+    assert_eq!(
+        device_lock::open(&secret, &record, &binding).expect("the record opens under its lock"),
+        plaintext
+    );
+    let other_account = uuid::Uuid::from_slice(&seq_bytes(0xc1, 16)).expect("16 bytes");
+    let refusals = [
+        (other_account, "identity", "actor"),
+        (account, "draft", "actor"),
+        (account, "identity", "draft"),
+        (account, "identityac", "tor"),
+    ]
+    .map(|(account, kind, key)| {
+        let wrong = Binding { account, kind, key };
+        assert!(device_lock::open(&secret, &record, &wrong).is_err());
+        json!({"accountId": account.to_string(), "recordKindUtf8": kind, "recordKeyUtf8": key})
+    });
+    json!({
+        "secretHex": hx(&secret),
+        "secretBase64": B64.encode(secret),
+        "hkdfInfoUtf8": "cogra:device-lock:v1",
+        "hkdfSaltHex": hx(&salt),
+        "lockKeyHex": hx(&device_lock::lock_key(&secret, &salt)),
+        "aesNonceHex": hx(&nonce),
+        "accountId": account.to_string(),
+        "recordKindUtf8": binding.kind,
+        "recordKeyUtf8": binding.key,
+        "associatedDataHex": hx(&device_lock::associated_data(&record[..device_lock::HEADER_LEN], &binding)),
+        "plaintextHex": hx(plaintext),
+        "recordHex": hx(&record),
+        "refusedBindings": refusals,
+    })
 }
 
 fn tagged(tag: &[u8], parts: &[&[u8]]) -> Value {
@@ -602,6 +658,7 @@ fn build_vectors() -> Value {
             "uploadChallengeHex": hx(&upload_challenge),
             "uploadSignatureHex": hx(&upload_signature),
         },
+        "deviceLock": device_lock_vectors(&actor_seed),
     })
 }
 

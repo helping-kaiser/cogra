@@ -29,6 +29,8 @@ In scope:
 - Rate limiting on auth endpoints.
 - Key-recovery backup — storing client-encrypted signing-key
   blobs the server cannot decrypt (see "Key recovery").
+- Device locks — the server-held secret a "don't remember me"
+  device's signed-out custody is locked under (see "Device lock").
 - The custody stores for the documented exceptions: the backend's
   co-signing halves for Collective members
   ([collectives.md §2](../instances/collectives.md#2-custody)) and
@@ -58,10 +60,13 @@ Out of scope:
 ## Server-stored credentials vs. user-owned keys
 
 The server stores **password hashes** — credentials it can
-verify but not reverse — and, for accounts that opt into key
+verify but not reverse — for accounts that opt into key
 backup, **client-encrypted key blobs** it cannot decrypt (see
-"Key recovery"). Neither puts a user-owned secret in CoGra's
-hands: the signing key itself is client-held
+"Key recovery"), and for "don't remember me" accounts, the
+**device-lock secrets** each device locks its signed-out custody
+under, which open nothing without that device's ciphertext (see
+"Device lock"). None puts a user-owned secret in CoGra's hands:
+the signing key itself is client-held
 ([substrate.md §6](../primitive/substrate.md#6-authoring-path-and-admission))
 and never enters custody.
 
@@ -1007,15 +1012,20 @@ There is no separate "abandon application" act: a signed-out
 application keeps following its lifecycle ("Application").
 
 The one exception is the **"don't remember me" opt-in**, offered
-at login, at restore and in Settings: an account flagged with it
-has its key material — seed, pending backup blob, handshake
-material, and device-local flags — purged from the device at
-sign-out (and on a session invalidation that clears the tokens).
-An explicit sign-out clears the account's unpublished draft with
-it, and asks first when this device holds the only copy of an
-unbacked key — make a recovery code, or erase and sign out. A
-remembered account's sign-out clears nothing, its draft included.
-For a shared or public device; default off.
+at login, at restore and in Settings, for a shared or public
+device; default off. An account flagged with it keeps nothing
+usable on the device once its session ends. With a recovery
+backup, its device material — key, pending backup blob, handshake
+material, draft, kept picks and device-local flags — is purged at
+sign-out. Without one, the device holds the only copy of the key,
+so the material is never destroyed silently: explicit sign-out
+asks first — make a recovery code, lock it, or erase it — and a
+session ended from anywhere else locks it ("Device lock" below).
+An invalidation ends sessions; it is never a remote wipe. A
+backed account's key material is purged on a session invalidation
+as at sign-out, while its draft and kept picks are locked, since
+they are the only copies of unpublished content. A remembered
+account's sign-out clears nothing, its draft included.
 
 ### Multi-account device custody
 
@@ -1023,15 +1033,76 @@ Several accounts on one device is a supported pattern
 (roadmap.md slice 1.1). The client identity stores bind every
 piece of key material — actor seed (Android) / non-extractable
 key pair (web), pending backup blob, per-write handshake
-material, and device-local UX flags — to the account it belongs
-to, never to a device-global slot; sign-out keeps each account's
-material in its own slot. The repair-attach verifies before
+material, the unpublished draft, kept picks, the device lock, and
+device-local UX flags — to the account it belongs to, never to a
+device-global slot; sign-out keeps each account's material in its
+own slot, and locking, purging or unlocking one account's slot
+never touches another's. The repair-attach verifies before
 offering: it re-attaches only a key held in the signed-in
 account's own slot, and treats a mismatch between the slot key
 and the account's attached key (`User.actorPubkey`, viewer-only)
 as key-not-on-device — the restore path, never a blind attach.
 Material stored by earlier single-account builds is adopted by
 the first account that signs in after the update.
+
+### Device lock
+
+The lock answers the next person at a shared device: someone with
+the browser profile or the app's storage, but not the account's
+password. It is not a remote wipe — a device learns of a session
+ended elsewhere only at its next refresh, and until then its
+custody is as live as any signed-in device's.
+
+A flagged account's custody on a device is locked under a
+**device lock**: a 32-byte CSPRNG secret the server mints per
+account and device slot (`issueDeviceLock`), stores in
+`auth_device_locks`, and names by a random id the device holds.
+The id is unguessable, so it doubles as the capability to delete
+the lock (`discardDeviceLock`). The secret is stored as given — it
+must be released, so it cannot be hashed — and a row opens nothing
+without the device's ciphertext: theft needs both, the recovery
+blob's posture.
+
+- **Held while signed in.** A flagged account's slot holds its
+  lock whenever the account is signed in: a session ended
+  elsewhere leaves no session to fetch a secret with, and the
+  explicit lock answer works offline. The client obtains it at
+  sign-in and at restore with the box checked, when the Settings
+  switch turns on, and on any signed-in start that finds none;
+  turning the switch off, or signing in with the box unchecked,
+  discards it. Web holds it as a non-extractable HKDF base key,
+  Android inside its Keystore-wrapped store, each in the account's
+  own slot.
+- **Released only online, behind the current password**
+  (`releaseDeviceLock`). The password is re-verified against the
+  stored hash, never against anything cached on the device, so
+  after a reset or a change elsewhere the old password cannot
+  unlock. The re-proof spends the account's re-authentication
+  budget ("Rate limiting"). Sign-in releases before it commits the
+  new session's tokens, so no signed-in screen ever reads a locked
+  slot.
+- **Never spent, never rotated, never revoked.** A release hands
+  back the same secret every time — a lost response must not
+  destroy the only way back into the device's custody — and no
+  session revocation touches a lock: a revoked session says
+  nothing about the actor ("Sessions").
+- **Deleted with the account.** Account deletion deletes the
+  account's locks, which leaves any ciphertext still on a device
+  permanently unopenable.
+- **Format (v1).** HKDF-SHA-256 over the 32-byte secret with a
+  fresh random 16-byte salt per lock event and info
+  `cogra:device-lock:v1` yields the lock key. Each locked record is
+  one AES-256-GCM message under a random 12-byte nonce, stored as
+  `version 0x01 ‖ salt ‖ nonce ‖ ciphertext`. The associated data
+  is that header, the account id's 16 bytes, and the record's kind
+  and key, each framed by its big-endian 64-bit length — so a
+  record opens only in its own account's slot, as itself. Golden
+  vectors sit beside the blob's in `client-crypto-vectors.json`.
+
+A locked, unbacked key depends on the login and on CoGra's server
+to open again; unlike a recovery code or an export ("Key
+export"), it survives the loss of neither. Making a recovery code
+before signing out is the way off that dependence.
 
 ---
 
@@ -1049,10 +1120,10 @@ limits survive restarts and hold across instances.
   exponential backoff on consecutive failures; a successful
   login ends the run.
 - Re-authentication inside a session (`changePassword`,
-  `requestEmailChange`) — one per-account run of consecutive wrong
-  current passwords, shared by every verb that re-proves the
-  password, with the same exponential backoff; a right password
-  ends the run. Without it a live session could guess the password
+  `requestEmailChange`, `releaseDeviceLock`) — one per-account run
+  of consecutive wrong current passwords, shared by every verb that
+  re-proves the password, with the same exponential backoff; a
+  right password ends the run. Without it a live session could guess the password
   it was opened with. The caller is authenticated, so the backoff
   answers visibly.
 - Application submits (`register`) — limited
@@ -1065,6 +1136,11 @@ limits survive restarts and hold across instances.
 - Email-change requests and resends (`requestEmailChange`,
   `resendEmailChange`) — one mail budget each, per account; visible
   for the same reason.
+- Device-lock issues (`issueDeviceLock`) — limited per account,
+  with a cap on the locks one account holds at once: issuing
+  writes a row, so a stolen session could otherwise grow storage
+  without bound. Visible for the same reason. Discarding is not
+  limited — it only deletes the caller's own rows.
 - Token confirmations (`verifyEmail`, `confirmPasswordReset`,
   `confirmEmailChange`, `confirmAccountDeletion`) — limited per IP. The tokens are
   high-entropy; the budget bounds guessing anyway.

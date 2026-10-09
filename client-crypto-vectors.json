@@ -1,4 +1,40 @@
 {
+  "deviceLock": {
+    "accountId": "b1b2b3b4-b5b6-b7b8-b9ba-bbbcbdbebfc0",
+    "aesNonceHex": "a1a2a3a4a5a6a7a8a9aaabac",
+    "associatedDataHex": "019192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacb1b2b3b4b5b6b7b8b9babbbcbdbebfc000000000000000086964656e7469747900000000000000056163746f72",
+    "hkdfInfoUtf8": "cogra:device-lock:v1",
+    "hkdfSaltHex": "9192939495969798999a9b9c9d9e9fa0",
+    "lockKeyHex": "0f4771835fc2191a4fb8124b492db8778dca9cb34712064172f14414a8ac045b",
+    "plaintextHex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+    "recordHex": "019192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabac5e829cd083c8073bdf569778d561222d31e060fb579f05edb49cef0ae676302672860bcda98a838df6387d217ea18fcb",
+    "recordKeyUtf8": "actor",
+    "recordKindUtf8": "identity",
+    "refusedBindings": [
+      {
+        "accountId": "c1c2c3c4-c5c6-c7c8-c9ca-cbcccdcecfd0",
+        "recordKeyUtf8": "actor",
+        "recordKindUtf8": "identity"
+      },
+      {
+        "accountId": "b1b2b3b4-b5b6-b7b8-b9ba-bbbcbdbebfc0",
+        "recordKeyUtf8": "actor",
+        "recordKindUtf8": "draft"
+      },
+      {
+        "accountId": "b1b2b3b4-b5b6-b7b8-b9ba-bbbcbdbebfc0",
+        "recordKeyUtf8": "draft",
+        "recordKindUtf8": "identity"
+      },
+      {
+        "accountId": "b1b2b3b4-b5b6-b7b8-b9ba-bbbcbdbebfc0",
+        "recordKeyUtf8": "tor",
+        "recordKindUtf8": "identityac"
+      }
+    ],
+    "secretBase64": "gYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6A=",
+    "secretHex": "8182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0"
+  },
   "encoding": [
     {
       "cborHex": "00",
