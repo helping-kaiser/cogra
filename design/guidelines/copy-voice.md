@@ -262,6 +262,9 @@ departs, in lowercase after a `·`:
   or `hiding removed`; `Still settling` off, `settled only`.
 - **Topic**: the tag's own name (*Topics*). A default never holds one,
   so it has no word for its absence.
+- **People**: `your people` (jakob 2026-10-09, ruling 77 — the label
+  `Your people` blessed; the trigger's lowercase state word follows the
+  axis rule). `Everyone` is the default and has no word.
 
 *New 2026-10-02, blessed (jakob 2026-10-02):* `all forms`, `hiding
 seen`, `+ still settling`, `hiding sensitive`, `hiding removed`,
@@ -280,10 +283,18 @@ carry, `ExploreFilter`, `HistoryFilter`):
 - `Order` — `Ranked puts what's closest to you first — your view, no one
   else's. Newest ignores it and lists by time.` — with `Ranked` ·
   `Newest` and the checkbox `Show what you've already seen`.
-- `Also show` — `Sensitive content stays veiled until you tap it. A
-  removed post keeps its place — author, time, and where it sat in the
-  thread — never the content.` — with `Sensitive` · `Removed` · `Still
-  settling`.
+- `Also show` — `How sensitive content is veiled is set in Settings.` —
+  with `Sensitive` · `Removed` · `Still settling`. The hint carries the
+  one thing the chips don't say themselves — where the veil behavior is
+  changed — and explains nothing else (jakob 2026-10-09: tapping a veil
+  and reading a removed post's husk explain themselves).
+- `People` — `Whose things reach this feed.` — the rows `Everyone` over
+  `The whole feed, as far as your eyes reach.` and `Your people` over
+  `Only the people you hold an opinion for — the same rank, narrowed to
+  them.` (the pair's labels blessed, jakob 2026-10-09, ruling 77; the
+  Everyone line's wording jakob's own, 2026-10-09; *the section word,
+  the Your-people line and the Also-show pointer drafted — their
+  wording jakob's at review*).
 
 ## Platform nouns
 
@@ -1026,6 +1037,17 @@ spelling — one `License terms` everywhere, never the British spelling:
   (jakob 2026-10-06)*). It stands against *Accessible names*' `Share this
   post` "everywhere it appears, never a bare Share" — an open question
   for jakob; the row stays as drawn meanwhile.
+- `Report` — the sheet tail of every other-person menu, a post's, a
+  comment's, a person's and a deleted account's alike; own menus carry
+  none (jakob 2026-10-09, ruling 75, **blessed**). It opens the one
+  confirm sheet (`ReportConfirm`), whose heading names the thing —
+  `Report this post?` / `Report @ada?` (**blessed**), with the comment's
+  `Report this comment?` and the nameless `Report this account?` as
+  their twins (*drafted 2026-10-09 — their wording jakob's at review*) —
+  over one body line, `It goes to the people who run CoGra for a look.`
+  (*drafted 2026-10-09; the commit mails the report for MVP and the line
+  names no mechanism*), the pair `Report` · `Cancel` and the snackbar
+  `Reported.` (**blessed**). It never connects to Report-a-problem.
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
@@ -1350,6 +1372,14 @@ Blessed with the audit-states round:
   two existing words, so nothing new to bless; `Verified`'s `Back to
   CoGra` keeps its words and opens `SignIn`. `VerifiedApp`'s way on reads
   `Sign in` the same way (jakob 2026-10-05).
+- **The dead deletion link** (`DeleteLinkExpired`; ER-G1, jakob
+  2026-10-07, drawn 2026-10-09): the family's heading `This link doesn't
+  work anymore` over `It may have been used already, or a newer request
+  replaced it. If you still mean to delete your account, ask again from
+  settings.` (*the body drafted 2026-10-09 — its wording jakob's at
+  review*), no Resend, and the one way on session-dependent —
+  `Back to settings` with a session, `Sign in` without. The body claims
+  no expiry, because the deletion mail claims none.
 
 ## The entry funnel's round
 
@@ -1538,8 +1568,12 @@ Every other line here is **carried over — blessed by use (jakob
 - **The waiting card** (`ApplicantWaiting`) — under `All set — waiting on
   @mira`, `Their approval brings you in. Nothing else is needed from
   you.`; its ask link labelled `Your ask link`, captioned `It does not
-  expire. While @mira's answer is open, it can't start a second
-  application.` (`ProfileApplicant` too).
+  expire.` (jakob 2026-10-07, item 58). On the applicant's own profile
+  (`ProfileApplicant`) the caption goes on in the second person: `It does
+  not expire. Anyone who holds your ask can let you in — the first vouch
+  lands it.` (*the twin drafted 2026-10-09, item 91 — its wording jakob's
+  at review; the third-person form, blessed with item 58, stays wherever
+  another reader meets the fact*).
 
 - **The approval that fell through** (`ApplicantFellThrough`, jakob
   2026-10-07, ruling 60) — the landing card flipped back to waiting, naming
@@ -1548,6 +1582,14 @@ Every other line here is **carried over — blessed by use (jakob
   `ApplicantRejected`'s ask-link block (`Ask someone you know to vouch for
   you` and its caption) and `Got it` (*new 2026-10-07, the title and the
   body drafted — their wording jakob's at review*).
+
+- **The registration's two legal lines** (`Join`, `JoinErrors`; jakob
+  2026-10-09, ruling 76) — the accept sentence `By creating your account
+  you accept the Terms.` directly above `Create account`, `Terms` a door
+  and no checkbox (**blessed**); and the Privacy Policy as its own linked
+  notice at the form's foot, never inside the accept sentence: `How CoGra
+  handles your data: the Privacy Policy.` (*new 2026-10-09, the notice
+  drafted — its wording jakob's at review*).
 
 ## The settings page
 
@@ -1882,7 +1924,12 @@ out: one address-free landing (jakob 2026-10-07, ruling 38) —
 `VerifyExpired`'s heading, `This link doesn't work anymore` (blessed), over
 `The change it belonged to may have run out, been canceled or already
 happened — this link can't move your email anymore.` and `Sign in` (*new
-2026-10-07, the body drafted — its wording jakob's at review*). Opened under a different account,
+2026-10-07, the body drafted — its wording jakob's at review*). Signed IN,
+a token the app does not know lands in the same family (jakob 2026-10-09,
+item 98): the dead-link heading over `It isn't a link CoGra knows — it
+may be mistyped, or from a change long gone. Your email stays as it is.`
+and `Back to settings` (*new 2026-10-09, the body drafted — its wording
+jakob's at review*). Opened under a different account,
 the link's side does not apply and the landing says so: `This link isn't
 for this account` · `It confirms a new address for another account, so
 nothing changed here. Open it signed in as that account to finish the
@@ -2022,17 +2069,20 @@ recovery code is 26 characters.` (jakob 2026-10-05). Either copy on `YourKey` an
 switch on and no recovery code): `Sign out without a backup?` / `This
 browser holds the only copy of your key. Signing out leaves your key,
 your draft and any opinions you kept pending here, locked until you sign
-in on this browser again. Erase them instead, and no one — including
+in again. Erase them instead, and no one — including
 CoGra — can bring them back.` — `Make a recovery code` ·
 `Sign out, keep them locked` · `Erase them and sign out` (the plurals
-blessed, jakob 2026-10-05). The body names all three things the opt-in
+blessed, jakob 2026-10-05; the custody clause `…locked until you sign in
+again.` on both twins, the locality carried by the opening noun and by
+`kept pending here` — jakob 2026-10-09, item 87). The body names all
+three things the opt-in
 would clear — the key, the draft, the picks kept pending (jakob's
 ruling) — and the answers name them as one plural. The app's body
 reads `This app holds the only copy of your key. Signing out leaves
 your key, your draft and any opinions you kept pending here, locked
-until you sign in to this app again. Erase them instead, and no one —
+until you sign in again. Erase them instead, and no one —
 including CoGra — can bring them back.` (*blessed (jakob
-2026-10-07)*).
+2026-10-07; the custody clause jakob 2026-10-09)*).
 
 **No screen lock** (Android, in front of every reveal or replace):
 `This phone has no screen lock` / `Anyone who picks it up could see your

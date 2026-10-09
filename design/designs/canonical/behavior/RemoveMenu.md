@@ -4,11 +4,13 @@ ALWAYS Save, or Unsave while the post is kept, is the menu's first row
 
 ALWAYS License terms is the menu's last row
 
+ALWAYS the menu carries no Report row, the own menus' rule
+
 WHEN tap Save -> the sheet closes AND the snackbar confirms at once AND the row reads Unsave the next time the menu opens
 
 WHEN Save does not go through -> the save reverts AND the post's row says so with Retry
 
-WHEN tap Unsave -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
+WHEN tap Unsave -> the sheet closes AND postDetail.snackbar reads Removed from Saved. with Undo on postDetail.snackbar.action
 
 WHEN tap Edit -> the post's edit opens
 

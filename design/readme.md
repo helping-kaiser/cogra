@@ -9568,6 +9568,64 @@ wait for jakob's review (copy-voice marks each).
   block, since anyone already in can now vouch. It registers with the
   applicant boards' own round.
 
+### The fabric-2 draws — 2026-10-09
+
+jakob's fabric-2 rulings (the day's digest, items 75–98) ordered this
+round's draws and lines. Each draw lands in an existing construction; the
+words it mints are drafted and wait for jakob's review (copy-voice marks
+each).
+
+- **The Report row** (item 75). `Report` joins the sheet tail of every
+  other-person menu — the reader's post menu on both widths, the
+  comment's, another's profile's and the deleted account's — and no own
+  menu. It opens one confirm sheet, `ReportConfirm`, drawn over the post
+  detail and a master for every other host: the heading names the thing,
+  one body line says what happens without naming the mechanism (the MVP
+  commit sends a mail; report machinery waits for proposals/moderation),
+  `Report`/`Cancel`, the snackbar `Reported.` It never connects to
+  Report-a-problem. Registered under each hosting menu's own prefix, the
+  sheet as `postDetail.reportSheet`.
+- **The feed-hosted menu** (item 84; the shape ruled 2026-10-07, item 53).
+  `FeedPostMenu`: the Feed with the reader's post menu open — the same
+  sheet `ReaderPostMenu` masters, on its second host, the rows the one
+  atom both boards read. The drawn state registers `feed.menuSheet.*`,
+  mirroring `postDetail.menuSheet`'s; paths never pre-register undrawn.
+  The plain feed's ⋮ edge now lands on it; the other feed-flavored
+  boards' ⋮ edges still name the detail's master and wait for a ruled
+  sweep.
+- **The aftermath extension** (item 83). The hide's snackbar landing,
+  drawn on the two surfaces #122 left: `HistoryHidden` — History's top
+  viewport as it stood, every card in place (the open list is frozen; the
+  standing stay-out law takes hold at the next open or pull, the person's
+  own profile card staying, ruling 11) — and `TagPageHidden` — the tag's
+  page standing and STAYING standing, since the hidden list is the feed's
+  (ruling 49's rule, met on a search subpage). Both snackbars are the
+  feed's word for word and register under their surface's own prefix
+  (`history.snackbar`, `tagPage.snackbar`). With them, item 48's unsave
+  aftermath lines on the menu hosts take their registered
+  `<host>.snackbar.action` paths.
+- **The People section** (item 77). The feed filter sheet gains the
+  friends-only scope as one exclusive pair of ROWS — the license sheets'
+  radio-row anatomy, never a segmented pill (jakob) — `Everyone`, the
+  default, and `Your people`: a scope filter over the neutral rank
+  (feed-ranking.md §10's Friends feed), the people the reader holds an
+  opinion for. It stands with the scope narrowers at the body's tail, the
+  topic section staying last; the trigger's deviation word is
+  `your people`, riding beside the topic's. Drawn on the one master, so
+  `FeedSheet` and `SettingsReading` carry it together; the paths register
+  under `settings.feedSheet.people` (the feed's own sheet stays
+  unregistered until its drawn state does).
+- **The dead-link family grows two members** (items 98 and ER-G1). The
+  signed-in unknown-token /email-change state joins `ChangeEmailLinked`'s
+  landing chip as `unknown` — the dead-link heading, a body naming no
+  address, `Back to settings` — one family with ruling 38's signed-out
+  landing. And the deletion link's dead landing is drawn,
+  `DeleteLinkExpired`: `ResetExpired`'s construction with no Resend (the
+  ask-again lives in settings, with its own content-sweep choice), a body
+  claiming no expiry because the deletion mail claims none, and the way on
+  session-dependent per the G9/38 family — `Back to settings` with a
+  session, `Sign in` without, the `session` chip swapping the one label.
+
 ---
 
 ## 14. The canvases

@@ -92,7 +92,18 @@ export const FEED_ALSO = [
   { value: "settling", label: "Still settling" },
 ];
 
-export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: ["settling"], topic: null };
+export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: ["settling"], topic: null, people: "everyone" };
+
+/* WHO THE FEED READS FROM (jakob 2026-10-09, ruling 77): `Everyone`, the
+   whole feed, or `Your people` — a scope filter over the neutral rank
+   (feed-ranking.md §10's Friends feed), the people the reader holds an
+   opinion for. The order never changes; the feed narrows to them. ROWS,
+   NOT A SEGMENTED PILL (jakob): the license sheets' radio-row anatomy,
+   the dot centred on the reading. */
+export const FEED_PEOPLE = [
+  { value: "everyone", label: "Everyone" },
+  { value: "yourPeople", label: "Your people" },
+];
 
 /* The trigger's word for the one default-on chip switched off — a deviation,
    so the trigger speaks it, in the landed-only view's own terms. */
@@ -207,6 +218,9 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_C
      to leave the pill — and the only thing that leaves is an extra. In the
      head, one long name would draw a summary nothing could shorten. */
   if (value.topic) extras.push(value.topic);
+  /* The people scope rides beside the topic: the other loud narrowing, an
+     extra for the topic's reasons. Everyone is the default and has no word. */
+  if (value.people === "yourPeople") extras.push("your people");
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map((form) => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
   if (value.seen === true) extras.push("showing seen");
@@ -331,10 +345,57 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
       {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
           the default is the feed as it has always been, and off is the
           landed-only view. */}
-      <FilterSection label="Also show" hint="Sensitive content stays veiled until you tap it. A removed post keeps its place — author, time, and where it sat in the thread — never the content." node={node && "also"}>
+      <FilterSection label="Also show" hint="How sensitive content is veiled is set in Settings." node={node && "also"}>
         {FEED_ALSO.map((entry) => (
           <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} node={node && `${entry.value}Chip`} />
         ))}
+      </FilterSection>
+      {/* WHO THE FEED READS FROM (jakob 2026-10-09, ruling 77). One exclusive
+          pair, drawn as ROWS — the license sheets' radio-row anatomy, never a
+          segmented pill (jakob) — because the two readings carry a sentence of
+          consequence each, and a pill carries none. `Everyone` is the default;
+          `Your people` narrows the feed to the people the reader holds an
+          opinion for, a scope filter over the same rank (feed-ranking.md §10).
+          It stands with the scope narrowers at the body's tail, the topic
+          section staying last (the one that grows). */}
+      <FilterSection label="People" hint="Whose things reach this feed." node={node && "people"}>
+        <div role="radiogroup" aria-label="People" style={{ flexBasis: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
+          {FEED_PEOPLE.map((entry) => {
+            const chosen = (value.people || "everyone") === entry.value;
+            return (
+              <label key={entry.value} data-people={entry.value} className="cg-state cg-focus" style={{ display: "flex", alignItems: "flex-start", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }} data-node={node && entry.value} data-node-key={undefined}>
+                <input
+                  type="radio"
+                  name="feed-people"
+                  checked={chosen}
+                  onChange={() => set({ people: entry.value })}
+                  style={{ position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 }}
+                />
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 18,
+                    height: 18,
+                    flex: "none",
+                    marginTop: 1,
+                    boxSizing: "border-box",
+                    borderRadius: "var(--radius-full)",
+                    border: chosen ? "5px solid var(--primary)" : "1px solid var(--border-field)",
+                  }}
+                  data-node={node && "dot"}
+                />
+                <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                  <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
+                    {entry.label}
+                  </span>
+                  <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+                    {entry.value === "everyone" ? "The whole feed, as far as your eyes reach." : "Only the people you hold an opinion for — the same rank, narrowed to them."}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
       </FilterSection>
       {/* THE TOPIC FEED IS JUST ANOTHER FEED SETTING (jakob, 2026-09-14), so it
           is a section of this sheet and not a surface of its own. What it

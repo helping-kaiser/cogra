@@ -2,6 +2,8 @@
 
 ALWAYS the reader's own profile menu reads Saved, then History, then Share your profile
 
+ALWAYS the menu carries no Report row, the own menus' rule
+
 ALWAYS the reader's own profile stays open beneath the sheet, and nothing beneath the scrim takes a tap
 
 WHEN tap Saved GIVEN the reader has kept something -> Saved opens

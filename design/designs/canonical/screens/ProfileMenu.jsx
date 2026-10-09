@@ -1,6 +1,7 @@
-/* ANOTHER PERSON'S PROFILE MENU (readme §13, the menus round). Four rows, and
+/* ANOTHER PERSON'S PROFILE MENU (readme §13, the menus round). Five rows, and
    none of them the post menu's first two: a profile declares no license, and
-   the word for referencing a person is mentioning, not citing.
+   the word for referencing a person is mentioning, not citing. Report closes
+   the sheet (jakob 2026-10-09, ruling 75 — `REPORT_ROW`'s note).
 
    MENTIONING IS CITING. Both stage the same fact — a Reference edge from the
    post being written to the thing it points at — and the two words only record
@@ -11,8 +12,8 @@
    A PERSON IS SAVEABLE (jakob, the private-viewer-state round), so Save leads
    here as it does on a post, and the person joins the one mixed Saved list.
 
-   HIDE CLOSES THE SHEET. It is the rarest row and the only one that takes
-   something away, so it sits furthest from the thumb's first target — and it
+   HIDE SITS LOW. It is the rarest comfort and the only row that takes
+   something away, so it sits far from the thumb's first target — and it
    names the handle, `Hide @ada`, which is the word the reader will look for
    again under Hidden accounts in settings. No confirm: the rows go and a
    snackbar offers Undo, because hiding clears your own feed and nothing else.

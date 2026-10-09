@@ -6,7 +6,9 @@ ALWAYS full matches stand before partial matches, a full match being a name or t
 
 ALWAYS what the ranker cannot score stands behind a visible seam, newest first GIVEN the order is Ranked
 
-ALWAYS a row past the seam shows its age in place of its rank, in the one age ladder: now, 35m, 2h, 3d up to 30 days, then the date as 06.09.2024
+ALWAYS a row past the seam but a tag or a person shows its age in place of its rank, in the one age ladder: now, 35m, 2h, 3d up to 30 days, then the date as 06.09.2024
+
+ALWAYS a tag or a person row past the seam carries nothing on its right edge
 
 ALWAYS a ranked row carries its viewer-relative rank on its right edge beside the score's graph glyph
 
@@ -54,7 +56,7 @@ WHEN a read fails GIVEN nothing is loaded -> Can't reach the server. Check your 
 
 WHEN tap Retry -> the failed read is asked again
 
-ALWAYS a guest's results stand newest first, each row with its age and no rank, and no explore.seam stands GIVEN the reader is a guest
+ALWAYS a guest's results stand newest first, each row but a tag or a person with its age, no row with a rank, and no explore.seam stands GIVEN the reader is a guest
 
 ALWAYS an applicant's search reads as a member's
 
@@ -64,6 +66,6 @@ ALWAYS full matches stand before partial matches, each tier newest first GIVEN t
 
 ALWAYS explore.seam is absent and no row carries a rank GIVEN the order is Newest
 
-ALWAYS every result but a tag carries its age on its right edge, in the one ladder of ages GIVEN the order is Newest
+ALWAYS every result but a tag or a person carries its age on its right edge, in the one ladder of ages GIVEN the order is Newest
 
-ALWAYS a tag result carries nothing on its right edge, never an age, a rank or a use count GIVEN the order is Newest
+ALWAYS a tag or a person result carries nothing on its right edge, never an age, a rank or a use count GIVEN the order is Newest

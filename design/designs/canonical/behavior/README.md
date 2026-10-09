@@ -213,7 +213,9 @@ And it checks nodes, against `nodes.json`:
   the home-vouch and Saved packets' boards — `VouchBack`, `VouchBackPad`,
   `VouchedIn`, `CommentMenu`, `CommentMenuOwn` and `RemoveMenu`; then the
   release-registry packet's boards — `WhatsNew`, `WhatsNewBehind` and
-  `FeedNewerVersion` — so far), plain words
+  `FeedNewerVersion`; then the fabric-2 round's boards — `ReportConfirm`,
+  `FeedPostMenu`, `HistoryHidden`, `TagPageHidden` and `DeleteLinkExpired` —
+  so far), plain words
   that spell one of its nodes fail: "the media row" on `ComposeDetails` is
   written `composeDetails.mediaRow`. The check knows a node by the words of a
   compound name — `mediaRow`, `filterTrigger`, `actionRow`. A one-word

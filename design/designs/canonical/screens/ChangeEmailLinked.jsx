@@ -19,6 +19,14 @@
    heading, `This link doesn't work anymore`, with the address the account
    has now and `Back to settings` — the chip's `canceled` and `applied`.
 
+   A LINK NOBODY KNOWS, SIGNED IN (jakob 2026-10-09, item 98 — one family
+   with ruling 38's signed-out landing). A mistyped or long-swept token
+   answers nothing at all, so the read can tie it to no change and no
+   address: the landing takes the dead-link heading over a body naming no
+   address — the signed-out G9 construction met with a session — and
+   `Back to settings`, the signed-in way on. The chip's `unknown`; its body
+   is drafted for jakob.
+
    IT NEEDS A SESSION. `confirmEmailChange` is a signed-in call, so a link
    opened on a device that is not signed in lands on
    `ChangeEmailLinkedSignedOut` first. An expired change and an address taken
@@ -30,8 +38,8 @@
    other landings name theirs. The `landing` chip changes their words and
    draws no element twice, so nothing is keyed. */
 export const NODE = "changeEmail";
-export const PROPS = { landing: { editor: "enum", options: ["first", "last", "canceled", "applied"], default: "first" } };
-export const VALS = `linkedTitle: this.props.landing === "last" ? "Email changed" : this.props.landing === "canceled" || this.props.landing === "applied" ? "This link doesn't work anymore" : "New address confirmed", linkedBody: this.props.landing === "last" ? "You sign in with sol@ferreira.studio from now on, and resets go there too." : this.props.landing === "canceled" ? "The change it belonged to was canceled. Your email is still sol@solferreira.art." : this.props.landing === "applied" ? "The change it belonged to already happened. Your email is now sol@ferreira.studio." : "One side left: the code we sent to sol@solferreira.art. Your email moves once it's typed in.", linkedWay: this.props.landing === "first" ? "Enter the code" : "Back to settings"`;
+export const PROPS = { landing: { editor: "enum", options: ["first", "last", "canceled", "applied", "unknown"], default: "first" } };
+export const VALS = `linkedTitle: this.props.landing === "last" ? "Email changed" : this.props.landing === "canceled" || this.props.landing === "applied" || this.props.landing === "unknown" ? "This link doesn't work anymore" : "New address confirmed", linkedBody: this.props.landing === "last" ? "You sign in with sol@ferreira.studio from now on, and resets go there too." : this.props.landing === "canceled" ? "The change it belonged to was canceled. Your email is still sol@solferreira.art." : this.props.landing === "applied" ? "The change it belonged to already happened. Your email is now sol@ferreira.studio." : this.props.landing === "unknown" ? "It isn't a link CoGra knows — it may be mistyped, or from a change long gone. Your email stays as it is." : "One side left: the code we sent to sol@solferreira.art. Your email moves once it's typed in.", linkedWay: this.props.landing === "first" ? "Enter the code" : "Back to settings"`;
 
 export function Screen() {
   return (

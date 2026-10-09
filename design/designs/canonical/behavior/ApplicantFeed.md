@@ -59,3 +59,5 @@ ALWAYS a staged act is seen by the applicant alone, in their own chronicle
 WHEN tap Profile on the bar -> the applicant's own profile opens
 
 WHEN the reader first enters this feed GIVEN the intro's seen flag is unset -> the intro opens over the feed at its first card
+
+ALWAYS the newer-version snackbar announces on this feed as on the member's, once per release on a cold open

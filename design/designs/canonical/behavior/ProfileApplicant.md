@@ -6,7 +6,7 @@ ALWAYS the application card rides above the header, titled Waiting on with the h
 
 ALWAYS the application card never names the role inviter
 
-ALWAYS the application card holds the ask link whole, labelled Your ask link, with its copy control and the caption It does not expire. Anyone who holds their ask can let them in — the first vouch lands it. GIVEN the application is open
+ALWAYS the application card holds the ask link whole, labelled Your ask link, with its copy control and the caption It does not expire. Anyone who holds your ask can let you in — the first vouch lands it. GIVEN the application is open
 
 ALWAYS the card wears the account-notice olive, titled @mira closed your application over That was @mira's call, and it is the only thing it decides. Your account stays exactly as it is, you can keep reading, and any member you know can vouch you in instead. GIVEN the member whose approval was in play closed the application
 

@@ -1,6 +1,6 @@
 # ProfileMenu · `spec:design:behavior-profile-menu`
 
-ALWAYS another person's profile menu reads Save or Unsave, then Mention in a new post, then Share this profile, then Hide with the person's handle
+ALWAYS another person's profile menu reads Save or Unsave, then Mention in a new post, then Share this profile, then Hide with the person's handle, then profile.menuSheet.report at the sheet tail
 
 ALWAYS the menu's first row reads Unsave GIVEN the person is kept
 
@@ -12,7 +12,7 @@ WHEN tap Save -> the person is kept in the one Saved list beside posts and comme
 
 WHEN tap Save GIVEN the save does not go through -> the save reverts AND the target's row says That didn't go through. with Retry, the profile's actions row when the menu opened on the profile
 
-WHEN tap Unsave -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
+WHEN tap Unsave -> the sheet closes AND profile.snackbar reads Removed from Saved. with Undo on profile.snackbar.action
 
 WHEN tap Mention in a new post -> the post wizard opens fresh at its first stage AND the person rides along as a staged reference, unseen until the details stage
 
@@ -31,6 +31,8 @@ WHEN tap Hide with the person's handle GIVEN the menu was opened from a profile 
 ALWAYS the menu carries no Share this profile row GIVEN it was opened from a profile card in the feed, whose own row carries the share
 
 ALWAYS a hidden person's profile still opens
+
+WHEN tap profile.menuSheet.report -> the sheet closes AND the report confirm sheet rises over the profile, its title reading Report @ada? AND NEVER anything is sent yet
 
 WHEN a guest taps any row but Share this profile -> the guest gate opens
 

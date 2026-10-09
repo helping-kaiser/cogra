@@ -35,3 +35,5 @@ WHEN tap Wallet on the bar GIVEN the reader is signed out -> the wallet's coming
 WHEN tap Feed on the bar GIVEN the feed is scrolled -> the feed goes back to its top
 
 WHEN tap Feed on the bar GIVEN the feed stands at its top -> the feed refreshes
+
+ALWAYS the newer-version snackbar announces on this feed as on the member's, once per release on a cold open

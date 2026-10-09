@@ -9,3 +9,7 @@ ALWAYS settings.snackbar stands above settings.hiddenSheet and its scrim, at the
 ALWAYS settings.people.hidden counts the accounts still hidden
 
 WHEN tap Undo on settings.snackbar -> the account is hidden again AND its posts leave the reader's feed again AND NEVER a dialog asks
+
+WHEN tap Undo on settings.snackbar GIVEN the re-hide does not go through -> the account stays unhidden AND its settings.hiddenSheet.list.account row comes back into its place, the line That didn't go through. in settings.hiddenSheet.list.account.second and Retry in the trailing slot, until Retry or the next fresh load
+
+WHEN tap Retry on the returned settings.hiddenSheet.list.account row -> the hide is asked again
