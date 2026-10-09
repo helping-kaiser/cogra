@@ -330,18 +330,23 @@ private fun LeaveTheStatusBarAlone(appWindow: Window?) {
     SideEffect {
         window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
         window.setDimAmount(0f)
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            // Deprecated at 35 precisely because edge-to-edge made it inert;
-            // below 35 it is still the window's own paint in the strip.
-            @Suppress("DEPRECATION")
-            window.statusBarColor = android.graphics.Color.TRANSPARENT
-        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) window.clearStatusBarPaint()
         if (appWindow != null) {
             val app = WindowCompat.getInsetsController(appWindow, appWindow.decorView)
             WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars =
                 app.isAppearanceLightStatusBars
         }
     }
+}
+
+/**
+ * The window's own paint in the status bar's strip, made transparent.
+ * `statusBarColor` is deprecated at 35 precisely because edge-to-edge made it
+ * inert; below 35 it is still painted, so the caller only comes here there.
+ */
+@Suppress("DEPRECATION")
+private fun Window.clearStatusBarPaint() {
+    statusBarColor = android.graphics.Color.TRANSPARENT
 }
 
 @Composable
