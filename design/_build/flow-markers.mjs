@@ -566,6 +566,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Hide @ada</button>", tag: "button" },
     { n: 4, find: ">License terms</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    // Report arrived at the sheet tail (ruling 75) and takes the next free
+    // number — the badge is an identity, not a position.
+    { n: 6, find: ">Report</button>", tag: "button" },
   ],
   // The same sheet on a phone too narrow for four actions: share has moved in
   // from the action row and leads, so every number below it shifts by one.
@@ -576,6 +579,14 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: ">Hide @ada</button>", tag: "button" },
     { n: 5, find: ">License terms</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 7, find: ">Report</button>", tag: "button" },
+  ],
+  // The report confirm (ruling 75): scanExempt like every menu board, so the
+  // sheet's own pair and its scrim are all that carries numbers.
+  ReportConfirm: [
+    { n: 1, find: ">Report</button>", tag: "button" },
+    { n: 2, find: ">Cancel</button>", tag: "button" },
+    { n: 3, find: 'class="cg-scrim-in"', tag: "div" },
   ],
   // TWO WASHES on this board — the thread's, and the menu's stacked over the
   // thread it dims — and both take the same number: the edge is "tap outside",
@@ -587,6 +598,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 4, find: 'class="cg-scrim-in"', tag: "div", all: true },
     { n: 5, find: ">Opinions on this</button>", tag: "button" },
     { n: 6, find: ">Cited by</button>", tag: "button" },
+    { n: 7, find: ">Report</button>", tag: "button" },
   ],
   // Your own comment's menu (the comment-removal round): CommentMenu's rows
   // keep their numbers — the badge is an identity, not a position — and
@@ -606,6 +618,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 3, find: ">Share this profile</button>", tag: "button" },
     { n: 4, find: ">Hide @ada</button>", tag: "button" },
     { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 6, find: ">Report</button>", tag: "button" },
   ],
   // A deleted account's menu: the master's rows minus Mention, which stages a
   // Reference at a person and has no handle left to spell.
@@ -614,6 +627,7 @@ Object.assign(FLOW_MARKERS, {
     { n: 2, find: ">Share this profile</button>", tag: "button" },
     { n: 3, find: ">Hide this account</button>", tag: "button" },
     { n: 4, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 5, find: ">Report</button>", tag: "button" },
   ],
   // Your own profile's menu (the private-viewer-state round): the two private
   // lists and the share row, over the page they belong to.

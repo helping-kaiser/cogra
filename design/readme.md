@@ -9568,6 +9568,24 @@ wait for jakob's review (copy-voice marks each).
   block, since anyone already in can now vouch. It registers with the
   applicant boards' own round.
 
+### The fabric-2 draws — 2026-10-09
+
+jakob's fabric-2 rulings (the day's digest, items 75–98) ordered this
+round's draws and lines. Each draw lands in an existing construction; the
+words it mints are drafted and wait for jakob's review (copy-voice marks
+each).
+
+- **The Report row** (item 75). `Report` joins the sheet tail of every
+  other-person menu — the reader's post menu on both widths, the
+  comment's, another's profile's and the deleted account's — and no own
+  menu. It opens one confirm sheet, `ReportConfirm`, drawn over the post
+  detail and a master for every other host: the heading names the thing,
+  one body line says what happens without naming the mechanism (the MVP
+  commit sends a mail; report machinery waits for proposals/moderation),
+  `Report`/`Cancel`, the snackbar `Reported.` It never connects to
+  Report-a-problem. Registered under each hosting menu's own prefix, the
+  sheet as `postDetail.reportSheet`.
+
 ---
 
 ## 14. The canvases

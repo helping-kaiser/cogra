@@ -1118,6 +1118,15 @@
       "page": "feed"
     },
     {
+      "file": "ReportConfirm.dc.html",
+      "title": "Post · the report confirm",
+      "x": 4320,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "ProfileOtherHidden.dc.html",
       "title": "Profile · someone else's, just hidden",
       "x": 4320,

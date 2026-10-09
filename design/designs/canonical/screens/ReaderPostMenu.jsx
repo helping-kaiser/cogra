@@ -3,12 +3,12 @@
    wired — the sheet the ⋮ opens on fifteen surfaces, mastered once here rather
    than redrawn beside each of them.
 
-   FOUR ROWS, IN THE ORDER A READER REACHES FOR THEM. Save, the thing done most;
+   FIVE ROWS, IN THE ORDER A READER REACHES FOR THEM. Save, the thing done most;
    citing, the reader's way of making this post the subject of their own; hiding
-   its author, rare and the only row that takes something away; and the license
+   its author, rare and the only row that takes something away; the license
    terms, which every genesis record declares and a reuser has to be able to
-   check — the rarest read in the product, so it closes the sheet. Report is the
-   one function still missing, and it waits for the slice that answers it.
+   check; and Report at the sheet tail (jakob 2026-10-09, ruling 75 —
+   `REPORT_ROW`'s note), opening the confirm sheet `ReportConfirm` draws.
 
    SAVE CARRIES THE STATE NOTHING ELSE SHOWS (jakob). The affordance row stays
    opinion · score · comments · share — no saved mark anywhere on the card — so

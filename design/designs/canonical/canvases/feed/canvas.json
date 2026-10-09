@@ -280,6 +280,15 @@
       "page": "feed"
     },
     {
+      "file": "ReportConfirm.dc.html",
+      "title": "Post · the report confirm",
+      "x": 4320,
+      "y": 4676,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "ExplorePerson.dc.html",
       "title": "Explore · a person found",
       "x": 1920,

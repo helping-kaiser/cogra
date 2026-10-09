@@ -2,7 +2,7 @@
 
 ALWAYS the comment's menu opens stacked over the thread, its wash between the two sheets and the thread's top still in view
 
-ALWAYS the comment's menu reads Save or Unsave, then Cite in a new post, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms
+ALWAYS the comment's menu reads Save or Unsave, then Cite in a new post, then postDetail.menuSheet.citedBy, then Opinions on this, then License terms, then postDetail.menuSheet.report at the sheet tail
 
 ALWAYS the comment's menu carries no Hide row
 
@@ -23,5 +23,7 @@ WHEN tap postDetail.menuSheet.citedBy -> the menu closes AND what cites the comm
 ALWAYS Opinions on this and postDetail.menuSheet.citedBy stand in the comment's menu whatever their counts
 
 WHEN tap License terms -> the menu closes AND the comment's terms come up in a sheet over the thread
+
+WHEN tap postDetail.menuSheet.report -> the menu closes AND postDetail.reportSheet rises stacked over the thread, its postDetail.reportSheet.title reading Report this comment? AND NEVER anything is sent yet
 
 WHEN tap the scrim, swipe the menu down, press system Back or press Escape -> the menu closes AND the thread stands open beneath it as it was

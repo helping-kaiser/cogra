@@ -1,8 +1,8 @@
 # ProfileDeletedMenu · `spec:design:behavior-profile-deleted-menu`
 
-ALWAYS a deleted account's profile menu reads Save or Unsave, then Share this profile, then Hide this account
+ALWAYS a deleted account's profile menu reads Save or Unsave, then Share this profile, then Hide this account, then profile.menuSheet.report at the sheet tail
 
-WHEN the deleted account's menu opens -> it reads Save or Unsave, Share this profile and Hide this account AND NEVER a Mention row stands AND NEVER a disabled row stands in its place AND NEVER a row names a handle
+WHEN the deleted account's menu opens -> it reads Save or Unsave, Share this profile, Hide this account and profile.menuSheet.report AND NEVER a Mention row stands AND NEVER a disabled row stands in its place AND NEVER a row names a handle
 
 ALWAYS the hide row reads Hide this account, the same words every card the account authored shows, and never names a handle
 
@@ -22,7 +22,9 @@ WHEN tap Hide this account -> the sheet closes AND the reader stays on the page 
 
 WHEN tap Hide this account GIVEN the hide does not go through -> the hide reverts AND the line That didn't go through. with Retry stands in the page's actions row
 
-WHEN a guest taps Save or Hide this account -> the guest gate opens
+WHEN tap profile.menuSheet.report -> the sheet closes AND the report confirm sheet rises over the page, its title reading Report this account? AND NEVER anything is sent yet AND NEVER its title names a handle
+
+WHEN a guest taps Save, Hide this account or profile.menuSheet.report -> the guest gate opens
 
 WHEN tap the scrim, swipe the sheet down, press Back or press Escape -> the sheet closes AND nothing changes
 

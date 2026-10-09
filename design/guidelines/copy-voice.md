@@ -1026,6 +1026,17 @@ spelling — one `License terms` everywhere, never the British spelling:
   (jakob 2026-10-06)*). It stands against *Accessible names*' `Share this
   post` "everywhere it appears, never a bare Share" — an open question
   for jakob; the row stays as drawn meanwhile.
+- `Report` — the sheet tail of every other-person menu, a post's, a
+  comment's, a person's and a deleted account's alike; own menus carry
+  none (jakob 2026-10-09, ruling 75, **blessed**). It opens the one
+  confirm sheet (`ReportConfirm`), whose heading names the thing —
+  `Report this post?` / `Report @ada?` (**blessed**), with the comment's
+  `Report this comment?` and the nameless `Report this account?` as
+  their twins (*drafted 2026-10-09 — their wording jakob's at review*) —
+  over one body line, `It goes to the people who run CoGra for a look.`
+  (*drafted 2026-10-09; the commit mails the report for MVP and the line
+  names no mechanism*), the pair `Report` · `Cancel` and the snackbar
+  `Reported.` (**blessed**). It never connects to Report-a-problem.
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,

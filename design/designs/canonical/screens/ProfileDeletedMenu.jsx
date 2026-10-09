@@ -6,7 +6,10 @@
    THE SAME SHEET AS ANOTHER'S, ONE ROW SHORTER. `ProfileMenu`'s anatomy is the
    master and nothing here departs from it: the same `BottomSheet`, the same
    `SheetItem` rows, the same order — Save, then the reference row, then Share,
-   then Hide last as the rarest and the only one that takes something away.
+   then Hide as the rarest comfort and the only row that takes something away,
+   then Report at the sheet tail (jakob 2026-10-09, ruling 75): a redacted
+   actor still authors and still ranks, and their conduct is as reportable as
+   anyone's; the confirm names them `this account`, the page's own word.
 
    MENTION IS THE ONE ROW THAT GOES, AND IT IS NOT A SHELL BEING DROPPED. The
    husk's shells all stand: the header, the counts, the tabs, the chronicle, and
