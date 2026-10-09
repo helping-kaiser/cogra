@@ -1776,12 +1776,13 @@
       "startsOn": [
         "CommentMenu",
         "CommentMenuOwn",
+        "FeedPostMenu",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
       ],
       "steps": [
-        "start · «Cite in a new post» — to ComposePick on 5 boards → ComposePick",
+        "start · «Cite in a new post» — to ComposePick on 6 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeCited — a reference rides along — details arrives with it staged",
         "end · arrival at ComposeCited"
@@ -1792,6 +1793,7 @@
         "ComposeCited",
         "CommentMenu",
         "CommentMenuOwn",
+        "FeedPostMenu",
         "ReaderPostMenu",
         "ReaderPostMenuNarrow",
         "RemoveMenu"
@@ -3582,12 +3584,12 @@
       "description": "Hide on a post's menu, opened from a card in the feed, asks nothing: that person's rows go, the ones behind them move up, and the snackbar offers Undo.",
       "status": "resolved",
       "steps": [
-        "start · Feed · 3 «post overflow ⋮» → ReaderPostMenu — the reader's sheet (master)",
-        "end · ReaderPostMenu · 3 «Hide @ada» → FeedHidden — opened from a card in the feed — no confirm: her rows go, the ones behind them move up, and the snackbar offers Undo"
+        "start · Feed · 3 «post overflow ⋮» → FeedPostMenu — the reader's sheet on the feed (the feed-hosted state, drawn — ruling 84)",
+        "end · FeedPostMenu · 3 «Hide @ada» → FeedHidden — no confirm: her rows go, the ones behind them move up, and the snackbar offers Undo"
       ],
       "boards": [
         "Feed",
-        "ReaderPostMenu",
+        "FeedPostMenu",
         "FeedHidden"
       ]
     },
@@ -3612,12 +3614,12 @@
       "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
       "status": "resolved",
       "steps": [
-        "start · Feed · 3 «post overflow ⋮» → ReaderPostMenu — the reader's sheet (master)",
-        "end · ReaderPostMenu · 4 «License terms» → PostLicense — the menu closes and the terms come up in a sheet over the post"
+        "start · Feed · 3 «post overflow ⋮» → FeedPostMenu — the reader's sheet on the feed (the feed-hosted state, drawn — ruling 84)",
+        "end · FeedPostMenu · 4 «License terms» → PostLicense — the menu closes and the terms come up in a sheet over the feed (master)"
       ],
       "boards": [
         "Feed",
-        "ReaderPostMenu",
+        "FeedPostMenu",
         "PostLicense"
       ]
     },
@@ -5307,6 +5309,14 @@
         "undo-the-narrowing"
       ]
     },
+    "FeedPostMenu": {
+      "flows": [
+        "cite-a-post",
+        "hide-someone-from-the-feed",
+        "read-a-posts-license"
+      ],
+      "endpoint": []
+    },
     "FeedScrolled": {
       "flows": [
         "follow-a-citation",
@@ -6155,9 +6165,7 @@
     "ReaderPostMenu": {
       "flows": [
         "cite-a-post",
-        "hide-someone-from-the-feed",
-        "hide-someone-from-their-post",
-        "read-a-posts-license"
+        "hide-someone-from-their-post"
       ],
       "endpoint": []
     },

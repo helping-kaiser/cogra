@@ -1235,6 +1235,15 @@
       "page": "feed"
     },
     {
+      "file": "FeedPostMenu.dc.html",
+      "title": "Feed · the post menu",
+      "x": 8640,
+      "y": 1060,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
+    },
+    {
       "file": "FeedWordsSensitive.dc.html",
       "title": "Feed · a words-only post, veiled",
       "x": 8160,
@@ -1623,9 +1632,9 @@
     },
     {
       "file": "MapFeed.dc.html",
-      "x": -5640,
+      "x": -5930,
       "y": 0,
-      "w": 5220,
+      "w": 5510,
       "h": 5308,
       "page": "feed",
       "title": "Feed & Search · flow map"

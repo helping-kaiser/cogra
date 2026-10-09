@@ -1699,6 +1699,131 @@
         "feed.snackbar.message": []
       }
     },
+    "FeedPostMenu": {
+      "prefix": "feed",
+      "keys": {
+        "feed.card": "the author's handle, without @ (PostCard)",
+        "feed.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "feed.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "feed.band": [],
+        "feed.band.bell": [],
+        "feed.band.chats": [],
+        "feed.band.filterTrigger": [],
+        "feed.band.mark": [],
+        "feed.band.wordmark": [],
+        "feed.bottomBar": [],
+        "feed.bottomBar.composeSlot": [],
+        "feed.bottomBar.feedSlot": [],
+        "feed.bottomBar.profileSlot": [],
+        "feed.bottomBar.searchSlot": [],
+        "feed.bottomBar.walletSlot": [],
+        "feed.card": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.comments.count": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.score.value": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.share": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.exact": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.actionRow.stance.anchor.face": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.avatar": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.handle": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.authorChip.name": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.body": [
+          "tobias"
+        ],
+        "feed.card.description": [
+          "ada"
+        ],
+        "feed.card.media": [
+          "ada"
+        ],
+        "feed.card.media.frame": [
+          "ada/1"
+        ],
+        "feed.card.menu": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.opener": [
+          "ada"
+        ],
+        "feed.card.tagsLine": [
+          "ada"
+        ],
+        "feed.card.tagsLine.counts": [
+          "ada"
+        ],
+        "feed.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "feed.card.timestamp": [
+          "ada",
+          "tobias"
+        ],
+        "feed.card.title": [
+          "ada"
+        ],
+        "feed.menuSheet": [],
+        "feed.menuSheet.cite": [],
+        "feed.menuSheet.dragHandle": [],
+        "feed.menuSheet.hide": [],
+        "feed.menuSheet.license": [],
+        "feed.menuSheet.report": [],
+        "feed.menuSheet.save": []
+      }
+    },
     "History": {
       "prefix": "history",
       "keys": {

@@ -581,6 +581,16 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Report</button>", tag: "button" },
   ],
+  // The feed's own menu state (ruling 84): the same sheet on its second host,
+  // scanExempt like the detail's, numbered as ReaderPostMenu numbers it.
+  FeedPostMenu: [
+    { n: 1, find: ">Save</button>", tag: "button" },
+    { n: 2, find: ">Cite in a new post</button>", tag: "button" },
+    { n: 3, find: ">Hide @ada</button>", tag: "button" },
+    { n: 4, find: ">License terms</button>", tag: "button" },
+    { n: 5, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 6, find: ">Report</button>", tag: "button" },
+  ],
   // The report confirm (ruling 75): scanExempt like every menu board, so the
   // sheet's own pair and its scrim are all that carries numbers.
   ReportConfirm: [

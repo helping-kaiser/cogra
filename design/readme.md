@@ -9585,6 +9585,14 @@ each).
   `Report`/`Cancel`, the snackbar `Reported.` It never connects to
   Report-a-problem. Registered under each hosting menu's own prefix, the
   sheet as `postDetail.reportSheet`.
+- **The feed-hosted menu** (item 84; the shape ruled 2026-10-07, item 53).
+  `FeedPostMenu`: the Feed with the reader's post menu open — the same
+  sheet `ReaderPostMenu` masters, on its second host, the rows the one
+  atom both boards read. The drawn state registers `feed.menuSheet.*`,
+  mirroring `postDetail.menuSheet`'s; paths never pre-register undrawn.
+  The plain feed's ⋮ edge now lands on it; the other feed-flavored
+  boards' ⋮ edges still name the detail's master and wait for a ruled
+  sweep.
 
 ---
 
