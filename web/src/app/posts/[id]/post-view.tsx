@@ -367,6 +367,11 @@ export function PostView({
               altText={pinned.altText}
               sourceRatio={pinned.sourceRatio}
               durationMs={pinned.durationMs}
+              mediaId={pinned.mediaId}
+              // The viewer is a layer presenting this same clip bigger: while
+              // it is up the pinned clip has handed its clip over to it
+              // (PostDetailVideo.md:47–51).
+              behindViewer={viewerAt !== null}
               // The pinned clip's two routes into the viewer — the bar's
               // fullscreen toggle and the clip's own tap (graph.json,
               // `PostDetailVideo` via 19 and via 3). The clip is the post's one

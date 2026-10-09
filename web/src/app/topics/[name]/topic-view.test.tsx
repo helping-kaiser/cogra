@@ -3,7 +3,7 @@ import { graphql, HttpResponse } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
-import { intersectEach } from "@/test/media-env";
+import { intersectEach, whenObserved } from "@/test/media-env";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
@@ -113,6 +113,9 @@ describe("TopicView", () => {
     await screen.findByTestId("topic-post-p2");
     const clipOf = (id: string) =>
       screen.getByTestId(`topic-post-${id}-media`).querySelector("video") as HTMLVideoElement;
+    // The stage watches its clips from a passive effect; report their places
+    // only once it does (`whenObserved`).
+    await whenObserved(clipOf("p1"), clipOf("p2"));
     act(() =>
       intersectEach([
         { target: clipOf("p2"), ratio: 1 },

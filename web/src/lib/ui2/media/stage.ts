@@ -151,6 +151,26 @@ export class Stage {
   }
 
   /**
+   * The clip takes the stage STANDING STILL — a presentation carrying on a
+   * clip the reader had paused elsewhere (the fullscreen viewer and the pinned
+   * clip it hands back to: "the viewer's play state carries … paused returns
+   * paused", PostDetailVideo.md:51). It holds the stage as a clip started by
+   * hand does, so no election starts it on its own; the reader's play is what
+   * starts it, from the frame it stands on.
+   */
+  seat(key: object): void {
+    const place = this.places.get(key);
+    if (place === undefined) return;
+    if (this.holder !== null && this.holder !== key) this.freeze(this.holder);
+    this.holder = key;
+    place.handStarted = true;
+    place.qualifiedSinceTap = place.ratio >= GATE;
+    this.padPaused = null;
+    this.hiddenPlaying = null;
+    if (!place.video.paused) place.video.pause();
+  }
+
+  /**
    * The surface's scroll came to rest at its hard top (Feed.md:19/21,
    * ReplyEntry.md:3/5, TagPage.md:25/27, ProfilePosts.md:7/9, History.md:69/71).
    * The election lapses an autoplayed incumbent's claim there, never a
@@ -251,7 +271,9 @@ export class Stage {
    * Whether the device allows autoplay (FeedCover.md:23). Allowing again is
    * the standing rule 3 applying once more: an empty stage goes to the
    * topmost qualifying clip. Suppressing stops nothing already playing — "no
-   * clip STARTS on its own" (FeedCover.md:25) is a rule about starts.
+   * clip STARTS on its own" (FeedCover.md:25) is a rule about starts, ruled so
+   * by jakob 2026-10-09 (seam 109, item 96): a mid-play suppression flip never
+   * stops a playing clip.
    */
   setAllowed(allowed: boolean): void {
     if (this.allowed === allowed) return;

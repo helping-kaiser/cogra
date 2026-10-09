@@ -250,6 +250,32 @@ describe("a clip started by its play disc", () => {
   });
 });
 
+// RULED 2026-10-09 (jakob, seam 109 item 96): "no clip starts on its own …
+// GIVEN the device suppresses autoplay" (FeedCover.md:25) governs STARTS only.
+describe("suppression arriving while a clip plays", () => {
+  it("never stops the playing clip, which keeps its sound disc (C10 FeedCover.md:25, C06 FeedCover.md:17)", () => {
+    suppressesAutoplay({});
+    render(<List ids={["a", "b"]} />);
+    frame({ a: 1, b: 0.3 });
+    expect(playing("a", "b")).toEqual(["a"]);
+
+    act(() => suppressesAutoplay({ reducedMotion: true }));
+
+    expect(playing("a", "b")).toEqual(["a"]);
+    expect(screen.getByTestId("a-sound")).toBeInTheDocument();
+    expect(screen.queryByTestId("a-play")).toBeNull();
+  });
+
+  it("still governs the next start: when the clip loses the stage, nothing starts in its place (C10, F07 Feed.md:15)", () => {
+    suppressesAutoplay({});
+    render(<List ids={["a", "b"]} />);
+    frame({ a: 1, b: 0.3 });
+    act(() => suppressesAutoplay({ saveData: true }));
+    frame({ a: 0.2, b: 1 });
+    expect(playing("a", "b")).toEqual([]);
+  });
+});
+
 /** A hard-top surface, as each host stands in the app. */
 type Surface = {
   name: string;
@@ -444,6 +470,40 @@ describe("suppressed autoplay starts nothing on its own", () => {
     expect(playing("a", "b")).toEqual([]);
     act(() => suppressesAutoplay({ reducedMotion: false }));
     expect(playing("a", "b")).toEqual(["a"]);
+  });
+});
+
+// A LAYER SHIELDS WHAT IT DRAWS (SL-1 flag d): a clip on a layer raised over a
+// host is not on the covered surface, so it never joins — and is never
+// suspended with — the stage the layer covers.
+describe("a clip drawn on a layer over a host", () => {
+  function Covered({ sheetOpen }: { sheetOpen: boolean }) {
+    return (
+      <List ids={["page"]}>
+        <BottomSheet open={sheetOpen} onClose={noop} title="Sheet" testId="sheet">
+          <VideoPlayer src={CLIP} testId="drawn" />
+        </BottomSheet>
+      </List>
+    );
+  }
+
+  it("plays on the sheet while the page's stage beneath stands suspended (L04, Feed.md:33)", () => {
+    const { rerender } = render(<Covered sheetOpen={false} />);
+    frame({ page: 1 });
+    expect(playing("page")).toEqual(["page"]);
+
+    rerender(<Covered sheetOpen />);
+    frame({ page: 1, drawn: 1 });
+    // The page's clip stopped for the sheet; the sheet's own clip is not
+    // suspended by the very layer it is drawn on.
+    expect(playing("page", "drawn")).toEqual(["drawn"]);
+  });
+
+  it("makes a stage of its own rather than joining the page's — one observer more", () => {
+    const observers = liveObserverCount();
+    render(<Covered sheetOpen />);
+    frame({ page: 1, drawn: 1 });
+    expect(liveObserverCount()).toBe(observers + 2);
   });
 });
 

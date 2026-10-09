@@ -17,7 +17,18 @@
 // `mute.ts` gives for the one global mute. A list that refreshes forgets its
 // own clips (FeedCover.md:13, `forgetList`).
 //
-// Unused until the continuity PR wires it.
+// WHO WRITES, AND WHEN (`video-player.tsx`): a player writes the moment its
+// clip plays, where its clip stands when it unmounts, and when it hands its
+// clip to a layer presenting the same clip bigger (the fullscreen viewer).
+// Those cover every moment a second presentation of the clip can come to read
+// it — the web draws one route at a time, and the viewer is the one layer that
+// presents a clip the page already shows.
+//
+// A FORGOTTEN CLIP STAYS FORGOTTEN BY THE PLAYERS THAT MET IT BEFORE. A
+// refresh forgets the list's clips and then remounts the list; the players
+// it unmounts write where they stood on their way out, AFTER the forgetting.
+// So each forgetting opens a new era, a writer says which era it was born in,
+// and a write from a player born before its clip was forgotten is dropped.
 
 /** What the session remembers of one clip. */
 export type ClipMemory = {
@@ -31,19 +42,34 @@ export type ClipMemory = {
 
 const memory = new Map<string, ClipMemory>();
 
+/** How many forgettings the session has seen — the era a writer is born in. */
+let era = 0;
+/** The era each forgotten clip was forgotten in. */
+const forgottenIn = new Map<string, number>();
+
 /** The session's memory of a clip, or undefined for one it has not met. */
 export function read(mediaId: string): ClipMemory | undefined {
   return memory.get(mediaId);
 }
 
+/** The era now: a player reads it once, at mount, and writes with it. */
+export function currentEra(): number {
+  return era;
+}
+
 /**
- * Remember where a clip stands — on every pause or freeze, and on unmount.
+ * Remember where a clip stands.
  *
  * Having played is never forgotten by a write: a clip that has played keeps
  * its reached frame for the rest of the session, so `everPlayed` only ever
  * turns on here. Only {@link forgetList} turns it off.
+ *
+ * `since` is the era the writer was born in (default: now). A writer born
+ * before its clip was forgotten is writing about a frame the refresh already
+ * took back, and is not heard.
  */
-export function write(mediaId: string, entry: ClipMemory): void {
+export function write(mediaId: string, entry: ClipMemory, since: number = era): void {
+  if ((forgottenIn.get(mediaId) ?? -1) > since) return;
   const before = memory.get(mediaId);
   memory.set(mediaId, {
     ...entry,
@@ -57,10 +83,16 @@ export function write(mediaId: string, entry: ClipMemory): void {
  * memory"). Per clip, so the same clip elsewhere is re-stilled too.
  */
 export function forgetList(mediaIds: Iterable<string>): void {
-  for (const id of mediaIds) memory.delete(id);
+  era += 1;
+  for (const id of mediaIds) {
+    memory.delete(id);
+    forgottenIn.set(id, era);
+  }
 }
 
 /** Test seam: nothing in the app clears the whole session's memory. */
 export function resetClipMemoryForTests(): void {
   memory.clear();
+  forgottenIn.clear();
+  era = 0;
 }
