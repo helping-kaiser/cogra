@@ -9,6 +9,7 @@ import type { ApolloClient } from "@apollo/client";
 import {
   CommentRepliesDocument,
   CommentSelfMarkDocument,
+  FeedPostFragmentDoc,
   PostCommentsDocument,
   PostDetailDocument,
   PostsDocument,
@@ -296,7 +297,51 @@ export async function fetchPosts(
   });
 }
 
-/** null: the id names no post. */
+/**
+ * The post as the cache already holds it — the card a feed (or any read that
+ * selects `FeedPost`) drew it with — or null when it holds less than that.
+ *
+ * THE POST THE READER JUST TAPPED PAINTS AT ONCE (jakob 2026-10-09). The feed
+ * wrote it into the normalized cache under its `Post:<id>` entity; a fragment
+ * read answers off that entity whichever query wrote it (Apollo Client,
+ * "Reading and writing data to the cache", `readFragment`).
+ *
+ * ALL OR NOTHING, ON PURPOSE. `returnPartialData` is left at its default
+ * (false), so an entity missing any field the card draws — a post the cache
+ * only knows as a citation's target, say — reads as null and the page loads
+ * exactly as an uncached one does. A half-drawn card is not a faster card.
+ *
+ * It is a paint, never the answer: the detail read still goes to the network
+ * and lands over it (`fetchPostDetail`).
+ */
+export function readCachedPost(
+  client: ApolloClient,
+  id: string,
+  options: ListingOptions = {},
+): PostView | null {
+  return client.readFragment({
+    fragment: FeedPostFragmentDoc,
+    // The document carries `PostFields` and the fragments it spreads too, so
+    // the root is named (the `fragmentName` option's own rule).
+    fragmentName: "FeedPost",
+    id: client.cache.identify({ __typename: "Post", id }),
+    variables: { includePending: includePendingOf(options) },
+  });
+}
+
+/**
+ * null: the id names no post.
+ *
+ * NETWORK-ONLY STILL, and the cache paint is `readCachedPost`'s job rather than
+ * this read's policy. `client.query` resolves ONE result and has no partial
+ * channel — its options carry no `returnPartialData`, and `cache-and-network`
+ * is a watched query's policy, not its (Apollo Client 4, `QueryOptions` /
+ * `FetchPolicy`). A feed-cached post is always a PARTIAL hit for this document
+ * (the page of comments and the author's own mark are never on a feed card),
+ * so `cache-first` here would wait on the network all the same — and on a
+ * complete hit it would skip the network, which is the read pull-to-refresh
+ * and the fresh answer both depend on.
+ */
 export async function fetchPostDetail(
   client: ApolloClient,
   id: string,

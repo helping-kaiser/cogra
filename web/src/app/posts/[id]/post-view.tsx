@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
-import { fetchPostDetail, type PostDetail } from "@/lib/api/content-api";
+import { fetchPostDetail, readCachedPost, type PostView as Post } from "@/lib/api/content-api";
 import { appendDeduped } from "@/lib/api/pagination";
 import {
   fetchCitedBy,
@@ -71,8 +71,17 @@ export function PostView({
   const narrow = useNarrowShare();
   const shareCapable = useShareCapable();
 
-  const [detail, setDetail] = useState<PostDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  // THE POST THE READER JUST TAPPED PAINTS AT ONCE (jakob 2026-10-09): the
+  // feed already holds it, so the page opens on that card rather than on
+  // "Loading…", and the detail read below lands over it. Only a post the cache
+  // does not hold whole — a deep link, a cold start — waits on the read.
+  //
+  // What the page draws is the card's shape and nothing more: the thread is
+  // the sheet's own read, and the author's own mark is the editor's. So the
+  // cached card is not a stand-in for something bigger — it is everything
+  // this page shows, one read early.
+  const [post, setPost] = useState<Post | null>(() => readCachedPost(client, postId));
+  const [loading, setLoading] = useState(post === null);
   // The read in flight while the post is already on screen — distinct
   // from `loading`, which gates the nothing-loaded page. A pull-to-
   // refresh must not fall back to that blank page over content the
@@ -117,6 +126,9 @@ export function PostView({
       if (cancelled) return;
       setLoading(false);
       setRefreshing(false);
+      // Over a cached paint a failed read is a failed refresh — the card stays
+      // and the banner says so (HT-10's shared rule); with nothing painted it
+      // is the nothing-loaded page, as it always was.
       if (outcome.kind !== "success") {
         setTransportFault("refresh");
       } else if (outcome.value === null) {
@@ -124,7 +136,7 @@ export function PostView({
         setNotFound(true);
       } else {
         setTransportFault(null);
-        setDetail(outcome.value);
+        setPost(outcome.value.post);
       }
     });
     return () => {
@@ -257,7 +269,7 @@ export function PostView({
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header(null)}
-        <p>Loading…</p>
+        <p data-testid="post-loading">Loading…</p>
       </main>
     );
   }
@@ -271,7 +283,7 @@ export function PostView({
       </main>
     );
   }
-  if (detail === null) {
+  if (post === null) {
     return (
       <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
         {header(null)}
@@ -293,7 +305,6 @@ export function PostView({
     );
   }
 
-  const post = detail.post;
   const isOwnPost = viewerId !== null && post.author?.id === viewerId;
   // A REMOVED POST HAS NO MENU LEFT — back is the whole header (`Removed.jsx`),
   // and the license rode the payload, so a redacted record has none to show.
