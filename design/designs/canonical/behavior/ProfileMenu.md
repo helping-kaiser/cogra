@@ -12,7 +12,7 @@ WHEN tap Save -> the person is kept in the one Saved list beside posts and comme
 
 WHEN tap Save GIVEN the save does not go through -> the save reverts AND the target's row says That didn't go through. with Retry, the profile's actions row when the menu opened on the profile
 
-WHEN tap Unsave -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
+WHEN tap Unsave -> the sheet closes AND profile.snackbar reads Removed from Saved. with Undo on profile.snackbar.action
 
 WHEN tap Mention in a new post -> the post wizard opens fresh at its first stage AND the person rides along as a staged reference, unseen until the details stage
 

@@ -1596,6 +1596,34 @@ Object.assign(FLOW_MARKERS, {
     { n: 22, find: 'aria-label="Tag a new post with it"', tag: "button" },
     ...nav(23),
   ],
+  /* History a moment after a hide (item 83): the top viewport of the same
+     page — the header trio, the day divider, the comment card and the post
+     whose ⋮ the hide was made from — so each element keeps History's own
+     number; the snackbar's Undo takes the next free one after the subset. */
+  HistoryHidden: [
+    { n: 1, find: 'aria-label="Back to your profile"', tag: "a" },
+    { n: 2, find: ">Search your history<", tag: "div" },
+    { n: 3, find: 'what your history shows"', tag: "button" },
+    { n: 4, find: 'aria-label="On “', tag: "button" },
+    { n: 5, find: '<a href="/u/', tag: "a", all: true },
+    { n: 6, find: 'aria-label="More on this comment"', tag: "button" },
+    { n: 7, find: ">That stretch after the second bend", tag: "a" },
+    { n: 8, find: '<a href="/t/', tag: "a", all: true },
+    { n: 9, find: 'aria-label="Give your opinion on this comment"', tag: "button" },
+    { n: 9, find: ">Choose your opinion on this comment</button>", tag: "button" },
+    { n: 9, find: 'aria-label="Your opinion on this post', tag: "button", all: true },
+    { n: 9, find: ">Choose your opinion on this post</button>", tag: "button", all: true },
+    { n: 10, find: 'aria-label="Reply to @tobias"', tag: "button" },
+    { n: 11, find: 'aria-label="Share ', tag: "button", all: true },
+    { n: 12, find: ">Feed score</span>", tag: "button", all: true },
+    { n: 13, find: 'aria-label="More on this post"', tag: "button", all: true },
+    { n: 14, find: ">More</button>", tag: "button" },
+    { n: 15, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 16, find: ">· 1 reference<", tag: "button" },
+    { n: 17, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 18, find: ">Undo</button>", tag: "button" },
+    ...nav(19),
+  ],
   HistoryEmpty: [{ n: 1, find: 'aria-label="Back to your profile"', tag: "a" }, ...nav(2)],
   /* History narrowed to nothing (the final brief, 2026-10-05). The `cause`
      chip draws the field, the trigger and the empty state twice, one shown
@@ -2534,6 +2562,12 @@ const tagPageBody = ({ topicStance }) => [
 
 Object.assign(FLOW_MARKERS, {
   TagPage: tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+  /* The page a moment after a hide (item 83): the same body, so the same
+     markers; the snackbar's Undo takes the next free number. */
+  TagPageHidden: [
+    ...tagPageBody({ topicStance: 'aria-label="Give your opinion on #saltmaps"' }),
+    { n: 16, find: ">Undo</button>", tag: "button" },
+  ],
   /* The same page with the topic held \u2014 the same markers, one find apart: an
      anchor with a bundle behind it says so in its own accessible name. */
   TagPageHeld: tagPageBody({ topicStance: 'aria-label="Your opinion on #saltmaps' }),

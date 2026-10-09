@@ -8,7 +8,7 @@ ALWAYS the menu carries no Report row, the own menus' rule
 
 WHEN tap Save -> the reader's own comment is kept in the one Saved list beside posts and people AND the menu closes AND the snackbar reads Saved.
 
-WHEN tap Unsave -> the menu closes AND the snackbar reads Removed from Saved. with Undo
+WHEN tap Unsave -> the menu closes AND postDetail.snackbar reads Removed from Saved. with Undo on postDetail.snackbar.action
 
 WHEN tap Remove -> the menu closes AND the think-twice dialog comes up over the thread
 

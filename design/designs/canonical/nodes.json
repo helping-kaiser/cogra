@@ -2175,6 +2175,116 @@
         "history.searchField.input": []
       }
     },
+    "HistoryHidden": {
+      "prefix": "history",
+      "keys": {
+        "history.card": "the author's handle, without @ (PostCard)",
+        "history.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "history.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)",
+        "history.commentCard": "the comment author's handle, without @ (CommentCard)",
+        "history.day": "the divider's words, lowercased, each run of other characters one - (History's day dividers)"
+      },
+      "nodes": {
+        "history.bottomBar": [],
+        "history.bottomBar.composeSlot": [],
+        "history.bottomBar.feedSlot": [],
+        "history.bottomBar.profileSlot": [],
+        "history.bottomBar.searchSlot": [],
+        "history.bottomBar.walletSlot": [],
+        "history.card": [
+          "ada"
+        ],
+        "history.card.actionRow": [
+          "ada"
+        ],
+        "history.card.actionRow.comments": [
+          "ada"
+        ],
+        "history.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "history.card.actionRow.score": [
+          "ada"
+        ],
+        "history.card.actionRow.score.value": [
+          "ada"
+        ],
+        "history.card.actionRow.share": [
+          "ada"
+        ],
+        "history.card.actionRow.stance": [
+          "ada"
+        ],
+        "history.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "history.card.actionRow.stance.anchor.exact": [
+          "ada"
+        ],
+        "history.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "history.card.authorChip": [
+          "ada"
+        ],
+        "history.card.authorChip.avatar": [
+          "ada"
+        ],
+        "history.card.authorChip.handle": [
+          "ada"
+        ],
+        "history.card.authorChip.name": [
+          "ada"
+        ],
+        "history.card.description": [
+          "ada"
+        ],
+        "history.card.media": [
+          "ada"
+        ],
+        "history.card.media.frame": [
+          "ada/1"
+        ],
+        "history.card.menu": [
+          "ada"
+        ],
+        "history.card.opener": [
+          "ada"
+        ],
+        "history.card.tagsLine": [
+          "ada"
+        ],
+        "history.card.tagsLine.counts": [
+          "ada"
+        ],
+        "history.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "history.card.timestamp": [
+          "ada"
+        ],
+        "history.card.title": [
+          "ada"
+        ],
+        "history.commentCard": [
+          "tobias"
+        ],
+        "history.day": [
+          "today"
+        ],
+        "history.filterTrigger": [],
+        "history.header": [],
+        "history.header.back": [],
+        "history.header.title": [],
+        "history.searchField": [],
+        "history.searchField.glyph": [],
+        "history.searchField.input": [],
+        "history.snackbar": [],
+        "history.snackbar.action": [],
+        "history.snackbar.message": []
+      }
+    },
     "HistoryNone": {
       "prefix": "history",
       "keys": {
@@ -5161,6 +5271,15 @@
         "settings.writing.license.chevron": [],
         "settings.writing.license.label": [],
         "settings.writing.license.value": []
+      }
+    },
+    "TagPageHidden": {
+      "prefix": "tagPage",
+      "keys": {},
+      "nodes": {
+        "tagPage.snackbar": [],
+        "tagPage.snackbar.action": [],
+        "tagPage.snackbar.message": []
       }
     },
     "VerifyExpired": {

@@ -12,7 +12,7 @@ WHEN tap Save -> the post is kept AND the sheet closes AND the snackbar reads Sa
 
 WHEN tap Save GIVEN the save does not go through -> the save reverts AND the target's row says so with Retry
 
-WHEN tap Unsave -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
+WHEN tap Unsave -> the sheet closes AND postDetail.snackbar reads Removed from Saved. with Undo on postDetail.snackbar.action
 
 WHEN tap Hide with the author's handle GIVEN the menu was opened from the post being read -> the sheet closes AND the reader stays on the post being read AND the snackbar reads @ada is hidden — their posts stay out of your feed. with Undo AND NEVER a confirm step appears
 

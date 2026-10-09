@@ -9593,6 +9593,17 @@ each).
   The plain feed's ⋮ edge now lands on it; the other feed-flavored
   boards' ⋮ edges still name the detail's master and wait for a ruled
   sweep.
+- **The aftermath extension** (item 83). The hide's snackbar landing,
+  drawn on the two surfaces #122 left: `HistoryHidden` — History's top
+  viewport as it stood, every card in place (the open list is frozen; the
+  standing stay-out law takes hold at the next open or pull, the person's
+  own profile card staying, ruling 11) — and `TagPageHidden` — the tag's
+  page standing and STAYING standing, since the hidden list is the feed's
+  (ruling 49's rule, met on a search subpage). Both snackbars are the
+  feed's word for word and register under their surface's own prefix
+  (`history.snackbar`, `tagPage.snackbar`). With them, item 48's unsave
+  aftermath lines on the menu hosts take their registered
+  `<host>.snackbar.action` paths.
 
 ---
 

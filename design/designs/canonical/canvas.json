@@ -1145,6 +1145,15 @@
       "page": "profile"
     },
     {
+      "file": "HistoryHidden.dc.html",
+      "title": "History · someone just hidden",
+      "x": 4320,
+      "y": 4661,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "ExplorePerson.dc.html",
       "title": "Explore · a person found",
       "x": 1920,
@@ -1635,7 +1644,7 @@
       "x": -5930,
       "y": 0,
       "w": 5510,
-      "h": 5308,
+      "h": 5320,
       "page": "feed",
       "title": "Feed & Search · flow map"
     },
@@ -2628,6 +2637,15 @@
       "w": 390,
       "h": 844,
       "page": "comments"
+    },
+    {
+      "file": "TagPageHidden.dc.html",
+      "title": "A tag's page · someone just hidden",
+      "x": 1920,
+      "y": 2120,
+      "w": 390,
+      "h": 844,
+      "page": "feed"
     },
     {
       "file": "TagPageHeldPad.dc.html",

@@ -32,6 +32,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -64,7 +65,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -101,6 +102,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -214,6 +216,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailHidden",
@@ -225,10 +228,11 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 28 boards → ReplyEntry",
+        "start · «comment count» on 30 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -254,6 +258,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "PostDetail",
         "PostDetailHidden",
@@ -265,6 +270,7 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ]
     },
@@ -545,10 +551,11 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 25 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 26 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -577,6 +584,7 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ]
     },
@@ -772,6 +780,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -804,7 +813,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -841,6 +850,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -904,6 +914,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -936,7 +947,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -973,6 +984,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -1036,6 +1048,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -1068,7 +1081,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 57 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1103,6 +1116,7 @@
         "FeedWordsSensitive",
         "History",
         "HistoryEmpty",
+        "HistoryHidden",
         "HistoryNone",
         "KeyElsewhere",
         "Notifications",
@@ -1486,6 +1500,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1497,10 +1512,11 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 34 boards → ProfileOther",
+        "start · «author chip» on 36 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
@@ -1527,6 +1543,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1538,6 +1555,7 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ]
     },
@@ -1707,13 +1725,14 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 21 boards → RefsSheet",
+        "start · «reference count» on 22 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
@@ -1736,6 +1755,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "Main",
         "ProfilePosts",
@@ -1860,6 +1880,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1870,10 +1891,11 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 33 boards → FeedEntry",
+        "start · «Feed score» on 35 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1906,6 +1928,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "History",
+        "HistoryHidden",
         "KeyElsewhere",
         "Main",
         "PostDetail",
@@ -1916,6 +1939,7 @@
         "Removed",
         "TagPage",
         "TagPageHeld",
+        "TagPageHidden",
         "VouchBack"
       ]
     },
@@ -5465,6 +5489,19 @@
       ],
       "endpoint": []
     },
+    "HistoryHidden": {
+      "flows": [
+        "follow-a-citation",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
+      ],
+      "endpoint": []
+    },
     "HistoryNone": {
       "flows": [
         "filter-your-history-to-nothing",
@@ -6919,6 +6956,15 @@
         "add-to-a-held-topic",
         "walk-your-topics"
       ]
+    },
+    "TagPageHidden": {
+      "flows": [
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "TagPicker": {
       "flows": [

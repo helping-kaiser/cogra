@@ -10,7 +10,7 @@ WHEN tap Save -> the sheet closes AND the snackbar confirms at once AND the row 
 
 WHEN Save does not go through -> the save reverts AND the post's row says so with Retry
 
-WHEN tap Unsave -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
+WHEN tap Unsave -> the sheet closes AND postDetail.snackbar reads Removed from Saved. with Undo on postDetail.snackbar.action
 
 WHEN tap Edit -> the post's edit opens
 

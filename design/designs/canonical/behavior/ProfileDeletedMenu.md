@@ -14,7 +14,7 @@ WHEN tap Save -> the account is kept in the one Saved list beside posts and comm
 
 WHEN tap Save GIVEN the save does not go through -> the save reverts AND the line That didn't go through. with Retry stands in the page's actions row
 
-WHEN tap Unsave -> the sheet closes AND the snackbar reads Removed from Saved. with Undo
+WHEN tap Unsave -> the sheet closes AND profile.snackbar reads Removed from Saved. with Undo on profile.snackbar.action
 
 WHEN tap Share this profile -> the platform's own share sheet opens
 
