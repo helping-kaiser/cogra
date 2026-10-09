@@ -34,7 +34,10 @@ import androidx.compose.ui.Modifier
  *   whole app below it and consumes the inset, so no screen re-pads it.
  *
  * Every separate window (dialogs, sheets, the media viewer) is outside this
- * box; what each does with the bar is in the system-bar audit, not here.
+ * box; what each does with the bar is in the system-bar audit, not here. The
+ * media viewer, which draws edge to edge, keeps the law itself: its black
+ * stops below the bar and its window leaves the strip undimmed, with the app's
+ * icon reading (core:designsystem `MediaViewer`, jakob 2026-10-09, q-fx1a).
  */
 
 /**
