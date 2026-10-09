@@ -38,7 +38,8 @@ fun registrationFormValid(handle: String, email: String, password: String): Bool
  * first sanitized the way that input sanitizes it (newlines stripped,
  * then leading and trailing ASCII whitespace), then matched against the
  * standard's own regular expression (html.spec.whatwg.org, "Valid email
- * address"). The server keeps its lenient `@` floor, and the
+ * address"). The server keeps its own lenient floor (one `@`, a dotted
+ * domain) and answers BAD_INPUT past it; the
  * verification mail stays the real proof that the address exists.
  */
 fun emailValid(email: String): Boolean = WHATWG_EMAIL.matches(sanitizedEmail(email))

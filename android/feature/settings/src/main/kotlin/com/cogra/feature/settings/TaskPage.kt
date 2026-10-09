@@ -91,11 +91,9 @@ internal fun TaskPage(
  * The malformed-address check New email answers on the press: the WHATWG
  * standard's, which registration and the web's `type="email"` share
  * (ruling 94, [com.cogra.domain.emailValid]). The server's
- * `BAD_INPUT@newEmail` maps to the same line.
- *
- * DRIFT (design): the `fault` chip's drawn malformed example, `sol@ferreira`
- * (`ChangeEmail.jsx`), is a valid address under the standard, so that drawn
- * state is reached only by an address the standard refuses.
+ * `BAD_INPUT@newEmail` maps to the same line — which is how the board's own
+ * malformed example, `sol@ferreira`, reads it: the standard takes a
+ * single-label domain, the server's normalization asks for a dotted one.
  */
 internal fun looksLikeEmail(value: String): Boolean = emailValid(value)
 

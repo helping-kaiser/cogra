@@ -68,8 +68,9 @@ export function passwordValid(password: string): boolean {
  * input, so the page carries no grammar of its own (ruling 94; Android
  * ports the same standard's regular expression for parity). Setting the
  * value runs the input's sanitization (newlines stripped, then the ends
- * trimmed), and an empty value is never an address. The server keeps its
- * lenient `@` floor, and the verification mail stays the real proof.
+ * trimmed), and an empty value is never an address. The server keeps its own
+ * lenient floor (one `@`, a dotted domain) and answers BAD_INPUT past it;
+ * the verification mail stays the real proof.
  *
  * Outside a document (the server's render) nothing can be asked, and no
  * address is valid yet: every caller's field starts empty there.
