@@ -187,7 +187,12 @@ export function MediaViewer({
       ref={surfaceRef}
       role="dialog"
       aria-modal="true"
-      aria-label="Media"
+      // THE SPOKEN NAME SAYS WHAT IS SHOWN: "the viewer's spoken name reads
+      // Video" (ViewerVideo.md:37), and over pictures it "reads Picture N of
+      // M and follows the paging, and the dot row is not spoken"
+      // (ViewerPicture.md:11) — the dot row below is hidden from assistive
+      // technology for that reason.
+      aria-label={video ? "Video" : `Picture ${Math.min(current, count - 1) + 1} of ${count}`}
       data-testid={testId}
       // THE BACKDROP CLOSES IT (`MediaViewer.jsx:136`, graph.json ViewerPicture
       // via 3). The stage below stops the press, so only a tap on the ground
@@ -215,6 +220,7 @@ export function MediaViewer({
           held clear of the gesture zone the transport's bar also respects. */}
       {count > 1 && (
         <div
+          aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 z-[3] flex justify-center"
           style={{ bottom: `calc(${GESTURE_ZONE}px + env(safe-area-inset-bottom))` }}
         >
