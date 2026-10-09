@@ -303,7 +303,8 @@ function Player({
   // the host's stage is a parent whose passive cleanup freezes the clip as it
   // goes, and React runs every layout cleanup of a removed tree before any
   // passive one — so this still sees whether the clip was playing, which is
-  // the play state the viewer hands back (PostDetailVideo.md:49/51).
+  // the play state the viewer hands back (PostDetailVideo.md:49/51) — and its
+  // stage still holds its place, so this sees whether it was on screen.
   useLayoutEffect(() => {
     const video = ref.current;
     if (!video || !mediaId) return;
@@ -311,9 +312,11 @@ function Player({
       const played = playedHere.current || remembered?.everPlayed === true;
       // A clip that never moved has nothing to say: its still is still right.
       if (!played && video.currentTime === 0) return;
-      remember(video, mediaId, played, bornIn);
+      // Its frame is pictured for the next presentation only where a reader
+      // could be looking at it (`Stage.inView`).
+      remember(video, mediaId, played, bornIn, stage?.inView(stageToken) === true);
     };
-  }, [mediaId, remembered, bornIn]);
+  }, [mediaId, remembered, bornIn, stage, stageToken]);
 
   // ON THE STAGE for as long as the player is mounted — and not handed over.
   // It joins unveiled and the veil effect below says otherwise in the same
@@ -361,7 +364,8 @@ function Player({
           const video = ref.current;
           if (video && mediaId) {
             const played = playedHere.current || remembered?.everPlayed === true;
-            remember(video, mediaId, played, bornIn);
+            // The viewer presents this clip next, so its frame is pictured.
+            remember(video, mediaId, played, bornIn, true);
           }
           onOpenViewer();
         };
@@ -655,18 +659,20 @@ function Player({
 }
 
 /**
- * Remember where a clip stands — and keep a picture of that frame for the
- * presentation that comes next (`handover-still.tsx`), taken in the same
- * moment so the picture is of exactly the time remembered.
+ * Remember where a clip stands — and, when `pictured`, keep a picture of that
+ * frame for the presentation that comes next (`handover-still.tsx`), taken in
+ * the same moment so the picture is of exactly the time remembered.
  */
 function remember(
   video: HTMLVideoElement,
   mediaId: string,
   everPlayed: boolean,
   bornIn: number,
+  pictured: boolean,
 ): void {
   const entry = standing(video, everPlayed);
   clipMemory.write(mediaId, entry, bornIn);
+  if (!pictured) return;
   const picture = pictureOf(video);
   if (picture) clipMemory.keepFrame(mediaId, { time: entry.time, picture }, bornIn);
 }

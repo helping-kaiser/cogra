@@ -21,6 +21,7 @@ import { pictureOf } from "./handover-still";
 import { MediaViewer } from "./media-viewer";
 import { resetMuteForTests } from "./mute";
 import { PinnedClip } from "./pinned-clip";
+import { Stage } from "./stage";
 import { StageHost } from "./stage-host";
 import { VideoPlayer } from "./video-player";
 import { resetVideoStageForTests } from "./video-stage";
@@ -277,6 +278,21 @@ describe("the still never shows a frame the clip is not at", () => {
     expect(still("pinned-media")).toBeNull();
   });
 
+  it("a played clip scrolled off screen pictures nothing on its way out — nobody is looking at it", () => {
+    const view = render(<Route at="card" />);
+    onScreen("card");
+    video("card").currentTime = 5;
+    decoded(video("card"));
+    act(() => intersectEach([{ target: video("card"), ratio: 0 }]));
+
+    view.rerender(<Route at="detail" />);
+
+    expect(clipMemory.read(ID)?.time).toBe(5);
+    expect(clipMemory.frameOf(ID)).toBeUndefined();
+    expect(draws).toEqual([]);
+    expect(still("pinned-media")).toBeNull();
+  });
+
   it("a picture of a moment the clip has since moved from is not handed out", () => {
     const picture = document.createElement("canvas");
     clipMemory.write(ID, { time: 5, everPlayed: true });
@@ -318,6 +334,23 @@ describe("the still never shows a frame the clip is not at", () => {
     expect(clipMemory.FRAMES_KEPT).toBe(3);
     expect(clipMemory.frameOf("a")).toBeUndefined();
     expect(ids.slice(1).every((id) => clipMemory.frameOf(id) !== undefined)).toBe(true);
+  });
+});
+
+describe("the stage's in-view question (`Stage.inView`)", () => {
+  it("answers from the last observer batch and decides nothing", () => {
+    const stage = new Stage({ visible: true, allowed: true });
+    const key = {};
+    const element = document.createElement("video");
+    stage.register(key, element, false);
+    expect(stage.inView(key)).toBe(false);
+
+    stage.measure([{ target: element, intersectionRatio: 0.2 }]);
+    expect(stage.inView(key)).toBe(true);
+    stage.measure([{ target: element, intersectionRatio: 0 }]);
+    expect(stage.inView(key)).toBe(false);
+    expect(stage.inView({})).toBe(false);
+    stage.dispose();
   });
 });
 
