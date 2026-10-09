@@ -1,6 +1,6 @@
 # Settings · `spec:design:behavior-settings`
 
-ALWAYS settings is one scrolling page, its groups in the ruled order: Theme, Giving an opinion, Writing, Reading, People, Key backup, Sessions, Credentials, About, the sign-out group, the delete-account group
+ALWAYS settings is one scrolling page, its groups in the ruled order: Theme, Giving an opinion, Writing, Reading, People, Sensitive content, Key backup, Sessions, Credentials, About, the sign-out group, the delete-account group
 
 ALWAYS settings carries no bottom bar
 
@@ -31,6 +31,14 @@ ALWAYS the What your feed shows row reads the default every feed opens with, in 
 WHEN tap Show exact values GIVEN the switch is off -> the switch turns on AND the exact number pairs appear beside every face and glyph AND the choice stays on this device
 
 WHEN tap Show exact values GIVEN the switch is on -> the switch turns off AND the faces and glyphs carry the pairs alone AND scores and ranks still read in numbers
+
+ALWAYS the Always unveil sensitive content switch is off GIVEN the account never chose otherwise
+
+WHEN tap Always unveil sensitive content GIVEN the switch is off -> the switch turns on AND sensitive content stands unveiled wherever the account reads, this device and every other
+
+WHEN tap Always unveil sensitive content GIVEN the switch is on -> the switch turns off AND sensitive content stays veiled until it is tapped
+
+ALWAYS the Sensitive content choice follows the account, never this device alone
 
 ALWAYS the Hidden accounts row reads the bare count of hidden accounts GIVEN at least one account is hidden
 

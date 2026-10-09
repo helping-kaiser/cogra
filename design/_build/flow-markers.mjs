@@ -1495,6 +1495,9 @@ Object.assign(FLOW_MARKERS, {
     // The kept picks' row (backlog item 113), inside the Key backup group and
     // numbered by the same identity rule — the next free number.
     { n: 26, find: " kept picks waiting</span>", tag: "button" },
+    // The sensitive-content switch (jakob 2026-10-09), its own group after
+    // People, numbered by the same identity rule — the next free number.
+    { n: 27, find: ">Always unveil sensitive content</span>", tag: "button" },
   ],
   // The release chronicle: the way out, and one door per release — the same
   // control drawn three times, so one number.
