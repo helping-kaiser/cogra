@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -13,6 +13,7 @@ import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
+import { intersectEach, whenObserved } from "@/test/media-env";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
@@ -2263,6 +2264,46 @@ describe("PostView — references", () => {
         expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
         // An unmarked post pins no veil over its clip.
         expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+      });
+
+      // ONE CLIP SHOWN BIGGER (PostDetailVideo.md:47–51, ViewerVideo.md:5):
+      // the page hands its pinned clip to the viewer and takes it back.
+      it("hands the pinned clip to the viewer at its frame, and takes it back at the viewer's", async () => {
+        // The page's count read lands inside this test, never after it.
+        let counted = false;
+        server.use(
+          ...withBody({ content: null, attachments: [clip("m1")] }),
+          graphql.query("CitedByCount", () => {
+            counted = true;
+            return HttpResponse.json({
+              data: { records: { __typename: "RecordConnection", totalCount: 0 } },
+            });
+          }),
+        );
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        await screen.findByTestId("post-pinned-clip");
+        await waitFor(() => expect(counted).toBe(true));
+        const pinned = screen.getByTestId("post-pinned-clip-media") as HTMLVideoElement;
+        await whenObserved(pinned);
+        act(() => intersectEach([{ target: pinned, ratio: 1 }]));
+        expect(pinned.paused).toBe(false);
+        pinned.currentTime = 6;
+
+        fireEvent.click(screen.getByTestId("post-pinned-clip-media-transport-fullscreen"));
+        const viewer = screen.getByTestId("post-media-viewer-video") as HTMLVideoElement;
+        // It stops, and never plays behind the viewer (PostDetailVideo.md:47);
+        // the viewer stands where it stood, playing (ViewerVideo.md:5, N1).
+        expect(pinned.paused).toBe(true);
+        expect(viewer.currentTime).toBe(6);
+        expect(viewer.paused).toBe(false);
+
+        viewer.currentTime = 15;
+        fireEvent.click(screen.getByTestId("post-media-viewer-close"));
+        // Plays on from the viewer's position (PostDetailVideo.md:49).
+        expect(screen.queryByTestId("post-media-viewer")).toBeNull();
+        expect(pinned.currentTime).toBe(15);
+        expect(pinned.paused).toBe(false);
       });
 
       // THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video

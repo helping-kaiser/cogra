@@ -236,17 +236,18 @@ async fn a_partial_landing_position_is_rejected(pool: PgPool) {
 }
 
 /// Refusals key on constraint *names*: PostgreSQL reports the constraint
-/// and not the column on a unique violation, and two of the four names
+/// and not the column on a unique violation, and two of the names
 /// `auth::constraints` relies on were never written down by a migration —
 /// PostgreSQL derived them from an inline `UNIQUE`. A migration that
 /// re-declares either one under a name of its own turns `HANDLE_TAKEN`
 /// and `EMAIL_IN_USE` into 500s, with nothing else to catch it.
 ///
 /// The lookup is on the unique *index* rather than on `pg_constraint`,
-/// because the four names arrive two ways: `actors.handle` and
+/// because the names arrive two ways: `actors.handle` and
 /// `user_credentials.email` are inline `UNIQUE` constraints, while the
-/// actor key and address are standalone `CREATE UNIQUE INDEX` and have no
-/// constraint row at all. What the error message carries either way is
+/// actor key and address and the one-open-application-per-approver rule
+/// are standalone `CREATE UNIQUE INDEX` and have no constraint row at
+/// all. What the error message carries either way is
 /// the index's name.
 ///
 /// Every name a refusal keys on names a unique index in the schema.

@@ -186,6 +186,11 @@ event-driven and is not an MVP dependency.
   What's new, WhatsNewBehind, and FeedNewerVersion, the cold-open
   snackbar when a newer release exists. How a release row is written
   is chosen at implementation.
+- **The invite lifecycle** — invite links, the approval queue
+  across both ends of the funnel, rejection, and the ask link
+  (`stageApplicant`, `askLinkCheck`; [auth.md](auth.md) "The ask
+  link"), the backend the Invites, VouchAsk and applicant-card
+  boards read (ruled 2026-10-06).
 - **The conformance workstreams W3–W8** of the 2026-09-08 UI audit,
   plus the settings-surface conformance and the audit's open
   decision tables — touched surfaces ship 100% conform to the
