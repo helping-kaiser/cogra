@@ -1,5 +1,6 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
+import { useLayoutEffect, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
@@ -863,6 +864,56 @@ describe("FeedView", () => {
         </ScrollHostProvider>,
       );
       expect(scroller.scrollTop).toBe(1240);
+      scroller.remove();
+    });
+
+    // FX-6 (jakob's hand test 2026-10-09): opening a post and coming back
+    // landed at the top. The scroller is the shell's, and the page drawn next
+    // moves it in its own first commit — Next's navigation scrolls a fresh page
+    // to its top from a layout-phase lifecycle — while the leaving feed's passive
+    // cleanup has not run yet. A feed still listening then recorded the detail's
+    // top, anchored to nothing, over the reader's place. The swap here is one
+    // root, as a navigation is: the feed leaves and the next page arrives in the
+    // same commit, and the next page's scroll lands before any passive cleanup.
+    it("keeps the reader's place through the next page scrolling the shared scroller on its way in", async () => {
+      const afters: (string | null)[] = [];
+      server.use(pagedPosts(afters));
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      const host = { current: scroller };
+      // The detail page's arrival, as far as the shared scroller sees it.
+      function NextPage() {
+        useLayoutEffect(() => {
+          scroller.scrollTop = 0;
+          fireEvent.scroll(scroller);
+        }, []);
+        return <p data-testid="next-page">Post</p>;
+      }
+      let navigate: (feed: boolean) => void = () => {};
+      function Route() {
+        const [feed, setFeed] = useState(true);
+        navigate = setFeed;
+        return <ScrollHostProvider value={host}>{feed ? <FeedView /> : <NextPage />}</ScrollHostProvider>;
+      }
+
+      renderWithProviders(<Route />);
+      await screen.findByTestId(byNode("feed.card", "p1"));
+      scroller.scrollTop = 1240;
+      fireEvent.scroll(scroller);
+      await waitFor(() => expect(recallFeed()?.place.offset).toBe(1240));
+
+      act(() => navigate(false));
+      expect(screen.getByTestId("next-page")).toBeInTheDocument();
+      // A measurement the leaving feed scheduled would land within a frame.
+      await act(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
+      expect(recallFeed()?.place.offset).toBe(1240);
+
+      act(() => navigate(true));
+      // Synchronously, on the first render — and with nothing re-fetched.
+      expect(screen.getByTestId(byNode("feed.card", "p1"))).toBeInTheDocument();
+      expect(screen.queryByTestId("feed-loading")).not.toBeInTheDocument();
+      expect(scroller.scrollTop).toBe(1240);
+      expect(afters).toEqual([null]);
       scroller.remove();
     });
 
