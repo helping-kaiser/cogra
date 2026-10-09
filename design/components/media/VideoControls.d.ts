@@ -7,8 +7,8 @@
  * no length threshold decides whether a reader gets controls. Drawn on the post
  * detail view and in the fullscreen viewer.
  *
- * `SeekLine` — the same timeline thinned to a hairline at the screen's bottom
- * edge, with no glyphs beside it. The stream's only transport: a play/pause
+ * `SeekLine` — the same timeline thinned to a hairline riding above the bottom
+ * bar, with no glyphs beside it. The stream's only transport: a play/pause
  * there would answer a question nobody scrolling a stream is asking.
  *
  * Both auto-hide with the rest of the chrome; a tap on the video reveals them.
@@ -57,6 +57,9 @@ export interface TimelineProps {
   thin?: boolean;
   /** The ground the timeline lies on: `media` (default) over footage, `surface` on a fill — a voice note's bubble. */
   tone?: "media" | "surface";
+  /** The 48px target hangs down from the track's top instead of centring on
+   *  it — the transport's bar, where the space above is the clip's own tap. */
+  hitBelow?: boolean;
 }
 
 export declare function Timeline(props: TimelineProps): JSX.Element;

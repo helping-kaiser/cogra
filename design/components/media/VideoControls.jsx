@@ -104,8 +104,14 @@ function TransportButton({ label, glyph, size = 22, box = 32, onClick, style }) 
    `media`, the default, unchanged. A voice note's timeline lies on a bubble's
    fill, where that white vanishes, so `surface` draws the unplayed track in
    the field-border ink instead. Played part and knob are `primary` either way:
-   one transport, two grounds. */
-export function Timeline({ progress = 0, elapsed, duration, thin = false, tone = "media" }) {
+   one transport, two grounds.
+
+   `hitBelow` (jakob 2026-10-09, the clip detail rulings): on the transport's
+   bar the space above the timeline is the clip's own tap, so the slider's 48px
+   target cannot centre on its track. It hangs DOWN from the track's top
+   instead — through the bar's lower half and the gesture-zone inset to the
+   frame's bottom edge — and the tap above stays whole. The ink never moves. */
+export function Timeline({ progress = 0, elapsed, duration, thin = false, tone = "media", hitBelow = false }) {
   const at = Math.max(0, Math.min(1, progress));
   return (
     <div
@@ -128,6 +134,12 @@ export function Timeline({ progress = 0, elapsed, duration, thin = false, tone =
         touchAction: "none",
       }}
     >
+      {hitBelow && (
+        <span
+          aria-hidden="true"
+          style={{ position: "absolute", left: 0, right: 0, top: 0, height: "var(--touch-target-min)" }}
+        />
+      )}
       <span
         style={{
           position: "absolute",
@@ -235,20 +247,25 @@ export function VideoTransport({
         }}
       >
         <span style={{ ...TIME, filter: OVER_MEDIA }}>{elapsed}</span>
-        <Timeline progress={progress} elapsed={elapsed} duration={duration} />
+        <Timeline progress={progress} elapsed={elapsed} duration={duration} hitBelow />
         <span style={{ ...TIME, opacity: 0.85, filter: OVER_MEDIA }}>{duration}</span>
         {/* The sound decision rides the bar rather than keeping its disc: a disc
-            beside a bar is two pieces of chrome for one clip. */}
-        <TransportButton
-          label={muted ? "Turn sound on" : "Turn sound off"}
-          glyph={muted ? "volume_off" : "volume_up"}
-          size={20}
-          box={28}
-          onClick={onToggleMute}
-        />
-        {fullscreen && (
-          <TransportButton label="Full screen" glyph="fullscreen" size={20} box={28} onClick={onFullscreen} />
-        )}
+            beside a bar is two pieces of chrome for one clip. The pair stands
+            20px apart (jakob 2026-10-09, the clip detail rulings): two 28px boxes
+            whose centres sit 48px apart, so their 48px targets meet and never
+            overlap. */}
+        <div style={{ display: "flex", alignItems: "center", gap: "var(--space-5)", flex: "none" }}>
+          <TransportButton
+            label={muted ? "Turn sound on" : "Turn sound off"}
+            glyph={muted ? "volume_off" : "volume_up"}
+            size={20}
+            box={28}
+            onClick={onToggleMute}
+          />
+          {fullscreen && (
+            <TransportButton label="Full screen" glyph="fullscreen" size={20} box={28} onClick={onFullscreen} />
+          )}
+        </div>
       </div>
     </div>
   );

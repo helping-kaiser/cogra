@@ -42,9 +42,10 @@ import { VideoTransport } from "./VideoControls.jsx";
      one video and the next one down is already unmuted; mute it again and they
      all go quiet. Tapping every clip to start it is friction with no upside, and
      a per-video mute state means the reader re-decides the same thing on every
-     scroll. It only plays while it is actually on screen — at 70% visibility or
-     more (readme §13, the video conform round) — offscreen video is neither
-     calm nor cheap.
+     scroll. It only plays while it is actually on screen — at 70% visibility
+     or more (readme §13, the video conform round) — offscreen video is
+     neither calm nor cheap. A detail view's clip is the exception: opening
+     the detail starts it, and scroll never stops it (`DetailClip`).
    · THE STAGE LAW (jakob 2026-09-23, the feed-video rulings). One stage per
      scroll surface — a post's clip and a comment's clip compete for the same
      one. The INCUMBENT KEEPS THE STAGE while it stays past the 70% gate;
