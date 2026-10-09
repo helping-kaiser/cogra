@@ -4,8 +4,8 @@
 // (design/designs/canonical/screens/Settings.jsx; `SettingsBody` in
 // `_shared.jsx`; behavior/Settings.md). Theme · Giving an opinion · Writing ·
 // Reading · People · Key backup · Sessions · Credentials · About · the
-// sign-out group. The delete-account group is the erasure packet's, and its
-// slot stays at the end of the page.
+// sign-out group · the delete-account group, whose row waits on the erasure
+// packet's request screen.
 //
 // No bottom bar (the shell hides it off read surfaces), no leading icons, and
 // the header pinned — not the collapsing top the inline forms used to ride.
@@ -94,6 +94,11 @@ const THEME_OPTIONS = [
   { value: "dark", label: "Dark" },
   { value: "auto", label: "Auto" },
 ] as const;
+
+/** The deletion group's footnote — the member's, and the applicant's without the mailed link. */
+const DELETE_FOOTNOTE_MEMBER =
+  "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.";
+const DELETE_FOOTNOTE_APPLICANT = "Nothing is deleted here. The next screen says what goes and what stays.";
 
 /** What a row-level act that got no answer says (copy-voice *Faults by code*). */
 const NO_ANSWER = "That didn't send. Try again.";
@@ -531,6 +536,22 @@ export function SettingsView({
             rowRef={signOutRow}
             node={node("leaving.leave")}
           />
+        </SettingsGroup>
+
+        {/* The page's last row, in a group of its own after leaving, drawn
+            quiet: a navigating row with a chevron. The footnote is the
+            applicant's when the reader is one (Settings.md :139-141).
+            DRIFT (the erasure-deletion packet): the deletion's request
+            screen, its grace status and the applicant's locked look are not
+            built, so the row opens nothing yet. */}
+        <SettingsGroup
+          ariaLabel="Delete account"
+          footnote={
+            account?.accountState === "APPLICANT" ? DELETE_FOOTNOTE_APPLICANT : DELETE_FOOTNOTE_MEMBER
+          }
+          node={node("ending")}
+        >
+          <SettingsRow label="Delete account" onOpen={() => {}} node={node("ending.delete")} />
         </SettingsGroup>
       </div>
 

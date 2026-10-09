@@ -33,7 +33,7 @@ export function SignOutConfirm({
     <DialogSurface
       title="Sign out without a backup?"
       body={[
-        "This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in on this browser again. Erase them instead, and no one — including CoGra — can bring them back.",
+        "This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in again. Erase them instead, and no one — including CoGra — can bring them back.",
       ]}
       onDismiss={onDismiss}
       node={DIALOG}

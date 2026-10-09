@@ -275,7 +275,7 @@ class CredentialSubpagesTest {
     @Test
     fun `malformed_address_reads_on_the_press_then_rechecks_live`() = runTest(dispatcher) {
         val vm = email()
-        vm.onNewEmail("sol@ferreira")
+        vm.onNewEmail("sol@ferreira.")
         vm.onPassword("saltmarsh-tides")
         assertThat(vm.state.value.malformed).isFalse()
         vm.onCommit()
