@@ -4,9 +4,9 @@ WHEN tap Sign out GIVEN the don't-remember switch is on and this device holds th
 
 ALWAYS the dialog names all three things the sign-out would clear: the key, the draft and any picks kept pending
 
-ALWAYS the dialog's body reads This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in on this browser again. Erase them instead, and no one — including CoGra — can bring them back. on the web
+ALWAYS the dialog's body reads This browser holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in again. Erase them instead, and no one — including CoGra — can bring them back. on the web
 
-ALWAYS the dialog's body reads This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in to this app again. Erase them instead, and no one — including CoGra — can bring them back. on android
+ALWAYS the dialog's body reads This app holds the only copy of your key. Signing out leaves your key, your draft and any opinions you kept pending here, locked until you sign in again. Erase them instead, and no one — including CoGra — can bring them back. on android
 
 ALWAYS Make a recovery code is the filled answer and leads, and Sign out, keep them locked and Erase them and sign out are the quiet ones
 

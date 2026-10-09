@@ -37,6 +37,15 @@
       "page": "profile"
     },
     {
+      "file": "HistoryHidden.dc.html",
+      "title": "History · someone just hidden",
+      "x": 4320,
+      "y": 4661,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 3360,
@@ -257,6 +266,15 @@
       "title": "Settings · change your handle",
       "x": 2880,
       "y": 1928,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "DeleteLinkExpired.dc.html",
+      "title": "Deletion link · already used or replaced",
+      "x": 6720,
+      "y": 2988,
       "w": 390,
       "h": 844,
       "page": "profile"

@@ -301,6 +301,54 @@ function ApkLine() {
   );
 }
 
+/* THE REGISTRATION'S TWO LEGAL LINES (jakob 2026-10-09, ruling 76; §305(2)
+   BGB needs a conspicuous reference and readable terms, not a checkbox).
+   The accept sentence stands DIRECTLY ABOVE the commit — the one place a
+   reader's eye crosses on the way to `Create account` — with `Terms` as a
+   door, and no checkbox anywhere: ticking a box is ceremony the law does not
+   ask for and the form does not need. The sentence is blessed verbatim.
+
+   THE PRIVACY POLICY IS A NOTICE, NEVER PART OF THE ACCEPTANCE (the same
+   ruling; GDPR's information duty is owed, not agreed to). It stands as its
+   own linked line at the form's foot, apart from the accept sentence, so
+   nothing reads as if a reader consented to data handling by registering.
+
+   Both live here because `Join` and `JoinErrors` draw one form, and a legal
+   line spelled twice is a legal line that drifts. */
+function JoinTermsLine() {
+  return (
+    <p
+      style={{
+        margin: 0,
+        textAlign: "center",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      By creating your account you accept the <a href="#">Terms</a>.
+    </p>
+  );
+}
+
+function JoinPrivacyNotice() {
+  return (
+    <p
+      style={{
+        margin: 0,
+        textAlign: "center",
+        fontSize: "var(--text-body-small)",
+        lineHeight: "var(--text-body-small--line-height)",
+        letterSpacing: "var(--text-body-small--letter-spacing)",
+        color: "var(--text-secondary)",
+      }}
+    >
+      How CoGra handles your data: the <a href="#">Privacy Policy</a>.
+    </p>
+  );
+}
+
 /* The feed column: full-width rounded cards, 8px of surface as the seam. */
 function FeedList({ children }) {
   return (
@@ -532,6 +580,17 @@ const LICENSE_ROW = { label: LICENSE_MENU_LABEL, onSelect: () => {}, node: "lice
    where the post's menu has always put it: the rarest act, and the one that
    takes the content away. */
 const REMOVE_ROW = { label: "Remove", onSelect: () => {}, node: "remove" };
+/* THE REPORT ROW, AT THE SHEET TAIL OF EVERY OTHER-PERSON MENU (jakob
+   2026-10-09, ruling 75). Minimal and via mail for MVP: the row opens a
+   confirm sheet naming the thing (`ReportConfirm`), the commit sends the
+   report out, and no report machinery exists until proposals/moderation
+   land. It sits LAST — below even the license — because it is the one row
+   a reader reaches for about someone else's conduct, not about using the
+   thing, and the tail is where the rows that take or send something have
+   always lived. It NEVER connects to Report-a-problem: reporting content
+   must not read as reporting the app (jakob). Own menus carry no Report —
+   a reader has nothing to report themselves for. */
+const REPORT_ROW = { label: "Report", onSelect: () => {}, node: "report" };
 const OWN_POST_MENU = [
   SAVE_ROW,
   CITE_ROW,
@@ -540,7 +599,7 @@ const OWN_POST_MENU = [
   REMOVE_ROW,
   LICENSE_ROW,
 ];
-const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW];
+const READER_POST_MENU = [...CARD_MENU, { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" }, LICENSE_ROW, REPORT_ROW];
 /* THE COMMENT'S MENU IS WHERE ITS OPINIONS LIVE (backlog item 55; jakob ruled
    both doors, and this is the comment's). A post's door is a count row on its
    detail surface; a comment has no detail surface of its own — it lives inside a
@@ -573,7 +632,7 @@ const OPINIONS_ROW = { label: "Opinions on this", onSelect: () => {}, node: "opi
    about people. */
 const CITED_BY_ROW = { label: "Cited by", onSelect: () => {}, node: "citedBy" };
 
-const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW];
+const COMMENT_MENU = [...CARD_MENU, CITED_BY_ROW, OPINIONS_ROW, LICENSE_ROW, REPORT_ROW];
 /* YOUR OWN COMMENT'S MENU (the comment-removal round, 2026-10-01): the reader's
    menu with `Remove` joined as the last of the acts — after Save and Cite,
    before the two readings, the license closing it. That is `OWN_POST_MENU`'s
@@ -663,6 +722,7 @@ const PROFILE_MENU = [
   { label: "Mention in a new post", onSelect: () => {}, node: "mention" },
   { label: "Share this profile", onSelect: () => {}, node: "share" },
   { label: HIDE_ACTOR_LABEL("@ada"), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
 ];
 
 /* A DELETED ACCOUNT'S MENU (jakob 2026-09-12): the three rows that work on a
@@ -677,6 +737,7 @@ const PROFILE_DELETED_MENU = [
   SAVE_ROW,
   { label: "Share this profile", onSelect: () => {}, node: "share" },
   { label: HIDE_ACTOR_LABEL(null, true), onSelect: () => {}, node: "hide" },
+  REPORT_ROW,
 ];
 
 /* Your own profile's menu (the private-viewer-state round): the two private

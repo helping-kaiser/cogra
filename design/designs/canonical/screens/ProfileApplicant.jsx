@@ -21,7 +21,10 @@
    away, so the profile is the link's permanent home — `ApplicantWaiting`'s
    block and label, `bare` inside the card. Its caption adds what the open
    application means now that anyone holding the ask can vouch (jakob
-   2026-10-07, item 58). Settings carries no ask link.
+   2026-10-07, item 58), spoken in the second person because this is the
+   reader's own page — "more personal is better" (jakob 2026-10-09, item 91);
+   the third-person form stays wherever another reader meets the fact.
+   Settings carries no ask link.
 
    TURNED DOWN, THE CARD SAYS SO (jakob 2026-10-05, D9; the `application`
    chip). Once @mira closes the application, `Waiting on @mira` and the
@@ -53,7 +56,7 @@ export function Screen() {
               address={ASK_LINK}
               onCopy={() => {}}
               copyLabel="Copy your ask link"
-              caption="It does not expire. Anyone who holds their ask can let them in — the first vouch lands it."
+              caption="It does not expire. Anyone who holds your ask can let you in — the first vouch lands it."
               node="link"
             />
           </TaskCard>

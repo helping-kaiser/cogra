@@ -16,6 +16,8 @@ WHEN the new address's link is opened GIVEN the change was canceled -> the landi
 
 WHEN the new address's link is opened again GIVEN the change already applied -> the landing reads This link doesn't work anymore AND says The change it belonged to already happened. Your email is now sol@ferreira.studio. AND its way on reads Back to settings AND NEVER the change applies a second time
 
+WHEN a /email-change link is opened signed in GIVEN the link is not one the app knows -> the landing reads This link doesn't work anymore AND says It isn't a link CoGra knows — it may be mistyped, or from a change long gone. Your email stays as it is. AND its way on reads Back to settings AND NEVER an address appears AND NEVER anything changes
+
 WHEN the new address's link is opened GIVEN the new address was registered by another account meanwhile -> the landing reads That address is taken now over the address-taken line AND its way on reads Back to settings AND NEVER the address moves
 
 ALWAYS the landing carries no back arrow
