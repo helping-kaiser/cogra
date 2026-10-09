@@ -6,14 +6,10 @@
 //! provenance reads split — the link issuer lends the borrowed view, the
 //! admitting voucher is `invitedBy`.
 //!
-//! Paths beyond the registration path: PS-7's `stageApplicant` does not
-//! exist yet, so a second path is an `auth_applications` row inserted
-//! through another member's invite link — the honest stub
-//! `tests/borrowed_view.rs` uses for a state the API surface cannot yet
-//! produce. The stub covers everything below the staging verb: the row is
-//! a real queue entry in that member's queue, approvable and rejectable
-//! through the real verbs. What it does not cover is how a path comes to
-//! exist; when `stageApplicant` lands these tests switch to it.
+//! Paths beyond the registration path are staged the way they come to
+//! exist: another member takes the account up from its ask link
+//! (`stageApplicant`), so each is a real queue entry in that member's
+//! queue, approvable and rejectable through the real verbs.
 
 use std::sync::{Arc, Mutex};
 
@@ -176,21 +172,17 @@ impl Rig {
         Applicant { account, key }
     }
 
-    /// Another path of `account`, in `owner`'s queue (module docs: the
-    /// stub for `stageApplicant`).
+    /// Another path of `account`, in `owner`'s queue: `owner` takes the
+    /// account up from its ask link (module docs).
     async fn path(&self, account: Uuid, owner: Uuid) -> Uuid {
-        let link = self.link(owner).await;
-        let id = Uuid::new_v4();
-        sqlx::query(
-            "INSERT INTO auth_applications (id, account_id, invite_link_id) VALUES ($1, $2, $3)",
-        )
-        .bind(id)
-        .bind(account)
-        .bind(link)
-        .execute(&self.pool)
-        .await
-        .expect("path");
-        id
+        let ask_link = store::ask_link_of(&self.pool, account)
+            .await
+            .expect("ask link read")
+            .expect("an applicant has an ask link");
+        onboarding::stage_applicant(&self.pool, owner, ask_link)
+            .await
+            .expect("stages")
+            .id
     }
 
     async fn registration_path(&self, account: Uuid) -> Uuid {
@@ -419,18 +411,19 @@ impl Rig {
         serde_json::to_value(&response).expect("json")
     }
 
+    /// Whether the path stands in its member's view of the queue: a link
+    /// path in its link's share (every status), an ask-link path in the
+    /// approver's waiting queue.
     async fn queue_holds(&self, path: Uuid) -> bool {
-        let link: Uuid =
-            sqlx::query_scalar("SELECT invite_link_id FROM auth_applications WHERE id = $1")
-                .bind(path)
-                .fetch_one(&self.pool)
-                .await
-                .expect("link");
-        store::applications_for_link(&self.pool, link)
+        let row = store::application(&self.pool, path)
             .await
-            .expect("queue")
-            .iter()
-            .any(|a| a.id == path)
+            .expect("read")
+            .expect("path");
+        let rows = match row.invite_link_id {
+            Some(link) => store::applications_for_link(&self.pool, link).await,
+            None => store::approval_queue(&self.pool, row.approver_id).await,
+        };
+        rows.expect("queue").iter().any(|a| a.id == path)
     }
 }
 
@@ -968,8 +961,9 @@ async fn landing_closes_the_other_open_paths(pool: PgPool) {
     rig.sign_registration(&noa).await;
     rig.close().await;
 
-    assert!(
-        rig.queue_holds(landing).await,
+    assert_eq!(
+        rig.landed_paths(noa.account).await,
+        vec![landing],
         "the landed path stays as the record"
     );
     assert!(!rig.queue_holds(vouched).await);
