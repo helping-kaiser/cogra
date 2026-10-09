@@ -10,6 +10,12 @@ ALWAYS the form chips combine
 
 ALWAYS the order is Ranked or Newest, never both
 
+ALWAYS the People section holds the rows Everyone and Your people, one on and never both
+
+ALWAYS Your people narrows the feed to the people the reader holds an opinion for, over the same rank
+
+WHEN tap Everyone or Your people -> the choice is staged AND NEVER the feed behind the sheet moves before Done
+
 ALWAYS the filter's topic chips are the topics the reader holds an opinion for
 
 ALWAYS at most one topic chip is on
@@ -24,7 +30,7 @@ WHEN tap Ranked or Newest -> that order is staged AND NEVER the feed behind the 
 
 WHEN tap Show what you've already seen -> the toggle flips, staged AND NEVER the feed behind the sheet moves before Done
 
-ALWAYS Posts is the one kind on, Ranked is the order, Show what you've already seen is off, Still settling is on and Sensitive and Removed are off GIVEN the filter is at its default and the reader has set no default of their own in Settings
+ALWAYS Posts is the one kind on, Ranked is the order, Everyone is the people row on, Show what you've already seen is off, Still settling is on and Sensitive and Removed are off GIVEN the filter is at its default and the reader has set no default of their own in Settings
 
 ALWAYS the feed admits content not yet landed, wearing Still settling GIVEN the feed's filter has Still settling on
 

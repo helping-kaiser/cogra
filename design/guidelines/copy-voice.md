@@ -262,6 +262,9 @@ departs, in lowercase after a `·`:
   or `hiding removed`; `Still settling` off, `settled only`.
 - **Topic**: the tag's own name (*Topics*). A default never holds one,
   so it has no word for its absence.
+- **People**: `your people` (jakob 2026-10-09, ruling 77 — the label
+  `Your people` blessed; the trigger's lowercase state word follows the
+  axis rule). `Everyone` is the default and has no word.
 
 *New 2026-10-02, blessed (jakob 2026-10-02):* `all forms`, `hiding
 seen`, `+ still settling`, `hiding sensitive`, `hiding removed`,
@@ -284,6 +287,12 @@ carry, `ExploreFilter`, `HistoryFilter`):
   removed post keeps its place — author, time, and where it sat in the
   thread — never the content.` — with `Sensitive` · `Removed` · `Still
   settling`.
+- `People` — `Whose things reach this feed.` — the rows `Everyone` over
+  `The whole feed, as far as your walks reach.` and `Your people` over
+  `Only the people you hold an opinion for — the same rank, narrowed to
+  them.` (the pair's labels blessed, jakob 2026-10-09, ruling 77; *the
+  section word and the three support lines drafted 2026-10-09 — their
+  wording jakob's at review*).
 
 ## Platform nouns
 

@@ -9604,6 +9604,17 @@ each).
   (`history.snackbar`, `tagPage.snackbar`). With them, item 48's unsave
   aftermath lines on the menu hosts take their registered
   `<host>.snackbar.action` paths.
+- **The People section** (item 77). The feed filter sheet gains the
+  friends-only scope as one exclusive pair of ROWS — the license sheets'
+  radio-row anatomy, never a segmented pill (jakob) — `Everyone`, the
+  default, and `Your people`: a scope filter over the neutral rank
+  (feed-ranking.md §10's Friends feed), the people the reader holds an
+  opinion for. It stands with the scope narrowers at the body's tail, the
+  topic section staying last; the trigger's deviation word is
+  `your people`, riding beside the topic's. Drawn on the one master, so
+  `FeedSheet` and `SettingsReading` carry it together; the paths register
+  under `settings.feedSheet.people` (the feed's own sheet stays
+  unregistered until its drawn state does).
 
 ---
 

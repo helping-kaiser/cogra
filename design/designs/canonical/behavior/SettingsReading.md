@@ -16,6 +16,10 @@ WHEN tap a kind, form or also-show chip -> the chip's change is staged AND NEVER
 
 WHEN tap Ranked or Newest -> that order is staged as the default AND NEVER the default changes before Done
 
+WHEN tap settings.feedSheet.people.everyone or settings.feedSheet.people.yourPeople -> that choice is staged as the default AND NEVER the default changes before Done
+
+ALWAYS settings.feedSheet.people holds the rows settings.feedSheet.people.everyone and settings.feedSheet.people.yourPeople, one on and never both
+
 WHEN tap the already-seen toggle -> the toggle flips, staged AND NEVER the default changes before Done
 
 WHEN tap Reset -> CoGra's own default is staged AND NEVER the reader's own default is staged AND NEVER the default changes before Done

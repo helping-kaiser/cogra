@@ -271,6 +271,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">All your topics</button>", tag: "button" },
     { n: 8, find: ">Done</button>", tag: "button" },
+    // The People rows (ruling 77): one choice, two rows, one number.
+    { n: 9, find: 'data-people="everyone"', tag: "label" },
+    { n: 9, find: 'data-people="yourPeople"', tag: "label" },
   ],
   /* The feed narrowed to one topic. Neither card carries a reference, so the
      numbering closes over the slot `FeedNarrowed` keeps for one. */
@@ -1695,6 +1698,9 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Done</button>", tag: "button" },
+    // The People rows (ruling 77): one choice, two rows, one number.
+    { n: 8, find: 'data-people="everyone"', tag: "label" },
+    { n: 8, find: 'data-people="yourPeople"', tag: "label" },
   ],
   // Two password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated
