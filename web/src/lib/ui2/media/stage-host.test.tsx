@@ -447,6 +447,40 @@ describe("suppressed autoplay starts nothing on its own", () => {
   });
 });
 
+// A LAYER SHIELDS WHAT IT DRAWS (SL-1 flag d): a clip on a layer raised over a
+// host is not on the covered surface, so it never joins — and is never
+// suspended with — the stage the layer covers.
+describe("a clip drawn on a layer over a host", () => {
+  function Covered({ sheetOpen }: { sheetOpen: boolean }) {
+    return (
+      <List ids={["page"]}>
+        <BottomSheet open={sheetOpen} onClose={noop} title="Sheet" testId="sheet">
+          <VideoPlayer src={CLIP} testId="drawn" />
+        </BottomSheet>
+      </List>
+    );
+  }
+
+  it("plays on the sheet while the page's stage beneath stands suspended (L04, Feed.md:33)", () => {
+    const { rerender } = render(<Covered sheetOpen={false} />);
+    frame({ page: 1 });
+    expect(playing("page")).toEqual(["page"]);
+
+    rerender(<Covered sheetOpen />);
+    frame({ page: 1, drawn: 1 });
+    // The page's clip stopped for the sheet; the sheet's own clip is not
+    // suspended by the very layer it is drawn on.
+    expect(playing("page", "drawn")).toEqual(["drawn"]);
+  });
+
+  it("makes a stage of its own rather than joining the page's — one observer more", () => {
+    const observers = liveObserverCount();
+    render(<Covered sheetOpen />);
+    frame({ page: 1, drawn: 1 });
+    expect(liveObserverCount()).toBe(observers + 2);
+  });
+});
+
 // TEARDOWN HYGIENE (the packet's §6 row; seam 024's teardown-race class).
 describe("teardown hygiene", () => {
   it("a host that leaves takes its observer and its subscriptions with it", () => {
