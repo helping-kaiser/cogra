@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_device_locks SET released_at = NOW()\n          WHERE id = $1 AND user_id = $2\n          RETURNING secret",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "secret",
+        "type_info": "Bytea"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1bb8afb5cf5cedf921a77ce4f746ec7279409eee8a06f77bb18fd4fdc35b91ef"
+}
