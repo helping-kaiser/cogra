@@ -328,15 +328,16 @@ link out of curiosity must not acquire a queue entry for doing it.
 From there the staged entry is an ordinary application: the same
 approval, the same rejection.
 
-**One live application at a time.** The account rule does not bend
-here: while an application is live the ask link stages nobody new,
-and `askLinkCheck` reports that before a member commits to
-anything. An applicant asks one person at a time, and the answer —
-approval or rejection — is what frees the link again. The graph is untouched by any of it: several members
-vouching is the primitive's own case
-([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)),
-and the queue being serial is a service constraint, not a
-statement about who may point an Opinion at whom.
+**Several members can be asked at once.** A live application in
+another member's queue does not stop the ask link: any member who
+does not already have the applicant open in their own queue —
+waiting, or approved with their vouch still in flight — can stage
+them, and `askLinkCheck` reports only the cases that refuse. The
+first vouch to land completes the entry; a later one is an
+ordinary Opinion ("Approval and landing" below). The graph is
+untouched by any of it: several members vouching is the
+primitive's own case
+([invitations.md §2](../primitive/invitations.md#2-the-mutual-pair-relation)).
 
 **Landing retires it.** A member has no application to stage; the
 row stays — nothing here is deleted — and the check reports it
@@ -436,7 +437,7 @@ and ends the application — the row stays, the account persists
 with its login, its reads and its attached key. Nothing is
 deleted.
 
-What it closes is **this inviter's queue entry, not the person.**
+What it closes is **this approver's queue entry, not the person.**
 One member declining to vouch is not the network's answer: the
 account goes on reading, and its ask link stays open.
 Deleting the account is never the way out of a rejection, and no
@@ -466,8 +467,8 @@ told separately: the act reaches each of them, so each gets their
 own notification. Clients name the count in the confirmation,
 the sweep's size being the fact worth confirming. Someone real
 swept up with the rest loses the wait, not the way in — their ask
-link puts them back, one application at a time ("The ask link"
-above), and that second look is what the link is for.
+link puts them back ("The ask link" above), and that second look
+is what the link is for.
 
 An applicant can already **read** — the shared graph is public —
 and **stages each kind of act once**: a post, an Opinion and an
@@ -622,7 +623,8 @@ without latching.
 reciprocation and first-opinion latches are writes inside query
 resolvers — a deliberate deviation from GraphQL's rule that
 non-mutation fields stay side-effect-free. All three writes are
-idempotent, serialized on the application row, and convergent:
+idempotent, serialized (the re-staging on the account, each latch
+by its own guard), and convergent:
 they push stored state toward what the approval or a permanent
 accepted Opinion already committed — a read never creates new
 intent. A failed repair only logs; the
@@ -1086,6 +1088,13 @@ community fund's outflow — and refused with the approval batch,
 whole, before anything is burned. It is per voucher rather than
 instance-wide, since a global cap is one an attacker could exhaust to
 stall every admission.
+
+Queue writes are not auth endpoints either. `stageApplicant`,
+`rejectApplication` and `rejectLinkApplications` are member-gated
+writes to the caller's own queue, with no limiter: a stage is bounded
+to one open application per applicant in each member's queue, and the
+anonymous `askLinkCheck` matches `inviteLinkCheck`, whose ids are too
+random to guess.
 
 The client IP is the socket peer address by default. Behind a
 reverse proxy that is the sole ingress, `CLIENT_IP_SOURCE`

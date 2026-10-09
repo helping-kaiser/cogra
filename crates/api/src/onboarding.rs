@@ -65,6 +65,11 @@ impl Default for OnboardingConfig {
 pub enum OnboardingError {
     #[error("invite link invalid, expired, revoked, or consumed")]
     InviteUnusable,
+    /// The ask link stages nobody for this caller: unknown, its account
+    /// landed, or an application of it already open in the caller's
+    /// queue. The client names the case by re-reading `askLinkCheck`.
+    #[error("ask link unknown, or its applicant is landed or already waiting in your own queue")]
+    AskLinkUnusable,
     #[error("handle already taken")]
     HandleTaken,
     #[error("the email already belongs to an account")]
@@ -452,10 +457,13 @@ fn unknown_application() -> OnboardingError {
     }
 }
 
-/// The application, when it sits in `approver`'s queue — the queue of the
-/// invite link's issuer.
+/// The application, when it sits in `approver`'s queue — the row's own
+/// approver, whichever end of the funnel staged it: the invite link's
+/// issuer, or the member who took the account up from its ask link. An
+/// account with several open paths is approvable on each by that path's
+/// approver only.
 ///
-/// The approval queue is issuer-visible only, so someone else's queue
+/// The approval queue is approver-visible only, so someone else's queue
 /// reads as an unknown application rather than a refusal — the two are
 /// deliberately indistinguishable to the caller.
 async fn queued_application(
@@ -466,10 +474,7 @@ async fn queued_application(
     let application = store::application(pool, id)
         .await?
         .ok_or_else(unknown_application)?;
-    let link = store::invite_link(pool, application.invite_link_id)
-        .await?
-        .ok_or_else(|| OnboardingError::Internal("application without a link".into()))?;
-    if link.inviter_id != approver {
+    if application.approver_id != approver {
         return Err(unknown_application());
     }
     Ok(application)
@@ -525,6 +530,26 @@ async fn answered_meanwhile(pool: &PgPool, id: Uuid) -> OnboardingError {
         },
         Ok(None) => unknown_application(),
         Err(e) => e.into(),
+    }
+}
+
+/// Takes up an ask link (auth.md "The ask link"): stages its applicant
+/// as a waiting application in the caller's own queue — the ask
+/// direction's answer to `register`, a deliberate call and never a side
+/// effect of opening the link. It writes only the queue entry: no
+/// approvability is required, nothing is approved, signed or spent, and
+/// the entry waits with no timer. A live application in another member's
+/// queue never refuses (EC-R3).
+pub async fn stage_applicant(
+    pool: &PgPool,
+    approver: Uuid,
+    ask_link: Uuid,
+) -> Result<store::Application, OnboardingError> {
+    match store::stage_application(pool, Uuid::new_v4(), ask_link, approver).await? {
+        store::StageOutcome::Staged(application) => Ok(application),
+        store::StageOutcome::Unknown
+        | store::StageOutcome::Landed
+        | store::StageOutcome::OpenWithApprover => Err(OnboardingError::AskLinkUnusable),
     }
 }
 

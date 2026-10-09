@@ -12,6 +12,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -36,6 +37,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -45,6 +47,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -61,7 +64,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCrop — pictures — the crop",
         "ComposeCrop · 3 «Next» → ComposeDetails — pictures — details next",
         "ComposeDetails · 10 «Next» → ComposeSeal",
@@ -78,6 +81,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -102,6 +106,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -111,6 +116,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -210,6 +216,7 @@
         "History",
         "KeyElsewhere",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
@@ -221,7 +228,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «comment count» on 27 boards → ReplyEntry",
+        "start · «comment count» on 28 boards → ReplyEntry",
         "ReplyEntry · 7 «Add a comment» → ReplyCompose — the full-focus composer, parent pinned",
         "ReplyCompose · 3 «Next» → ReplySeal",
         "end · ReplySeal · 9 «Sign comment» → ReplySettled — signed — the thread reopened where it was left, the reply settling on its parent"
@@ -249,6 +256,7 @@
         "History",
         "KeyElsewhere",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
@@ -528,6 +536,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
@@ -539,7 +548,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «stance face» — to VouchBackPad on 24 boards → VouchBackPad",
+        "start · «stance face» — to VouchBackPad on 25 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -559,6 +568,7 @@
         "FeedUnread",
         "FeedWordsSensitive",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
@@ -742,6 +752,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -766,6 +777,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -775,6 +787,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -791,7 +804,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
         "ComposePick · 4 «Write words instead» → ComposeWords — the body empty — the words stage, no ask",
         "ComposeWords · 3 «Next» → ComposeDetailsWords — the words path skips crop and cover — details without the media row or a description",
         "ComposeDetailsWords · 8 «Next» → ComposeSeal — the words path never waits on uploads",
@@ -808,6 +821,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -832,6 +846,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -841,6 +856,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -868,6 +884,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -892,6 +909,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -901,6 +919,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -917,7 +936,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeCover — a horizontal or square video — its face",
         "ComposeCover · 6 «Next» → ComposeDetailsVideo — the face is chosen — details, and no cover door there to open",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
@@ -934,6 +953,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -958,6 +978,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -967,6 +988,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -994,6 +1016,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -1018,6 +1041,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -1027,6 +1051,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -1043,7 +1068,7 @@
         "WalletComingSoon"
       ],
       "steps": [
-        "start · «nav · New post» — to ComposePick on 53 boards → ComposePick",
+        "start · «nav · New post» — to ComposePick on 56 boards → ComposePick",
         "ComposePick · 3 «Next» → ComposeDetailsVideo — a vertical video — no cover step, the door waits on details",
         "ComposeDetailsVideo · 9 «Next» → ComposeSeal",
         "end · ComposeSeal · 7 «Sign and publish» → ComposeLanded — signed — the detail view, still settling"
@@ -1058,6 +1083,7 @@
         "DeleteAccountCanceled",
         "Explore",
         "ExploreNone",
+        "ExplorePerson",
         "ExploreSearch",
         "ExploreUnscoped",
         "Feed",
@@ -1082,6 +1108,7 @@
         "Notifications",
         "NotificationsEmpty",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "PostNotFound",
@@ -1091,6 +1118,7 @@
         "ProfileNotFound",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts",
         "ProfileStances",
         "ProfileUnreachable",
@@ -1312,10 +1340,11 @@
         "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts"
       ],
       "steps": [
-        "start · «the figures row» on 7 boards → ProfileStances",
+        "start · «the figures row» on 8 boards → ProfileStances",
         "end · arrival at ProfileStances"
       ],
       "boards": [
@@ -1326,6 +1355,7 @@
         "ProfileDeleted",
         "ProfileOther",
         "ProfileOtherHeld",
+        "ProfileOtherHidden",
         "ProfilePosts"
       ]
     },
@@ -1366,10 +1396,11 @@
         "ProfileComments",
         "ProfileDeleted",
         "ProfileOther",
+        "ProfileOtherHidden",
         "ProfilePosts"
       ],
       "steps": [
-        "start · «the stance anchor» — to VouchBackPad on 4 boards → VouchBackPad",
+        "start · «the stance anchor» — to VouchBackPad on 5 boards → VouchBackPad",
         "end · VouchBackPad · 4 «Set» → back — signed — the stance lands, back where the pad bloomed"
       ],
       "boards": [
@@ -1377,6 +1408,7 @@
         "ProfileComments",
         "ProfileDeleted",
         "ProfileOther",
+        "ProfileOtherHidden",
         "ProfilePosts"
       ]
     },
@@ -1433,6 +1465,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1456,6 +1489,7 @@
         "KeyElsewhere",
         "Main",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Reel",
@@ -1466,12 +1500,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «author chip» on 32 boards → ProfileOther",
+        "start · «author chip» on 34 boards → ProfileOther",
         "end · arrival at ProfileOther"
       ],
       "boards": [
         "ProfileOther",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1495,6 +1530,7 @@
         "KeyElsewhere",
         "Main",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "Reel",
@@ -1511,6 +1547,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1533,12 +1570,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — pictures — the post opens on 21 boards → PostDetail",
+        "start · «post media» — pictures — the post opens on 22 boards → PostDetail",
         "end · arrival at PostDetail"
       ],
       "boards": [
         "PostDetail",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1567,6 +1605,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1590,12 +1629,13 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «post media» — a portrait clip — the stream opens on 22 boards → Reel",
+        "start · «post media» — a portrait clip — the stream opens on 23 boards → Reel",
         "end · arrival at Reel"
       ],
       "boards": [
         "Reel",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1651,6 +1691,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1672,13 +1713,14 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «reference count» on 20 boards → RefsSheet",
+        "start · «reference count» on 21 boards → RefsSheet",
         "end · RefsSheet · 3 «post reference rows» → PostDetail — the cited post opens"
       ],
       "boards": [
         "RefsSheet",
         "PostDetail",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1795,6 +1837,7 @@
       "status": "resolved",
       "startsOn": [
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1818,6 +1861,7 @@
         "KeyElsewhere",
         "Main",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
@@ -1827,7 +1871,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 31 boards → FeedEntry",
+        "start · «Feed score» on 33 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -1839,6 +1883,7 @@
         "RankHop",
         "RankRecords",
         "ApplicantFeed",
+        "ApplicantFellThrough",
         "ApplicantLanding",
         "ApplicantRejected",
         "ApplicantWaiting",
@@ -1862,6 +1907,7 @@
         "KeyElsewhere",
         "Main",
         "PostDetail",
+        "PostDetailHidden",
         "PostDetailVideo",
         "PostDetailVideoSensitive",
         "ProfilePosts",
@@ -2139,6 +2185,18 @@
       ],
       "boards": [
         "ApplicantLanding"
+      ]
+    },
+    {
+      "name": "ask-again-after-an-approval-fell-through",
+      "description": "An approval that lapses before the reader is in flips the landing card back to waiting, naming nobody; the ask link on it goes to anyone already in, and the first vouch lands it.",
+      "status": "resolved",
+      "steps": [
+        "start · ApplicantFellThrough",
+        "end · ApplicantFellThrough · 20 «copy your ask link» → self — the ask link lands on the clipboard — Link copied. It does not expire and it is not used up, so the same one goes to as many members as the reader knows"
+      ],
+      "boards": [
+        "ApplicantFellThrough"
       ]
     },
     {
@@ -2640,11 +2698,12 @@
       "status": "resolved",
       "steps": [
         "start · Settings · 17 «Hidden accounts» → SettingsHidden — the hidden list in a sheet over settings; with nobody hidden the row is inert and reads None, so there is nothing to open",
-        "end · SettingsHidden · 1 «Unhide» → self — the row goes and their posts return to your feed — the snackbar answers"
+        "end · SettingsHidden · 1 «Unhide» → SettingsUnhidden — the row goes and their posts return to your feed — the snackbar answers"
       ],
       "boards": [
         "Settings",
-        "SettingsHidden"
+        "SettingsHidden",
+        "SettingsUnhidden"
       ]
     },
     {
@@ -3533,6 +3592,22 @@
       ]
     },
     {
+      "name": "hide-someone-from-their-post",
+      "description": "Hide on the menu of a post being read asks nothing: the post stays where it is, the snackbar offers Undo, and the feed, the next time it is opened, has that person's rows gone.",
+      "status": "resolved",
+      "steps": [
+        "start · PostDetail · 2 «post overflow ⋮» → ReaderPostMenu — the reader's sheet (master)",
+        "ReaderPostMenu · 3 «Hide @ada» → PostDetailHidden — opened from the post being read — that post stays, hiding clearing the feed rather than the record, and the snackbar offers Undo",
+        "end · PostDetailHidden · 10 «nav · Feed» → FeedHidden — the feed without the hidden person's rows"
+      ],
+      "boards": [
+        "PostDetail",
+        "ReaderPostMenu",
+        "PostDetailHidden",
+        "FeedHidden"
+      ]
+    },
+    {
       "name": "read-a-posts-license",
       "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
       "status": "resolved",
@@ -3607,6 +3682,20 @@
       "boards": [
         "PostDetail",
         "CitedBy"
+      ]
+    },
+    {
+      "name": "search-and-open-a-person",
+      "description": "A bare word that matches a person's name or handle brings their row among the results; it opens their profile, its arrow reading Back to the search.",
+      "status": "resolved",
+      "steps": [
+        "start · Explore · 1 «search field» → ExplorePerson — an unscoped query that reaches a person by name or handle — the Profiles row among the results",
+        "end · ExplorePerson · 5 «profile result row» → ProfileOther — another person — their profile, its back arrow reading Back to the search"
+      ],
+      "boards": [
+        "Explore",
+        "ExplorePerson",
+        "ProfileOther"
       ]
     },
     {
@@ -3729,11 +3818,13 @@
       "status": "resolved",
       "steps": [
         "start · ProfileOther · 2 «profile overflow ⋮» → ProfileMenu — another's profile sheet (master)",
-        "end · ProfileMenu · 4 «Hide @ada» → FeedHidden — the feed, the next time it is opened — her rows gone, the ones behind them moved up"
+        "ProfileMenu · 4 «Hide @ada» → ProfileOtherHidden — no confirm — the snackbar offers Undo and this page stays open, hiding clearing the feed rather than the person",
+        "end · ProfileOtherHidden · 8 «nav · Feed» → FeedHidden — the feed without the hidden person's rows"
       ],
       "boards": [
         "ProfileOther",
         "ProfileMenu",
+        "ProfileOtherHidden",
         "FeedHidden"
       ]
     },
@@ -4130,6 +4221,19 @@
         "verify-the-email",
         "verify-the-email-in-the-app",
         "watch-the-intro"
+      ]
+    },
+    "ApplicantFellThrough": {
+      "flows": [
+        "ask-again-after-an-approval-fell-through",
+        "follow-a-citation",
+        "open-a-posts-pictures",
+        "trace-a-score-to-its-records",
+        "visit-an-author",
+        "watch-the-stream"
+      ],
+      "endpoint": [
+        "ask-again-after-an-approval-fell-through"
       ]
     },
     "ApplicantKeyElsewhere": {
@@ -4889,12 +4993,14 @@
         "publish-a-vertical-video",
         "publish-a-video",
         "publish-words",
+        "search-and-open-a-person",
         "search-and-open-a-post",
         "search-for-a-name-nothing-carries",
         "search-into-a-thread",
         "walk-your-topics"
       ],
       "endpoint": [
+        "search-and-open-a-person",
         "search-and-open-a-post",
         "search-for-a-name-nothing-carries",
         "search-into-a-thread",
@@ -4914,6 +5020,16 @@
         "publish-a-video",
         "publish-words",
         "search-for-a-name-nothing-carries"
+      ],
+      "endpoint": []
+    },
+    "ExplorePerson": {
+      "flows": [
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "search-and-open-a-person"
       ],
       "endpoint": []
     },
@@ -5120,6 +5236,7 @@
       "flows": [
         "hide-a-deleted-account",
         "hide-someone-from-the-feed",
+        "hide-someone-from-their-post",
         "hide-someone-from-their-profile",
         "open-a-posts-pictures",
         "publish-a-post",
@@ -5135,6 +5252,7 @@
       "endpoint": [
         "hide-a-deleted-account",
         "hide-someone-from-the-feed",
+        "hide-someone-from-their-post",
         "hide-someone-from-their-profile"
       ]
     },
@@ -5655,6 +5773,7 @@
       "flows": [
         "follow-a-citation",
         "follow-the-already-published-marker",
+        "hide-someone-from-their-post",
         "open-a-posts-pictures",
         "open-something-you-saved",
         "open-the-viewer",
@@ -5674,6 +5793,7 @@
       "endpoint": [
         "follow-a-citation",
         "follow-the-already-published-marker",
+        "hide-someone-from-their-post",
         "open-a-posts-pictures",
         "open-something-you-saved",
         "open-the-viewer",
@@ -5682,6 +5802,20 @@
         "see-what-cites-a-post",
         "who-holds-an-opinion-on-this"
       ]
+    },
+    "PostDetailHidden": {
+      "flows": [
+        "hide-someone-from-their-post",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "reply-to-a-post",
+        "take-a-stance-on-a-post",
+        "trace-a-score-to-its-records",
+        "visit-an-author"
+      ],
+      "endpoint": []
     },
     "PostDetailVideo": {
       "flows": [
@@ -5887,6 +6021,7 @@
         "publish-a-video",
         "publish-words",
         "read-someones-posts",
+        "search-and-open-a-person",
         "see-who-stands-with-someone",
         "take-a-stance-on-a-person",
         "visit-an-author"
@@ -5898,6 +6033,7 @@
         "meet-an-ask-link-that-cant-be-taken-up",
         "message-someone",
         "read-someones-posts",
+        "search-and-open-a-person",
         "visit-an-author"
       ]
     },
@@ -5915,6 +6051,18 @@
         "revise-a-standing-opinion",
         "walk-back-an-opinion"
       ]
+    },
+    "ProfileOtherHidden": {
+      "flows": [
+        "hide-someone-from-their-profile",
+        "publish-a-post",
+        "publish-a-vertical-video",
+        "publish-a-video",
+        "publish-words",
+        "see-who-stands-with-someone",
+        "take-a-stance-on-a-person"
+      ],
+      "endpoint": []
     },
     "ProfileOwnMenu": {
       "flows": [
@@ -6008,6 +6156,7 @@
       "flows": [
         "cite-a-post",
         "hide-someone-from-the-feed",
+        "hide-someone-from-their-post",
         "read-a-posts-license"
       ],
       "endpoint": []
@@ -6612,9 +6761,7 @@
       "flows": [
         "unhide-an-account"
       ],
-      "endpoint": [
-        "unhide-an-account"
-      ]
+      "endpoint": []
     },
     "SettingsLicense": {
       "flows": [
@@ -6627,6 +6774,14 @@
         "set-what-every-feed-opens-with"
       ],
       "endpoint": []
+    },
+    "SettingsUnhidden": {
+      "flows": [
+        "unhide-an-account"
+      ],
+      "endpoint": [
+        "unhide-an-account"
+      ]
     },
     "SeveranceConfirm": {
       "flows": [

@@ -22,7 +22,7 @@
 // No `error` colouring and no warning glyph: a neutral wash of the standard
 // scrim and a plain `visibility` chip. A veiled post is not a failure.
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type CSSProperties, type ReactNode } from "react";
 
 /**
  * Whether the nearest enclosing `BodyVeil` currently veils this subtree.
@@ -67,10 +67,6 @@ export function BodyVeil({
   const [local, setLocal] = useState(false);
   const revealed = controlled ?? local;
 
-  if (revealed) {
-    return <VeilContext.Provider value={false}>{children}</VeilContext.Provider>;
-  }
-
   const reveal = (event: { preventDefault: () => void; stopPropagation: () => void }) => {
     // The veil is a decision, not a route: tapping it must not also open the
     // post it sits in.
@@ -80,52 +76,66 @@ export function BodyVeil({
     else setLocal(true);
   };
 
+  // REVEALING MOVES NOTHING — NOT EVEN IN THE TREE. The body stands at one
+  // place in the tree veiled or not: revealed, the two wrappers stay but draw
+  // no box of their own (`display: contents` — "the element itself does not
+  // generate any boxes, but its children … generate boxes as normal",
+  // https://developer.mozilla.org/en-US/docs/Web/CSS/display#contents), so the
+  // body lays out exactly as if it stood bare. A body that moved in the tree
+  // would REMOUNT on the reveal: a clip under the veil would come back as a
+  // new element — its preloaded frame dropped, its place on the stage given up
+  // and asked for again — where "the unveil is an eligibility change, not a
+  // suspension lift" and preloading under the veil "makes the unveil instant"
+  // (design/readme.md §13, the stage law).
   return (
     <div
-      data-testid={testId}
-      style={{ borderRadius: radius }}
-      className="relative flex min-w-0 overflow-hidden"
+      data-testid={revealed ? undefined : testId}
+      style={revealed ? CONTENTS : { borderRadius: radius }}
+      className={revealed ? undefined : "relative flex min-w-0 overflow-hidden"}
     >
       {/* The content still renders and still reserves its exact space — the
           veil is OVER it, not instead of it. `scale` hides the transparent edge
           a blur leaves at the bounds, and the wrapper clips it so the scaled
           halo never paints into the title above. */}
       <div
-        aria-hidden="true"
-        style={{ filter: "blur(24px)", transform: "scale(1.06)" }}
-        className="min-w-0 flex-1 overflow-hidden select-none"
+        aria-hidden={revealed ? undefined : "true"}
+        style={revealed ? CONTENTS : { filter: "blur(24px)", transform: "scale(1.06)" }}
+        className={revealed ? undefined : "min-w-0 flex-1 overflow-hidden select-none"}
       >
-        <VeilContext.Provider value={true}>{children}</VeilContext.Provider>
+        <VeilContext.Provider value={!revealed}>{children}</VeilContext.Provider>
       </div>
-      <button
-        type="button"
-        data-testid={`${testId}-reveal`}
-        onClick={reveal}
-        aria-label={reason ? `${label} — ${reason}` : label}
-        style={{
-          borderRadius: radius,
-          // A neutral wash, not a warning: the same scrim every covering
-          // surface in this system uses, at a little over half strength.
-          background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)",
-        }}
-        className="cg-focus absolute inset-0 grid cursor-pointer place-items-center border-0 p-0"
-      >
-        <span
-          // Fixed white, deliberately theme-independent: the wash is dark in
-          // both themes, so a role here would go invisible in one of them.
-          style={{ color: "#ffffff" }}
-          className="flex flex-col items-center gap-2 px-6 text-center"
+      {!revealed && (
+        <button
+          type="button"
+          data-testid={`${testId}-reveal`}
+          onClick={reveal}
+          aria-label={reason ? `${label} — ${reason}` : label}
+          style={{
+            borderRadius: radius,
+            // A neutral wash, not a warning: the same scrim every covering
+            // surface in this system uses, at a little over half strength.
+            background: "color-mix(in oklab, var(--scrim-dialog) 55%, transparent)",
+          }}
+          className="cg-focus absolute inset-0 grid cursor-pointer place-items-center border-0 p-0"
         >
-          <VisibilityGlyph />
-          <span className="text-label-large">{label}</span>
-          {reason && (
-            <span className="text-body-small opacity-85">{reason}</span>
-          )}
-        </span>
-      </button>
+          <span
+            // Fixed white, deliberately theme-independent: the wash is dark in
+            // both themes, so a role here would go invisible in one of them.
+            style={{ color: "#ffffff" }}
+            className="flex flex-col items-center gap-2 px-6 text-center"
+          >
+            <VisibilityGlyph />
+            <span className="text-label-large">{label}</span>
+            {reason && <span className="text-body-small opacity-85">{reason}</span>}
+          </span>
+        </button>
+      )}
     </div>
   );
 }
+
+/** A wrapper that draws no box: its children lay out as if it were not there. */
+const CONTENTS: CSSProperties = { display: "contents" };
 
 // Material's `visibility`, the filled 24px cut the product already inlines.
 export function VisibilityGlyph({ size = 24 }: { size?: number }) {

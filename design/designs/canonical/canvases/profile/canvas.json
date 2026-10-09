@@ -19,6 +19,24 @@
       "page": "profile"
     },
     {
+      "file": "ProfileOtherHidden.dc.html",
+      "title": "Profile · someone else's, just hidden",
+      "x": 4320,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
+      "file": "SettingsUnhidden.dc.html",
+      "title": "Settings · hidden accounts, one just unhidden",
+      "x": 3840,
+      "y": 4661,
+      "w": 390,
+      "h": 844,
+      "page": "profile"
+    },
+    {
       "file": "AvatarCrop.dc.html",
       "title": "Profile picture · crop",
       "x": 3360,
@@ -68,7 +86,7 @@
       "x": -5060,
       "y": 0,
       "w": 4640,
-      "h": 7704,
+      "h": 7730,
       "page": "profile",
       "title": "Profile · flow map"
     },

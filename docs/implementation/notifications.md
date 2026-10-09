@@ -179,7 +179,7 @@ rather than a data-loss event.
 **Rows are written at ingestion.** When a record lands in the
 mirror, the ingestion path resolves its addressee — the author of
 the Review's target, the Reference's target owner, the Profile's
-owner, the invite link's issuer — and writes one row per
+owner, the landed application's approver — and writes one row per
 addressee. Writing at ingestion rather than computing the list per
 read is what lets read state be per row: a row needs an identity
 to carry `readAt`.
@@ -188,7 +188,7 @@ to carry `readAt`.
 `APPLICATION_APPROVABLE`, `APPLICATION_APPROVED` and
 `APPLICATION_REJECTED` have no record to ingest: the first is
 written when the second approvability proof completes, the second
-when the inviter's approval commits, the third when the approver
+when the approver's approval commits, the third when the approver
 closes the entry — on its own or as one of a link's whole waiting
 queue, which is that many closes and that many addressees. Each
 transition happens once per application row and writes one
@@ -309,13 +309,15 @@ enum NotificationKind {
   CITATION
   "An opinion whose target is the viewer's profile."
   PROFILE_OPINION
-  "An application staged through the viewer's invite link became
-   approvable — email verified and key attached, so the inviter
-   can now act on it."
+  "An application waiting in the viewer's queue — staged through
+   their invite link or taken up from an ask link — became
+   approvable: email verified and key attached, so the viewer can
+   now act on it."
   APPLICATION_APPROVABLE
   "An account applied through the viewer's invite link and landed."
   INVITE_LANDED
-  "The viewer's inviter approved their application."
+  "A member approved the viewer's application — the approver of
+   that queue entry."
   APPLICATION_APPROVED
   "The approver closed the viewer's application without approving
    it — that queue entry only; the account and its ask link

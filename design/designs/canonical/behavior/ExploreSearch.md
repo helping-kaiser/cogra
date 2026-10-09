@@ -2,15 +2,15 @@
 
 WHEN the reader types in explore.searchField -> the results refine as the reader types
 
-ALWAYS full matches stand before partial matches, a full match being a name or title equal to the query, case aside, each tier ordered by the reader's ranker and never newest by default
+ALWAYS full matches stand before partial matches, a full match being a name or title equal to the query, case aside, each tier ordered by the reader's ranker and never newest by default GIVEN the order is Ranked
 
-ALWAYS what the ranker cannot score stands behind a visible seam, newest first
+ALWAYS what the ranker cannot score stands behind a visible seam, newest first GIVEN the order is Ranked
 
 ALWAYS a row past the seam shows its age in place of its rank, in the one age ladder: now, 35m, 2h, 3d up to 30 days, then the date as 06.09.2024
 
 ALWAYS a ranked row carries its viewer-relative rank on its right edge beside the score's graph glyph
 
-ALWAYS a tag result carries the reader's rank and never a use count
+ALWAYS a tag result carries the reader's rank and never a use count GIVEN the order is Ranked
 
 ALWAYS explore.filterTrigger reads Everything GIVEN the search filter is at its default
 
@@ -57,3 +57,13 @@ WHEN tap Retry -> the failed read is asked again
 ALWAYS a guest's results stand newest first, each row with its age and no rank, and no explore.seam stands GIVEN the reader is a guest
 
 ALWAYS an applicant's search reads as a member's
+
+ALWAYS the order is Newest GIVEN the ranker does not serve the search yet
+
+ALWAYS full matches stand before partial matches, each tier newest first GIVEN the order is Newest
+
+ALWAYS explore.seam is absent and no row carries a rank GIVEN the order is Newest
+
+ALWAYS every result but a tag carries its age on its right edge, in the one ladder of ages GIVEN the order is Newest
+
+ALWAYS a tag result carries nothing on its right edge, never an age, a rank or a use count GIVEN the order is Newest

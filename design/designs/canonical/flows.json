@@ -4,7 +4,7 @@
     {
       "name": "publish-a-post",
       "description": "The bottom nav's New post opens the wizard on every tab root; pictures are cropped, described, and signed into the feed.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "pictures — the crop" },
         { "board": "ComposeCrop", "via": 3, "case": "pictures — details next" },
@@ -16,6 +16,9 @@
       "name": "edit-avatar-standalone",
       "description": "The change badge on your own profile picture goes straight to the crop and its own seal — one signature, the picture alone.",
       "start": { "board": "Profile", "via": 4 },
+      "waypoints": [
+        { "board": "AvatarCrop", "via": 3, "to": "AvatarSeal" }
+      ],
       "end": { "board": "AvatarSeal", "via": 4, "case": "signed — shown everywhere you appear" }
     },
     {
@@ -44,7 +47,7 @@
     {
       "name": "reply-to-a-post",
       "description": "The comment count, wherever a post is drawn, opens the thread sheet; Add a comment opens the composer, and the seal signs the reply back into the thread.",
-      "start": { "control": "comment count", "except": ["Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
+      "start": { "control": "comment count", "except": ["Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected"] },
       "waypoints": [
         { "board": "ReplyEntry", "via": 7, "to": "ReplyCompose" },
         { "board": "ReplyCompose", "via": 3 }
@@ -171,7 +174,7 @@
     {
       "name": "take-a-stance-on-a-post",
       "description": "Tap the stance face, wherever a post is drawn, and the pad blooms; the signed stance lands back where it was taken.",
-      "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected"] },
+      "start": { "control": "stance face", "to": "VouchBackPad", "except": ["Main", "FeedBare", "KeyElsewhere", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected"] },
       "end": { "board": "VouchBackPad", "via": 4, "case": "signed — the stance lands, back where the pad bloomed" }
     },
     {
@@ -254,7 +257,7 @@
     {
       "name": "publish-words",
       "description": "Write words instead takes the wizard's other half — no crop, no cover, the same details and the same seal signing words alone into the feed.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 4, "case": "the body empty — the words stage, no ask" },
         { "board": "ComposeWords", "via": 3, "to": "ComposeDetailsWords" },
@@ -265,7 +268,7 @@
     {
       "name": "publish-a-video",
       "description": "A horizontal or square clip takes a step of its own — the cover picks the face the post wears, and details and seal follow the way pictures do.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a horizontal or square video — its face" },
         { "board": "ComposeCover", "via": 6 },
@@ -276,7 +279,7 @@
     {
       "name": "publish-a-vertical-video",
       "description": "A vertical clip meets no cover step at all: it plays the moment it is on screen, so its face is its first frame and the wizard runs pick to details, where an optional door offers a cover to anyone who wants one.",
-      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantRejected", "ProfileApplicant"] },
+      "start": { "control": "nav · New post", "to": "ComposePick", "except": ["ComposeExpired", "Main", "FeedBare", "ApplicantFeed", "ApplicantWaiting", "ApplicantLanding", "ApplicantFellThrough", "ApplicantRejected", "ProfileApplicant"] },
       "waypoints": [
         { "board": "ComposePick", "via": 3, "case": "a vertical video — no cover step, the door waits on details" },
         { "board": "ComposeDetailsVideo", "via": 9, "to": "ComposeSeal" }
@@ -635,6 +638,12 @@
       "start": { "board": "ApplicantLanding" }
     },
     {
+      "name": "ask-again-after-an-approval-fell-through",
+      "description": "An approval that lapses before the reader is in flips the landing card back to waiting, naming nobody; the ask link on it goes to anyone already in, and the first vouch lands it.",
+      "start": { "board": "ApplicantFellThrough" },
+      "end": { "board": "ApplicantFellThrough", "via": 20 }
+    },
+    {
       "name": "ask-another-member-to-vouch",
       "description": "The notification that an inviter closed the application opens the turned-down shell, where the ask link stands; copying it hands the reader a link that does not expire, for as many members as they know.",
       "start": { "board": "Notifications", "via": 15 },
@@ -766,7 +775,7 @@
       "description": "The same link opened where no session is asks for sign-in first, since the proof counts only signed in; signed in, its side applies, and when it was the first side the code from the old address is still owed.",
       "start": { "board": "ChangeEmailLinkedSignedOut" },
       "waypoints": [
-        { "board": "ChangeEmailLinkedSignedOut", "via": 1 },
+        { "board": "ChangeEmailLinkedSignedOut", "via": 1, "case": "after sign-in the link's side applies, and its landing follows (ChangeEmailLinked)" },
         { "board": "SignIn", "via": 6, "to": "ChangeEmailLinked" }
       ],
       "end": { "board": "ChangeEmailLinked", "via": 1, "to": "ChangeEmailConfirm" }
@@ -1310,6 +1319,15 @@
       "end": { "board": "ReaderPostMenu", "via": 3, "to": "FeedHidden" }
     },
     {
+      "name": "hide-someone-from-their-post",
+      "description": "Hide on the menu of a post being read asks nothing: the post stays where it is, the snackbar offers Undo, and the feed, the next time it is opened, has that person's rows gone.",
+      "start": { "board": "PostDetail", "via": 2 },
+      "waypoints": [
+        { "board": "ReaderPostMenu", "via": 3, "to": "PostDetailHidden" }
+      ],
+      "end": { "board": "PostDetailHidden", "via": 10, "to": "FeedHidden" }
+    },
+    {
       "name": "read-a-posts-license",
       "description": "License terms on a post's menu closes the menu and brings the post's terms up in a sheet over it — reading them is the whole of it.",
       "start": { "board": "Feed", "via": 3 },
@@ -1342,6 +1360,12 @@
       "description": "Cited by on a post's own view opens what cites it; a citing post's row opens that post's detail.",
       "start": { "board": "PostDetail", "via": 16 },
       "end": { "board": "CitedBy", "via": 1, "to": "PostDetail" }
+    },
+    {
+      "name": "search-and-open-a-person",
+      "description": "A bare word that matches a person's name or handle brings their row among the results; it opens their profile, its arrow reading Back to the search.",
+      "start": { "board": "Explore", "via": 1, "to": "ExplorePerson" },
+      "end": { "board": "ExplorePerson", "via": 5, "to": "ProfileOther" }
     },
     {
       "name": "search-for-a-name-nothing-carries",
@@ -1396,7 +1420,10 @@
       "name": "hide-someone-from-their-profile",
       "description": "Hide on another's profile menu asks nothing; the page stays open, and the feed, the next time it is opened, has their rows gone and the ones behind them moved up.",
       "start": { "board": "ProfileOther", "via": 2 },
-      "end": { "board": "ProfileMenu", "via": 4, "to": "FeedHidden" }
+      "waypoints": [
+        { "board": "ProfileMenu", "via": 4, "to": "ProfileOtherHidden" }
+      ],
+      "end": { "board": "ProfileOtherHidden", "via": 8, "to": "FeedHidden" }
     },
     {
       "name": "hide-a-deleted-account",

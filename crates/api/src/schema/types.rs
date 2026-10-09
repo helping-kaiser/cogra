@@ -304,6 +304,9 @@ pub enum ErrorCode {
     InvalidCredentials,
     /// Invite link invalid, expired, revoked, or consumed.
     InviteUnusable,
+    /// Ask link unknown, or its applicant is landed or already waiting in
+    /// your own queue.
+    AskLinkUnusable,
     /// The handle is already held in the one actor namespace.
     HandleTaken,
     /// Under the length floor or in the breach corpus.
@@ -413,6 +416,9 @@ impl UserError {
         match e {
             OnboardingError::InviteUnusable => {
                 UserError::new(ErrorCode::InviteUnusable, e.to_string())
+            }
+            OnboardingError::AskLinkUnusable => {
+                UserError::new(ErrorCode::AskLinkUnusable, e.to_string())
             }
             OnboardingError::HandleTaken => UserError {
                 message: e.to_string(),
@@ -1550,6 +1556,45 @@ impl User {
         Ok(Some(Application(application)))
     }
 
+    /// The account's own ask link — the standing capability that lets any
+    /// member it is handed take up the application (auth.md "The ask
+    /// link"). Holding the id is holding the link, so this resolves only
+    /// for the account itself; null for accounts that never applied.
+    async fn ask_link(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Uuid>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::ask_link_of(pool, self.identity.id).await?)
+    }
+
+    /// Applications waiting on this account's vouch — the approval queue
+    /// itself, spanning both ends of the funnel: applicants staged through
+    /// its invite links, and applicants it took up from an ask link
+    /// (auth.md). Waiting applications only — neither approved nor
+    /// rejected — oldest first. An application whose applicant has landed
+    /// through another member's vouch leaves the queue at that landing: the
+    /// row is filtered out on read, nothing is written, and approving it is
+    /// BAD_INPUT. Field-level: resolves only for the approving account.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    async fn approval_queue(
+        &self,
+        ctx: &Context<'_>,
+        after: Option<String>,
+        before: Option<String>,
+        first: Option<i32>,
+        last: Option<i32>,
+    ) -> async_graphql::Result<Option<KeysetConnection<Application>>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        let rows = store::approval_queue(pool, self.identity.id).await?;
+        Ok(Some(
+            offset_connection(rows, after, before, first, last, Application).await?,
+        ))
+    }
+
     /// The account's invite links — service-side staging state, not
     /// graph structure. Field-level: each link's id is the link
     /// capability, so this resolves only for the issuing actor.
@@ -1685,6 +1730,67 @@ pub struct InviteLinkCheck {
     pub expires_at: DateTime<Utc>,
 }
 
+/// The anonymous pre-stage view of an ask link (the `askLinkCheck`
+/// query) — who is asking, and whether they can be taken up right now.
+/// Holding the id is holding the link.
+#[derive(SimpleObject)]
+pub struct AskLinkCheck {
+    /// Whether the link can stage its applicant for this caller now — the
+    /// account is still an applicant and, for an authenticated caller, has
+    /// no application already waiting in the caller's own queue, or
+    /// approved there with the caller's vouch still in flight (auth.md
+    /// "The ask link"). A live application in another member's queue
+    /// never blocks it. An ask link itself never expires.
+    pub usable: bool,
+    /// The asking account's handle. The profile door for LANDED resolves
+    /// by it.
+    pub applicant_handle: String,
+    /// Why the link cannot stage right now; null when usable. The asker
+    /// reading their own link needs no value — the client compares
+    /// against its own User.askLink.
+    pub reason: Option<AskLinkUnusableReason>,
+}
+
+impl AskLinkCheck {
+    /// The check's answer from the link's state — one predicate with
+    /// `stageApplicant`'s refusals, so the check gates the call exactly.
+    ///
+    /// DRIFT(EC-R3): `VouchAskUnusable.md:17` is drawn but unreachable —
+    /// no WAITING_ELSEWHERE value exists; retired by design item 58.
+    ///
+    /// DRIFT(#126 lapse): `VouchAsk.md:17` draws WAITING_ON_VIEWER as a row
+    /// standing in Invites; a row approved with the caller's vouch still
+    /// in flight reads it too, but stands in no queue — undrawn.
+    pub fn from_store(state: store::AskLinkState) -> Self {
+        let reason = if state.landed {
+            Some(AskLinkUnusableReason::Landed)
+        } else if state.open_with_viewer {
+            Some(AskLinkUnusableReason::WaitingOnViewer)
+        } else {
+            None
+        };
+        Self {
+            usable: reason.is_none(),
+            applicant_handle: state.handle,
+            reason,
+        }
+    }
+}
+
+/// Why an ask link stages nobody for this caller right now (auth.md "The
+/// ask link"). LANDED: the account is a member — the profile door
+/// replaces the ask. WAITING_ON_VIEWER: an application of the account
+/// already waits in the authenticated caller's own queue, or sits there
+/// approved with the caller's vouch still in flight — the client opens
+/// that row. WAITING_ON_VIEWER is viewer-relative; an anonymous call never
+/// reads it.
+#[derive(Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[graphql(rename_items = "SCREAMING_SNAKE_CASE")]
+pub enum AskLinkUnusableReason {
+    Landed,
+    WaitingOnViewer,
+}
+
 /// An invite link: pure service-side staging UX. Nothing binds at issue
 /// and the link carries no stance values — the inviter chooses them at
 /// approval, which is the priced act.
@@ -1784,15 +1890,15 @@ impl Application {
         self.0.key_attached
     }
 
-    /// The member whose queue this application sits in — the issuer of
-    /// the invite link it came through: whose vouch it waits on, or whose
-    /// vouch is in play. Visible wherever the application is.
+    /// The member whose queue this application sits in — whose vouch it
+    /// waits on, or whose vouch is in play: the invite link's issuer for
+    /// the registration application, the member who took it up for an
+    /// ask-link staging (auth.md "The ask link"). An account may have
+    /// several open applications, each with its own approver. Visible
+    /// wherever the application is.
     async fn approver(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<Actor>> {
         let pool = ctx.data::<PgPool>()?;
-        let Some(link) = store::invite_link(pool, self.0.invite_link_id).await? else {
-            return Ok(None);
-        };
-        Ok(store::actor_identity(pool, link.inviter_id)
+        Ok(store::actor_identity(pool, self.0.approver_id)
             .await?
             .map(|identity| {
                 Actor::User(User {
@@ -1800,6 +1906,23 @@ impl Application {
                     viewer_session: None,
                 })
             }))
+    }
+
+    /// The invite link it came through; null when a member took it up
+    /// through the account's ask link. Field-level: resolves only for the
+    /// link's issuer — its id is the link capability.
+    async fn invite_link(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<InviteLink>> {
+        let Some(link_id) = self.0.invite_link_id else {
+            return Ok(None);
+        };
+        let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
+            return Ok(None);
+        };
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::invite_link(pool, link_id)
+            .await?
+            .filter(|link| link.inviter_id == viewer.user_id)
+            .map(InviteLink))
     }
 
     /// Since when this path has a live vouch — its approver's decision,

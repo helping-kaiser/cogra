@@ -33,9 +33,18 @@
 // draws no bar is what keeps "nothing plays beneath a veil" true of the
 // controls too, without reaching into `VideoPlayer` to add a check it was not
 // built to need everywhere else it is used.
+//
+// IT IS ITS DETAIL'S ONE STAGE (the stage-law packet §3.2 rule 12): a sheet or
+// a dialog over the post stops it where it is and, dismissed, resumes it only
+// if it was playing when the layer rose and the device allows autoplay; the
+// reader's own pause survives; the opinion pad pauses and resumes it
+// (PostDetailVideo.md:29–41). The unveil plays it where the device allows
+// autoplay and never otherwise (PostDetailVideoSensitive.md:15/17) — the veil
+// is an eligibility change on the one element, which the veil keeps mounted.
 
 import { MediaTile } from "./media-tile";
 import { useVeiled } from "./body-veil";
+import { StageHost } from "./stage-host";
 
 export function PinnedClip({
   src,
@@ -44,10 +53,22 @@ export function PinnedClip({
   altText,
   sourceRatio,
   durationMs,
+  mediaId,
+  behindViewer = false,
   onOpenViewer,
   testId = "pinned-clip",
 }: {
   src: string;
+  /** The clip's identity in the session's clip memory (`clip-memory.ts`). */
+  mediaId?: string | null;
+  /**
+   * Whether the fullscreen viewer stands over the post. The pinned clip has
+   * handed its clip over to it: "WHEN the fullscreen viewer opens over the
+   * post -> the pinned clip stops AND NEVER it plays behind the viewer", and
+   * on close it plays on, or stands paused, from where the viewer's clip
+   * reached (PostDetailVideo.md:47–51).
+   */
+  behindViewer?: boolean;
   mimeType: string;
   poster?: string | null;
   altText?: string | null;
@@ -85,23 +106,27 @@ export function PinnedClip({
       // clip beside it did not.
       style={{ background: "#000" }}
     >
-      <MediaTile
-        src={src}
-        mimeType={mimeType}
-        poster={poster}
-        altText={altText}
-        sourceRatio={sourceRatio}
-        durationMs={durationMs}
-        // The clip pins still playing — it is the thing the reader came for.
-        // `VideoPlayer` itself refuses the claim while veiled either way.
-        autoplay
-        surface={veiled ? "full" : "transport"}
-        // The media meets the screen's own sides here: there is no card around
-        // it to round against (`PinnedClip.jsx:28` — `radius="0px"`).
-        radius="0px"
-        onOpen={onOpenViewer}
-        testId={`${testId}-media`}
-      />
+      <StageHost pinned>
+        <MediaTile
+          src={src}
+          mimeType={mimeType}
+          poster={poster}
+          altText={altText}
+          sourceRatio={sourceRatio}
+          durationMs={durationMs}
+          mediaId={mediaId}
+          handedOver={behindViewer}
+          // The clip pins still playing — it is the thing the reader came for.
+          // `VideoPlayer` itself refuses the claim while veiled either way.
+          autoplay
+          surface={veiled ? "full" : "transport"}
+          // The media meets the screen's own sides here: there is no card
+          // around it to round against (`PinnedClip.jsx:28` — `radius="0px"`).
+          radius="0px"
+          onOpen={onOpenViewer}
+          testId={`${testId}-media`}
+        />
+      </StageHost>
     </div>
   );
 }

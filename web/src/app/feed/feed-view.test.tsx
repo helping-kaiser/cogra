@@ -7,7 +7,7 @@ import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { stanceHandlers } from "@/test/stance";
-import { intersect, intersectEach } from "@/test/media-env";
+import { intersect, intersectEach, whenObserved } from "@/test/media-env";
 import { FeedView } from "./feed-view";
 import { forgetFeed, recallFeed } from "./feed-memory";
 import { PULL_THRESHOLD } from "@/lib/ui/pull-to-refresh";
@@ -341,6 +341,9 @@ describe("FeedView", () => {
       );
       renderWithProviders(<FeedView />);
       await screen.findByTestId(byNode("feed.card.media.frame", "p2/1"));
+      // The stage watches its clips from a passive effect; report their places
+      // only once it does (`whenObserved`).
+      await whenObserved(frameOf("p1"), frameOf("p2"));
       act(() =>
         intersectEach([
           { target: frameOf("p2"), ratio: 1 },
@@ -369,6 +372,7 @@ describe("FeedView", () => {
       });
       await screen.findByTestId(byNode("feed.card.media.frame", "p1/1"));
       const video = frameOf("p1");
+      await whenObserved(video);
       act(() => intersectEach([{ target: video, ratio: 1 }]));
       expect(video.paused).toBe(false);
 
@@ -390,6 +394,69 @@ describe("FeedView", () => {
 
       fireEvent(sheet, new Event("close"));
       await waitFor(() => expect(video.paused).toBe(false));
+    });
+
+    // CONTINUITY (FeedCover.md:9/13): a played clip keeps its reached frame
+    // for the reading session — until the list holding it refreshes.
+    it("a pull at the top re-stills the list: its played clip wears its stored still again (C18 FeedCover.md:13)", async () => {
+      const COVER = "https://media.test/p1-cover.webp";
+      const coveredClip = () => {
+        const base = clipPost("p1");
+        return {
+          ...base,
+          attachments: [
+            {
+              ...base.attachments[0],
+              coverMedia: {
+                __typename: "MediaAttachment",
+                id: "c-p1",
+                url: COVER,
+                status: "NORMAL",
+                options: { __typename: "MediaOptions", aspectRatio: "9:16" },
+              },
+            },
+          ],
+        };
+      };
+      let reads = 0;
+      server.use(
+        graphql.query("Posts", () => {
+          reads += 1;
+          return HttpResponse.json({ data: postsPage([coveredClip()], null, false) });
+        }),
+      );
+      const scroller = document.createElement("div");
+      document.body.append(scroller);
+      renderWithProviders(
+        <ScrollHostProvider value={{ current: scroller }}>
+          <FeedView store={fakeIdentityStore()} />
+        </ScrollHostProvider>,
+      );
+      await screen.findByTestId(byNode("feed.card.media.frame", "p1/1"));
+      const played = frameOf("p1");
+      expect(played).toHaveAttribute("poster", COVER);
+      await whenObserved(played);
+      act(() => intersectEach([{ target: played, ratio: 1 }]));
+      expect(played.paused).toBe(false);
+      played.currentTime = 4;
+
+      const touch = (type: string, clientY: number) => {
+        const event = new Event(type, { bubbles: true });
+        const points = [{ clientY }];
+        Object.defineProperty(event, "touches", { value: points });
+        Object.defineProperty(event, "changedTouches", { value: points });
+        return event;
+      };
+      fireEvent(scroller, touch("touchstart", 100));
+      fireEvent(scroller, touch("touchmove", 100 + PULL_THRESHOLD));
+      fireEvent(scroller, touch("touchend", 100 + PULL_THRESHOLD));
+
+      // The refreshed list lands with its clip built anew, on its stored still.
+      await waitFor(() => expect(frameOf("p1")).not.toBe(played));
+      expect(reads).toBe(2);
+      expect(frameOf("p1")).toHaveAttribute("poster", COVER);
+      expect(frameOf("p1").currentTime).toBe(0);
+      scroller.remove();
     });
   });
 

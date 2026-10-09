@@ -50,6 +50,14 @@ export type MediaTileProps = {
    */
   poster?: string | null;
   durationMs?: number | null;
+  /**
+   * The attachment's own id — a clip's identity in the session's clip memory,
+   * which keeps the frame it reached across its presentations
+   * (`clip-memory.ts`). Absent for media that is no record's yet.
+   */
+  mediaId?: string | null;
+  /** The clip is handed over to the fullscreen viewer (`VideoPlayer`'s `handedOver`). */
+  handedOver?: boolean;
   /** A feed pauses what scrolls away; a lightbox plays what the reader opened. */
   autoplay?: boolean;
   /** `reading` gives a comment's clip the sound control and nothing else. */
@@ -88,6 +96,8 @@ export function MediaTile({
   mimeType,
   poster,
   durationMs,
+  mediaId,
+  handedOver = false,
   autoplay = true,
   surface = "full",
   altText,
@@ -163,6 +173,8 @@ export function MediaTile({
         poster={poster}
         altText={altText}
         durationMs={durationMs}
+        mediaId={mediaId}
+        handedOver={handedOver}
         autoplay={autoplay}
         surface={surface}
         framed

@@ -954,6 +954,48 @@
         "explore.searchField.input": []
       }
     },
+    "ExplorePerson": {
+      "prefix": "explore",
+      "keys": {
+        "explore.result": "the result's position in the results, counted from 1, the rows past the seam counting on (Explore's search)"
+      },
+      "nodes": {
+        "explore.bottomBar": [],
+        "explore.bottomBar.composeSlot": [],
+        "explore.bottomBar.feedSlot": [],
+        "explore.bottomBar.profileSlot": [],
+        "explore.bottomBar.searchSlot": [],
+        "explore.bottomBar.walletSlot": [],
+        "explore.filterTrigger": [],
+        "explore.help": [],
+        "explore.result": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.mark": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.name": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.rank": [
+          "1",
+          "2",
+          "3"
+        ],
+        "explore.result.sub": [
+          "2"
+        ],
+        "explore.searchField": [],
+        "explore.searchField.glyph": [],
+        "explore.searchField.input": []
+      }
+    },
     "ExploreSearch": {
       "prefix": "explore",
       "keys": {
@@ -993,10 +1035,13 @@
         ],
         "explore.result.sub": [
           "2",
-          "3"
+          "3",
+          "1"
         ],
         "explore.result.value": [
-          "4"
+          "4",
+          "1",
+          "2"
         ],
         "explore.seam": [],
         "explore.seam.label": [],
@@ -2245,6 +2290,98 @@
         "postDetail.header.menu": []
       }
     },
+    "PostDetailHidden": {
+      "prefix": "postDetail",
+      "keys": {
+        "postDetail.card": "the author's handle, without @ (PostCard)",
+        "postDetail.card.media.frame": "the picture's position in the post's media, counted from 1 (MediaGallery)",
+        "postDetail.card.tagsLine.tag": "the tag's name, without # (TopicsLine, TopicRemovable)"
+      },
+      "nodes": {
+        "postDetail.bottomBar": [],
+        "postDetail.bottomBar.composeSlot": [],
+        "postDetail.bottomBar.feedSlot": [],
+        "postDetail.bottomBar.profileSlot": [],
+        "postDetail.bottomBar.searchSlot": [],
+        "postDetail.bottomBar.walletSlot": [],
+        "postDetail.card": [
+          "ada"
+        ],
+        "postDetail.card.actionRow": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.comments.count": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.score.value": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.share": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor": [
+          "ada"
+        ],
+        "postDetail.card.actionRow.stance.anchor.face": [
+          "ada"
+        ],
+        "postDetail.card.authorChip": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.avatar": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.handle": [
+          "ada"
+        ],
+        "postDetail.card.authorChip.name": [
+          "ada"
+        ],
+        "postDetail.card.description": [
+          "ada"
+        ],
+        "postDetail.card.media": [
+          "ada"
+        ],
+        "postDetail.card.media.frame": [
+          "ada/1"
+        ],
+        "postDetail.card.opinions": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.counts": [
+          "ada"
+        ],
+        "postDetail.card.tagsLine.tag": [
+          "ada/photography",
+          "ada/coastroad"
+        ],
+        "postDetail.card.timestamp": [
+          "ada"
+        ],
+        "postDetail.card.title": [
+          "ada"
+        ],
+        "postDetail.header": [],
+        "postDetail.header.back": [],
+        "postDetail.header.menu": [],
+        "postDetail.snackbar": [],
+        "postDetail.snackbar.action": [],
+        "postDetail.snackbar.message": []
+      }
+    },
     "Profile": {
       "prefix": "profile",
       "keys": {
@@ -2745,6 +2882,87 @@
         "profile.identity.figures.stancesTaken.label": [],
         "profile.identity.figures.stancesTaken.value": [],
         "profile.identity.name": [],
+        "profile.tabRow": [],
+        "profile.tabRow.commentsTab": [],
+        "profile.tabRow.everythingTab": [],
+        "profile.tabRow.postsTab": []
+      }
+    },
+    "ProfileOtherHidden": {
+      "prefix": "profile",
+      "keys": {
+        "profile.chronicle.act": "the act's position in the chronicle, newest first, counted from 1 (the profile's chronicle)"
+      },
+      "nodes": {
+        "profile.bottomBar": [],
+        "profile.bottomBar.composeSlot": [],
+        "profile.bottomBar.feedSlot": [],
+        "profile.bottomBar.profileSlot": [],
+        "profile.bottomBar.searchSlot": [],
+        "profile.bottomBar.walletSlot": [],
+        "profile.chronicle": [],
+        "profile.chronicle.act": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.aside": [
+          "3"
+        ],
+        "profile.chronicle.act.disc": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.second": [
+          "1",
+          "2",
+          "4"
+        ],
+        "profile.chronicle.act.title": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.chronicle.act.trailing": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "profile.header": [],
+        "profile.header.back": [],
+        "profile.header.title": [],
+        "profile.identity": [],
+        "profile.identity.actionRow": [],
+        "profile.identity.actionRow.menu": [],
+        "profile.identity.actionRow.message": [],
+        "profile.identity.actionRow.stance": [],
+        "profile.identity.actionRow.stance.anchor": [],
+        "profile.identity.actionRow.stance.anchor.face": [],
+        "profile.identity.avatar": [],
+        "profile.identity.bio": [],
+        "profile.identity.figures": [],
+        "profile.identity.figures.posts": [],
+        "profile.identity.figures.posts.label": [],
+        "profile.identity.figures.posts.value": [],
+        "profile.identity.figures.stancesOn": [],
+        "profile.identity.figures.stancesOn.label": [],
+        "profile.identity.figures.stancesOn.value": [],
+        "profile.identity.figures.stancesTaken": [],
+        "profile.identity.figures.stancesTaken.label": [],
+        "profile.identity.figures.stancesTaken.value": [],
+        "profile.identity.name": [],
+        "profile.snackbar": [],
+        "profile.snackbar.action": [],
+        "profile.snackbar.message": [],
         "profile.tabRow": [],
         "profile.tabRow.commentsTab": [],
         "profile.tabRow.everythingTab": [],
@@ -4348,6 +4566,190 @@
           "2",
           "3"
         ],
+        "settings.stance": [],
+        "settings.stance.footnote": [],
+        "settings.stance.label": [],
+        "settings.stance.pad": [],
+        "settings.stance.pad.choice": [],
+        "settings.stance.pad.label": [],
+        "settings.stance.pad.status": [],
+        "settings.stance.sliders": [],
+        "settings.stance.sliders.choice": [],
+        "settings.stance.sliders.label": [],
+        "settings.stance.sliders.status": [],
+        "settings.stance.typed": [],
+        "settings.stance.typed.choice": [],
+        "settings.stance.typed.label": [],
+        "settings.stance.typed.status": [],
+        "settings.theme": [],
+        "settings.theme.footnote": [],
+        "settings.theme.label": [],
+        "settings.theme.picker": [],
+        "settings.theme.picker.autoOption": [],
+        "settings.theme.picker.darkOption": [],
+        "settings.theme.picker.lightOption": [],
+        "settings.writing": [],
+        "settings.writing.confirm": [],
+        "settings.writing.confirm.label": [],
+        "settings.writing.confirm.status": [],
+        "settings.writing.confirm.switch": [],
+        "settings.writing.footnote": [],
+        "settings.writing.label": [],
+        "settings.writing.license": [],
+        "settings.writing.license.chevron": [],
+        "settings.writing.license.label": [],
+        "settings.writing.license.value": []
+      }
+    },
+    "SettingsUnhidden": {
+      "prefix": "settings",
+      "keys": {
+        "settings.hiddenSheet.list.account": "the hidden account's handle, without @ (the hidden-accounts sheet)",
+        "settings.sessions.session": "the session's position in the list, this device first, counted from 1 (Settings' sessions)"
+      },
+      "nodes": {
+        "settings.about": [],
+        "settings.about.aboutCogra": [],
+        "settings.about.aboutCogra.chevron": [],
+        "settings.about.aboutCogra.label": [],
+        "settings.about.contact": [],
+        "settings.about.contact.chevron": [],
+        "settings.about.contact.label": [],
+        "settings.about.contact.value": [],
+        "settings.about.intro": [],
+        "settings.about.intro.chevron": [],
+        "settings.about.intro.label": [],
+        "settings.about.label": [],
+        "settings.about.privacy": [],
+        "settings.about.privacy.chevron": [],
+        "settings.about.privacy.label": [],
+        "settings.about.report": [],
+        "settings.about.report.chevron": [],
+        "settings.about.report.label": [],
+        "settings.about.terms": [],
+        "settings.about.terms.chevron": [],
+        "settings.about.terms.label": [],
+        "settings.about.whatsNew": [],
+        "settings.about.whatsNew.chevron": [],
+        "settings.about.whatsNew.label": [],
+        "settings.about.whatsNew.value": [],
+        "settings.backup": [],
+        "settings.backup.footnote": [],
+        "settings.backup.key": [],
+        "settings.backup.key.chevron": [],
+        "settings.backup.key.label": [],
+        "settings.backup.label": [],
+        "settings.backup.recovery": [],
+        "settings.backup.recovery.chevron": [],
+        "settings.backup.recovery.label": [],
+        "settings.backup.recovery.status": [],
+        "settings.credentials": [],
+        "settings.credentials.email": [],
+        "settings.credentials.email.chevron": [],
+        "settings.credentials.email.label": [],
+        "settings.credentials.email.value": [],
+        "settings.credentials.footnote": [],
+        "settings.credentials.handle": [],
+        "settings.credentials.handle.chevron": [],
+        "settings.credentials.handle.label": [],
+        "settings.credentials.handle.value": [],
+        "settings.credentials.label": [],
+        "settings.credentials.password": [],
+        "settings.credentials.password.chevron": [],
+        "settings.credentials.password.label": [],
+        "settings.credentials.password.status": [],
+        "settings.ending": [],
+        "settings.ending.delete": [],
+        "settings.ending.delete.chevron": [],
+        "settings.ending.delete.label": [],
+        "settings.ending.footnote": [],
+        "settings.header": [],
+        "settings.header.back": [],
+        "settings.header.title": [],
+        "settings.hiddenSheet": [],
+        "settings.hiddenSheet.dragHandle": [],
+        "settings.hiddenSheet.list": [],
+        "settings.hiddenSheet.list.account": [
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.aside": [
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.disc": [
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.second": [
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.title": [
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.trailing": [
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.list.account.trailing.unhide": [
+          "ada",
+          "tobias"
+        ],
+        "settings.hiddenSheet.title": [],
+        "settings.leaving": [],
+        "settings.leaving.forget": [],
+        "settings.leaving.forget.label": [],
+        "settings.leaving.forget.status": [],
+        "settings.leaving.forget.switch": [],
+        "settings.leaving.leave": [],
+        "settings.leaving.leave.label": [],
+        "settings.people": [],
+        "settings.people.footnote": [],
+        "settings.people.hidden": [],
+        "settings.people.hidden.chevron": [],
+        "settings.people.hidden.label": [],
+        "settings.people.hidden.value": [],
+        "settings.people.label": [],
+        "settings.reading": [],
+        "settings.reading.exact": [],
+        "settings.reading.exact.label": [],
+        "settings.reading.exact.status": [],
+        "settings.reading.exact.switch": [],
+        "settings.reading.feed": [],
+        "settings.reading.feed.chevron": [],
+        "settings.reading.feed.label": [],
+        "settings.reading.feed.value": [],
+        "settings.reading.footnote": [],
+        "settings.reading.label": [],
+        "settings.sessions": [],
+        "settings.sessions.elsewhere": [],
+        "settings.sessions.elsewhere.label": [],
+        "settings.sessions.footnote": [],
+        "settings.sessions.label": [],
+        "settings.sessions.session": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.label": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.revoke": [
+          "2",
+          "3"
+        ],
+        "settings.sessions.session.status": [
+          "1",
+          "2",
+          "3"
+        ],
+        "settings.snackbar": [],
+        "settings.snackbar.action": [],
+        "settings.snackbar.message": [],
         "settings.stance": [],
         "settings.stance.footnote": [],
         "settings.stance.label": [],

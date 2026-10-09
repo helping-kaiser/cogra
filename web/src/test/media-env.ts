@@ -36,6 +36,8 @@
 // Everything a test changes here is put back by `resetMediaEnvironmentForTests`,
 // which the shared setup runs after every test.
 
+import { waitFor } from "@testing-library/react";
+
 type StubEntry = {
   isIntersecting: boolean;
   intersectionRatio: number;
@@ -113,6 +115,30 @@ export function intersectEach(places: readonly Intersection[]): void {
       }));
     if (entries.length > 0) observer.callback(entries, observer);
   }
+}
+
+/** Whether some live observer watches `target`. */
+export function isObserved(target: Element): boolean {
+  return [...StubIntersectionObserver.live].some((observer) => observer.targets.has(target));
+}
+
+/**
+ * Wait until every target is watched by a live observer.
+ *
+ * A clip is put under observation by its stage in a PASSIVE effect, and after
+ * a render driven by a network answer React flushes those on the scheduler's
+ * own task (a `setImmediate`), while `findBy*` hands control back after a
+ * `setTimeout(0)` — Node orders the two either way. Reporting a frame's place
+ * before the stage watches it reports it to nobody: the stub, like nothing
+ * else, has no observer to tell, and the entry is lost. So a test that finds
+ * a clip by an async render awaits its observation before reporting it — the
+ * web test law's "no passive-effect assertions right after findBy*".
+ */
+export async function whenObserved(...targets: Element[]): Promise<void> {
+  await waitFor(() => {
+    const unwatched = targets.filter((target) => !isObserved(target));
+    if (unwatched.length > 0) throw new Error(`${unwatched.length} target(s) not observed yet`);
+  });
 }
 
 /** The threshold the component asked for, so a test can assert the contract. */

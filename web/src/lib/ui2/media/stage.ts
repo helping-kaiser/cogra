@@ -26,6 +26,26 @@
 // again (Feed.md:51–55). While any of the three stands, the stage decides
 // nothing; each one's lifting is its own rule below.
 //
+// THE DETAIL'S PINNED CLIP IS A STAGE OF ITS OWN KIND (`pinned`, the
+// stage-law packet §3.2 rule 12). It elects, freezes and honours the veil, the
+// device and the page exactly as a list does — "a sheet or a dialog opens over
+// the post -> the clip stops where it is" (PostDetailVideo.md:31) — but it
+// does not decide from empty when the layer lifts. It RESUMES: "GIVEN the clip
+// was playing when it rose and the device allows autoplay -> the clip resumes
+// where it stopped" (:33), "GIVEN the reader had paused the clip -> NEVER the
+// clip resumes on its own" (:35), "GIVEN the device suppresses autoplay ->
+// NEVER the clip starts on its own" (:37). A reader's pause on the transport
+// therefore keeps the stage (the clip stays the holder, standing still), so no
+// later election starts it (:11, "stops or starts where it is"). The opinion
+// pad's pause and resume is the list's own (:39/:41, Feed.md:39/41).
+//
+// What the layer's lifting resumes is only ever the clip IT stopped. An
+// explicit hand-over — the fullscreen viewer carrying its play state back to
+// the pinned clip (PostDetailVideo.md:49/51) — seats or starts the clip by
+// itself, and in doing so settles whatever the lifting owed: the explicit
+// carry wins over the generic rule because it is the later, more particular
+// word on the same clip, not because the generic rule knows about viewers.
+//
 // Framework-free on purpose: the React side (`stage-host.tsx`) only feeds it
 // what the platform says and hands it the players' elements.
 
@@ -60,9 +80,29 @@ export class Stage {
    */
   private liftOwed = false;
 
-  constructor({ visible, allowed }: { visible: boolean; allowed: boolean }) {
+  /** A pinned clip's stage: a covering layer's lifting resumes, it never decides. */
+  private readonly pinned: boolean;
+  /** The clip a covering layer stopped while it played, which the lifting may resume. */
+  private coverStopped: object | null = null;
+  /**
+   * Whether a sheet or a dialog stood over the pinned clip since the cover
+   * rose — the lifting then resumes only where autoplay is allowed
+   * (PostDetailVideo.md:37); the pad alone resumes under suppression too (:41).
+   */
+  private coverSuspended = false;
+
+  constructor({
+    visible,
+    allowed,
+    pinned = false,
+  }: {
+    visible: boolean;
+    allowed: boolean;
+    pinned?: boolean;
+  }) {
     this.visible = visible;
     this.allowed = allowed;
+    this.pinned = pinned;
   }
 
   // ---- the clips ---------------------------------------------------------
@@ -91,6 +131,7 @@ export class Stage {
     this.keys.delete(place.video);
     if (this.padPaused === key) this.padPaused = null;
     if (this.hiddenPlaying === key) this.hiddenPlaying = null;
+    if (this.coverStopped === key) this.coverStopped = null;
     if (this.holder === key) {
       this.freeze(key);
       this.holder = null;
@@ -147,7 +188,31 @@ export class Stage {
     place.qualifiedSinceTap = place.ratio >= GATE;
     this.padPaused = null;
     this.hiddenPlaying = null;
+    this.coverStopped = null;
     this.start(key);
+  }
+
+  /**
+   * The clip takes the stage STANDING STILL — a presentation carrying on a
+   * clip the reader had paused elsewhere (the fullscreen viewer and the pinned
+   * clip it hands back to: "the viewer's play state carries … paused returns
+   * paused", PostDetailVideo.md:51). It holds the stage as a clip started by
+   * hand does, so no election starts it on its own; the reader's play is what
+   * starts it, from the frame it stands on.
+   */
+  seat(key: object): void {
+    const place = this.places.get(key);
+    if (place === undefined) return;
+    if (this.holder !== null && this.holder !== key) this.freeze(this.holder);
+    this.holder = key;
+    place.handStarted = true;
+    place.qualifiedSinceTap = place.ratio >= GATE;
+    this.padPaused = null;
+    this.hiddenPlaying = null;
+    // The carry is the last word on this clip: a covering layer's lifting
+    // owes it no resume (PostDetailVideo.md:51 over :33).
+    this.coverStopped = null;
+    if (!place.video.paused) place.video.pause();
   }
 
   /**
@@ -167,6 +232,11 @@ export class Stage {
     const prev = this.cover;
     if (prev === next) return;
     this.cover = next;
+
+    if (this.pinned) {
+      this.coverPinned(prev, next);
+      return;
+    }
 
     if (next === "suspended") {
       // "WHEN a sheet or a dialog opens over the feed -> the incumbent stops"
@@ -214,6 +284,38 @@ export class Stage {
     this.decide();
   }
 
+  /**
+   * What covers the detail's pinned clip changed (rule 12; the note above).
+   * Whatever rises first stops the playing clip where it is and remembers it
+   * — the opinion pad included (PostDetailVideo.md:39) — and the clip keeps
+   * the stage throughout, standing still. When the last layer lifts, that
+   * same clip resumes where it stopped: always after the pad alone (:41),
+   * and after a sheet or a dialog only where autoplay is allowed (:33, :37).
+   * A clip that was not playing when the cover rose — the reader had paused
+   * it, it had played to its end, the device never started it — is not
+   * remembered, so nothing resumes it (:35, :37).
+   */
+  private coverPinned(prev: SurfaceCover, next: SurfaceCover): void {
+    if (next !== null) {
+      if (next === "suspended") this.coverSuspended = true;
+      if (prev !== null || this.holder === null) return;
+      const video = this.places.get(this.holder)?.video;
+      if (video !== undefined && !video.paused) {
+        video.pause();
+        this.coverStopped = this.holder;
+      }
+      return;
+    }
+
+    const resume = this.coverStopped;
+    const suspended = this.coverSuspended;
+    this.coverStopped = null;
+    this.coverSuspended = false;
+    if (resume === null || resume !== this.holder || !this.visible) return;
+    if (suspended && !this.allowed) return;
+    this.start(resume);
+  }
+
   /** The page was hidden or shown (Page Visibility API, `page-visibility.ts`). */
   setVisible(visible: boolean): void {
     if (this.visible === visible) return;
@@ -251,7 +353,9 @@ export class Stage {
    * Whether the device allows autoplay (FeedCover.md:23). Allowing again is
    * the standing rule 3 applying once more: an empty stage goes to the
    * topmost qualifying clip. Suppressing stops nothing already playing — "no
-   * clip STARTS on its own" (FeedCover.md:25) is a rule about starts.
+   * clip STARTS on its own" (FeedCover.md:25) is a rule about starts, ruled so
+   * by jakob 2026-10-09 (seam 109, item 96): a mid-play suppression flip never
+   * stops a playing clip.
    */
   setAllowed(allowed: boolean): void {
     if (this.allowed === allowed) return;
@@ -270,6 +374,8 @@ export class Stage {
     this.padPaused = null;
     this.hiddenPlaying = null;
     this.liftOwed = false;
+    this.coverStopped = null;
+    this.coverSuspended = false;
   }
 
   // ---- the machinery -----------------------------------------------------

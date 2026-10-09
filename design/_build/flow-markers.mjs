@@ -111,6 +111,17 @@ export const FLOW_MARKERS = {
     { n: 17, find: ">Restore the key</button>", tag: "button" },
     { n: 19, find: 'what your feed shows"', tag: "button" },
   ],
+  // The approval that fell through (ruling 60): ApplicantWaiting's shell and
+  // ApplicantWaiting's numbers, the card's dismissal at its 17 and its copy
+  // control at its 20 — the waiting card's two controls, in this card's words.
+  ApplicantFellThrough: [
+    ...post({ author: 1, menu: 2, media: 3, more: 4, topic: 5, refs: 6, stance: 7, score: 8, comments: 9 }),
+    secondComments(9),
+    ...nav(10),
+    { n: 17, find: ">Got it</button>", tag: "button" },
+    { n: 19, find: 'what your feed shows"', tag: "button" },
+    { n: 20, find: 'aria-label="Copy your ask link"', tag: "button" },
+  ],
   VouchBack: [
     filter,
     { n: 2, find: ">Got it</button>", tag: "button" },
@@ -207,13 +218,24 @@ Object.assign(FLOW_MARKERS, {
   ],
   /* V1.0's rows only (readme §13, the V1.0 scope cut): posts, a comment, a
      tag. The rows number in reading order, the bar follows them, and the tag
-     row keeps the last number, where the tag round appended it. */
+     row keeps the last number, where the tag round appended it. The `order`
+     chip draws the rows once per order (ruling 24), and each copy of a row
+     keeps that row's number. */
   ExploreSearch: [
-    { n: 11, find: ">saltmaps<", tag: "button" },
+    { n: 11, find: ">saltmaps<", tag: "button", all: true },
     ...searchShell("@sol salt", 6),
+    { n: 4, find: "Salt maps of the coast road", tag: "button", all: true },
+    { n: 4, find: "First try at a rubbing", tag: "button", all: true },
+    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button", all: true },
+  ],
+  /* The Profiles row (ruling 23): `ExploreSearch`'s numbering, the person's
+     row taking the comment row's 5 — the one row each board has that the
+     other has not. */
+  ExplorePerson: [
+    { n: 11, find: ">saltmaps<", tag: "button" },
+    ...searchShell("salt", 6),
     { n: 4, find: "Salt maps of the coast road", tag: "button" },
-    { n: 4, find: "First try at a rubbing", tag: "button" },
-    { n: 5, find: "The wax-stick ones read like weather charts", tag: "button" },
+    { n: 5, find: ">Sal Torres<", tag: "button" },
   ],
   ExploreFilter: [
     { n: 1, find: 'aria-label="How the filter works"', tag: "button" },
@@ -1155,6 +1177,25 @@ Object.assign(FLOW_MARKERS, {
     { n: 15, find: 'opinions on this post</span>', tag: "button" },
     { n: 16, find: '<span>Cited by ', tag: "button" },
   ],
+  // The detail a moment after Hide @ada (ruling 65): `PostDetail`'s numbers,
+  // to the number, on the post the menu's board draws — which carries no
+  // Cited-by line, so 16 stays unused — and the snackbar's Undo as the next
+  // free number.
+  PostDetailHidden: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More on this post"', tag: "button" },
+    { n: 3, find: '<a href="/u/', tag: "a" },
+    { n: 4, find: "aspect-ratio:1.91 / 1", tag: "div" },
+    { n: 5, find: 'aria-label="Tags and references"', tag: "button" },
+    { n: 6, find: 'aria-label="Give your opinion on this post"', tag: "button" },
+    { n: 6, find: ">Choose your opinion on this post</button>", tag: "button" },
+    { n: 7, find: ">Feed score</span>", tag: "button" },
+    { n: 8, find: 'aria-label="3 comments"', tag: "button" },
+    { n: 9, find: 'aria-label="Share this post"', tag: "button" },
+    ...nav(10),
+    { n: 15, find: 'opinions on this post</span>', tag: "button" },
+    { n: 17, find: ">Undo</button>", tag: "button" },
+  ],
   PostDetailVideo: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
     { n: 2, find: 'aria-label="More on this post"', tag: "button" },
@@ -1272,6 +1313,24 @@ Object.assign(FLOW_MARKERS, {
     { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
     { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
     ...nav(8),
+  ],
+  // The page a moment after Hide @ada (ruling 65): `ProfileOther`'s numbers,
+  // to the number, and the snackbar's Undo as the next free one.
+  ProfileOtherHidden: [
+    { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
+    { n: 2, find: 'aria-label="More about @ada"', tag: "button" },
+    { n: 3, find: ', opinions on and by @ada"', tag: "button" },
+    { n: 4, find: 'aria-label="Give your opinion on @ada"', tag: "button" },
+    { n: 4, find: ">Choose your opinion on @ada</button>", tag: "button" },
+    { n: 5, find: ">Message</button>", tag: "button" },
+    { n: 6, find: 'aria-label="Posts"', tag: "button" },
+    { n: 6, find: 'aria-label="Comments"', tag: "button" },
+    { n: 6, find: 'aria-label="Everything"', tag: "button" },
+    { n: 7, find: "The long way home — the light does something", tag: "button" },
+    { n: 7, find: "The glovebox camera earns its keep", tag: "button" },
+    { n: 7, find: "Took the coast road instead of the tunnel", tag: "button" },
+    ...nav(8),
+    { n: 13, find: ">Undo</button>", tag: "button" },
   ],
   ProfileOtherHeld: [
     { n: 1, find: 'aria-label="Back to feed"', tag: "a" },
@@ -1442,6 +1501,13 @@ Object.assign(FLOW_MARKERS, {
   SettingsHidden: [
     { n: 1, find: ">Unhide</button>", tag: "button", all: true },
     { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+  ],
+  // The same sheet a moment after an unhide (ruling 65): its numbers, and the
+  // snackbar's Undo raised over it as the next free one.
+  SettingsUnhidden: [
+    { n: 1, find: ">Unhide</button>", tag: "button", all: true },
+    { n: 2, find: 'class="cg-scrim-in"', tag: "div" },
+    { n: 3, find: ">Undo</button>", tag: "button" },
   ],
   // Saved and History: the back arrow, the rows (one control, one number, drawn
   // once per row) and the bar.
@@ -2346,7 +2412,7 @@ Object.assign(FLOW_MARKERS, {
    surface's gap (guest boards: the guest gate's). */
 const BAND_CHATS = {
   Main: 18, FeedBare: 18, ApplicantFeed: 18, ApplicantWaiting: 15,
-  ApplicantRejected: 15, ApplicantLanding: 15,
+  ApplicantRejected: 15, ApplicantLanding: 15, ApplicantFellThrough: 15,
   VouchBack: 18, KeyElsewhere: 17, ComposeExpired: 18, Explore: 8,
   Feed: 16, FeedUnread: 16, FeedScrolled: 16, FeedDeleting: 16, DeleteAccountCanceled: 16,
   FeedNarrowed: 16, FeedNothing: 8, FeedFar: 16, FeedHidden: 15, FeedTopic: 15,
@@ -2365,7 +2431,7 @@ for (const [board, n] of Object.entries(BAND_CHATS)) {
    name and carries its marker in its own list above. */
 const BAND_BELL = {
   ApplicantFeed: 20, ApplicantWaiting: 18, VouchBack: 20, KeyElsewhere: 19,
-  ApplicantRejected: 18, ApplicantLanding: 18,
+  ApplicantRejected: 18, ApplicantLanding: 18, ApplicantFellThrough: 18,
   ComposeExpired: 20, Explore: 9,
   Feed: 18, FeedScrolled: 18, FeedDeleting: 18, DeleteAccountCanceled: 18,
   FeedNarrowed: 18, FeedNothing: 9, FeedFar: 18, FeedGallery: 17, FeedHidden: 17, FeedTopic: 17,
@@ -2383,7 +2449,7 @@ for (const [board, n] of Object.entries(BAND_BELL)) {
    the platform's own sheet. */
 const CARD_SHARE = {
   Main: 19, FeedBare: 19, ApplicantFeed: 19, ApplicantWaiting: 16, VouchBack: 19,
-  ApplicantRejected: 16, ApplicantLanding: 16,
+  ApplicantRejected: 16, ApplicantLanding: 16, ApplicantFellThrough: 16,
   KeyElsewhere: 18, Feed: 17, FeedUnread: 17, FeedDeleting: 17, DeleteAccountCanceled: 17,
   FeedNarrowed: 17, FeedScrolled: 17, FeedFar: 17, FeedGallery: 16, FeedHidden: 16, FeedTopic: 16,
   FeedCover: 18, ComposeExpired: 19, ComposeLanded: 14, Removed: 11, ProfilePosts: 21, FeedWordsSensitive: 17,
