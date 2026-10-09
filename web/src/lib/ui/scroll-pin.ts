@@ -25,7 +25,7 @@
 // Items name themselves with `data-scroll-anchor`, so this knows nothing about
 // posts and a second surface can be pinned the same way.
 
-import { useCallback, useEffect, useRef, type RefObject } from "react";
+import { useCallback, useRef, type RefObject } from "react";
 
 import { useMeasureEffect } from "./measure-effect";
 import { scrollElementOf, scrollHostBy, scrollHostTo, scrollOffsetOf } from "./scroll-host";
@@ -168,21 +168,33 @@ export function usePinnedPlace({
     correct();
   }, [host, place, correct]);
 
-  useEffect(() => {
+  // THE SCROLLER OUTLIVES THE SURFACE, SO THE SURFACE STOPS LISTENING THE MOMENT
+  // IT LEAVES. The shell's scroller is shared with whatever is drawn next, and
+  // the next surface moves it in its own first commit — Next's navigation
+  // scrolls a fresh page to its top from a class lifecycle, React's layout
+  // phase. A passive effect's cleanup runs after that commit, sometimes frames
+  // after it, and a listener still attached then hears the NEXT surface's scroll
+  // with this one's items already gone: it records the next surface's offset,
+  // anchored to nothing, over the place the reader left — and coming back lands
+  // at the top. So the subscription is a layout effect: on the way out React
+  // runs its cleanup in the same commit that removes the items, before the next
+  // surface's layout effects run, so no scroll after the swap can reach it. A
+  // measurement still waiting on its frame is dropped with it, for the same
+  // reason — it would measure a page this surface is no longer on.
+  useMeasureEffect(() => {
     const scroller = scrollElementOf(host);
-    let ticking = false;
+    let pending: number | null = null;
     const onScroll = () => {
       if (pinned.current) {
         if (Math.abs(scrollOffsetOf(host) - written.current) <= 1) return;
         pinned.current = false;
       }
-      if (ticking) return;
-      ticking = true;
+      if (pending !== null) return;
       // Kept on the way past rather than on unmount: a mobile browser may never
       // run an unmount, and one measurement per frame is cheaper than a render.
-      requestAnimationFrame(() => {
+      pending = requestAnimationFrame(() => {
+        pending = null;
         record(placeOf(scrollOffsetOf(host), measureAnchors(scrollElementOf(host))));
-        ticking = false;
       });
     };
     const target: HTMLElement | Window = scroller ?? window;
@@ -199,6 +211,7 @@ export function usePinnedPlace({
     }
     return () => {
       target.removeEventListener("scroll", onScroll);
+      if (pending !== null) cancelAnimationFrame(pending);
       observer.disconnect();
     };
   }, [host, record, correct]);
