@@ -258,6 +258,35 @@ describe("a sheet or a dialog over the post (PostDetailVideo.md:29–37)", () =>
   });
 });
 
+// Page visibility is written in Feed.md and applied page-wide (the packet's
+// flag §7.2-a, L09); on the pinned stage it meets the covering layers.
+describe("the page hidden and shown (F25/F26 Feed.md:51/53, page-wide)", () => {
+  it("hiding pauses the pinned clip on its frame; showing resumes it from there", () => {
+    render(<Detail />);
+    onScreen("pinned-media");
+    at(8);
+
+    act(() => setsPageVisibility("hidden"));
+    expect(pinned().paused).toBe(true);
+    act(() => setsPageVisibility("visible"));
+    expect(pinned().paused).toBe(false);
+    expect(pinned().currentTime).toBe(8);
+  });
+
+  it("hidden and shown while a sheet stands, the clip waits for the dismissal, which resumes it (D06 :33)", () => {
+    const { rerender } = render(<Detail />);
+    onScreen("pinned-media");
+
+    rerender(<Detail raised={{ comments: true }} />);
+    act(() => setsPageVisibility("hidden"));
+    act(() => setsPageVisibility("visible"));
+    expect(pinned().paused).toBe(true);
+
+    rerender(<Detail />);
+    expect(pinned().paused).toBe(false);
+  });
+});
+
 describe("the transport's pause keeps the stage (D04 PostDetailVideo.md:11, D07 :35)", () => {
   it("nothing re-plays a clip the reader paused: not the observer, not autoplay coming back, not the page showing again", () => {
     suppressesAutoplay({});
