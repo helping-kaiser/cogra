@@ -8,6 +8,7 @@
 pub mod census;
 pub mod client;
 pub mod crypto;
+pub mod device_lock;
 pub mod encoding;
 pub mod fold;
 pub mod handshake;

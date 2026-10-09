@@ -1,8 +1,8 @@
 //! ´mod:module:auth´
 //!
 //! Authentication and onboarding state: invite links, accounts and their
-//! applications, credentials, refresh-token sessions, and key backups
-//! (auth.md; data-model.md "Authentication state").
+//! applications, credentials, refresh-token sessions, key backups, and
+//! device locks (auth.md; data-model.md "Authentication state").
 //!
 //! Auth gates the service, never the graph — nothing here is authoritative
 //! about any record.
@@ -2734,6 +2734,90 @@ pub async fn key_backup_created_at(
     )
     .fetch_one(pool)
     .await
+}
+
+/// What issuing a device lock came to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum IssueLockOutcome {
+    Issued,
+    /// The account already holds its cap of live locks; nothing stored.
+    AtCap,
+    /// The account is gone.
+    NoAccount,
+}
+
+/// Stores a fresh device lock (data-model.md `auth_device_locks`) under
+/// the account's live-lock cap. The count and the insert run under the
+/// account's credentials-row lock, so two issues racing at one below the
+/// cap cannot both pass it.
+pub async fn issue_device_lock(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+    secret: &[u8],
+    cap: i64,
+) -> Result<IssueLockOutcome, sqlx::Error> {
+    let mut tx = pool.begin().await?;
+    if !lock_account(&mut tx, user_id).await? {
+        return Ok(IssueLockOutcome::NoAccount);
+    }
+    let live = sqlx::query_scalar!(
+        r#"SELECT COUNT(*) AS "live!" FROM auth_device_locks WHERE user_id = $1"#,
+        user_id,
+    )
+    .fetch_one(&mut *tx)
+    .await?;
+    if live >= cap {
+        return Ok(IssueLockOutcome::AtCap);
+    }
+    sqlx::query!(
+        "INSERT INTO auth_device_locks (id, user_id, secret) VALUES ($1, $2, $3)",
+        id,
+        user_id,
+        secret,
+    )
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(IssueLockOutcome::Issued)
+}
+
+/// The secret of one of the account's locks, stamping the release; None
+/// for an unknown id or another account's. A release never spends the
+/// row — a lost response must not destroy the only way back into the
+/// device's custody.
+pub async fn release_device_lock(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+) -> Result<Option<Vec<u8>>, sqlx::Error> {
+    sqlx::query_scalar!(
+        "UPDATE auth_device_locks SET released_at = NOW()
+          WHERE id = $1 AND user_id = $2
+          RETURNING secret",
+        id,
+        user_id,
+    )
+    .fetch_optional(pool)
+    .await
+}
+
+/// Deletes one of the account's locks; whether one went. Another
+/// account's lock is never reached, whatever id is named.
+pub async fn discard_device_lock(
+    pool: &PgPool,
+    user_id: Uuid,
+    id: Uuid,
+) -> Result<bool, sqlx::Error> {
+    Ok(sqlx::query!(
+        "DELETE FROM auth_device_locks WHERE id = $1 AND user_id = $2",
+        id,
+        user_id,
+    )
+    .execute(pool)
+    .await?
+    .rows_affected()
+        == 1)
 }
 
 /// The account's cross-device preferences (data-model.md
