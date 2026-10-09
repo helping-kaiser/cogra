@@ -28,13 +28,18 @@
 // explicitly instead (`BottomSheet`'s `coverHeld`, the thread yielding to its
 // composer).
 //
-// A PRIVATE STAGE is what a clip outside any host gets — the detail's pinned
-// clip, the viewer, a compose preview, a gallery on an unhosted page, a clip
-// on a layer raised over its host (android precedent: `MediaGallery.kt:88`). It elects, freezes, honours suppression
-// and the page's visibility, but reads no covering layer and lands at no hard
-// top: the detail's pinned clip is its own stage with its own rules (the
-// pinned-clip PR), and the player layer (`video-stage.ts`) still keeps one
-// clip playing across all of them.
+// A PRIVATE STAGE is what a clip outside any host gets — the viewer, a compose
+// preview, a gallery on an unhosted page, a clip on a layer raised over its
+// host (android precedent: `MediaGallery.kt:88`). It elects, freezes, honours
+// suppression and the page's visibility, but reads no covering layer and lands
+// at no hard top; the player layer (`video-stage.ts`) still keeps one clip
+// playing across all of them.
+//
+// THE PINNED STAGE is the detail's pinned clip's (`pinned-clip.tsx`): "the
+// pinned clip is its detail's one stage" (the stage-law packet §3.2 rule 12).
+// It reads the covering layers over the detail as a list does, but answers
+// them in its own resume mode (`stage.ts`, PostDetailVideo.md:31–41), and it
+// lands at no hard top — the clip is pinned, the page scrolls beneath it.
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -73,16 +78,19 @@ export function useStage(): Stage | null {
 export function StageHost({
   children,
   private: isPrivate = false,
+  pinned = false,
 }: {
   children: ReactNode;
   /** A stage for clips that no surface hosts — see the note above. */
   private?: boolean;
+  /** The detail's pinned clip's stage — see the note above. */
+  pinned?: boolean;
 }) {
   // Identity, not value: one engine for the host's whole life. The lazy
   // initializer reads the platform once, so the first registration already
   // knows the page and the device.
   const [stage] = useState(
-    () => new Stage({ visible: isPageVisible(), allowed: !isAutoplaySuppressed() }),
+    () => new Stage({ visible: isPageVisible(), allowed: !isAutoplaySuppressed(), pinned }),
   );
   const cover = useSurfaceCover();
   const layer = useCoveringLayer();
@@ -101,7 +109,11 @@ export function StageHost({
     if (!isPrivate) stage.setCover(cover);
   }, [stage, cover, isPrivate]);
 
-  useHardTopLanding({ host: scroller, onLand: () => stage.land(), enabled: !isPrivate });
+  useHardTopLanding({
+    host: scroller,
+    onLand: () => stage.land(),
+    enabled: !isPrivate && !pinned,
+  });
 
   return <StageContext.Provider value={hosted}>{children}</StageContext.Provider>;
 }
