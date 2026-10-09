@@ -17,12 +17,12 @@
 // `mute.ts` gives for the one global mute. A list that refreshes forgets its
 // own clips (FeedCover.md:13, `forgetList`).
 //
-// WHO WRITES, AND WHEN (`video-player.tsx`): a player writes where its clip
-// stands when it unmounts, and when it hands its clip to a layer presenting
-// the same clip bigger (the fullscreen viewer). Those are the only moments a
-// second presentation of the clip can come to read it — the web draws one
-// route at a time, and the viewer is the one layer that presents a clip the
-// page already shows.
+// WHO WRITES, AND WHEN (`video-player.tsx`): a player writes the moment its
+// clip plays, where its clip stands when it unmounts, and when it hands its
+// clip to a layer presenting the same clip bigger (the fullscreen viewer).
+// Those cover every moment a second presentation of the clip can come to read
+// it — the web draws one route at a time, and the viewer is the one layer that
+// presents a clip the page already shows.
 //
 // A FORGOTTEN CLIP STAYS FORGOTTEN BY THE PLAYERS THAT MET IT BEFORE. A
 // refresh forgets the list's clips and then remounts the list; the players
