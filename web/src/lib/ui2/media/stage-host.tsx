@@ -29,28 +29,45 @@
 // composer).
 //
 // A PRIVATE STAGE is what a clip outside any host gets — the detail's pinned
-// clip, the viewer, a compose preview, a gallery on an unhosted page (android
-// precedent: `MediaGallery.kt:88`). It elects, freezes, honours suppression
+// clip, the viewer, a compose preview, a gallery on an unhosted page, a clip
+// on a layer raised over its host (android precedent: `MediaGallery.kt:88`). It elects, freezes, honours suppression
 // and the page's visibility, but reads no covering layer and lands at no hard
 // top: the detail's pinned clip is its own stage with its own rules (the
 // pinned-clip PR), and the player layer (`video-stage.ts`) still keeps one
 // clip playing across all of them.
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { useHardTopLanding } from "@/lib/ui/hard-top-landing";
 import { isPageVisible, usePageVisible } from "@/lib/ui/page-visibility";
 import { useScrollHost } from "@/lib/ui/scroll-host";
 
-import { useSurfaceCover } from "../covering-layer";
+import { useCoveringLayer, useSurfaceCover } from "../covering-layer";
 import { isAutoplaySuppressed, useAutoplaySuppressed } from "./autoplay-suppression";
 import { Stage } from "./stage";
 
-const StageContext = createContext<Stage | null>(null);
+// A LAYER SHIELDS WHAT IT DRAWS FROM THE STAGE BENEATH IT. A host is a stage on
+// the layer it stands on — the page, or a sheet. A clip drawn on a layer RAISED
+// OVER that host (a sheet with no stage of its own, the fullscreen viewer) is
+// not on the covered surface at all: joining its stage would have the layer
+// suspend the very clip it draws, since that stage holds nobody while the
+// layer is up (Feed.md:33). So a host is only the stage of components standing
+// on its own layer (`CoveringLayerProvider`), and a clip on a layer above it
+// finds no host and gets a private stage of its own — "a clip drawn on the
+// sheet competes for the stage by the same law" (design/readme.md §13), on the
+// sheet's stage rather than the covered surface's.
+type Hosted = { readonly stage: Stage; readonly layer: object | null };
 
-/** The stage the calling component stands on, or null outside any host. */
+const StageContext = createContext<Hosted | null>(null);
+
+/**
+ * The stage the calling component stands on, or null outside any host — and
+ * null on a layer raised over the nearest host, which is not its surface.
+ */
 export function useStage(): Stage | null {
-  return useContext(StageContext);
+  const hosted = useContext(StageContext);
+  const layer = useCoveringLayer();
+  return hosted !== null && hosted.layer === layer ? hosted.stage : null;
 }
 
 export function StageHost({
@@ -68,6 +85,11 @@ export function StageHost({
     () => new Stage({ visible: isPageVisible(), allowed: !isAutoplaySuppressed() }),
   );
   const cover = useSurfaceCover();
+  const layer = useCoveringLayer();
+  // Memoised as react.dev's `useContext` page advises for an object value, so
+  // the players reading it re-render only when the layer the host stands on
+  // changes — which, for a mounted host, is never.
+  const hosted = useMemo<Hosted>(() => ({ stage, layer }), [stage, layer]);
   const visible = usePageVisible();
   const suppressed = useAutoplaySuppressed();
   const scroller = useScrollHost();
@@ -81,7 +103,7 @@ export function StageHost({
 
   useHardTopLanding({ host: scroller, onLand: () => stage.land(), enabled: !isPrivate });
 
-  return <StageContext.Provider value={stage}>{children}</StageContext.Provider>;
+  return <StageContext.Provider value={hosted}>{children}</StageContext.Provider>;
 }
 
 /**

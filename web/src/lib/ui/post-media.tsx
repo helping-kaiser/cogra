@@ -128,6 +128,10 @@ export function galleryItems(node: Bearer): readonly GalleryItem[] {
     const ratio = parseAspectRatio(attachment.options.aspectRatio);
     return {
       src: attachment.url,
+      // The clip's identity in the session's clip memory: the record's own
+      // attachment id, so one clip shown on a card, in the detail and in the
+      // viewer is one clip (`clip-memory.ts`).
+      mediaId: attachment.id,
       // A picture the author left undescribed is DECORATIVE to a screen reader,
       // not "image": an empty alt is the documented way to say "skip this", and
       // inventing a description would be worse than saying nothing.

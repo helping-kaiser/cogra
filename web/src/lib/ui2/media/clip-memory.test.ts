@@ -48,6 +48,27 @@ describe("the clip memory", () => {
     expect(clipMemory.read("elsewhere")).toEqual({ time: 7, everPlayed: true });
   });
 
+  it("does not hear a writer born before its clip was forgotten — the refreshed list's outgoing players (FeedCover.md:13)", () => {
+    const before = clipMemory.currentEra();
+    clipMemory.write("m1", { time: 2, everPlayed: true }, before);
+
+    clipMemory.forgetList(["m1"]);
+    // The old list's player unmounts after the refresh forgot its clip.
+    clipMemory.write("m1", { time: 6, everPlayed: true }, before);
+    expect(clipMemory.read("m1")).toBeUndefined();
+
+    // The new list's player, born after the forgetting, is heard again.
+    clipMemory.write("m1", { time: 1, everPlayed: true }, clipMemory.currentEra());
+    expect(clipMemory.read("m1")).toEqual({ time: 1, everPlayed: true });
+  });
+
+  it("a forgetting reaches only the clips it names: other writers born before it are still heard", () => {
+    const before = clipMemory.currentEra();
+    clipMemory.forgetList(["m1"]);
+    clipMemory.write("m2", { time: 3, everPlayed: true }, before);
+    expect(clipMemory.read("m2")).toEqual({ time: 3, everPlayed: true });
+  });
+
   it("starts empty in a new document — a cold launch wears the stills (FeedCover.md:11)", async () => {
     clipMemory.write("m1", { time: 2, everPlayed: true });
 

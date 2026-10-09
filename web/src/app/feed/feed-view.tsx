@@ -12,7 +12,7 @@
 // opening a post and coming back is not a fresh feed; `scroll-pin.ts` says why
 // the place is an anchor rather than a number, and how it is held afterwards.
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useApolloClient } from "@apollo/client/react";
 
@@ -42,11 +42,17 @@ import { useScrollHost } from "@/lib/ui/scroll-host";
 import { ANCHOR_ATTRIBUTE, usePinnedPlace } from "@/lib/ui/scroll-pin";
 import { LINK_COPIED } from "@/lib/ui/share";
 import { Snackbar } from "@/lib/ui/snackbar";
+import * as clipMemory from "@/lib/ui2/media/clip-memory";
 import { StageHost } from "@/lib/ui2/media/stage-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
+
+/** Every clip a list of posts draws, by the media id the clip memory keys on. */
+function clipIdsOf(posts: readonly PostView[]): string[] {
+  return posts.flatMap((post) => post.attachments.map((attachment) => attachment.id));
+}
 
 /**
  * The band, for the reader whose feed is not their own — guest, applicant,
@@ -176,13 +182,33 @@ export function FeedView({
   // made the banner vanish and reappear on every failed retry. It
   // also carries which fetch failed, so the fault can surface where
   // that fetch was requested.
-  const refresh = useCallback(() => {
+  // THE LIST'S CLIPS, AS OF THE LAST RENDER — what a refresh re-stills.
+  const postsNow = useRef(posts);
+  useEffect(() => {
+    postsNow.current = posts;
+  }, [posts]);
+  // Which refreshed list is on screen: the stage and its clips are built anew
+  // for each one (see `restill` below).
+  const [listEra, setListEra] = useState(0);
+
+  const refresh = useCallback((restill = false) => {
     let cancelled = false;
     void fetchPosts(client).then((outcome) => {
       if (cancelled) return;
       setLoading(false);
       if (outcome.kind === "success") {
         setTransportFault(null);
+        if (restill) {
+          // "WHEN the list holding feed.card refreshes -> feed.card.media.frame
+          // wears its clip's stored still again" (FeedCover.md:13; RULINGS
+          // "pull-to-refresh RESETS the reached-frame memory"). The session
+          // forgets the clips of the list as it stood and as it arrives, and
+          // the list's players are built anew — a played `<video>` keeps its
+          // frame for as long as it lives — on a stage that decides from
+          // empty, as a fresh list's does (the packet §3.2 rule 6).
+          clipMemory.forgetList(clipIdsOf([...postsNow.current, ...outcome.value.items]));
+          setListEra((era) => era + 1);
+        }
         setPosts(outcome.value.items);
         setEndCursor(outcome.value.endCursor);
         setHasNextPage(outcome.value.hasNextPage);
@@ -228,7 +254,7 @@ export function FeedView({
   const onPull = useCallback(() => {
     releasePin();
     setLoading(true);
-    refresh();
+    refresh(true);
   }, [releasePin, refresh]);
   usePullToRefresh({ host, onPull, enabled: !commentsOpen });
 
@@ -360,7 +386,7 @@ export function FeedView({
       {/* THE FEED'S ONE STAGE (Feed.md:3–55): every clip in the list — a
           post's, and a comment card's when the feed draws one (Feed.md:7) —
           competes for it, and it lands at the feed's own hard top. */}
-      <StageHost>
+      <StageHost key={listEra}>
         <ul className="flex flex-col gap-2" data-testid="feed-list">
           {posts.map((post, index) => (
             // The card names itself to the pin: it is the anchor the reader's

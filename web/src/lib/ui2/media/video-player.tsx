@@ -36,13 +36,38 @@
 // disc's place (FeedCover.md:21), and a tap plays the clip where it stands
 // (FeedCover.md:27). Read live through `autoplay-suppression.ts`: a reader
 // changing either preference while the page is up changes the disc.
+//
+// ONE CLIP, MANY PRESENTATIONS (the stage-law packet §3.2 rules 5 and 13). A
+// clip that has played never wears its stored still again within the reading
+// session, its remounts included (FeedCover.md:7/9), and it carries the frame
+// it reached card → detail → back (PostDetailVideo.md:43/45). The element dies
+// with its card, so the reached frame lives in the session's clip memory
+// (`clip-memory.ts`), keyed by the clip's media id: a player remembers where
+// it stood as it unmounts, and a player mounting on a remembered clip drops
+// the still and stands at that frame. Whether it then PLAYS is still its
+// surface's stage's to decide.
+//
+// The fullscreen viewer is the one presentation that also carries the PLAY
+// STATE (PostDetailVideo.md:47–51, ViewerVideo.md:5): the pinned clip HANDS
+// its clip over as the viewer opens — remembers where it stood and whether it
+// played, then leaves its stage so it never plays behind the viewer — and the
+// viewer CARRIES that state in; on close the viewer remembers on its way out
+// and the pinned clip takes it back the same way.
 
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent,
+} from "react";
 
 import { testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 import { useAutoplaySuppressed } from "./autoplay-suppression";
 import { useVeiled } from "./body-veil";
+import * as clipMemory from "./clip-memory";
 import { setMuted, useMuted } from "./mute";
 import { startPlayback } from "./playback";
 import { OnStage, useStage } from "./stage-host";
@@ -106,8 +131,32 @@ function Player({
   safeArea = false,
   soundNode,
   playNode,
+  mediaId,
+  carry = false,
+  handedOver = false,
 }: {
   src: string;
+  /**
+   * The clip's identity in the session's clip memory — the attachment's media
+   * id. Without one the player remembers nothing (a compose preview's local
+   * file is no clip of the session's).
+   */
+  mediaId?: string | null;
+  /**
+   * This presentation CARRIES ON a clip shown elsewhere — the fullscreen
+   * viewer opened on the pinned clip: it opens at the remembered frame AND in
+   * the remembered play state (PostDetailVideo.md:47–51, ViewerVideo.md:5),
+   * rather than its stage deciding. With nothing remembered, the stage's law.
+   */
+  carry?: boolean;
+  /**
+   * The clip is HANDED OVER to a layer presenting it bigger (the pinned clip
+   * while the viewer is up): it stands stopped, off its stage, and never plays
+   * behind that layer (PostDetailVideo.md:47). Lowered, it takes the clip
+   * back at the frame and in the play state the layer left it in
+   * (PostDetailVideo.md:49/51).
+   */
+  handedOver?: boolean;
   /** The registered node the sound disc is; it then names the disc instead of `testId`'s. */
   soundNode?: DataNode;
   /** The registered node the play disc is (`….frame.playDisc`), likewise. */
@@ -201,6 +250,26 @@ function Player({
   // `useRef({}).current`, it never reads a ref during render, which React's
   // own lint rule (react-hooks/refs) forbids.
   const [stageToken] = useState(() => ({}));
+  // What the session remembered of this clip when the player first rendered,
+  // and the memory's era then — read once, through lazy initializers, so the
+  // render that draws the frame already knows whether its still may return.
+  //
+  // THAT RENDER CAN COME BEFORE THE OUTGOING PRESENTATION'S GOODBYE. A route
+  // change (card → detail) renders the new page before the commit that
+  // removes the old one, so the card's unmount write lands after this read.
+  // Having played is therefore written the moment a clip first plays (`onPlay`
+  // below), and the exact frame is read again once mounted, after every
+  // outgoing write of the same commit has landed (the layout effect below).
+  const [remembered] = useState(() => (mediaId ? clipMemory.read(mediaId) : undefined));
+  const [bornIn] = useState(clipMemory.currentEra);
+  // Whether the clip has played in THIS mount; with what the memory says of
+  // earlier ones, whether it has played in the session.
+  const playedHere = useRef(false);
+  // The veil as last rendered, for the carry below, which must not start a
+  // veiled clip and runs where the veil is not a dependency.
+  const veiledNow = useRef(veiled);
+  // The clip was handed over and is due back from the layer that took it.
+  const dueBack = useRef(false);
 
   // The store is the truth; the element follows it. Written through the
   // property rather than the attribute because the attribute is only the
@@ -210,16 +279,91 @@ function Player({
     if (video && video.muted !== muted) video.muted = muted;
   }, [muted]);
 
-  // ON THE STAGE for as long as the player is mounted. It joins unveiled and
-  // the veil effect below says otherwise in the same commit — so a veil
-  // coming or going is an eligibility change on the one registration, never a
-  // leave-and-rejoin that would hand the stage away.
+  useEffect(() => {
+    veiledNow.current = veiled;
+  }, [veiled]);
+
+  // A REMEMBERED CLIP STANDS AT THE FRAME IT REACHED (FeedCover.md:9,
+  // PostDetailVideo.md:43/45). Read at mount, in a LAYOUT effect: React runs
+  // a commit's layout cleanups — the outgoing presentation's goodbye below —
+  // before its layout mounts, so this sees the frame the clip left at. And it
+  // runs before the stage (a passive effect) can start the clip, so a start
+  // runs on from there rather than jumping. Before metadata has loaded, the
+  // assignment is the element's "default playback start position", applied
+  // when it loads (html.spec.whatwg.org, the `currentTime` setter) — so it
+  // needs no wait for `loadedmetadata`.
+  useLayoutEffect(() => {
+    const video = ref.current;
+    const at = mediaId ? clipMemory.read(mediaId) : undefined;
+    if (video && at !== undefined && at.time > 0) video.currentTime = at.time;
+  }, [mediaId]);
+
+  // WHERE IT STOOD, REMEMBERED ON THE WAY OUT. A layout cleanup, on purpose:
+  // the host's stage is a parent whose passive cleanup freezes the clip as it
+  // goes, and React runs every layout cleanup of a removed tree before any
+  // passive one — so this still sees whether the clip was playing, which is
+  // the play state the viewer hands back (PostDetailVideo.md:49/51).
+  useLayoutEffect(() => {
+    const video = ref.current;
+    if (!video || !mediaId) return;
+    return () => {
+      const played = playedHere.current || remembered?.everPlayed === true;
+      // A clip that never moved has nothing to say: its still is still right.
+      if (!played && video.currentTime === 0) return;
+      clipMemory.write(mediaId, standing(video, played), bornIn);
+    };
+  }, [mediaId, remembered, bornIn]);
+
+  // ON THE STAGE for as long as the player is mounted — and not handed over.
+  // It joins unveiled and the veil effect below says otherwise in the same
+  // commit — so a veil coming or going is an eligibility change on the one
+  // registration, never a leave-and-rejoin that would hand the stage away.
+  //
+  // HANDED OVER, it leaves the stage: leaving freezes it where it stands, and
+  // a clip that is on no stage cannot be started by one — not by an election,
+  // a page shown again, or autoplay coming back (PostDetailVideo.md:47).
+  // Taken back, it rejoins and carries the layer's play state in.
   useEffect(() => {
     const video = ref.current;
     if (!video || !autoplay || stage === null) return;
+    if (handedOver) {
+      dueBack.current = true;
+      return;
+    }
     stage.register(stageToken, video, false);
+    if ((carry || dueBack.current) && mediaId) {
+      dueBack.current = false;
+      const carried = clipMemory.read(mediaId);
+      if (carried !== undefined) {
+        if (video.currentTime !== carried.time) video.currentTime = carried.time;
+        // "playing returns playing, paused returns paused" (RULINGS 4c,
+        // PostDetailVideo.md:49/51). A carried PLAYING state is the reader's
+        // own start continuing — under suppressed autoplay too, as the pad's
+        // resume is (Feed.md:41): not a clip starting "on its own"
+        // (FeedCover.md:25). A veiled clip starts nothing (Feed.md:43).
+        if (carried.playing === true && !veiledNow.current) stage.handStart(stageToken);
+        else stage.seat(stageToken);
+      }
+    }
     return () => stage.unregister(stageToken);
-  }, [autoplay, stage, stageToken]);
+  }, [autoplay, stage, stageToken, handedOver, carry, mediaId]);
+
+  /**
+   * The way into the fullscreen viewer, handing the clip over first: where it
+   * stands and whether it plays are remembered BEFORE the viewer renders, so
+   * the viewer opens on them (ViewerVideo.md:5, PostDetailVideo.md:47).
+   */
+  const openViewer =
+    onOpenViewer === undefined
+      ? undefined
+      : () => {
+          const video = ref.current;
+          if (video && mediaId) {
+            const played = playedHere.current || remembered?.everPlayed === true;
+            clipMemory.write(mediaId, standing(video, played), bornIn);
+          }
+          onOpenViewer();
+        };
 
   useEffect(() => {
     if (autoplay) stage?.setVeiled(stageToken, veiled);
@@ -283,7 +427,10 @@ function Player({
       <video
         ref={ref}
         src={src}
-        poster={poster ?? undefined}
+        // A CLIP THAT HAS PLAYED NEVER WEARS ITS STILL AGAIN within the
+        // reading session, its remounts included (FeedCover.md:7/9): the
+        // remembered frame is its face.
+        poster={remembered?.everPlayed === true ? undefined : (poster ?? undefined)}
         // Every one of these is load-bearing: `muted` is what makes autoplay
         // permitted at all, `playsInline` is what stops iOS taking the clip
         // fullscreen, `loop` is the short-form idiom the feed is built on, and
@@ -308,7 +455,18 @@ function Player({
         // The transport's whole state comes off these: what the element is
         // doing IS what the controls report, so a play that the browser
         // refused shows as paused rather than as a lying pause glyph.
-        onPlay={() => {
+        onPlay={(event) => {
+          playedHere.current = true;
+          // Having played, said at once: a presentation of this clip that
+          // renders before this one's goodbye already knows its still is gone
+          // (FeedCover.md:7).
+          if (mediaId) {
+            clipMemory.write(
+              mediaId,
+              { time: event.currentTarget.currentTime, everPlayed: true, playing: true },
+              bornIn,
+            );
+          }
           setPlaying(true);
           setEnded(false);
         }}
@@ -338,7 +496,7 @@ function Player({
         onClick={
           transport
             ? () => {
-                if (chromeShown && onOpenViewer) onOpenViewer();
+                if (chromeShown && openViewer) openViewer();
                 else setChromeShown((shown) => !shown);
               }
             : undefined
@@ -401,7 +559,7 @@ function Player({
           onToggleMute={() => setMuted(!muted)}
           onSeek={(fraction) => seekTo(fraction * (totalSec ?? 0))}
           onSkip={skipBy}
-          onFullscreen={onOpenViewer}
+          onFullscreen={openViewer}
         />
       )}
 
@@ -486,6 +644,15 @@ function Player({
       )}
     </span>
   );
+}
+
+/** Where a clip stands, as the session's memory keeps it. */
+function standing(video: HTMLVideoElement, everPlayed: boolean): clipMemory.ClipMemory {
+  return {
+    time: video.currentTime,
+    everPlayed,
+    playing: !video.paused && !video.ended,
+  };
 }
 
 /** Every disc a clip wears is one `MediaDisc`: one plate, one corner. */

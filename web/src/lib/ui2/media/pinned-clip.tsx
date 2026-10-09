@@ -44,10 +44,22 @@ export function PinnedClip({
   altText,
   sourceRatio,
   durationMs,
+  mediaId,
+  behindViewer = false,
   onOpenViewer,
   testId = "pinned-clip",
 }: {
   src: string;
+  /** The clip's identity in the session's clip memory (`clip-memory.ts`). */
+  mediaId?: string | null;
+  /**
+   * Whether the fullscreen viewer stands over the post. The pinned clip has
+   * handed its clip over to it: "WHEN the fullscreen viewer opens over the
+   * post -> the pinned clip stops AND NEVER it plays behind the viewer", and
+   * on close it plays on, or stands paused, from where the viewer's clip
+   * reached (PostDetailVideo.md:47–51).
+   */
+  behindViewer?: boolean;
   mimeType: string;
   poster?: string | null;
   altText?: string | null;
@@ -92,6 +104,8 @@ export function PinnedClip({
         altText={altText}
         sourceRatio={sourceRatio}
         durationMs={durationMs}
+        mediaId={mediaId}
+        handedOver={behindViewer}
         // The clip pins still playing — it is the thing the reader came for.
         // `VideoPlayer` itself refuses the claim while veiled either way.
         autoplay
