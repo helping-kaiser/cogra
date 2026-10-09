@@ -125,14 +125,38 @@ describe("the settings page", () => {
       "settings.credentials",
       "settings.about",
       "settings.leaving",
+      "settings.ending",
     ].map((path) => screen.getByTestId(path));
     for (let i = 1; i < groups.length; i += 1) {
       // Each group follows the one before it in the document.
       expect(groups[i - 1].compareDocumentPosition(groups[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }
     expect(screen.getByTestId("settings.stance.label")).toHaveTextContent("Giving an opinion");
-    // The delete group is the erasure packet's: its slot stays empty here.
-    expect(screen.queryByTestId("settings.ending")).not.toBeInTheDocument();
+  });
+
+  it("delete_account_is_the_last_row_quiet_with_the_members_footnote", async () => {
+    renderSettings();
+    await screen.findByTestId("settings.credentials.password.status");
+    const row = screen.getByTestId("settings.ending.delete");
+    expect(screen.getByTestId("settings.ending")).toHaveAccessibleName("Delete account");
+    expect(screen.getByTestId("settings.ending.delete.label")).toHaveTextContent("Delete account");
+    expect(screen.getByTestId("settings.ending.delete.chevron")).toBeInTheDocument();
+    expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
+      "Nothing is deleted here. The next screen says what goes and what stays, and the deletion is confirmed by a link we email you.",
+    );
+    // DRIFT (erasure-deletion packet): the request screen is not built, so
+    // the press opens nothing.
+    fireEvent.click(row);
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("an_applicants_delete_footnote_drops_the_mailed_link", async () => {
+    server.use(accountHandler({ accountState: "APPLICANT" }));
+    renderSettings();
+    await screen.findByTestId("settings.credentials.password.status");
+    expect(screen.getByTestId("settings.ending.footnote")).toHaveTextContent(
+      /^Nothing is deleted here\. The next screen says what goes and what stays\.$/,
+    );
   });
 
   it("back_returns_to_the_own_profile", async () => {

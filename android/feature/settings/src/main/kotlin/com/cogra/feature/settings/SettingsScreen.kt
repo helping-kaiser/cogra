@@ -41,6 +41,7 @@ import com.cogra.core.designsystem.v2.atom.SettingsRow
 import com.cogra.core.designsystem.v2.atom.SettingsRowKind
 import com.cogra.core.designsystem.v2.atom.rememberParticiple
 import com.cogra.core.designsystem.v2.compose.licenseName
+import com.cogra.domain.AccountState
 import com.cogra.domain.ageLadder
 import com.cogra.domain.dateLine
 import com.cogra.domain.stance.StanceInputMode
@@ -185,8 +186,7 @@ fun SettingsScreen(
             CredentialsGroup(state, doors)
             AboutGroup(versionName, doors)
             LeavingGroup(state, actions, signOutFocus)
-            // The `ending` group (Delete account) is the erasure-deletion
-            // packet's; its slot is here, after the sign-out group.
+            EndingGroup(state)
         }
     }
 
@@ -635,6 +635,37 @@ private fun LeavingGroup(state: SettingsUiState, actions: SettingsActions, signO
                     onClick = actions.onSignOut,
                     node = group / "leave",
                     modifier = Modifier.focusRequester(signOutFocus),
+                )
+            },
+        ),
+    )
+}
+
+/**
+ * The page's last row, in a group of its own after leaving — drawn quiet, a
+ * navigating row with a chevron (`SettingsBody`'s `ending`). The footnote is
+ * the applicant's when the reader is one (Settings.md :139-141).
+ */
+@Composable
+private fun EndingGroup(state: SettingsUiState) {
+    val group = Page / "ending"
+    val applicant = state.account?.accountState == AccountState.APPLICANT
+    SettingsGroup(
+        ariaLabel = stringResource(R.string.settings_ending),
+        footnote = stringResource(
+            if (applicant) R.string.settings_ending_footnote_applicant else R.string.settings_ending_footnote_member,
+        ),
+        node = group,
+        rows = listOf(
+            {
+                // DRIFT (the erasure-deletion packet): the deletion's request
+                // screen (DeleteAccount), its grace status and the applicant's
+                // locked look are not built, so the row opens nothing yet.
+                SettingsRow(
+                    label = stringResource(R.string.settings_ending_delete),
+                    kind = SettingsRowKind.Opens,
+                    onClick = {},
+                    node = group / "delete",
                 )
             },
         ),
