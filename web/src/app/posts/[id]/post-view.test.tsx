@@ -218,6 +218,10 @@ function detail(
       license: { __typename: "License", attribution: 0, provenance: 0 },
       topics: postTopics,
       references: postReferences,
+      // The detail read selects the author's own mark beside the card's
+      // fields; an answer without it is one the cache cannot store whole.
+      sensitiveSelfMark: false,
+      sensitiveReason: null,
       comments: {
         __typename: "CommentConnection",
         // The card's affordance counts the WHOLE thread, not this page.
