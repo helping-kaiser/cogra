@@ -655,9 +655,16 @@ function standing(video: HTMLVideoElement, everPlayed: boolean): clipMemory.Clip
   };
 }
 
-/** Every disc a clip wears is one `MediaDisc`: one plate, one corner. */
+/**
+ * Every disc a clip wears is one `MediaDisc`: one plate, one corner.
+ *
+ * THE PLATE IS 36px AND THE TARGET IS 48 (`--touch-target-min`): "48dp targets
+ * grow invisibly where space allows" (jakob's ruling 92, seam 109). `cg-hit`
+ * grows the press area around the drawn plate, and the corner has the room —
+ * the plate stands 8px in from the frame's edges, and the growth needs 6.
+ */
 const DISC_CLASS =
-  "cg-state cg-focus grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0";
+  "cg-state cg-focus cg-hit grid size-9 cursor-pointer place-items-center rounded-full border-0 p-0";
 
 /** See the sound disc's note for why the corner and the plate are a style. */
 const DISC_STYLE: CSSProperties = {
