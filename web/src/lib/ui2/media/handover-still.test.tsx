@@ -29,6 +29,11 @@ import { resetVideoStageForTests } from "./video-stage";
 const CLIP = "https://media.example/clip.mp4";
 const COVER = "https://media.example/cover.webp";
 const ID = "m1";
+// THE STILL IS THE FALLBACK where the element pool has nothing for the clip
+// (`video-stage.ts`): the detail plays another rendition of the same clip, so
+// no element is carried between the presentations here — the carried path is
+// pinned in `element-carry.test.tsx`.
+const RENDITION = "https://media.example/clip-720.mp4";
 
 /** Every `drawImage` a 2D context received, with the canvas it drew into. */
 let draws: { into: HTMLCanvasElement; source: unknown }[] = [];
@@ -87,7 +92,7 @@ function Detail() {
   return (
     <>
       <PinnedClip
-        src={CLIP}
+        src={RENDITION}
         mimeType="video/mp4"
         poster={COVER}
         mediaId={ID}
@@ -137,7 +142,7 @@ describe("card → detail: the pinned clip wears the card's frame while it prepa
     // element as it left — at the card's decoded size, of the card's moment.
     const over = still("pinned-media");
     expect(over).toBeInstanceOf(HTMLCanvasElement);
-    expect(pinned().nextElementSibling).toBe(over);
+    expect(pinned().parentElement!.nextElementSibling).toBe(over);
     const taken = draws.find((d) => d.source === cardElement)?.into;
     expect(taken).toBeDefined();
     expect(draws).toContainEqual({ into: over, source: taken });
