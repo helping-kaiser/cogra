@@ -204,12 +204,16 @@ pub fn decode_cursor(cursor: &str) -> Option<SearchCursor> {
 mod tests {
     use super::*;
 
+    /// An empty or all-blank query parses as blank: nothing to match, nothing to refuse.
+    /// ´claim:search:a-blank-query-is-blank´
     #[test]
     fn a_blank_query_parses_as_blank() {
         assert_eq!(parse(""), Ok(Parsed::Blank));
         assert_eq!(parse(" \t\n "), Ok(Parsed::Blank));
     }
 
+    /// The length cap counts Unicode scalar values of the trimmed query, so padding never trips it.
+    /// ´claim:search:the-cap-counts-scalars-of-the-trimmed-query´
     #[test]
     fn the_cap_counts_scalars_of_the_trimmed_query() {
         let at_cap = "é".repeat(MAX_QUERY_CHARS);
@@ -217,6 +221,8 @@ mod tests {
         assert_eq!(parse(&format!("{at_cap}é")), Err(QueryTooLong));
     }
 
+    /// Only a leading @handle or #tag scopes a query; anywhere else those characters are text.
+    /// ´claim:search:only-a-leading-operator-scopes´
     #[test]
     fn only_a_leading_operator_scopes() {
         assert_eq!(parse("salt @sol"), Ok(Parsed::Unscoped("salt @sol")));
@@ -239,11 +245,15 @@ mod tests {
         );
     }
 
+    /// The pattern metacharacters a query carries match themselves, never as wildcards.
+    /// ´claim:search:like-metacharacters-match-literally´
     #[test]
     fn like_metacharacters_match_literally() {
         assert_eq!(like_body(r"50%_off\"), r"50\%\_off\\");
     }
 
+    /// A title query requires every typed word and reads the last one as a prefix, so a title refines as it is typed.
+    /// ´claim:search:the-last-title-word-is-a-prefix´
     #[test]
     fn the_last_title_word_is_a_prefix() {
         assert_eq!(
@@ -255,6 +265,8 @@ mod tests {
         assert_eq!(title_query("it's").as_deref(), Some("'it' & 's':*"));
     }
 
+    /// A search cursor decodes back to its position, and one this matcher did not issue decodes to nothing.
+    /// ´claim:search:a-search-cursor-round-trips´
     #[test]
     fn a_cursor_round_trips_and_a_foreign_one_does_not_decode() {
         let cursor = SearchCursor {
