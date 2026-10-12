@@ -1,35 +1,11 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { graphql, HttpResponse } from "msw";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
-import type { MeUser } from "@/lib/api/auth-api";
 import { createTokenStore } from "@/lib/session/token-store";
 import { fakeIdentityStore } from "@/test/identity";
-import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeWriteSigner } from "@/test/registration";
-import { SNACKBAR_MS } from "@/lib/ui/snackbar";
 import { MemberStatus } from "./member-status";
-
-const server = startMswServer();
-
-const invited: MeUser = {
-  id: "u1",
-  handle: "ada",
-  // The account's attached key. Null here because this fixture never
-  // signs — the guard that reads it refuses before any leg runs, which
-  // is a path this file's own tests do not walk.
-  actorPubkey: null,
-  displayName: { value: null },
-  accountState: "MEMBER",
-  hasReciprocated: false,
-  vouchBackDismissed: false,
-  invitedBy: { id: "u0", handle: "grace" },
-  preferences: null,
-};
-
-// Vacuously reciprocated, as the server answers without an inviter.
-const genesis: MeUser = { ...invited, invitedBy: null, hasReciprocated: true };
 
 function signedInStore() {
   const store = createTokenStore();
@@ -37,242 +13,11 @@ function signedInStore() {
   return store;
 }
 
-function prepareStanceHandler(
-  onVariables?: (variables: Record<string, unknown>) => void,
-) {
-  return graphql.mutation("PrepareStance", ({ variables }) => {
-    onVariables?.(variables);
-    return HttpResponse.json({
-      data: {
-        prepareStance: {
-          __typename: "PreparePayload",
-          writes: [
-            {
-              __typename: "PreparedWrite",
-              id: "w1",
-              family: "OPINION",
-              canonicalProposal: "cHJvcG9zYWw=",
-            },
-          ],
-          userErrors: [],
-        },
-      },
-    });
-  });
-}
-
 describe("MemberStatus", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-  });
-
-  it("prompts an invited member whose key is on this device", async () => {
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    renderWithProviders(<MemberStatus me={invited} store={store} />, {
-      store: signedInStore(),
-      writeSigner: fakeWriteSigner(),
-    });
-    expect(await screen.findByTestId("home_reciprocation")).toHaveTextContent(
-      "@grace vouched you in",
-    );
-  });
-
-  it("shows no prompt to a genesis member", async () => {
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    renderWithProviders(<MemberStatus me={genesis} store={store} />, {
-      store: signedInStore(),
-      writeSigner: fakeWriteSigner(),
-    });
-    await waitFor(() =>
-      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
-    );
-  });
-
-  it("withholds the reciprocation prompt while the key lives elsewhere", async () => {
-    // The husk warning itself rides the screen's collapsing top now
-    // (feed-view/profile-view) — this stack only stays quiet.
-    const store = fakeIdentityStore({ keyOnDevice: false });
-    renderWithProviders(<MemberStatus me={invited} store={store} />, {
-      store: signedInStore(),
-      writeSigner: fakeWriteSigner(),
-    });
-    await waitFor(() =>
-      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
-    );
-    expect(screen.queryByTestId("home_restore")).not.toBeInTheDocument();
-  });
-
-  it("shows no prompt once the account dismissed it, on any device", async () => {
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    renderWithProviders(
-      <MemberStatus me={{ ...invited, vouchBackDismissed: true }} store={store} />,
-      { store: signedInStore(), writeSigner: fakeWriteSigner() },
-    );
-    await waitFor(() =>
-      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
-    );
-  });
-
-  it("the server's answer silences the prompt on a fresh device", async () => {
-    // Reciprocated elsewhere: still no prompt here.
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    renderWithProviders(
-      <MemberStatus me={{ ...invited, hasReciprocated: true }} store={store} />,
-      { store: signedInStore(), writeSigner: fakeWriteSigner() },
-    );
-    await waitFor(() =>
-      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
-    );
-  });
-
-  it("reciprocating prepares the stance and signs", async () => {
-    let variables: Record<string, unknown> | null = null;
-    server.use(prepareStanceHandler((v) => (variables = v)));
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    const writeSigner = fakeWriteSigner();
-    renderWithProviders(<MemberStatus me={invited} store={store} />, {
-      store: signedInStore(),
-      writeSigner,
-    });
-
-    fireEvent.click(await screen.findByTestId("home_reciprocate"));
-    // The confirmation is a SNACKBAR (design/readme.md §3), so it rides a live
-    // region that was already mounted — a region announced together with its
-    // own text is routinely missed.
-    expect(screen.getByTestId("home_reciprocated-region")).toBeInTheDocument();
-    expect(await screen.findByTestId("home_reciprocated")).toBeInTheDocument();
-    expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
-    expect(writeSigner.signStaged).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "w1", state: "AWAITING_PRE_SIGN", verifiedAct: null }),
-    );
-    expect(variables).toEqual({
-      input: { target: "u0", pDirected: 0.1, pInterest: 0.1 },
-    });
-  });
-
-  // HT-4. The line this replaces never left — it outlived the act it
-  // confirmed by the whole session. The FACT (the prompt is gone) stays; the
-  // sentence goes with the snackbar's own timer.
-  it("lets the vouch confirmation go, and does not bring the prompt back", async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    try {
-      server.use(prepareStanceHandler());
-      renderWithProviders(
-        <MemberStatus me={invited} store={fakeIdentityStore({ keyOnDevice: true })} />,
-        { store: signedInStore(), writeSigner: fakeWriteSigner() },
-      );
-      fireEvent.click(await screen.findByTestId("home_reciprocate"));
-      expect(await screen.findByTestId("home_reciprocated")).toBeInTheDocument();
-
-      // The confirmation's node reaches the DOM one commit before the effect
-      // that arms its dismissal timer, so a synchronous jump can advance past
-      // a timer that does not exist yet — and the one armed a beat later then
-      // starts its four seconds from the far side of the jump. The async
-      // advance yields to the event loop as it moves the clock, so a timer
-      // armed inside the window still fires within it.
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(SNACKBAR_MS + 1);
-      });
-      // The poll's own budget is fake time: its 1000ms default cannot outlast
-      // a dismissal window that is four times longer.
-      await waitFor(
-        () => expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument(),
-        { timeout: SNACKBAR_MS * 2 },
-      );
-      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it("keeps the prompt and surfaces the failure when signing does not finish", async () => {
-    server.use(prepareStanceHandler());
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    const writeSigner = fakeWriteSigner({
-      signStaged: vi.fn(() =>
-        Promise.resolve({ kind: "failed" as const, id: "w1", cause: new Error("offline") }),
-      ),
-    });
-    renderWithProviders(<MemberStatus me={invited} store={store} />, {
-      store: signedInStore(),
-      writeSigner,
-    });
-
-    fireEvent.click(await screen.findByTestId("home_reciprocate"));
-    expect(await screen.findByTestId("home_signing_failed")).toBeInTheDocument();
-    expect(screen.getByTestId("home_reciprocation")).toBeInTheDocument();
-  });
-
-  it("keeps the prompt when the prepare itself fails", async () => {
-    server.use(graphql.mutation("PrepareStance", () => HttpResponse.error()));
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    renderWithProviders(<MemberStatus me={invited} store={store} />, {
-      store: signedInStore(),
-      writeSigner: fakeWriteSigner(),
-    });
-
-    fireEvent.click(await screen.findByTestId("home_reciprocate"));
-    expect(await screen.findByTestId("home_signing_failed")).toBeInTheDocument();
-  });
-
-  it("dismissing is account state, kept by the server", async () => {
-    let dismissals = 0;
-    server.use(
-      graphql.mutation("DismissVouchBack", () => {
-        dismissals += 1;
-        return HttpResponse.json({
-          data: {
-            dismissVouchBack: {
-              __typename: "DismissVouchBackPayload",
-              user: { __typename: "User", id: "u1", vouchBackDismissed: true },
-              userErrors: [],
-            },
-          },
-        });
-      }),
-    );
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    renderWithProviders(<MemberStatus me={invited} store={store} />, {
-      store: signedInStore(),
-      writeSigner: fakeWriteSigner(),
-    });
-
-    fireEvent.click(await screen.findByTestId("home_reciprocate_skip"));
-    await waitFor(() =>
-      expect(screen.queryByTestId("home_reciprocation")).not.toBeInTheDocument(),
-    );
-    expect(dismissals).toBe(1);
-    expect(screen.queryByTestId("home_reciprocated")).not.toBeInTheDocument();
-  });
-
-  it("keeps the prompt when the dismissal does not reach the server", async () => {
-    let attempts = 0;
-    server.use(
-      graphql.mutation("DismissVouchBack", () => {
-        attempts += 1;
-        return HttpResponse.error();
-      }),
-    );
-    const store = fakeIdentityStore({ keyOnDevice: true });
-    renderWithProviders(<MemberStatus me={invited} store={store} />, {
-      store: signedInStore(),
-      writeSigner: fakeWriteSigner(),
-    });
-
-    fireEvent.click(await screen.findByTestId("home_reciprocate_skip"));
-    await waitFor(() => expect(attempts).toBeGreaterThan(0));
-    // A card that vanished on a dismissal the server never kept would
-    // come back on the next read, unexplained.
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
-    expect(screen.getByTestId("home_reciprocation")).toBeInTheDocument();
-  });
-
   it("offers to resume parked handshakes", async () => {
     const store = fakeIdentityStore({ keyOnDevice: true, handshakeIds: ["w1", "w2"] });
     const writeSigner = fakeWriteSigner();
-    renderWithProviders(<MemberStatus me={genesis} store={store} />, {
+    renderWithProviders(<MemberStatus store={store} />, {
       store: signedInStore(),
       writeSigner,
     });
@@ -280,5 +25,18 @@ describe("MemberStatus", () => {
     expect(await screen.findByTestId("home_pending")).toHaveTextContent("2 signed act(s)");
     fireEvent.click(screen.getByTestId("home_resume"));
     await waitFor(() => expect(writeSigner.resume).toHaveBeenCalled());
+  });
+
+  // The vouch card is the feed's own first card now (`feed/vouch-card.tsx`):
+  // this stack never carries it, on the feed or on the own profile.
+  it("carries no vouch card, and nothing at all with no parked handshake", async () => {
+    const store = fakeIdentityStore({ keyOnDevice: true });
+    const { container } = renderWithProviders(<MemberStatus store={store} />, {
+      store: signedInStore(),
+      writeSigner: fakeWriteSigner(),
+    });
+
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    expect(screen.queryByTestId("feed.vouchCard")).not.toBeInTheDocument();
   });
 });

@@ -28,6 +28,9 @@ const VARIANTS = {
   outlined: "border border-outline text-primary",
   text: "text-primary",
   inverse: "bg-on-tertiary-container text-tertiary-container",
+  // The TEXT button on the same tonal panel: no fill, the panel's own ink
+  // (`VouchBack.jsx`'s `Got it`, `color: var(--on-tertiary-container)`).
+  inverseText: "text-on-tertiary-container",
 } as const;
 
 // Heights are `min-h` on a border-box element, so the border of the outlined

@@ -21,6 +21,7 @@
 
 import { Button } from "@/lib/ui/button";
 import { MonogramAvatar } from "@/lib/ui/actor-chip";
+import { part, testAttributes, type DataNode } from "@/lib/ui/data-node";
 
 export function BorrowedViewBand({
   handle,
@@ -30,6 +31,7 @@ export function BorrowedViewBand({
   actionLabel,
   onAction,
   testId = "borrowed-view",
+  node,
 }: {
   handle: string;
   displayName?: string | null;
@@ -40,14 +42,20 @@ export function BorrowedViewBand({
   actionLabel?: string;
   onAction?: () => void;
   testId?: string;
+  /**
+   * The registered band (`feed.borrowedViewBand`), on a screen whose board
+   * draws it; it and its avatar and line then wear the node ids. The guest's
+   * action is drawn on no registered board, so it keeps its legacy id.
+   */
+  node?: DataNode;
 }) {
   const name = displayName?.trim() ? displayName : handle;
   return (
     // The master's own box: the screen gutter across, `space-3` below and
     // nothing above, so the band butts against the 48px identity band.
-    <div data-testid={testId} className="flex items-center gap-2 px-6 pb-3">
-      <MonogramAvatar name={name} src={avatarUrl} />
-      <span data-testid={`${testId}-line`} className="flex-1 text-body-small text-on-surface-variant">
+    <div {...testAttributes(node, testId)} className="flex items-center gap-2 px-6 pb-3">
+      <MonogramAvatar name={name} src={avatarUrl} node={part(node, "avatar")} />
+      <span {...testAttributes(part(node, "line"), `${testId}-line`)} className="flex-1 text-body-small text-on-surface-variant">
         {line}
       </span>
       {actionLabel !== undefined && onAction !== undefined && (
@@ -64,16 +72,17 @@ export function BorrowedViewBand({
 /**
  * The three ruled readings (`design/readme.md` §13). All name the same
  * borrowed vantage and differ in what the reader can do about it: the
- * guest can join, the applicant can only wait, and the landed member can
- * end the borrowing by pointing back.
+ * guest can join, the applicant can only wait, and the landed member's own
+ * view starts with their first opinion — toward anyone, not only the
+ * member who vouched them in (VouchBack.md:13, :21).
  */
 export const borrowedViewLine = {
   /** A signed-out reader, who can do something about it. */
   join: (handle: string) => `Browsing from @${handle}'s view — join to build your own.`,
   /** A signed-in applicant: the vantage is the same, the action is not theirs. */
   applicant: (handle: string) => `Browsing from @${handle}'s view while your application lands.`,
-  /** Landed, not yet pointed back — the act that ends the borrowing. */
-  vouchBack: (handle: string) => `Browsing from @${handle}'s view — vouch back to start your own.`,
+  /** Landed, no opinion signed yet. The band asks for nothing (VouchBack.md:17). */
+  member: (handle: string) => `Browsing from @${handle}'s view — your first opinion starts your own.`,
 } as const;
 
 export const SIGN_IN_OR_JOIN = "Sign in or join";

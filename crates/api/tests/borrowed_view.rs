@@ -487,6 +487,31 @@ async fn an_opinion_on_a_stranger_ends_the_borrowing(pool: PgPool) {
     );
 }
 
+/// The borrowing and the pair are two questions now (VouchBack.md:3 vs
+/// :21): an opinion on a stranger ends the first, but the pair with the
+/// member who vouched the account in stays incomplete, so the vouch card
+/// keeps standing beside a band that has left.
+///
+/// A member's opinion on someone other than their voucher ends the borrowing and still reads as not reciprocated.
+/// ´claim:vouch:an-opinion-on-a-stranger-leaves-the-pair-incomplete´
+#[sqlx::test(migrations = "../../migrations")]
+async fn an_opinion_on_a_stranger_leaves_has_reciprocated_false(pool: PgPool) {
+    let rig = WireRig::new(pool, api::ratelimit::RateLimitConfig::unlimited());
+    let (mira, _) = rig.seed_member("mira", "mira@example.com").await;
+    let (stranger, _) = rig.seed_member("sol", "sol@example.com").await;
+    let (_, key, token) = wire_member(&rig, mira, "noa").await;
+    let read = "{ me { invitedBy { id } hasReciprocated } }";
+
+    land_stance(&rig, &token, &key, json!({ "target": stranger })).await;
+    assert_eq!(wire_borrowed(&rig, &token).await, None);
+    let me = rig.gql(Some(&token), read, json!({})).await;
+    assert_eq!(me["me"]["invitedBy"]["id"], mira.to_string());
+    assert_eq!(
+        me["me"]["hasReciprocated"], false,
+        "an opinion on a stranger is not the vouch-back"
+    );
+}
+
 /// "Toward any target" covers content as much as people: a first opinion
 /// on a post ends the borrowing too.
 ///

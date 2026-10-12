@@ -14,8 +14,9 @@ describe("BorrowedViewBand", () => {
     expect(borrowedViewLine.applicant("mira")).toBe(
       "Browsing from @mira's view while your application lands.",
     );
-    expect(borrowedViewLine.vouchBack("mira")).toBe(
-      "Browsing from @mira's view — vouch back to start your own.",
+    // VouchBack.md:13 — the member's line asks for nothing.
+    expect(borrowedViewLine.member("mira")).toBe(
+      "Browsing from @mira's view — your first opinion starts your own.",
     );
     expect(SIGN_IN_OR_JOIN).toBe("Sign in or join");
   });
@@ -46,6 +47,26 @@ describe("BorrowedViewBand", () => {
 
     expect(screen.getByTestId("borrowed-view")).toBeInTheDocument();
     expect(screen.queryByTestId("borrowed-view-action")).not.toBeInTheDocument();
+  });
+
+  // On the registered feed the band and its parts wear the node ids the
+  // boards draw (`feed.borrowedViewBand{,.avatar,.line}`, VouchBack).
+  it("wears the registered node ids when handed its node", () => {
+    render(
+      <BorrowedViewBand
+        handle="mira"
+        avatarUrl="https://media.example/mira.jpg"
+        line={borrowedViewLine.member("mira")}
+        node={{ path: "feed.borrowedViewBand" }}
+      />,
+    );
+
+    expect(screen.getByTestId("feed.borrowedViewBand")).toBeInTheDocument();
+    expect(screen.getByTestId("feed.borrowedViewBand.avatar")).toBeInTheDocument();
+    expect(screen.getByTestId("feed.borrowedViewBand.line")).toHaveTextContent(
+      "Browsing from @mira's view — your first opinion starts your own.",
+    );
+    expect(screen.queryByTestId("borrowed-view")).not.toBeInTheDocument();
   });
 
   // The monogram is the designed placeholder, not a gap: a vantage with no

@@ -53,10 +53,12 @@ import com.cogra.core.designsystem.rememberCollapsingTop
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.media.CograAvatar
 import com.cogra.crypto.Family
+import com.cogra.domain.ProfileView
 import com.cogra.domain.RecordLink
 import com.cogra.domain.RecordRow
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.feature.stance.StanceControlRoute
+import com.cogra.feature.stance.vouchBackVariant
 import kotlinx.coroutines.launch
 
 @Composable
@@ -73,6 +75,12 @@ fun ProfileRoute(
     onBack: (() -> Unit)?,
     keyBanner: @Composable () -> Unit = {},
     banners: @Composable () -> Unit = {},
+    /**
+     * A signing on the member who vouched the reader in was taken — by Set
+     * or by the hold — so the ceremony opens (ProfileOther.md:37). Gets the
+     * profile it was signed on.
+     */
+    onVouchedBack: (ProfileView) -> Unit = {},
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -108,7 +116,23 @@ fun ProfileRoute(
         onBack = onBack,
         keyBanner = keyBanner,
         banners = banners,
-        stanceControl = { target, tag -> StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag) },
+        stanceControl = { target, tag ->
+            val profile = state.profile
+            if (state.vouchesBack && profile != null) {
+                // THE VOUCH-BACK STAYS OPEN FROM HERE (VouchBack.md:51): the
+                // tap opens the vouch-back pad, Cancel closes back onto this
+                // profile (VouchBackPad.md:47), and a taken signing opens the
+                // ceremony instead of the control's own confirmation.
+                StanceControlRoute(
+                    target = StanceTarget.Node(target),
+                    testTagPrefix = tag,
+                    variant = vouchBackVariant(),
+                    onTaken = { onVouchedBack(profile) },
+                )
+            } else {
+                StanceControlRoute(target = StanceTarget.Node(target), testTagPrefix = tag)
+            }
+        },
     )
 }
 

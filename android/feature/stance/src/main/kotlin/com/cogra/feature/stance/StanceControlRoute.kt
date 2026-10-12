@@ -7,6 +7,9 @@ package com.cogra.feature.stance
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -20,6 +23,7 @@ import com.cogra.core.designsystem.StanceControlState
 import com.cogra.core.designsystem.StanceInputSurface
 import com.cogra.core.designsystem.StanceLanding
 import com.cogra.core.designsystem.StancePadMode
+import com.cogra.core.designsystem.StancePadVariant
 import com.cogra.core.designsystem.StancePoint
 import com.cogra.core.designsystem.StanceZeroWords
 import com.cogra.domain.stance.StanceInputMode
@@ -55,6 +59,21 @@ fun StanceControlRoute(
     onRequireAccount: (() -> Unit)? = null,
     /** The control's data-node on a registered screen; see [StanceControl]. */
     node: DataNode? = null,
+    /** The pad opened as something in particular (the vouch-back); see [StancePadVariant]. */
+    variant: StancePadVariant? = null,
+    /**
+     * The host is the opening gesture (the vouch card's `Vouch back`): the
+     * pad opens with the route, no resting target is drawn, and
+     * [onPadClosed] hears it close with nothing taken.
+     */
+    padOnly: Boolean = false,
+    onPadClosed: (() -> Unit)? = null,
+    /**
+     * A signing on [target] was taken — by Set or by the hold. The host
+     * routes on (the ceremony), so the control's own confirmation does not
+     * also answer: the ceremony replaces it (VouchBackPad.md:33).
+     */
+    onTaken: (() -> Unit)? = null,
     viewModel: StanceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -75,11 +94,34 @@ fun StanceControlRoute(
         viewModel.onDismissPad(target)
     }
     val entry = state.targets[target] ?: TargetStance()
+    if (padOnly) {
+        LaunchedEffect(target) { viewModel.onOpenPad(target) }
+        // Closed once it has been open: Cancel, the wash, or a taken
+        // signing — the host stops drawing the pad either way.
+        var opened by remember(target) { mutableStateOf(false) }
+        LaunchedEffect(entry.pad) {
+            if (entry.pad == PadMode.STICKY) {
+                opened = true
+            } else if (opened) {
+                onPadClosed?.invoke()
+            }
+        }
+    }
+    if (onTaken != null) {
+        LaunchedEffect(entry.taken) {
+            if (entry.taken) {
+                viewModel.onTakenShown(target)
+                viewModel.onConfirmationShown(target)
+                onTaken()
+            }
+        }
+    }
+    val controlState = entry.toControlState(
+        coaching = state.coachingTarget == target,
+        inputMode = state.inputMode,
+    )
     StanceControl(
-        state = entry.toControlState(
-            coaching = state.coachingTarget == target,
-            inputMode = state.inputMode,
-        ),
+        state = if (onTaken != null) controlState.copy(confirmation = null) else controlState,
         // Every gesture that ENTERS the ceremony, so a guest meets the
         // gate at the first touch rather than inside a pad whose Set
         // button can only fail — bounced by a longer road is still
@@ -104,6 +146,8 @@ fun StanceControlRoute(
         targetLabel = targetLabel,
         wide = wide,
         node = node,
+        variant = variant,
+        padOnly = padOnly,
     )
 }
 

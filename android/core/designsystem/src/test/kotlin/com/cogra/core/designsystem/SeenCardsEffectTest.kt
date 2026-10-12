@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,8 @@ class SeenCardsEffectTest {
     val compose = createComposeRule()
 
     private val reports = mutableListOf<List<String>>()
+    private val edgeReports = mutableListOf<List<EdgeSighting>>()
+    private lateinit var listState: LazyListState
     private var checkpoints = 0
     private val tracking = mutableStateOf(true)
     private val suspended = mutableStateOf(false)
@@ -45,12 +48,13 @@ class SeenCardsEffectTest {
      */
     private fun render(heights: List<Dp>) {
         compose.setContent {
-            val state = rememberLazyListState()
+            val state = rememberLazyListState().also { listState = it }
             if (tracking.value) {
                 SeenCardsEffect(
                     listState = state,
                     nodeIdOf = { key -> (key as? String)?.takeIf { it.startsWith("n") } },
                     onSeen = { reports += it },
+                    onEdgesSeen = { edgeReports += it },
                     onCheckpoint = { checkpoints++ },
                     suspended = suspended.value,
                 )
@@ -89,7 +93,7 @@ class SeenCardsEffectTest {
     }
 
     @Test
-    fun `a card taller than the viewport never fires in H1`() {
+    fun `a card taller than the viewport reports its two edges, never as a whole`() {
         render(listOf(100.dp, 400.dp, 100.dp, 100.dp, 100.dp, 100.dp))
 
         // Scroll the tall card through the viewport from top to bottom.
@@ -99,9 +103,68 @@ class SeenCardsEffectTest {
         }
 
         // The cards either side of it fired, so the list did travel past it:
-        // n0 at the top, n5 at rest at the bottom.
+        // n0 at the top, n5 at rest at the bottom. The tall one never stood
+        // whole; its top and its bottom each reported as an edge instead
+        // (History.md:13), for the receiver to put together.
         assertThat(seen).doesNotContain("n1")
         assertThat(seen).containsAtLeast("n0", "n5")
+        val n1 = edgeReports.flatten().filter { it.nodeId == "n1" }
+        assertThat(n1.any { it.top }).isTrue()
+        assertThat(n1.any { it.bottom }).isTrue()
+    }
+
+    @Test
+    fun `a tall card's top and bottom edges arrive in separate frames, never both at once`() {
+        // n1 spans 120..520dp of a 300dp list: its top is on screen at rest.
+        render(listOf(100.dp, 400.dp, 100.dp, 100.dp, 100.dp, 100.dp))
+        assertThat(edgeReports.flatten()).containsExactly(EdgeSighting("n1", top = true, bottom = false))
+
+        // 300dp on, it spans -180..220dp: its bottom is on screen, its top is not.
+        val step = with(compose.density) { 300.dp.toPx() }
+        compose.runOnIdle { listState.dispatchRawDelta(step) }
+        compose.waitForIdle()
+
+        assertThat(edgeReports.last()).containsExactly(EdgeSighting("n1", top = false, bottom = true))
+        assertThat(edgeReports.flatten().none { it.top && it.bottom }).isTrue()
+        assertThat(seen).doesNotContain("n1")
+    }
+
+    @Test
+    fun `a tall card covering the viewport reports no edge`() {
+        render(listOf(100.dp, 400.dp, 100.dp, 100.dp, 100.dp, 100.dp))
+        edgeReports.clear()
+
+        // 150dp on, n1 spans -30..370dp of the 300dp list.
+        val step = with(compose.density) { 150.dp.toPx() }
+        compose.runOnIdle { listState.dispatchRawDelta(step) }
+        compose.waitForIdle()
+
+        assertThat(edgeReports.flatten()).isEmpty()
+    }
+
+    @Test
+    fun `a card that fits reports no edge, however it is cut`() {
+        render(List(20) { 100.dp })
+        // Cut at the bottom (n2 at 220..320dp), then at the top as well.
+        val step = with(compose.density) { 50.dp.toPx() }
+        compose.runOnIdle { listState.dispatchRawDelta(step) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("list").performTouchInput { swipeUp() }
+        compose.waitForIdle()
+
+        assertThat(edgeReports).isEmpty()
+    }
+
+    @Test
+    fun `a tall card under a raised sheet reports no edge until the sheet drops`() {
+        suspended.value = true
+        render(listOf(100.dp, 400.dp, 100.dp))
+        assertThat(edgeReports).isEmpty()
+
+        suspended.value = false
+        compose.waitForIdle()
+
+        assertThat(edgeReports.flatten()).containsExactly(EdgeSighting("n1", top = true, bottom = false))
     }
 
     @Test

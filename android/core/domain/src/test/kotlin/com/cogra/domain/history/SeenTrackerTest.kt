@@ -243,4 +243,99 @@ class SeenTrackerTest {
         assertThat(calls).containsExactly(listOf("p1"), listOf("p2")).inOrder()
         assertThat(tracker.queued()).isEmpty()
     }
+
+    // THE TALL-CARD RULE (History.md:13): a card taller than the viewport is
+    // seen once both its top and its bottom edge have been on screen, not
+    // necessarily at once. The surface reports edges frame by frame; the
+    // book remembers the first for the session.
+
+    @Test
+    fun `a tall card is queued once its top and its bottom were reported in separate frames`() = runTest {
+        signIn()
+        val tracker = tracker()
+
+        tracker.sawEdges("tall", top = true, bottom = false)
+        assertThat(tracker.queued()).isEmpty()
+        tracker.sawEdges("tall", top = false, bottom = true)
+
+        assertThat(tracker.queued()).containsExactly("tall")
+        tracker.flush()
+        runCurrent()
+        assertThat(history.calls).containsExactly(listOf("tall"))
+    }
+
+    @Test
+    fun `a tall card reached from below joins bottom edge first`() = runTest {
+        signIn()
+        val tracker = tracker()
+
+        tracker.sawEdges("tall", top = false, bottom = true)
+        tracker.sawEdges("tall", top = false, bottom = true)
+        tracker.sawEdges("tall", top = true, bottom = false)
+
+        assertThat(tracker.queued()).containsExactly("tall")
+    }
+
+    @Test
+    fun `a tall card that only ever showed one edge is never queued`() = runTest {
+        signIn()
+        val tracker = tracker()
+
+        repeat(3) { tracker.sawEdges("tall", top = true, bottom = false) }
+        tracker.sawEdges("tall", top = false, bottom = false)
+        tracker.flush()
+        runCurrent()
+
+        assertThat(tracker.queued()).isEmpty()
+        assertThat(history.calls).isEmpty()
+    }
+
+    @Test
+    fun `a tall card already seen is not queued again by its edges`() = runTest {
+        signIn()
+        val tracker = tracker()
+        tracker.sawEdges("tall", top = true, bottom = false)
+        tracker.sawEdges("tall", top = false, bottom = true)
+        tracker.flush()
+        runCurrent()
+
+        tracker.sawEdges("tall", top = true, bottom = false)
+        tracker.sawEdges("tall", top = false, bottom = true)
+
+        assertThat(tracker.queued()).isEmpty()
+        assertThat(history.calls).containsExactly(listOf("tall"))
+    }
+
+    @Test
+    fun `the session boundary forgets a tall card's remembered edge`() = runTest {
+        signIn("u1")
+        val tracker = tracker()
+        tracker.sawEdges("tall", top = true, bottom = false)
+
+        // Another account: u1's top edge is not u2's.
+        signIn("u2")
+        runCurrent()
+        tracker.sawEdges("tall", top = false, bottom = true)
+        assertThat(tracker.queued()).isEmpty()
+
+        // Signed out and back in: the session that saw the bottom is gone.
+        session.tokens.value = null
+        runCurrent()
+        signIn("u2")
+        runCurrent()
+        tracker.sawEdges("tall", top = true, bottom = false)
+        assertThat(tracker.queued()).isEmpty()
+    }
+
+    @Test
+    fun `no session records no edge`() = runTest {
+        val tracker = tracker()
+        tracker.sawEdges("tall", top = true, bottom = false)
+
+        signIn()
+        runCurrent()
+        tracker.sawEdges("tall", top = false, bottom = true)
+
+        assertThat(tracker.queued()).isEmpty()
+    }
 }

@@ -25,6 +25,7 @@ import { useKeyOnDevice } from "@/lib/identity/use-key-on-device";
 import { useAuthPhase } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useRegistrationProgress } from "@/lib/signing/provider";
+import { onStanceSigned } from "@/lib/stance/signed-events";
 import { RestoreCard } from "@/app/applicant-status";
 import { StatusBanners } from "@/app/status-banners";
 import {
@@ -48,6 +49,7 @@ import { StageHost } from "@/lib/ui2/media/stage-host";
 import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { ComposeNotice, composeOutcomeOf } from "./compose-notice";
 import { recallFeed, rememberFeed, rememberFeedPlace } from "./feed-memory";
+import { VouchCard } from "./vouch-card";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
 /** Every clip a list of posts draws, by the media id the clip memory keys on. */
@@ -57,20 +59,36 @@ function clipIdsOf(posts: readonly PostView[]): string[] {
 
 /**
  * The band, for the reader whose feed is not their own — guest, applicant,
- * and the landed member who has not pointed back yet (`design/readme.md`
+ * and the landed member who has signed no opinion yet (`design/readme.md`
  * §13; Android's twin in `feature:home`).
  *
  * WHETHER a band shows is the contract's call: `borrowedView` answers null
- * the moment the reader's own view exists — their vouch-back — and the band
- * leaving is that rule rather than a gap. The account state is asked only
- * to pick the wording, and only once there is a vantage to word.
+ * the moment the reader's own view exists — their first signed opinion,
+ * toward anyone (VouchBack.md:21) — and the band leaving is that rule rather
+ * than a gap. The account state is asked only to pick the wording, and only
+ * once there is a vantage to word.
+ *
+ * SO IT RE-READS WHEN A STANCE IS SIGNED, on any surface: the band leaves at
+ * once and the feed reads the own view from its next refresh, never a reload
+ * at the signing (:21, ruling 57). It re-reads with the feed's own refresh
+ * too, which is where a first opinion that expired with nothing landed
+ * brings it back (:23).
  */
-function BorrowedView({ signedOut }: { signedOut: boolean }) {
+function BorrowedView({
+  signedOut,
+  refreshSignal,
+}: {
+  signedOut: boolean;
+  refreshSignal: number;
+}) {
   const client = useApolloClient();
   const guard = useAuthGuard();
   const router = useRouter();
   const [vantage, setVantage] = useState<BorrowedVantage | null>(null);
   const [member, setMember] = useState(false);
+  const [signedSignal, setSignedSignal] = useState(0);
+
+  useEffect(() => onStanceSigned(() => setSignedSignal((n) => n + 1)), []);
 
   // Re-read when the session flips, not only on mount: the answer is
   // per-reader, so a sign-in or a sign-out under a mounted feed would
@@ -96,20 +114,25 @@ function BorrowedView({ signedOut }: { signedOut: boolean }) {
     return () => {
       cancelled = true;
     };
-  }, [client, guard, signedOut]);
+  }, [client, guard, signedOut, signedSignal, refreshSignal]);
 
   if (vantage === null) return null;
   const { handle } = vantage;
+  const memberReading = !signedOut && member;
   const line = signedOut
     ? borrowedViewLine.join(handle)
-    : member
-      ? borrowedViewLine.vouchBack(handle)
+    : memberReading
+      ? borrowedViewLine.member(handle)
       : borrowedViewLine.applicant(handle);
   return (
     <BorrowedViewBand
       testId="feed-borrowed-view"
+      // The member's band is the one a registered board draws (VouchBack);
+      // the guest's and the applicant's keep their own ids.
+      node={memberReading ? { path: "feed.borrowedViewBand" } : undefined}
       handle={handle}
       displayName={vantage.displayName.value}
+      avatarUrl={"avatar" in vantage ? (vantage.avatar?.url ?? null) : null}
       line={line}
       // The action rides the guest's reading alone. The other two name an
       // act performed elsewhere — the application runs itself, the
@@ -326,7 +349,9 @@ export function FeedView({
               identity band, not a card in the stack below it. Nothing is
               drawn while the phase resolves: the two readings differ, and
               guessing puts the wrong sentence on screen for a frame. */}
-          {phase !== "resolving" && <BorrowedView signedOut={phase === "signedOut"} />}
+          {phase !== "resolving" && (
+            <BorrowedView signedOut={phase === "signedOut"} refreshSignal={listEra} />
+          )}
           <div className="flex flex-col gap-4 px-6">
             {/* Must-act, so it collapses into the header and follows the
                 reader back up instead of living only at the top. */}
@@ -396,6 +421,10 @@ export function FeedView({
           competes for it, and it lands at the feed's own hard top. */}
       <StageHost key={listEra}>
         <ul ref={listRef} className="flex flex-col gap-2" data-testid="feed-list">
+          {/* The vouch card is the list's first child, above the posts
+              (`VouchBack.jsx`), after the security notice and the key card
+              that head the column (ruling 45). */}
+          {phase === "signedIn" && <VouchCard refreshSignal={listEra} />}
           {posts.map((post, index) => (
             // The card names itself to the pin: it is the anchor the reader's
             // place is measured against (`scroll-pin.ts`). One of them also

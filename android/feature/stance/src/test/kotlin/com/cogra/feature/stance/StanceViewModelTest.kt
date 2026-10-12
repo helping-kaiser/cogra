@@ -10,6 +10,7 @@ import com.cogra.domain.stance.SeveranceQuote
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.stance.StancePair
 import com.cogra.domain.stance.StanceProjection
+import com.cogra.domain.stance.StanceSignals
 import com.cogra.domain.stance.StanceStanding
 import com.cogra.domain.stance.StanceTarget
 import com.cogra.domain.stance.localLanding
@@ -20,7 +21,9 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -37,6 +40,7 @@ class StanceViewModelTest {
     private val actor = ActorKey.generate()
     private val identity = FakeIdentityStore().apply { seed = actor.seed() }
     private val writes = SealingWriteRepository(actor)
+    private val signals = StanceSignals()
 
     /** Records exactly what the control asked for; nothing is derived. */
     private val stances = object : ThrowingStanceRepository() {
@@ -125,7 +129,7 @@ class StanceViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity)
+    private fun viewModel() = StanceViewModel(stances, WriteSigner(writes, identity), identity, signals)
 
     private fun entry(vm: StanceViewModel) = vm.state.value.targets.getValue(TARGET)
 
@@ -216,6 +220,55 @@ class StanceViewModelTest {
 
         assertThat(entry(vm).standing).isEqualTo(StancePair(0.4, 0.2))
         assertThat(stances.standingCalls).isEqualTo(2)
+    }
+
+    // -- Announcing: the borrowed-view band hears every signing (VouchBack.md:21) --
+
+    @Test
+    fun aTakenSigningIsAnnouncedAndMarkedTaken() = runTest(dispatcher) {
+        val heard = mutableListOf<Unit>()
+        val listening = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            signals.signed.collect {
+                heard +=
+                    it
+            }
+        }
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(heard).hasSize(1)
+        // The one-shot a host routes on (the vouch-back's ceremony).
+        assertThat(entry(vm).taken).isTrue()
+        vm.onTakenShown(TARGET)
+        assertThat(entry(vm).taken).isFalse()
+        listening.cancel()
+    }
+
+    @Test
+    fun aSigningThatDidNotGoThroughIsNeitherAnnouncedNorTaken() = runTest(dispatcher) {
+        val heard = mutableListOf<Unit>()
+        val listening = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            signals.signed.collect {
+                heard +=
+                    it
+            }
+        }
+        stances.prepareOutcome = Outcome.Failed(IllegalStateException("offline"))
+        val vm = viewModel()
+        vm.observe(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        vm.onHoldDefault(TARGET)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(heard).isEmpty()
+        assertThat(entry(vm).taken).isFalse()
+        assertThat(entry(vm).failed).isTrue()
+        listening.cancel()
     }
 
     // -- Writing: the raw-edge rule (design.md §8.1) --

@@ -33,10 +33,12 @@ class StatusBannersTest {
         compose.setContent {
             StatusBanners(
                 state = state,
-                onTokenChange = {}, onVerify = {}, onResendEmailChange = {}, onResend = {},
+                onTokenChange = {},
+                onVerify = {},
+                onResendEmailChange = {},
+                onResend = {},
                 onDismissWaitingHint = {},
-                onPDirectedChange = {}, onPInterestChange = {},
-                onReciprocate = {}, onDismissReciprocation = {}, onResumePending = {},
+                onResumePending = {},
                 onStartKeyCeremony = {},
             )
         }
@@ -52,7 +54,6 @@ class StatusBannersTest {
                 onActorRestoredShown = onShown,
                 onApprovedShown = onShown,
                 onWelcomeShown = onShown,
-                onReciprocatedShown = onShown,
                 onResentShown = onShown,
             )
             SnackbarHost(host, modifier = Modifier.testTag("home_snackbar"))
@@ -84,7 +85,7 @@ class StatusBannersTest {
     fun theHuskWarningRidesTheCollapsingTopNotTheStack() {
         render(HomeUiState(loading = false, huskWarning = true))
         compose.onNodeWithTag("home_restore").assertDoesNotExist()
-        compose.onNodeWithTag("home_reciprocation").assertDoesNotExist()
+        compose.onNodeWithTag("feed.vouchCard").assertDoesNotExist()
     }
 
     @Test
@@ -137,18 +138,20 @@ class StatusBannersTest {
         compose.onNodeWithTag("home_restore").assertDoesNotExist()
     }
 
+    /**
+     * The vouch card is the feed's own first card (`VouchCardRoute`): the
+     * banner stack — which the own profile carries too — never draws it.
+     */
     @Test
-    fun theReciprocationPromptRendersWithSliders() {
+    fun theBannerStackNeverCarriesTheVouchCard() {
         render(
             HomeUiState(
                 loading = false,
                 profile = UserProfile("u", "joiner", null, AccountState.MEMBER, false, ActorRef("i", "inviter")),
-                reciprocationTarget = ActorRef("i", "inviter"),
+                vouchVoucher = ActorRef("i", "inviter"),
             ),
         )
-        compose.onNodeWithTag("home_reciprocation").assertExists()
-        compose.onNodeWithTag("home_p_directed").assertExists()
-        compose.onNodeWithTag("home_reciprocate_skip").assertExists()
+        compose.onNodeWithTag("feed.vouchCard").assertDoesNotExist()
     }
 
     @Test
@@ -177,24 +180,9 @@ class StatusBannersTest {
     }
 
     @Test
-    fun aSignedVouchConfirmsThroughTheSnackbar() {
-        renderOneShots(HomeUiState(loading = false, reciprocated = true))
-        compose.onNodeWithTag("home_snackbar").assertExists()
-    }
-
-    @Test
     fun aResentTokenConfirmsThroughTheSnackbar() {
         renderOneShots(HomeUiState(loading = false, resent = true))
         compose.onNodeWithTag("home_snackbar").assertExists()
-    }
-
-    @Test
-    fun aSignedVouchLeavesNoStandingLineInTheStack() {
-        // design/readme.md §3: a completed action is confirmed by a
-        // snackbar — the stack has no dismissal, so a line here stood
-        // until the app died (HT-4).
-        render(HomeUiState(loading = false, reciprocated = true))
-        compose.onNodeWithTag("home_reciprocated").assertDoesNotExist()
     }
 
     @Test

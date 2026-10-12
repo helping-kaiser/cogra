@@ -13,6 +13,9 @@ export const SEEN_BATCH_MAX = 100;
 /** Sends one batch; answers whether the server took it. */
 export type SendSeen = (ids: readonly string[]) => Promise<boolean>;
 
+/** An edge of a card taller than the viewport (History.md:13). */
+export type CardEdge = "top" | "bottom";
+
 /**
  * The session's seen queue: what has been reported, and what is still to
  * send. One per tab, keyed by the account it belongs to, so one account's
@@ -22,6 +25,8 @@ export class SeenQueue {
   private account: string | null = null;
   private reported = new Set<string>();
   private pending: string[] = [];
+  // A tall card's one edge already on screen, until the other one arrives.
+  private edges = new Map<string, CardEdge>();
   // Bumped whenever the queue changes hands, so a batch that was in flight
   // across the change cannot splice the new account's queue.
   private era = 0;
@@ -33,6 +38,7 @@ export class SeenQueue {
     this.account = account;
     this.reported = new Set();
     this.pending = [];
+    this.edges = new Map();
     this.era += 1;
   }
 
@@ -47,6 +53,25 @@ export class SeenQueue {
     this.reported.add(id);
     this.pending.push(id);
     return true;
+  }
+
+  /**
+   * A card taller than the viewport had `edge` on screen. Its first edge is
+   * remembered; the other one, in any later frame, queues the card as a first
+   * seeing — "once both its top and its bottom edge have been on screen, not
+   * necessarily at once" (History.md:13). The memory is the session's, kept
+   * with the rest of the queue: a change of account forgets it whole.
+   * Answers true when this edge queued the card.
+   */
+  seeEdge(id: string, edge: CardEdge): boolean {
+    if (this.account === null || this.reported.has(id)) return false;
+    const earlier = this.edges.get(id);
+    if (earlier === undefined || earlier === edge) {
+      this.edges.set(id, edge);
+      return false;
+    }
+    this.edges.delete(id);
+    return this.see(id);
   }
 
   /** Whether `id` has been reported this session. */
