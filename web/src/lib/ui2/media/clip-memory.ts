@@ -67,6 +67,16 @@ export function currentEra(): number {
 }
 
 /**
+ * Whether something born in era `since` still speaks for the clip — false
+ * once the clip was forgotten after it. The rule every write is heard under,
+ * and the one a carried element is taken under (`video-stage.ts`): an element
+ * built before its clip was forgotten stands at a frame the refresh took back.
+ */
+export function heardSince(mediaId: string, since: number): boolean {
+  return (forgottenIn.get(mediaId) ?? -1) <= since;
+}
+
+/**
  * Remember where a clip stands.
  *
  * Having played is never forgotten by a write: a clip that has played keeps
@@ -78,7 +88,7 @@ export function currentEra(): number {
  * took back, and is not heard.
  */
 export function write(mediaId: string, entry: ClipMemory, since: number = era): void {
-  if ((forgottenIn.get(mediaId) ?? -1) > since) return;
+  if (!heardSince(mediaId, since)) return;
   const before = memory.get(mediaId);
   memory.set(mediaId, {
     ...entry,
@@ -108,7 +118,7 @@ const frames = new Map<string, ClipFrame>();
  * there. Heard under the same era rule as {@link write}.
  */
 export function keepFrame(mediaId: string, frame: ClipFrame, since: number = era): void {
-  if ((forgottenIn.get(mediaId) ?? -1) > since) return;
+  if (!heardSince(mediaId, since)) return;
   // Re-inserted, so the Map's insertion order is the order of recency.
   frames.delete(mediaId);
   frames.set(mediaId, frame);
