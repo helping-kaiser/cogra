@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(\n               SELECT 1 FROM mirror_records m\n               JOIN actors a ON a.realization_address = m.author\n               WHERE a.id = $1 AND m.family = $2\n           ) AS \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a35e2b0244ed3f1460f77794b041c61447947a3ec1de94145c97aa7141b6697c"
+}

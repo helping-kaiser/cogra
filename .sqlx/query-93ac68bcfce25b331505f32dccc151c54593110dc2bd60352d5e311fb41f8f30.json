@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "DELETE FROM staged_writes WHERE actor_id = ANY($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "93ac68bcfce25b331505f32dccc151c54593110dc2bd60352d5e311fb41f8f30"
+}

@@ -11,6 +11,7 @@ import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -38,7 +39,14 @@ data class PostDetailUiState(
      * and nothing else.
      */
     val refreshing: Boolean = false,
+    /** The post on screen: the version the detail opened on, until the reader asks for another. */
     val post: PostView? = null,
+    /**
+     * A newer version a fresh read found while [post] was being read —
+     * an edit, or a changed tag or citation set — waiting behind
+     * PostDetail.md's line until the reader taps it ([DetailLanding]).
+     */
+    val newer: PostView? = null,
     /** The landed-only opt-out; true is the API's own default. */
     val includePending: Boolean = true,
     val notFound: Boolean = false,
@@ -104,9 +112,26 @@ class PostDetailViewModel @Inject constructor(
         // made, so it says nothing while it runs: the held post is
         // already painted and an indicator over content the reader can
         // see claims the screen is still arriving when it has arrived
-        // (F2-9). Only a reader's own pull reports itself.
-        read(indicate = false)
+        // (F2-9). Only a reader's own pull reports itself. Nor is it the
+        // reader asking for the newest, so a newer version it finds waits
+        // behind the line rather than landing over the opened one.
+        read(indicate = false, asked = false)
     }
+
+    /**
+     * The reader tapped the line: the newer version swaps in place and the
+     * line goes (PostDetail.md:13).
+     */
+    fun swapToNewer() = _state.update { state ->
+        state.newer?.let { newer -> state.copy(post = newer, newer = null) } ?: state
+    }
+
+    /**
+     * A reply landed from the thread: the post's own count moved, which is
+     * read with the post. The reader asked for a reply, not for the post's
+     * newest version, so another version this read finds waits like any.
+     */
+    fun recount() = read(indicate = true, asked = false)
 
     // As in FeedViewModel: the fault reflects the last COMPLETED
     // fetch — so a failed retry never flashes the error surface —
@@ -120,17 +145,29 @@ class PostDetailViewModel @Inject constructor(
     fun setIncludePending(include: Boolean) {
         if (_state.value.includePending == include) return
         _state.update { it.copy(includePending = include) }
+        // The reader's own switch: what it shows is theirs to see at once.
         refresh()
     }
 
-    /** The reader's own re-pull — the one read that reports itself. */
-    fun refresh() = read(indicate = true)
+    /**
+     * The reader's own re-pull — the one read that reports itself, and a
+     * reader asking for the newest: it lands over the opened version.
+     */
+    fun refresh() = read(indicate = true, asked = true)
 
-    private fun read(indicate: Boolean) {
+    /**
+     * THE LATEST READ ANSWERS: a read started while another is out cancels
+     * it, so an older answer never lands second — and, with the hold, never
+     * raises the line to offer a version older than the one on screen.
+     */
+    private var latestRead: Job? = null
+
+    private fun read(indicate: Boolean, asked: Boolean) {
         val id = postId ?: return
         _state.update { it.copy(loading = it.post == null, refreshing = indicate) }
         val includePending = _state.value.includePending
-        viewModelScope.launch {
+        latestRead?.cancel()
+        latestRead = viewModelScope.launch {
             when (
                 val outcome =
                     content.post(id, FEED_PAGE_SIZE, commentsAfter = null, includePending = includePending)
@@ -156,12 +193,15 @@ class PostDetailViewModel @Inject constructor(
                         // open of this post starts from it.
                         seen.saw(detail.post)
                         _state.update {
-                            it.copy(
-                                loading = false,
-                                refreshing = false,
-                                transportFault = null,
-                                post = detail.post,
-                            )
+                            val settled = it.copy(loading = false, refreshing = false, transportFault = null)
+                            // Only another version waits; every other landing
+                            // IS the newest, so nothing older is left to offer
+                            // and the line goes.
+                            if (landingOf(it.post, detail.post, asked) == DetailLanding.HOLD) {
+                                settled.copy(newer = detail.post)
+                            } else {
+                                settled.copy(post = detail.post, newer = null)
+                            }
                         }
                     }
                 }

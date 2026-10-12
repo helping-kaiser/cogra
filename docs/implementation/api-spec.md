@@ -4919,14 +4919,18 @@ type RemoveContentPayload { records: [Record!]! }
  content-level redaction with includeContent). What remains after
  execution is the L1 husk: structural records, standing, and title
  persist; identity association, display content, and payloads go
- (erasure.md). Members only — an applicant account refuses
- FORBIDDEN and deletes through deleteApplicantAccount. The request
- records its includeContent and mails the confirmation link to the
- verified address; nothing is scheduled until the link is opened.
- A second request supersedes the first: the earlier link dies and
- the new request carries its own includeContent. The mail screen's
- \"Resend the link\" is exactly this re-call with the recorded
- choice. Requests spend a per-account mail budget, and a tripped
+ (erasure.md). The member path: a member, or an applicant whose
+ Registration has landed, vouched or not — any other applicant
+ refuses FORBIDDEN and deletes through deleteApplicantAccount. The
+ request records its includeContent and mails the confirmation link
+ to the verified address; nothing is scheduled until the link is
+ opened. A second request supersedes the first: the earlier link
+ dies and the new request carries its own includeContent. The mail
+ screen's \"Resend the link\" is exactly this re-call with the
+ recorded choice. A request while a confirmed deletion is in its
+ grace changes nothing: it returns that deletion, never supersedes
+ it, mails nothing and never moves the deadline. Requests spend a
+ per-account mail budget, and a tripped
  budget answers a transport-tier RATE_LIMITED, never a silent
  drop — the mail screen claims a message goes, so a silent trip
  would falsify it (auth.md \"Rate limiting\")."
@@ -4973,12 +4977,12 @@ type AccountDeletion {
  application, staged acts and any key backup go immediately, like
  the reaper's sweep, every session is revoked, and no mail is sent.
  FORBIDDEN for a member (members go through requestAccountDeletion),
- and FORBIDDEN for an applicant whose application is approved and
- whose registration has not landed — approval already funded the
- burn and staged the Registration, so nothing may vanish under it.
- DeleteAccount is locked in that window (design Settings.md), the
- client answers the tap itself, and this refusal is the backstop;
- the member path applies once the account lands. A dedicated verb,
+ and FORBIDDEN for a funded applicant — approval already burned for
+ its address and staged the Registration, so nothing may vanish
+ under it. DeleteAccount is locked in that window (design
+ Settings.md), the client answers the tap itself, and this refusal
+ is the backstop; the member path applies once the Registration
+ lands. A dedicated verb,
  not a mode of requestAccountDeletion: mail-and-wait and immediate
  hard delete, chosen by account state, would be a hidden mode."
 type DeleteApplicantAccountPayload { ok: Boolean }
@@ -5058,6 +5062,11 @@ extend type Mutation {
   removeContent(input: RemoveContentInput!): RemoveContentPayload!
   requestAccountDeletion(input: RequestAccountDeletionInput!): AccountDeletionPayload!
   confirmAccountDeletion(input: ConfirmAccountDeletionInput!): AccountDeletionPayload!
+  "End the standing deletion, requested or confirmed, from any
+   signed-in device until the deadline executes it; its link then
+   answers DELETION_TOKEN_INVALID. Idempotent: with nothing standing
+   (a second device's cancel, an applicant) it answers
+   accountDeletion null and no error."
   cancelAccountDeletion: AccountDeletionPayload!
   deleteApplicantAccount: DeleteApplicantAccountPayload!
 }

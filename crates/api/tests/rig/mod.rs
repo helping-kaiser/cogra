@@ -479,6 +479,35 @@ impl TestMailer {
             .collect()
     }
 
+    /// The newest message's body to `to`, whole.
+    pub fn latest_body_for(&self, to: &str) -> String {
+        self.0
+            .lock()
+            .expect("mailbox")
+            .iter()
+            .rev()
+            .find(|m| m.to == to)
+            .map(|m| m.body.clone())
+            .unwrap_or_else(|| panic!("no mail for {to}"))
+    }
+
+    /// Every link token mailed to `to`, in send order — each message's
+    /// `token=` parameter (auth.md "Link URLs").
+    pub fn tokens_for(&self, to: &str) -> Vec<String> {
+        self.0
+            .lock()
+            .expect("mailbox")
+            .iter()
+            .filter(|m| m.to == to)
+            .filter_map(|m| {
+                m.body
+                    .lines()
+                    .find_map(|l| l.split("token=").nth(1))
+                    .map(|t| t.trim().to_string())
+            })
+            .collect()
+    }
+
     /// The token out of the newest message to `to` — read from the
     /// link's `token=` parameter (auth.md "Link URLs").
     pub fn latest_token_for(&self, to: &str) -> String {
