@@ -35,7 +35,7 @@ use async_graphql_axum::GraphQLResponse;
 use async_graphql_axum::rejection::GraphQLRejection;
 use axum::body::Bytes;
 use axum::extract::{DefaultBodyLimit, Path, Request, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{Extensions, HeaderMap, StatusCode, Version};
 use axum::response::IntoResponse;
 use axum::routing::{get, post, put};
 use axum::{Json, Router, response::Html};
@@ -44,6 +44,8 @@ use postgres_store::PgPool;
 use serde_json::{Value, json};
 use tokio_util::compat::TokioAsyncReadCompatExt;
 use tokio_util::io::StreamReader;
+use tower_http::compression::CompressionLayer;
+use tower_http::compression::predicate::{DefaultPredicate, Predicate};
 use tower_http::limit::RequestBodyLimitLayer;
 use uuid::Uuid;
 
@@ -135,7 +137,7 @@ async fn graphql_handler(
     let parsed = async_graphql::http::receive_batch_body(content_type, reader, state.multipart)
         .await
         .and_then(async_graphql::BatchRequest::into_single);
-    let request = match parsed {
+    let mut request = match parsed {
         Ok(request) => request,
         Err(e) if over_the_body_limit(&e) => {
             return upload_error(
@@ -148,12 +150,60 @@ async fn graphql_handler(
         Err(e) => return GraphQLRejection(e).into_response(),
     };
 
+    let compressible = is_query(&mut request);
     let response: GraphQLResponse = state
         .schema
         .execute(request.data(viewer).data(RequestIp(ip)))
         .await
         .into();
-    response.into_response()
+    let mut response = response.into_response();
+    if !compressible {
+        response.extensions_mut().insert(NeverCompress);
+    }
+    response
+}
+
+/// Marks a `/graphql` answer the compression layer must leave as it is.
+#[derive(Clone, Copy)]
+struct NeverCompress;
+
+/// Whether the request's operation is a query — the only operations whose
+/// answers are compressed (see [`not_marked_never`]). The parse is the one
+/// execution reuses (`Request::parsed_query` caches it), so asking costs
+/// no second parse. A document that does not parse, or does not single out
+/// one of its operations, is not a query here; execution answers it with
+/// its own error.
+fn is_query(request: &mut async_graphql::Request) -> bool {
+    use async_graphql::parser::types::{DocumentOperations, OperationType};
+    let name = request.operation_name.clone();
+    let Ok(document) = request.parsed_query() else {
+        return false;
+    };
+    let operation = match (&document.operations, name) {
+        (DocumentOperations::Single(operation), _) => Some(operation),
+        (DocumentOperations::Multiple(operations), Some(name)) => operations.get(name.as_str()),
+        (DocumentOperations::Multiple(_), None) => None,
+    };
+    operation.is_some_and(|operation| operation.node.ty == OperationType::Query)
+}
+
+/// The handler's half of the `/graphql` compression posture
+/// (ranked-feed-api §4.13, the BREACH check); [`DefaultPredicate`]'s size
+/// and content-type rules are the other half, and the client's
+/// `Accept-Encoding` decides the rest.
+///
+/// **Only queries compress; no mutation answer ever does.** Compressing a
+/// response that carries a secret beside attacker-influenced text lets
+/// the compressed length leak the secret (the BREACH class), and every
+/// piece of session material this api hands out — the access and refresh
+/// tokens, a device lock's secret — rides a mutation's payload on this
+/// same route. So the scope is cut at the operation type rather than
+/// argued response by response: nothing a query can reach carries session
+/// material (pinned by `no_query_reaches_session_material`), and a
+/// mutation is never compressed whatever it returns. The feed answer —
+/// the bytes the obligation exists for — is a query.
+fn not_marked_never(_: StatusCode, _: Version, _: &HeaderMap, ext: &Extensions) -> bool {
+    ext.get::<NeverCompress>().is_none()
 }
 
 /// Whether a parse failure is the body ceiling being hit rather than a
@@ -332,6 +382,11 @@ async fn upload_part(
 /// handler in this shape. The bound sits one part above the multipart
 /// transport ceiling so that the file part is always refused by the
 /// readable multipart error rather than by the connection being cut.
+///
+/// `/graphql` answers compressed itself (ranked-feed-api §4.13): gzip, to
+/// any client that accepts it, so the feed's wire obligation holds in
+/// every deployment, dev included, and an edge proxy in front adds no
+/// second encoding. Which answers may compress is [`not_marked_never`]'s.
 pub fn app(
     schema: ApiSchema,
     auth: AuthConfig,
@@ -349,7 +404,12 @@ pub fn app(
     let mut router = Router::new()
         .route(
             "/graphql",
-            post(graphql_handler).layer(RequestBodyLimitLayer::new(graphql_limit)),
+            post(graphql_handler)
+                .layer::<_, std::convert::Infallible>(RequestBodyLimitLayer::new(graphql_limit))
+                .layer(
+                    CompressionLayer::new()
+                        .compress_when(DefaultPredicate::new().and(not_marked_never)),
+                ),
         )
         .route(
             "/media/uploads/{session_id}/parts/{part_number}",

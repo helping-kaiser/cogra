@@ -75,3 +75,7 @@ tempfile           = { workspace = true }
 # real MP4 to test the probe against needs the type it is defined over.
 bytes          = { version = "1" }
 tower          = { version = "0.5", features = ["util"] }
+# Decodes the gzip the compression layer answers with, so the compression
+# tests compare the decoded bytes with the identity answer. Already in the
+# tree through tower-http's gzip encoder.
+flate2         = { version = "1" }
