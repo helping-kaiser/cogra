@@ -173,8 +173,7 @@ fun VideoPlayer(
     // feed card and on the post detail is the same instance, so opening
     // the detail continues from where the feed had it instead of
     // starting a second decoder at zero. See [VideoStage].
-    val ownToken = remember(url) { Any() }
-    val token = stageToken ?: ownToken
+    val token = rememberStageToken(url, stageToken)
     val traced = remember(url) { VideoTrace.clip(url) }
 
     // Read from the stage rather than held: a second clip taking the
@@ -243,7 +242,7 @@ fun VideoPlayer(
     // with what the reader last said, however it got here. Only the
     // surface actually showing the clip drives it — a screen on its way
     // out must not pause what its replacement just started.
-    LaunchedEffect(autoplay, player) { if (autoplay != null) player?.playWhenReady = autoplay }
+    AssertsAutoplay(autoplay, player)
     LaunchedEffect(muted, player) { player?.volume = if (muted) 0f else 1f }
 
     // A FEED CLIP LOOPS AND A CLIP UNDER THE REAL TRANSPORT STOPS (jakob
@@ -438,6 +437,24 @@ private fun borrowFromStage(url: String, token: Any, traced: String): ExoPlayer?
     }
 
     return VideoStage.playerFor(token, url)
+}
+
+/** The token a surface holds the stage by: its caller's, where it hands one down, or its own. */
+@Composable
+private fun rememberStageToken(url: String, given: Any?): Any {
+    val own = remember(url) { Any() }
+    return given ?: own
+}
+
+/**
+ * Applies [autoplay] to the [player] this surface binds, whenever either
+ * changes — or nothing, where the caller drives the player itself (null).
+ */
+@Composable
+private fun AssertsAutoplay(autoplay: Boolean?, player: ExoPlayer?) {
+    LaunchedEffect(autoplay, player) {
+        if (autoplay != null) player?.playWhenReady = autoplay
+    }
 }
 
 /**
