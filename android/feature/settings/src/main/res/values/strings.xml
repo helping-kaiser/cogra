@@ -62,6 +62,7 @@
     <string name="settings_sensitive">Sensitive content</string>
     <string name="settings_sensitive_unveil">Always unveil sensitive content</string>
     <string name="settings_sensitive_unveil_off">Off, the veil stays until you tap it.</string>
+    <string name="settings_sensitive_unveil_on">On, sensitive content stands unveiled wherever you read.</string>
     <string name="settings_sensitive_footnote">This choice follows your account to every device.</string>
 
     <string name="settings_backup">Key backup</string>
@@ -189,6 +190,7 @@
     <string name="confirm_email_reason">Waiting for the code</string>
     <string name="confirm_email_in_flight">Confirming the code…</string>
     <string name="confirm_email_note">Until both sides land your account keeps the address it has, and a reset still goes there.</string>
+    <string name="confirm_email_code_done">Done on this side — now open the link at %1$s</string>
     <string name="confirm_email_cancel">Cancel the change</string>
     <string name="confirm_email_wrong_code">That code doesn\'t check out.</string>
     <string name="confirm_email_code_disabled">Too many tries — for safety we have disabled your current code. Resend sends a fresh one.</string>

@@ -510,8 +510,10 @@ describe("sensitive content (B5)", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     await waitFor(() => expect(sent).toEqual([{ contentFilteringSeverityLevel: 0 }]));
     await waitFor(() => expect(accountFilterLevel()).toBe(0));
-    // DRIFT (G10): the On form of the second line is undrawn.
-    expect(screen.queryByTestId("settings.sensitive.unveil.status")).not.toBeInTheDocument();
+    // The On line (seam 132, G10), verbatim.
+    expect(screen.getByTestId("settings.sensitive.unveil.status").textContent).toBe(
+      "On, sensitive content stands unveiled wherever you read.",
+    );
 
     fireEvent.click(row);
     expect(row).toHaveAttribute("aria-checked", "false");

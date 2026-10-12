@@ -101,15 +101,15 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun `the unveil switch reads on and drops its Off line - DRIFT G10, the On line is undrawn`() {
+    fun `the unveil switch reads on and swaps in the On line`() {
         var flips = 0
         render(
             state = SettingsUiState(account = account(), actorKeyHere = true, now = NOW, alwaysUnveil = true),
             actions = SettingsActions(onAlwaysUnveil = { flips++ }),
         )
         node("settings.sensitive.unveil").performScrollTo().assertIsOn().performClick()
-        val status = compose.onAllNodesWithTag("settings.sensitive.unveil.status", useUnmergedTree = true)
-        assertThat(status.fetchSemanticsNodes()).isEmpty()
+        node("settings.sensitive.unveil.status")
+            .assertTextEquals("On, sensitive content stands unveiled wherever you read.")
         assertThat(flips).isEqualTo(1)
     }
 
