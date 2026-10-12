@@ -23,13 +23,21 @@
 //!   case-insensitively is tier 0; any other match is tier 1. Order is
 //!   tier, then newest first, then id.
 //!
-//! The scoped branch — what `@handle <text>` and `#tag <text>` serve —
-//! is [`Parsed::Scoped`]'s to answer. It is not built yet (search-surface
-//! B2); until it is, a scoped query reads empty.
+//! - **Scopes.** A scope operator with text after it is a content search
+//!   inside the scope; the text matches as above, through what the
+//!   scoped content carries — a post's title, a comment's thread root's
+//!   title, a topic's name ([`scoped`]). `@handle <text>` serves that
+//!   person's posts, comments and the topics they tagged their own
+//!   content with, and never the person's own row; `#tag <text>` serves
+//!   the posts and comments that carry the topic. A BARE scope — the
+//!   operator and a name, nothing after — is a lookup in progress: it
+//!   proposes people (`@`) or topics (`#`) whose handle or name starts
+//!   with what was typed, and never lists anyone's content ([`lookup`]).
+//!   A name that can never be a handle or a topic scopes to nothing.
 
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
-use postgres_store::search::{MatchQuery, SearchCursor};
+use postgres_store::search::{MatchQuery, ScopedQuery, SearchCursor};
 use uuid::Uuid;
 
 /// The longest query accepted, in Unicode scalar values: a full post
@@ -59,6 +67,25 @@ impl IndexKind {
     }
 }
 
+/// A kind a scoped content search serves.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScopedKind {
+    Post,
+    Comment,
+    Hashtag,
+}
+
+impl ScopedKind {
+    /// The kind as the scoped statements name it.
+    pub fn as_store(self) -> &'static str {
+        match self {
+            Self::Post => "post",
+            Self::Comment => "comment",
+            Self::Hashtag => "hashtag",
+        }
+    }
+}
+
 /// A leading scope operator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Scope {
@@ -66,6 +93,28 @@ pub enum Scope {
     Handle,
     /// `#tag` — inside a topic.
     Tag,
+}
+
+impl Scope {
+    /// What a content search inside this scope serves: a person's work
+    /// takes in the topics they tagged it with; a topic's set is posts
+    /// and comments. Never a person — `@handle <text>` is a search of
+    /// their work, not a lookup of them.
+    pub fn content_kinds(self) -> &'static [ScopedKind] {
+        match self {
+            Self::Handle => &[ScopedKind::Post, ScopedKind::Comment, ScopedKind::Hashtag],
+            Self::Tag => &[ScopedKind::Post, ScopedKind::Comment],
+        }
+    }
+
+    /// The one kind a bare scope proposes: people for `@`, topics for
+    /// `#`.
+    pub fn lookup_kind(self) -> IndexKind {
+        match self {
+            Self::Handle => IndexKind::User,
+            Self::Tag => IndexKind::Hashtag,
+        }
+    }
 }
 
 /// A query, parsed.
@@ -132,7 +181,55 @@ pub fn unscoped(
         kinds: kinds.iter().map(|k| k.as_store().to_string()).collect(),
         exclude_seen_by,
         keyed_users_only,
+        lookup: false,
     }
+}
+
+/// The match request for a bare scope's `name` — a lookup proposing what
+/// starts with it, of the one `kind` the scope proposes. None when there
+/// is nothing typed after the operator yet: a lone `@` or `#` proposes
+/// no one, as a blank query matches nothing.
+pub fn lookup(name: &str, kind: IndexKind, exclude_seen_by: Option<Uuid>) -> Option<MatchQuery> {
+    if name.is_empty() {
+        return None;
+    }
+    Some(MatchQuery {
+        text: name.to_string(),
+        like_body: like_body(name),
+        title_query: None,
+        kinds: vec![kind.as_store().to_string()],
+        exclude_seen_by,
+        keyed_users_only: false,
+        lookup: true,
+    })
+}
+
+/// The scoped content search for `remainder` inside `scope`, over
+/// `kinds`. `pending_actor` is the viewer's address atom: their own
+/// in-flight topic claims count, as on the tag page.
+pub fn scoped(
+    scope: postgres_store::search::Scope,
+    remainder: &str,
+    kinds: &[ScopedKind],
+    exclude_seen_by: Option<Uuid>,
+    pending_actor: Option<String>,
+) -> ScopedQuery {
+    ScopedQuery {
+        scope,
+        text: remainder.to_string(),
+        like_body: like_body(remainder),
+        title_query: title_query(remainder),
+        kinds: kinds.iter().map(|k| k.as_store().to_string()).collect(),
+        exclude_seen_by,
+        pending_actor,
+    }
+}
+
+/// The canonical topic a `#` scope names: the name exactly as the tag
+/// grammar canonicalizes it (hashtag.md §2), the operator being its one
+/// sigil — so `##salt` names nothing. None for a name no topic can carry.
+pub fn scoped_topic(name: &str) -> Option<String> {
+    common::hashtag::canonicalize(&format!("#{name}")).ok()
 }
 
 /// `text` as the body of a `LIKE` pattern matching itself literally:
