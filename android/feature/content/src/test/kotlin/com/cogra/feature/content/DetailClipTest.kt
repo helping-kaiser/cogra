@@ -47,7 +47,11 @@ import org.robolectric.annotation.Config
  * THE DETAIL CLIP, UN-PINNED (jakob's ruling 100 — design/readme.md §13, "The
  * clip detail rulings"; PostDetailVideo.md:3-63): the real [PostDetailScreen],
  * its detail clip, and [VideoStage]'s one player. One test per behavior line
- * that Android carries; the lines it does not yet carry are named at the foot.
+ * that Android carries. The detail stage's own rules — the open under
+ * suppression (:9), the layers' stops and resumes (:41-51) — are pinned line
+ * by line in `core:designsystem` (`DetailPlaybackTest`, `DetailStageTest`);
+ * here, that this screen's own layers announce themselves: the comment
+ * count's sheet (:39), the platform's share sheet (:41) and the pad (:49/:51).
  *
  * The phone is short on purpose, so the post is taller than the screen and
  * the page has somewhere to scroll.

@@ -45,8 +45,10 @@ import com.cogra.core.designsystem.v2.token.MediaFrame
  * the deliberate act, so no share of the screen gates it … A clip scrolled out
  * of view plays on — scroll never stops it — and no floating player takes its
  * place" (`:18-21`). Composing the player is what claims [VideoStage]'s one
- * player and starts it ([VideoPlayer] with `autoplay`); no 70% election stands
- * over it. So the caller must keep it COMPOSED for as long as the detail is up
+ * player, and the detail's own stage starts it ([DetailPlayback]: the open,
+ * suppression, and the layers raised over the post — [CoveringLayers]); no
+ * 70% election stands over it. So the caller must keep it COMPOSED for as
+ * long as the detail is up
  * — a lazy list disposes a row scrolled out of view, and a disposed player
  * surrenders the clip — which is why the post detail stands it in the same
  * row as the card it heads.
