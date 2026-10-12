@@ -9,7 +9,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { intersectEach, suppressesAutoplay } from "@/test/media-env";
+import { intersectEach, setsPageVisibility, suppressesAutoplay } from "@/test/media-env";
 
 import * as clipMemory from "./clip-memory";
 import { MediaViewer } from "./media-viewer";
@@ -162,9 +162,14 @@ describe("detail → viewer → detail (PostDetailVideo.md:47–51, ViewerVideo.
     pinned().currentTime = 6;
     expect(pinned().paused).toBe(false);
 
+    const element = pinned();
+
     openViewer();
 
-    expect(pinned().paused).toBe(true);
+    // The clip's one element moved into the viewer (`video-stage.ts`): the
+    // pinned frame behind it holds none, so nothing of it plays there.
+    expect(screen.queryByTestId("pinned-media")).toBeNull();
+    expect(viewerClip()).toBe(element);
     expect(viewerClip().currentTime).toBe(6);
     expect(viewerClip().paused).toBe(false);
   });
@@ -190,17 +195,15 @@ describe("detail → viewer → detail (PostDetailVideo.md:47–51, ViewerVideo.
     render(<Detail />);
     onScreen("pinned-media");
     openViewer();
-    let behind = 0;
-    pinned().addEventListener("play", () => {
-      behind += 1;
-    });
+    // The element is the viewer's now; behind it the pinned frame holds none,
+    // and nothing the page or the device says puts one back.
+    expect(screen.queryByTestId("pinned-media")).toBeNull();
 
-    onScreen("pinned-media");
+    act(() => setsPageVisibility("hidden"));
+    act(() => setsPageVisibility("visible"));
     act(() => suppressesAutoplay({ reducedMotion: false }));
-    onScreen("pinned-media");
 
-    expect(behind).toBe(0);
-    expect(pinned().paused).toBe(true);
+    expect(screen.queryByTestId("pinned-media")).toBeNull();
   });
 
   it("closing a playing viewer: the pinned clip plays on from the viewer's position (D14 PostDetailVideo.md:49)", () => {

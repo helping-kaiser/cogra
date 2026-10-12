@@ -394,11 +394,13 @@ function ViewerStage({
               stands at the position the pinned clip reached AND NEVER it
               starts over" (ViewerVideo.md:5), in the pinned clip's play state
               (the ruled GAP-8 carry), while the pinned clip stops and never
-              plays behind it (PostDetailVideo.md:47). Each `<video>` owns its
-              own decode, so the hand-over is the session's clip memory: the
-              pinned clip remembers where it stood as it opens the viewer, and
-              this player reads it (`video-player.tsx`'s `carry`). On close it
-              remembers on its way out, and the pinned clip takes it back. */}
+              plays behind it (PostDetailVideo.md:47). The pinned clip's live
+              element moves in here (`video-stage.ts`, the element pool) and
+              plays on, so nothing is left behind to play; the session's clip
+              memory carries the play state the pinned clip remembered as it
+              opened the viewer (`video-player.tsx`'s `carry`). On close it
+              remembers on its way out, and the pinned clip takes the element
+              back. */}
           <VideoPlayer
             src={item.src ?? ""}
             mediaId={item.mediaId}
