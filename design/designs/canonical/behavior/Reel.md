@@ -18,15 +18,15 @@ ALWAYS the bottom bar stays on the stream
 
 ALWAYS the rail reads, top to bottom, the author, the opinion, the comments, the share and the score
 
-ALWAYS the score on the rail is the same figure the card wore, and from a feed the one the reader's own last feed fetch computed
+ALWAYS the score on the rail is the same figure the card wears, the one the latest fetch of the post found
 
 ALWAYS the rail's score is the door to the post, whichever face it wears
 
 ALWAYS the rail's score stands as the bare graph glyph with Still settling under it, never a 0, a dash or a placeholder, GIVEN the clip is still settling, under Ranked and Newest alike
 
-ALWAYS the rail's score reads a dash, never the figure it wore before, GIVEN the trace's fetch found no paths for the post since the reader's last feed fetch
+WHEN the trace's fetch finds other than the rail's score -> the rail's score reads what it found, a dash where it found no paths AND NEVER the figure it wore before
 
-WHEN the feed is fetched again GIVEN the rail's score reads a dash -> the rail's score reads what that fetch computed
+WHEN the feed is fetched again GIVEN the rail's score reads what the trace's fetch found -> the rail's score reads what that fetch computed
 
 ALWAYS the stream pages vertically, a swipe up bringing the next clip and a swipe down the one before, from the tapped clip both ways through the list's clips
 

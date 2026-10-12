@@ -49,6 +49,7 @@ const {
   Checkbox,
   FeedFilter,
   FeedFilterSheet,
+  FeedPeopleRows,
   FilterTrigger,
   FilterFoot,
   FilterSection,
@@ -4553,6 +4554,28 @@ const HELD_TOPICS = [
    chips are the held set minus the ones held against; deriving it here means
    the filter and Your topics can never disagree about who is missing and why. */
 const FEED_TOPICS = HELD_TOPICS.filter((topic) => topic.pair.pDirected > 0).map((topic) => topic.name);
+
+/* THE PEOPLE SECTION IN BOTH ITS STATES, for the two boards that host the
+   filter sheet (`FeedSheet`, `SettingsReading`). The sign row stands only
+   while `Your people` is chosen, and both boards draw the default, so each
+   carries a `people` chip that draws the section once per value, one shown
+   at a time: `everyone` (the default) and `your-people`, the sign row at its
+   default `Either`. Both boards export `PEOPLE_CHIP` as their PROPS and
+   `PEOPLE_VALS` as their VALS. */
+const PEOPLE_CHIP = { people: { editor: "enum", options: ["everyone", "your-people"], default: "everyone" } };
+const PEOPLE_VALS = `everyoneShown: this.props.people === "your-people" ? "none" : "contents", yourPeopleShown: this.props.people === "your-people" ? "contents" : "none"`;
+function PeopleCopies({ node }) {
+  return (
+    <>
+      <div style={{ display: "{{everyoneShown}}" }} data-node-chip="people" data-node-key="everyone">
+        <FeedPeopleRows people="everyone" node={node} />
+      </div>
+      <div style={{ display: "{{yourPeopleShown}}" }} data-node-chip="people" data-node-key="your-people">
+        <FeedPeopleRows people="yourPeople" node={node} />
+      </div>
+    </>
+  );
+}
 
 /* THE INBOUND LIST ITSELF, NEWEST FIRST — a ruled departure from the opinions
    sheet's strongest-first, and deliberate (jakob, 2026-09-14). The opinions

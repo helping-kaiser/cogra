@@ -51,8 +51,16 @@
    `SettingsHidden`'s and `SettingsLicense`'s are — never sharing a path with
    the feed filter's (jakob 2026-10-07, ruling 37): its `title` with the
    `help` on its row, the `note`, the sections as the search and history
-   sheets name theirs, and the `foot`. */
+   sheets name theirs, and the `foot`.
+
+   THE `people` CHIP (jakob 2026-10-12, item 7), `FeedSheet`'s own: the
+   default drawn at `Everyone`, and `your-people` drawing the section with
+   its one-line sign row, `Either` chosen. The section's paths take the
+   chip's value as their key, `settings.feedSheet.people.sign` and its words
+   under `your-people` alone. */
 export const NODE = "settings";
+export const PROPS = PEOPLE_CHIP;
+export const VALS = PEOPLE_VALS;
 export function Screen() {
   return (
     <>
@@ -62,6 +70,7 @@ export function Screen() {
         open
         ariaLabel="What your feed shows"
         node="feedSheet"
+        peopleRows={<PeopleCopies node="feedSheet" />}
         lead={
           <>
             <SheetTitle trailing={<HelpDot ariaLabel="How the filter works" node="help" />} node="title">

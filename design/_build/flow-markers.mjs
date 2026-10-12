@@ -271,9 +271,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">All your topics</button>", tag: "button" },
     { n: 8, find: ">Done</button>", tag: "button" },
-    // The People rows (ruling 77): one choice, two rows, one number.
-    { n: 9, find: 'data-people="everyone"', tag: "label" },
-    { n: 9, find: 'data-people="yourPeople"', tag: "label" },
+    // The People rows (ruling 77): one choice, two rows, one number — on
+    // both of the `people` chip's copies.
+    { n: 9, find: 'data-people="everyone"', tag: "label", all: true },
+    { n: 9, find: 'data-people="yourPeople"', tag: "label", all: true },
+    // The sign row under Your people (item 7): one choice, three words, the
+    // next free number. Drawn on the chip's `your-people` copy.
+    { n: 10, find: 'data-sign="', tag: "label", all: true },
   ],
   /* The feed narrowed to one topic. Neither card carries a reference, so the
      numbering closes over the slot `FeedNarrowed` keeps for one. */
@@ -1712,9 +1716,13 @@ Object.assign(FLOW_MARKERS, {
     { n: 5, find: ">Reset</button>", tag: "button" },
     { n: 6, find: 'class="cg-scrim-in"', tag: "div" },
     { n: 7, find: ">Done</button>", tag: "button" },
-    // The People rows (ruling 77): one choice, two rows, one number.
-    { n: 8, find: 'data-people="everyone"', tag: "label" },
-    { n: 8, find: 'data-people="yourPeople"', tag: "label" },
+    // The People rows (ruling 77): one choice, two rows, one number — on
+    // both of the `people` chip's copies.
+    { n: 8, find: 'data-people="everyone"', tag: "label", all: true },
+    { n: 8, find: 'data-people="yourPeople"', tag: "label", all: true },
+    // The sign row under Your people (item 7): one choice, three words, the
+    // next free number. Drawn on the chip's `your-people` copy.
+    { n: 9, find: 'data-sign="', tag: "label", all: true },
   ],
   // Two password fields, one reveal affordance: the toggle is the same control
   // drawn twice, so it carries one number on both — the rule the repeated

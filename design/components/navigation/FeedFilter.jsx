@@ -80,29 +80,42 @@ export const FEED_FORMS = [
 export const FEED_ORDER = FILTER_ORDER;
 
 /* WHAT THE FEED ALSO ADMITS. `Sensitive` and `Removed` are off until asked
-   for. `Still settling` is ON by default (jakob, 2026-10-01; readme §13, the
-   V1.0 scope cut): content authored and not yet landed reaches the feed
-   wearing its pending marker, which is the feed every reader has always had.
-   Switched off, the feed keeps to what has landed — the landed-only view. Its
-   label is the pending marker's own words, so the chip names exactly what it
-   lets in. */
+   for. `Still settling` is ON by default (jakob 2026-10-12, seam 137: "on by
+   default would be fine if woven"): content authored and not yet landed is
+   WOVEN IN among the landed rows, wearing its pending marker, ranked by the
+   reader's reach to its author through the one edge it was born with — its
+   authorship edge's own rank, applied before it lands. Switched off, the
+   feed keeps to what has landed — the landed-only view. Its label is the
+   pending marker's own words, so the chip names exactly what it lets in. */
 export const FEED_ALSO = [
   { value: "sensitive", label: "Sensitive" },
   { value: "removed", label: "Removed" },
   { value: "settling", label: "Still settling" },
 ];
 
-export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: ["settling"], topic: null, people: "everyone" };
+export const FEED_FILTER_DEFAULT = { kinds: ["posts"], forms: ["text", "photos", "video"], order: "ranked", seen: false, also: ["settling"], topic: null, people: "everyone", peopleSign: "either" };
 
 /* WHO THE FEED READS FROM (jakob 2026-10-09, ruling 77): `Everyone`, the
    whole feed, or `Your people` — a scope filter over the neutral rank
    (feed-ranking.md §10's Friends feed), the people the reader holds an
-   opinion for. The order never changes; the feed narrows to them. ROWS,
-   NOT A SEGMENTED PILL (jakob): the license sheets' radio-row anatomy,
-   the dot centred on the reading. */
+   opinion of: every one-step connection, whichever way the opinion points.
+   The order never changes; the feed narrows to them. ROWS, NOT A SEGMENTED
+   PILL (jakob): the license sheets' radio-row anatomy, the dot centred on
+   the reading. */
 export const FEED_PEOPLE = [
   { value: "everyone", label: "Everyone" },
   { value: "yourPeople", label: "Your people" },
+];
+
+/* WHICH OF YOUR PEOPLE (jakob 2026-10-12, item 7, option a): the people the
+   reader is `For`, the ones they are `Against`, or `Either` — the default,
+   every opinion held. One inline row of three words under `Your people`,
+   there only while it is chosen: compact on a sheet that already scrolls,
+   and never a pill (jakob). */
+export const FEED_PEOPLE_SIGN = [
+  { value: "for", label: "For" },
+  { value: "against", label: "Against" },
+  { value: "either", label: "Either" },
 ];
 
 /* The trigger's word for the one default-on chip switched off — a deviation,
@@ -197,6 +210,8 @@ export function measureTriggerText(text) {
      `+ still settling`); `Sensitive` or `Removed` off under a default that
      admits it, `hiding sensitive`, `hiding removed`; `Still settling` off,
      `settled only`;
+   - people: `your people`; with `For` or `Against` chosen under it,
+     `your people, for`, `your people, against`;
    - topic: the tag's own name. A default never holds one — the settings
      sheet draws no topic section — so it has no back word. */
 export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_CEILING_PX) {
@@ -219,8 +234,13 @@ export function feedFilterSummary(value = FEED_FILTER_DEFAULT, budgetPx = BAND_C
      head, one long name would draw a summary nothing could shorten. */
   if (value.topic) extras.push(value.topic);
   /* The people scope rides beside the topic: the other loud narrowing, an
-     extra for the topic's reasons. Everyone is the default and has no word. */
-  if (value.people === "yourPeople") extras.push("your people");
+     extra for the topic's reasons. Everyone is the default and has no word;
+     under Your people, a chosen `For` or `Against` joins the same extra and
+     `Either`, the default, adds nothing. */
+  if (value.people === "yourPeople") {
+    const sign = value.peopleSign ?? FEED_FILTER_DEFAULT.peopleSign;
+    extras.push(sign === "either" ? "your people" : "your people, " + labelOf(FEED_PEOPLE_SIGN, sign).toLowerCase());
+  }
   if (forms.length > 0 && forms.length < FEED_FORMS.length) extras.push(forms.map((form) => labelOf(FEED_FORMS, form).toLowerCase()).join(" + "));
   if (value.order && value.order !== "ranked") extras.push(labelOf(FEED_ORDER, value.order).toLowerCase());
   if (value.seen === true) extras.push("showing seen");
@@ -285,6 +305,103 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
   );
 }
 
+/* THE PEOPLE SECTION'S BODY. One exclusive pair, drawn as ROWS — the license
+   sheets' radio-row anatomy, never a segmented pill (jakob) — because the two
+   readings carry a sentence of consequence each, and a pill carries none.
+   `Everyone` is the default; `Your people` narrows the feed to the people the
+   reader holds an opinion of, a scope filter over the same rank
+   (feed-ranking.md §10).
+
+   THE SIGN IS ONE LINE OF THREE WORDS (jakob 2026-10-12, item 7, option a).
+   Under `Your people`, and there only while it is chosen: `For` · `Against`
+   · `Either`, mid-dot separated, the chosen word in primary ink — set at the
+   label's weight too, so the choice never rests on colour alone (WCAG
+   1.4.1). Never a pill (jakob), and one line: the sheet already scrolls, so
+   the row spends as little height as its targets allow. It aligns with the
+   rows' words, past the dot's column, and stands 14px under the row above
+   so each word's 48px target grows invisibly without reaching it (ruling
+   92). Choosing `Everyone` hides it and keeps its word. */
+const SR_RADIO = { position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 };
+
+export function FeedPeopleRows({ people = "everyone", sign = "either", onPeople, onSign, node }) {
+  return (
+    <>
+      <div role="radiogroup" aria-label="People" style={{ flexBasis: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
+        {FEED_PEOPLE.map((entry) => {
+          const chosen = people === entry.value;
+          return (
+            <label key={entry.value} data-people={entry.value} className="cg-state cg-focus" style={{ display: "flex", alignItems: "flex-start", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }} data-node={node && entry.value}>
+              <input type="radio" name="feed-people" checked={chosen} onChange={() => onPeople && onPeople(entry.value)} style={SR_RADIO} />
+              <span
+                aria-hidden="true"
+                style={{
+                  width: 18,
+                  height: 18,
+                  flex: "none",
+                  marginTop: 1,
+                  boxSizing: "border-box",
+                  borderRadius: "var(--radius-full)",
+                  border: chosen ? "5px solid var(--primary)" : "1px solid var(--border-field)",
+                }}
+                data-node={node && "dot"}
+              />
+              <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
+                  {entry.label}
+                </span>
+                <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
+                  {entry.value === "everyone" ? "The whole feed, as far as your eyes reach." : "Only the people you hold an opinion of — the same rank, narrowed to them."}
+                </span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+      {people === "yourPeople" && (
+        <div
+          role="radiogroup"
+          aria-label="Which of your people"
+          style={{
+            flexBasis: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            marginTop: 6,
+            paddingLeft: 28,
+            fontSize: "var(--text-body-medium)",
+            lineHeight: "var(--text-body-medium--line-height)",
+            letterSpacing: "var(--text-body-medium--letter-spacing)",
+            whiteSpace: "nowrap",
+          }}
+          data-node={node && "sign"}
+        >
+          {FEED_PEOPLE_SIGN.map((option, index) => {
+            const chosen = sign === option.value;
+            return (
+              <React.Fragment key={option.value}>
+                {index > 0 && (
+                  <span aria-hidden="true" style={{ color: "var(--text-secondary)" }}>
+                    ·
+                  </span>
+                )}
+                <label
+                  data-sign={option.value}
+                  className="cg-state cg-focus cg-hit"
+                  style={{ position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)", color: chosen ? "var(--primary)" : "var(--text-secondary)", fontWeight: chosen ? 500 : 400 }}
+                  data-node={node && option.value}
+                >
+                  <input type="radio" name="feed-people-sign" checked={chosen} onChange={() => onSign && onSign(option.value)} style={SR_RADIO} />
+                  {option.label}
+                </label>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
 /* THE SHEET ALONE — for a surface that owns its trigger. `FilterTrigger` is
    already the half search takes; this is the other half, and the settings
    page is what asked for it: its Reading row IS the trigger, so the row opens
@@ -319,9 +436,10 @@ export function FilterTrigger({ reading, onOpen, expanded = false, ariaLabel = "
    `node` NAMES THE SHEET AND ITS PARTS where a registered placer gives it one
    (design ⇄ impl seam 002): the sections as the search and history sheets
    name theirs — `kinds`, `forms`, `order`, `also` — each chip `<value>Chip`,
-   and the corner "?" `help`. The feed's own `FeedFilter` passes none, so its
+   the corner "?" `help`, and `people` with its rows (`everyone`,
+   `yourPeople`) and its sign row (`sign`: `for`, `against`, `either`). The feed's own `FeedFilter` passes none, so its
    sheet stays unnamed until a drawn feed-hosted state registers it. */
-export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics, node }) {
+export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp, open = false, onClose, ariaLabel = "What your feed shows", lead, foot, topics = [], onOpenTopics, peopleRows, node }) {
   const set = (patch) => onChange && onChange({ ...value, ...patch });
   const toggle = (key, entry) => {
     const list = value[key] || [];
@@ -343,59 +461,22 @@ export function FeedFilterSheet({ value = FEED_FILTER_DEFAULT, onChange, onHelp,
       </FilterSection>
       <OrderSection order={value.order} onOrder={(order) => set({ order })} seen={value.seen === true} onSeen={(seen) => set({ seen })} node={node && "order"} />
       {/* `Still settling` is the group's one chip on by default (`FEED_ALSO`):
-          the default is the feed as it has always been, and off is the
-          landed-only view. */}
+          on, what has not landed is woven in among the landed rows; off is
+          the landed-only view. */}
       <FilterSection label="Also show" hint="How sensitive content is veiled is set in Settings." node={node && "also"}>
         {FEED_ALSO.map((entry) => (
           <Chip key={entry.value} label={entry.label} selected={(value.also || []).includes(entry.value)} onToggle={() => toggle("also", entry.value)} node={node && `${entry.value}Chip`} />
         ))}
       </FilterSection>
-      {/* WHO THE FEED READS FROM (jakob 2026-10-09, ruling 77). One exclusive
-          pair, drawn as ROWS — the license sheets' radio-row anatomy, never a
-          segmented pill (jakob) — because the two readings carry a sentence of
-          consequence each, and a pill carries none. `Everyone` is the default;
-          `Your people` narrows the feed to the people the reader holds an
-          opinion for, a scope filter over the same rank (feed-ranking.md §10).
-          It stands with the scope narrowers at the body's tail, the topic
-          section staying last (the one that grows). */}
+      {/* WHO THE FEED READS FROM (jakob 2026-10-09, ruling 77; the sign row,
+          2026-10-12, item 7). It stands with the scope narrowers at the
+          body's tail, the topic section staying last (the one that grows).
+          `peopleRows` is a static board's: the section drawn once per state,
+          under the board's own chip. */}
       <FilterSection label="People" hint="Whose things reach this feed." node={node && "people"}>
-        <div role="radiogroup" aria-label="People" style={{ flexBasis: "100%", display: "flex", flexDirection: "column", gap: 6 }}>
-          {FEED_PEOPLE.map((entry) => {
-            const chosen = (value.people || "everyone") === entry.value;
-            return (
-              <label key={entry.value} data-people={entry.value} className="cg-state cg-focus" style={{ display: "flex", alignItems: "flex-start", gap: 10, minHeight: 24, position: "relative", cursor: "pointer", borderRadius: "var(--radius-small)" }} data-node={node && entry.value} data-node-key={undefined}>
-                <input
-                  type="radio"
-                  name="feed-people"
-                  checked={chosen}
-                  onChange={() => set({ people: entry.value })}
-                  style={{ position: "absolute", opacity: 0, width: "1px", height: "1px", margin: 0 }}
-                />
-                <span
-                  aria-hidden="true"
-                  style={{
-                    width: 18,
-                    height: 18,
-                    flex: "none",
-                    marginTop: 1,
-                    boxSizing: "border-box",
-                    borderRadius: "var(--radius-full)",
-                    border: chosen ? "5px solid var(--primary)" : "1px solid var(--border-field)",
-                  }}
-                  data-node={node && "dot"}
-                />
-                <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                  <span style={{ fontSize: "var(--text-body-medium)", lineHeight: "var(--text-body-medium--line-height)", letterSpacing: "var(--text-body-medium--letter-spacing)" }} data-node={node && "label"}>
-                    {entry.label}
-                  </span>
-                  <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", letterSpacing: "var(--text-body-small--letter-spacing)", color: "var(--text-secondary)" }} data-node={node && "hint"}>
-                    {entry.value === "everyone" ? "The whole feed, as far as your eyes reach." : "Only the people you hold an opinion for — the same rank, narrowed to them."}
-                  </span>
-                </span>
-              </label>
-            );
-          })}
-        </div>
+        {peopleRows ?? (
+          <FeedPeopleRows people={value.people} sign={value.peopleSign} onPeople={(people) => set({ people })} onSign={(peopleSign) => set({ peopleSign })} node={node} />
+        )}
       </FilterSection>
       {/* THE TOPIC FEED IS JUST ANOTHER FEED SETTING (jakob, 2026-09-14), so it
           is a section of this sheet and not a surface of its own. What it
@@ -520,7 +601,7 @@ const SPOKEN_ONLY = {
   border: 0,
 };
 
-export function FeedFilter({ value = FEED_FILTER_DEFAULT, readerDefault = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics, node }) {
+export function FeedFilter({ value = FEED_FILTER_DEFAULT, readerDefault = FEED_FILTER_DEFAULT, onChange, onHelp, defaultOpen = false, ariaLabel = "What your feed shows", topics = [], onOpenTopics, peopleRows, node }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const [staged, setStaged] = React.useState(value);
   const [said, setSaid] = React.useState("");
@@ -549,6 +630,7 @@ export function FeedFilter({ value = FEED_FILTER_DEFAULT, readerDefault = FEED_F
         ariaLabel={ariaLabel}
         topics={topics}
         onOpenTopics={onOpenTopics}
+        peopleRows={peopleRows}
         foot={<FilterFoot onReset={() => setStaged(readerDefault)} onDone={commit} />}
       />
     </>

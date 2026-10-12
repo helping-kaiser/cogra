@@ -12,9 +12,19 @@ ALWAYS the order is Ranked or Newest, never both
 
 ALWAYS the People section holds the rows Everyone and Your people, one on and never both
 
-ALWAYS Your people narrows the feed to the people the reader holds an opinion for, over the same rank
+ALWAYS Your people narrows the feed to the people the reader holds an opinion of, whichever way it points, over the same rank
 
 WHEN tap Everyone or Your people -> the choice is staged AND NEVER the feed behind the sheet moves before Done
+
+ALWAYS the sign row stands under Your people as one line of three words, For · Against · Either, the chosen word in primary ink and never a pill GIVEN Your people is on
+
+ALWAYS no sign row stands GIVEN Everyone is on
+
+ALWAYS For narrows Your people to the people the reader is for, Against to the people the reader is against, and Either to both
+
+WHEN tap For, Against or Either -> that word is chosen, staged AND NEVER the feed behind the sheet moves before Done
+
+WHEN tap Everyone GIVEN Your people is on -> the sign row goes AND its chosen word is kept for Your people's return
 
 ALWAYS the filter's topic chips are the topics the reader holds an opinion for
 
@@ -30,11 +40,11 @@ WHEN tap Ranked or Newest -> that order is staged AND NEVER the feed behind the 
 
 WHEN tap Show what you've already seen -> the toggle flips, staged AND NEVER the feed behind the sheet moves before Done
 
-ALWAYS Posts is the one kind on, Ranked is the order, Everyone is the people row on, Show what you've already seen is off, Still settling is on and Sensitive and Removed are off GIVEN the filter is at its default and the reader has set no default of their own in Settings
+ALWAYS Posts is the one kind on, Ranked is the order, Everyone is the people row on, Either is the sign row's chosen word, Show what you've already seen is off, Still settling is on and Sensitive and Removed are off GIVEN the filter is at its default and the reader has set no default of their own in Settings
 
 ALWAYS the feed admits content not yet landed, wearing Still settling GIVEN the feed's filter has Still settling on
 
-ALWAYS content not yet landed leads the ranked feed, before every scored row GIVEN the feed's filter has Still settling on and the order is Ranked
+ALWAYS content not yet landed is woven in among the landed rows, ranked by the reader's reach to its author through the one edge it was born with GIVEN the feed's filter has Still settling on and the order is Ranked
 
 ALWAYS a row not yet landed wears Still settling and carries no score, its score slot bare
 
@@ -57,6 +67,8 @@ ALWAYS the trigger speaks only the deviations from the reader's default
 ALWAYS the trigger speaks a deviation back toward the app's default like any other GIVEN the reader's own default differs from the app's
 
 ALWAYS the trigger speaks each departing axis's state, never the direction it departs in
+
+ALWAYS the trigger reads your people among its deviations, as your people, for or your people, against GIVEN Your people is on and For or Against is chosen
 
 ALWAYS the filter's "?" says Reset brings back your defaults, to change them go to settings.
 
