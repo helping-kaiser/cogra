@@ -4,8 +4,10 @@ import { join } from "node:path";
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { useRef, useState } from "react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ErrorCode } from "@/__generated__/graphql";
+import type { Outcome } from "@/lib/api/outcome";
 import { createTokenStore } from "@/lib/session/token-store";
 import {
   intersectEach,
@@ -15,13 +17,15 @@ import {
 } from "@/test/media-env";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
-import { resetSeenQueueForTests } from "./seen-queue";
+import { resetSeenQueueForTests, seenAnswerOf } from "./seen-queue";
 import {
   edgesOnScreen,
   SCROLL_IDLE_MS,
   SEEN_ATTRIBUTE,
   SEEN_BATCH_MAX,
   SeenQueue,
+  type SeenAnswer,
+  type SendSeen,
   useSeenOnOpen,
   useSeenTracker,
 } from "./seen-tracker";
@@ -29,9 +33,24 @@ import {
 // What the server was sent, call by call; what it answers is per test.
 let sent: string[][] = [];
 let refuseNext = 0;
+// The id the server refuses as BAD_INPUT, whatever batch it rides in.
+let poisonId = "";
 const server = startMswServer(
   graphql.mutation("MarkSeen", ({ variables }) => {
     sent.push(variables.nodes as string[]);
+    if ((variables.nodes as string[]).includes(poisonId)) {
+      return HttpResponse.json({
+        data: {
+          markSeen: {
+            __typename: "MarkSeenPayload",
+            ok: null,
+            userErrors: [
+              { __typename: "UserError", code: "BAD_INPUT", message: "no such node", field: ["nodes"] },
+            ],
+          },
+        },
+      });
+    }
     if (refuseNext > 0) {
       refuseNext -= 1;
       return HttpResponse.json({
@@ -52,6 +71,7 @@ beforeEach(resetSeenQueueForTests);
 function reset() {
   sent = [];
   refuseNext = 0;
+  poisonId = "";
   server.resetHandlers();
 }
 
@@ -107,7 +127,7 @@ describe("the seen queue", () => {
     const batches: string[][] = [];
     await queue.flush(async (batch) => {
       batches.push([...batch]);
-      return true;
+      return "taken";
     });
     expect(batches.map((b) => b.length)).toEqual([100, 100, 50]);
     expect(batches.flat()).toEqual(ids);
@@ -119,7 +139,10 @@ describe("the seen queue", () => {
     queue.belongTo("acct-1");
     queue.see("a");
     queue.see("b");
-    await queue.flush(async () => false);
+    // However many checkpoints come and go, a transient answer drops nothing.
+    for (let n = 0; n < 5; n += 1) await queue.flush(async () => "retry");
+    expect(queue.dropped).toEqual([]);
+    await queue.flush(async () => "retry");
     expect(queue.queued).toEqual(["a", "b"]);
     await queue.flush(async () => {
       throw new Error("offline");
@@ -129,9 +152,139 @@ describe("the seen queue", () => {
     const batches: string[][] = [];
     await queue.flush(async (batch) => {
       batches.push([...batch]);
-      return true;
+      return "taken";
     });
     expect(batches).toEqual([["a", "b", "c"]]);
+  });
+
+  describe("a batch the server refuses for good", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    const ids = Array.from({ length: 100 }, (_, n) => `n${n}`);
+
+    /** A server that refuses any batch holding a poison id, and takes the rest. */
+    function poisoned(...poison: string[]) {
+      const calls: string[][] = [];
+      const send: SendSeen = async (batch) => {
+        calls.push([...batch]);
+        return batch.some((id) => poison.includes(id)) ? "refused" : "taken";
+      };
+      return { calls, send };
+    }
+
+    function queueOf(list: readonly string[]) {
+      const queue = new SeenQueue();
+      queue.belongTo("acct-1");
+      for (const id of list) queue.see(id);
+      return queue;
+    }
+
+    it("halves down to the poison id alone and drops only it, its batch-mates delivered", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(ids);
+      const { calls, send } = poisoned("n37");
+      await queue.flush(send);
+      expect(queue.queued).toEqual([]);
+      expect(queue.dropped).toEqual(["n37"]);
+      expect(calls[0]).toHaveLength(100);
+      expect(calls[1]).toHaveLength(50);
+      const delivered = calls.filter((b) => !b.includes("n37")).flat();
+      expect(delivered.filter((id) => id !== "n37").sort()).toEqual(
+        ids.filter((id) => id !== "n37").sort(),
+      );
+      // Bounded: about twice the depth of the halving, not one call per id.
+      expect(calls.length).toBeLessThanOrEqual(2 * Math.ceil(Math.log2(100)) + 2);
+      // The writer is told which id went, and why.
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(String(warn.mock.calls[0]?.[0])).toContain("n37");
+    });
+
+    it("an id refused alone is dropped at once", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["solo"]);
+      const { calls, send } = poisoned("solo");
+      await queue.flush(send);
+      expect(calls).toEqual([["solo"]]);
+      expect(queue.queued).toEqual([]);
+      expect(queue.dropped).toEqual(["solo"]);
+    });
+
+    it("a dropped id is never queued or sent again this session", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["a", "bad", "b"]);
+      const { calls, send } = poisoned("bad");
+      await queue.flush(send);
+      expect(queue.see("bad")).toBe(false);
+      expect(queue.seeEdge("bad", "top")).toBe(false);
+      expect(queue.hasSeen("bad")).toBe(true);
+      const before = calls.length;
+      await queue.flush(send);
+      expect(calls).toHaveLength(before);
+      expect(queue.queued).toEqual([]);
+    });
+
+    it("a transient answer mid-halving keeps the rest queued, and the halving carries on", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["a", "b", "bad", "c"]);
+      const calls: string[][] = [];
+      let busy = true;
+      const send: SendSeen = async (batch) => {
+        calls.push([...batch]);
+        if (batch.includes("bad") && batch.length > 1) return "refused";
+        if (busy && calls.length === 2) return "retry";
+        return batch.includes("bad") ? "refused" : "taken";
+      };
+      await queue.flush(send);
+      // The page was refused and halved; then the half could not be sent.
+      expect(calls).toEqual([["a", "b", "bad", "c"], ["a", "b"]]);
+      expect(queue.queued).toEqual(["a", "b", "bad", "c"]);
+      expect(queue.dropped).toEqual([]);
+      busy = false;
+      await queue.flush(send);
+      // It resumes at the half, not at the whole page.
+      expect(calls[2]).toEqual(["a", "b"]);
+      expect(queue.queued).toEqual([]);
+      expect(queue.dropped).toEqual(["bad"]);
+    });
+
+    it("a change of account forgets the halving and the dropped ids", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      const queue = queueOf(["a", "bad"]);
+      let first = true;
+      await queue.flush(async (batch) => {
+        if (first) {
+          first = false;
+          return "refused";
+        }
+        return batch.includes("bad") ? "retry" : "taken";
+      });
+      queue.belongTo("acct-2");
+      expect(queue.dropped).toEqual([]);
+      queue.see("x");
+      queue.see("y");
+      const calls: string[][] = [];
+      await queue.flush(async (batch) => {
+        calls.push([...batch]);
+        return "taken";
+      });
+      expect(calls).toEqual([["x", "y"]]);
+    });
+  });
+
+  describe("an outcome as a seen answer", () => {
+    const refusedWith = (code: ErrorCode): Outcome<true> => ({
+      kind: "refused",
+      errors: [{ code, message: "no", field: null }],
+    });
+
+    it("only BAD_INPUT is final; everything else is worth another try", () => {
+      expect(seenAnswerOf({ kind: "success", value: true })).toBe("taken");
+      expect(seenAnswerOf(refusedWith("BAD_INPUT"))).toBe("refused");
+      for (const code of ["RATE_LIMITED", "UNAUTHENTICATED", "INTERNAL", "FORBIDDEN"] as const) {
+        expect(seenAnswerOf(refusedWith(code))).toBe("retry");
+      }
+      expect(seenAnswerOf({ kind: "failed", cause: new Error("offline") })).toBe("retry");
+    });
   });
 
   it("nothing is tracked without a session, and another account starts empty", async () => {
@@ -149,11 +302,11 @@ describe("the seen queue", () => {
     const queue = new SeenQueue();
     queue.belongTo("acct-1");
     queue.see("a");
-    let release: (taken: boolean) => void = () => {};
+    let release: (answer: SeenAnswer) => void = () => {};
     const flight = queue.flush(() => new Promise((resolve) => (release = resolve)));
     queue.belongTo("acct-2");
     queue.see("b");
-    release(true);
+    release("taken");
     await flight;
     expect(queue.queued).toEqual(["b"]);
   });
@@ -239,6 +392,31 @@ describe("the seen tracker on a list", () => {
     intersectEach([{ target: b, ratio: 1 }]);
     setsPageVisibility("hidden");
     await waitFor(() => expect(sent).toEqual([["a"], ["a", "b"]]));
+  });
+
+  it("a batch the server refuses as BAD_INPUT is split until the one bad card is dropped", async () => {
+    reset();
+    poisonId = "b";
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    renderWithProviders(<List ids={["a", "b", "c"]} />, { store: signedIn() });
+    const [a, b, c] = await cards("a", "b", "c");
+    intersectEach([
+      { target: a, ratio: 1 },
+      { target: b, ratio: 1 },
+      { target: c, ratio: 1 },
+    ]);
+    setsPageVisibility("hidden");
+    await waitFor(() =>
+      expect(sent).toEqual([["a", "b", "c"], ["a", "b"], ["a"], ["b"], ["c"]]),
+    );
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]?.[0])).toContain("b");
+    // The bad card is never sent again: another checkpoint has nothing to send.
+    setsPageVisibility("visible");
+    setsPageVisibility("hidden");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(sent).toHaveLength(5);
+    warn.mockRestore();
   });
 
   it("nothing is tracked without a session", async () => {

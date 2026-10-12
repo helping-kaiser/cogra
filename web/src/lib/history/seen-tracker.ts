@@ -41,8 +41,12 @@
 // WHEN IT IS SENT: batched, and flushed at the natural checkpoints
 // (feed-ranking.md §9.4; architecture.md "Render"): the scroller coming to
 // rest, the list leaving the screen (navigation), and the page being hidden.
-// A refused or failed batch stays queued, in order, for the next checkpoint —
-// seeing has no surface, so nothing is ever shown for it (the packet's
+// A batch that could not be delivered — offline, RATE_LIMITED, any refusal not
+// known to be final — stays queued, in order, for the next checkpoint. A batch
+// the server refuses for good (BAD_INPUT) is halved and sent again down to the
+// one id at fault, which alone is dropped for the session and logged
+// (`SeenQueue.flush`): a session never stalls on a batch that cannot succeed.
+// Seeing has no surface, so nothing is ever shown for either (the packet's
 // rate-limiter row). With no session there is no seen-list, so nothing is
 // tracked at all (packet F6).
 //
@@ -61,9 +65,21 @@ import { useActiveAccountId } from "@/lib/session/provider";
 import { useAuthGuard } from "@/lib/session/runtime";
 import { useMeasureEffect } from "@/lib/ui/measure-effect";
 import { scrollElementOf } from "@/lib/ui/scroll-host";
-import { seenQueue, SeenQueue, type CardEdge, type SendSeen } from "./seen-queue";
+import {
+  seenAnswerOf,
+  seenQueue,
+  SeenQueue,
+  type CardEdge,
+  type SendSeen,
+} from "./seen-queue";
 
-export { SEEN_BATCH_MAX, SeenQueue, type CardEdge, type SendSeen } from "./seen-queue";
+export {
+  SEEN_BATCH_MAX,
+  SeenQueue,
+  type CardEdge,
+  type SeenAnswer,
+  type SendSeen,
+} from "./seen-queue";
 
 /** How long the scroller must rest before the queue is sent. */
 export const SCROLL_IDLE_MS = 600;
@@ -104,11 +120,10 @@ export function useSeenTracker({
   const account = useActiveAccountId();
 
   // The send, current at every checkpoint without re-subscribing anything.
-  const send = useRef<SendSeen>(async () => false);
+  const send = useRef<SendSeen>(async () => "retry");
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null);
   useMeasureEffect(() => {
-    send.current = async (batch) =>
-      (await guard.run(() => markSeen(client, batch))).kind === "success";
+    send.current = async (batch) => seenAnswerOf(await guard.run(() => markSeen(client, batch)));
   }, [client, guard]);
 
   // Whose queue it is — before anything below can write to it.
@@ -279,8 +294,8 @@ export function useSeenOnOpen(id: string | null, queue: SeenQueue = seenQueue): 
   useMeasureEffect(() => {
     queue.belongTo(account);
     if (id === null || !queue.see(id)) return;
-    void queue.flush(
-      async (batch) => (await guard.run(() => markSeen(client, batch))).kind === "success",
+    void queue.flush(async (batch) =>
+      seenAnswerOf(await guard.run(() => markSeen(client, batch))),
     );
   }, [id, account, queue, client, guard]);
 }

@@ -1,12 +1,14 @@
 // The seen tracker's half of H1 (history packet, "Test obligations →
 // Clients"): first-seeing dedupe in-session, batching and flushing at a
-// checkpoint, the retry of a refused batch, and no tracking without a
-// session. What counts as seen is the surface's question (`SeenCardsEffect`
-// in core:designsystem) and is tested there.
+// checkpoint, the retry of a refused batch, the bounded failure of a batch
+// refused for good (PR-46), and no tracking without a session. What counts
+// as seen is the surface's question (`SeenCardsEffect` in core:designsystem)
+// and is tested there.
 
 package com.cogra.domain.history
 
 import com.cogra.domain.AuthTokens
+import com.cogra.domain.CograLog
 import com.cogra.domain.ErrorCode
 import com.cogra.domain.Outcome
 import com.cogra.domain.UserError
@@ -18,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Test
 import java.io.IOException
 
@@ -152,6 +155,166 @@ class SeenTrackerTest {
         runCurrent()
         assertThat(history.calls.last()).containsExactlyElementsIn(ids(101..150)).inOrder()
         assertThat(tracker.queued()).isEmpty()
+    }
+
+    // A BATCH REFUSED FOR GOOD (PR-46: "we cant have a stalling session"): the
+    // queue halves it down to the id at fault and drops that one alone.
+
+    private val badInput = Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no such node")))
+
+    /** Refuses any batch holding a poison id, takes the rest; scripted answers go first. */
+    private class PoisonedHistory(
+        private vararg val poison: String,
+        val first: ArrayDeque<Outcome<Unit>> = ArrayDeque(),
+    ) : ViewHistoryRepository {
+        val calls = mutableListOf<List<String>>()
+
+        override suspend fun markSeen(nodeIds: List<String>): Outcome<Unit> {
+            calls += nodeIds
+            first.removeFirstOrNull()?.let { return it }
+            return if (nodeIds.any { it in poison }) {
+                Outcome.Refused(listOf(UserError(ErrorCode.BAD_INPUT, "no such node")))
+            } else {
+                Outcome.Success(Unit)
+            }
+        }
+    }
+
+    private val log = mutableListOf<String>()
+
+    @After
+    fun silenceLog() = CograLog.uninstall()
+
+    @Test
+    fun `a batch refused for good is halved down to the one bad id, which alone is dropped`() = runTest {
+        signIn()
+        CograLog.install { _, message, _ -> log += message }
+        val repo = PoisonedHistory("n37")
+        val tracker = tracker(repo)
+
+        tracker.saw(ids(0..99))
+        tracker.flush()
+        runCurrent()
+
+        assertThat(tracker.queued()).isEmpty()
+        assertThat(tracker.dropped()).containsExactly("n37")
+        assertThat(repo.calls[0]).hasSize(100)
+        assertThat(repo.calls[1]).hasSize(50)
+        // Every other id landed, in order within what was delivered.
+        val delivered = repo.calls.filter { "n37" !in it }.flatten()
+        assertThat(delivered).containsExactlyElementsIn(ids(0..99) - "n37")
+        // Bounded: about twice the depth of the halving, not a call per id.
+        assertThat(repo.calls.size).isAtMost(16)
+        // The writer is told which id went.
+        assertThat(log).hasSize(1)
+        assertThat(log.single()).contains("n37")
+    }
+
+    @Test
+    fun `an id refused alone is dropped at once`() = runTest {
+        signIn()
+        val repo = PoisonedHistory("solo")
+        val tracker = tracker(repo)
+
+        tracker.saw(listOf("solo"))
+        tracker.flush()
+        runCurrent()
+
+        assertThat(repo.calls).containsExactly(listOf("solo"))
+        assertThat(tracker.queued()).isEmpty()
+        assertThat(tracker.dropped()).containsExactly("solo")
+    }
+
+    @Test
+    fun `a dropped id is never queued or sent again this session`() = runTest {
+        signIn()
+        val repo = PoisonedHistory("bad")
+        val tracker = tracker(repo)
+        tracker.saw(listOf("a", "bad", "b"))
+        tracker.flush()
+        runCurrent()
+        val before = repo.calls.size
+
+        tracker.saw(listOf("bad"))
+        tracker.sawEdges("bad", top = true, bottom = true)
+        tracker.flush()
+        runCurrent()
+
+        assertThat(tracker.queued()).isEmpty()
+        assertThat(repo.calls).hasSize(before)
+    }
+
+    @Test
+    fun `a transient answer never drops an id however often it comes`() = runTest {
+        signIn()
+        val tracker = tracker()
+        tracker.saw(listOf("p1", "p2"))
+
+        repeat(5) {
+            history.answers += rateLimited
+            history.answers += Outcome.Failed(IOException("offline"))
+            history.answers += Outcome.Refused(listOf(UserError(ErrorCode.INTERNAL, "fault")))
+            history.answers += Outcome.Refused(listOf(UserError(ErrorCode.UNKNOWN, "newer server")))
+            repeat(4) {
+                tracker.flush()
+                runCurrent()
+            }
+        }
+
+        assertThat(tracker.queued()).containsExactly("p1", "p2").inOrder()
+        assertThat(tracker.dropped()).isEmpty()
+    }
+
+    @Test
+    fun `a transient answer mid halving keeps the rest queued and the halving carries on`() = runTest {
+        signIn()
+        val repo = PoisonedHistory("bad")
+        val tracker = tracker(repo)
+        // The page is refused for good and halved; the half is then rate limited.
+        repo.first += badInput
+        repo.first += rateLimited
+
+        tracker.saw(listOf("a", "b", "bad", "c"))
+        tracker.flush()
+        runCurrent()
+
+        assertThat(repo.calls).containsExactly(listOf("a", "b", "bad", "c"), listOf("a", "b")).inOrder()
+        assertThat(tracker.queued()).containsExactly("a", "b", "bad", "c").inOrder()
+        assertThat(tracker.dropped()).isEmpty()
+
+        tracker.flush()
+        runCurrent()
+
+        // It resumes at the half, not at the whole page.
+        assertThat(repo.calls[2]).containsExactly("a", "b").inOrder()
+        assertThat(tracker.queued()).isEmpty()
+        assertThat(tracker.dropped()).containsExactly("bad")
+    }
+
+    @Test
+    fun `another account starts with a whole page and nothing dropped`() = runTest {
+        signIn("u1")
+        val repo = PoisonedHistory("bad")
+        val tracker = tracker(repo)
+        repo.first += badInput
+        repo.first += rateLimited
+        tracker.saw(listOf("a", "bad"))
+        tracker.flush()
+        runCurrent()
+
+        signIn("u2")
+        runCurrent()
+        tracker.saw(listOf("x", "y"))
+        tracker.flush()
+        runCurrent()
+
+        assertThat(tracker.dropped()).isEmpty()
+        assertThat(repo.calls.last()).containsExactly("x", "y").inOrder()
+    }
+
+    @Test
+    fun `only BAD_INPUT is final`() {
+        assertThat(FINAL_REFUSALS).containsExactly(ErrorCode.BAD_INPUT)
     }
 
     @Test
