@@ -819,7 +819,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
-| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelRailScore`, `ReelPlate`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
 The pair a component is documented by is its **module file's**: every
@@ -9658,6 +9658,83 @@ and two spots on the transport's bar could not grow to 48dp.
   down from its track's top through the bar's lower half and the
   gesture-zone inset to the frame's bottom edge (`Timeline hitBelow`),
   so the clip's own tap above it stays whole. The ink does not move.
+
+### The slice-3 round — 2026-10-12
+
+jakob ruled the fourteen items the slice-3 packets (feed-card rework, the
+stream, the score readout) and the implementation loop raised, delegating
+the smaller set to the packets' written recommendations. The words each
+draw mints are drafted and wait for jakob's review (copy-voice marks
+each).
+
+- **The quiet note carries its weight.** `QuietNote` sets label-small's
+  500, which both clients already render; every board re-renders.
+- **The email change's half-way state is drawn.** `ChangeEmailConfirm`'s
+  `confirmed` chip draws the code's side landed: no field, no `Confirm
+  the code`, and one line under the pair, `Done on this side — now open
+  the link at` the new address. `Email changed to …` answers the confirm
+  press only; a return that finds the change applied says it with the
+  Email row alone.
+- **A detail holds what was opened.** When a fresh read finds the post
+  changed, one line stands in the page's flow between the header and the
+  post (`PostDetail`'s `read` chip), and its tap swaps the newest version
+  in place. A change to the post's tags or citations raises the same line
+  in the same words: on the graph those are acts of their own, but the
+  reader is owed the newer state either way, and one rule needs no
+  taxonomy. A redaction never waits behind it.
+- **The status bar is the system's.** The viewer's black and the stream's
+  black and washes end below it and never paint its strip — the one
+  amendment to the viewer's black-to-the-edges. Boards stay the
+  inset-zero case (*The viewer-grammar close*).
+- **The stream is the list it was opened from**, narrowed to its portrait
+  clips in that list's order — the feed, History, a profile's posts. It
+  pages vertically both ways from the tapped clip, never wraps and never
+  moves on by itself; the last clip carries `That's the last clip here.`
+  at its caption's head, and a load that does not come keeps the clip
+  playing with `Couldn't load more` and `Retry` there instead.
+- **The stream's other faces** ride `Reel`'s `state` chip. Under
+  suppressed autoplay the clip stands paused on its cover with the card's
+  play disc in the sound disc's corner. The rail's score is always the
+  door: the figure, the dash, or — still settling — the bare glyph with
+  `Still settling` under it, under Ranked and Newest alike. A hold that
+  did not sign, or that the write rule refused, says so beside the face —
+  the row the card would carry it on does not exist over a clip. Every
+  such line stands on the stream's plate (`ReelPlate`), the wash's black
+  at 60 %, and never fades on a timer.
+- **No target on the stream falls below 48dp.** The seek line keeps its
+  3px ink on the bottom bar and its target rises 48px from the track
+  (`Timeline hitAbove`, the transport's `hitBelow` mirrored); the caption
+  moves up to stand 62px above the bar, so `More`'s own target meets the
+  seek line's without overlapping (rulings 92 and 101).
+- **The score is the reader's last feed fetch.** A card's and the rail's
+  figure is what that fetch computed; the score's tap is the only fetch of
+  one thing's standing, and nothing is checked in the background. When
+  the trace's fetch finds no paths it stands on the dash and `The paths
+  that carried it here have moved on.`; back on the feed the card and the
+  rail read the dash too, the door standing, and the next feed fetch
+  dissolves it. The vocabulary is one: a figure is what a fetch computed,
+  the bare slot is settling's, the dash is no computed figure, and zero
+  is severance's alone. A thing still settling opens the same trace on
+  its dash with `Still settling — its paths count once it lands.`
+- **The trace speaks a borrowed view in the third person.** Under a
+  guest's or an applicant's borrowed view the paths start at the account
+  the view is borrowed from, so the trace names it, the band's way:
+  `Every path here starts with an opinion @mira gave.` (`FeedEntry`'s
+  `view` chip), its face leading every path.
+- **A step is one record, said per family**, a two-legged record naming
+  what it passed through, the trace showing only people and the reached
+  thing's mark; and a step whose
+  records add up past an opinion's limit says it carries the limit, the
+  unclipped sum in the exact values.
+- **Smaller lines**: each did-not-land family names itself, with
+  `Dismiss` alone; a tag card reaches the reader through the first person
+  on each strongest path; a refused report answers with the shared
+  `That didn't send. Try again.`; the Settings switch's On line is `On,
+  sensitive content stands unveiled wherever you read.`
+- **The gate**: edges **2025 → 2029** (`Reel`'s play disc and two
+  `Retry`s, `PostDetail`'s line), 4 gaps, flows 225 resolved; the
+  registry **75 / 2922 → 75 / 2924** — `changeEmail.interim` and
+  `postDetail.newerVersion` added, nothing removed or changed.
 
 ---
 

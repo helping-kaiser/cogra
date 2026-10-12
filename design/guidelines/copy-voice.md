@@ -1196,6 +1196,15 @@ that was no, and no answer at all:
   arrive, on `ProfileMoreFailed`: the fact at body-medium
   `text-secondary` (rows are already on screen, so the missing page
   means stale, not gone), the way out an `InlineAction` ending the line.
+  The stream says the same two words when its next clips do not come, at
+  its caption's head on the stream's plate, the clip on screen playing on
+  (`Reel`'s `fault`; RL-G13).
+- `That's the last clip here.` — the stream's last clip, at its caption's
+  head: a fact, no way on, since the list simply ends (`Reel`'s `end`;
+  RL-G4; *new 2026-10-12, drafted — its wording jakob's at review*). A
+  hold that did not sign over a clip keeps the row line's words, `That
+  didn't sign.` · `Retry` and `You can't sign right now.`, beside the
+  face (RL-G8).
 
 ## Faults by code
 
