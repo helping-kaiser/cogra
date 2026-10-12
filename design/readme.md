@@ -9773,6 +9773,49 @@ himself are drafted and wait for his review (copy-voice marks each).
   and its `for`, `against`, `either` added; the eight people-row paths
   keyed by the `people` chip's values; nothing removed.
 
+### Round 7's registration — 2026-10-12
+
+The formal ledger (design ⇄ impl seam 131.3): fifteen boards join the
+registry and two dots become component tails. Registration names what the
+boards already draw; nothing on any board moved.
+
+- **The dots are tails first.** `ContentRow`'s unread mark and
+  `BandIcon`'s bell dot each take the `dot` segment, the name
+  `ProfileHeader`'s invites dot already carries for the same mark, so
+  `feed.band.bell.dot` and `notifications.list.notification.dot`
+  register with their hosts.
+- **The notifications set.** `Notifications` and `NotificationsEmpty`
+  register under `notifications`. A row is `notification`, keyed by its
+  place in the list, newest first: two rows can share an actor, so the
+  place is the stable key, as the chronicle's acts are keyed.
+  `FeedUnread` registers under `feed`, named as `Feed` is.
+- **The entry boards.** `ApplicantWaiting`, `ApplicantLanding` and
+  `ApplicantFeed` register under `feed`, named as `ApplicantRejected`
+  names the shell: the card is `application`, `Got it` is `dismiss`, the
+  key-absent door `restore`; `ApplicantFeed`'s two cards are `verifyCard`
+  and `keyCard`, its sidecar's own words. `ApprovePad` registers under
+  `invites`, its pad under `invites.application.stance.pad` with
+  `VouchAskPad`'s names. `KeyCeremony` takes `keyCeremony` and
+  `OnboardingVouch` `onboarding`: the intro frame names its own parts,
+  the board the stage's labelled pieces, and the mesh stays unnamed, as a
+  scrim does.
+- **The Feed-score trace.** All six boards register under one prefix,
+  `feedEntry`, as the account screens share theirs; `FactRow`,
+  `QuotedRow` and `StanceValue` take node tails for it. `FeedEntry`'s
+  `view` chip draws the path list once per value, each row keeping its
+  own key.
+- **Five key rules join**: `notification`, `path` (place, strongest
+  first), `step` (place along the path), `record` (the key the row
+  prints) and `block` (`FeedEntryKinds`' kind).
+- **Not in this round.** The redacted row (item 56(c)): no board draws a
+  deleted account's row in Hidden accounts, so its actor-id key has
+  nothing to register on, and rewording the `account` key rule is a
+  breaking change the seam agrees first. `Reel` and `ReelSensitive`
+  register in lockstep with their rework's build.
+- **The gate**: screens and edges unchanged; the registry **75 / 2928 →
+  90 / 3352**, fifteen boards and 424 paths added, nothing removed or
+  changed.
+
 ---
 
 ## 14. The canvases
