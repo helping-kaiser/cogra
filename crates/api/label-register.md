@@ -280,6 +280,7 @@ label.
 | `test:integration:an-opinion-carried-from-the-application-ends-the-borrowing-at-landing`      | an_opinion_carried_from_the_application_ends_the_borrowing_at_landing      |
 | `test:integration:an-opinion-on-a-post-ends-the-borrowing`                                    | an_opinion_on_a_post_ends_the_borrowing                                    |
 | `test:integration:an-opinion-on-a-stranger-ends-the-borrowing`                                | an_opinion_on_a_stranger_ends_the_borrowing                                |
+| `test:integration:an-opinion-on-a-stranger-leaves-has-reciprocated-false`                     | an_opinion_on_a_stranger_leaves_has_reciprocated_false                     |
 | `test:integration:an-ordinary-opinion-on-a-registered-applicant-does-not-land-them`           | an_ordinary_opinion_on_a_registered_applicant_does_not_land_them           |
 | `test:integration:an-over-long-password-still-reaches-verification-at-login`                  | an_over_long_password_still_reaches_verification_at_login                  |
 | `test:integration:an-over-target-upload-is-not-attachable-until-ready`                        | an_over_target_upload_is_not_attachable_until_ready                        |
