@@ -1179,29 +1179,30 @@ async fn an_applicant_deletion_takes_its_device_locks(pool: PgPool) {
     );
 }
 
-/// The applicant's waiting application held its single-use link's slot;
-/// deleting the account frees it, as the reaper's sweep does.
+/// The deleted applicant's email and handle are free again: the same
+/// person can register anew. Deliberately silent on the single-use invite
+/// slot — consumed for good at account creation (round-3 ruling), which
+/// the link's used-at stamp will enforce for this path and the reaper's
+/// alike.
 ///
-/// An applicant's deletion frees its single-use link's slot.
-/// ´claim:deletion:an-applicant-deletion-frees-its-slot´
+/// An applicant's deletion frees its email and handle for a fresh registration.
+/// ´claim:deletion:an-applicant-deletion-frees-its-email-and-handle´
 #[sqlx::test(migrations = "../../migrations")]
-async fn an_applicant_deletion_frees_its_single_use_slot(pool: PgPool) {
+async fn an_applicant_deletion_frees_its_email_and_handle(pool: PgPool) {
     let rig = rig(pool);
     let mira = member(&rig, "mira").await;
-    let link = invite_link(&rig, &mira, true).await;
-    let noa = applicant_through(&rig, link, "noa").await;
-    assert_eq!(noa.link, link);
-    assert!(!store::invite_link_usable(&rig.pool, link).await.expect("query"));
-    let refused = register(&rig, link, "second").await;
+    let noa = applicant(&rig, &mira, "noa").await;
+    let taken = register(&rig, noa.link, "noa").await;
     assert_eq!(
-        refused["data"]["register"]["userErrors"][0]["code"],
-        "INVITE_UNUSABLE",
-        "{refused}"
+        taken["data"]["register"]["userErrors"][0]["code"],
+        "HANDLE_TAKEN",
+        "{taken}"
     );
 
     rig.gql(Some(&noa.token), DELETE_APPLICANT, json!({})).await;
-    assert!(store::invite_link_usable(&rig.pool, link).await.expect("query"));
-    applicant_through(&rig, link, "third").await;
+    let again = applicant_through(&rig, noa.link, "noa").await;
+    assert_ne!(again.id, noa.id, "a new account, not the old one");
+    assert_eq!(again.email, noa.email);
 }
 
 /// Once the account lands it is a member: the immediate path is refused,

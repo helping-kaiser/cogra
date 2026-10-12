@@ -2846,6 +2846,14 @@ pub enum ApplicantDeletion {
 /// approval that funds the account either commits first and is refused
 /// here, or waits and finds the account gone. A failed funding never
 /// burned, so it does not hold the account.
+///
+/// Email and handle are freed with the account. The account's single-use
+/// invite slot is NOT meant to be: a single-use invite is consumed for
+/// good at account creation (jakob, round-3 ruling). Today
+/// [`invite_link_usable`] reads a vanished application row as a free
+/// slot, so this delete — like the reaper's — frees it as a side effect.
+/// Nothing here frees it on purpose; the link's own used-at stamp, read
+/// by that predicate, fixes both paths at once.
 pub async fn delete_applicant_account(
     pool: &PgPool,
     account_id: Uuid,
