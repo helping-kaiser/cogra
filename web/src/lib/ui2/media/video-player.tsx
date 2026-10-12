@@ -63,9 +63,10 @@
 // The fullscreen viewer is the one presentation that also carries the PLAY
 // STATE (PostDetailVideo.md:47–51, ViewerVideo.md:5): the pinned clip HANDS
 // its clip over as the viewer opens — remembers where it stood and whether it
-// played, then leaves its stage so it never plays behind the viewer — and the
-// viewer CARRIES that state in; on close the viewer remembers on its way out
-// and the pinned clip takes it back the same way.
+// played, gives up its element and leaves its stage, so nothing of it plays
+// behind the viewer — and the viewer CARRIES that state in; on close the
+// viewer remembers on its way out and the pinned clip takes it back the same
+// way.
 
 import {
   useCallback,
@@ -166,10 +167,10 @@ function Player({
   carry?: boolean;
   /**
    * The clip is HANDED OVER to a layer presenting it bigger (the pinned clip
-   * while the viewer is up): it stands stopped, off its stage, and never plays
-   * behind that layer (PostDetailVideo.md:47). Lowered, it takes the clip
-   * back at the frame and in the play state the layer left it in
-   * (PostDetailVideo.md:49/51).
+   * while the viewer is up): the layer has its element, and this player stands
+   * off its stage with none, so nothing of it plays behind that layer
+   * (PostDetailVideo.md:47). Lowered, it takes the clip back at the frame and
+   * in the play state the layer left it in (PostDetailVideo.md:49/51).
    */
   handedOver?: boolean;
   /** The registered node the sound disc is; it then names the disc instead of `testId`'s. */

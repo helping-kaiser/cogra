@@ -4,9 +4,11 @@
 //
 // "WHEN feed.card.media.frame's clip stops being the playing clip -> it
 // freezes on the frame it reached AND NEVER the stored still returns within
-// the reading session, its card's remounts included" (FeedCover.md:9). A
-// remount builds a new `<video>`, so the frame it reached cannot live on the
-// element: it lives here, KEYED PER CLIP — "position is keyed per clip within
+// the reading session, its card's remounts included" (FeedCover.md:9). The
+// clip's live element is carried into its next presentation where the pool
+// still has it (`video-stage.ts`), but a presentation it has nothing for builds
+// a new `<video>`, so the frame it reached cannot live on the element alone: it
+// lives here, KEYED PER CLIP — "position is keyed per clip within
 // the session" (the ruled GAP-8 sub-question) — which is also what carries a
 // clip's place card → detail → viewer and back (PostDetailVideo.md:43–51,
 // ViewerVideo.md:5).
