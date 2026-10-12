@@ -22,7 +22,8 @@ import { emptyWizard, kindOf, type CoverAsset, type PickedAsset, type WizardStat
 
 const DB_NAME = "cogra.compose";
 const DB_VERSION = 1;
-const STORE = "draft";
+/** Shared with the sealed copies (`sealed-draft.ts`), which ride the same store under their own keys. */
+export const STORE = "draft";
 /**
  * The pre-multi-account record, which belonged to whoever was signed in when it
  * was written. It is DROPPED rather than adopted: nothing ties it to an
@@ -40,7 +41,7 @@ const LEGACY_SINGLETON_KEY = "current";
  * type promises a value, which turns a controlled input uncontrolled. The
  * version is what lets `load` say "not a shape this build reads" instead.
  */
-const DRAFT_SCHEMA = 1;
+export const DRAFT_SCHEMA = 1;
 
 export type ComposeDraftStore = {
   save(state: WizardState): Promise<void>;
@@ -48,7 +49,7 @@ export type ComposeDraftStore = {
   clear(): Promise<void>;
 };
 
-function open(idb: IDBFactory): Promise<IDBDatabase> {
+export function open(idb: IDBFactory): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = idb.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
@@ -110,14 +111,42 @@ function run<T>(
 type StoredAsset = Omit<PickedAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
 /** The video's face travels the same way, and for the same reason. */
 type StoredCover = Omit<CoverAsset, "file"> & { bytes: ArrayBuffer; fileType: string };
-type StoredState = Omit<WizardState, "assets" | "cover" | "autoCover"> & {
+export type StoredState = Omit<WizardState, "assets" | "cover" | "autoCover"> & {
   assets: readonly StoredAsset[];
   cover: StoredCover | null;
   /** The silent frame-1 still, stored the same way as a chosen `cover`. */
   autoCover: StoredCover | null;
 };
 
-type StoredDraft = {
+/** The wizard's state in the shape that goes to disk — the picked blobs read out as bytes. */
+export async function storedOf(state: WizardState): Promise<StoredState> {
+  const assets: StoredAsset[] = await Promise.all(
+    state.assets.map(async ({ file, ...rest }) => ({
+      ...rest,
+      bytes: await file.arrayBuffer(),
+      fileType: file.type,
+    })),
+  );
+  const cover: StoredCover | null =
+    state.cover === null
+      ? null
+      : {
+          ...state.cover,
+          bytes: await state.cover.file.arrayBuffer(),
+          fileType: state.cover.file.type,
+        };
+  const autoCover: StoredCover | null =
+    state.autoCover === null
+      ? null
+      : {
+          ...state.autoCover,
+          bytes: await state.autoCover.file.arrayBuffer(),
+          fileType: state.autoCover.file.type,
+        };
+  return { ...state, assets, cover, autoCover };
+}
+
+export type StoredDraft = {
   schema: number;
   savedAt: string;
   state: StoredState;
@@ -158,7 +187,7 @@ function afterReload(upload: PickedAsset["upload"]): PickedAsset["upload"] {
  * between a toggle that reads "off" and a controlled input that silently turns
  * uncontrolled.
  */
-function restored(stored: StoredState): WizardState {
+export function restored(stored: StoredState): WizardState {
   const base = emptyWizard();
   // The fields the stored shape genuinely differs on — `assets`, `cover` and
   // `autoCover` carry bytes rather than blobs — are rebuilt below. Every
@@ -241,34 +270,12 @@ export function createComposeDraftStore(deps: {
       // afterwards would think it was current and write the draft back.
       const startedIn = generation;
       await forgetLegacy();
-      const assets: StoredAsset[] = await Promise.all(
-        state.assets.map(async ({ file, ...rest }) => ({
-          ...rest,
-          bytes: await file.arrayBuffer(),
-          fileType: file.type,
-        })),
-      );
-      const cover: StoredCover | null =
-        state.cover === null
-          ? null
-          : {
-              ...state.cover,
-              bytes: await state.cover.file.arrayBuffer(),
-              fileType: state.cover.file.type,
-            };
-      const autoCover: StoredCover | null =
-        state.autoCover === null
-          ? null
-          : {
-              ...state.autoCover,
-              bytes: await state.autoCover.file.arrayBuffer(),
-              fileType: state.autoCover.file.type,
-            };
+      const stored = await storedOf(state);
       if (startedIn !== generation) return;
       const draft: StoredDraft = {
         schema: DRAFT_SCHEMA,
         savedAt: new Date().toISOString(),
-        state: { ...state, assets, cover, autoCover },
+        state: stored,
       };
       await run(factory(), "readwrite", (store) => store.put(draft, account));
     },

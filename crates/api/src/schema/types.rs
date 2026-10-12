@@ -3269,7 +3269,7 @@ fn node_moderation_status(marks: SensitiveMarks) -> ModerationStatus {
 /// The requesting viewer's address, when they have one. Pending rows
 /// are only ever *their own* acts: a staged write is not on the graph,
 /// so nobody else may see it.
-async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
+pub(crate) async fn viewer_address(ctx: &Context<'_>) -> async_graphql::Result<Option<String>> {
     let Some(Some(viewer)) = ctx.data_opt::<Option<Viewer>>() else {
         return Ok(None);
     };
@@ -3625,11 +3625,11 @@ pub type SearchConnection = Connection<
 /// `SearchConnection`'s connection-level fields. It holds the match
 /// request that served the edges, so the count is resolved under exactly
 /// that predicate and only when asked. `None` is a request that matched
-/// nothing without asking the store — a blank query, a scoped query
-/// before the scoped branch exists, a kind filter naming no served kind —
-/// whose count is zero without a query.
+/// nothing without asking the store — a blank query, a scope naming no
+/// one, a kind filter naming no served kind — whose count is zero
+/// without a query.
 pub struct SearchConnectionFields {
-    pub(crate) request: Option<postgres_store::search::MatchQuery>,
+    pub(crate) request: Option<postgres_store::search::SearchRequest>,
 }
 
 #[Object]
@@ -3643,7 +3643,8 @@ impl SearchConnectionFields {
             return Ok(Some(0));
         };
         let pool = ctx.data::<PgPool>()?;
-        let total = postgres_store::search::count(pool, request)
+        let total = request
+            .count(pool)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))

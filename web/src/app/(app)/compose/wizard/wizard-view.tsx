@@ -58,6 +58,8 @@ import {
   draftSummary,
   type ComposeDraftStore,
 } from "@/lib/compose/draft-store";
+import { fateOf, sealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
+import { fetchStagedWrite } from "@/lib/api/writes-api";
 import { useStageHistory } from "@/lib/compose/stage-history";
 import { runUpload, runVideoUpload } from "@/lib/compose/uploads";
 import { useObjectUrl, usePreviewUrls, useRevokeOnChange } from "@/lib/compose/previews";
@@ -95,10 +97,12 @@ const HEADINGS: Record<WizardState["step"], string> = {
 export function ComposeWizard({
   store = identityStore,
   drafts = composeDraftStore,
+  seals = sealedDraftStore,
 }: {
   /** Test injection. */
   store?: IdentityStore;
   drafts?: ComposeDraftStore;
+  seals?: SealedDraftStore;
 }) {
   const client = useApolloClient();
   const router = useRouter();
@@ -383,17 +387,29 @@ export function ComposeWizard({
 
   // ---- the draft on this device -------------------------------------------
 
+  // THE SEALED COPIES SETTLE FIRST (FC-G5). A post whose signing was taken has
+  // its draft held out of the composer until the write lands or expires; an
+  // expired one comes back here as the kept draft, so the load below offers
+  // it — which is what makes "Open the draft" lead with it
+  // (ComposeExpired.md:3-5). A copy whose write is still open stays sealed and
+  // is never offered. Asking costs one read per waiting write, and nothing at
+  // all when no copy waits; a settle that cannot finish never holds the
+  // composer shut.
   useEffect(() => {
     let cancelled = false;
-    void drafts.load().then((draft) => {
-      if (cancelled) return;
-      if (draft !== null && draftIsWorthKeeping(draft)) setOffered(draft);
-      setLoaded(true);
-    });
+    void seals
+      .settle(async (id) => fateOf(await guard.run(() => fetchStagedWrite(client, id))))
+      .catch(() => {})
+      .then(() => drafts.load())
+      .then((draft) => {
+        if (cancelled) return;
+        if (draft !== null && draftIsWorthKeeping(draft)) setOffered(draft);
+        setLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
-  }, [drafts]);
+  }, [drafts, seals, client, guard]);
 
   // THE DRAFT IS KEPT CONTINUOUSLY. Every meaningful change is written, and
   // leaving never discards — the only way a draft goes is the offer's Discard.
@@ -656,6 +672,28 @@ export function ComposeWizard({
       // up BEFORE the clear, so a save the reader's last keystroke armed cannot
       // slip in behind it.
       landed.current = true;
+      // TAKEN IS NOT LANDED (FC-G5). A write still relaying can be collected
+      // unlanded epochs from now, and the expiry notice promises the draft is
+      // kept then (ComposeExpired.md:3). So the composed state is SEALED — out
+      // of the composer, never offered while the write is alive — and the
+      // same transaction drops the working draft, so there is no instant at
+      // which neither holds the post. A batch that has already landed has no
+      // fate left open and needs no copy.
+      if (results.some((result) => result.kind === "done" && result.state !== "LANDED")) {
+        try {
+          await seals.seal(state, { node, writes: writes.map((write) => write.id) });
+        } catch {
+          // The seal did not take, so the working draft was not dropped
+          // either (one transaction). It is written current and LEFT: a draft
+          // offered while its post settles is the lesser fault next to one
+          // the expiry would find gone.
+          await drafts.save(state).catch(() => {});
+          router.push(`/posts/${node}?published=1`);
+          return;
+        }
+      }
+      // Still cleared here, after the seal: `clear` is what retires a save
+      // already reading blobs when the post was signed (draft-store.ts).
       await drafts.clear();
       // ComposeLanded is the POST'S OWN PAGE carrying a confirmation, not the
       // feed carrying a card: what an author wants after publishing is to see

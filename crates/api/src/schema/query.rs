@@ -23,11 +23,11 @@ use super::types::{
     ReferenceTarget, SearchConnection, SearchConnectionFields, SearchResult, StagedWriteType, User,
     borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
     keyset_page, list_cost, list_limit, record_connection, resolve_reference_target,
-    validate_page_args,
+    validate_page_args, viewer_address,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
-use crate::search::{self, IndexKind};
+use crate::search::{self, IndexKind, ScopedKind};
 
 /// Connectivity report for the API process and its store.
 #[derive(SimpleObject)]
@@ -587,21 +587,80 @@ impl Query {
             ))
         })?;
         let empty = || search_page(Vec::new(), cursor.is_some(), backward, false, None);
-        let text = match parsed {
-            search::Parsed::Unscoped(text) => text,
-            search::Parsed::Blank | search::Parsed::Scoped { .. } => return Ok(empty()),
-        };
-        let kinds = served_kinds(kinds.as_deref());
-        if kinds.is_empty() {
-            return Ok(empty());
-        }
         let viewer = match ctx.data_opt::<Option<Viewer>>() {
             Some(Some(v)) => Some(v.user_id),
             _ => None,
         };
         let exclude_seen_by = viewer.filter(|_| include_seen == Some(false));
-        let request = search::unscoped(text, &kinds, exclude_seen_by, false);
-        let mut hits = search_store::find(pool, &request, cursor, backward, limit + 1)
+        let request = match parsed {
+            search::Parsed::Blank => return Ok(empty()),
+            search::Parsed::Unscoped(text) => {
+                let kinds = served_kinds(kinds.as_deref());
+                if kinds.is_empty() {
+                    return Ok(empty());
+                }
+                search_store::SearchRequest::Match(search::unscoped(
+                    text,
+                    &kinds,
+                    exclude_seen_by,
+                    false,
+                ))
+            }
+            search::Parsed::Scoped {
+                scope,
+                name,
+                remainder: None,
+            } => {
+                let kind = scope.lookup_kind();
+                if !served_kinds(kinds.as_deref()).contains(&kind) {
+                    return Ok(empty());
+                }
+                match search::lookup(name, kind, exclude_seen_by) {
+                    Some(request) => search_store::SearchRequest::Match(request),
+                    None => return Ok(empty()),
+                }
+            }
+            search::Parsed::Scoped {
+                scope,
+                name,
+                remainder: Some(remainder),
+            } => {
+                let kinds = scoped_kinds(kinds.as_deref(), scope);
+                if kinds.is_empty() {
+                    return Ok(empty());
+                }
+                let within = match scope {
+                    search::Scope::Handle => {
+                        let Ok(folded) = crate::auth::normalize_handle(name) else {
+                            return Ok(empty());
+                        };
+                        let Some(author) = search_store::scoped_author(pool, &folded)
+                            .await
+                            .map_err(|e| async_graphql::Error::new(e.to_string()))?
+                        else {
+                            return Ok(empty());
+                        };
+                        search_store::Scope::Author {
+                            id: author.id,
+                            address: author.address,
+                        }
+                    }
+                    search::Scope::Tag => match search::scoped_topic(name) {
+                        Some(name) => search_store::Scope::Topic { name },
+                        None => return Ok(empty()),
+                    },
+                };
+                search_store::SearchRequest::Scoped(search::scoped(
+                    within,
+                    remainder,
+                    &kinds,
+                    exclude_seen_by,
+                    viewer_address(ctx).await?,
+                ))
+            }
+        };
+        let mut hits = request
+            .find(pool, cursor, backward, limit + 1)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
         let has_more = hits.len() as i64 > limit;
@@ -705,23 +764,46 @@ fn served_kinds(kinds: Option<&[NodeKind]>) -> Vec<IndexKind> {
     }
 }
 
+/// The kinds a `kinds` argument serves inside `scope`: null or empty
+/// narrows nothing, and USER is never a scoped content result.
+fn scoped_kinds(kinds: Option<&[NodeKind]>, scope: search::Scope) -> Vec<ScopedKind> {
+    let served = scope.content_kinds();
+    match kinds {
+        None | Some([]) => served.to_vec(),
+        Some(kinds) => served
+            .iter()
+            .copied()
+            .filter(|served| {
+                kinds.iter().any(|kind| match served {
+                    ScopedKind::Post => *kind == NodeKind::Post,
+                    ScopedKind::Comment => *kind == NodeKind::Comment,
+                    ScopedKind::Hashtag => *kind == NodeKind::Hashtag,
+                })
+            })
+            .collect(),
+    }
+}
+
 /// The matched nodes, typed, in match order. A hit whose node vanished
 /// between the match and the load is dropped rather than served empty.
 async fn hydrate(
     pool: &PgPool,
     hits: Vec<search_store::SearchHit>,
 ) -> async_graphql::Result<Vec<(search_store::SearchHit, SearchResult)>> {
-    let ids_of = |kind: IndexKind| -> Vec<Uuid> {
+    let ids_of = |kinds: &[&str]| -> Vec<Uuid> {
         hits.iter()
-            .filter(|h| h.kind == kind.as_store())
+            .filter(|h| kinds.contains(&h.kind.as_str()))
             .map(|h| h.node_id)
             .collect()
     };
-    let posts = crate::nodes::resolve_content_many(pool, &ids_of(IndexKind::Post))
-        .await
-        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let content = crate::nodes::resolve_content_many(
+        pool,
+        &ids_of(&[IndexKind::Post.as_store(), ScopedKind::Comment.as_store()]),
+    )
+    .await
+    .map_err(|e| async_graphql::Error::new(e.to_string()))?;
     let mut users: HashMap<Uuid, store::ActorIdentity> =
-        store::actor_identities_by_ids(pool, &ids_of(IndexKind::User))
+        store::actor_identities_by_ids(pool, &ids_of(&[IndexKind::User.as_store()]))
             .await?
             .into_iter()
             .map(|identity| (identity.id, identity))
@@ -730,9 +812,15 @@ async fn hydrate(
         .into_iter()
         .filter_map(|hit| {
             let result = match hit.kind.as_str() {
-                "post" => match posts.get(&hit.node_id) {
+                "post" => match content.get(&hit.node_id) {
                     Some(crate::nodes::ContentNode::Post(post)) => {
                         SearchResult::Post(PostType(post.clone()))
+                    }
+                    _ => return None,
+                },
+                "comment" => match content.get(&hit.node_id) {
+                    Some(crate::nodes::ContentNode::Comment(comment)) => {
+                        SearchResult::Comment(CommentType(comment.clone()))
                     }
                     _ => return None,
                 },
@@ -759,7 +847,7 @@ fn search_page(
     had_cursor: bool,
     backward: bool,
     has_more: bool,
-    request: Option<search_store::MatchQuery>,
+    request: Option<search_store::SearchRequest>,
 ) -> SearchConnection {
     let (has_previous, has_next) = if backward {
         (has_more, had_cursor)

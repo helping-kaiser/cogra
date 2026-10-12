@@ -17,8 +17,10 @@ import com.cogra.domain.FieldStatus
 import com.cogra.domain.LicenseChoice
 import com.cogra.domain.MediaAssetView
 import com.cogra.domain.MediaFieldUpdate
-import com.cogra.domain.compose.ComposeDraft
 import com.cogra.domain.compose.ComposeDraftStore
+import com.cogra.domain.compose.SealedDraftStore
+import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.settings.AccountEmail
@@ -431,20 +433,8 @@ class ScriptedMediaRepository : ThrowingMediaRepository() {
     ): Outcome<MediaAssetView> = outcome
 }
 
-/** The wizard's local draft, in memory. */
-class FakeComposeDraftStore : ComposeDraftStore {
-    var held: ComposeDraft? = null
-
-    override suspend fun draft(): ComposeDraft? = held
-
-    override suspend fun save(draft: ComposeDraft) {
-        held = draft
-    }
-
-    override suspend fun clear() {
-        held = null
-    }
-}
+/** The wizard's local draft, in memory (the shared fixture, under the name the app tests use). */
+class FakeComposeDraftStore : InMemoryComposeDraftStore()
 
 @Module
 @TestInstallIn(
@@ -556,6 +546,14 @@ object FakeBindingsModule {
 
     @Provides
     fun composeDraftStore(fake: FakeComposeDraftStore): ComposeDraftStore = fake
+
+    @Provides
+    @Singleton
+    fun fakeSealedDraftStore(drafts: FakeComposeDraftStore): InMemorySealedDraftStore =
+        InMemorySealedDraftStore(drafts)
+
+    @Provides
+    fun sealedDraftStore(fake: InMemorySealedDraftStore): SealedDraftStore = fake
 
     @Provides
     @Singleton

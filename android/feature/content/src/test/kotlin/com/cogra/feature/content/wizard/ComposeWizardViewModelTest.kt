@@ -11,9 +11,10 @@ import com.cogra.domain.MediaAssetView
 import com.cogra.domain.Outcome
 import com.cogra.domain.PreparedContentView
 import com.cogra.domain.PreparedWriteView
+import com.cogra.domain.StagedWriteView
 import com.cogra.domain.UserError
+import com.cogra.domain.WriteState
 import com.cogra.domain.compose.ComposeDraft
-import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.CropSpec
@@ -28,7 +29,10 @@ import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.media.VideoInfo
 import com.cogra.domain.references.ReferenceClaim
 import com.cogra.domain.signing.WriteSigner
+import com.cogra.domain.repo.WriteRepository
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
@@ -206,21 +210,17 @@ class ComposeWizardViewModelTest {
         override suspend fun aspectRatio(uri: String): Float? = if (unreadable) null else 0.8f
     }
 
-    private val drafts = object : ComposeDraftStore {
-        var held: ComposeDraft? = null
+    private val drafts = object : InMemoryComposeDraftStore() {
         var cleared = 0
-
-        override suspend fun draft(): ComposeDraft? = held
-
-        override suspend fun save(draft: ComposeDraft) {
-            held = draft
-        }
 
         override suspend fun clear() {
             cleared += 1
-            held = null
+            super.clear()
         }
     }
+
+    /** The sealed copies of staged posts (FC-G5), restoring into [drafts]. */
+    private val seals = InMemorySealedDraftStore(drafts)
 
     /** `ComposePick`'s grid, scripted: the wizard only ever reads it. */
     private val deviceMedia = object : DeviceMediaSource {
@@ -308,7 +308,9 @@ class ComposeWizardViewModelTest {
         video = video,
         deviceMedia = deviceMedia,
         drafts = drafts,
+        seals = seals,
         signer = WriteSigner(sealer, identity),
+        stagedWrites = sealer,
         settings = settings,
     )
 
@@ -754,6 +756,135 @@ class ComposeWizardViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertThat(drafts.held).isNull()
+    }
+
+    // -- The sealed copy (FC-G5, ruled "fix the BUILD, not the board") --
+    //
+    // Taken is RELAYING, not LANDED: the write can still be collected
+    // unlanded epochs after the wizard left, and `ComposeExpired` promises
+    // the draft is kept then.
+
+    /** Signs a words post the fake host leaves RELAYING, and returns its first write's id. */
+    private fun signAndLeave(): String {
+        val vm = viewModel()
+        vm.signWords()
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed("node-1"))
+        return sealer.staged.keys.single()
+    }
+
+    /** What the server says now about write [id]; null is a write it no longer knows. */
+    private fun serverSays(id: String, state: WriteState?) {
+        if (state == null) {
+            sealer.staged.remove(id)
+        } else {
+            sealer.staged[id] = sealer.staged.getValue(id).copy(state = state)
+        }
+    }
+
+    /** A fresh composer opening — `New post`, or the notice's `Open the draft`. */
+    private fun reopen(): ComposeWizardViewModel = viewModel().also {
+        it.start()
+        dispatcher.scheduler.advanceUntilIdle()
+    }
+
+    @Test
+    fun a_staged_post_keeps_a_sealed_copy_until_it_lands() = runTest(dispatcher) {
+        val id = signAndLeave()
+
+        // jakob 2026-08-31 still holds: the composer holds no draft…
+        assertThat(drafts.held).isNull()
+        // …because the post's draft is SEALED, out of its reach.
+        val copy = seals.copies.single()
+        assertThat(copy.node).isEqualTo("node-1")
+        assertThat(copy.writes).containsExactly(id)
+        assertThat(copy.draft.body).isEqualTo("Salt maps of the coast road")
+
+        // While the write relays, a composer opening offers nothing.
+        val vm = reopen()
+        assertThat(vm.state.value.draftOffer).isNull()
+        assertThat(seals.copies).hasSize(1)
+    }
+
+    @Test
+    fun a_landed_post_purges_its_sealed_copy() = runTest(dispatcher) {
+        val id = signAndLeave()
+        serverSays(id, WriteState.LANDED)
+
+        val vm = reopen()
+        assertThat(vm.state.value.draftOffer).isNull()
+        assertThat(seals.copies).isEmpty()
+        assertThat(drafts.held).isNull()
+    }
+
+    @Test
+    fun an_expired_post_restores_its_draft_and_open_the_draft_leads_with_it() = runTest(dispatcher) {
+        val id = signAndLeave()
+        serverSays(id, WriteState.EXPIRED)
+
+        val vm = reopen()
+        assertThat(vm.state.value.draftOffer?.body).isEqualTo("Salt maps of the coast road")
+        assertThat(seals.copies).isEmpty()
+        vm.onContinueDraft()
+        assertThat(vm.state.value.body).isEqualTo("Salt maps of the coast road")
+    }
+
+    @Test
+    fun aPostWhoseWriteWasReapedRestoresItsDraft() = runTest(dispatcher) {
+        val id = signAndLeave()
+        serverSays(id, null)
+
+        assertThat(reopen().state.value.draftOffer?.body).isEqualTo("Salt maps of the coast road")
+    }
+
+    @Test
+    fun aRestoredDraftThatIsDiscardedStaysDiscarded() = runTest(dispatcher) {
+        val id = signAndLeave()
+        serverSays(id, WriteState.EXPIRED)
+        reopen().onDiscardDraft()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertThat(reopen().state.value.draftOffer).isNull()
+    }
+
+    @Test
+    fun anExpiryNeverOverwritesADraftStartedSince() = runTest(dispatcher) {
+        val id = signAndLeave()
+        drafts.held = ComposeDraft(DraftBodyKind.Words, body = "a newer draft")
+        serverSays(id, WriteState.EXPIRED)
+
+        assertThat(reopen().state.value.draftOffer?.body).isEqualTo("a newer draft")
+        assertThat(seals.copies).hasSize(1)
+    }
+
+    @Test
+    fun aBatchAlreadyLandedAtSigningSealsNothing() = runTest(dispatcher) {
+        // The approval comes back LANDED: nothing is left open to seal for.
+        val vm = ComposeWizardViewModel(
+            content = content,
+            references = references,
+            media = media,
+            processor = processor,
+            video = video,
+            deviceMedia = deviceMedia,
+            drafts = drafts,
+            seals = seals,
+            signer = WriteSigner(LandingAtOnce(sealer), identity),
+            stagedWrites = sealer,
+            settings = settings,
+        )
+        vm.signWords()
+        assertThat(vm.state.value.outcome).isEqualTo(WizardOutcome.Landed("node-1"))
+        assertThat(seals.copies).isEmpty()
+        assertThat(drafts.held).isNull()
+    }
+
+    /** The fake host, except that an approval lands at once rather than relaying. */
+    private class LandingAtOnce(private val inner: SealingWriteRepository) : WriteRepository by inner {
+        override suspend fun approveAct(stagedWriteId: String, signatureBase64: String): Outcome<StagedWriteView> =
+            when (val approved = inner.approveAct(stagedWriteId, signatureBase64)) {
+                is Outcome.Success -> Outcome.Success(approved.value.copy(state = WriteState.LANDED))
+                else -> approved
+            }
     }
 
     @Test

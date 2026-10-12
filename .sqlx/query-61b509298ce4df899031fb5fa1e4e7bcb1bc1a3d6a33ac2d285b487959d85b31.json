@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "WITH RECURSIVE\n           claims AS (\n               SELECT l.source AS node, r.author AS author, l.target AS target,\n                      l.p_i AS relevance, FALSE AS pending,\n                      r.epoch AS epoch, r.act_time AS act_time,\n                      r.position AS position, NULL::timestamptz AS authored_at\n               FROM mirror_record_legs l\n               JOIN mirror_records r ON r.record_id = l.record_id\n               WHERE l.leg = 't' AND l.family = 'tag'\n                 AND NOT r.payload_marked\n                 AND NOT l.census_unknown\n                 AND (l.target = $7 OR ($7::text IS NULL AND r.author = $6))\n                 AND r.author = CASE\n                         WHEN l.source LIKE 'mint:act:%' THEN split_part(l.source, ':', 3)\n                         WHEN l.source LIKE 'prof:%'     THEN split_part(l.source, ':', 2)\n                         ELSE NULL\n                     END\n             UNION ALL\n               SELECT s.middle, s.author, s.target, s.p_d, TRUE, 0, 0, 0, s.pre_signed_at\n               FROM staged_writes s\n               WHERE s.author = $8\n                 AND s.family = 'tag'\n                 AND s.middle IS NOT NULL\n                 AND octet_length(s.payload) = 0\n                 AND s.pre_signed_at IS NOT NULL\n                 AND s.state NOT IN ('landed', 'expired')\n                 AND (s.target = $7 OR ($7::text IS NULL AND s.author = $6))\n                 AND s.author = CASE\n                         WHEN s.middle LIKE 'mint:act:%' THEN split_part(s.middle, ':', 3)\n                         WHEN s.middle LIKE 'prof:%'     THEN split_part(s.middle, ':', 2)\n                         ELSE NULL\n                     END\n           ),\n           carried AS (\n               SELECT w.node, w.target\n               FROM (\n                   SELECT DISTINCT ON (author, node, target) node, target, relevance\n                   FROM claims\n                   ORDER BY author, node, target, pending DESC,\n                            epoch DESC, act_time DESC, position DESC, authored_at DESC\n               ) w\n               WHERE w.relevance <> 0\n           ),\n           chain AS (\n               SELECT c.id AS comment_id, c.target_id, c.target_type\n               FROM comments c\n               WHERE 'comment' = ANY($3)\n                 AND (c.author_id = $5\n                      OR ($5::uuid IS NULL AND c.l1_node_id IN (SELECT node FROM carried)))\n                 AND (SELECT v.redaction_reason IS NULL\n                      FROM comment_versions v WHERE v.comment_id = c.id\n                      ORDER BY pending DESC,\n                               landed_epoch DESC NULLS LAST,\n                               act_time DESC NULLS LAST,\n                               position DESC NULLS LAST,\n                               created_at DESC, version_id DESC\n                      LIMIT 1)\n             UNION ALL\n               SELECT ch.comment_id, p.target_id, p.target_type\n               FROM chain ch\n               JOIN comments p ON p.id = ch.target_id\n               WHERE ch.target_type = 'comment'\n           ),\n           hits AS (\n               SELECT s.node_id\n               FROM search_index s\n               WHERE 'post' = ANY($3)\n                 AND s.kind = 'post' AND s.field = 'title'\n                 AND s.words @@ to_tsquery('simple', $2)\n                 AND (s.author_id = $5\n                      OR ($5::uuid IS NULL AND EXISTS (\n                          SELECT 1 FROM posts p\n                          JOIN carried k ON k.node = p.l1_node_id\n                          WHERE p.id = s.node_id)))\n             UNION ALL\n               SELECT ch.comment_id\n               FROM chain ch\n               JOIN search_index t ON t.node_id = ch.target_id AND t.field = 'title'\n               WHERE ch.target_type = 'post'\n                 AND t.words @@ to_tsquery('simple', $2)\n             UNION ALL\n               SELECT s.node_id\n               FROM search_index s\n               WHERE 'hashtag' = ANY($3)\n                 AND $5::uuid IS NOT NULL\n                 AND s.kind = 'hashtag' AND s.field = 'name'\n                 AND s.folded LIKE '%' || lower($1) || '%'\n                 AND EXISTS (SELECT 1 FROM carried k WHERE k.target = 'name:' || s.value)\n           )\n           SELECT COUNT(*) AS \"count!\"\n           FROM hits h\n           WHERE ($4::uuid IS NULL OR NOT EXISTS (\n                     SELECT 1 FROM user_view_log l\n                     WHERE l.user_id = $4 AND l.content_id = h.node_id))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Uuid",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "61b509298ce4df899031fb5fa1e4e7bcb1bc1a3d6a33ac2d285b487959d85b31"
+}

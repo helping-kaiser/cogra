@@ -32,7 +32,6 @@ import com.cogra.crypto.ActorKey
 import com.cogra.domain.ReferenceContentKind
 import com.cogra.domain.ReferenceTargetView
 import com.cogra.domain.compose.ComposeDraft
-import com.cogra.domain.compose.ComposeDraftStore
 import com.cogra.domain.compose.DraftAsset
 import com.cogra.domain.compose.DraftBodyKind
 import com.cogra.domain.media.DeviceMedia
@@ -41,6 +40,8 @@ import com.cogra.domain.media.ProcessedPicture
 import com.cogra.domain.media.VideoFrame
 import com.cogra.domain.signing.WriteSigner
 import com.cogra.domain.testing.FakeIdentityStore
+import com.cogra.domain.testing.InMemoryComposeDraftStore
+import com.cogra.domain.testing.InMemorySealedDraftStore
 import com.cogra.domain.testing.SealingWriteRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingMediaProcessor
@@ -181,19 +182,7 @@ class ComposeWizardScreenTest {
 
     // -- A real ViewModel, for the questions only the wiring answers --
 
-    private val drafts = object : ComposeDraftStore {
-        var held: ComposeDraft? = null
-
-        override suspend fun draft(): ComposeDraft? = held
-
-        override suspend fun save(draft: ComposeDraft) {
-            held = draft
-        }
-
-        override suspend fun clear() {
-            held = null
-        }
-    }
+    private val drafts = InMemoryComposeDraftStore()
 
     private val roll = object : DeviceMediaSource {
         override suspend fun newestMedia(limit: Int): List<DeviceMedia> =
@@ -206,6 +195,7 @@ class ComposeWizardScreenTest {
 
     private fun viewModel(): ComposeWizardViewModel {
         val actor = ActorKey.generate()
+        val writes = SealingWriteRepository(actor)
         return ComposeWizardViewModel(
             content = ThrowingContentRepository(),
             references = ThrowingReferenceRepository(),
@@ -214,10 +204,12 @@ class ComposeWizardScreenTest {
             video = ThrowingVideoProcessor(),
             deviceMedia = roll,
             drafts = drafts,
+            seals = InMemorySealedDraftStore(drafts),
             signer = WriteSigner(
-                SealingWriteRepository(actor),
+                writes,
                 FakeIdentityStore().apply { seed = actor.seed() },
             ),
+            stagedWrites = writes,
             settings = object : com.cogra.domain.testing.ThrowingSettingsRepository() {
                 override suspend fun defaultLicense(): com.cogra.domain.Outcome<com.cogra.domain.LicenseChoice?> =
                     com.cogra.domain.Outcome.Success(null)

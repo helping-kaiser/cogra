@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.apollographql.apollo.ApolloClient
 import com.cogra.domain.compose.ComposeDraftStore
+import com.cogra.domain.compose.SealedDraftStore
 import com.cogra.domain.media.MediaRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
@@ -40,6 +41,7 @@ import com.cogra.network.repo.ReferenceRepositoryImpl
 import com.cogra.network.repo.TopicRepositoryImpl
 import com.cogra.network.repo.WriteRepositoryImpl
 import com.cogra.network.store.ComposeDraftStoreImpl
+import com.cogra.network.store.SealedDraftStoreImpl
 import com.cogra.network.store.DevicePreferencesImpl
 import com.cogra.network.store.EncryptedStore
 import com.cogra.network.store.IdentityStoreImpl
@@ -152,6 +154,9 @@ abstract class NetworkBindsModule {
 
     @Binds
     abstract fun composeDraftStore(impl: ComposeDraftStoreImpl): ComposeDraftStore
+
+    @Binds
+    abstract fun sealedDraftStore(impl: SealedDraftStoreImpl): SealedDraftStore
 
     @Binds
     abstract fun settingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
