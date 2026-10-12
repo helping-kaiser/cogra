@@ -121,6 +121,7 @@ class FeedViewModel @Inject constructor(
     // reappear — a visible flash — on every failed retry. It also
     // carries which fetch failed, so the fault can surface where
     // that fetch was requested.
+
     /**
      * The landed-only opt-out. The cursor namespaces differ, so a
      * change restarts the walk rather than continuing the held one.
