@@ -9736,6 +9736,38 @@ each).
   registry **75 / 2922 → 75 / 2924** — `changeEmail.interim` and
   `postDetail.newerVersion` added, nothing removed or changed.
 
+### The feed chooser round — 2026-10-12
+
+jakob's item 7 (the either-sign chooser, option a) and seam 137 (the
+settling weave), drawn as one feed round. The words jakob did not write
+himself are drafted and wait for his review (copy-voice marks each).
+
+- **Your people is every opinion held, and the sign narrows it.** The
+  Your-people line reads `Only the people you hold an opinion of — the
+  same rank, narrowed to them.`: every one-step connection, whichever
+  way the opinion points. Under it, only while it is chosen, one line
+  of three words, `For · Against · Either`, mid-dot separated, the
+  chosen word in primary ink and at the label's weight; `Either` is
+  the default. Never a pill and never a second line — the sheet already
+  scrolls. Choosing `Everyone` hides the row and keeps its word. Off
+  `Either`, the trigger's extra reads `your people, for` or `your
+  people, against`. `FeedPeopleRows` draws the section on the one
+  master, so `FeedSheet` and `SettingsReading` carry it together.
+- **The hosts draw it under a `people` chip.** Both boards draw the
+  default, so each carries a `people` chip — `everyone`, `your-people`
+  — drawing the section once per value (`PeopleCopies`).
+- **Settling content is woven in.** Under Ranked, content not yet
+  landed stands among the landed rows, ranked by the reader's reach to
+  its author through the one edge it was born with, wearing its pending
+  mark with its score slot bare and a door (SR-G2(b)). `Still settling`
+  stays on by default; off, the feed keeps to what has landed and the
+  trigger reads `settled only`. No board draws a settling row in a
+  feed, so no board redraws.
+- **The gate**: edges **2029 → 2031** (the sign row on both hosts);
+  the registry **75 / 2924 → 75 / 2928** — `settings.feedSheet.people.sign`
+  and its `for`, `against`, `either` added; the eight people-row paths
+  keyed by the `people` chip's values; nothing removed.
+
 ---
 
 ## 14. The canvases
