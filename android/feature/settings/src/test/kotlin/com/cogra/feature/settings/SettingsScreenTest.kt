@@ -108,8 +108,8 @@ class SettingsScreenTest {
             actions = SettingsActions(onAlwaysUnveil = { flips++ }),
         )
         node("settings.sensitive.unveil").performScrollTo().assertIsOn().performClick()
-        assertThat(compose.onAllNodesWithTag("settings.sensitive.unveil.status", useUnmergedTree = true).fetchSemanticsNodes())
-            .isEmpty()
+        val status = compose.onAllNodesWithTag("settings.sensitive.unveil.status", useUnmergedTree = true)
+        assertThat(status.fetchSemanticsNodes()).isEmpty()
         assertThat(flips).isEqualTo(1)
     }
 

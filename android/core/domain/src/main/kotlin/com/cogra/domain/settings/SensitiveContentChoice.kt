@@ -1,10 +1,10 @@
 package com.cogra.domain.settings
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /** The threshold that unveils everything — Settings' switch turned on. */
 const val UNVEIL_LEVEL: Int = 0

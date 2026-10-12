@@ -411,7 +411,7 @@ fun CograNavGraph(
     shellSnackbar: SnackbarHostState = remember { SnackbarHostState() },
 ) {
     // The account's sensitive-content choice reaches every veil from here
-    // (`AccountPreferences.kt`; `SensitiveVeil.kt`'s [LocalAlwaysUnveil]).
+    // (`AccountPreferencesViewModel.kt`; `SensitiveVeil.kt`'s [LocalAlwaysUnveil]).
     val preferences: AccountPreferencesViewModel = hiltViewModel()
     val alwaysUnveil by preferences.alwaysUnveil.collectAsStateWithLifecycle()
     CompositionLocalProvider(
