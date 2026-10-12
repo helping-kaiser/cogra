@@ -6,7 +6,6 @@ import { createTokenStore } from "@/lib/session/token-store";
 import { DEFAULT_STANCE_INPUT_MODE, writeStanceInputMode } from "@/lib/stance/input-mode";
 import { ORIGIN, TAP_DEFAULT } from "@/lib/stance/model";
 import { KNOB_TRAVEL_INSET_PX } from "@/lib/stance/pad-geometry";
-import { PAD_ANCHOR_GAP_PX } from "@/lib/stance/pad-placement";
 import { writeStanceTaught } from "@/lib/stance/stance-coach";
 import type { StanceTargetRef } from "@/lib/stance/stance-data";
 import { createStubStanceData, type StubStanceOptions } from "@/lib/stance/stub-stance-data";
