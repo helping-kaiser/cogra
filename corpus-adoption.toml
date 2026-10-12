@@ -2080,8 +2080,7 @@ surface    = "query"
 built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; the owning feature packet is not yet named"
 names      = [
   "appVersions", "campaign", "chat", "chatMessage", "chatSearch",
-  "collective", "feed", "feedSlice", "honorEntries", "item",
-  "networkParameters", "proposal",
+  "collective", "honorEntries", "item", "proposal",
 ]
 
 [[api-contract.staged]]
