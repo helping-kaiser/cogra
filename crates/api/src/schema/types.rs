@@ -331,6 +331,9 @@ pub enum ErrorCode {
     EmailChangeAlreadyApplied,
     /// The password-reset token is invalid, expired, or already used.
     ResetTokenInvalid,
+    /// The account-deletion link is unknown, superseded, cancelled,
+    /// expired, or spent.
+    DeletionTokenInvalid,
     /// Refresh token invalid, expired, or reuse-detected.
     RefreshTokenInvalid,
     /// The prepare pre-check: W1 solvency, W2 stamps, or the signing
@@ -1431,6 +1434,23 @@ impl User {
             .is_some_and(|state| state.vouch_back_dismissed))
     }
 
+    /// The account's confirmed deletion in its grace period — the
+    /// Settings band and the pending screen read it. Viewer-only; null
+    /// when none is confirmed (a requested-not-confirmed deletion has no
+    /// status) and once cancelled.
+    async fn account_deletion(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<Option<AccountDeletion>> {
+        if !self.is_viewer(ctx) {
+            return Ok(None);
+        }
+        let pool = ctx.data::<PgPool>()?;
+        Ok(store::confirmed_account_deletion(pool, self.identity.id)
+            .await?
+            .and_then(AccountDeletion::from_store))
+    }
+
     /// The account's service state — gates acting through CoGra (auth.md
     /// "Account states"). Field-level: viewer-only.
     async fn account_state(
@@ -1643,6 +1663,26 @@ impl PendingEmailChange {
             expires_at: change.expires_at,
             new_email: change.new_email,
         }
+    }
+}
+
+/// A confirmed deletion in its grace period — what the Settings band and
+/// the pending screen read (`User.accountDeletion`). scheduledFor is the
+/// grace-period deadline, fixed at confirmation.
+#[derive(SimpleObject, Debug, Clone)]
+pub struct AccountDeletion {
+    pub scheduled_for: DateTime<Utc>,
+    pub includes_content: bool,
+}
+
+impl AccountDeletion {
+    /// None for a request not yet confirmed: it has no deadline, and no
+    /// status to read.
+    pub fn from_store(deletion: store::AccountDeletion) -> Option<Self> {
+        Some(Self {
+            scheduled_for: deletion.scheduled_for?,
+            includes_content: deletion.include_content,
+        })
     }
 }
 

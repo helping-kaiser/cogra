@@ -335,3 +335,9 @@ fragment PendingEmailChangeFields on PendingEmailChange {
   linkConfirmed
   expiresAt
 }
+
+# A confirmed deletion in its grace: the deadline and the sweep choice.
+fragment AccountDeletionFields on AccountDeletion {
+  scheduledFor
+  includesContent
+}

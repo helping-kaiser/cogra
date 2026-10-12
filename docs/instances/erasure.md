@@ -106,14 +106,12 @@ mechanism itself is the same one-way transition either way.
   removal drops every record in the bundle to its reduced
   projection, current version and prior revisions alike.
 - **The Postgres profile is tombstoned** — a new profile version
-  row with the identity fields cleared, `redaction_reason` set,
-  and the unique redacted form below as its username value.
+  row with the identity fields cleared and `redaction_reason` set.
   Nothing is overwritten in place: the redaction is one more
   version layer marking when it happened, and the prior versions'
-  values are removed and archived per §4. `users.username` is a
-  derived projection of the current version
-  ([layers.md §3](../primitive/layers.md#3-layers-on-overlay-nodes):
-  derived caches do not layer).
+  values are removed and archived per §4. The handle is account
+  state rather than a profile field, so `actors.handle` is the one
+  value redacted in place, to the unique form below.
 - **The avatar and cover assets** in blob storage are removed and
   archived; their digests remain committed in the (now removed)
   witnessed payloads.
@@ -142,15 +140,15 @@ participated in. Content-level is the sweep for an actor who
 wants everything gone at once; §1 is the targeted tool for
 removing specific regretted content.
 
-### Username post-redaction
+### Handle post-redaction
 
-`users.username` is `UNIQUE` in Postgres
+`actors.handle` is `UNIQUE` in Postgres
 ([data-model.md](../implementation/data-model.md)). The redacted
 form must therefore be guaranteed-unique, not probabilistically
-unique. The user's existing UUID PK is unique by construction:
+unique. The actor's existing UUID PK is unique by construction:
 
 ```
-users.username = "redacted-user-{user_id_uuid}"
+actors.handle = "redacted-user-{actor_id_uuid}"
 ```
 
 This preserves the column invariant, never collides, and remains
@@ -259,16 +257,17 @@ lives in [api-spec.md](../implementation/api-spec.md).
    path** post-execution — payload removal is one-way, and the
    platform commits to the redaction once executed.
 
-**An applicant's deletion is immediate.** An account that has not
-landed has nothing on L1 — nothing is on the graph to redact and
-no one's standing to protect — so the five steps do not apply:
-one in-app press deletes the account, credentials, application,
-staged acts and any key backup at once, with no mailed link and no
-grace period, and every session ends. The one exception is the
-landing window: an applicant whose application is approved and
-whose registration has not landed cannot delete, because approval
-has already funded the burn and staged the Registration. Once the
-account lands, the member path above applies.
+**An applicant's deletion is immediate.** An applicant whose
+address is unfunded has nothing on L1 — nothing is on the graph to
+redact and no one's standing to protect — so the five steps do not
+apply: one in-app press deletes the account, credentials,
+application, staged acts and any key backup at once, with no mailed
+link and no grace period, and every session ends. A funded
+applicant cannot take that path: approval has already burned for
+its address and staged the Registration, so nothing may vanish
+under it. Until that Registration lands, no deletion opens; once it
+lands — vouched or not — the account has a node, and the member path
+above applies.
 
 The grace period exists for the same reason GDPR confirmation
 patterns exist: account deletion is destructive, account-wide,

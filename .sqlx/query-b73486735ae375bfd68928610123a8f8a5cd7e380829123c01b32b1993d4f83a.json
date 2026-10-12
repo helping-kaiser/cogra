@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "UPDATE auth_account_deletions SET cancelled_at = NOW()\n         WHERE user_id = $1\n           AND cancelled_at IS NULL AND superseded_at IS NULL AND executed_at IS NULL",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b73486735ae375bfd68928610123a8f8a5cd7e380829123c01b32b1993d4f83a"
+}
