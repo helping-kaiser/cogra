@@ -32,15 +32,30 @@
    to the wait it dismissed (`ApplicantWaiting`), and this is a new state, so
    it comes back the way every state card does; `Got it` puts this one away
    in turn, until the state changes again. The title and the body are
-   drafted for jakob. */
+   drafted for jakob.
+
+   REGISTERED under the feed's own prefix (round 7), named as
+   `ApplicantWaiting` names the same shell: the card is `application`, its ask
+   link `link`, and `Got it` is `dismiss`. */
+export const NODE = "feed";
 export function Screen() {
   return (
     <>
-      <CograBand trailing={<FeedFilter />}>
-        <BorrowedViewBand handle="mira" displayName="Mira Voss" avatarSrc="inviter.jpg" line="Browsing from @mira's view while your application lands." />
+      <CograBand trailing={<FeedFilter node="filterTrigger" />} node="band">
+        <BorrowedViewBand
+          handle="mira"
+          displayName="Mira Voss"
+          avatarSrc="inviter.jpg"
+          line="Browsing from @mira's view while your application lands."
+          node="borrowedViewBand"
+        />
       </CograBand>
       <FeedList>
-        <TaskCard title="The approval didn't land" body="You're waiting again — anyone who's already in can vouch you in, and the first vouch lands it.">
+        <TaskCard
+          title="The approval didn't land"
+          body="You're waiting again — anyone who's already in can vouch you in, and the first vouch lands it."
+          node="application"
+        >
           <PayoutAddress
             bare
             label="Ask someone you know to vouch for you"
@@ -48,15 +63,16 @@ export function Screen() {
             onCopy={() => {}}
             copyLabel="Copy your ask link"
             caption="Send it to anyone who is already in. It does not expire, and it works however many people you send it to."
+            node="link"
           />
-          <Button variant="outline" selfStart>
+          <Button variant="outline" selfStart node="dismiss">
             Got it
           </Button>
         </TaskCard>
-        <PostCard {...ADA_POST} signedIn={false} />
-        <PostCard {...TOBIAS_POST} signedIn={false} />
+        <PostCard {...ADA_POST} signedIn={false} node="card" />
+        <PostCard {...TOBIAS_POST} signedIn={false} node="card" />
       </FeedList>
-      <BottomNav active="feed" slots={ALL_SLOTS} inline />
+      <BottomNav active="feed" slots={ALL_SLOTS} inline node="bottomBar" />
     </>
   );
 }
