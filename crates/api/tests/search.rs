@@ -5,11 +5,10 @@
 //!
 //! Content is seeded through the store's own writers, so the authoring
 //! instants — the recency key — are chosen by the test; the database's
-//! trigger keeps the index current behind every writer. Two states have
-//! no writer yet and are seeded by raw SQL, which the trigger follows
-//! like any other write: a redaction (the moderation slice writes it) is
-//! a raw tombstone, and the seen-list (`markSeen` is History's) is a raw
-//! `user_view_log` row.
+//! trigger keeps the index current behind every writer. A redaction has
+//! no writer yet (the moderation slice writes it) and is seeded as a raw
+//! tombstone, which the trigger follows like any other write. The
+//! seen-list is written through its own verb, `markSeen`.
 
 mod rig;
 
@@ -579,15 +578,17 @@ async fn an_empty_kind_list_narrows_nothing(pool: PgPool) {
     assert_eq!(tags, vec!["Post:Salt", "Hashtag:saltmaps"]);
 }
 
-/// Mark `content` seen by `viewer` — what History's `markSeen` will
-/// write.
-async fn seen(pool: &PgPool, viewer: Uuid, content: Uuid) {
-    sqlx::query("INSERT INTO user_view_log (user_id, content_id) VALUES ($1, $2)")
-        .bind(viewer)
-        .bind(content)
-        .execute(pool)
-        .await
-        .expect("seen");
+/// Mark `content` seen through History's `markSeen`, in the session
+/// `token` holds.
+async fn seen(rig: &WireRig, token: &str, content: Uuid) {
+    let marked = rig
+        .gql(
+            Some(token),
+            "mutation($nodes: [UUID!]!) { markSeen(input: { nodes: $nodes }) { ok } }",
+            json!({ "nodes": [content] }),
+        )
+        .await;
+    assert_eq!(marked["markSeen"]["ok"], true, "{marked}");
 }
 
 /// With a session, `includeSeen: false` drops what the viewer has seen
@@ -598,13 +599,13 @@ async fn seen(pool: &PgPool, viewer: Uuid, content: Uuid) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_seen_false_drops_seen_nodes(pool: PgPool) {
     let rig = rig(pool);
-    let (reader, _) = rig.seed_member("reader", "reader@example.test").await;
+    rig.seed_member("reader", "reader@example.test").await;
     let token = rig.log_in("reader@example.test").await;
     let sol = person(&rig.pool, "saltine", None).await;
     let read = post(&rig.pool, sol, 1, Some("Salt read"), None, "x").await;
     post(&rig.pool, sol, 2, Some("Salt fresh"), None, "x").await;
-    seen(&rig.pool, reader, read).await;
-    seen(&rig.pool, reader, sol).await;
+    seen(&rig, &token, read).await;
+    seen(&rig, &token, sol).await;
 
     let kept = search(&rig, Some(&token), json!({ "query": "salt" })).await;
     assert_eq!(
@@ -630,7 +631,7 @@ async fn include_seen_false_drops_seen_nodes(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_seen_false_keeps_page_sizes(pool: PgPool) {
     let rig = rig(pool);
-    let (reader, _) = rig.seed_member("reader", "reader@example.test").await;
+    rig.seed_member("reader", "reader@example.test").await;
     let token = rig.log_in("reader@example.test").await;
     let sol = person(&rig.pool, "sol", None).await;
     let mut posts = Vec::new();
@@ -638,7 +639,7 @@ async fn include_seen_false_keeps_page_sizes(pool: PgPool) {
         posts.push(post(&rig.pool, sol, n, Some(&format!("Salt {n}")), None, "x").await);
     }
     for id in &posts[7..] {
-        seen(&rig.pool, reader, *id).await;
+        seen(&rig, &token, *id).await;
     }
 
     let first = search(
@@ -677,10 +678,11 @@ async fn include_seen_false_keeps_page_sizes(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn include_seen_is_ignored_without_a_session(pool: PgPool) {
     let rig = rig(pool);
-    let (reader, _) = rig.seed_member("reader", "reader@example.test").await;
+    rig.seed_member("reader", "reader@example.test").await;
+    let token = rig.log_in("reader@example.test").await;
     let sol = person(&rig.pool, "sol", None).await;
     let read = post(&rig.pool, sol, 1, Some("Salt"), None, "x").await;
-    seen(&rig.pool, reader, read).await;
+    seen(&rig, &token, read).await;
 
     let found = search(&rig, None, json!({ "query": "salt", "includeSeen": false })).await;
     assert_eq!(names(&found), vec!["Post:Salt"]);
@@ -1491,7 +1493,7 @@ async fn a_handle_scope_with_text_returns_no_profile_row(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn scoped_pages_are_stable_and_complete(pool: PgPool) {
     let rig = rig(pool);
-    let (reader, _) = rig.seed_member("reader", "reader@example.test").await;
+    rig.seed_member("reader", "reader@example.test").await;
     let token = rig.log_in("reader@example.test").await;
     let sol = person(&rig.pool, "sol", None).await;
     let kel = person(&rig.pool, "kel", None).await;
@@ -1560,7 +1562,7 @@ async fn scoped_pages_are_stable_and_complete(pool: PgPool) {
     assert_eq!(back, expected, "backward");
 
     let seen_comment = comments[3];
-    seen(&rig.pool, reader, seen_comment).await;
+    seen(&rig, &token, seen_comment).await;
     let unseen = scoped(
         &rig,
         Some(&token),
