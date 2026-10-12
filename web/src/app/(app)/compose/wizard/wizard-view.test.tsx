@@ -14,7 +14,9 @@ import { fakeWriteSigner } from "@/test/registration";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { emptyWizard, type WizardState } from "@/lib/compose/wizard";
-import type { ComposeDraftStore } from "@/lib/compose/draft-store";
+import { createComposeDraftStore, type ComposeDraftStore } from "@/lib/compose/draft-store";
+import { createSealedDraftStore, type SealedDraftStore } from "@/lib/compose/sealed-draft";
+import { IDBFactory } from "fake-indexeddb";
 import { ComposeWizard } from "./wizard-view";
 import { byAnyTestId, byNode } from "@/test/data-node";
 
@@ -142,12 +144,19 @@ async function pick(names: string[]) {
 
 function render(drafts = fakeDrafts(), keyed = true) {
   return renderWithProviders(
-    <ComposeWizard store={fakeIdentityStore({ keyOnDevice: keyed })} drafts={drafts} />,
+    <ComposeWizard
+      store={fakeIdentityStore({ keyOnDevice: keyed })}
+      drafts={drafts}
+      // A store of its own per render, over a fresh database (`beforeEach`),
+      // so no copy one test seals is settled by the next.
+      seals={createSealedDraftStore({ activeAccountId: () => "acct-1" })}
+    />,
     { store: signedInStore(), writeSigner: fakeWriteSigner() },
   );
 }
 
 beforeEach(async () => {
+  globalThis.indexedDB = new IDBFactory();
   installEncoder();
   searchParams = new URLSearchParams();
   push.mockClear();
@@ -1056,5 +1065,172 @@ describe("the license a new post starts from", () => {
     render(drafts);
     fireEvent.click(await screen.findByTestId("wizard-draft-continue"));
     await waitFor(() => expect(drafts.held()?.license).toEqual({ attribution: 0, provenance: 1 }));
+  });
+});
+
+// FC-G5, ruled "fix the BUILD, not the board": taken is not landed, and the
+// draft ComposeExpired.md:3 promises must still exist when a relaying post
+// expires epochs after the wizard left. These run on the REAL stores over a
+// fresh in-memory IndexedDB, because the custody being proven is the stores'.
+describe("the sealed copy of a staged post (FC-G5)", () => {
+  const ACCOUNT = "acct-1";
+
+  let realDrafts: ComposeDraftStore;
+  let seals: SealedDraftStore;
+
+  beforeEach(() => {
+    globalThis.indexedDB = new IDBFactory();
+    realDrafts = createComposeDraftStore({ activeAccountId: () => ACCOUNT });
+    seals = createSealedDraftStore({ activeAccountId: () => ACCOUNT });
+  });
+
+  const stagedWriteIs = (state: string | null) =>
+    graphql.query("StagedWrite", ({ variables }) =>
+      HttpResponse.json({
+        data: {
+          stagedWrite:
+            state === null
+              ? null
+              : {
+                  __typename: "StagedWrite",
+                  id: variables.id,
+                  state,
+                  carried: false,
+                  family: "PUBLISH",
+                  canonicalProposal: "AA==",
+                  verifiedAct: null,
+                  record: null,
+                },
+        },
+      }),
+    );
+
+  function mount(signer = fakeWriteSigner()) {
+    return renderWithProviders(
+      <ComposeWizard
+        store={fakeIdentityStore({ keyOnDevice: true })}
+        drafts={realDrafts}
+        seals={seals}
+      />,
+      { store: signedInStore(), writeSigner: signer },
+    );
+  }
+
+  async function publishWords(words: string) {
+    fireEvent.click(await screen.findByTestId("wizard-to-words"));
+    fireEvent.change(screen.getByTestId("wizard-words"), { target: { value: words } });
+    fireEvent.click(screen.getByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(await screen.findByTestId(byAnyTestId("wizard-next", "composeDetails.next")));
+    fireEvent.click(await screen.findByTestId("wizard-sign"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/posts/post-1?published=1"));
+  }
+
+  const staged: WizardState = {
+    ...emptyWizard(),
+    mode: "words",
+    words: "Three weekends at low tide.",
+    title: "Salt maps",
+    step: "seal",
+  };
+
+  it("a_staged_post_keeps_a_sealed_copy_until_it_lands", async () => {
+    server.use(preparePost());
+    // The default signer answers RELAYING: taken, not landed.
+    mount();
+    await publishWords("Three weekends at low tide.");
+
+    // jakob 2026-08-31 still holds — the composer has no draft…
+    expect(await realDrafts.load()).toBeNull();
+    // …because the post's draft is SEALED, out of its reach.
+    const copies = await seals.list();
+    expect(copies).toHaveLength(1);
+    expect(copies[0]!.node).toBe("post-1");
+    expect(copies[0]!.writes).toEqual(["w1"]);
+    expect(copies[0]!.state.words).toBe("Three weekends at low tide.");
+  });
+
+  it("a batch already landed at signing seals nothing and keeps no draft", async () => {
+    server.use(preparePost());
+    mount(
+      fakeWriteSigner({
+        signStaged: async (write) => ({ kind: "done", id: write.id, state: "LANDED" }),
+      }),
+    );
+    await publishWords("Landed at once.");
+    expect(await seals.list()).toHaveLength(0);
+    expect(await realDrafts.load()).toBeNull();
+  });
+
+  it("never offers the copy while its write is still relaying", async () => {
+    await seals.seal(staged, { node: "post-1", writes: ["w1"] });
+    server.use(stagedWriteIs("RELAYING"));
+    mount();
+
+    expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();
+    expect(await seals.list()).toHaveLength(1);
+  });
+
+  it("a_landed_post_purges_its_sealed_copy", async () => {
+    await seals.seal(staged, { node: "post-1", writes: ["w1"] });
+    server.use(stagedWriteIs("LANDED"));
+    mount();
+
+    expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();
+    expect(await seals.list()).toHaveLength(0);
+  });
+
+  it("an_expired_post_restores_its_draft_and_open_the_draft_leads_with_it", async () => {
+    await seals.seal(staged, { node: "post-1", writes: ["w1"] });
+    server.use(stagedWriteIs("EXPIRED"));
+    // "Open the draft" is a link to /compose: this mount IS that press.
+    mount();
+
+    expect(await screen.findByTestId("wizard-draft-card")).toHaveTextContent("Salt maps");
+    expect(await seals.list()).toHaveLength(0);
+    // Continue resumes on the stage it was sealed from, words intact.
+    fireEvent.click(screen.getByTestId("wizard-draft-continue"));
+    expect(await screen.findByTestId("wizard-sign")).toBeInTheDocument();
+  });
+
+  it("restores a post whose write the server has already reaped", async () => {
+    await seals.seal(staged, { node: "post-1", writes: ["w1"] });
+    server.use(stagedWriteIs(null));
+    mount();
+    expect(await screen.findByTestId("wizard-draft-card")).toHaveTextContent("Salt maps");
+  });
+
+  it("decides nothing when the fate cannot be read, and still opens", async () => {
+    await seals.seal(staged, { node: "post-1", writes: ["w1"] });
+    server.use(graphql.query("StagedWrite", () => HttpResponse.error()));
+    mount();
+    expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();
+    expect(await seals.list()).toHaveLength(1);
+  });
+
+  it("a restored draft that is discarded stays discarded", async () => {
+    await seals.seal(staged, { node: "post-1", writes: ["w1"] });
+    server.use(stagedWriteIs("EXPIRED"));
+    const first = mount();
+    await screen.findByTestId("wizard-draft-card");
+    fireEvent.click(screen.getByTestId("wizard-draft-discard"));
+    await waitFor(async () => expect(await realDrafts.load()).toBeNull());
+    first.unmount();
+
+    mount();
+    expect(await screen.findByTestId("wizard-to-words")).toBeInTheDocument();
+    expect(screen.queryByTestId("wizard-draft-card")).not.toBeInTheDocument();
+  });
+
+  it("never overwrites a draft started since: the newer one leads, the copy waits sealed", async () => {
+    await seals.seal(staged, { node: "post-1", writes: ["w1"] });
+    await realDrafts.save({ ...emptyWizard(), mode: "words", words: "x", title: "A newer draft" });
+    server.use(stagedWriteIs("EXPIRED"));
+    mount();
+
+    expect(await screen.findByTestId("wizard-draft-card")).toHaveTextContent("A newer draft");
+    expect(await seals.list()).toHaveLength(1);
   });
 });
