@@ -4,9 +4,9 @@
 // read, so it is parsed here rather than transcribed. A row edited in the
 // doc and not in the code — or the reverse — fails.
 //
-// The tap default is pinned the same way, out of §8.3: it is the one
-// number the resting gesture writes, and the low-defaults policy is what
-// keeps stronger stances expressible.
+// The low default is pinned the same way, out of §8.3: it is the one
+// number the held gesture writes and the one the pad opens at, and the
+// low-defaults policy is what keeps stronger stances expressible.
 
 import { readFileSync } from "node:fs";
 
@@ -55,9 +55,13 @@ describe("stance anchors", () => {
     expect(STANCE_ANCHORS).toEqual(documented);
   });
 
-  it("takes the tap default from design.md §8.3", () => {
-    const stated = DESIGN.match(/plain tap commits a modest\s+positive — \*\*`\(([^)]+)\)`\*\*/);
-    expect(stated, "§8.3 no longer states the tap default").not.toBeNull();
+  it("takes the held default from design.md §8.3, where a tap stages nothing", () => {
+    // stance-control.md "The gesture": the tap opens, the hold signs.
+    expect(DESIGN).toMatch(/A tap blooms the pad and stages\s+nothing/);
+    const stated = DESIGN.match(
+      /press-and-hold of 500ms commits a modest\s+positive — \*\*`\(([^)]+)\)`\*\*/,
+    );
+    expect(stated, "§8.3 no longer states the held default").not.toBeNull();
     const [directed, interest] = stated![1].split(",").map((part) => Number(part.trim()));
     expect(TAP_DEFAULT).toEqual({ pDirected: directed, pInterest: interest });
   });
@@ -68,7 +72,7 @@ describe("stance anchors", () => {
     }
   });
 
-  it("reads the tap default as the nearest anchor, not as its own face", () => {
+  it("reads the low default as the nearest anchor, not as its own face", () => {
     // (+0.1, +0.1) is not an anchor; the readout is the nearest one.
     expect(nearestAnchor(TAP_DEFAULT).label).toBe("Nice");
   });

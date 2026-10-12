@@ -1,26 +1,24 @@
 "use client";
 
-// Whether the stance gesture has been taught yet (design.md §8.7).
+// Whether the stance gesture has been taught yet
+// (design/guidelines/stance-control.md "Teaching it").
 //
-// "A held gesture is invisible until taught, and a tap that stages a
-// priced act must not be the teaching moment's casualty. The first tap
-// ever on a stance target teaches before it acts: it opens the coach mark
-// — anchored to the target, overlapping nothing, staying until dismissed
-// or until the first successful hold — and stages nothing. Every tap
-// after that acts."
+// "A held gesture is invisible until taught — and the pad is the teacher.
+// … The account's first open ever, wherever that pad opens, carries two
+// coaching lines … They close with the pad and never show again."
 //
-// So the stored fact is one bit: has the viewer met the gesture. It flips
-// on the teaching tap, and equally on a successful hold by someone who
-// found the gesture without being told — either way they have met it, and
-// a second teaching would cost them a tap for nothing.
+// So the stored fact is one bit: has the first open happened. It flips
+// the moment the considered surface first opens, and the lines stay on
+// that open until it closes. A hold opens nothing, so it teaches nothing
+// and spends nothing.
 //
 // It is about the gesture rather than any one target, so it is stored
 // once for the viewer rather than per post: teaching the same lesson
-// again on the next card is the noise the mark exists to avoid. It is a
+// again on the next card is the noise the rule exists to avoid. It is a
 // rendering preference with nothing private in it, so it lives in
 // `localStorage` beside the input mode, read through
 // `useSyncExternalStore` the same way — which also keeps every mounted
-// control in step, so the teaching tap on one card does not leave the
+// control in step, so the teaching open on one card does not leave the
 // next card still waiting to teach.
 
 import { useCallback, useSyncExternalStore } from "react";
