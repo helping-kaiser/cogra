@@ -242,7 +242,7 @@ fun VideoPlayer(
     // reel-vs-video split: a clip in a card or a stream is a MOMENT, read with
     // the scroller's grammar, and stopping it would leave a card gone still and
     // dead under a reader still looking at it. A clip the reader opened on
-    // purpose — the detail's pinned clip, the viewer — is a PROGRAMME, read
+    // purpose — the detail clip, the viewer — is a PROGRAMME, read
     // with a player's grammar, and a programme that silently restarted would be
     // a player that never admits it finished.
     //
@@ -391,7 +391,7 @@ fun VideoPlayer(
  * surface entering last is the one that ends up showing.
  *
  * **An unowned stage is a claim waiting to be made** (jakob 2026-09-15, hand
- * test: returning from the fullscreen viewer left the detail's pinned clip a
+ * test: returning from the fullscreen viewer left the detail clip a
  * black box with no transport at all). The viewer claims the stage on the way
  * in and SURRENDERS on the way out, which leaves the clip on stage with nobody
  * showing it. The surface underneath never stopped being composed, so nothing

@@ -28,7 +28,7 @@ import org.robolectric.RobolectricTestRunner
  * The detail's clip and the fullscreen viewer, handing one clip between them
  * (PostDetailVideo.md:57/59, ViewerVideo.md:5).
  *
- * The real [PinnedClip] under the real [MediaViewer]: one player carries the
+ * The real [DetailClip] under the real [MediaViewer]: one player carries the
  * clip into the viewer and back, so the viewer opens where the detail was, and
  * nothing of the clip is drawn — let alone played — behind it.
  *
@@ -117,8 +117,8 @@ class ViewerHandoverTest {
         assertThat(VideoStage.sourceOnStage).isSameInstanceAs(source)
         assertThat(player.currentPosition).isEqualTo(reached)
         assertThat(player.playWhenReady).isTrue()
-        compose.onNode(surfaceIn(PINNED), useUnmergedTree = true).assertExists()
-        compose.onNode(transportIn(PINNED), useUnmergedTree = true).assertExists()
+        compose.onNode(surfaceIn(DETAIL), useUnmergedTree = true).assertExists()
+        compose.onNode(transportIn(DETAIL), useUnmergedTree = true).assertExists()
     }
 
     private fun showDetail() {
@@ -126,7 +126,7 @@ class ViewerHandoverTest {
         compose.setContent {
             Cogra2PreviewTheme {
                 CompositionLocalProvider(LocalLifecycleOwner provides destination) {
-                    Column { PinnedClip(item = clip, onOpenViewer = { viewerUp = true }) }
+                    Column { DetailClip(item = clip, onOpenViewer = { viewerUp = true }) }
                 }
                 if (viewerUp) MediaViewer(items = listOf(clip), onClose = { viewerUp = false })
             }
@@ -137,8 +137,8 @@ class ViewerHandoverTest {
     private fun assertTheViewerAloneShowsTheClip() {
         compose.onNode(surfaceIn(VIEWER), useUnmergedTree = true).assertExists()
         compose.onNode(transportIn(VIEWER), useUnmergedTree = true).assertExists()
-        compose.onNode(surfaceIn(PINNED), useUnmergedTree = true).assertDoesNotExist()
-        compose.onNode(transportIn(PINNED), useUnmergedTree = true).assertDoesNotExist()
+        compose.onNode(surfaceIn(DETAIL), useUnmergedTree = true).assertDoesNotExist()
+        compose.onNode(transportIn(DETAIL), useUnmergedTree = true).assertDoesNotExist()
         assertThat(VideoStage.holding?.owner).isNotNull()
     }
 
@@ -149,7 +149,7 @@ class ViewerHandoverTest {
         hasTestTag(TRANSPORT_TAG) and hasAnyAncestor(hasTestTag(host))
 
     private companion object {
-        const val PINNED = "${PINNED_CLIP_TAG}_video"
+        const val DETAIL = "${DETAIL_CLIP_TAG}_video"
         const val VIEWER = "${VIEWER_TAG}_video"
 
         /** A moment past the clip's start, so starting over (back to zero) shows. */

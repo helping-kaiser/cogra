@@ -1,7 +1,7 @@
 // THE CONTROL LADDER, asserted at its second rung (DV-03/DV-04/DV-05).
 //
-// A feed card wears the sound control and nothing else; the detail's pinned
-// clip wears the real transport — play/pause, the two skips, and a timeline
+// A feed card wears the sound control and nothing else; the detail clip
+// wears the real transport — play/pause, the two skips, and a timeline
 // that is a SLIDER rather than a filled track. These are behaviours, so they
 // are driven through the events a browser delivers, using the stubs in
 // `src/test/media-env.ts`.
@@ -10,6 +10,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { endsClip, intersect, statesDuration } from "@/test/media-env";
+import { MediaViewer } from "./media-viewer";
 import { isMuted, resetMuteForTests } from "./mute";
 import { VideoPlayer } from "./video-player";
 import { resetVideoStageForTests } from "./video-stage";
@@ -279,6 +280,89 @@ describe("the reach", () => {
       .parentElement as HTMLElement;
     expect(bar.style.bottom).toBe("16px");
   });
+});
+
+// NO TARGET ON THE BAR FALLS BELOW 48dp (jakob's ruling 101 — design/readme.md
+// §13, "The clip detail rulings"; `VideoControls.jsx:109-113`, `:237-268`).
+// The transport is SHARED, so the detail clip and the fullscreen viewer carry
+// the re-space alike; each case runs on both.
+describe("the bar's targets (ruling 101)", () => {
+  const surfaces = [
+    ["the detail's clip", () => transportPlayer({ onOpenViewer: () => {} }), "video-player"],
+    [
+      "the fullscreen viewer",
+      () =>
+        render(
+          <MediaViewer
+            items={[{ src: CLIP, mimeType: "video/mp4", poster: null, mediaId: "m1" }]}
+            onClose={() => {}}
+            testId="viewer"
+          />,
+        ),
+      "viewer-video",
+    ],
+  ] as const;
+
+  it.each(surfaces)(
+    "%s: sound and fullscreen stand 20px apart, so their 48px targets meet without overlapping",
+    (_, mount, id) => {
+      mount();
+      const pair = screen.getByTestId(`${id}-transport-pair`);
+      const sound = screen.getByTestId(`${id}-transport-sound`);
+      expect(pair).toContainElement(sound);
+      expect(pair.style.gap).toBe("20px");
+      // Two 28px boxes 20px apart: centres 48 apart — exactly one 48px
+      // `cg-hit` target, so the two targets touch and never overlap.
+      const box = Number.parseFloat(sound.style.width);
+      expect(box + Number.parseFloat(pair.style.gap)).toBe(48);
+      expect(sound.className).toContain("cg-hit");
+      const fullscreen = screen.queryByTestId(`${id}-transport-fullscreen`);
+      // The viewer draws no toggle — "this IS the fullscreen"
+      // (`MediaViewer.jsx:153`) — and its sound still stands in the pair.
+      if (fullscreen !== null) {
+        expect(pair).toContainElement(fullscreen);
+        expect(fullscreen.style.width).toBe(`${box}px`);
+        expect(fullscreen.className).toContain("cg-hit");
+      } else {
+        expect(id).toBe("viewer-video");
+      }
+    },
+  );
+
+  it.each(surfaces)(
+    "%s: the timeline's target grows DOWN to the frame's edge and the clip's tap above it stays whole",
+    (_, mount, id) => {
+      mount();
+      const timeline = screen.getByTestId(`${id}-transport-timeline`);
+      const target = screen.getByTestId(`${id}-transport-timeline-target`);
+      const bar = timeline.parentElement as HTMLElement;
+      // Hanging from the track's top, never centred on it: nothing of it
+      // reaches above the slider into the clip's own tap.
+      expect(timeline).toContainElement(target);
+      expect(target.className).toMatch(/\btop-0\b/);
+      expect(target.style.height).toBe("var(--touch-target-min)");
+      // The row stands at the 48px floor, so a 48px target hung from a 16px
+      // track centred in it ends on the bar's bottom edge — and the bar's
+      // bottom is the gesture-zone inset off the frame's: the target spans
+      // 16 + 16 of row and inset, 48 in all, to the frame's bottom edge.
+      expect(bar.style.minHeight).toBe("var(--touch-target-min)");
+      expect(timeline.style.height).toBe("16px");
+      // The target is reach, never ink.
+      expect(target.getAttribute("aria-hidden")).toBe("true");
+
+      // A press on the grown target is a press on the slider.
+      vi.spyOn(timeline, "getBoundingClientRect").mockReturnValue({
+        left: 0,
+        width: 100,
+      } as DOMRect);
+      timeline.setPointerCapture = () => {};
+      timeline.hasPointerCapture = () => true;
+      const video = screen.getByTestId(id) as HTMLVideoElement;
+      act(() => statesDuration(video, 40));
+      fireEvent.pointerDown(target, { clientX: 50, pointerId: 1 });
+      expect(video.currentTime).toBe(20);
+    },
+  );
 });
 
 describe("the stage", () => {

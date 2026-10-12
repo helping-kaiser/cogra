@@ -17,53 +17,69 @@ import com.cogra.core.designsystem.v2.token.MediaFrame
 
 /**
  * The top of a video post's detail view
- * (`design/components/media/PinnedClip.jsx`).
+ * (`design/components/media/DetailClip.jsx`).
  *
  * **It sits above the card, not inside it**, "which is why the author chip
  * leads the CARD on that surface rather than the screen. On every other
  * surface the chip sits above the content; here the content the reader is
  * already watching sits above everything, and the card beneath it is the post
- * as it always reads" (`:9-12`).
+ * as it always reads" (`:10-13`).
  *
- * **It is pinned, not merely first.** The board stands it outside the
- * scrolling column entirely (`screens/_shared.jsx:666-672`), so the body rises
- * beneath a clip that stays put and stays playing — which is why a caller puts
- * this above its list rather than in the list's first item.
+ * **It is content, and scrolls with the page** (jakob's ruling 100,
+ * design/readme.md §13, "The clip detail rulings"): "Comments live in their
+ * sheet, so nothing stands below the post on its detail but the post itself,
+ * and a clip held on screen would take the room the post is read in"
+ * (`:15-17`). The caller stands it at the head of the detail's scrolling
+ * column, flush on the card — "one block, no gap between them"
+ * (`DetailClip.prompt.md:15`).
  *
- * **The ground is black** (`:24`), "so a clip that does not fill the frame's
- * width sits on the same ground the viewer would give it".
+ * **Opening the detail starts it, and scroll never stops it**: "the open is
+ * the deliberate act, so no share of the screen gates it … A clip scrolled out
+ * of view plays on — scroll never stops it — and no floating player takes its
+ * place" (`:18-21`). Composing the player is what claims [VideoStage]'s one
+ * player and starts it ([VideoPlayer] with `autoplay`); no 70% election stands
+ * over it. So the caller must keep it COMPOSED for as long as the detail is up
+ * — a lazy list disposes a row scrolled out of view, and a disposed player
+ * surrenders the clip — which is why the post detail stands it in the same
+ * row as the card it heads.
+ *
+ * **The ground is black** (`:51`), "so a clip that does not fill the frame's
+ * width sits on the same ground the viewer would give it" (`:24-26`).
  *
  * **It carries the full transport** (`controls="transport"`), the ladder's
- * second rung: the reader opened this clip on purpose.
+ * second rung: the reader opened this clip on purpose. Android's chrome stays
+ * up (PostDetailVideo.md:31).
  *
- * A [item] with no clip in it draws nothing — there is no such thing as a
- * pinned picture.
+ * A [item] with no clip in it draws nothing — a picture post's gallery stays
+ * the card's body.
  *
  * **Under a sensitive veil it is the poster alone** (jakob 2026-09-24, the
- * pinned-clip veil ruling): the clip wears its veil in place, and a veiled
+ * detail-clip veil ruling): the clip wears its veil in place, and a veiled
  * clip is out of the stage ([LocalStageVeil], backlog item 103). No player is
  * composed, so nothing claims [VideoStage], nothing plays behind the blur, and
  * no transport stands under the veil — the face's only affordance is the
  * reveal. The frame keeps its exact size either way, so revealing moves
- * nothing, and the reveal composes the player, which claims the stage.
+ * nothing, and the reveal composes the player, which claims the stage
+ * (PostDetailVideoSensitive.md:3-15).
  */
 @Composable
-fun PinnedClip(
+fun DetailClip(
     item: MediaItem,
     modifier: Modifier = Modifier,
     maxHeight: Dp = mediaMaxHeight(),
     /**
-     * Where the clip's own tap goes (`:19-20` — "the tap on it is the surface's
+     * Where the clip's own tap goes (`:28-29` — "the tap on it is the surface's
      * to wire: back into the stream where the reader came from it, and into the
      * fullscreen viewer everywhere else").
      *
-     * THE STREAM HALF IS SLICE 3's. `Reel` is not built, so the graph's other
-     * case (`PostDetailVideo` via 3 — "came from the stream — the clip expands
-     * back into it, the reader's place held") has no destination yet; the
-     * viewer half is wired and the reel half lands with the stream.
+     * THE STREAM HALF IS THE REEL PACKET'S (feed-card-rework BX-2). `Reel` is
+     * not built, so PostDetailVideo.md:33 ("GIVEN the reader came from the
+     * stream … the clip expands back into the stream") has no origin to come
+     * from yet; every reader comes from "anywhere else" (:35), so the viewer
+     * half is the whole of the wiring today.
      */
     onOpenViewer: (() -> Unit)? = null,
-    testTag: String = PINNED_CLIP_TAG,
+    testTag: String = DETAIL_CLIP_TAG,
 ) {
     val videoUrl = item.videoUrl ?: return
     // The clip's own shape, clamped to tall by the same rule every frame in
@@ -71,7 +87,7 @@ fun PinnedClip(
     // invents. One frame for the poster and the player alike.
     val frame = Modifier
         .fillMaxWidth()
-        .aspectRatio(item.aspectRatio?.cappedToTallestTile() ?: 1f)
+        .aspectRatio(item.aspectRatio.cappedToTallestTile())
         .heightIn(min = MediaFrame.MinHeight, max = maxHeight)
     val veiled = LocalStageVeil.current
     Box(
@@ -94,14 +110,15 @@ fun PinnedClip(
                 url = videoUrl,
                 // The cover is the clip's face until a frame of it exists.
                 posterUrl = item.imageModel(),
-                // Pinned still playing: the clip is the thing the reader came
-                // for, and arriving here claims the stage from whatever card
-                // was playing it.
+                // THE OPEN STARTS IT (PostDetailVideo.md:7): the clip is the
+                // thing the reader came for, and arriving here claims the stage
+                // from whatever card was playing it — at the frame it reached
+                // (:53), since the player is the same one.
                 autoplay = true,
                 durationMs = item.durationMs,
                 controls = VideoControls.Full,
                 contentScale = ContentScale.Crop,
-                videoAspectRatio = item.aspectRatio?.cappedToTallestTile(),
+                videoAspectRatio = item.aspectRatio.cappedToTallestTile(),
                 contentDescription = item.altText,
                 onOpenViewer = onOpenViewer,
                 modifier = frame,
@@ -111,4 +128,4 @@ fun PinnedClip(
     }
 }
 
-const val PINNED_CLIP_TAG = "pinned_clip"
+const val DETAIL_CLIP_TAG = "detail_clip"

@@ -32,7 +32,7 @@
 // in the accessible name rather than on the frame.
 //
 // A VIDEO TAKES THE FULL TRANSPORT (`:39-41`) — the ladder's third rung, the
-// same component the detail's pinned clip wears, with the same stop-at-end
+// same component the detail clip wears, with the same stop-at-end
 // grammar. Rotating the device fills the screen with it, which is the device's
 // own gesture, so there is no rotate control to draw.
 //
@@ -49,7 +49,7 @@
 //
 // IT IS A COVERING LAYER (the stage-law packet §3.2 rule 13): a dialog over
 // the page, so a stage beneath it holds nobody while it is up (Feed.md:31/33,
-// PostDetailVideo.md:31), from the moment it mounts until it unmounts — the
+// PostDetailVideo.md:41), from the moment it mounts until it unmounts — the
 // viewer has no open flag, so mounted IS open, and its unmounting is the
 // cover's end. What it draws stands ON its layer (`CoveringLayerProvider`),
 // so the viewer's own clip is never suspended by the cover the viewer raises
@@ -385,21 +385,21 @@ function ViewerStage({
     >
       {video ? (
         <div className="absolute inset-0">
-          {/* THE LADDER'S THIRD RUNG. The same transport the detail's pinned
-              clip wears, over a clip that stops at its end rather than looping
+          {/* THE LADDER'S THIRD RUNG. The same transport the detail clip
+              wears, over a clip that stops at its end rather than looping
               — the reader opened this one on purpose, twice over.
 
               IT CARRIES THE CLIP ON, NEVER STARTS IT OVER. Opened on the
-              detail's pinned clip, it is one clip shown bigger: "the clip
-              stands at the position the pinned clip reached AND NEVER it
-              starts over" (ViewerVideo.md:5), in the pinned clip's play state
-              (the ruled GAP-8 carry), while the pinned clip stops and never
-              plays behind it (PostDetailVideo.md:47). The pinned clip's live
+              detail clip, it is one clip shown bigger: "the clip
+              stands at the position the detail's clip reached AND NEVER it
+              starts over" (ViewerVideo.md:5), in the detail clip's play state
+              (the ruled GAP-8 carry), while the detail clip stops and never
+              plays behind it (PostDetailVideo.md:57). The detail clip's live
               element moves in here (`video-stage.ts`, the element pool) and
               plays on, so nothing is left behind to play; the session's clip
-              memory carries the play state the pinned clip remembered as it
+              memory carries the play state the detail clip remembered as it
               opened the viewer (`video-player.tsx`'s `carry`). On close it
-              remembers on its way out, and the pinned clip takes the element
+              remembers on its way out, and the detail clip takes the element
               back. */}
           <VideoPlayer
             src={item.src ?? ""}
