@@ -26,7 +26,7 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType,
+    AccountDeletion, Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType,
     PendingEmailChange, PreparedWrite, Session, StagedWriteType, User, UserError, UserPreferences,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
@@ -49,6 +49,12 @@ use crate::stance::{self, StanceError};
 const EMAIL_CHANGE_TTL_HOURS: i64 = 24;
 /// Password-reset tokens stay live this long (auth.md default).
 const PASSWORD_RESET_TTL_MINUTES: i64 = 15;
+/// An unopened account-deletion link dies this long after its request
+/// (auth.md "Self-service deletion", in the email-change family).
+const DELETION_LINK_TTL_DAYS: i64 = 7;
+/// The grace period a confirmed deletion waits out before it executes
+/// (erasure.md §5).
+const DELETION_GRACE_DAYS: i64 = 7;
 /// Key-backup blob cap (auth.md "Blob format (v1)"): the v1 container is
 /// tens of bytes, so 4 KiB leaves format headroom while denying a
 /// hostile client unbounded rows.
@@ -116,6 +122,53 @@ fn link_mail(to: String, requires_code: bool, web_origin: &str, token: &str) -> 
             "{line} (valid {EMAIL_CHANGE_TTL_HOURS} h): {web_origin}/{path}?token={token}\nOr paste the token in the app: {token}"
         ),
     }
+}
+
+/// The account-deletion confirmation, to the verified address on file
+/// (auth.md "Self-service deletion"). The link is the capability; the bare
+/// token rides beside the URL, the fallback native apps accept as a paste
+/// (auth.md "Link URLs").
+fn deletion_mail(to: String, web_origin: &str, token: &str) -> Mail {
+    Mail {
+        to,
+        subject: "Confirm the deletion of your CoGra account".into(),
+        body: format!(
+            "Confirm the deletion of your account (link valid {DELETION_LINK_TTL_DAYS} days): {web_origin}/delete-account?token={token}\nOr paste the token in the app: {token}\n\nOpening the link starts a {DELETION_GRACE_DAYS}-day grace period; until it ends, you can cancel from any device."
+        ),
+    }
+}
+
+/// The transport-tier refusal of a deletion verb the account's state does
+/// not take — a client bug, the client already choosing the verb by the
+/// state (api-spec "Authentication").
+fn wrong_deletion_path(message: &'static str) -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new(message).extend_with(
+        |_, e: &mut async_graphql::ErrorExtensionValues| {
+            e.set("code", "FORBIDDEN");
+        },
+    )
+}
+
+/// Whether the account deletes through the mailed member path: a member,
+/// or an applicant whose admission Registration has landed — the account
+/// has a node, so only the husk path may remove it (design item 69).
+async fn takes_member_deletion_path(
+    pool: &PgPool,
+    credentials: &store::Credentials,
+) -> async_graphql::Result<bool> {
+    Ok(match credentials.account_state {
+        store::AccountState::Member => true,
+        store::AccountState::Applicant => {
+            store::registration_landed(
+                pool,
+                credentials.actor_id,
+                common::l1::census::Family::Registration.as_str(),
+            )
+            .await?
+        }
+        store::AccountState::Guest => false,
+    })
 }
 
 /// Re-proves the current password inside a live session, spending the
@@ -1436,6 +1489,47 @@ struct DiscardDeviceLockInput {
 
 #[derive(SimpleObject)]
 struct DiscardDeviceLockPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
+#[derive(InputObject)]
+struct RequestAccountDeletionInput {
+    /// Opt into content-level redaction; identity-only when absent or
+    /// false.
+    include_content: Option<bool>,
+}
+
+#[derive(InputObject)]
+struct ConfirmAccountDeletionInput {
+    deletion_token: String,
+    /// Opt into content-level redaction at or after confirmation. The
+    /// election is opt-in only: true upgrades an identity-only request,
+    /// including on a re-call inside the grace; null and false never
+    /// downgrade and leave the standing choice unchanged.
+    include_content: Option<bool>,
+}
+
+/// The result of request, confirm and cancel. accountDeletion is the
+/// confirmed deletion; null after a request (nothing is confirmed until
+/// the link is opened) and after a cancel.
+#[derive(SimpleObject)]
+struct AccountDeletionPayload {
+    account_deletion: Option<AccountDeletion>,
+    user_errors: Vec<UserError>,
+}
+
+impl AccountDeletionPayload {
+    fn standing(deletion: Option<store::AccountDeletion>) -> Self {
+        Self {
+            account_deletion: deletion.and_then(AccountDeletion::from_store),
+            user_errors: vec![],
+        }
+    }
+}
+
+#[derive(SimpleObject)]
+struct DeleteApplicantAccountPayload {
     ok: Option<bool>,
     user_errors: Vec<UserError>,
 }
@@ -2803,6 +2897,159 @@ impl Mutation {
             ok: Some(true),
             user_errors: vec![],
         })
+    }
+
+    /// Begins account deletion (auth.md "Self-service deletion";
+    /// erasure.md §5): records the content-sweep choice and mails the
+    /// confirmation link to the verified address; nothing is scheduled
+    /// until the link is opened. A second request supersedes the first —
+    /// the earlier link dies, the new one carries its own choice — and
+    /// is what the mail screen's Resend sends.
+    ///
+    /// The member path: a member, or an applicant whose Registration
+    /// landed. Any other applicant is FORBIDDEN and deletes through
+    /// deleteApplicantAccount. While a confirmed deletion is in its grace
+    /// the request changes nothing — it returns that deletion, mails
+    /// nothing, spends nothing, and never moves the deadline: superseding
+    /// it would silently un-confirm it. Otherwise each request spends the
+    /// account's deletion mail budget, and a spent one answers
+    /// RATE_LIMITED with nothing recorded, mailed or superseded.
+    async fn request_account_deletion(
+        &self,
+        ctx: &Context<'_>,
+        input: RequestAccountDeletionInput,
+    ) -> async_graphql::Result<AccountDeletionPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let mailer = ctx.data::<Arc<dyn Mailer>>()?;
+        let web_origin = ctx.data::<WebOrigin>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        let Some(credentials) = store::credentials_by_actor(pool, v.user_id).await? else {
+            return Err(unauthenticated());
+        };
+        if !takes_member_deletion_path(pool, &credentials).await? {
+            return Err(wrong_deletion_path(
+                "an applicant deletes through deleteApplicantAccount",
+            ));
+        }
+        if let Some(standing) = store::confirmed_account_deletion(pool, v.user_id).await? {
+            return Ok(AccountDeletionPayload::standing(Some(standing)));
+        }
+        if !ratelimit::spend_mail_budget(
+            pool,
+            scope::DELETION_REQUEST_ACCOUNT,
+            v.user_id,
+            limits.deletion_request_account,
+        )
+        .await?
+        {
+            return Err(rate_limited());
+        }
+        let link = auth::new_secret();
+        match store::open_account_deletion(
+            pool,
+            Uuid::new_v4(),
+            v.user_id,
+            &link.hash,
+            input.include_content.unwrap_or(false),
+            Utc::now() + Duration::days(DELETION_LINK_TTL_DAYS),
+        )
+        .await?
+        {
+            None => Err(unauthenticated()),
+            Some(store::DeletionRequest::InGrace(standing)) => {
+                Ok(AccountDeletionPayload::standing(Some(standing)))
+            }
+            Some(store::DeletionRequest::Opened) => {
+                mailer
+                    .send(deletion_mail(
+                        credentials.email,
+                        &web_origin.0,
+                        &link.token,
+                    ))
+                    .await;
+                Ok(AccountDeletionPayload::standing(None))
+            }
+        }
+    }
+
+    /// Opens the mailed link: confirms the deletion and fixes its deadline
+    /// at now plus the grace period. Token-bearing, no session — the link
+    /// is the capability. A re-call with the same token inside the grace
+    /// never moves the deadline, and can add the content sweep. Every dead
+    /// link — unknown, superseded, cancelled, executed, or unopened past
+    /// its lifetime — is one DELETION_TOKEN_INVALID at deletionToken.
+    /// Spends the per-IP confirmation budget every token verb shares.
+    async fn confirm_account_deletion(
+        &self,
+        ctx: &Context<'_>,
+        input: ConfirmAccountDeletionInput,
+    ) -> async_graphql::Result<AccountDeletionPayload> {
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        guard_window(ctx, scope::CONFIRM_IP, &request_ip(ctx)?, limits.confirm_ip).await?;
+        let grace_secs = Duration::days(DELETION_GRACE_DAYS).num_seconds() as f64;
+        match store::confirm_account_deletion(
+            pool,
+            &auth::hash_of(&input.deletion_token),
+            input.include_content.unwrap_or(false),
+            grace_secs,
+        )
+        .await?
+        {
+            Some(confirmed) => Ok(AccountDeletionPayload::standing(Some(confirmed))),
+            None => Ok(AccountDeletionPayload {
+                account_deletion: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::DeletionTokenInvalid,
+                    "deletion link unknown, superseded, cancelled, expired, or spent",
+                    vec!["deletionToken".to_string()],
+                )],
+            }),
+        }
+    }
+
+    /// Ends the account's standing deletion, requested or confirmed, from
+    /// any signed-in device until the deadline executes it; its link dies
+    /// with it. Idempotent: with nothing standing — two devices cancelling
+    /// at once, or an applicant — it answers the same null and no error.
+    async fn cancel_account_deletion(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<AccountDeletionPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        store::cancel_account_deletion(pool, v.user_id).await?;
+        Ok(AccountDeletionPayload::standing(None))
+    }
+
+    /// Deletes an applicant account at once — DeleteAccount's applicant
+    /// case: account, credentials, application, staged acts (those carried
+    /// with the application included), key backup and device locks go
+    /// immediately, every session with them, and no mail is sent. Nothing
+    /// of it reached L1. FORBIDDEN for a member, who takes the mailed path,
+    /// and for an applicant whose address approval already funded — the
+    /// burn is spent and the Registration staged, so nothing may vanish
+    /// under it; once it lands, the mailed path applies.
+    async fn delete_applicant_account(
+        &self,
+        ctx: &Context<'_>,
+    ) -> async_graphql::Result<DeleteApplicantAccountPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        match store::delete_applicant_account(pool, v.user_id).await? {
+            store::ApplicantDeletion::Deleted => Ok(DeleteApplicantAccountPayload {
+                ok: Some(true),
+                user_errors: vec![],
+            }),
+            store::ApplicantDeletion::Gone => Err(unauthenticated()),
+            store::ApplicantDeletion::NotApplicant => Err(wrong_deletion_path(
+                "a member deletes through requestAccountDeletion",
+            )),
+            store::ApplicantDeletion::Funded => Err(wrong_deletion_path(
+                "approval funded this account; it can be deleted once it lands",
+            )),
+        }
     }
 
     /// Issues an invite link — pure service-side staging UX; its id is

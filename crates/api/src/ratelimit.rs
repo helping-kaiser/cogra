@@ -2,8 +2,8 @@
 //!
 //! Rate limiting: the auth endpoints' per-IP and per-key fixed windows
 //! plus the login and re-authentication backoffs (auth.md "Rate
-//! limiting"), the email-change
-//! mail budget, the media upload budget, and the per-account signing
+//! limiting"), the email-change and
+//! account-deletion mail budgets, the media upload budget, and the per-account signing
 //! budget spent at prepare (api-spec.md "Conventions") with the voucher's
 //! admission funding budget priced beside it, and the device-lock issue
 //! budget.
@@ -43,6 +43,7 @@ pub mod scope {
     pub const REAUTH_ACCOUNT: &str = "reauth_account";
     pub const EMAIL_CHANGE_REQUEST_ACCOUNT: &str = "email_change_request_account";
     pub const EMAIL_CHANGE_RESEND_ACCOUNT: &str = "email_change_resend_account";
+    pub const DELETION_REQUEST_ACCOUNT: &str = "deletion_request_account";
     pub const DEVICE_LOCK_ACCOUNT: &str = "device_lock_account";
     pub const UPLOAD_ACCOUNT: &str = "upload_account";
     pub const SIGN_POST: &str = "sign_post";
@@ -223,7 +224,7 @@ pub struct RateLimitConfig {
     /// Verification resends per submitted email — trips silently.
     pub resend_email: Window,
     /// Token confirmations (verifyEmail, confirmPasswordReset,
-    /// confirmEmailChange) per IP.
+    /// confirmEmailChange, confirmAccountDeletion) per IP.
     pub confirm_ip: Window,
     /// Consecutive wrong current passwords per account before the
     /// re-authentication backoff bites — every verb that re-proves the
@@ -240,6 +241,10 @@ pub struct RateLimitConfig {
     pub email_change_request_account: Window,
     /// Email-change resends per account, the same budget's other verb.
     pub email_change_resend_account: Window,
+    /// Account-deletion requests per account — a mail budget, Resend
+    /// included (it is the same verb). The caller is authenticated, so it
+    /// answers visibly (auth.md "Rate limiting").
+    pub deletion_request_account: Window,
     /// Wrong codes against one email-change code before it is disabled
     /// until a resend mints a fresh one (auth.md "Email change").
     pub email_change_code_tries: i32,
@@ -304,6 +309,10 @@ impl Default for RateLimitConfig {
                 limit: 5,
                 window_secs: 3600.0,
             },
+            deletion_request_account: Window {
+                limit: 5,
+                window_secs: 3600.0,
+            },
             email_change_code_tries: 5,
             device_lock_issue_account: Window {
                 limit: 10,
@@ -340,6 +349,10 @@ impl RateLimitConfig {
             (
                 "RATE_LIMIT_EMAIL_CHANGE_RESEND_PER_ACCOUNT",
                 &mut cfg.email_change_resend_account.limit,
+            ),
+            (
+                "RATE_LIMIT_DELETION_REQUEST_PER_ACCOUNT",
+                &mut cfg.deletion_request_account.limit,
             ),
             (
                 "RATE_LIMIT_EMAIL_CHANGE_CODE_TRIES",
@@ -400,6 +413,7 @@ impl RateLimitConfig {
             reauth_backoff_cap_secs: 0.0,
             email_change_request_account: generous,
             email_change_resend_account: generous,
+            deletion_request_account: generous,
             email_change_code_tries: 5,
             device_lock_issue_account: generous,
             device_lock_live_cap: i32::MAX,
