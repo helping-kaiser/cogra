@@ -311,8 +311,9 @@ export async function fetchPosts(
  * only knows as a citation's target, say — reads as null and the page loads
  * exactly as an uncached one does. A half-drawn card is not a faster card.
  *
- * It is a paint, never the answer: the detail read still goes to the network
- * and lands over it (`fetchPostDetail`).
+ * It is the version the detail opens on, never the answer: the detail read
+ * still goes to the network (`fetchPostDetail`), and the page decides how its
+ * answer lands over what was opened (`app/posts/[id]/detail-freeze.ts`).
  */
 export function readCachedPost(
   client: ApolloClient,

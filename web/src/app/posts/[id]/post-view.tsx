@@ -12,7 +12,7 @@
 // sheets that menu raises, and the read behind all of it.
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useApolloClient } from "@apollo/client/react";
 
 import { fetchPostDetail, readCachedPost, type PostView as Post } from "@/lib/api/content-api";
@@ -52,6 +52,9 @@ import { CommentsSheet } from "@/app/comments/comments-sheet";
 import { Snackbar } from "@/lib/ui/snackbar";
 import { TransportError, type TransportFault } from "@/lib/ui/transport-error";
 
+import { freezeReducer, type Freeze } from "./detail-freeze";
+import { NewerVersionLine } from "./newer-version-line";
+
 export function PostView({
   postId,
   store = identityStore,
@@ -73,14 +76,24 @@ export function PostView({
 
   // THE POST THE READER JUST TAPPED PAINTS AT ONCE (jakob 2026-10-09): the
   // feed already holds it, so the page opens on that card rather than on
-  // "Loading…", and the detail read below lands over it. Only a post the cache
-  // does not hold whole — a deep link, a cold start — waits on the read.
+  // "Loading…", and the detail read below catches up behind it. Only a post
+  // the cache does not hold whole — a deep link, a cold start — waits on the
+  // read.
   //
   // What the page draws is the card's shape and nothing more: the thread is
   // the sheet's own read, and the author's own mark is the editor's. So the
   // cached card is not a stand-in for something bigger — it is everything
   // this page shows, one read early.
-  const [post, setPost] = useState<Post | null>(() => readCachedPost(client, postId));
+  //
+  // AND IT HOLDS (jakob 2026-10-09, seam 120; PostDetail.md:5-15): a read that
+  // brings another version of the post does not land over the one opened.
+  // `newer` is that version, waiting behind the line until the reader asks for
+  // it — every case of how an answer lands is `detail-freeze.ts`'s.
+  const [{ post, newer }, land] = useReducer(
+    freezeReducer<Post>,
+    client,
+    (apollo): Freeze<Post> => ({ post: readCachedPost(apollo, postId), newer: null }),
+  );
   const [loading, setLoading] = useState(post === null);
   // The read in flight while the post is already on screen — distinct
   // from `loading`, which gates the nothing-loaded page. A pull-to-
@@ -120,7 +133,9 @@ export function PostView({
   const [removeOpen, setRemoveOpen] = useState(false);
   const dismissLinkCopied = useCallback(() => setLinkCopied(false), []);
 
-  const refresh = useCallback(() => {
+  // `asked`: the reader's own pull — the one read that brings the newest in
+  // over the opened version rather than holding it behind the line.
+  const refresh = useCallback((asked = false) => {
     let cancelled = false;
     void fetchPostDetail(client, postId).then((outcome) => {
       if (cancelled) return;
@@ -136,7 +151,7 @@ export function PostView({
         setNotFound(true);
       } else {
         setTransportFault(null);
-        setPost(outcome.value.post);
+        land({ kind: "read", fresh: outcome.value.post, asked });
       }
     });
     return () => {
@@ -198,7 +213,7 @@ export function PostView({
   const onPull = useCallback(() => {
     setRefreshing(true);
     setThreadToken((n) => n + 1);
-    refresh();
+    refresh(true);
   }, [refresh]);
   // The thread is the sheet's own read, so the page's pull has to say so to
   // both owners — and it stands down entirely while the sheet is raised, so
@@ -372,6 +387,16 @@ export function PostView({
           media, and in the page's flow — it scrolls with the page
           (PostDetailVideo.md:5). */}
       <div className="-mx-6 flex flex-col">
+        {/* BETWEEN THE HEADER AND THE POST (PostDetail.md:7; PostDetailVideo.md
+            :65 — "under the header", so above a video post's clip too): the
+            line that says a fresh read found another version, and whose tap
+            brings it in. In this block for its full width, and because an
+            empty live region here takes no page gap. */}
+        <NewerVersionLine
+          shown={newer !== null}
+          onSwap={() => land({ kind: "swap" })}
+          node={{ path: "postDetail.newerVersion" }}
+        />
         {/* THE DETAIL CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive post's
             clip veils IN PLACE, not demoted into the card, and ONE scope spans
             both — `BodyRegion` keys the reveal on the post's own id and
@@ -422,7 +447,10 @@ export function PostView({
           testId="post"
           authorTestId="post-author"
           stanceTestId="post-stance"
-          comments={liveComments ?? post.comments.totalCount}
+          // THE THREAD IS NOT HELD (the freeze governs the post, and the
+          // thread is the sheet's own read): its size is the freshest read's,
+          // the held version's while one waits behind the line.
+          comments={liveComments ?? (newer ?? post).comments.totalCount}
           // THE COUNT RAISES THE THREAD (graph.json: every `comment count`
           // edge advances to `ReplyEntry`), here as on every other board that
           // carries it.
