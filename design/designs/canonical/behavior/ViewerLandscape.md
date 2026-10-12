@@ -1,6 +1,6 @@
 # ViewerLandscape · `spec:design:behavior-viewer-landscape`
 
-ALWAYS the clip takes the screen's whole height and stands whole, never cut to the edges
+ALWAYS the clip takes the screen's whole height below the system status bar and stands whole, never cut to the edges
 
 ALWAYS a clip whose shape is not the screen's leaves black ground at its sides
 
