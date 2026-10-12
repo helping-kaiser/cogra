@@ -576,7 +576,7 @@ private fun PostDetailBody(
                 DetailCard(
                     post = post,
                     removed = removed,
-                    mediaPinned = pinned != null,
+                    mediaAbove = pinned != null,
                     // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail`
                     // via 4), on the page the reader was looking at.
                     onOpenMedia = { page -> viewerAt = page },
@@ -611,7 +611,7 @@ private fun DetailCard(
     /** The gallery's tap, handed the page under the reader's thumb. */
     onOpenMedia: (Int) -> Unit,
     /** The clip is pinned above this card, so the body draws no gallery. */
-    mediaPinned: Boolean,
+    mediaAbove: Boolean,
     /** The post's one revealed-state, shared with the pinned clip's veil. */
     revealed: Boolean,
     onReveal: () -> Unit,
@@ -665,7 +665,7 @@ private fun DetailCard(
                 node = card,
                 modifier = Modifier.testTag("detail_body"),
                 bleed = Space.x4,
-                mediaPinned = mediaPinned,
+                mediaAbove = mediaAbove,
                 onOpenMedia = onOpenMedia,
                 revealed = revealed,
                 onReveal = onReveal,

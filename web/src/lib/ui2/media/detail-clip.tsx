@@ -1,44 +1,53 @@
 "use client";
 
-// THE PINNED CLIP — the top of a video post's detail view
-// (`design/components/media/PinnedClip.jsx`).
+// THE DETAIL CLIP — the top of a video post's detail view
+// (`design/components/media/DetailClip.jsx`).
 //
 // IT SITS ABOVE THE CARD, NOT INSIDE IT, "which is why the author chip leads
 // the CARD on that surface rather than the screen. On every other surface the
 // chip sits above the content; here the content the reader is already watching
 // sits above everything, and the card beneath it is the post as it always
-// reads" (`PinnedClip.jsx:9-12`).
+// reads" (`DetailClip.jsx:10-13`).
 //
-// IT IS PINNED, not merely first. The board stands it OUTSIDE the scrolling
-// column — `flex: "none"` beside a `DetailColumn` that owns the overflow
-// (`screens/_shared.jsx:666-672`) — so the body rises beneath a clip that stays
-// put and stays playing. A page that scrolls as one document says the same
-// thing with `position: sticky`.
+// IT IS CONTENT, AND SCROLLS WITH THE PAGE (jakob's ruling 100, 2026-10-09 —
+// design/readme.md §13, "The clip detail rulings"): "Comments live in their
+// sheet, so nothing stands below the post on its detail but the post itself,
+// and a clip held on screen would take the room the post is read in"
+// (`DetailClip.jsx:15-17`). It heads the detail's column, flush on the card —
+// the caller sets the two as one block (`DetailClip.prompt.md:15`) — and
+// nothing here holds it on screen.
 //
-// THE GROUND IS BLACK (`PinnedClip.jsx:24` — `background: "#000"`), "so a clip
+// OPENING THE DETAIL STARTS IT, and scroll never stops it: "the open is the
+// deliberate act, so no share of the screen gates it" and "a clip scrolled out
+// of view plays on — scroll never stops it — and no floating player takes its
+// place" (`DetailClip.jsx:18-21`). That is its stage's law, not this frame's:
+// the stage it stands on is a DETAIL stage (`stage-host.tsx`, `stage.ts`),
+// which starts the clip on the open and never decides from the scroll.
+//
+// THE GROUND IS BLACK (`DetailClip.jsx:51` — `background: "#000"`), "so a clip
 // that does not fill the frame's width sits on the same ground the viewer would
-// give it".
+// give it" (`DetailClip.jsx:24-26`).
 //
 // IT CARRIES THE FULL TRANSPORT (`controls="transport"`), the ladder's second
 // rung: the reader opened this clip on purpose.
 //
-// THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive post's clip
+// THE DETAIL CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive post's clip
 // veils IN PLACE — the caller wraps it in a `BodyVeil` sharing the post's own
-// reveal, never demoting it into the card — and the transport goes with it.
-// `VideoPlayer` already refuses the playback claim while `useVeiled()` reads
-// true (`video-player.tsx`, backlog item 103), but it draws its transport bar
-// off `surface` alone, with no veil check of its own — so a `transport`
-// surface behind a veil would still mount play/pause, skip and a scrubber
-// nothing plays under. Reading the veil here and dropping to a surface that
-// draws no bar is what keeps "nothing plays beneath a veil" true of the
-// controls too, without reaching into `VideoPlayer` to add a check it was not
-// built to need everywhere else it is used.
+// reveal, never demoting it into the card — and the transport goes with it
+// (PostDetailVideoSensitive.md:3-7). `VideoPlayer` already refuses the playback
+// claim while `useVeiled()` reads true (`video-player.tsx`, backlog item 103),
+// but it draws its transport bar off `surface` alone, with no veil check of its
+// own — so a `transport` surface behind a veil would still mount play/pause,
+// skip and a scrubber nothing plays under. Reading the veil here and dropping
+// to a surface that draws no bar is what keeps "nothing plays beneath a veil"
+// true of the controls too, without reaching into `VideoPlayer` to add a check
+// it was not built to need everywhere else it is used.
 //
 // IT IS ITS DETAIL'S ONE STAGE (the stage-law packet §3.2 rule 12): a sheet or
 // a dialog over the post stops it where it is and, dismissed, resumes it only
 // if it was playing when the layer rose and the device allows autoplay; the
 // reader's own pause survives; the opinion pad pauses and resumes it
-// (PostDetailVideo.md:29–41). The unveil plays it where the device allows
+// (PostDetailVideo.md:39–51). The unveil plays it where the device allows
 // autoplay and never otherwise (PostDetailVideoSensitive.md:15/17) — the veil
 // is an eligibility change on the one element, which the veil keeps mounted.
 
@@ -46,7 +55,7 @@ import { MediaTile } from "./media-tile";
 import { useVeiled } from "./body-veil";
 import { StageHost } from "./stage-host";
 
-export function PinnedClip({
+export function DetailClip({
   src,
   mimeType,
   poster,
@@ -56,17 +65,17 @@ export function PinnedClip({
   mediaId,
   behindViewer = false,
   onOpenViewer,
-  testId = "pinned-clip",
+  testId = "detail-clip",
 }: {
   src: string;
   /** The clip's identity in the session's clip memory (`clip-memory.ts`). */
   mediaId?: string | null;
   /**
-   * Whether the fullscreen viewer stands over the post. The pinned clip has
+   * Whether the fullscreen viewer stands over the post. The detail clip has
    * handed its clip over to it: "WHEN the fullscreen viewer opens over the
-   * post -> the pinned clip stops AND NEVER it plays behind the viewer", and
-   * on close it plays on, or stands paused, from where the viewer's clip
-   * reached (PostDetailVideo.md:47–51).
+   * post -> the clip stops AND NEVER it plays behind the viewer", and on close
+   * it plays on, or stands paused, from where the viewer's clip reached
+   * (PostDetailVideo.md:57–61).
    */
   behindViewer?: boolean;
   mimeType: string;
@@ -75,14 +84,15 @@ export function PinnedClip({
   sourceRatio?: number | null;
   durationMs?: number | null;
   /**
-   * Where the clip's own tap goes (`PinnedClip.jsx:19-20` — "the tap on it is
+   * Where the clip's own tap goes (`DetailClip.jsx:28-29` — "the tap on it is
    * the surface's to wire: back into the stream where the reader came from it,
    * and into the fullscreen viewer everywhere else").
    *
-   * THE STREAM HALF IS SLICE 3's. `Reel` is not built, so the graph's other
-   * case (`PostDetailVideo` via 3 — "came from the stream — the clip expands
-   * back into it, the reader's place held") has no destination yet; the viewer
-   * half is wired and the reel half lands with the stream.
+   * THE STREAM HALF IS THE REEL PACKET'S (feed-card-rework BX-2). `Reel` is not
+   * built, so PostDetailVideo.md:33 ("GIVEN the reader came from the stream …
+   * the clip expands back into the stream") has no origin to come from yet;
+   * every reader comes from "anywhere else" (:35), so the viewer half is the
+   * whole of the wiring today, and the stream half lands with the stream.
    */
   onOpenViewer?: () => void;
   testId?: string;
@@ -96,17 +106,13 @@ export function PinnedClip({
   return (
     <div
       data-testid={testId}
-      // `top-0` rather than under a header: the detail's header scrolls with
-      // the page, and a clip that stopped short of the edge would leave a band
-      // of page showing above it on the way past.
-      className="sticky top-0 z-10"
       // A LITERAL, not a role: this is the ground behind media, and the
       // viewer's own ground is black in both themes — a surface role would
       // make the band under a clip change colour with the theme while the
       // clip beside it did not.
       style={{ background: "#000" }}
     >
-      <StageHost pinned>
+      <StageHost detail>
         <MediaTile
           src={src}
           mimeType={mimeType}
@@ -116,12 +122,13 @@ export function PinnedClip({
           durationMs={durationMs}
           mediaId={mediaId}
           handedOver={behindViewer}
-          // The clip pins still playing — it is the thing the reader came for.
-          // `VideoPlayer` itself refuses the claim while veiled either way.
+          // On its stage: the detail stage starts it on the open, where the
+          // device allows (PostDetailVideo.md:7/9). `VideoPlayer` itself
+          // refuses the claim while veiled either way.
           autoplay
           surface={veiled ? "full" : "transport"}
           // The media meets the screen's own sides here: there is no card
-          // around it to round against (`PinnedClip.jsx:28` — `radius="0px"`).
+          // around it to round against (`DetailClip.jsx:43` — `radius="0px"`).
           radius="0px"
           onOpen={onOpenViewer}
           testId={`${testId}-media`}

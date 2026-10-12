@@ -39,7 +39,7 @@ import {
   sensitiveSignature,
 } from "@/lib/ui/post-media";
 import { MediaViewer } from "@/lib/ui2/media/media-viewer";
-import { PinnedClip } from "@/lib/ui2/media/pinned-clip";
+import { DetailClip } from "@/lib/ui2/media/detail-clip";
 import { PostCard } from "@/lib/ui/post-card";
 import { LINK_COPIED, shareLink } from "@/lib/ui/share";
 import { useShareCapable } from "@/lib/ui/share-button";
@@ -243,26 +243,36 @@ export function PostView({
   // ON A DETAIL SURFACE THE MENU LIVES UP HERE and the card's own dot yields
   // (`_shared.jsx:341-346` — `PostCard` hides it in `detail`): two dots would
   // be two menus for one post.
+  //
+  // THE DETAIL'S HEADER PINS (design/readme.md §4, "Browse collapses, task
+  // pins": the post detail is a pinning surface, and "on web, pinned means
+  // `position: sticky` — the bar rides the page's edge and never hides"; the
+  // clip detail rulings restate it beside the clip that now scrolls under it).
+  // The wrapper bleeds through the page's gutter so its ground covers the
+  // edge-to-edge clip and card passing beneath, the way `settings-view.tsx`
+  // pins its own.
   const header = (menu: readonly MenuItem[] | null) => (
-    <PageHeader
-      backHref="/feed"
-      // The feed restores the place the reader left it in; scrolling it to the
-      // top would land on top of that restore.
-      backScroll={false}
-      backLabel="Back to feed"
-      backTestId="post-back"
-      node={{ path: "postDetail.header" }}
-      action={
-        menu === null || menu.length === 0 ? undefined : (
-          <OverflowMenu
-            items={menu}
-            ariaLabel="More on this post"
-            testId="post-menu"
-            node={{ path: "postDetail.header.menu" }}
-          />
-        )
-      }
-    />
+    <div className="sticky top-0 z-10 -mx-6 bg-surface px-6" data-testid="post-header-bar">
+      <PageHeader
+        backHref="/feed"
+        // The feed restores the place the reader left it in; scrolling it to
+        // the top would land on top of that restore.
+        backScroll={false}
+        backLabel="Back to feed"
+        backTestId="post-back"
+        node={{ path: "postDetail.header" }}
+        action={
+          menu === null || menu.length === 0 ? undefined : (
+            <OverflowMenu
+              items={menu}
+              ariaLabel="More on this post"
+              testId="post-menu"
+              node={{ path: "postDetail.header.menu" }}
+            />
+          )
+        }
+      />
+    </div>
   );
 
   if (loading) {
@@ -311,24 +321,24 @@ export function PostView({
   // What survives is the skeleton the card draws: author, timestamp, thread
   // position, and the stance a reader can still take.
   const redacted = payloadIsRedacted(post);
-  // THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): the body veils as one and
+  // THE DETAIL CLIP'S VEIL FACE (jakob 2026-09-24): the body veils as one and
   // revealing moves nothing, so this is the same `sensitive` the card's own
   // `BodyRegion` computes (`PostCard.tsx` — `!redacted && bodyIsSensitive`),
-  // read here too so the clip pinned above the card can share its veil.
+  // read here too so the clip above the card can share its veil.
   const sensitive = !redacted && bodyIsSensitive(post);
   // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
-  // the clip leaves the card body and pins above it, wearing the full
+  // the clip leaves the card body and stands above it, wearing the full
   // transport, and the card beneath is the post as it always reads. A post of
   // pictures is unchanged — its gallery is still the card's body.
-  // A REMOVED RECORD HAS NO CLIP TO PIN: redaction is record-granular, so the
-  // skeleton is the whole card and the placeholder is its body.
+  // A REMOVED RECORD HAS NO CLIP TO RAISE: redaction is record-granular, so
+  // the skeleton is the whole card and the placeholder is its body.
   const clip = !redacted && hasVideo(post)
     ? galleryItems(post).find((item) => item.mimeType.startsWith("video/"))
     : undefined;
   // A gallery entry's `src` is optional on the tile because the tile also
-  // draws the asset-less reserved region; a PINNED clip is a clip, so a
+  // draws the asset-less reserved region; a DETAIL clip is a clip, so a
   // sourceless one is not one and the card keeps its body.
-  const pinned = clip?.src ? { ...clip, src: clip.src } : undefined;
+  const detailClip = clip?.src ? { ...clip, src: clip.src } : undefined;
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-6 pb-6 pt-3">
@@ -354,50 +364,52 @@ export function PostView({
           comments sat on cards, which is the inverse of the board's emphasis.
           Edge to edge inside the page's gutter, so the card and the feed's
           cards frame their media identically (design/backlog.md item 35). */}
-      {/* THE CLIP PINS ABOVE THE CARD, edge to edge like the card's own media:
-          the board stands it outside the detail column entirely
-          (`PostDetailVideo.jsx:25-28`). */}
-      {/* THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive post's
-          clip veils IN PLACE, not demoted into the card, and ONE scope spans
-          both — `BodyRegion` keys the reveal on the post's own id and
-          sensitive signature, the same key the card's `BodyRegion` reads
-          (`PostCard.tsx`), so the shared store in `reveal.ts` answers for
-          both from one tap. */}
-      {pinned && (
-        <div className="-mx-6">
+      {/* THE CLIP HEADS THE COLUMN, FLUSH ON THE CARD (ruling 100,
+          `PostDetailVideo.jsx:30-33`, `DetailClip.prompt.md:15` — "set the
+          clip flush on the card — one block, no gap between them"): the two
+          share one wrapper, so the page's stack gap falls above the block
+          and never between its halves. Edge to edge like the card's own
+          media, and in the page's flow — it scrolls with the page
+          (PostDetailVideo.md:5). */}
+      <div className="-mx-6 flex flex-col">
+        {/* THE DETAIL CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive post's
+            clip veils IN PLACE, not demoted into the card, and ONE scope spans
+            both — `BodyRegion` keys the reveal on the post's own id and
+            sensitive signature, the same key the card's `BodyRegion` reads
+            (`PostCard.tsx`), so the shared store in `reveal.ts` answers for
+            both from one tap. */}
+        {detailClip && (
           <BodyRegion
             veiled={sensitive}
             nodeId={post.id}
             signature={sensitiveSignature(post)}
-            testId="post-pinned-clip"
+            testId="post-detail-clip"
           >
-            <PinnedClip
-              src={pinned.src}
-              mimeType={pinned.mimeType}
-              poster={pinned.poster}
-              altText={pinned.altText}
-              sourceRatio={pinned.sourceRatio}
-              durationMs={pinned.durationMs}
-              mediaId={pinned.mediaId}
+            <DetailClip
+              src={detailClip.src}
+              mimeType={detailClip.mimeType}
+              poster={detailClip.poster}
+              altText={detailClip.altText}
+              sourceRatio={detailClip.sourceRatio}
+              durationMs={detailClip.durationMs}
+              mediaId={detailClip.mediaId}
               // The viewer is a layer presenting this same clip bigger: while
-              // it is up the pinned clip has handed its clip over to it
-              // (PostDetailVideo.md:47–51).
+              // it is up the detail clip has handed its clip over to it
+              // (PostDetailVideo.md:57–61).
               behindViewer={viewerAt !== null}
-              // The pinned clip's two routes into the viewer — the bar's
-              // fullscreen toggle and the clip's own tap (graph.json,
-              // `PostDetailVideo` via 19 and via 3). The clip is the post's one
-              // attachment, so the viewer opens on it.
+              // The clip's two routes into the viewer — the bar's fullscreen
+              // toggle and the clip's own tap (graph.json, `PostDetailVideo`
+              // via 19 and via 3; PostDetailVideo.md:35/37). The clip is the
+              // post's one attachment, so the viewer opens on it.
               onOpenViewer={() => setViewerAt(0)}
-              testId="post-pinned-clip"
+              testId="post-detail-clip"
             />
           </BodyRegion>
-        </div>
-      )}
-      <div className="-mx-6">
+        )}
         <PostCard
           post={post}
           variant="detail"
-          mediaPinned={pinned !== undefined}
+          mediaAbove={detailClip !== undefined}
           // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail` via 4 —
           // "detail media → the frame, whole and full-screen"). The feed card's
           // tap opens the post instead, which is why only this variant is
