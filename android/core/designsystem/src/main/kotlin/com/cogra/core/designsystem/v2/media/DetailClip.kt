@@ -87,7 +87,7 @@ fun DetailClip(
     // invents. One frame for the poster and the player alike.
     val frame = Modifier
         .fillMaxWidth()
-        .aspectRatio(item.aspectRatio?.cappedToTallestTile() ?: 1f)
+        .aspectRatio(item.aspectRatio.cappedToTallestTile())
         .heightIn(min = MediaFrame.MinHeight, max = maxHeight)
     val veiled = LocalStageVeil.current
     Box(
@@ -118,7 +118,7 @@ fun DetailClip(
                 durationMs = item.durationMs,
                 controls = VideoControls.Full,
                 contentScale = ContentScale.Crop,
-                videoAspectRatio = item.aspectRatio?.cappedToTallestTile(),
+                videoAspectRatio = item.aspectRatio.cappedToTallestTile(),
                 contentDescription = item.altText,
                 onOpenViewer = onOpenViewer,
                 modifier = frame,

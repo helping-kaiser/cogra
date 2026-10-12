@@ -2,6 +2,9 @@ package com.cogra.core.designsystem.v2.media
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,12 +33,15 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -351,12 +356,16 @@ private fun InRow(content: @Composable () -> Unit) {
  * above the timeline is the clip's own tap, so the 48dp target cannot centre
  * on the track. It hangs DOWN from the timeline's top instead — "through the
  * bar's lower half and the gesture-zone inset to the frame's bottom edge … so
- * the clip's own tap above it stays whole. The ink does not move." The slider
- * is laid out at the target's height, so every press inside it is the
- * slider's, and Material centres its track and knob in that height; both are
- * lifted back to the 16dp timeline's middle, where they were drawn.
+ * the clip's own tap above it stays whole. The ink does not move."
+ *
+ * Material's `Slider` sizes its own pointer area to what it draws, whatever
+ * height it is handed, so the reach below it is a box of the target's height
+ * with the 16dp slider at its top: a press on the slider is the slider's, and
+ * a press or a drag on the reach below it seeks by the same x, through
+ * Compose's own gesture primitives (`awaitEachGesture`, `awaitFirstDown`,
+ * `drag` — developer.android.com/develop/ui/compose/touch-input/pointer-input/drag-swipe-fling).
+ * The slider keeps the role, the range and the keyboard.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Timeline(
     progress: Float,
@@ -364,14 +373,44 @@ fun Timeline(
     modifier: Modifier = Modifier,
     hitBelow: Boolean = false,
 ) {
+    if (!hitBelow) {
+        TimelineSlider(progress = progress, onSeek = onSeek, modifier = modifier)
+        return
+    }
+    val seek by rememberUpdatedState(onSeek)
+    Box(
+        modifier = modifier
+            .height(BAR_TARGET)
+            .testTag(TIMELINE_TARGET_TAG)
+            .pointerInput(Unit) {
+                val along = { x: Float -> if (size.width == 0) 0f else (x / size.width).coerceIn(0f, 1f) }
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    seek(along(down.position.x))
+                    drag(down.id) { change ->
+                        seek(along(change.position.x))
+                        change.consume()
+                    }
+                }
+            },
+    ) {
+        TimelineSlider(progress = progress, onSeek = onSeek, modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimelineSlider(
+    progress: Float,
+    onSeek: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val seekLabel = stringResource(R.string.designsystem_video_seek)
-    // The ink's lift: from the target's middle back up to the 16dp timeline's.
-    val lift = if (hitBelow) (BAR_TARGET - TIMELINE_HEIGHT) / 2 else 0.dp
     Slider(
         value = progress.coerceIn(0f, 1f),
         onValueChange = onSeek,
         modifier = modifier
-            .height(if (hitBelow) BAR_TARGET else TIMELINE_HEIGHT)
+            .height(TIMELINE_HEIGHT)
             .testTag(TIMELINE_TAG)
             .semantics { contentDescription = seekLabel },
         colors = SliderDefaults.colors(
@@ -382,7 +421,6 @@ fun Timeline(
         thumb = {
             Box(
                 modifier = Modifier
-                    .offset(y = -lift)
                     .size(KNOB)
                     .clip(RoundedCornerShape(KNOB / 2))
                     .background(MaterialTheme.colorScheme.primary),
@@ -391,7 +429,6 @@ fun Timeline(
         track = { state ->
             Box(
                 modifier = Modifier
-                    .offset(y = -lift)
                     .fillMaxWidth()
                     .height(TRACK)
                     .testTag(TIMELINE_INK_TAG),
@@ -462,6 +499,9 @@ internal const val TIMELINE_TAG = "video_timeline"
 
 /** The timeline's drawn track — the ink, as distinct from the slider's target. */
 internal const val TIMELINE_INK_TAG = "video_timeline_ink"
+
+/** The timeline's grown target on the bar (ruling 101): the slider and the reach below it. */
+internal const val TIMELINE_TARGET_TAG = "video_timeline_target"
 
 /** The bar's own box: the 48dp row and the gesture-zone inset beneath it. */
 internal const val BAR_TAG = "video_bar"

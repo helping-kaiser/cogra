@@ -191,9 +191,10 @@ class VideoTransportTest {
         val fullscreenCentre = (fullscreen.left + fullscreen.right).value / 2
         // Centres 48 apart: 28dp discs 20dp apart.
         assertThat(fullscreenCentre - soundCentre).isWithin(TOLERANCE).of(BAR_TARGET.value)
-        // Each target is 48 wide, so the two meet edge on edge.
-        assertThat((sound.right - sound.left).value).isWithin(TOLERANCE).of(BAR_TARGET.value)
-        assertThat(fullscreen.left.value).isWithin(TOLERANCE).of(sound.right.value)
+        // The drawn discs stay 28 and stand the board's 20 apart; each wears
+        // a 48 target centred on it, so the two targets meet edge on edge.
+        assertThat((sound.right - sound.left).value).isWithin(TOLERANCE).of(28f)
+        assertThat((fullscreen.left - sound.right).value).isWithin(TOLERANCE).of(PAIR_GAP.value)
         assertThat(PAIR_GAP.value).isEqualTo(20f)
     }
 
@@ -209,7 +210,7 @@ class VideoTransportTest {
 
         val frame = compose.onNodeWithTag(TRANSPORT_TAG).getUnclippedBoundsInRoot()
         val bar = compose.onNodeWithTag(BAR_TAG).getUnclippedBoundsInRoot()
-        val target = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
+        val target = compose.onNodeWithTag(TIMELINE_TARGET_TAG).getUnclippedBoundsInRoot()
         val ink = compose.onNodeWithTag(TIMELINE_INK_TAG, useUnmergedTree = true).getUnclippedBoundsInRoot()
         // 48 tall, reaching the frame's bottom edge.
         assertThat((target.bottom - target.top).value).isWithin(TOLERANCE).of(BAR_TARGET.value)
@@ -228,7 +229,7 @@ class VideoTransportTest {
         var seeked: Float? = null
         compose.setContent { Transport(onSeek = { seeked = it }) }
 
-        compose.onNodeWithTag(TIMELINE_TAG).performTouchInput {
+        compose.onNodeWithTag(TIMELINE_TARGET_TAG).performTouchInput {
             click(Offset(width / 2f, height - 2f))
         }
 
@@ -255,7 +256,7 @@ class VideoTransportTest {
             .isAtLeast(GESTURE_ZONE.value + NAV_BAR.value)
         // The timeline's grown target reaches the board's strip (ruling 101)
         // and stops at the device's bar: the device's strip is never a target.
-        val target = compose.onNodeWithTag(TIMELINE_TAG).getUnclippedBoundsInRoot()
+        val target = compose.onNodeWithTag(TIMELINE_TARGET_TAG).getUnclippedBoundsInRoot()
         assertThat((frame.bottom - target.bottom).value).isAtLeast(NAV_BAR.value - TOLERANCE)
     }
 
