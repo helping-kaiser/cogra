@@ -139,6 +139,29 @@ describe("the link opened signed in", () => {
     expect(store.accessToken()).toBe("a");
   });
 
+  it("signed_in_unknown_link_reads_the_drawn_unknown_landing", async () => {
+    // A token the confirm ties to no change answers a code no drawn state
+    // names; the `unknown` chip (ChangeEmailLinked.md, item 98).
+    server.use(confirmed(null, "VERIFICATION_TOKEN_INVALID"), accountWith(OLD));
+    renderWithProviders(<EmailChangeView />, { store: signedIn() });
+    expect(await screen.findByTestId("changeEmail.title")).toHaveTextContent("This link doesn't work anymore");
+    expect(screen.getByTestId("changeEmail.body")).toHaveTextContent(
+      "It isn't a link CoGra knows — it may be mistyped, or from a change long gone. Your email stays as it is.",
+    );
+    expect(screen.getByTestId("changeEmail.onward")).toHaveTextContent("Back to settings");
+    expect(screen.getByTestId("changeEmail.onward")).toHaveAttribute("href", "/settings");
+    expect(screen.getByTestId("changeEmail.mark")).toBeInTheDocument();
+    // NEVER an address appears.
+    expect(document.body).not.toHaveTextContent(OLD);
+  });
+
+  it("a signed-in /email-change with no token reads the unknown landing", async () => {
+    search = new URLSearchParams();
+    renderWithProviders(<EmailChangeView />, { store: signedIn() });
+    expect(await screen.findByTestId("changeEmail.body")).toHaveTextContent("It isn't a link CoGra knows");
+    expect(screen.getByTestId("changeEmail.onward")).toHaveTextContent("Back to settings");
+  });
+
   it("signed_in_landing_never_calls_the_check", async () => {
     let checked = false;
     server.use(
@@ -198,12 +221,42 @@ describe("the link opened signed out", () => {
     expect(heldEmailChangeLink()).toBe("tok-1");
   });
 
-  it("a dead or unknown link reads the dead-link heading over Sign in, with no address (G9)", async () => {
-    server.use(check(null));
+  const DEAD_BODY =
+    "The change it belonged to may have run out, been canceled or already happened — this link can't move your email anymore.";
+
+  it.each([
+    ["unknown (null)", null],
+    ["ran out", { newEmail: NEW, state: "EXPIRED" }],
+    ["canceled", { newEmail: NEW, state: "CANCELED" }],
+    ["applied", { newEmail: NEW, state: "APPLIED" }],
+  ])("signed_out_dead_or_unknown_link_reads_the_drawn_dead_landing — %s", async (_name, answer) => {
+    server.use(check(answer));
     renderWithProviders(<EmailChangeView />);
     expect(await screen.findByTestId("changeEmail.title")).toHaveTextContent("This link doesn't work anymore");
-    expect(screen.queryByTestId("changeEmail.body")).not.toBeInTheDocument();
+    expect(screen.getByTestId("changeEmail.body")).toHaveTextContent(DEAD_BODY);
     expect(screen.getByTestId("changeEmail.onward")).toHaveTextContent("Sign in");
+    expect(screen.queryByTestId("changeEmail.mark")).not.toBeInTheDocument();
+    // NEVER an address appears — not even the one the check named.
+    expect(document.body).not.toHaveTextContent(NEW);
+    expect(document.body).not.toHaveTextContent(OLD);
+  });
+
+  it("signed_out_dead_link_sign_in_never_holds_the_link", async () => {
+    server.use(check({ newEmail: NEW, state: "EXPIRED" }));
+    renderWithProviders(<EmailChangeView />);
+    fireEvent.click(await screen.findByTestId("changeEmail.onward"));
+    expect(push).toHaveBeenCalledWith("/login");
+    expect(heldEmailChangeLink()).toBeNull();
+  });
+
+  it("a dead link's Sign in drops a link an earlier sign-in parked", async () => {
+    search = new URLSearchParams();
+    window.sessionStorage.setItem("cogra.heldEmailChangeLink", "tok-stale");
+    server.use(check(null));
+    renderWithProviders(<EmailChangeView />);
+    fireEvent.click(await screen.findByTestId("changeEmail.onward"));
+    expect(push).toHaveBeenCalledWith("/login");
+    expect(heldEmailChangeLink()).toBeNull();
   });
 
   it("applies the held link once signed in again", async () => {

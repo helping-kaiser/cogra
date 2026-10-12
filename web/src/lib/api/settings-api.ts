@@ -200,6 +200,30 @@ export async function setDefaultLicense(
   return success(outcome.value.defaultLicense ?? null);
 }
 
+/**
+ * Saves the account's sensitive-content choice — Settings' Always unveil
+ * sensitive content. On writes the one MVP threshold, 0; off writes the
+ * explicit null that restores the default veil (api-spec.md
+ * `SetPreferencesInput.contentFilteringSeverityLevel`). Answers the level
+ * the account now holds.
+ */
+export async function setAlwaysUnveil(
+  client: ApolloClient,
+  on: boolean,
+): Promise<Outcome<number | null>> {
+  const outcome = await payloadOutcome(
+    () =>
+      client.mutate({
+        mutation: SetPreferencesDocument,
+        variables: { input: { contentFilteringSeverityLevel: on ? 0 : null } },
+      }),
+    (data) => data.setPreferences.userErrors,
+    (data) => data.setPreferences.preferences,
+  );
+  if (outcome.kind !== "success") return outcome;
+  return success(outcome.value.contentFilteringSeverityLevel ?? null);
+}
+
 export type EmailChangeLink = { newEmail: string; state: EmailChangeLinkState };
 
 /**

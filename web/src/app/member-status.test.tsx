@@ -25,6 +25,7 @@ const invited: MeUser = {
   hasReciprocated: false,
   vouchBackDismissed: false,
   invitedBy: { id: "u0", handle: "grace" },
+  preferences: null,
 };
 
 // Vacuously reciprocated, as the server answers without an inviter.

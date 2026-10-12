@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { PostView } from "@/lib/api/content-api";
 import { renderWithProviders } from "@/test/providers";
 import { createTokenStore } from "@/lib/session/token-store";
+import { setAccountFilterLevel } from "@/lib/settings/sensitive-content";
+import { forgetReveals } from "@/lib/ui2/media/reveal";
 import { PostCard } from "./post-card";
 
 // The card's ⋮ rows navigate, so the card reaches the router the way every
@@ -430,5 +432,31 @@ describe("PostCard", () => {
     setViewport(360);
     mount(post());
     expect(screen.getByTestId("card-share")).toBeInTheDocument();
+  });
+});
+
+// V-1 (feed-card-rework §6): the card's veil answers the account's choice
+// (settings packet §3.1a) — both states of the switch.
+describe("PostCard and the account's sensitive-content choice", () => {
+  afterEach(() => {
+    setAccountFilterLevel(null);
+    forgetReveals();
+  });
+
+  const sensitive = () =>
+    post({ attachmentsStatus: "SENSITIVE", content: moderated("The marked body", "SENSITIVE") });
+
+  it("a_sensitive_card_unveils_when_the_account_always_unveils", () => {
+    setAccountFilterLevel(0);
+    mount(sensitive());
+    expect(screen.queryByTestId("card-veil")).not.toBeInTheDocument();
+    expect(screen.getByText("The marked body")).toBeInTheDocument();
+    // The title stays readable either way.
+    expect(screen.getByText("The title")).toBeInTheDocument();
+  });
+
+  it("a_sensitive_card_stays_veiled_for_a_guest", () => {
+    mount(sensitive());
+    expect(screen.getByTestId("card-veil")).toBeInTheDocument();
   });
 });
