@@ -36,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -58,8 +59,9 @@ import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
-import com.cogra.core.designsystem.v2.media.MediaViewer
 import com.cogra.core.designsystem.v2.media.DetailClip
+import com.cogra.core.designsystem.v2.media.MediaItem
+import com.cogra.core.designsystem.v2.media.MediaViewer
 import com.cogra.core.designsystem.v2.media.SensitiveVeil
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
@@ -539,24 +541,12 @@ private fun PostDetailBody(
     val reveal = { onReveal(post.id, mark) }
     val clipVeiled = !revealed && isSensitive(post.content, post.description, post.attachmentsStatus)
 
-    // THE PHONE TURNING TO LANDSCAPE OPENS THE VIEWER: "WHEN the phone turns
-    // to landscape GIVEN the detail holds a landscape clip -> the fullscreen
-    // viewer opens on the clip, filling the turned screen"
-    // (PostDetailVideo.md:63). A TURN is a change, so the orientation last
-    // seen is kept across the activity's own recreation on rotation
-    // (developer.android.com/guide/topics/resources/runtime-changes;
-    // `rememberSaveable` survives it) — a detail opened already in landscape
-    // opens nothing. Never under the veil: nothing of a veiled clip plays,
-    // and the viewer would show it bare.
-    val orientation = LocalConfiguration.current.orientation
-    var orientationSeen by rememberSaveable { mutableIntStateOf(orientation) }
-    val landscapeClip = clip != null && !clipVeiled && clip.aspectRatio > 1f
-    LaunchedEffect(orientation) {
-        val turned = orientation == Configuration.ORIENTATION_LANDSCAPE &&
-            orientationSeen != Configuration.ORIENTATION_LANDSCAPE
-        orientationSeen = orientation
-        if (turned && landscapeClip && viewerAt == null) viewerAt = 0
-    }
+    // Never under the veil: nothing of a veiled clip plays, and the viewer
+    // would show it bare.
+    TurnToLandscapeOpensTheViewer(
+        landscapeClip = clip != null && !clipVeiled && clip.aspectRatio > 1f,
+        onTurn = { if (viewerAt == null) viewerAt = 0 },
+    )
 
     // The post is a card here too, edge to edge with its 8dp seam — on the
     // boards the post wears the card and the thread stands in its own sheet
@@ -581,26 +571,11 @@ private fun PostDetailBody(
             // The card's row is on screen for as long as any of the post is.
             Column(modifier = Modifier.fillMaxWidth().testTag(DETAIL_BLOCK_TAG)) {
                 if (clip != null) {
-                    // A SENSITIVE CLIP WEARS ITS OWN VEIL IN PLACE — never
-                    // demoted into the card. The veil is the post body's full
-                    // face over the clip's frame, and under it the clip is out
-                    // of the stage and carries no transport ([DetailClip]).
-                    SensitiveVeil(
-                        veiled = clipVeiled,
-                        onReveal = reveal,
-                        modifier = Modifier.fillMaxWidth(),
-                        testTag = DETAIL_CLIP_VEIL_TAG,
-                    ) {
-                        DetailClip(
-                            item = clip,
-                            // The clip's two routes into the viewer — the bar's
-                            // fullscreen toggle and the clip's own tap
-                            // (graph.json, `PostDetailVideo` via 19 and via 3;
-                            // PostDetailVideo.md:35/37). A post carries one
-                            // clip, so the viewer opens on it.
-                            onOpenViewer = { viewerAt = 0 },
-                        )
-                    }
+                    // The clip's two routes into the viewer — the bar's
+                    // fullscreen toggle and the clip's own tap (graph.json,
+                    // `PostDetailVideo` via 19 and via 3; PostDetailVideo.md:35/37).
+                    // A post carries one clip, so the viewer opens on it.
+                    VeiledDetailClip(clip, veiled = clipVeiled, onReveal = reveal, onOpenViewer = { viewerAt = 0 })
                 }
                 DetailCard(
                     post = post,
@@ -629,6 +604,54 @@ private fun PostDetailBody(
             index = at,
             onClose = { viewerAt = null },
         )
+    }
+}
+
+/**
+ * The detail clip in its own veil: a sensitive clip WEARS ITS OWN VEIL IN
+ * PLACE — never demoted into the card. The veil is the post body's full face
+ * over the clip's frame, and under it the clip is out of the stage and carries
+ * no transport ([DetailClip]; PostDetailVideoSensitive.md:3-7).
+ */
+@Composable
+private fun VeiledDetailClip(
+    clip: MediaItem,
+    veiled: Boolean,
+    onReveal: () -> Unit,
+    onOpenViewer: () -> Unit,
+) {
+    SensitiveVeil(
+        veiled = veiled,
+        onReveal = onReveal,
+        modifier = Modifier.fillMaxWidth(),
+        testTag = DETAIL_CLIP_VEIL_TAG,
+    ) {
+        DetailClip(item = clip, onOpenViewer = onOpenViewer)
+    }
+}
+
+/**
+ * THE PHONE TURNING TO LANDSCAPE OPENS THE VIEWER: "WHEN the phone turns to
+ * landscape GIVEN the detail holds a landscape clip -> the fullscreen viewer
+ * opens on the clip, filling the turned screen" (PostDetailVideo.md:63).
+ *
+ * A TURN is a change, so the orientation last seen is kept across the
+ * activity's own recreation on rotation
+ * (developer.android.com/guide/topics/resources/runtime-changes;
+ * `rememberSaveable` survives it) — a detail opened already in landscape
+ * opens nothing.
+ */
+@Composable
+private fun TurnToLandscapeOpensTheViewer(landscapeClip: Boolean, onTurn: () -> Unit) {
+    val orientation = LocalConfiguration.current.orientation
+    var orientationSeen by rememberSaveable { mutableIntStateOf(orientation) }
+    val turnNow by rememberUpdatedState(onTurn)
+    val holdsLandscapeClip by rememberUpdatedState(landscapeClip)
+    LaunchedEffect(orientation) {
+        val turned = orientation == Configuration.ORIENTATION_LANDSCAPE &&
+            orientationSeen != Configuration.ORIENTATION_LANDSCAPE
+        orientationSeen = orientation
+        if (turned && holdsLandscapeClip) turnNow()
     }
 }
 

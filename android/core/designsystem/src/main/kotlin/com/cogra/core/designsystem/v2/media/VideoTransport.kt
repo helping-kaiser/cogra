@@ -295,40 +295,44 @@ private fun Bar(
         // already lays out its whole 48dp target around the drawn 28dp disc
         // ([TransportButton]), so the drawn 20dp gap is a layout gap of
         // 20 - (48 - 28) = 0: the targets touch, edge on edge.
-        InRow {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(PAIR_GAP - (BAR_TARGET - BAR_CONTROL)),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.testTag(PAIR_TAG),
-            ) {
-                TransportButton(
-                    label = stringResource(
-                        if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
-                    ),
-                    glyph = if (muted) {
-                        Icons.AutoMirrored.Filled.VolumeOff
-                    } else {
-                        Icons.AutoMirrored.Filled.VolumeUp
-                    },
-                    box = BAR_CONTROL,
-                    glyphSize = BAR_GLYPH,
-                    onClick = onToggleMute,
-                    testTag = "video_mute",
-                )
-                // THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:265-267`).
-                // It is the transport's own route there; the clip's surface tap
-                // is the other (graph.json, `PostDetailVideo` via 19 and via 3).
-                if (onFullscreen != null) {
-                    TransportButton(
-                        label = stringResource(R.string.designsystem_video_fullscreen),
-                        glyph = Icons.Filled.Fullscreen,
-                        box = BAR_CONTROL,
-                        glyphSize = BAR_GLYPH,
-                        onClick = onFullscreen,
-                        testTag = "video_fullscreen",
-                    )
-                }
-            }
+        InRow { SoundAndFullscreen(muted = muted, onToggleMute = onToggleMute, onFullscreen = onFullscreen) }
+    }
+}
+
+/** The bar's sound and fullscreen, as the one pair ruling 101 spaces (see [Bar]). */
+@Composable
+private fun SoundAndFullscreen(muted: Boolean, onToggleMute: () -> Unit, onFullscreen: (() -> Unit)?) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(PAIR_GAP - (BAR_TARGET - BAR_CONTROL)),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.testTag(PAIR_TAG),
+    ) {
+        TransportButton(
+            label = stringResource(
+                if (muted) R.string.designsystem_video_unmute else R.string.designsystem_video_mute,
+            ),
+            glyph = if (muted) {
+                Icons.AutoMirrored.Filled.VolumeOff
+            } else {
+                Icons.AutoMirrored.Filled.VolumeUp
+            },
+            box = BAR_CONTROL,
+            glyphSize = BAR_GLYPH,
+            onClick = onToggleMute,
+            testTag = "video_mute",
+        )
+        // THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:265-267`).
+        // It is the transport's own route there; the clip's surface tap is the
+        // other (graph.json, `PostDetailVideo` via 19 and via 3).
+        if (onFullscreen != null) {
+            TransportButton(
+                label = stringResource(R.string.designsystem_video_fullscreen),
+                glyph = Icons.Filled.Fullscreen,
+                box = BAR_CONTROL,
+                glyphSize = BAR_GLYPH,
+                onClick = onFullscreen,
+                testTag = "video_fullscreen",
+            )
         }
     }
 }
