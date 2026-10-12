@@ -24,7 +24,7 @@
 //
 // IT IS BUILT SHAREABLE: the fullscreen viewer is the ladder's other
 // full-transport surface and consumes this same component. The bar ends in a
-// FULLSCREEN TOGGLE (`VideoControls.jsx:231-233`) wherever it is handed one to
+// FULLSCREEN TOGGLE (`VideoControls.jsx:265-267`) wherever it is handed one to
 // open — which is every full-transport surface but the viewer itself, where
 // "this IS the fullscreen".
 
@@ -127,6 +127,7 @@ export function Timeline({
   elapsed,
   duration,
   thin = false,
+  hitBelow = false,
   onSeek,
   testId = "video-timeline",
 }: {
@@ -135,6 +136,15 @@ export function Timeline({
   duration?: string;
   /** The stream's rung: the same gesture with no glyphs and no knob. */
   thin?: boolean;
+  /**
+   * The 48px target hangs DOWN from the track's top instead of centring on it
+   * (`VideoControls.jsx:109-113`, jakob's ruling 101 — design/readme.md §13,
+   * "The clip detail rulings"): on the transport's bar the space above the
+   * timeline is the clip's own tap, so the target reaches "through the bar's
+   * lower half and the gesture-zone inset to the frame's bottom edge … so the
+   * clip's own tap above it stays whole. The ink does not move."
+   */
+  hitBelow?: boolean;
   /** Where the reader put it, as a fraction of the clip. */
   onSeek?: (fraction: number) => void;
   testId?: string;
@@ -199,6 +209,16 @@ export function Timeline({
         move();
       }}
     >
+      {/* The target, not ink: a transparent child of the slider, so a press
+          on it is a press on the slider (its pointer events bubble here). */}
+      {hitBelow && (
+        <span
+          aria-hidden="true"
+          data-testid={`${testId}-target`}
+          className="absolute inset-x-0 top-0"
+          style={{ height: "var(--touch-target-min)" }}
+        />
+      )}
       <span
         aria-hidden="true"
         className="absolute inset-x-0 rounded-full"
@@ -270,7 +290,7 @@ export function VideoTransport({
   onSeek: (fraction: number) => void;
   onSkip: (seconds: number) => void;
   /**
-   * The way into the fullscreen viewer (`VideoControls.jsx:231-233`).
+   * The way into the fullscreen viewer (`VideoControls.jsx:265-267`).
    *
    * Drawn only where it is handed one, which is the master's own condition
    * (`{fullscreen && …}`): THE VIEWER DOES NOT DRAW IT, because "no fullscreen
@@ -309,7 +329,12 @@ export function VideoTransport({
           often" (`VideoControls.jsx:19-21`). */}
       <div
         className="absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center justify-center"
-        style={{ gap: "var(--space-6)" }}
+        // The board's `--space-6`, in pixels: the web's token sheet carries
+        // no `--space-*` scale, and an undefined custom property makes the
+        // whole `gap` declaration compute to its initial value — no gap at all
+        // (https://developer.mozilla.org/en-US/docs/Web/CSS/var — "invalid at
+        // computed-value time").
+        style={{ gap: "24px" }}
       >
         <TransportButton
           label={`Back ${SKIP_SECONDS} seconds`}
@@ -337,10 +362,21 @@ export function VideoTransport({
           testId={`${testId}-forward`}
         />
       </div>
-      {/* THE BAR, held clear of the gesture zone. */}
+      {/* THE BAR, held clear of the gesture zone, its row at the 48px floor
+          (`VideoControls.jsx:237-248` — `minHeight: var(--touch-target-min)`):
+          the timeline's target hangs from its track through the row's lower
+          half and the inset to the frame's bottom edge, which is only that
+          edge with the row at 48. Gaps are the board's `--space-2` (8px) and
+          `--space-5` (20px) in pixels — see the cluster's note. */}
       <div
         className="absolute flex items-center"
-        style={{ left: "12px", right: "12px", bottom, gap: "var(--space-2)" }}
+        style={{
+          left: "12px",
+          right: "12px",
+          bottom,
+          minHeight: "var(--touch-target-min)",
+          gap: "8px",
+        }}
       >
         <span
           className="flex-none text-label-small tabular-nums"
@@ -354,6 +390,7 @@ export function VideoTransport({
           elapsed={elapsed}
           duration={duration}
           onSeek={onSeek}
+          hitBelow
           testId={`${testId}-timeline`}
         />
         <span
@@ -365,28 +402,37 @@ export function VideoTransport({
         </span>
         {/* THE SOUND DECISION RIDES THE BAR rather than keeping its disc: "a
             disc beside a bar is two pieces of chrome for one clip"
-            (`VideoControls.jsx:222-223`). */}
-        <TransportButton
-          label={muted ? "Turn sound on" : "Turn sound off"}
-          glyph={muted ? "volume_off" : "volume_up"}
-          size={20}
-          box={28}
-          onClick={onToggleMute}
-          testId={`${testId}-sound`}
-        />
-        {/* THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:231`).
-            It is the transport's own route there; the clip's surface tap is
-            the other (graph.json, `PostDetailVideo` via 19 and via 3). */}
-        {onFullscreen && (
+            (`VideoControls.jsx:252-253`). THE PAIR STANDS 20px APART (jakob's
+            ruling 101): "two 28px boxes whose centres sit 48px apart, so
+            their 48px targets meet and never overlap" (`:253-256`) — each
+            box's `cg-hit` target is 48 wide, centred on it. */}
+        <div
+          className="flex flex-none items-center"
+          style={{ gap: "20px" }}
+          data-testid={`${testId}-pair`}
+        >
           <TransportButton
-            label="Full screen"
-            glyph="fullscreen"
+            label={muted ? "Turn sound on" : "Turn sound off"}
+            glyph={muted ? "volume_off" : "volume_up"}
             size={20}
             box={28}
-            onClick={onFullscreen}
-            testId={`${testId}-fullscreen`}
+            onClick={onToggleMute}
+            testId={`${testId}-sound`}
           />
-        )}
+          {/* THE BAR ENDS IN THE WAY INTO THE VIEWER (`VideoControls.jsx:265-267`).
+              It is the transport's own route there; the clip's surface tap is
+              the other (graph.json, `PostDetailVideo` via 19 and via 3). */}
+          {onFullscreen && (
+            <TransportButton
+              label="Full screen"
+              glyph="fullscreen"
+              size={20}
+              box={28}
+              onClick={onFullscreen}
+              testId={`${testId}-fullscreen`}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

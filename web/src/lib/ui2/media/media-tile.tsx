@@ -58,6 +58,8 @@ export type MediaTileProps = {
   mediaId?: string | null;
   /** The clip is handed over to the fullscreen viewer (`VideoPlayer`'s `handedOver`). */
   handedOver?: boolean;
+  /** The phone turning to landscape opens the viewer (`VideoPlayer`'s `openOnLandscape`). */
+  openOnLandscape?: boolean;
   /** A feed pauses what scrolls away; a lightbox plays what the reader opened. */
   autoplay?: boolean;
   /** `reading` gives a comment's clip the sound control and nothing else. */
@@ -98,6 +100,7 @@ export function MediaTile({
   durationMs,
   mediaId,
   handedOver = false,
+  openOnLandscape = false,
   autoplay = true,
   surface = "full",
   altText,
@@ -175,6 +178,7 @@ export function MediaTile({
         durationMs={durationMs}
         mediaId={mediaId}
         handedOver={handedOver}
+        openOnLandscape={openOnLandscape}
         autoplay={autoplay}
         surface={surface}
         framed

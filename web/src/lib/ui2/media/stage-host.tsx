@@ -35,11 +35,12 @@
 // at no hard top; the player layer (`video-stage.ts`) still keeps one clip
 // playing across all of them.
 //
-// THE PINNED STAGE is the detail's pinned clip's (`pinned-clip.tsx`): "the
-// pinned clip is its detail's one stage" (the stage-law packet §3.2 rule 12).
-// It reads the covering layers over the detail as a list does, but answers
-// them in its own resume mode (`stage.ts`, PostDetailVideo.md:31–41), and it
-// lands at no hard top — the clip is pinned, the page scrolls beneath it.
+// THE DETAIL STAGE is the detail clip's (`detail-clip.tsx`): "the clip is its
+// detail's one stage" (the stage-law packet §3.2 rule 12). It reads the
+// covering layers over the detail as a list does, but answers them in its own
+// resume mode (`stage.ts`, PostDetailVideo.md:39–51); the open is its only
+// start and the scroll decides nothing on it (ruling 100,
+// PostDetailVideo.md:7–13), so it lands at no hard top either.
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
@@ -78,19 +79,19 @@ export function useStage(): Stage | null {
 export function StageHost({
   children,
   private: isPrivate = false,
-  pinned = false,
+  detail = false,
 }: {
   children: ReactNode;
   /** A stage for clips that no surface hosts — see the note above. */
   private?: boolean;
-  /** The detail's pinned clip's stage — see the note above. */
-  pinned?: boolean;
+  /** The detail clip's stage — see the note above. */
+  detail?: boolean;
 }) {
   // Identity, not value: one engine for the host's whole life. The lazy
   // initializer reads the platform once, so the first registration already
   // knows the page and the device.
   const [stage] = useState(
-    () => new Stage({ visible: isPageVisible(), allowed: !isAutoplaySuppressed(), pinned }),
+    () => new Stage({ visible: isPageVisible(), allowed: !isAutoplaySuppressed(), detail }),
   );
   const cover = useSurfaceCover();
   const layer = useCoveringLayer();
@@ -112,7 +113,7 @@ export function StageHost({
   useHardTopLanding({
     host: scroller,
     onLand: () => stage.land(),
-    enabled: !isPrivate && !pinned,
+    enabled: !isPrivate && !detail,
   });
 
   return <StageContext.Provider value={hosted}>{children}</StageContext.Provider>;

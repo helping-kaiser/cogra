@@ -20,7 +20,7 @@ import * as clipMemory from "./clip-memory";
 import { pictureOf } from "./handover-still";
 import { MediaViewer } from "./media-viewer";
 import { resetMuteForTests } from "./mute";
-import { PinnedClip } from "./pinned-clip";
+import { DetailClip } from "./detail-clip";
 import { Stage } from "./stage";
 import { StageHost } from "./stage-host";
 import { VideoPlayer } from "./video-player";
@@ -91,14 +91,14 @@ function Detail() {
   const [viewer, setViewer] = useState(false);
   return (
     <>
-      <PinnedClip
+      <DetailClip
         src={RENDITION}
         mimeType="video/mp4"
         poster={COVER}
         mediaId={ID}
         behindViewer={viewer}
         onOpenViewer={() => setViewer(true)}
-        testId="pinned"
+        testId="detail"
       />
       {viewer && (
         <MediaViewer
@@ -126,7 +126,7 @@ function playedCard(time: number) {
   return view;
 }
 
-describe("card → detail: the pinned clip wears the card's frame while it prepares", () => {
+describe("card → detail: the detail clip wears the card's frame while it prepares", () => {
   it("covers the new element with a picture of exactly the card's last frame (the naive remount shows the frame's ground)", () => {
     const { rerender } = playedCard(5);
     const cardElement = video("card");
@@ -135,14 +135,14 @@ describe("card → detail: the pinned clip wears the card's frame while it prepa
 
     // The new element is a fresh one, with nothing decoded and no poster: on
     // its own it paints the frame's ground until its seek lands.
-    expect(pinned()).not.toBe(cardElement);
-    expect(pinned().readyState).toBe(0);
-    expect(pinned()).not.toHaveAttribute("poster");
+    expect(detailClip()).not.toBe(cardElement);
+    expect(detailClip().readyState).toBe(0);
+    expect(detailClip()).not.toHaveAttribute("poster");
     // The still stands over it, drawn from the picture taken off the card's
     // element as it left — at the card's decoded size, of the card's moment.
-    const over = still("pinned-media");
+    const over = still("detail-media");
     expect(over).toBeInstanceOf(HTMLCanvasElement);
-    expect(pinned().parentElement!.nextElementSibling).toBe(over);
+    expect(detailClip().parentElement!.nextElementSibling).toBe(over);
     const taken = draws.find((d) => d.source === cardElement)?.into;
     expect(taken).toBeDefined();
     expect(draws).toContainEqual({ into: over, source: taken });
@@ -155,50 +155,50 @@ describe("card → detail: the pinned clip wears the card's frame while it prepa
     const { rerender } = playedCard(5);
     rerender(<Route at="detail" />);
 
-    const over = still("pinned-media")!;
+    const over = still("detail-media")!;
     expect(over).toHaveAttribute("aria-hidden", "true");
     expect(over.className).toContain("pointer-events-none");
     expect(over.className).toContain("absolute");
     expect(over.className).toContain("inset-0");
     expect(over.className).toContain("object-cover");
-    expect(pinned().className).toContain("object-cover");
+    expect(detailClip().className).toContain("object-cover");
   });
 
   it("changes nothing about when the clip plays: the stage starts the element under the still, at the card's frame", () => {
     const { rerender } = playedCard(5);
     rerender(<Route at="detail" />);
-    onScreen("pinned-media");
+    onScreen("detail-media");
 
-    expect(pinned().paused).toBe(false);
-    expect(pinned().currentTime).toBe(5);
-    expect(still("pinned-media")).not.toBeNull();
+    expect(detailClip().paused).toBe(false);
+    expect(detailClip().currentTime).toBe(5);
+    expect(still("detail-media")).not.toBeNull();
   });
 
   it("stays up while the seek is in flight, and goes two frames after the element can paint the moment", async () => {
     const { rerender } = playedCard(5);
     rerender(<Route at="detail" />);
-    onScreen("pinned-media");
+    onScreen("detail-media");
 
     // Data arrived but the seek has not landed: the element would still paint
     // the wrong frame, or none.
-    Object.defineProperty(pinned(), "readyState", { configurable: true, value: 2 });
-    Object.defineProperty(pinned(), "seeking", { configurable: true, value: true });
-    fireEvent(pinned(), new Event("loadeddata"));
+    Object.defineProperty(detailClip(), "readyState", { configurable: true, value: 2 });
+    Object.defineProperty(detailClip(), "seeking", { configurable: true, value: true });
+    fireEvent(detailClip(), new Event("loadeddata"));
     await act(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
-    expect(still("pinned-media")).not.toBeNull();
+    expect(still("detail-media")).not.toBeNull();
 
-    seekLanded(pinned());
-    expect(still("pinned-media")).not.toBeNull();
-    await waitFor(() => expect(still("pinned-media")).toBeNull());
+    seekLanded(detailClip());
+    expect(still("detail-media")).not.toBeNull();
+    await waitFor(() => expect(still("detail-media")).toBeNull());
   });
 
   it("gives way to the element's own face when the element cannot load", () => {
     const { rerender } = playedCard(5);
     rerender(<Route at="detail" />);
 
-    fireEvent(pinned(), new Event("error"));
+    fireEvent(detailClip(), new Event("error"));
 
-    expect(still("pinned-media")).toBeNull();
+    expect(still("detail-media")).toBeNull();
   });
 
   it("holds under suppressed autoplay too, where the element stands paused at the frame", async () => {
@@ -210,28 +210,28 @@ describe("card → detail: the pinned clip wears the card's frame while it prepa
     decoded(video("card"));
 
     view.rerender(<Route at="detail" />);
-    onScreen("pinned-media");
+    onScreen("detail-media");
 
-    expect(pinned().paused).toBe(true);
-    expect(still("pinned-media")).not.toBeNull();
-    seekLanded(pinned());
-    await waitFor(() => expect(still("pinned-media")).toBeNull());
+    expect(detailClip().paused).toBe(true);
+    expect(still("detail-media")).not.toBeNull();
+    seekLanded(detailClip());
+    await waitFor(() => expect(still("detail-media")).toBeNull());
   });
 });
 
-describe("detail → back: the card wears the pinned clip's frame", () => {
-  it("covers the card's new element with the pinned clip's last frame", () => {
+describe("detail → back: the card wears the detail clip's frame", () => {
+  it("covers the card's new element with the detail clip's last frame", () => {
     const view = render(<Route at="detail" />);
-    onScreen("pinned-media");
-    pinned().currentTime = 9;
-    decoded(pinned(), 1080, 1920);
-    const pinnedElement = pinned();
+    onScreen("detail-media");
+    detailClip().currentTime = 9;
+    decoded(detailClip(), 1080, 1920);
+    const detailElement = detailClip();
 
     view.rerender(<Route at="card" />);
 
     const over = still("card");
     expect(over).not.toBeNull();
-    const taken = draws.find((d) => d.source === pinnedElement)?.into;
+    const taken = draws.find((d) => d.source === detailElement)?.into;
     expect(draws).toContainEqual({ into: over, source: taken });
     // Bounded: the longest side is kept at 1280.
     expect(over).toHaveAttribute("width", "720");
@@ -248,21 +248,21 @@ describe("detail → back: the card wears the pinned clip's frame", () => {
   // that element can paint is not the moment the card is pointed at.
   it("covers the card's element even when it arrived having loaded the clip's opening frame while the feed rendered", async () => {
     const view = render(<Route at="detail" />);
-    onScreen("pinned-media");
-    pinned().currentTime = 9;
-    decoded(pinned());
-    const pinnedElement = pinned();
+    onScreen("detail-media");
+    detailClip().currentTime = 9;
+    decoded(detailClip());
+    const detailElement = detailClip();
 
     videosArriveLoaded();
     view.rerender(<Route at="card" />);
 
-    // The card reads the pinned clip's goodbye — the newest word on the clip.
+    // The card reads the detail clip's goodbye — the newest word on the clip.
     expect(clipMemory.read(ID)?.time).toBe(9);
     expect(video("card").currentTime).toBe(9);
     expect(video("card").readyState).toBe(2);
     const over = still("card");
     expect(over).not.toBeNull();
-    const taken = draws.find((d) => d.source === pinnedElement)?.into;
+    const taken = draws.find((d) => d.source === detailElement)?.into;
     expect(draws).toContainEqual({ into: over, source: taken });
 
     // It goes as the forward handover's does: two frames after the seek lands.
@@ -273,9 +273,9 @@ describe("detail → back: the card wears the pinned clip's frame", () => {
 
   it("an element that arrives already standing at the pictured moment, with its data, wears no still", () => {
     const view = render(<Route at="detail" />);
-    onScreen("pinned-media");
-    pinned().currentTime = 9;
-    decoded(pinned());
+    onScreen("detail-media");
+    detailClip().currentTime = 9;
+    decoded(detailClip());
 
     videosArriveLoaded(9);
     view.rerender(<Route at="card" />);
@@ -305,20 +305,20 @@ function videosArriveLoaded(at = 0): void {
   }) as typeof document.createElement);
 }
 
-describe("pinned clip → viewer: the viewer opens on the pinned clip's frame", () => {
+describe("detail clip → viewer: the viewer opens on the detail clip's frame", () => {
   it("lays the handed-over frame under the viewer's own fit", () => {
     render(<Detail />);
-    onScreen("pinned-media");
-    pinned().currentTime = 6;
-    decoded(pinned());
+    onScreen("detail-media");
+    detailClip().currentTime = 6;
+    decoded(detailClip());
 
-    fireEvent.click(screen.getByTestId("pinned-media-transport-fullscreen"));
+    fireEvent.click(screen.getByTestId("detail-media-transport-fullscreen"));
 
     const over = still("viewer-video");
     expect(over).not.toBeNull();
     expect(over!.className).toContain("object-contain");
     expect(clipMemory.frameOf(ID)?.time).toBe(6);
-    // The carry is unchanged: the viewer's clip plays from the pinned clip's moment.
+    // The carry is unchanged: the viewer's clip plays from the detail clip's moment.
     expect(video("viewer-video").currentTime).toBe(6);
     expect(video("viewer-video").paused).toBe(false);
   });
@@ -333,8 +333,8 @@ describe("the still never shows a frame the clip is not at", () => {
 
     view.rerender(<Route at="detail" />);
 
-    expect(still("pinned-media")).toBeNull();
-    expect(pinned()).toHaveAttribute("poster", COVER);
+    expect(still("detail-media")).toBeNull();
+    expect(detailClip()).toHaveAttribute("poster", COVER);
   });
 
   it("an outgoing element with no decoded frame keeps no picture, and the new presentation draws none", () => {
@@ -345,7 +345,7 @@ describe("the still never shows a frame the clip is not at", () => {
     view.rerender(<Route at="detail" />);
 
     expect(clipMemory.frameOf(ID)).toBeUndefined();
-    expect(still("pinned-media")).toBeNull();
+    expect(still("detail-media")).toBeNull();
   });
 
   it("a played clip scrolled off screen pictures nothing on its way out — nobody is looking at it", () => {
@@ -360,7 +360,7 @@ describe("the still never shows a frame the clip is not at", () => {
     expect(clipMemory.read(ID)?.time).toBe(5);
     expect(clipMemory.frameOf(ID)).toBeUndefined();
     expect(draws).toEqual([]);
-    expect(still("pinned-media")).toBeNull();
+    expect(still("detail-media")).toBeNull();
   });
 
   it("a picture of a moment the clip has since moved from is not handed out", () => {
@@ -454,6 +454,6 @@ describe("taking the picture", () => {
   });
 });
 
-function pinned() {
-  return video("pinned-media");
+function detailClip() {
+  return video("detail-media");
 }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.assertTopPositionInRootIsEqualTo
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -169,6 +170,26 @@ class MediaViewerTest {
         compose.setContent { Cogra2PreviewTheme { MediaViewer(items = listOf(clip), onClose = {}) } }
         node(TRANSPORT_TAG).assertExists()
         node(TIMELINE_TAG).assertExists()
+    }
+
+    /**
+     * THE TRANSPORT IS SHARED, so the viewer carries ruling 101's re-space too
+     * (design/readme.md §13, "The clip detail rulings"): the timeline's 48dp
+     * target hangs down from its top, and the sound — alone in the pair here,
+     * with no fullscreen toggle — keeps its drawn 28dp disc, its 48dp target
+     * around it (`minimumInteractiveComponentSize`).
+     */
+    @Test
+    fun `the viewer's timeline target grows down and its sound keeps its drawn disc`() {
+        compose.setContent { Cogra2PreviewTheme { MediaViewer(items = listOf(clip), onClose = {}) } }
+        val bar = node(BAR_TAG).getUnclippedBoundsInRoot()
+        val target = node(TIMELINE_TARGET_TAG).getUnclippedBoundsInRoot()
+        val sound = node("video_mute").getUnclippedBoundsInRoot()
+        assertThat((target.bottom - target.top).value).isWithin(1f).of(BAR_TARGET.value)
+        assertThat(target.top.value).isAtLeast(bar.top.value)
+        assertThat(target.bottom.value).isWithin(1f).of(bar.bottom.value)
+        assertThat((sound.right - sound.left).value).isWithin(1f).of(28f)
+        node(PAIR_TAG).assertExists()
     }
 
     @Test

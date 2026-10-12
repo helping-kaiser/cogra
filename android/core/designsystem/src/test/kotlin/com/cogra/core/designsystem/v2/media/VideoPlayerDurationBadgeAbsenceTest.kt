@@ -22,7 +22,7 @@ import org.robolectric.RobolectricTestRunner
  * reader meets a clip's length is the detail's transport").
  *
  * `VideoPlayer` is the one composable every reading surface's clip goes
- * through — `PinnedClip` and `MediaViewer` hand it `VideoControls.Full`,
+ * through — `DetailClip` and `MediaViewer` hand it `VideoControls.Full`,
  * `MediaGallery`'s card and comment tiles hand it `VideoControls.SoundOnly`
  * — so pinning both arms here covers the detail, the fullscreen viewer, the
  * feed card and a comment's clip at once, without reproducing each

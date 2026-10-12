@@ -369,7 +369,7 @@ describe("page visibility", () => {
     ["on the feed", onList],
     ["in the thread", (ids) => void render(<Thread ids={ids} />)],
     [
-      "the detail's pinned clip, on its own stage",
+      "the detail clip, on its own stage",
       (ids) =>
         void render(
           <>
@@ -436,7 +436,7 @@ describe("page visibility", () => {
 // dismissal: `covering-layer.test.tsx`; page show: above; the live signal and
 // the disc: `video-player.test.tsx`).
 describe("suppressed autoplay starts nothing on its own", () => {
-  it("on the detail's pinned clip arriving — the transport's play still starts it (C10, rule 12)", () => {
+  it("on the detail clip arriving — the transport's play still starts it (C10, rule 12)", () => {
     suppressesAutoplay({ saveData: true });
     render(<VideoPlayer src={CLIP} surface="transport" testId="a" />);
     frame({ a: 1 });
