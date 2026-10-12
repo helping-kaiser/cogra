@@ -51,8 +51,8 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -87,13 +87,13 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.IntOffset
@@ -101,13 +101,13 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.cogra.core.designsystem.v2.token.Space
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import com.cogra.core.designsystem.v2.token.Space
+import kotlinx.coroutines.flow.filterNotNull
 import java.util.Locale
 import kotlin.math.roundToInt
-import kotlinx.coroutines.flow.filterNotNull
 
 /**
  * Which surface the control offers for picking (design.md §8.6), as the
@@ -470,26 +470,30 @@ private fun Modifier.stanceGesture(
     enabled: Boolean,
     onHoldDefault: () -> Unit,
     onOpenPad: () -> Unit,
-): Modifier = if (!enabled) this else pointerInput(Unit) {
-    awaitEachGesture {
-        awaitFirstDown(requireUnconsumed = false).consume()
-        var held = false
-        val up = try {
-            withTimeout(viewConfiguration.longPressTimeoutMillis) {
-                waitForUpOrCancellation()
+): Modifier = if (!enabled) {
+    this
+} else {
+    pointerInput(Unit) {
+        awaitEachGesture {
+            awaitFirstDown(requireUnconsumed = false).consume()
+            var held = false
+            val up = try {
+                withTimeout(viewConfiguration.longPressTimeoutMillis) {
+                    waitForUpOrCancellation()
+                }
+            } catch (_: PointerEventTimeoutCancellationException) {
+                held = true
+                null
             }
-        } catch (_: PointerEventTimeoutCancellationException) {
-            held = true
-            null
-        }
-        up?.consume()
-        when {
-            held -> {
-                onHoldDefault()
-                waitForUpOrCancellation()?.consume()
+            up?.consume()
+            when {
+                held -> {
+                    onHoldDefault()
+                    waitForUpOrCancellation()?.consume()
+                }
+                up != null -> onOpenPad()
+                else -> Unit
             }
-            up != null -> onOpenPad()
-            else -> Unit
         }
     }
 }
@@ -517,18 +521,22 @@ private fun Modifier.fieldGesture(
     extentPx: Float,
     pick: State<StancePoint>,
     onPick: State<(StancePoint) -> Unit>,
-): Modifier = if (!enabled) this else pointerInput(extentPx) {
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        down.consume()
-        // Read once, at the down: the base is what was standing when this
-        // drag began, and the picks it reports must not feed back into it.
-        val base = pick.value
-        var travel = Offset.Zero
-        drag(down.id) { change ->
-            travel += change.positionChange()
-            change.consume()
-            onPick.value(stancePointFrom(base, travel, extentPx))
+): Modifier = if (!enabled) {
+    this
+} else {
+    pointerInput(extentPx) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            down.consume()
+            // Read once, at the down: the base is what was standing when this
+            // drag began, and the picks it reports must not feed back into it.
+            val base = pick.value
+            var travel = Offset.Zero
+            drag(down.id) { change ->
+                travel += change.positionChange()
+                change.consume()
+                onPick.value(stancePointFrom(base, travel, extentPx))
+            }
         }
     }
 }
