@@ -26,8 +26,9 @@ use rand::rngs::OsRng;
 use uuid::Uuid;
 
 use super::types::{
-    AccountDeletion, Application, AuthSession, Dimension, ErrorCode, InviteLink, MediaAttachmentType,
-    PendingEmailChange, PreparedWrite, Session, StagedWriteType, User, UserError, UserPreferences,
+    AccountDeletion, Application, AuthSession, Dimension, ErrorCode, InviteLink,
+    MediaAttachmentType, PendingEmailChange, PreparedWrite, Session, StagedWriteType, User,
+    UserError, UserPreferences,
 };
 use crate::auth::{self, AuthConfig, RefreshError, Viewer};
 use crate::breach::BreachCorpus;
@@ -2962,11 +2963,7 @@ impl Mutation {
             }
             Some(store::DeletionRequest::Opened) => {
                 mailer
-                    .send(deletion_mail(
-                        credentials.email,
-                        &web_origin.0,
-                        &link.token,
-                    ))
+                    .send(deletion_mail(credentials.email, &web_origin.0, &link.token))
                     .await;
                 Ok(AccountDeletionPayload::standing(None))
             }
