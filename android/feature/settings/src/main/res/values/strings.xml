@@ -62,6 +62,7 @@
     <string name="settings_sensitive">Sensitive content</string>
     <string name="settings_sensitive_unveil">Always unveil sensitive content</string>
     <string name="settings_sensitive_unveil_off">Off, the veil stays until you tap it.</string>
+    <string name="settings_sensitive_unveil_on">On, sensitive content stands unveiled wherever you read.</string>
     <string name="settings_sensitive_footnote">This choice follows your account to every device.</string>
 
     <string name="settings_backup">Key backup</string>
