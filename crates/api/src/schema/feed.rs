@@ -616,7 +616,7 @@ pub async fn feed_ranking(
         }));
     }
 
-    let candidates = settling_candidates(pool, &kinds, filter.topic, pinned).await?;
+    let candidates = settling_candidates(pool, &kinds, filter.topic).await?;
     let staged_kinds: HashMap<Uuid, NodeKind> = candidates
         .iter()
         .map(|(candidate, kind)| (candidate.ref_, *kind))
@@ -674,11 +674,14 @@ pub async fn feed_ranking(
 /// person key (`prof:<atom>`), the one rule the slice applies to every
 /// person (`postgres_store::slice`), so the pod joins it against
 /// `SliceNode.graphId` without a mapping of its own.
+///
+/// Only Posts and Comments can settle in a feed: a Type never pends, and
+/// a Profile pends only under its Registration, which an applicant
+/// carries — held, author-only, never a candidate.
 async fn settling_candidates(
     pool: &PgPool,
     kinds: &[NodeKind],
     topic: Option<Uuid>,
-    pinned: i64,
 ) -> async_graphql::Result<Vec<(SettlingCandidate, NodeKind)>> {
     let tables: Vec<String> = kinds
         .iter()
@@ -705,31 +708,29 @@ async fn settling_candidates(
             None => return Ok(Vec::new()),
         },
     };
-    Ok(
-        settling::candidates(pool, &tables, topic.as_deref(), pinned)
-            .await
-            .map_err(storage)?
-            .into_iter()
-            .map(|row| {
-                let kind = if row.kind == "comment" {
-                    NodeKind::Comment
-                } else {
-                    NodeKind::Post
-                };
-                (
-                    SettlingCandidate {
-                        ref_: row.node_id,
-                        author: NodeId::Prof(row.author).to_string(),
-                        family: row.family,
-                        p_directed: row.p_d,
-                        p_interest: row.p_i,
-                        authored_at: row.authored_at,
-                    },
-                    kind,
-                )
-            })
-            .collect(),
-    )
+    Ok(settling::candidates(pool, &tables, topic.as_deref())
+        .await
+        .map_err(storage)?
+        .into_iter()
+        .map(|row| {
+            let kind = if row.kind == "comment" {
+                NodeKind::Comment
+            } else {
+                NodeKind::Post
+            };
+            (
+                SettlingCandidate {
+                    ref_: row.node_id,
+                    author: NodeId::Prof(row.author).to_string(),
+                    family: row.family,
+                    p_directed: row.p_d,
+                    p_interest: row.p_i,
+                    authored_at: row.authored_at,
+                },
+                kind,
+            )
+        })
+        .collect())
 }
 
 /// The pod's answer in the public shapes, field for field. Composes

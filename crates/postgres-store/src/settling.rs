@@ -36,9 +36,11 @@ pub struct SettlingCandidate {
 /// - a write carried with an application: held, author-only, never served
 ///   to anyone else (auth.md "Application");
 /// - a write expired or not yet pre-signed: nothing of it is served;
-/// - a write whose record already landed by `as_of_epoch`, though the
-///   content row has not caught up: by the pin it is landed, so it ranks
-///   among the landed entries and must never repeat as settling (W-4).
+/// - a write whose record already landed, though the content row has not
+///   caught up. Landed by the pin, it ranks among the landed entries and
+///   must never repeat as settling; landed after the pin, it is in neither
+///   list for this call and arrives with the next (W-4). Either way it is
+///   no longer settling.
 ///
 /// Under a `topic` (its Type identifier, `name:<canonical name>`), only
 /// content whose own author declares the topic in a pending Tag — the
@@ -54,7 +56,6 @@ pub async fn candidates(
     pool: &PgPool,
     kinds: &[String],
     topic: Option<&str>,
-    as_of_epoch: i64,
 ) -> Result<Vec<SettlingCandidate>, sqlx::Error> {
     sqlx::query_as!(
         SettlingCandidate,
@@ -81,17 +82,16 @@ pub async fn candidates(
              AND s.state NOT IN ('landed', 'expired', 'carried')
              AND s.pre_signed_at IS NOT NULL
              AND NOT EXISTS (
-                 SELECT 1 FROM mirror_records r
-                 WHERE r.record_id = s.act_id AND r.epoch <= $2
+                 SELECT 1 FROM mirror_records r WHERE r.record_id = s.act_id
              )
-             AND ($3::text IS NULL OR EXISTS (
+             AND ($2::text IS NULL OR EXISTS (
                  SELECT 1
                  FROM (
                      SELECT DISTINCT ON (t.target) t.p_d AS relevance
                      FROM staged_writes t
                      WHERE t.family = 'tag'
                        AND t.middle = n.l1_node_id
-                       AND t.target = $3
+                       AND t.target = $2
                        AND t.author = s.author
                        AND NOT t.carried
                        AND octet_length(t.payload) = 0
@@ -103,7 +103,6 @@ pub async fn candidates(
              ))
            ORDER BY n.id"#,
         kinds,
-        as_of_epoch,
         topic,
     )
     .fetch_all(pool)
