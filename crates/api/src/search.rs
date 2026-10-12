@@ -353,7 +353,7 @@ mod tests {
         assert_eq!(request.title_query, None);
     }
 
-    /// A `#` scope names a topic by the tag grammar with the operator as its one sigil, so a second `#` names nothing.
+    /// A topic scope names a topic by the tag grammar with the operator as its one sigil, so a second sigil names nothing.
     /// ´claim:search:a-tag-scope-names-a-canonical-topic´
     #[test]
     fn a_tag_scope_names_a_canonical_topic() {

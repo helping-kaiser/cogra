@@ -860,16 +860,15 @@ async fn the_finder_offers_a_post_by_a_title_word(pool: PgPool) {
     assert_eq!(long["referenceCandidates"], json!([]));
 }
 
-// ── The scoped branch (search-surface B2; design digest item 21) ──────────
-//
-// Scoped content is minted under its author's address atom, as the seal
-// mints it: a topic read tells a content's own author from its identifier,
-// and "carries" is exactly that author's current claim. Claims land through
-// the mirror's own ingestion, one epoch per call, rendered through the
-// census as the seal renders them.
-
-/// `person`'s address atom — `addr-<handle>`, the realization address
+/// A person's address atom — `addr-<handle>`, the realization address
 /// [`person`] gives them.
+///
+/// The scoped branch's fixtures (search-surface B2; design digest item
+/// 21) mint content under its author's atom, as the seal mints it: a
+/// topic read tells a content's own author from its identifier, and
+/// "carries" is exactly that author's current claim. Claims land through
+/// the mirror's own ingestion, rendered through the census as the seal
+/// renders them.
 fn atom(handle: &str) -> String {
     format!("addr-{handle}")
 }
@@ -951,9 +950,7 @@ async fn claim(
     name: &str,
     relevance: f64,
 ) {
-    hashtag::upsert(&mut *pool.acquire().await.expect("conn"), name)
-        .await
-        .expect("registry");
+    tag(pool, name).await;
     let author = atom(handle);
     let (a_pd, a_pi) = leg_params(LegRole::A, relevance, 1.0);
     let (t_pd, t_pi) = leg_params(LegRole::T, relevance, 1.0);
