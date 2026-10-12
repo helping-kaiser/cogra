@@ -3744,6 +3744,17 @@ const SCORE_PATHS = [
 ];
 const SCORE_MORE_PATHS = { count: 2, value: "+0.50" };
 
+/* THE SAME SET UNDER A BORROWED VIEW (jakob 2026-10-12, SR-G3): a guest on
+   @mira's invite link, or an applicant she let in, reads the walk from HER
+   opinions, so every path leads with her face — and the one that ran through
+   her runs through @sol instead, since a path never revisits its start. */
+const SCORE_PATHS_BORROWED = [
+  { through: "@ada", people: [MIRA_FACED, ADA_FACED], value: "+6.80" },
+  { through: "@tobias", people: [MIRA_FACED, TOBIAS], value: "+4.20" },
+  { through: "@sol", people: [MIRA_FACED, SOL], value: "+2.60" },
+  { through: "@kel and @wren", people: [MIRA_FACED, KEL, WREN], value: "+1.10" },
+];
+
 /* ScoreOrigin — THE THING THE SCORE BELONGS TO, carried on all four levels so
    a reader four taps deep never loses what they are reading about.
 
@@ -3786,7 +3797,9 @@ const SCORE_ORIGINS = {
   person: { title: MIRA.displayName, snippet: "@" + MIRA.handle, name: MIRA.displayName, src: "inviter.jpg" },
   topic: { title: "#saltmaps", mark: <NodeMark kind="topic" onCard /> },
 };
-const signedScore = (score) => (/^[−-]/.test(score) || /^0(\.0+)?$/.test(score) ? score : "+" + score);
+/* Only a positive figure takes the `+`: a negative carries its own sign, a
+   zero wears none, and the dash — no computed figure — is not a number at all. */
+const signedScore = (score) => (/^\d/.test(score) && !/^0(\.0+)?$/.test(score) ? "+" + score : score);
 
 function ScoreOrigin({ kind = "post", score = "15.20" }) {
   return (
@@ -3847,7 +3860,10 @@ const TRACE_ENDS = {
 
 function PathTrace({ people, size = 24, kind = "post", onCard = false }) {
   const between = people.length === 2 ? `@${people[1].handle}` : "several steps";
-  const spoken = `You, then ${between}, then what reached you`;
+  // A borrowed view's paths start at the account it borrows, and say so in the
+  // third person (jakob 2026-10-12, SR-G3): "You" is the reader's own view only.
+  const lead = people[0] === SCORE_VIEWER ? "You" : `@${people[0].handle}`;
+  const spoken = `${lead}, then ${between}, then what reached you`;
   return (
     <span style={{ display: "inline-flex", alignItems: "center" }}>
       {people.map((person, index) => (

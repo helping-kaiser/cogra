@@ -1895,7 +1895,7 @@
         "VouchBack"
       ],
       "steps": [
-        "start · «Feed score» on 35 boards → FeedEntry",
+        "start · «Feed score» — to FeedEntry on 35 boards → FeedEntry",
         "FeedEntry · 2 «a path row» → RankPath — the path, its steps and what it adds",
         "RankPath · 2 «a step row» → RankHop — the step, what carries it, and the records behind it",
         "RankHop · 2 «Show them» → RankRecords — the signed records the step folds",
@@ -3802,7 +3802,7 @@
     },
     {
       "name": "read-a-score-whose-paths-moved-on",
-      "description": "A score opened on a post whose paths have all aged out draws the state the dust floor leaves — a reading journey that concludes on arrival.",
+      "description": "A score whose trace's fetch finds no paths draws the cover, the dash and the quiet line — a reading journey that concludes on arrival.",
       "status": "resolved",
       "steps": [
         "start · FeedEntryMoved",

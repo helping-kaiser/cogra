@@ -3048,10 +3048,48 @@ behind it` (`RankPath`); one step opens under `Your opinion of @ada — the
 first of this path's two steps.`, its `Behind it` reading `2 opinions`
 (`RankHop`).
 
-**The aged-out line**: `The paths that carried it here have moved on.`
+**The moved-on line**: `The paths that carried it here have moved on.`
 One line, and no offer of anything to do about it — nothing is owed and
 nothing is broken. It is deliberately not an empty-list line: something
-*was* here.
+*was* here. It stands when the trace's fetch finds no paths, under the
+dash — no computed figure, never `0.00`, since zero is severance's alone
+(jakob 2026-10-12).
+
+**The settling trace**: `Still settling — its paths count once it lands.`
+under the dash, for a thing not yet landed (`FeedEntryMoved`'s `cause`
+chip; SR-G2) — the pending marker's own words, then what the reader
+waits for (*new 2026-10-12, drafted — its wording jakob's at review*).
+
+**The borrowed view's twin** (jakob 2026-10-12, SR-G3): under a borrowed
+view the paths start at the account the view is borrowed from, so the
+first person would be false. The trace speaks that account by handle, the
+band's grammar: `Every path here starts with an opinion @mira gave.`; a
+step `@mira's opinion of @ada`; the fold `@mira has given @ada two
+opinions. They add up to one, and that one is what carries.` — the pad's
+clause left out, the pad being the reader's; the floor `The two records
+behind @mira's opinion of @ada.`; spoken, `@mira, then @ada, then what
+reached you` (*new 2026-10-12, drafted — their wording jakob's at
+review*).
+
+**A step in words, every family** (SR-G4/G5): one record is one step,
+however many legs it has, and it names what it passed through. An
+opinion `Your opinion of @ada` / `@ada's opinion of @tobias`; a publish
+`@ada published it`, a comment reached through its writing `@ada wrote
+it`; a comment passed through to what it answers `@ada replied to it`; a
+citation `@ada cited it in "The long way home"`; a tag `@ada tagged it
+#saltmaps`; a feeling about a topic `How you feel about #saltmaps` /
+`How @ada feels about #saltmaps` — the pad's own register, never the
+word *Affinity*. *It* is always the thing the path reached (*new
+2026-10-12, drafted — their wording jakob's at review*).
+
+**A step that hits the limit** (SR-G6): the fold sums, then stops at the
+limit an opinion can reach, so its records can add up past what the step
+carries. The fold's note closes with `Added up, they go past the limit
+an opinion can reach, so the step carries the limit.`, the records' with
+`Added up, these go past the limit an opinion can reach, so the step
+carries the limit.`, and the exact values show the unclipped sum beside
+the step's pair (*new 2026-10-12, drafted — their wording jakob's at
+review*).
 
 **The opinions list.** The post's door reads `8 opinions on this post`
 (`1 opinion on this post` in the singular), and those words are its

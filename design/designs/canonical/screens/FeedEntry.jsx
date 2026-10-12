@@ -24,20 +24,36 @@
    EVERY PATH STARTS WITH AN OPINION THE READER GAVE (§1, the inbound-inert
    rule): nothing anyone points at you moves anything toward you. That is the
    note under the cover, and it is the sentence the whole feature exists to make
-   checkable. */
+   checkable.
+
+   UNDER A BORROWED VIEW IT IS SAID IN THE THIRD PERSON (jakob 2026-10-12,
+   SR-G3; the `view` chip's `borrowed`). A guest or an applicant reads a feed
+   walked from someone else's opinions, so "an opinion you gave" would be false
+   for them: the note names the account the view is borrowed from, in the
+   band's own grammar (`Browsing from @mira's view`), and every path leads with
+   that account's face. */
+export const PROPS = { view: { editor: "enum", options: ["own", "borrowed"], default: "own" } };
+export const VALS = `traceNote: this.props.view === "borrowed" ? "Every path here starts with an opinion @mira gave." : "Every path here starts with an opinion you gave.", ownPaths: this.props.view === "borrowed" ? "none" : "contents", borrowedPaths: this.props.view === "borrowed" ? "contents" : "none"`;
 export function Screen() {
   return (
     <>
       <PageHeader title="Why this reached you" backHref="#" backLabel="Back to feed" />
       <ScoreColumn>
         <ScoreOrigin />
-        <QuietNote>Every path here starts with an opinion you gave.</QuietNote>
+        <QuietNote>{"{{traceNote}}"}</QuietNote>
 
         <SectionLabel>Strongest first</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {SCORE_PATHS.map((path) => (
-            <PathRow key={path.through} people={path.people} through={path.through} value={path.value} onOpen={() => {}} />
-          ))}
+          <div style={{ display: "{{ownPaths}}" }}>
+            {SCORE_PATHS.map((path) => (
+              <PathRow key={path.through} people={path.people} through={path.through} value={path.value} onOpen={() => {}} />
+            ))}
+          </div>
+          <div style={{ display: "{{borrowedPaths}}" }}>
+            {SCORE_PATHS_BORROWED.map((path) => (
+              <PathRow key={path.through} people={path.people} through={path.through} value={path.value} onOpen={() => {}} />
+            ))}
+          </div>
 
           {/* The quiet row. It is a text control and not a card: the four above
               it are destinations and this one is a state change on this screen,

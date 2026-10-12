@@ -4961,12 +4961,13 @@ are reading about.
   and the way down is `FactRow`'s own action slot. `PathTrace` is the one
   genuinely new drawing, and it exists because no master's leading slot
   holds a chain.
-- **The aged-out state is content, not a tap.** The score opens the same
-  board in the state the dust floor leaves a post whose every path's last
-  opinion has decayed past it — `TagPageEmpty`'s arrangement exactly. It
-  is not `EmptyState`: that master says "nothing here yet" and offers the
-  action that fills it, and here something *was* here and nothing is
-  owed.
+- **The moved-on state is content, not a tap.** The score opens the same
+  board in the state its fetch leaves it when that fetch finds no paths —
+  the cover, the dash, the quiet line — `TagPageEmpty`'s arrangement
+  exactly (the trigger and the dash ruled 2026-10-12, *The slice-3
+  round*). It is not `EmptyState`: that master says "nothing here yet"
+  and offers the action that fills it, and here something *was* here and
+  nothing is owed.
 
 **The opinions list is the profile's own page, mirrored onto content**
 and ungated — everyone can check every post and comment, the way
