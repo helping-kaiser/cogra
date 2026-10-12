@@ -5,8 +5,8 @@ import com.cogra.domain.Outcome
 import com.cogra.domain.StagedWriteView
 import com.cogra.domain.WriteState
 import com.google.common.truth.Truth.assertThat
-import java.io.IOException
 import org.junit.Test
+import java.io.IOException
 
 /** The sealed copy's decisions (FC-G5): what a write's fate is, and what a batch's fates ask. */
 class SealedDraftTest {

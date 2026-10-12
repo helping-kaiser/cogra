@@ -808,29 +808,7 @@ class ComposeWizardViewModel @Inject constructor(
                     // should be gone").
                     armed = false
                     draftSaveJob?.cancel()
-                    // TAKEN IS NOT LANDED (FC-G5). A write still relaying
-                    // can be collected unlanded epochs from now, and
-                    // `ComposeExpired` promises the draft is kept then. So
-                    // the draft is SEALED — out of the composer, never
-                    // offered while the write is alive — in the same edit
-                    // that drops it. A batch already landed needs no copy.
-                    val relaying = results.any { it is WriteResult.Done && it.state != WriteState.LANDED }
-                    if (relaying) {
-                        try {
-                            seals.seal(current.toDraft(), prepared.node, prepared.writes.map { it.id })
-                        } catch (_: IOException) {
-                            // The seal did not take, so neither did the
-                            // clear (one edit). The draft is written current
-                            // and LEFT: offered while its post settles is the
-                            // lesser fault next to gone when it expires.
-                            drafts.save(current.toDraft())
-                            _state.update {
-                                it.copy(submitting = false, outcome = WizardOutcome.Landed(prepared.node))
-                            }
-                            return@launch
-                        }
-                    }
-                    drafts.clear()
+                    retireDraft(current.toDraft(), prepared.node, prepared.writes.map { it.id }, results)
                     _state.update {
                         it.copy(submitting = false, outcome = WizardOutcome.Landed(prepared.node))
                     }
@@ -877,6 +855,35 @@ class ComposeWizardViewModel @Inject constructor(
     }
 
     fun onOutcomeConsumed() = _state.update { it.copy(outcome = null) }
+
+    /**
+     * TAKEN IS NOT LANDED (FC-G5). A write still relaying can be collected
+     * unlanded epochs from now, and `ComposeExpired` promises the draft is
+     * kept then. So the draft is SEALED — out of the composer, never
+     * offered while the write is alive — in the same edit that drops it. A
+     * batch already landed needs no copy, and its draft simply goes.
+     */
+    private suspend fun retireDraft(
+        draft: ComposeDraft,
+        node: String,
+        writes: List<String>,
+        results: List<WriteResult>,
+    ) {
+        val relaying = results.any { it is WriteResult.Done && it.state != WriteState.LANDED }
+        if (relaying) {
+            try {
+                seals.seal(draft, node, writes)
+            } catch (_: IOException) {
+                // The seal did not take, so neither did the clear (one
+                // edit). The draft is written current and LEFT: offered
+                // while its post settles is the lesser fault next to gone
+                // when it expires.
+                drafts.save(draft)
+                return
+            }
+        }
+        drafts.clear()
+    }
 
     private suspend fun keepDraft() {
         val draft = _state.value.toDraft()
