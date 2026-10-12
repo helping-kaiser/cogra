@@ -46,12 +46,28 @@
 // carry wins over the generic rule because it is the later, more particular
 // word on the same clip, not because the generic rule knows about viewers.
 //
+// A STAGE ACTS ONLY ON THE ELEMENTS IT STILL HOLDS. A clip's live element
+// moves between the clip's presentations (`video-stage.ts`, the element pool),
+// and a surface the clip just left still has its place for a moment — its
+// players leave in passive effects, its host disposes in one too. The element
+// is the next presentation's by then, so freezing it on the way out would
+// stop the very clip that carried on; a stage pauses and starts only what
+// `holds` says is its own.
+//
+// A CLIP CAN ARRIVE PLAYING. A carried element that was playing keeps playing
+// into its next presentation (`arrivePlaying`), and the surface it lands on
+// has not measured it yet. Nothing is decided early: it plays on, holding the
+// player layer, until the surface's first measurement of it — and if that
+// election does not hand it the stage, it freezes on the frame it reached,
+// exactly as a clip that loses the stage does. Whatever stands over the
+// surface when it arrives freezes it at once.
+//
 // Framework-free on purpose: the React side (`stage-host.tsx`) only feeds it
 // what the platform says and hands it the players' elements.
 
 import { GATE, documentOrder, elect, type StagePlace } from "./stage-election";
 import { startPlayback } from "./playback";
-import { claim, surrender } from "./video-stage";
+import { claim, holds, surrender } from "./video-stage";
 import type { SurfaceCover } from "../covering-layer";
 
 /** A clip on the surface: its element, and where it stood at the last batch. */
@@ -90,6 +106,8 @@ export class Stage {
    * (PostDetailVideo.md:37); the pad alone resumes under suppression too (:41).
    */
   private coverSuspended = false;
+  /** Clips that arrived playing and wait for their first measurement. */
+  private readonly arrived = new Set<object>();
 
   constructor({
     visible,
@@ -132,6 +150,9 @@ export class Stage {
     if (this.padPaused === key) this.padPaused = null;
     if (this.hiddenPlaying === key) this.hiddenPlaying = null;
     if (this.coverStopped === key) this.coverStopped = null;
+    // An arrival leaving before it was measured never held the stage: it
+    // freezes as a clip that lost it would.
+    if (this.arrived.delete(key) && this.holder !== key) this.freeze(key);
     if (this.holder === key) {
       this.freeze(key);
       this.holder = null;
@@ -153,6 +174,9 @@ export class Stage {
     const place = this.places.get(key);
     if (place === undefined || place.veiled === veiled) return;
     place.veiled = veiled;
+    // A veiled clip has no playback (Feed.md:43): an arrival is not let play
+    // on into its first measurement.
+    if (veiled && this.arrived.delete(key)) this.freeze(key);
     this.decide();
   }
 
@@ -169,10 +193,12 @@ export class Stage {
 
   /** One observer batch: every ratio first, then one decision (rule 3). */
   measure(entries: readonly { target: Element; intersectionRatio: number }[]): void {
+    const measured: object[] = [];
     for (const entry of entries) {
       const key = this.keys.get(entry.target);
       const place = key === undefined ? undefined : this.places.get(key);
       if (place === undefined) continue;
+      measured.push(key as object);
       place.ratio = entry.intersectionRatio;
       // A clip the reader started below the gate holds while any of it is on
       // screen — until it first reaches the gate, after which it is an
@@ -180,6 +206,31 @@ export class Stage {
       if (place.handStarted && place.ratio >= GATE) place.qualifiedSinceTap = true;
     }
     this.decide();
+    // An arrival this batch measured has had its election: holding the stage
+    // it plays on, and otherwise it freezes where it reached.
+    for (const key of measured) {
+      if (this.arrived.delete(key) && this.holder !== key) this.freeze(key);
+    }
+  }
+
+  /**
+   * The clip's element arrived on this surface PLAYING, carried on from
+   * another presentation of the same clip (`video-stage.ts`). It plays on,
+   * holding the player layer, until the surface first measures it and the
+   * election says whether it holds the stage (see the note at the top). With
+   * something standing over the surface, the page hidden, or no observer to
+   * measure it ever, it freezes now.
+   */
+  arrivePlaying(key: object): void {
+    const place = this.places.get(key);
+    if (place === undefined || this.holder === key) return;
+    if (place.video.paused || !holds(key, place.video)) return;
+    if (this.cover !== null || !this.visible || this.observerFor() === null) {
+      this.freeze(key);
+      return;
+    }
+    claim(key, place.video);
+    this.arrived.add(key);
   }
 
   // ---- what the reader does ---------------------------------------------
@@ -195,6 +246,7 @@ export class Stage {
     if (place === undefined) return;
     if (this.holder !== null && this.holder !== key) this.freeze(this.holder);
     this.holder = key;
+    this.arrived.delete(key);
     place.handStarted = true;
     place.qualifiedSinceTap = place.ratio >= GATE;
     this.padPaused = null;
@@ -223,7 +275,8 @@ export class Stage {
     // The carry is the last word on this clip: a covering layer's lifting
     // owes it no resume (PostDetailVideo.md:51 over :33).
     this.coverStopped = null;
-    if (!place.video.paused) place.video.pause();
+    this.arrived.delete(key);
+    if (!place.video.paused && holds(key, place.video)) place.video.pause();
   }
 
   /**
@@ -243,6 +296,9 @@ export class Stage {
     const prev = this.cover;
     if (prev === next) return;
     this.cover = next;
+    // Whatever rises over the surface finds its arrivals unelected: they
+    // freeze, as nothing new plays under a layer.
+    if (next !== null) this.freezeArrivals();
 
     if (this.pinned) {
       this.coverPinned(prev, next);
@@ -265,7 +321,7 @@ export class Stage {
       // "WHEN the opinion pad opens over the feed -> the playing clip pauses on
       // the frame it reached AND NEVER the stage changes hands" (Feed.md:39).
       if (prev === null && this.holder !== null) {
-        const video = this.places.get(this.holder)?.video;
+        const video = this.heldElement(this.holder);
         if (video !== undefined && !video.paused) {
           video.pause();
           this.padPaused = this.holder;
@@ -310,7 +366,7 @@ export class Stage {
     if (next !== null) {
       if (next === "suspended") this.coverSuspended = true;
       if (prev !== null || this.holder === null) return;
-      const video = this.places.get(this.holder)?.video;
+      const video = this.heldElement(this.holder);
       if (video !== undefined && !video.paused) {
         video.pause();
         this.coverStopped = this.holder;
@@ -335,8 +391,9 @@ export class Stage {
     if (!visible) {
       // "WHEN the page is hidden … -> the playing clip pauses on the frame it
       // reached" (Feed.md:51). It keeps the stage: nothing was decided.
+      this.freezeArrivals();
       if (this.holder === null) return;
-      const video = this.places.get(this.holder)?.video;
+      const video = this.heldElement(this.holder);
       if (video !== undefined && !video.paused) {
         video.pause();
         this.hiddenPlaying = this.holder;
@@ -387,9 +444,23 @@ export class Stage {
     this.liftOwed = false;
     this.coverStopped = null;
     this.coverSuspended = false;
+    this.arrived.clear();
   }
 
   // ---- the machinery -----------------------------------------------------
+
+  /** The clip's element, where this stage still holds it (see the note at the top). */
+  private heldElement(key: object): HTMLVideoElement | undefined {
+    const video = this.places.get(key)?.video;
+    return video !== undefined && holds(key, video) ? video : undefined;
+  }
+
+  /** Every arrival not yet measured freezes where it reached. */
+  private freezeArrivals(): void {
+    const waiting = [...this.arrived];
+    this.arrived.clear();
+    for (const key of waiting) if (this.holder !== key) this.freeze(key);
+  }
 
   /** The surface's one observer — none where the platform has none, and so no autoplay. */
   private observerFor(): IntersectionObserver | null {
@@ -424,7 +495,7 @@ export class Stage {
 
   /** The clip takes the stage: the player layer first, then the start. */
   private start(key: object): void {
-    const video = this.places.get(key)?.video;
+    const video = this.heldElement(key);
     if (video === undefined) return;
     claim(key, video);
     startPlayback(
@@ -444,6 +515,6 @@ export class Stage {
     if (place === undefined) return;
     place.handStarted = false;
     place.qualifiedSinceTap = false;
-    if (!place.video.paused) place.video.pause();
+    if (!place.video.paused && holds(key, place.video)) place.video.pause();
   }
 }

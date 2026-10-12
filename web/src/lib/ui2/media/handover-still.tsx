@@ -42,6 +42,7 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 import * as clipMemory from "./clip-memory";
+import { carriedOver } from "./video-stage";
 
 /** `HTMLMediaElement.HAVE_CURRENT_DATA`, spelled out for environments without the constant. */
 const HAVE_CURRENT_DATA = 2;
@@ -130,10 +131,19 @@ export function HandoverStill({
     const element = video.current;
     const frame = clipMemory.frameOf(mediaId);
     const context = frame && canvas ? canvas.getContext("2d") : null;
-    // Nothing pictured, or an element already painting the pictured moment:
+    // Nothing pictured, or an element already painting the pictured moment —
+    // or an element CARRIED IN from the clip's last presentation, which never
+    // stopped painting the clip and is not pointed anywhere (`video-stage.ts`):
     // the element is its own face. Gone before the browser paints, so nothing
     // shows.
-    if (!canvas || !element || !frame || !context || paintsMoment(element, frame.time)) {
+    if (
+      !canvas ||
+      !element ||
+      carriedOver(element) ||
+      !frame ||
+      !context ||
+      paintsMoment(element, frame.time)
+    ) {
       setUp(false);
       return;
     }

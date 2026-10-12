@@ -40,12 +40,25 @@
 // ONE CLIP, MANY PRESENTATIONS (the stage-law packet §3.2 rules 5 and 13). A
 // clip that has played never wears its stored still again within the reading
 // session, its remounts included (FeedCover.md:7/9), and it carries the frame
-// it reached card → detail → back (PostDetailVideo.md:43/45). The element dies
-// with its card, so the reached frame lives in the session's clip memory
-// (`clip-memory.ts`), keyed by the clip's media id: a player remembers where
-// it stood as it unmounts, and a player mounting on a remembered clip drops
-// the still and stands at that frame. Whether it then PLAYS is still its
-// surface's stage's to decide.
+// it reached card → detail → back (PostDetailVideo.md:43/45).
+//
+// THE ELEMENT ITSELF CARRIES IT (jakob's ruling q-fx2a). The `<video>` is not
+// this component's: it is the clip's live element from the player layer's
+// pool (`video-stage.ts`), taken when the player mounts and released when it
+// leaves, so the clip's next presentation takes the SAME element — decoded,
+// at the frame it reached, playing if it was — and nothing re-prepares. React
+// renders only an always-empty slot for it and the controls around it; the
+// element is appended into the slot by hand, which is the arrangement
+// react.dev documents as safe ("Manipulating the DOM with Refs": React never
+// touches the children of an element it always renders empty).
+//
+// WHERE THE POOL HAS NOTHING TO GIVE — a first presentation, an element that
+// was dropped — a new element is built, and the session's clip memory
+// (`clip-memory.ts`, keyed by the clip's media id) is what carries the frame:
+// a player remembers where it stood as it leaves, a player mounting on a
+// remembered clip drops the still and points its new element at that frame,
+// and the handover still (`handover-still.tsx`) covers the decode. Whether the
+// clip then PLAYS is its surface's stage's to decide in both cases.
 //
 // The fullscreen viewer is the one presentation that also carries the PLAY
 // STATE (PostDetailVideo.md:47–51, ViewerVideo.md:5): the pinned clip HANDS
@@ -55,6 +68,7 @@
 // and the pinned clip takes it back the same way.
 
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -74,7 +88,7 @@ import { startPlayback } from "./playback";
 import { OnStage, useStage } from "./stage-host";
 import { formatDuration } from "./video";
 import { VideoTransport } from "./video-transport";
-import { claim } from "./video-stage";
+import { claim, holds, releaseElement, takeElement } from "./video-stage";
 
 /**
  * How much of a player a surface gets — the control ladder, as a type
@@ -271,6 +285,179 @@ function Player({
   const veiledNow = useRef(veiled);
   // The clip was handed over and is due back from the layer that took it.
   const dueBack = useRef(false);
+  // Whether the element in the slot was carried in from another presentation
+  // of the clip — then it already stands where the clip is, and nothing here
+  // points it anywhere.
+  const carriedIn = useRef(false);
+  // What the element says, heard by whichever render is current.
+  const hear = useRef<((event: Event) => void) | null>(null);
+
+  // THE CLIP'S ELEMENT, taken into the slot as the slot attaches and released
+  // as it detaches. A ref callback rather than an effect because of WHEN it
+  // runs: React attaches a host element's ref in the same pass that runs the
+  // layout effects around it, earlier siblings first and the enclosing
+  // component last — so the element stands in the slot before the handover
+  // still (a later sibling) asks what it can paint, and before this player's
+  // own layout effects point it at a remembered frame. Handed over, the player
+  // holds no element: the layer presenting the clip bigger has it.
+  const slot = useCallback(
+    (container: HTMLSpanElement | null) => {
+      if (container === null || handedOver) return;
+      const { video, carried } = takeElement(stageToken, mediaId ? { mediaId, src } : null);
+      if (!carried) build(video, src);
+      container.appendChild(video);
+      ref.current = video;
+      carriedIn.current = carried;
+      const forward = (event: Event) => hear.current?.(event);
+      for (const type of HEARD) video.addEventListener(type, forward);
+      if (carried) {
+        // The controls read what the element is doing, and a carried element
+        // is already doing it: it fires no `play` for a start that happened
+        // under the presentation before.
+        playedHere.current ||= !video.paused;
+        setPlaying(!video.paused && !video.ended);
+        setEnded(video.ended);
+        setElapsedSec(video.currentTime);
+        if (Number.isFinite(video.duration)) setLengthSec(video.duration);
+      }
+      return () => {
+        for (const type of HEARD) video.removeEventListener(type, forward);
+        if (ref.current === video) ref.current = null;
+        carriedIn.current = false;
+        // Carried on only where it is worth it (`video-stage.ts`): a clip that
+        // moved, and that a reader could be looking at or that was playing.
+        const moved =
+          playedHere.current || remembered?.everPlayed === true || video.currentTime !== 0;
+        const shown = !video.paused || stage?.inView(stageToken) === true;
+        releaseElement(stageToken, video, { keep: moved && shown, moved });
+      };
+    },
+    [handedOver, stageToken, mediaId, src, remembered, stage],
+  );
+
+  /**
+   * The way into the fullscreen viewer, handing the clip over first: where it
+   * stands and whether it plays are remembered BEFORE the viewer renders, so
+   * the viewer opens on them (ViewerVideo.md:5, PostDetailVideo.md:47).
+   */
+  const openViewer =
+    onOpenViewer === undefined
+      ? undefined
+      : () => {
+          const video = ref.current;
+          if (video && mediaId) {
+            const played = playedHere.current || remembered?.everPlayed === true;
+            // The viewer presents this clip next, so its frame is pictured.
+            remember(video, mediaId, played, bornIn, true);
+          }
+          onOpenViewer();
+        };
+
+  // WHAT THE ELEMENT SAYS, AS THE CONTROLS HEAR IT. The element's listeners
+  // are added by hand (the element is not React's), so the current render's
+  // handling is handed to them here — first among this player's layout
+  // effects, before any of them moves the element and it speaks.
+  useLayoutEffect(() => {
+    hear.current = (event) => {
+      const video = event.currentTarget as HTMLVideoElement;
+      switch (event.type) {
+        case "volumechange":
+          setMuted(video.muted);
+          return;
+        // The transport's whole state comes off these: what the element is
+        // doing IS what the controls report, so a play that the browser
+        // refused shows as paused rather than as a lying pause glyph.
+        case "play":
+          playedHere.current = true;
+          // Having played, said at once: a presentation of this clip that
+          // renders before this one's goodbye already knows its still is gone
+          // (FeedCover.md:7).
+          if (mediaId) {
+            clipMemory.write(
+              mediaId,
+              { time: video.currentTime, everPlayed: true, playing: true },
+              bornIn,
+            );
+          }
+          setPlaying(true);
+          setEnded(false);
+          return;
+        case "pause":
+          setPlaying(false);
+          return;
+        // A clip that runs out is a clip at rest, and the transport has to say
+        // so. The HTML spec fires `pause` before `ended` for a non-looping
+        // element, but only "if the media element's paused attribute is false"
+        // (html.spec.whatwg.org, "playback has ended"), so the state is taken
+        // from the event that is guaranteed rather than from the one that is
+        // conditional.
+        case "ended":
+          setPlaying(false);
+          setEnded(true);
+          return;
+        case "timeupdate":
+          setElapsedSec(video.currentTime);
+          return;
+        case "durationchange":
+          // A stream whose length the browser does not know answers `Infinity`
+          // or `NaN`, and a timeline against an unknown end is a knob that
+          // cannot mean anything — the record's own number stands instead.
+          if (Number.isFinite(video.duration)) setLengthSec(video.duration);
+          return;
+        // A TAP ON THE VIDEO REVEALS THE CHROME. It is the player's own
+        // gesture rather than the surface's: the surface's tap (back to the
+        // stream, or into the viewer) is wired over the frame by the screen
+        // that owns it, and reaching the controls must not depend on it.
+        case "click":
+          if (!transport) return;
+          if (chromeShown && openViewer) openViewer();
+          else setChromeShown((shown) => !shown);
+          return;
+      }
+    };
+  });
+
+  // WHAT THE ELEMENT WEARS, for the presentation holding it now — a carried
+  // element arrives wearing its last presentation's, and changes into these.
+  useLayoutEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    // A CLIP THAT HAS PLAYED NEVER WEARS ITS STILL AGAIN within the reading
+    // session, its remounts included (FeedCover.md:7/9): the remembered frame
+    // is its face.
+    attribute(video, "poster", remembered?.everPlayed === true ? null : (poster ?? null));
+    // A FEED CLIP LOOPS AND A CLIP UNDER THE REAL TRANSPORT STOPS (jakob
+    // 2026-09-14, via the design loop). It sharpens the deliberate
+    // reel-vs-video split: a clip in a card or a stream is a MOMENT, read
+    // with the scroller's grammar, and stopping it would leave a card gone
+    // still and dead under a reader still looking at it. A clip the reader
+    // opened on purpose — the detail's pinned clip, the viewer — is a
+    // PROGRAMME, read with a player's grammar, and a programme that silently
+    // restarted would be a player that never admits it finished. The
+    // transport then stands at its Play glyph, and pressing it replays.
+    attribute(video, "loop", transport ? null : "");
+    attribute(video, "aria-label", altText ?? null);
+    attribute(video, "data-testid", testId);
+    // `object-cover` IS THE RULING, not a taste: a clip keeps its native
+    // ratio clamped to tall — 16:9 and 1:1 display true, anything taller
+    // than 4:5 centre-crops to it, and letterboxing exists nowhere (the
+    // reel round, review 1). Without it the element takes the CSS default
+    // `object-fit: fill`, so the moment a caller's reserved box didn't
+    // match the clip's own ratio the picture was squeezed to fit it.
+    // THE GROUND BEHIND A FITTED FRAME IS THE VIEWER'S OWN BLACK. Every
+    // other surface FILLS its box, so the reserved surface only ever shows
+    // before the bytes land; the viewer fits, so what sits beside a 16:9
+    // clip is ground the reader looks at — and a theme-coloured band there
+    // would be a light strip down a black screen.
+    attribute(
+      video,
+      "class",
+      [
+        surface === "reading" || framed ? "block size-full" : "block w-full",
+        fit === "contain" ? "object-contain" : "bg-surface-container-high object-cover",
+      ].join(" "),
+    );
+  });
 
   // The store is the truth; the element follows it. Written through the
   // property rather than the attribute because the attribute is only the
@@ -293,8 +480,13 @@ function Player({
   // assignment is the element's "default playback start position", applied
   // when it loads (html.spec.whatwg.org, the `currentTime` setter) — so it
   // needs no wait for `loadedmetadata`.
+  //
+  // A CARRIED ELEMENT IS NOT POINTED ANYWHERE: it already stands at the frame
+  // the clip reached — the element is the truth the memory only copies — and
+  // a seek, even to the moment it is at, is the re-prepare carrying it avoids.
   useLayoutEffect(() => {
     const video = ref.current;
+    if (carriedIn.current) return;
     const at = mediaId ? clipMemory.read(mediaId) : undefined;
     if (video && at !== undefined && at.time > 0) video.currentTime = at.time;
   }, [mediaId]);
@@ -305,10 +497,14 @@ function Player({
   // passive one — so this still sees whether the clip was playing, which is
   // the play state the viewer hands back (PostDetailVideo.md:49/51) — and its
   // stage still holds its place, so this sees whether it was on screen.
+  //
+  // A player whose element another presentation holds by then — handed to the
+  // viewer, which is still up — has nothing to say: the holder speaks for it.
   useLayoutEffect(() => {
     const video = ref.current;
     if (!video || !mediaId) return;
     return () => {
+      if (!holds(stageToken, video)) return;
       const played = playedHere.current || remembered?.everPlayed === true;
       // A clip that never moved has nothing to say: its still is still right.
       if (!played && video.currentTime === 0) return;
@@ -327,19 +523,29 @@ function Player({
   // a clip that is on no stage cannot be started by one — not by an election,
   // a page shown again, or autoplay coming back (PostDetailVideo.md:47).
   // Taken back, it rejoins and carries the layer's play state in.
+  //
+  // AN ELEMENT CARRIED IN PLAYING keeps playing into the surface's first
+  // measurement of it, which decides whether it holds the stage there
+  // (`Stage.arrivePlaying`) — the hand-over below being the one presentation
+  // that says so itself.
   useEffect(() => {
-    const video = ref.current;
-    if (!video || !autoplay || stage === null) return;
+    if (!autoplay || stage === null) return;
     if (handedOver) {
       dueBack.current = true;
       return;
     }
+    const video = ref.current;
+    if (!video) return;
     stage.register(stageToken, video, false);
+    let decided = false;
     if ((carry || dueBack.current) && mediaId) {
       dueBack.current = false;
       const carried = clipMemory.read(mediaId);
       if (carried !== undefined) {
-        if (video.currentTime !== carried.time) video.currentTime = carried.time;
+        decided = true;
+        if (!carriedIn.current && video.currentTime !== carried.time) {
+          video.currentTime = carried.time;
+        }
         // "playing returns playing, paused returns paused" (RULINGS 4c,
         // PostDetailVideo.md:49/51). A carried PLAYING state is the reader's
         // own start continuing — under suppressed autoplay too, as the pad's
@@ -349,26 +555,11 @@ function Player({
         else stage.seat(stageToken);
       }
     }
+    if (!decided && carriedIn.current) stage.arrivePlaying(stageToken);
     return () => stage.unregister(stageToken);
-  }, [autoplay, stage, stageToken, handedOver, carry, mediaId]);
-
-  /**
-   * The way into the fullscreen viewer, handing the clip over first: where it
-   * stands and whether it plays are remembered BEFORE the viewer renders, so
-   * the viewer opens on them (ViewerVideo.md:5, PostDetailVideo.md:47).
-   */
-  const openViewer =
-    onOpenViewer === undefined
-      ? undefined
-      : () => {
-          const video = ref.current;
-          if (video && mediaId) {
-            const played = playedHere.current || remembered?.everPlayed === true;
-            // The viewer presents this clip next, so its frame is pictured.
-            remember(video, mediaId, played, bornIn, true);
-          }
-          onOpenViewer();
-        };
+    // `src` too: a new source is a new element in the slot (`slot`), and the
+    // stage has to watch the one that is there.
+  }, [autoplay, stage, stageToken, handedOver, carry, mediaId, src]);
 
   useEffect(() => {
     if (autoplay) stage?.setVeiled(stageToken, veiled);
@@ -400,7 +591,6 @@ function Player({
     return () => window.clearTimeout(timer);
   }, [transport, chromeShown, playing]);
 
-  const reading = surface === "reading";
   // The element's own metadata is authoritative — it is what a seek lands
   // against — and the record's number stands in until it arrives, so the bar
   // does not read "0:00" over a clip the reader can see is longer than that.
@@ -429,99 +619,11 @@ function Player({
 
   return (
     <span className="relative block size-full">
-      <video
-        ref={ref}
-        src={src}
-        // A CLIP THAT HAS PLAYED NEVER WEARS ITS STILL AGAIN within the
-        // reading session, its remounts included (FeedCover.md:7/9): the
-        // remembered frame is its face.
-        poster={remembered?.everPlayed === true ? undefined : (poster ?? undefined)}
-        // Every one of these is load-bearing: `muted` is what makes autoplay
-        // permitted at all, `playsInline` is what stops iOS taking the clip
-        // fullscreen, `loop` is the short-form idiom the feed is built on, and
-        // `preload="metadata"` keeps a feed of ten clips from pulling ten
-        // videos down before any of them is on screen.
-        muted
-        playsInline
-        // A FEED CLIP LOOPS AND A CLIP UNDER THE REAL TRANSPORT STOPS (jakob
-        // 2026-09-14, via the design loop). It sharpens the deliberate
-        // reel-vs-video split: a clip in a card or a stream is a MOMENT, read
-        // with the scroller's grammar, and stopping it would leave a card gone
-        // still and dead under a reader still looking at it. A clip the reader
-        // opened on purpose — the detail's pinned clip, the viewer — is a
-        // PROGRAMME, read with a player's grammar, and a programme that silently
-        // restarted would be a player that never admits it finished. The
-        // transport then stands at its Play glyph, and pressing it replays.
-        loop={!transport}
-        preload="metadata"
-        aria-label={altText ?? undefined}
-        data-testid={testId}
-        onVolumeChange={(event) => setMuted(event.currentTarget.muted)}
-        // The transport's whole state comes off these: what the element is
-        // doing IS what the controls report, so a play that the browser
-        // refused shows as paused rather than as a lying pause glyph.
-        onPlay={(event) => {
-          playedHere.current = true;
-          // Having played, said at once: a presentation of this clip that
-          // renders before this one's goodbye already knows its still is gone
-          // (FeedCover.md:7).
-          if (mediaId) {
-            clipMemory.write(
-              mediaId,
-              { time: event.currentTarget.currentTime, everPlayed: true, playing: true },
-              bornIn,
-            );
-          }
-          setPlaying(true);
-          setEnded(false);
-        }}
-        onPause={() => setPlaying(false)}
-        // A clip that runs out is a clip at rest, and the transport has to say
-        // so. The HTML spec fires `pause` before `ended` for a non-looping
-        // element, but only "if the media element's paused attribute is false"
-        // (html.spec.whatwg.org, "playback has ended"), so the state is taken
-        // from the event that is guaranteed rather than from the one that is
-        // conditional.
-        onEnded={() => {
-          setPlaying(false);
-          setEnded(true);
-        }}
-        onTimeUpdate={(event) => setElapsedSec(event.currentTarget.currentTime)}
-        onDurationChange={(event) => {
-          const length = event.currentTarget.duration;
-          // A stream whose length the browser does not know answers `Infinity`
-          // or `NaN`, and a timeline against an unknown end is a knob that
-          // cannot mean anything — the record's own number stands instead.
-          if (Number.isFinite(length)) setLengthSec(length);
-        }}
-        // A TAP ON THE VIDEO REVEALS THE CHROME. It is the player's own
-        // gesture rather than the surface's: the surface's tap (back to the
-        // stream, or into the viewer) is wired over the frame by the screen
-        // that owns it, and reaching the controls must not depend on it.
-        onClick={
-          transport
-            ? () => {
-                if (chromeShown && openViewer) openViewer();
-                else setChromeShown((shown) => !shown);
-              }
-            : undefined
-        }
-        // `object-cover` IS THE RULING, not a taste: a clip keeps its native
-        // ratio clamped to tall — 16:9 and 1:1 display true, anything taller
-        // than 4:5 centre-crops to it, and letterboxing exists nowhere (the
-        // reel round, review 1). Without it the element takes the CSS default
-        // `object-fit: fill`, so the moment a caller's reserved box didn't
-        // match the clip's own ratio the picture was squeezed to fit it.
-        // THE GROUND BEHIND A FITTED FRAME IS THE VIEWER'S OWN BLACK. Every
-        // other surface FILLS its box, so the reserved surface only ever shows
-        // before the bytes land; the viewer fits, so what sits beside a 16:9
-        // clip is ground the reader looks at — and a theme-coloured band there
-        // would be a light strip down a black screen.
-        className={[
-          reading || framed ? "block size-full" : "block w-full",
-          fit === "contain" ? "object-contain" : "bg-surface-container-high object-cover",
-        ].join(" ")}
-      />
+      {/* THE CLIP'S ELEMENT STANDS HERE, put in by hand (`slot`): React
+          renders this span and never anything inside it. `contents` keeps
+          the span out of the layout, so the element sizes against the frame
+          exactly as a child of it would. */}
+      <span ref={slot} className="contents" />
 
       {/* THE REACHED FRAME OVER AN ELEMENT STILL PREPARING IT
           (`handover-still.tsx`): a played clip's new presentation wears the
@@ -675,6 +777,43 @@ function remember(
   if (!pictured) return;
   const picture = pictureOf(video);
   if (picture) clipMemory.keepFrame(mediaId, { time: entry.time, picture }, bornIn);
+}
+
+/** What the player hears from its element (`hear` in the player). */
+const HEARD = [
+  "volumechange",
+  "play",
+  "pause",
+  "ended",
+  "timeupdate",
+  "durationchange",
+  "click",
+] as const;
+
+/**
+ * A new element for a clip, built the way React built the `<video>` this
+ * player used to render: what it plays, and what it plays under. What it
+ * WEARS — the poster, the loop, its name and its class — is the presentation's
+ * and is put on by the player, carried elements included.
+ *
+ * Every one of these is load-bearing: `muted` is what makes autoplay
+ * permitted at all, `playsinline` is what stops iOS taking the clip
+ * fullscreen, and `preload="metadata"` keeps a feed of ten clips from pulling
+ * ten videos down before any of them is on screen. `muted` is the property,
+ * as React sets it: the attribute is only a default once the element exists.
+ */
+function build(video: HTMLVideoElement, src: string): void {
+  video.muted = true;
+  video.setAttribute("playsinline", "");
+  video.setAttribute("preload", "metadata");
+  video.setAttribute("src", src);
+}
+
+/** Set an attribute to `value`, or remove it for null — touching it only when it differs. */
+function attribute(video: HTMLVideoElement, name: string, value: string | null): void {
+  if (video.getAttribute(name) === value) return;
+  if (value === null) video.removeAttribute(name);
+  else video.setAttribute(name, value);
 }
 
 /** Where a clip stands, as the session's memory keeps it. */
