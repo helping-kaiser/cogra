@@ -71,36 +71,31 @@ fun StanceControlRoute(
     // destination and is still open on the way back. The lifecycle here
     // is the destination's own back-stack entry, so this fires when the
     // screen is covered, not when a card scrolls out of view.
-    // The coach mark is a popup on the same terms, and it is already
-    // spent by the time it is shown, so it goes with the pad.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
         viewModel.onDismissPad(target)
-        viewModel.onCoachMarkDismissed()
     }
     val entry = state.targets[target] ?: TargetStance()
     StanceControl(
         state = entry.toControlState(
-            coachMark = state.coachTarget == target,
+            coaching = state.coachingTarget == target,
             inputMode = state.inputMode,
         ),
         // Every gesture that ENTERS the ceremony, so a guest meets the
         // gate at the first touch rather than inside a pad whose Set
         // button can only fail — bounced by a longer road is still
-        // bounced. A hold fires open-then-hold and would raise the gate
-        // twice; the gate is a flag the shell sets, so the second raise
-        // is the same raise. Picking and dismissing are left alone:
-        // neither is reachable without one of these first.
-        onTapDefault = onRequireAccount ?: { viewModel.onTapDefault(target) },
+        // bounced. The tap and the hold each raise it, as a tap raises it
+        // (`VouchAsk`: "press and hold … GIVEN a guest -> the guest gate
+        // rises"). Picking and dismissing are left alone: neither is
+        // reachable without the tap first.
+        onHoldDefault = onRequireAccount ?: { viewModel.onHoldDefault(target) },
         onOpenPad = onRequireAccount ?: { viewModel.onOpenPad(target) },
         onPick = { viewModel.onPick(target, it.toPair()) },
         onCommit = { viewModel.onCommit(target) },
-        onHold = onRequireAccount ?: { viewModel.onHold(target) },
         onDismissPad = { viewModel.onDismissPad(target) },
         onToggleExactValues = { viewModel.onToggleExactValues(target) },
         onOpenSeverance = { viewModel.onOpenSeverance(target) },
         onConfirmSeverance = { viewModel.onConfirmSeverance(target) },
         onDismissSeverance = { viewModel.onDismissSeverance(target) },
-        onCoachMarkDismissed = viewModel::onCoachMarkDismissed,
         onConfirmationShown = { viewModel.onConfirmationShown(target) },
         testTagPrefix = testTagPrefix,
         modifier = modifier,
@@ -113,13 +108,12 @@ fun StanceControlRoute(
 }
 
 internal fun TargetStance.toControlState(
-    coachMark: Boolean,
+    coaching: Boolean,
     inputMode: StanceInputMode,
 ) = StanceControlState(
     pick = pick.toPoint(),
     pad = when (pad) {
         PadMode.CLOSED -> StancePadMode.CLOSED
-        PadMode.DRAGGING -> StancePadMode.DRAGGING
         PadMode.STICKY -> StancePadMode.STICKY
     },
     standing = standing?.toPoint(),
@@ -151,7 +145,7 @@ internal fun TargetStance.toControlState(
             failed = it.failed,
         )
     },
-    coachMark = coachMark,
+    coaching = coaching,
     confirmation = confirmation?.toPoint(),
 )
 
