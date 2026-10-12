@@ -40,7 +40,9 @@ query Search(
             status
           }
           createdAt
-          landing
+          landing {
+            state
+          }
           author {
             id
             handle
@@ -66,7 +68,9 @@ query Search(
             status
           }
           createdAt
-          landing
+          landing {
+            state
+          }
           # The found-through line, `on <title>`: derived from the target,
           # never a field of its own.
           target {
