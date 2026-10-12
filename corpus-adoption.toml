@@ -2098,7 +2098,7 @@ built_by   = "UNTRIAGED: unbuilt surface the spec declares ahead of the schema; 
 names      = [
   "appVersions", "campaign", "chat", "chatMessage", "chatSearch",
   "collective", "feed", "feedSlice", "honorEntries", "item",
-  "networkParameters", "proposal", "search",
+  "networkParameters", "proposal",
 ]
 
 [[api-contract.staged]]
