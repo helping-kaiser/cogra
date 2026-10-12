@@ -591,7 +591,11 @@ async fn token_confirmations_share_one_ip_budget(pool: PgPool) {
         );
     }
     let json = rig
-        .gql("10.4.0.1", CONFIRM_DELETION, json!({ "input": { "deletionToken": "guess" } }))
+        .gql(
+            "10.4.0.1",
+            CONFIRM_DELETION,
+            json!({ "input": { "deletionToken": "guess" } }),
+        )
         .await;
     assert_eq!(transport_code(&json), None, "{json}");
     assert_eq!(
@@ -599,7 +603,11 @@ async fn token_confirmations_share_one_ip_budget(pool: PgPool) {
         Some("DELETION_TOKEN_INVALID")
     );
     let json = rig
-        .gql("10.4.0.1", CONFIRM_DELETION, json!({ "input": { "deletionToken": "guess" } }))
+        .gql(
+            "10.4.0.1",
+            CONFIRM_DELETION,
+            json!({ "input": { "deletionToken": "guess" } }),
+        )
         .await;
     assert_eq!(transport_code(&json), Some("RATE_LIMITED"), "{json}");
     let json = rig

@@ -331,7 +331,11 @@ async fn carry(rig: &WireRig, who: &Applicant, mutation: &str, input: Value) {
 async fn requesting_deletion_without_a_session_is_unauthenticated(pool: PgPool) {
     let rig = rig(pool);
     let answer = rig
-        .gql_raw(None, REQUEST, json!({ "input": { "includeContent": false } }))
+        .gql_raw(
+            None,
+            REQUEST,
+            json!({ "input": { "includeContent": false } }),
+        )
         .await;
     assert_eq!(transport_code(&answer), Some("UNAUTHENTICATED"), "{answer}");
     assert_eq!(rig.mailer.count(), 0);
@@ -353,9 +357,18 @@ async fn an_applicant_cannot_request_the_member_path(pool: PgPool) {
         .gql_raw(Some(&noa.token), REQUEST, json!({ "input": {} }))
         .await;
     assert_eq!(transport_code(&answer), Some("FORBIDDEN"), "{answer}");
-    assert_eq!(rig.mailer.subjects_for(&noa.email).len(), 1, "only the verification mail");
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM auth_account_deletions WHERE user_id = $1", noa.id).await,
+        rig.mailer.subjects_for(&noa.email).len(),
+        1,
+        "only the verification mail"
+    );
+    assert_eq!(
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_account_deletions WHERE user_id = $1",
+            noa.id
+        )
+        .await,
         0
     );
 }
@@ -384,12 +397,19 @@ async fn deletion_requests_trip_the_account_budget(pool: PgPool) {
     assert_eq!(transport_code(&refused), Some("RATE_LIMITED"), "{refused}");
     assert_eq!(rig.mailer.subjects_for(&alice.email).len(), 2);
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM auth_account_deletions WHERE user_id = $1", alice.id)
-            .await,
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_account_deletions WHERE user_id = $1",
+            alice.id
+        )
+        .await,
         2
     );
     let confirmed = confirm(&rig, &standing, None).await;
-    assert_eq!(codes(&confirmed, "confirmAccountDeletion"), Vec::<&str>::new());
+    assert_eq!(
+        codes(&confirmed, "confirmAccountDeletion"),
+        Vec::<&str>::new()
+    );
 }
 
 /// A request records the choice and mails the link URL to the verified
@@ -429,7 +449,11 @@ async fn a_request_mails_the_link_and_schedules_nothing(pool: PgPool) {
     .fetch_one(&rig.pool)
     .await
     .expect("hash");
-    assert_eq!(stored, api::auth::hash_of(&link).to_vec(), "only the hash is stored");
+    assert_eq!(
+        stored,
+        api::auth::hash_of(&link).to_vec(),
+        "only the hash is stored"
+    );
 }
 
 /// The mail carries the deletion link on the web origin's
@@ -447,12 +471,17 @@ async fn the_deletion_mail_carries_the_link_url(pool: PgPool) {
 
     let body = rig.mailer.latest_body_for(&alice.email);
     assert!(
-        body.contains(&format!("http://localhost:3000/delete-account?token={token}\n")),
+        body.contains(&format!(
+            "http://localhost:3000/delete-account?token={token}\n"
+        )),
         "the link URL is on the web origin's /delete-account path: {body}"
     );
     assert!(body.contains(&format!("Or paste the token in the app: {token}")));
     let confirmed = confirm(&rig, &token, None).await;
-    assert_eq!(codes(&confirmed, "confirmAccountDeletion"), Vec::<&str>::new());
+    assert_eq!(
+        codes(&confirmed, "confirmAccountDeletion"),
+        Vec::<&str>::new()
+    );
 }
 
 /// A second request supersedes the first (053.2): the earlier link dies
@@ -469,11 +498,13 @@ async fn a_second_request_supersedes_the_first_with_its_own_choice(pool: PgPool)
     assert_ne!(first, second);
 
     let dead = confirm(&rig, &first, None).await;
-    assert_eq!(codes(&dead, "confirmAccountDeletion"), vec!["DELETION_TOKEN_INVALID"]);
+    assert_eq!(
+        codes(&dead, "confirmAccountDeletion"),
+        vec!["DELETION_TOKEN_INVALID"]
+    );
     let live = confirm(&rig, &second, None).await;
     assert_eq!(
-        live["confirmAccountDeletion"]["accountDeletion"]["includesContent"],
-        false,
+        live["confirmAccountDeletion"]["accountDeletion"]["includesContent"], false,
         "the new request's own choice, not the superseded one's"
     );
 }
@@ -542,7 +573,10 @@ async fn a_request_during_the_grace_changes_nothing(pool: PgPool) {
     }
     assert_eq!(rig.mailer.subjects_for(&alice.email).len(), 1);
     let reopened = confirm(&rig, &link, None).await;
-    assert_eq!(codes(&reopened, "confirmAccountDeletion"), Vec::<&str>::new());
+    assert_eq!(
+        codes(&reopened, "confirmAccountDeletion"),
+        Vec::<&str>::new()
+    );
     assert_eq!(deadline(&reopened["confirmAccountDeletion"]), fixed);
 }
 
@@ -570,7 +604,10 @@ async fn confirming_opens_a_seven_day_grace(pool: PgPool) {
         "{scheduled} is not seven days on"
     );
     let read = me(&rig, &alice.token).await;
-    assert_eq!(read["accountDeletion"]["scheduledFor"], confirmed["confirmAccountDeletion"]["accountDeletion"]["scheduledFor"]);
+    assert_eq!(
+        read["accountDeletion"]["scheduledFor"],
+        confirmed["confirmAccountDeletion"]["accountDeletion"]["scheduledFor"]
+    );
     assert_eq!(read["accountDeletion"]["includesContent"], false);
 }
 
@@ -597,7 +634,11 @@ async fn reopening_the_link_inside_the_grace_keeps_the_deadline(pool: PgPool) {
     .expect("two days into the grace");
 
     let again = deadline(&confirm(&rig, &link, None).await["confirmAccountDeletion"]);
-    assert_eq!(again, first - Duration::days(2), "the deadline stays where it was");
+    assert_eq!(
+        again,
+        first - Duration::days(2),
+        "the deadline stays where it was"
+    );
 }
 
 /// Once opened, the link outlives its unopened lifetime: through the
@@ -622,7 +663,10 @@ async fn a_confirmed_deletion_link_stays_valid_through_the_grace(pool: PgPool) {
     .expect("past the unopened lifetime");
 
     let reopened = confirm(&rig, &link, None).await;
-    assert_eq!(codes(&reopened, "confirmAccountDeletion"), Vec::<&str>::new());
+    assert_eq!(
+        codes(&reopened, "confirmAccountDeletion"),
+        Vec::<&str>::new()
+    );
 }
 
 /// A re-call with includeContent true upgrades an identity-only
@@ -637,7 +681,10 @@ async fn a_reconfirm_with_include_content_upgrades(pool: PgPool) {
     let alice = member(&rig, "alice").await;
     let link = requested_link(&rig, &alice, Some(false)).await;
     let first = confirm(&rig, &link, None).await;
-    assert_eq!(first["confirmAccountDeletion"]["accountDeletion"]["includesContent"], false);
+    assert_eq!(
+        first["confirmAccountDeletion"]["accountDeletion"]["includesContent"],
+        false
+    );
 
     let upgraded = confirm(&rig, &link, Some(true)).await;
     assert_eq!(
@@ -648,7 +695,10 @@ async fn a_reconfirm_with_include_content_upgrades(pool: PgPool) {
         deadline(&upgraded["confirmAccountDeletion"]),
         deadline(&first["confirmAccountDeletion"])
     );
-    assert_eq!(me(&rig, &alice.token).await["accountDeletion"]["includesContent"], true);
+    assert_eq!(
+        me(&rig, &alice.token).await["accountDeletion"]["includesContent"],
+        true
+    );
 }
 
 /// The election is opt-in only: neither false nor null takes the content
@@ -664,8 +714,7 @@ async fn a_reconfirm_never_downgrades(pool: PgPool) {
     for choice in [Some(false), None, Some(false)] {
         let again = confirm(&rig, &link, choice).await;
         assert_eq!(
-            again["confirmAccountDeletion"]["accountDeletion"]["includesContent"],
-            true,
+            again["confirmAccountDeletion"]["accountDeletion"]["includesContent"], true,
             "{choice:?} downgraded"
         );
     }
@@ -681,14 +730,12 @@ async fn the_link_confirms_signed_out(pool: PgPool) {
     let alice = member(&rig, "alice").await;
     let link = requested_link(&rig, &alice, None).await;
     let answer = rig
-        .gql_raw(
-            None,
-            CONFIRM,
-            json!({ "input": { "deletionToken": link } }),
-        )
+        .gql_raw(None, CONFIRM, json!({ "input": { "deletionToken": link } }))
         .await;
     assert!(answer.get("errors").is_none(), "{answer}");
-    assert!(answer["data"]["confirmAccountDeletion"]["accountDeletion"]["scheduledFor"].is_string());
+    assert!(
+        answer["data"]["confirmAccountDeletion"]["accountDeletion"]["scheduledFor"].is_string()
+    );
 }
 
 /// A token nothing ever minted is DELETION_TOKEN_INVALID at the token.
@@ -719,7 +766,10 @@ async fn a_superseded_deletion_link_is_token_invalid(pool: PgPool) {
     requested_link(&rig, &alice, None).await;
 
     let answer = confirm(&rig, &first, None).await;
-    assert_eq!(codes(&answer, "confirmAccountDeletion"), vec!["DELETION_TOKEN_INVALID"]);
+    assert_eq!(
+        codes(&answer, "confirmAccountDeletion"),
+        vec!["DELETION_TOKEN_INVALID"]
+    );
     assert!(me(&rig, &alice.token).await["accountDeletion"].is_null());
 }
 
@@ -735,7 +785,10 @@ async fn a_cancelled_deletion_link_is_token_invalid(pool: PgPool) {
     cancel(&rig, &alice.token).await;
 
     let answer = confirm(&rig, &link, None).await;
-    assert_eq!(codes(&answer, "confirmAccountDeletion"), vec!["DELETION_TOKEN_INVALID"]);
+    assert_eq!(
+        codes(&answer, "confirmAccountDeletion"),
+        vec!["DELETION_TOKEN_INVALID"]
+    );
     assert!(me(&rig, &alice.token).await["accountDeletion"].is_null());
 }
 
@@ -773,7 +826,10 @@ async fn an_unopened_deletion_link_dies_after_its_ttl(pool: PgPool) {
     .expect("the clock passes seven days");
 
     let answer = confirm(&rig, &link, None).await;
-    assert_eq!(codes(&answer, "confirmAccountDeletion"), vec!["DELETION_TOKEN_INVALID"]);
+    assert_eq!(
+        codes(&answer, "confirmAccountDeletion"),
+        vec!["DELETION_TOKEN_INVALID"]
+    );
     let scheduled: Option<DateTime<Utc>> =
         sqlx::query_scalar("SELECT scheduled_for FROM auth_account_deletions WHERE user_id = $1")
             .bind(alice.id)
@@ -814,11 +870,17 @@ async fn cancel_ends_a_confirmed_deletion_and_kills_its_link(pool: PgPool) {
     assert!(canceled["accountDeletion"].is_null());
     assert!(me(&rig, &alice.token).await["accountDeletion"].is_null());
     let dead = confirm(&rig, &link, None).await;
-    assert_eq!(codes(&dead, "confirmAccountDeletion"), vec!["DELETION_TOKEN_INVALID"]);
+    assert_eq!(
+        codes(&dead, "confirmAccountDeletion"),
+        vec!["DELETION_TOKEN_INVALID"]
+    );
 
     let fresh = requested_link(&rig, &alice, None).await;
     let reconfirmed = confirm(&rig, &fresh, None).await;
-    assert_eq!(codes(&reconfirmed, "confirmAccountDeletion"), Vec::<&str>::new());
+    assert_eq!(
+        codes(&reconfirmed, "confirmAccountDeletion"),
+        Vec::<&str>::new()
+    );
 }
 
 /// With nothing standing, cancel is a no-op answering null and no error —
@@ -885,7 +947,10 @@ async fn account_deletion_reads_null_before_confirmation(pool: PgPool) {
     let link = requested_link(&rig, &alice, Some(true)).await;
     assert!(me(&rig, &alice.token).await["accountDeletion"].is_null());
     confirm(&rig, &link, None).await;
-    assert_eq!(me(&rig, &alice.token).await["accountDeletion"]["includesContent"], true);
+    assert_eq!(
+        me(&rig, &alice.token).await["accountDeletion"]["includesContent"],
+        true
+    );
 }
 
 // ---- deleteApplicantAccount ------------------------------------------
@@ -914,7 +979,10 @@ async fn a_member_cannot_take_the_applicant_path(pool: PgPool) {
         .gql_raw(Some(&alice.token), DELETE_APPLICANT, json!({}))
         .await;
     assert_eq!(transport_code(&answer), Some("FORBIDDEN"), "{answer}");
-    assert_eq!(count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", alice.id).await, 1);
+    assert_eq!(
+        count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", alice.id).await,
+        1
+    );
     assert_eq!(me(&rig, &alice.token).await["id"], alice.id.to_string());
 }
 
@@ -930,21 +998,38 @@ async fn an_approved_not_landed_applicant_cannot_delete(pool: PgPool) {
     let mira = member(&rig, "mira").await;
     let noa = applicant(&rig, &mira, "noa").await;
     approve(&rig, &mira, &noa).await;
-    let staged_before =
-        count(&rig, "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1", noa.id).await;
+    let staged_before = count(
+        &rig,
+        "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1",
+        noa.id,
+    )
+    .await;
     assert!(staged_before > 0, "approval staged the Registration");
 
     let answer = rig
         .gql_raw(Some(&noa.token), DELETE_APPLICANT, json!({}))
         .await;
     assert_eq!(transport_code(&answer), Some("FORBIDDEN"), "{answer}");
-    assert_eq!(count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", noa.id).await, 1);
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1", noa.id).await,
+        count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", noa.id).await,
+        1
+    );
+    assert_eq!(
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1",
+            noa.id
+        )
+        .await,
         staged_before
     );
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM auth_applications WHERE account_id = $1", noa.id).await,
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_applications WHERE account_id = $1",
+            noa.id
+        )
+        .await,
         1
     );
 }
@@ -974,7 +1059,10 @@ async fn a_registered_unvouched_applicant_takes_the_member_path(pool: PgPool) {
     assert_eq!(mailed["userErrors"], json!([]), "{mailed}");
     let link = rig.mailer.latest_token_for(&noa.email);
     let confirmed = confirm(&rig, &link, None).await;
-    assert_eq!(codes(&confirmed, "confirmAccountDeletion"), Vec::<&str>::new());
+    assert_eq!(
+        codes(&confirmed, "confirmAccountDeletion"),
+        Vec::<&str>::new()
+    );
 }
 
 /// An applicant deletes at once and whole: account, credentials,
@@ -1003,9 +1091,14 @@ async fn an_applicant_deletes_at_once_and_every_session_dies(pool: PgPool) {
     store::upload_key_backup(&rig.pool, noa.id, b"backup")
         .await
         .expect("backup");
-    store::issue_key_backup_challenge(&rig.pool, noa.id, b"challenge", Utc::now() + Duration::minutes(5))
-        .await
-        .expect("challenge");
+    store::issue_key_backup_challenge(
+        &rig.pool,
+        noa.id,
+        b"challenge",
+        Utc::now() + Duration::minutes(5),
+    )
+    .await
+    .expect("challenge");
     let lock = rig
         .gql(
             Some(&noa.token),
@@ -1054,16 +1147,29 @@ async fn an_applicant_deletes_at_once_and_every_session_dies(pool: PgPool) {
         assert_eq!(count(&rig, &sql, noa.id).await, 0, "{table} kept a row");
     }
     let refreshed = rig
-        .gql(None, REFRESH, json!({ "input": { "refreshToken": refresh } }))
+        .gql(
+            None,
+            REFRESH,
+            json!({ "input": { "refreshToken": refresh } }),
+        )
         .await;
-    assert_eq!(codes(&refreshed, "refreshSession"), vec!["REFRESH_TOKEN_INVALID"]);
-    assert!(me(&rig, &noa.token).await.is_null(), "the access token reads no account");
+    assert_eq!(
+        codes(&refreshed, "refreshSession"),
+        vec!["REFRESH_TOKEN_INVALID"]
+    );
+    assert!(
+        me(&rig, &noa.token).await.is_null(),
+        "the access token reads no account"
+    );
     let again = rig
         .gql_raw(Some(&noa.token), DELETE_APPLICANT, json!({}))
         .await;
     assert_eq!(transport_code(&again), Some("UNAUTHENTICATED"), "{again}");
     assert_eq!(rig.mailer.count(), mails_before, "no mail is sent");
-    assert_eq!(count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", mira.id).await, 1);
+    assert_eq!(
+        count(&rig, "SELECT COUNT(*) FROM actors WHERE id = $1", mira.id).await,
+        1
+    );
 }
 
 /// The acts carried with the application (case (a2)) go with the account
@@ -1129,11 +1235,20 @@ async fn an_applicant_deletion_takes_its_carried_acts(pool: PgPool) {
     let deleted = rig.gql(Some(&noa.token), DELETE_APPLICANT, json!({})).await;
     assert_eq!(deleted["deleteApplicantAccount"]["ok"], true, "{deleted}");
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1", noa.id).await,
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM staged_writes WHERE actor_id = $1",
+            noa.id
+        )
+        .await,
         0
     );
     rig.close_and_ingest().await;
-    assert_eq!(mirrored(&rig).await, before, "nothing of the applicant reached the graph");
+    assert_eq!(
+        mirrored(&rig).await,
+        before,
+        "nothing of the applicant reached the graph"
+    );
 }
 
 /// The device locks go with the applicant — by the actor row's cascade,
@@ -1155,7 +1270,12 @@ async fn an_applicant_deletion_takes_its_device_locks(pool: PgPool) {
         .await;
     }
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM auth_device_locks WHERE user_id = $1", noa.id).await,
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_device_locks WHERE user_id = $1",
+            noa.id
+        )
+        .await,
         2
     );
     let mira_lock = rig
@@ -1169,11 +1289,21 @@ async fn an_applicant_deletion_takes_its_device_locks(pool: PgPool) {
 
     rig.gql(Some(&noa.token), DELETE_APPLICANT, json!({})).await;
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM auth_device_locks WHERE user_id = $1", noa.id).await,
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_device_locks WHERE user_id = $1",
+            noa.id
+        )
+        .await,
         0
     );
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM auth_device_locks WHERE user_id = $1", mira.id).await,
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_device_locks WHERE user_id = $1",
+            mira.id
+        )
+        .await,
         1,
         "another account's lock stays"
     );
@@ -1194,8 +1324,7 @@ async fn an_applicant_deletion_frees_its_email_and_handle(pool: PgPool) {
     let noa = applicant(&rig, &mira, "noa").await;
     let taken = register(&rig, noa.link, "noa").await;
     assert_eq!(
-        taken["data"]["register"]["userErrors"][0]["code"],
-        "HANDLE_TAKEN",
+        taken["data"]["register"]["userErrors"][0]["code"], "HANDLE_TAKEN",
         "{taken}"
     );
 
@@ -1228,7 +1357,10 @@ async fn after_landing_the_member_path_opens(pool: PgPool) {
     let mailed = request(&rig, &noa.token, None).await;
     assert_eq!(mailed["userErrors"], json!([]), "{mailed}");
     assert_eq!(
-        rig.mailer.subjects_for(&noa.email).last().map(String::as_str),
+        rig.mailer
+            .subjects_for(&noa.email)
+            .last()
+            .map(String::as_str),
         Some("Confirm the deletion of your CoGra account")
     );
 }
@@ -1275,16 +1407,26 @@ async fn the_secret_sweep_takes_ended_deletions_and_keeps_the_standing_one(pool:
         .expect("sweep");
     assert_eq!(swept.account_deletions, 3);
     assert_eq!(
-        count(&rig, "SELECT COUNT(*) FROM auth_account_deletions WHERE user_id = $1", alice.id)
-            .await,
+        count(
+            &rig,
+            "SELECT COUNT(*) FROM auth_account_deletions WHERE user_id = $1",
+            alice.id
+        )
+        .await,
         1
     );
     assert_eq!(
-        codes(&confirm(&rig, &superseded, None).await, "confirmAccountDeletion"),
+        codes(
+            &confirm(&rig, &superseded, None).await,
+            "confirmAccountDeletion"
+        ),
         vec!["DELETION_TOKEN_INVALID"]
     );
     assert_eq!(
-        codes(&confirm(&rig, &standing, None).await, "confirmAccountDeletion"),
+        codes(
+            &confirm(&rig, &standing, None).await,
+            "confirmAccountDeletion"
+        ),
         Vec::<&str>::new()
     );
 }
