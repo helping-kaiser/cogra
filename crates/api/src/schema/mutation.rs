@@ -1453,6 +1453,18 @@ struct DeviceLock {
     secret: String,
 }
 
+#[derive(InputObject)]
+struct MarkSeenInput {
+    /// The nodes the viewer has seen, in the order they were seen.
+    nodes: Vec<Uuid>,
+}
+
+#[derive(SimpleObject)]
+struct MarkSeenPayload {
+    ok: Option<bool>,
+    user_errors: Vec<UserError>,
+}
+
 #[derive(SimpleObject)]
 struct IssueDeviceLockPayload {
     lock: Option<DeviceLock>,
@@ -2671,6 +2683,54 @@ impl Mutation {
         .await?;
         Ok(SetPreferencesPayload {
             preferences: Some(UserPreferences::from_store(stored)),
+            user_errors: vec![],
+        })
+    }
+
+    /// Record that the viewer has seen nodes — first seeing only: a node
+    /// already on the list is left as it is (re-seeing never counts,
+    /// never moves it). Posts, comments, profiles and topics are
+    /// seeable. L2 only; nothing here becomes a graph record.
+    ///
+    /// At most 100 ids per call (the page budget); more is BAD_INPUT at
+    /// `["nodes"]`. Ids that name nothing seeable are skipped, never an
+    /// error: a pending write the reader saw may be discarded before it
+    /// lands, and a batch must not fail for it. The ids arrive in the
+    /// order they were seen, and a batch keeps that order. Needs a
+    /// session (UNAUTHENTICATED otherwise) and no particular account
+    /// state — an applicant's seeing counts like a member's; this is
+    /// private viewer state, not acting. Spends the account's markSeen
+    /// budget; over it is RATE_LIMITED and writes nothing.
+    async fn mark_seen(
+        &self,
+        ctx: &Context<'_>,
+        input: MarkSeenInput,
+    ) -> async_graphql::Result<MarkSeenPayload> {
+        let v = viewer(ctx)?;
+        let pool = ctx.data::<PgPool>()?;
+        let limits = ctx.data::<RateLimitConfig>()?;
+        if input.nodes.len() > crate::history::MAX_MARK_SEEN {
+            return Ok(MarkSeenPayload {
+                ok: None,
+                user_errors: vec![UserError::at(
+                    ErrorCode::BadInput,
+                    format!(
+                        "at most {} nodes per call",
+                        crate::history::MAX_MARK_SEEN
+                    ),
+                    vec!["nodes".to_string()],
+                )],
+            });
+        }
+        let ids = crate::history::first_seeings(&input.nodes);
+        if !ids.is_empty() {
+            if !ratelimit::spend_mark_seen(pool, limits, v.user_id).await? {
+                return Err(rate_limited());
+            }
+            postgres_store::history::mark_seen(pool, v.user_id, &ids).await?;
+        }
+        Ok(MarkSeenPayload {
+            ok: Some(true),
             user_errors: vec![],
         })
     }
