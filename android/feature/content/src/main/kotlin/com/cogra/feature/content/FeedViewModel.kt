@@ -10,6 +10,7 @@ import com.cogra.domain.content.SensitiveMark
 import com.cogra.domain.content.SeenPosts
 import com.cogra.domain.content.SensitiveReveals
 import com.cogra.domain.di.WebOrigin
+import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.repo.ContentRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -63,10 +64,17 @@ class FeedViewModel @Inject constructor(
     private val reveals: SensitiveReveals,
     private val seen: SeenPosts,
     @WebOrigin private val webOrigin: String,
+    private val seenTracker: SeenTracker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FeedUiState())
     val state = _state.asStateFlow()
+
+    /** Post cards that stood fully in the viewport, in the order they did. */
+    fun onCardsSeen(postIds: List<String>) = seenTracker.saw(postIds)
+
+    /** The reading paused — the scroll rested or the reader left. */
+    fun onSeenCheckpoint() = seenTracker.flush()
 
     /** What the share control hands to the platform's own sheet. */
     fun shareUrl(postId: String): String = postShareUrl(webOrigin, postId)

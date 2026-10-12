@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -49,6 +50,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -60,6 +62,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cogra.core.designsystem.ActorChip
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.domain.TaggedContentKind
 import com.cogra.domain.TaggedContentView
@@ -83,6 +86,8 @@ fun TopicRoute(
         onOpenActor = onOpenActor,
         onBack = onBack,
         stanceControl = stanceControl,
+        onCardsSeen = viewModel::onCardsSeen,
+        onSeenCheckpoint = viewModel::onSeenCheckpoint,
     )
 }
 
@@ -101,7 +106,27 @@ fun TopicScreen(
      * differ, and guessing puts the wrong action on the tap for a frame.
      */
     stanceControl: (@Composable () -> Unit)? = null,
+    /** Content cards that stood fully in the viewport (`SeenCardsEffect`). */
+    onCardsSeen: (List<String>) -> Unit = {},
+    /** The reading paused: the scroll rested, or the reader left. */
+    onSeenCheckpoint: () -> Unit = {},
 ) {
+    // SEEN, AT THE LIST: a post or comment card fully in the viewport joins
+    // the reader's History, as itself (History.md). The page's own title is
+    // a page rendering, not a card, and is never reported (H1 leaves pages
+    // out); neither is a kind this build does not render.
+    val listState = rememberLazyListState()
+    val cardIds = remember(state.content) {
+        state.content
+            .filter { it.kind == TaggedContentKind.POST || it.kind == TaggedContentKind.COMMENT }
+            .associate { it.listKey() to it.id }
+    }
+    SeenCardsEffect(
+        listState = listState,
+        nodeIdOf = { key -> cardIds[key] },
+        onSeen = onCardsSeen,
+        onCheckpoint = onSeenCheckpoint,
+    )
     Scaffold(
         topBar = {
             TopAppBar(
@@ -163,6 +188,7 @@ fun TopicScreen(
                         }
                     }
                     LazyColumn(
+                        state = listState,
                         modifier = Modifier
                             .fillMaxSize()
                             .testTag("topic_list"),
@@ -177,7 +203,7 @@ fun TopicScreen(
                                 )
                             }
                         }
-                        items(state.content, key = { "${it.kind}:${it.id}" }) { entry ->
+                        items(state.content, key = { it.listKey() }) { entry ->
                             TaggedContentCard(entry, onOpenPost = onOpenPost, onOpenActor = onOpenActor)
                         }
                         if (state.contentLoading) {
@@ -196,6 +222,9 @@ fun TopicScreen(
         }
     }
 }
+
+/** The row's list key, kind and id together; the seen map reads it back. */
+private fun TaggedContentView.listKey(): String = "$kind:$id"
 
 @Composable
 private fun TaggedContentCard(

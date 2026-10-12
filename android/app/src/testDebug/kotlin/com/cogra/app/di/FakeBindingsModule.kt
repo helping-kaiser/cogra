@@ -45,6 +45,7 @@ import com.cogra.domain.RecordRow
 import com.cogra.domain.SessionInfo
 import com.cogra.domain.TaggedContentView
 import com.cogra.domain.UserProfile
+import com.cogra.domain.history.ViewHistoryRepository
 import com.cogra.domain.repo.AccountRepository
 import com.cogra.domain.repo.ContentRepository
 import com.cogra.domain.repo.OnboardingRepository
@@ -68,6 +69,7 @@ import com.cogra.domain.topics.TagClaim
 import com.cogra.domain.testing.FakeIdentityStore
 import com.cogra.domain.testing.FakeStorageHealth
 import com.cogra.domain.testing.FakeTokenStore
+import com.cogra.domain.testing.RecordingViewHistoryRepository
 import com.cogra.domain.testing.ThrowingAccountRepository
 import com.cogra.domain.testing.ThrowingContentRepository
 import com.cogra.domain.testing.ThrowingOnboardingRepository
@@ -569,4 +571,13 @@ object FakeBindingsModule {
 
     @Provides
     fun devicePreferences(fake: FakeDevicePreferences): DevicePreferences = fake
+
+    // Seeing answers success: the navigation tests render the feed signed
+    // in, and the seen tracker writes behind every screenful.
+    @Provides
+    @Singleton
+    fun recordingViewHistoryRepository(): RecordingViewHistoryRepository = RecordingViewHistoryRepository()
+
+    @Provides
+    fun viewHistoryRepository(fake: RecordingViewHistoryRepository): ViewHistoryRepository = fake
 }

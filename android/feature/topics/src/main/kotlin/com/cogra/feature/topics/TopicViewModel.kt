@@ -11,6 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.cogra.domain.HashtagView
 import com.cogra.domain.Outcome
 import com.cogra.domain.TaggedContentView
+import com.cogra.domain.history.SeenTracker
 import com.cogra.domain.repo.TopicRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -32,10 +33,17 @@ data class TopicUiState(
 @HiltViewModel
 class TopicViewModel @Inject constructor(
     private val topics: TopicRepository,
+    private val seenTracker: SeenTracker,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TopicUiState())
     val state = _state.asStateFlow()
+
+    /** Post and comment cards that stood fully in the viewport, in order. */
+    fun onCardsSeen(nodeIds: List<String>) = seenTracker.saw(nodeIds)
+
+    /** The reading paused — the scroll rested or the reader left. */
+    fun onSeenCheckpoint() = seenTracker.flush()
 
     private var name: String? = null
     private var started = false

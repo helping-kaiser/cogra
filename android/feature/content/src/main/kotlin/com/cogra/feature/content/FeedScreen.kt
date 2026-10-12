@@ -47,6 +47,7 @@ import com.cogra.core.designsystem.CollapsingTopBanner
 import com.cogra.core.designsystem.DataNode
 import com.cogra.core.designsystem.ErrorLine
 import com.cogra.core.designsystem.PendingMarker
+import com.cogra.core.designsystem.SeenCardsEffect
 import com.cogra.core.designsystem.collapsingTop
 import com.cogra.core.designsystem.dataNode
 import com.cogra.core.designsystem.dataNodeSurface
@@ -171,6 +172,8 @@ fun FeedRoute(
         onOpenDraft = onOpenDraft,
         onRefresh = viewModel::refresh,
         onLoadMore = viewModel::loadMore,
+        onCardsSeen = viewModel::onCardsSeen,
+        onSeenCheckpoint = viewModel::onSeenCheckpoint,
         onReveal = viewModel::onReveal,
         onOpenPost = onOpenPost,
         onOpenActor = onOpenActor,
@@ -205,6 +208,10 @@ fun FeedScreen(
     onOpenPost: (String) -> Unit,
     onOpenActor: (String) -> Unit,
     onOpenTopic: (String) -> Unit,
+    /** Post cards that stood fully in the viewport (`SeenCardsEffect`). */
+    onCardsSeen: (List<String>) -> Unit = {},
+    /** The reading paused: the scroll rested, or the reader left. */
+    onSeenCheckpoint: () -> Unit = {},
     /** Hands a post to the platform's own share sheet. */
     onShare: (String) -> Unit = {},
     onChats: (() -> Unit)? = null,
@@ -268,6 +275,17 @@ fun FeedScreen(
     // the moment it left.
     val collapsingTop = rememberCollapsingTop()
     WatchFeedTail(listState = listState, state = state, onLoadMore = onLoadMore)
+    // SEEN, AT THE LIST: a post card fully in the viewport joins the
+    // reader's History, as itself (History.md). Only the post rows map to
+    // an id; the banner and expiry rows are not cards.
+    val postIds = remember(state.posts) { state.posts.mapTo(HashSet()) { it.id } }
+    SeenCardsEffect(
+        listState = listState,
+        nodeIdOf = { key -> (key as? String)?.takeIf { it in postIds } },
+        onSeen = onCardsSeen,
+        onCheckpoint = onSeenCheckpoint,
+        suspended = commentsFor != null,
+    )
     val band = FEED / "band"
     Scaffold(
         modifier = Modifier.dataNodeSurface(),
