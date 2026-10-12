@@ -9614,7 +9614,7 @@ each).
   radio-row anatomy, never a segmented pill (jakob) — `Everyone`, the
   default, and `Your people`: a scope filter over the neutral rank
   (feed-ranking.md §10's Friends feed), the people the reader holds an
-  opinion for. It stands with the scope narrowers at the body's tail, the
+  opinion of. It stands with the scope narrowers at the body's tail, the
   topic section staying last; the trigger's deviation word is
   `your people`, riding beside the topic's. Drawn on the one master, so
   `FeedSheet` and `SettingsReading` carry it together; the paths register

@@ -273,7 +273,11 @@ departs, in lowercase after a `·`:
   so it has no word for its absence.
 - **People**: `your people` (jakob 2026-10-09, ruling 77 — the label
   `Your people` blessed; the trigger's lowercase state word follows the
-  axis rule). `Everyone` is the default and has no word.
+  axis rule). `Everyone` is the default and has no word. Under `Your
+  people`, a sign off its `Either` default joins the same extra:
+  `your people, for`, `your people, against` (*drafted 2026-10-12 —
+  jakob's at review*; the `against` reading outgrows the 154px budget
+  beside a one-kind head and collapses to the count).
 
 *New 2026-10-02, blessed (jakob 2026-10-02):* `all forms`, `hiding
 seen`, `+ still settling`, `hiding sensitive`, `hiding removed`,
@@ -299,11 +303,14 @@ carry, `ExploreFilter`, `HistoryFilter`):
   and reading a removed post's husk explain themselves).
 - `People` — `Whose things reach this feed.` — the rows `Everyone` over
   `The whole feed, as far as your eyes reach.` and `Your people` over
-  `Only the people you hold an opinion for — the same rank, narrowed to
-  them.` (the pair's labels blessed, jakob 2026-10-09, ruling 77; the
-  Everyone line's wording jakob's own, 2026-10-09; *the section word,
-  the Your-people line and the Also-show pointer drafted — their
-  wording jakob's at review*).
+  `Only the people you hold an opinion of — the same rank, narrowed to
+  them.`, and under `Your people`, only while it is chosen, the one-line
+  sign row `For` · `Against` · `Either` (the pair's labels blessed, jakob
+  2026-10-09, ruling 77; the Everyone line's wording jakob's own,
+  2026-10-09; the Your-people line and the three words jakob's own,
+  2026-10-12, item 7; the sign row's spoken name `Which of your people`
+  *drafted — jakob's at review*; *the section word and the Also-show
+  pointer drafted — their wording jakob's at review*).
 
 ## Platform nouns
 
