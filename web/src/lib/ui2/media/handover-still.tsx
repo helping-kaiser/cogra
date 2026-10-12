@@ -80,6 +80,28 @@ function canPaint(video: HTMLVideoElement): boolean {
 }
 
 /**
+ * Whether `video` already paints the pictured moment — it can paint where it
+ * stands, AND it stands there.
+ *
+ * WHERE IT STANDS IS NOT YET THE MOMENT WHEN THE STILL DECIDES. The still is
+ * the player's child, so its layout effect runs before the player's own — the
+ * one that points the element at the remembered moment. And the element may
+ * already have data by then: React creates a host element, `src` and all,
+ * while it RENDERS, and a route whose render runs well ahead of its commit (the
+ * feed's many cards, on the way back from a detail) hands over an element that
+ * has loaded frame 0 of the clip, detached. Asked only whether it can paint,
+ * that element says yes — and the still gives way to a seek that has not
+ * started, leaving the frame's ground on screen until it lands.
+ *
+ * The comparison is exact on purpose: the pictured moment is the remembered
+ * time (`clipMemory.frameOf`), and an element reads back exactly the time it
+ * was pointed at — the same number.
+ */
+function paintsMoment(video: HTMLVideoElement, moment: number): boolean {
+  return canPaint(video) && video.currentTime === moment;
+}
+
+/**
  * The remembered frame over a presentation's element, until the element can
  * paint it.
  *
@@ -108,9 +130,10 @@ export function HandoverStill({
     const element = video.current;
     const frame = clipMemory.frameOf(mediaId);
     const context = frame && canvas ? canvas.getContext("2d") : null;
-    // Nothing pictured, or an element already able to paint: the element is
-    // its own face. Gone before the browser paints, so nothing shows.
-    if (!canvas || !element || !frame || !context || canPaint(element)) {
+    // Nothing pictured, or an element already painting the pictured moment:
+    // the element is its own face. Gone before the browser paints, so nothing
+    // shows.
+    if (!canvas || !element || !frame || !context || paintsMoment(element, frame.time)) {
       setUp(false);
       return;
     }
@@ -118,6 +141,13 @@ export function HandoverStill({
     canvas.height = frame.picture.height;
     context.drawImage(frame.picture, 0, 0);
 
+    // FROM HERE ON, ANY MOMENT THE ELEMENT CAN PAINT IS THE SEEK LANDING. The
+    // player points the element at the moment in this same commit, and the
+    // seek raises `seeking` as it starts (html.spec.whatwg.org, "seek" step 4),
+    // so the next time the element can paint, it paints the moment or past it.
+    // Settling asks no time on purpose: a looping clip that played on past its
+    // end stands before the moment again, and a still that waited for the
+    // moment would stand over it for good.
     const pending: number[] = [];
     const settle = () => {
       if (pending.length > 0 || !canPaint(element)) return;
