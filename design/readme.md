@@ -4916,7 +4916,7 @@ are reading about.
   growth-dashboard framing `ExplainableNumber` already refuses.
 - **The arithmetic closes on the drawn surface.** Four paths at 6.80,
   4.20, 2.60 and 1.10, and the more-paths row carrying the remaining
-  0.50: 15.20, the score the reader tapped. That is why the quiet row
+  0.50: 15.20, the trace's score. That is why the quiet row
   states what the folded paths add rather than only how many there are —
   a row saying "2 more paths" alone would leave a hole in the one place
   the product promises there is none. At the floor the same discipline
@@ -9706,13 +9706,18 @@ each).
   (`Timeline hitAbove`, the transport's `hitBelow` mirrored); the caption
   moves up to stand 66px above the bar, so `More`'s own target meets the
   seek line's without overlapping (rulings 92 and 101).
-- **The score is the reader's last feed fetch.** A card's and the rail's
-  figure is what that fetch computed; the score's tap is the only fetch of
-  one thing's standing, and nothing is checked in the background. When
-  the trace's fetch finds no paths it stands on the dash and `The paths
-  that carried it here have moved on.`; back on the feed the card and the
-  rail read the dash too, the door standing, and the next feed fetch
-  dissolves it. The vocabulary is one: a figure is what a fetch computed,
+- **The score is the latest fetch of its thing.** A card's and the
+  rail's figure is what the reader's last feed fetch computed, until the
+  score's tap — the only fetch of one thing's standing, made live —
+  finds otherwise; nothing is checked in the background. Whatever the
+  trace's fetch finds, the card and the rail take on: the new figure, or,
+  where it finds no paths, the dash under `The paths that carried it here
+  have moved on.`, the door standing. Never the figure they wore before,
+  the feed never re-orders on it, and the next feed fetch replaces it.
+  Off the feed — History, a profile's posts, a tag page, a post's detail
+  and the stream over them — a slot looks its thing up in that same last
+  feed fetch, the dash standing only where the fetch computed none. The
+  vocabulary is one: a figure is what a fetch computed,
   the bare slot is settling's, the dash is no computed figure, and zero
   is severance's alone. A thing still settling opens the same trace on
   its dash with `Still settling — its paths count once it lands.`
