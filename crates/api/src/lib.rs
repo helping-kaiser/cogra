@@ -19,9 +19,9 @@ pub mod prepare;
 pub mod profile;
 pub mod ratelimit;
 pub mod references;
-pub mod search;
 pub mod relay;
 pub mod schema;
+pub mod search;
 pub mod stance;
 pub mod topics;
 

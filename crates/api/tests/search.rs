@@ -210,7 +210,15 @@ async fn search_finds_a_tag_by_its_name(pool: PgPool) {
 async fn search_matches_title_words_and_a_typed_prefix(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol", None).await;
-    post(&rig.pool, sol, 1, Some("Salt maps of the coast road"), None, "x").await;
+    post(
+        &rig.pool,
+        sol,
+        1,
+        Some("Salt maps of the coast road"),
+        None,
+        "x",
+    )
+    .await;
 
     for typed in ["coast", "Salt ma", "road coast", "the coa", "salt-maps"] {
         let found = search(&rig, None, json!({ "query": typed })).await;
@@ -264,7 +272,12 @@ async fn an_untitled_words_post_is_never_matched_by_its_body(pool: PgPool) {
     post(&rig.pool, sol, 1, None, None, "Salt flats at first light").await;
     post(&rig.pool, sol, 2, Some("   "), None, "Salt flats again").await;
 
-    let found = search(&rig, None, json!({ "query": "salt flats", "kinds": ["POST"] })).await;
+    let found = search(
+        &rig,
+        None,
+        json!({ "query": "salt flats", "kinds": ["POST"] }),
+    )
+    .await;
     assert_eq!(names(&found), Vec::<String>::new());
 }
 
@@ -443,7 +456,15 @@ async fn search_pages_are_stable_and_complete(pool: PgPool) {
     let sol = person(&rig.pool, "sol", None).await;
     for n in 0..23 {
         // Pairs share an instant, so the id must break the tie.
-        post(&rig.pool, sol, n / 2, Some(&format!("Salt study {n}")), None, "x").await;
+        post(
+            &rig.pool,
+            sol,
+            n / 2,
+            Some(&format!("Salt study {n}")),
+            None,
+            "x",
+        )
+        .await;
     }
     post(&rig.pool, sol, 40, Some("salt"), None, "x").await;
 
@@ -553,8 +574,14 @@ async fn an_empty_kind_list_narrows_nothing(pool: PgPool) {
     assert_eq!(empty, all);
     let users = names(&search(&rig, None, json!({ "query": "salt", "kinds": ["USER"] })).await);
     assert_eq!(users, vec!["User:saltor"]);
-    let tags =
-        names(&search(&rig, None, json!({ "query": "salt", "kinds": ["HASHTAG", "POST"] })).await);
+    let tags = names(
+        &search(
+            &rig,
+            None,
+            json!({ "query": "salt", "kinds": ["HASHTAG", "POST"] }),
+        )
+        .await,
+    );
     assert_eq!(tags, vec!["Post:Salt", "Hashtag:saltmaps"]);
 }
 
@@ -629,7 +656,13 @@ async fn include_seen_false_keeps_page_sizes(pool: PgPool) {
     .await;
     assert_eq!(
         names(&first),
-        vec!["Post:Salt 6", "Post:Salt 5", "Post:Salt 4", "Post:Salt 3", "Post:Salt 2"]
+        vec![
+            "Post:Salt 6",
+            "Post:Salt 5",
+            "Post:Salt 4",
+            "Post:Salt 3",
+            "Post:Salt 2"
+        ]
     );
     assert_eq!(first["pageInfo"]["hasNextPage"], true);
     let second = search(
@@ -786,7 +819,11 @@ async fn the_finder_offers_a_person_by_handle_prefix(pool: PgPool) {
             .gql(None, REFERENCE_CANDIDATES, json!({ "query": typed }))
             .await["referenceCandidates"]
             .clone();
-        assert_eq!(found.as_array().expect("list").len(), 1, "for {typed:?}: {found}");
+        assert_eq!(
+            found.as_array().expect("list").len(),
+            1,
+            "for {typed:?}: {found}"
+        );
         assert_eq!(found[0]["targetId"], json!(solarium), "for {typed:?}");
         assert_eq!(found[0]["target"]["__typename"], "User");
     }
@@ -801,7 +838,15 @@ async fn the_finder_offers_a_person_by_handle_prefix(pool: PgPool) {
 async fn the_finder_offers_a_post_by_a_title_word(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol", None).await;
-    let id = post(&rig.pool, sol, 1, Some("Salt maps of the coast road"), None, "x").await;
+    let id = post(
+        &rig.pool,
+        sol,
+        1,
+        Some("Salt maps of the coast road"),
+        None,
+        "x",
+    )
+    .await;
     tag(&rig.pool, "coast").await;
 
     let found = rig
