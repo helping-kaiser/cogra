@@ -819,7 +819,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
-| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `PinnedClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
 The pair a component is documented by is its **module file's**: every
@@ -2668,7 +2668,7 @@ item 33, jakob's rulings the same day).
   says it instead is the **score on the rail** — the reader's own
   reach into this post, the same number the card wore.
 - **A portrait clip's tap opens the stream; any other media's tap
-  opens the post.** From the pinned-clip detail, tapping the clip
+  opens the post.** From the clip detail, tapping the clip
   expands back into the stream with the reader's place held.
 - **The detail door on a reel is the score element** — the exact
   element a feed card wears, so the way in is a thing the reader has
@@ -2752,7 +2752,7 @@ item 33, jakob's rulings the same day).
   wide screen — a tap on it closes the viewer too (jakob 2026-10-02).
 - **The round is masters, not markup.** Everything it drew that a second
   surface could want is in the system: the media family moved into
-  **`components/media/`** and gained `PinnedClip` (the clip above the
+  **`components/media/`** and gained `DetailClip` (the clip above the
   card, and what the squish morph leaves behind), `ReelRail` /
   `ReelRailItem` and `ReelCaption` (the stream's chrome), beside
   `MediaViewer`, `VideoTransport` / `SeekLine`, `MediaDisc` and the
@@ -2763,7 +2763,7 @@ item 33, jakob's rulings the same day).
   are props on the real controls, so the stream acts through the same
   pad and the same score element the feed does.
 - **The post detail exists at last, both bodies** — the gallery post's,
-  and the video post's with the clip pinned above the card, which is
+  and the video post's with the clip above the card, which is
   why the author chip leads the card there rather than the screen. The
   comments sheet's board is the first of these with the sheet raised:
   one anatomy, drawn once. The standalone detail the search results,
@@ -5609,7 +5609,7 @@ viewer lane).
   stop belongs to the reel-vs-video split, not to playback plumbing: a
   looping detail clip would blur the one line the two medias keep
   sharp.
-- **The pinned clip's chrome tap stays platform-native.** Web opens the
+- **The detail clip's chrome tap stays platform-native.** Web opens the
   viewer only while the transport chrome is up — a tap with the chrome
   hidden reveals it first, else the transport would be unreachable
   under auto-hide; Android, which never hides the transport there,
@@ -7199,20 +7199,20 @@ search:
   @-scoped query's indirect hits — so no board moves; api-spec gains
   the scoped-join paragraph.
 
-### The pinned clip's veil face — 2026-09-24
+### The detail clip's veil face — 2026-09-24
 
 The implementation session's veil build found the gap: the video
-detail pins its clip *above* the card, outside the card's veil, so
+detail sets its clip *above* the card, outside the card's veil, so
 a sensitive video post's detail autoplayed unblurred with full
 transport. jakob's ruling, drawn as `PostDetailVideoSensitive`:
 
-- **The pinned clip veils in place.** The body veils as one and
+- **The detail clip veils in place.** The body veils as one and
   revealing moves nothing, so the veil sits where the clip always
   sits — the veil state never demotes the clip back into the card.
 - **The transport goes with it.** Nothing plays beneath a veil
   (backlog item 103), so the face is the whole surface and its only
   affordance is the reveal.
-- **One scope, one tap.** The pinned clip and the card share one
+- **One scope, one tap.** The detail clip and the card share one
   `SensitiveScope`; the reveal is per post, so either veil face
   reveals both and the screen becomes `PostDetailVideo`. A nested
   `SensitiveScope` now defers to the ambient one — the fix that
@@ -8449,7 +8449,7 @@ as the board's own; the back edge in `graph.json` carries the table.
   profile` from another's posts, `Back to your profile` from the
   reader's own, `Back to History` from History (jakob 2026-10-05).
 - **The stream** (`Reel`, `ReelSensitive`): `Back to feed` from the feed
-  it narrowed (drawn), `Back to the post` from a post's pinned clip,
+  it narrowed (drawn), `Back to the post` from a post's clip detail,
   `Back to the profile` from another's posts, `Back to your profile`
   from the reader's own, `Back to History` from History (jakob
   2026-10-05).
@@ -9625,6 +9625,34 @@ each).
   claiming no expiry because the deletion mail claims none, and the way on
   session-dependent per the G9/38 family — `Back to settings` with a
   session, `Sign in` without, the `session` chip swapping the one label.
+
+### The clip detail rulings — 2026-10-09
+
+jakob's rulings 100 and 101, raised by the implementation loop's stage
+build: a clip taller than the viewport could never reach the 70% gate,
+and two spots on the transport's bar could not grow to 48dp.
+
+- **The detail's clip is content, and scrolls with the page.** Comments
+  live in their sheet (§4, *Sheets*), so nothing stands below the post on
+  its detail but the post itself; a clip held on screen would take the
+  room the post is read in. `DetailClip` heads the detail's column,
+  flush on the card. The detail's header pins (§4, *Spacing and
+  layout*).
+- **Opening the detail starts the clip.** The open is the deliberate
+  act, so no share of the screen gates it on the detail; the device's
+  suppression — reduced motion, data saver — holds it back. The 70% gate
+  and the stage law govern every other scroll surface.
+- **Scroll never stops it.** Scrolled out of view the clip plays on,
+  and scrolling it back into view never starts a paused one: scroll
+  governs starts, never stops (ruling 96's spirit), and on the detail
+  the open is the only start. There is no mini-player: the reader
+  scrolls back up to it.
+- **No target on the transport's bar falls below 48dp.** Sound and
+  fullscreen stand 20px apart, their 28px boxes' centres 48px apart, so
+  their targets meet without overlapping. The timeline's target hangs
+  down from its track's top through the bar's lower half and the
+  gesture-zone inset to the frame's bottom edge (`Timeline hitBelow`),
+  so the clip's own tap above it stays whole. The ink does not move.
 
 ---
 

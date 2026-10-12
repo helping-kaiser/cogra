@@ -95,7 +95,7 @@ const {
   MediaViewer,
   ReelRail,
   ReelCaption,
-  PinnedClip,
+  DetailClip,
   LICENSE_MENU_LABEL,
   LicenseTerms,
   ATTRIBUTION_TIERS,
@@ -2656,7 +2656,7 @@ function CommentsThreadSheet({ landed = false, scrolledBy = 0, removed = false, 
 
 /* ── The stream's fixtures (readme §13, the reel round) ───────────────────
    The clip and the post it belongs to. Everything the stream is BUILT from is a
-   master — `ReelRail`, `ReelCaption`, `SeekLine`, `MediaDisc`, `PinnedClip` —
+   master — `ReelRail`, `ReelCaption`, `SeekLine`, `MediaDisc`, `DetailClip` —
    because the stream is the ordinary feed in a different frame, not a second
    product; what stays here is the mock material those masters are handed. */
 

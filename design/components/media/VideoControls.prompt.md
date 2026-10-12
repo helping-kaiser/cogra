@@ -1,11 +1,11 @@
 **Proposed, not shipped.** `VideoTransport` and `SeekLine` are the two rungs of the video control ladder that sit above a feed card's sound disc.
 
 ```jsx
-// the post detail view — the clip pinned at the top, watched deliberately
+// the post detail view — the clip at the head of the page, watched deliberately
 <MediaAttachment kind="video" ratio="portrait" controls="transport"
                  elapsed="0:14" duration="0:41" progress={0.34} src={clip} />
 
-// the stream — sound, and a hairline at the very bottom edge
+// the stream — sound, and a hairline riding above the bottom bar
 <SeekLine progress={0.34} elapsed="0:14" duration="0:41" />
 ```
 
@@ -21,6 +21,7 @@ What holds:
 - **The centre slot has three states.** Play, pause, and — once the clip has run out — **Replay**: a detail clip stops at its end rather than looping (*the viewer-grammar close*), and `ended` turns the same slot into the `replay` glyph at the same size.
 - **The timeline is a slider, not a progress bar.** It takes a tap anywhere along it and a drag along it, so it carries the knob and the `slider` role rather than a filled track.
 - **The bar's row is 48px tall** — the ruled target floor. The small glyphs on it keep their drawn size and reach the floor through `cg-hit`, so the timeline keeps the width.
+- **No target on the bar falls below 48px.** Sound and fullscreen stand 20px apart, their centres 48px apart, so their targets meet and never overlap. The timeline's target hangs down from its track's top to the frame's bottom edge (`hitBelow`), because the space above it is the clip's own tap.
 - **The chrome auto-hides**, and a tap on the video brings it back. Boards draw the revealed state, because a board of the hidden state is a board of a video.
-- **Nothing else.** No fullscreen button (the clip itself opens the viewer), no speed menu, no settings gear.
+- **Nothing else.** No speed menu, no settings gear, no cast.
 - **Times are formatted by the caller.** The component never does arithmetic, so a board and the product can put the same strings in it.
