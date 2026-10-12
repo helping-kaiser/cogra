@@ -2298,9 +2298,11 @@ describe("PostView — references", () => {
 
         fireEvent.click(screen.getByTestId("post-pinned-clip-media-transport-fullscreen"));
         const viewer = screen.getByTestId("post-media-viewer-video") as HTMLVideoElement;
-        // It stops, and never plays behind the viewer (PostDetailVideo.md:47);
-        // the viewer stands where it stood, playing (ViewerVideo.md:5, N1).
-        expect(pinned.paused).toBe(true);
+        // The clip's one element moves into the viewer, so nothing of the
+        // pinned clip plays behind it (PostDetailVideo.md:47); the viewer
+        // stands where it stood, playing (ViewerVideo.md:5, N1).
+        expect(viewer).toBe(pinned);
+        expect(screen.queryByTestId("post-pinned-clip-media")).toBeNull();
         expect(viewer.currentTime).toBe(6);
         expect(viewer.paused).toBe(false);
 

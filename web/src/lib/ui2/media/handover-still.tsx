@@ -3,10 +3,14 @@
 // THE HANDOVER STILL — a clip's new presentation shows the frame its last one
 // stopped on while its own element prepares (jakob's hand-test finding 8).
 //
-// WHY A NEW PRESENTATION CANNOT SHOW THE FRAME ITSELF. Each presentation of a
-// clip is its own `<video>` (`video-stage.ts` arbitrates playback, not
-// elements), so a card → detail → back swap mounts a fresh element and points
-// it at the remembered moment (`clip-memory.ts`). A video decoder can only
+// IT IS THE FALLBACK. A clip's live element is carried into its next
+// presentation (`video-stage.ts`, the element pool), already painting the
+// frame it reached, and then there is nothing to cover. Where the pool has no
+// element for the clip — the first presentation, an element dropped or never
+// worth parking — the swap mounts a fresh element and points it at the
+// remembered moment (`clip-memory.ts`), and that is what this covers.
+//
+// WHY A NEW ELEMENT CANNOT SHOW THE FRAME ITSELF. A video decoder can only
 // start at a keyframe, so before the element can paint that moment it decodes
 // every frame from the keyframe before it — the composer's re-encode keeps
 // one keyframe per five seconds (mediabunny's `keyFrameInterval` default,
@@ -42,6 +46,7 @@
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 
 import * as clipMemory from "./clip-memory";
+import { carriedOver } from "./video-stage";
 
 /** `HTMLMediaElement.HAVE_CURRENT_DATA`, spelled out for environments without the constant. */
 const HAVE_CURRENT_DATA = 2;
@@ -130,10 +135,19 @@ export function HandoverStill({
     const element = video.current;
     const frame = clipMemory.frameOf(mediaId);
     const context = frame && canvas ? canvas.getContext("2d") : null;
-    // Nothing pictured, or an element already painting the pictured moment:
+    // Nothing pictured, or an element already painting the pictured moment —
+    // or an element CARRIED IN from the clip's last presentation, which never
+    // stopped painting the clip and is not pointed anywhere (`video-stage.ts`):
     // the element is its own face. Gone before the browser paints, so nothing
     // shows.
-    if (!canvas || !element || !frame || !context || paintsMoment(element, frame.time)) {
+    if (
+      !canvas ||
+      !element ||
+      carriedOver(element) ||
+      !frame ||
+      !context ||
+      paintsMoment(element, frame.time)
+    ) {
       setUp(false);
       return;
     }
