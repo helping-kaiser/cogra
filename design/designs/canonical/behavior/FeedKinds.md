@@ -4,13 +4,13 @@ ALWAYS every feed card's row reads the opinion, then the score, then the kind's 
 
 ALWAYS a person's feed card's row reads the opinion, then the score, then the share, its act's slot waiting for chats
 
-ALWAYS a feed card's score is the figure the reader's own last feed fetch computed, whatever kind the card is
+ALWAYS a feed card's score is the figure the latest fetch of its thing found — the reader's own last feed fetch, or its trace's fetch since — whatever kind the card is
 
 ALWAYS nothing re-reads one card's standing in the background — the score's tap, which opens the trace and fetches its paths, is the only fetch of one thing's standing
 
-ALWAYS a feed card's score reads a dash, never the figure it wore before, and still opens the trace GIVEN the trace's fetch found no paths for its thing since the reader's last feed fetch
+WHEN the trace's fetch finds other than the card's score -> the card's score reads what it found, a dash still opening the trace where it found no paths AND NEVER the figure it wore before AND NEVER the feed re-orders
 
-WHEN the feed is fetched again GIVEN a card's score reads a dash -> the card's score reads what that fetch computed
+WHEN the feed is fetched again GIVEN a card's score reads what its trace's fetch found -> the card's score reads what that fetch computed
 
 ALWAYS a feed card's score slot stands bare only for a thing still settling and reads zero only for a severed one, the dash standing for every other figure not computed
 

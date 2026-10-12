@@ -20,6 +20,10 @@ WHEN tap settings.feedSheet.people.everyone or settings.feedSheet.people.yourPeo
 
 ALWAYS settings.feedSheet.people holds the rows settings.feedSheet.people.everyone and settings.feedSheet.people.yourPeople, one on and never both
 
+ALWAYS settings.feedSheet.people.sign stands under settings.feedSheet.people.yourPeople as one line of three words, settings.feedSheet.people.sign.for, settings.feedSheet.people.sign.against and settings.feedSheet.people.sign.either, the chosen word in primary ink GIVEN settings.feedSheet.people.yourPeople is on
+
+WHEN tap settings.feedSheet.people.sign.for, settings.feedSheet.people.sign.against or settings.feedSheet.people.sign.either -> that word is staged as the default AND NEVER the default changes before Done
+
 WHEN tap the already-seen toggle -> the toggle flips, staged AND NEVER the default changes before Done
 
 WHEN tap Reset -> CoGra's own default is staged AND NEVER the reader's own default is staged AND NEVER the default changes before Done

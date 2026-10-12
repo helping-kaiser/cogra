@@ -20,6 +20,8 @@ ALWAYS every row carries the claim above it, its exact pair painting only in gee
 
 ALWAYS the tag page shows no count of people or of uses
 
+ALWAYS a card's score on the tag page is the figure the latest fetch of its thing found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none
+
 ALWAYS at most one clip plays on the tag page, by the feed's stage law
 
 WHEN scroll settles at the tag page's hard top GIVEN a qualifying clip exists and the device allows autoplay -> the stage re-elects to the first qualifying clip in the tag page's order

@@ -4916,7 +4916,7 @@ are reading about.
   growth-dashboard framing `ExplainableNumber` already refuses.
 - **The arithmetic closes on the drawn surface.** Four paths at 6.80,
   4.20, 2.60 and 1.10, and the more-paths row carrying the remaining
-  0.50: 15.20, the score the reader tapped. That is why the quiet row
+  0.50: 15.20, the trace's score. That is why the quiet row
   states what the folded paths add rather than only how many there are —
   a row saying "2 more paths" alone would leave a hole in the one place
   the product promises there is none. At the floor the same discipline
@@ -9614,7 +9614,7 @@ each).
   radio-row anatomy, never a segmented pill (jakob) — `Everyone`, the
   default, and `Your people`: a scope filter over the neutral rank
   (feed-ranking.md §10's Friends feed), the people the reader holds an
-  opinion for. It stands with the scope narrowers at the body's tail, the
+  opinion of. It stands with the scope narrowers at the body's tail, the
   topic section staying last; the trigger's deviation word is
   `your people`, riding beside the topic's. Drawn on the one master, so
   `FeedSheet` and `SettingsReading` carry it together; the paths register
@@ -9706,13 +9706,18 @@ each).
   (`Timeline hitAbove`, the transport's `hitBelow` mirrored); the caption
   moves up to stand 66px above the bar, so `More`'s own target meets the
   seek line's without overlapping (rulings 92 and 101).
-- **The score is the reader's last feed fetch.** A card's and the rail's
-  figure is what that fetch computed; the score's tap is the only fetch of
-  one thing's standing, and nothing is checked in the background. When
-  the trace's fetch finds no paths it stands on the dash and `The paths
-  that carried it here have moved on.`; back on the feed the card and the
-  rail read the dash too, the door standing, and the next feed fetch
-  dissolves it. The vocabulary is one: a figure is what a fetch computed,
+- **The score is the latest fetch of its thing.** A card's and the
+  rail's figure is what the reader's last feed fetch computed, until the
+  score's tap — the only fetch of one thing's standing, made live —
+  finds otherwise; nothing is checked in the background. Whatever the
+  trace's fetch finds, the card and the rail take on: the new figure, or,
+  where it finds no paths, the dash under `The paths that carried it here
+  have moved on.`, the door standing. Never the figure they wore before,
+  the feed never re-orders on it, and the next feed fetch replaces it.
+  Off the feed — History, a profile's posts, a tag page, a post's detail
+  and the stream over them — a slot looks its thing up in that same last
+  feed fetch, the dash standing only where the fetch computed none. The
+  vocabulary is one: a figure is what a fetch computed,
   the bare slot is settling's, the dash is no computed figure, and zero
   is severance's alone. A thing still settling opens the same trace on
   its dash with `Still settling — its paths count once it lands.`
@@ -9735,6 +9740,38 @@ each).
   `Retry`s, `PostDetail`'s line), 4 gaps, flows 225 resolved; the
   registry **75 / 2922 → 75 / 2924** — `changeEmail.interim` and
   `postDetail.newerVersion` added, nothing removed or changed.
+
+### The feed chooser round — 2026-10-12
+
+jakob's item 7 (the either-sign chooser, option a) and seam 137 (the
+settling weave), drawn as one feed round. The words jakob did not write
+himself are drafted and wait for his review (copy-voice marks each).
+
+- **Your people is every opinion held, and the sign narrows it.** The
+  Your-people line reads `Only the people you hold an opinion of — the
+  same rank, narrowed to them.`: every one-step connection, whichever
+  way the opinion points. Under it, only while it is chosen, one line
+  of three words, `For · Against · Either`, mid-dot separated, the
+  chosen word in primary ink and at the label's weight; `Either` is
+  the default. Never a pill and never a second line — the sheet already
+  scrolls. Choosing `Everyone` hides the row and keeps its word. Off
+  `Either`, the trigger's extra reads `your people, for` or `your
+  people, against`. `FeedPeopleRows` draws the section on the one
+  master, so `FeedSheet` and `SettingsReading` carry it together.
+- **The hosts draw it under a `people` chip.** Both boards draw the
+  default, so each carries a `people` chip — `everyone`, `your-people`
+  — drawing the section once per value (`PeopleCopies`).
+- **Settling content is woven in.** Under Ranked, content not yet
+  landed stands among the landed rows, ranked by the reader's reach to
+  its author through the one edge it was born with, wearing its pending
+  mark with its score slot bare and a door (SR-G2(b)). `Still settling`
+  stays on by default; off, the feed keeps to what has landed and the
+  trigger reads `settled only`. No board draws a settling row in a
+  feed, so no board redraws.
+- **The gate**: edges **2029 → 2031** (the sign row on both hosts);
+  the registry **75 / 2924 → 75 / 2928** — `settings.feedSheet.people.sign`
+  and its `for`, `against`, `either` added; the eight people-row paths
+  keyed by the `people` chip's values; nothing removed.
 
 ---
 
