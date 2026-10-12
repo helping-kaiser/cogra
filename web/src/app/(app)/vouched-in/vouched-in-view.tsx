@@ -150,17 +150,18 @@ export function VouchedInView() {
       data-stage={stage}
       // A tap anywhere while the motion runs completes it (VouchedIn.md:29).
       onPointerDown={completeAtOnce}
-      className="cg-nav-in flex min-h-dvh flex-1 flex-col overflow-hidden"
+      className="cg-nav-in flex min-h-dvh flex-1 flex-col"
     >
       <div
         {...testAttributes({ path: "vouchedIn.sky" })}
         className="relative mx-auto flex-none"
-        style={{ width: SKY_W, height: SKY_H }}
+        // The drawn 390 × 560 frame, scaled down whole on a narrower phone.
+        style={{ width: `min(${SKY_W}px, 100%)`, aspectRatio: `${SKY_W} / ${SKY_H}` }}
       >
         <svg
           viewBox={`0 0 ${SKY_W} ${SKY_H}`}
-          width={SKY_W}
-          height={SKY_H}
+          width="100%"
+          height="100%"
           aria-hidden="true"
           className="block"
         >
@@ -245,7 +246,10 @@ export function VouchedInView() {
         {/* The voucher carries their actual face — the only identified point. */}
         <div
           className="absolute"
-          style={{ left: VOUCHER_AT.x - VOUCHER_AT.r, top: VOUCHER_AT.y - VOUCHER_AT.r }}
+          style={{
+            left: `${((VOUCHER_AT.x - VOUCHER_AT.r) / SKY_W) * 100}%`,
+            top: `${((VOUCHER_AT.y - VOUCHER_AT.r) / SKY_H) * 100}%`,
+          }}
         >
           <MonogramAvatar
             name={voucher.name}
