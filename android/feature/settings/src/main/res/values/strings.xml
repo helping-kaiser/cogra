@@ -190,6 +190,7 @@
     <string name="confirm_email_reason">Waiting for the code</string>
     <string name="confirm_email_in_flight">Confirming the code…</string>
     <string name="confirm_email_note">Until both sides land your account keeps the address it has, and a reset still goes there.</string>
+    <string name="confirm_email_code_done">Done on this side — now open the link at %1$s</string>
     <string name="confirm_email_cancel">Cancel the change</string>
     <string name="confirm_email_wrong_code">That code doesn\'t check out.</string>
     <string name="confirm_email_code_disabled">Too many tries — for safety we have disabled your current code. Resend sends a fresh one.</string>
