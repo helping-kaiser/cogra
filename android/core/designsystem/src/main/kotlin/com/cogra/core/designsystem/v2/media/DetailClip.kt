@@ -1,17 +1,25 @@
 package com.cogra.core.designsystem.v2.media
 
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import coil3.compose.AsyncImage
 import com.cogra.core.designsystem.v2.token.MediaFrame
 
@@ -106,26 +114,110 @@ fun DetailClip(
                 modifier = frame.testTag("${testTag}_poster"),
             )
         } else {
-            VideoPlayer(
-                url = videoUrl,
-                // The cover is the clip's face until a frame of it exists.
-                posterUrl = item.imageModel(),
-                // THE OPEN STARTS IT (PostDetailVideo.md:7): the clip is the
-                // thing the reader came for, and arriving here claims the stage
-                // from whatever card was playing it — at the frame it reached
-                // (:53), since the player is the same one.
-                autoplay = true,
-                durationMs = item.durationMs,
-                controls = VideoControls.Full,
-                contentScale = ContentScale.Crop,
-                videoAspectRatio = item.aspectRatio.cappedToTallestTile(),
-                contentDescription = item.altText,
-                onOpenViewer = onOpenViewer,
-                modifier = frame,
-                testTag = "${testTag}_video",
-            )
+            StagedDetailClip(item, videoUrl, frame, onOpenViewer, "${testTag}_video")
         }
     }
+}
+
+/**
+ * The unveiled clip, on the detail's own stage ([DetailPlayback]).
+ *
+ * **Composed only unveiled, so the unveil is the veiled clip's open**
+ * (PostDetailVideoSensitive.md:15/17): the playback is remembered here, under
+ * the veil's branch, and is created the moment the veil lifts — the veil
+ * decides whether a player exists ([LocalStageVeil]), suppression decides
+ * whether the open starts it.
+ *
+ * **Every decision is the detail's, so the surface asserts nothing**
+ * (`autoplay = null`): the open, the cover rising and lifting, and what a
+ * re-binding surface asserts are each carried out here, against the one
+ * player [VideoStage] holds — read afresh each time, never kept
+ * (developer.android.com/develop/ui/compose/side-effects: `snapshotFlow` turns
+ * the stage's and the layers' Compose state into the flows the decisions run
+ * on).
+ */
+@OptIn(UnstableApi::class)
+@Composable
+private fun StagedDetailClip(
+    item: MediaItem,
+    url: String,
+    frame: Modifier,
+    onOpenViewer: (() -> Unit)?,
+    testTag: String,
+) {
+    val context = LocalContext.current
+    val suppression = LocalAutoplaySuppression.current
+    val layers = LocalCoveringLayers.current
+    val token = remember(url) { Any() }
+    // THE OPEN (PostDetailVideo.md:7/9), decided while composing so the very
+    // first bind asserts it: a placeholder answer would start a suppressed
+    // clip for a frame, or stop a carried one. Saved, so a return to the
+    // detail — from the comment composer, under the thread's sheet — is no
+    // second open.
+    val playback = rememberSaveable(url, saver = DetailPlayback.Saver) {
+        DetailPlayback.open(clipNow(url), suppressed = suppression.suppressed(context))
+    }
+
+    // WHAT A BIND ASSERTS: the open's answer, or "still" under a cover — the
+    // one assertion `autoplay` used to make, now answered by the stage.
+    LaunchedEffect(playback, url, token) {
+        snapshotFlow { VideoStage.playerFor(token, url) }.collect { player ->
+            if (player != null && !playback.consumeOwnClaim()) player.playWhenReady = playback.bindPlays
+        }
+    }
+
+    // WHAT STANDS OVER THE POST (PostDetailVideo.md:39-51).
+    LaunchedEffect(playback, url, token, layers) {
+        snapshotFlow { layers?.cover }.collect { next ->
+            val command = playback.coverChanged(next, clipNow(url)) { suppression.suppressed(context) }
+            val held = VideoStage.holding?.takeIf { it.url == url }?.player
+            when (command) {
+                DetailPlayback.Command.None -> Unit
+                DetailPlayback.Command.Pause -> held?.pause()
+                DetailPlayback.Command.Play -> held?.play()
+                is DetailPlayback.Command.Reclaim -> {
+                    VideoStage.claim(context, url, token)
+                    VideoStage.playerFor(token, url)?.apply {
+                        seekTo(command.atMs)
+                        playWhenReady = command.play
+                    }
+                }
+            }
+        }
+    }
+
+    VideoPlayer(
+        url = url,
+        // The cover is the clip's face until a frame of it exists.
+        posterUrl = item.imageModel(),
+        // THE STAGE DECIDES, NOT THE SURFACE (see above): arriving here still
+        // claims the stage from whatever card was playing the clip — at the
+        // frame it reached (:53), since the player is the same one.
+        autoplay = null,
+        durationMs = item.durationMs,
+        controls = VideoControls.Full,
+        contentScale = ContentScale.Crop,
+        videoAspectRatio = item.aspectRatio.cappedToTallestTile(),
+        contentDescription = item.altText,
+        onOpenViewer = onOpenViewer,
+        stageToken = token,
+        modifier = frame,
+        testTag = testTag,
+    )
+}
+
+/** The detail's clip as the one player holds it now — or as not on stage. */
+@OptIn(UnstableApi::class)
+private fun clipNow(url: String): ClipNow {
+    val player = VideoStage.holding?.takeIf { it.url == url }?.player
+        ?: return ClipNow(onStage = false, playing = false, positionMs = 0L)
+    return ClipNow(
+        onStage = true,
+        // Told to play and not run out: buffering is still playing, as far as
+        // the reader's last word goes; an ended clip is at rest (:19).
+        playing = player.playWhenReady && player.playbackState != Player.STATE_ENDED,
+        positionMs = player.currentPosition,
+    )
 }
 
 const val DETAIL_CLIP_TAG = "detail_clip"
