@@ -24,9 +24,9 @@ export interface ReelRailProps {
   author?: ReelRailAuthor;
   /**
    * The Feed score, already formatted — the rail never does arithmetic: the
-   * same figure the card wore (from a feed, what the reader's own last feed
-   * fetch computed), or `—` where the trace's fetch found no paths. The door
-   * stays either way.
+   * same figure the card wears (what the latest fetch of the post found, the
+   * reader's own last feed fetch or the trace's since), or `—` where that
+   * fetch found none. The door stays either way.
    */
   score?: string;
   /** Still settling: the score glyph stands bare with `Still settling` under it, and still opens the post. */

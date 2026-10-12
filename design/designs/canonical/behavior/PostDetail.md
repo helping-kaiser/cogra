@@ -16,6 +16,8 @@ WHEN a fresh read finds the post or any of its parts redacted -> the redaction s
 
 ALWAYS postDetail.card.actionRow reads postDetail.card.actionRow.stance, then postDetail.card.actionRow.score, then postDetail.card.actionRow.comments, then postDetail.card.actionRow.share
 
+ALWAYS postDetail.card.actionRow.score is the figure the latest fetch of the post found — the reader's own last feed fetch, or its trace's fetch since — a dash only where that fetch found none, wherever the detail was opened from
+
 ALWAYS postDetail.card.actionRow.share carries no number
 
 ALWAYS postDetail.card keeps the one order of its contents a post card has on every surface, with nothing clamped to lift postDetail.card.actionRow above the fold

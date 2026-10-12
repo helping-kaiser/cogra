@@ -81,11 +81,12 @@ export function ReelPlate({ children, role = "status" }) {
 }
 
 /* THE RAIL'S SCORE DOOR, in its three faces (jakob 2026-10-12: RL-G7 and the
-   moved-on vocabulary). The figure the reader's own last feed fetch computed —
-   the same the card wore. Still settling, the glyph stands BARE with the
+   moved-on vocabulary). The figure the latest fetch of the post found — the
+   reader's own last feed fetch, or the trace's since — the same the card
+   wears. Still settling, the glyph stands BARE with the
    pending mark under it, and the door stays: the score is the stream's only
    way into the post, and a settling clip has a post like any other. A dash
-   where the trace's fetch found no paths — no computed figure — and the door
+   where that fetch found no paths — no computed figure — and the door
    stays then too. The bare slot is settling's alone; zero is severance's. */
 export function ReelRailScore({ score, settling = false, onOpen }) {
   const door = (

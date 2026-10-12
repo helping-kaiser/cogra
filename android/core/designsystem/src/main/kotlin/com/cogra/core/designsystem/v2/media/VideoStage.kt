@@ -118,6 +118,15 @@ object VideoStage {
             if (current.owner !== token) holding = current.copy(owner = token)
             return
         }
+        // The clip leaving the player, as it stood: the one fact about it
+        // nothing else keeps once the player holds the next.
+        swappedOut = current?.player?.let {
+            SwappedOut(
+                url = current.url,
+                positionMs = it.currentPosition,
+                playing = it.playWhenReady && it.playbackState != Player.STATE_ENDED,
+            )
+        }
         // A new clip has its own face to earn: the last one's rendered
         // frame says nothing about this one, and inheriting it would
         // skip the cover on a clip that has not drawn anything yet.
@@ -150,6 +159,25 @@ object VideoStage {
         }
         holding = Holding(url = url, player = player, owner = token)
     }
+
+    /** A clip a swap put out of the player: where it stood, and whether it was playing. */
+    @Immutable
+    data class SwappedOut(val url: String, val positionMs: Long, val playing: Boolean)
+
+    /**
+     * The clip the last swap put out of the player, as it stood the moment
+     * the next clip took its place; null before any swap and after [release].
+     *
+     * **Why the stage keeps it.** The detail clip is stopped by a sheet's
+     * rising and resumed by its dismissal where it stopped
+     * (PostDetailVideo.md:41/43), and the sheet's own stage can claim the one
+     * player for the thread's clip in the very frame the sheet rises — before
+     * the detail has had its say. The swap is then the only witness to where
+     * the detail's clip stood and whether it was playing ([DetailPlayback]).
+     * A plain field: it is read when a cover rises, never composed from.
+     */
+    var swappedOut: SwappedOut? = null
+        private set
 
     /**
      * What the stage handed its player for the clip on stage — the preload
@@ -332,6 +360,7 @@ object VideoStage {
         // and a backgrounded app needs neither — nor the memory it holds.
         VideoPreload.release()
         holding = null
+        swappedOut = null
         sourceOnStage = null
         hasRendered = false
         pendingSwap = null

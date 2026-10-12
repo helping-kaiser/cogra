@@ -12,7 +12,7 @@ ALWAYS a path's trace shows the people along it and the reached thing's own mark
 
 ALWAYS the strongest handful stands drawn and the rest ride one quiet row stating how many there are and what they add
 
-ALWAYS the drawn paths and the quiet row add up to the score the reader tapped
+ALWAYS the drawn paths and the quiet row add up to the trace's score, the figure its own fetch found
 
 WHEN tap the quiet row of more paths -> the weakest paths unfold in place AND NEVER a second page opens
 

@@ -104,6 +104,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import com.cogra.core.designsystem.v2.media.CoverKind
+import com.cogra.core.designsystem.v2.media.CoversSurface
 import com.cogra.core.designsystem.v2.token.Space
 import kotlinx.coroutines.flow.filterNotNull
 import java.util.Locale
@@ -339,6 +341,13 @@ fun StanceControl(
     val severable = state.standing != null
 
     StanceConfirmation(state.confirmation, standingLabel, axes, onConfirmationShown)
+    // THE PAD AND THE SEVERANCE DIALOG SAY THEY ARE UP, wherever the control
+    // stands — no surface that hosts one can forget to (the web's
+    // `stance-control.tsx` and `severance-confirm.tsx` do the same). Over a
+    // post's detail the pad PAUSES its clip and its closing resumes it
+    // (PostDetailVideo.md:49/51); the dialog is a dialog over the post (:41).
+    CoversSurface(open = state.pad != StancePadMode.CLOSED, kind = CoverKind.Pause)
+    CoversSurface(open = state.severance != null, kind = CoverKind.Suspend)
     val anchor = node?.div("anchor")
 
     Column(modifier.dataNode(node)) {
