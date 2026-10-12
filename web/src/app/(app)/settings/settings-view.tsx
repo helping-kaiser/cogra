@@ -110,8 +110,9 @@ const DELETE_FOOTNOTE_APPLICANT = "Nothing is deleted here. The next screen says
 /** What a row-level act that got no answer says (copy-voice *Faults by code*). */
 const NO_ANSWER = "That didn't send. Try again.";
 
-/** The unveil switch's second line, drawn in its Off form only (`_shared.jsx`, #141). */
+/** The unveil switch's second line, by state (`_shared.jsx`, #141; the On words ruled in seam 132). */
 const UNVEIL_OFF_STATUS = "Off, the veil stays until you tap it.";
+const UNVEIL_ON_STATUS = "On, sensitive content stands unveiled wherever you read.";
 
 export function SettingsView({
   store = identityStore,
@@ -458,13 +459,10 @@ export function SettingsView({
           footnote="This choice follows your account to every device."
           node={node("sensitive")}
         >
-          {/* DRIFT (G10, design): the second line is drawn in its Off form
-              only; the On form is undrawn, so the On switch carries no
-              second line until design draws one. */}
           <SettingsRow
             checked={alwaysUnveil}
             label="Always unveil sensitive content"
-            status={alwaysUnveil ? undefined : UNVEIL_OFF_STATUS}
+            status={alwaysUnveil ? UNVEIL_ON_STATUS : UNVEIL_OFF_STATUS}
             onOpen={() => void onUnveil()}
             node={node("sensitive.unveil")}
           />

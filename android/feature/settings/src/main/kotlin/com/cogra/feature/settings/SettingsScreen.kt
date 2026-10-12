@@ -436,10 +436,13 @@ private fun SensitiveGroup(state: SettingsUiState, actions: SettingsActions) {
             {
                 SettingsRow(
                     label = stringResource(R.string.settings_sensitive_unveil),
-                    // DRIFT (G10, design): the second line is drawn in its Off
-                    // form only; the On form is undrawn, so the On switch
-                    // carries no second line until design draws one.
-                    status = if (state.alwaysUnveil) null else stringResource(R.string.settings_sensitive_unveil_off),
+                    status = stringResource(
+                        if (state.alwaysUnveil) {
+                            R.string.settings_sensitive_unveil_on
+                        } else {
+                            R.string.settings_sensitive_unveil_off
+                        },
+                    ),
                     kind = SettingsRowKind.Switch(checked = state.alwaysUnveil),
                     onClick = actions.onAlwaysUnveil,
                     node = group / "unveil",

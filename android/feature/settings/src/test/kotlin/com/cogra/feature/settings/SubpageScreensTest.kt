@@ -203,6 +203,18 @@ class SubpageScreensTest {
     }
 
     @Test
+    fun `code_confirmed_reads_the_interim_line_with_the_new_address`() {
+        confirm(ConfirmEmailUiState(email = "sol@solferreira.art", pending = pending(codeConfirmed = true)))
+        node("changeEmail.codeDone").assertTextEquals("Done on this side — now open the link at sol@ferreira.studio")
+    }
+
+    @Test
+    fun `the interim line is absent while the code is still owed`() {
+        confirm(ConfirmEmailUiState(email = "sol@solferreira.art", pending = pending()))
+        absent("changeEmail.codeDone")
+    }
+
+    @Test
     fun `code_field_is_numeric_one_time_code`() {
         confirm(ConfirmEmailUiState(email = "sol@solferreira.art", pending = pending()))
         val code = node("changeEmail.code.input").fetchSemanticsNode()

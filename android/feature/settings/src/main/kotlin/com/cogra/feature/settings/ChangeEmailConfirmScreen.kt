@@ -168,12 +168,8 @@ class ChangeEmailConfirmViewModel @Inject constructor(
                         _state.update { it.copy(inFlight = false) }
                         exit(ConfirmEmailExit.Applied(after.email.orEmpty()))
                     } else {
-                        // The code's side landed, the link's still owed: the page stays.
-                        // DRIFT (seam 115.3): `ChangeEmailConfirm.md` draws this state as
-                        // the pair alone — `Code — confirmed`, no field, no commit (G3) —
-                        // and no line saying the page's errand is done and the link at
-                        // the new address is what is left. That line is asked of design;
-                        // nothing is drawn here until its words land.
+                        // The code's side landed, the link's still owed: the page stays,
+                        // and its interim line says the link at the new address is what is left.
                         _state.update {
                             it.copy(inFlight = false, pending = after.pending, email = after.email, code = "")
                         }
@@ -338,6 +334,13 @@ fun ChangeEmailConfirmScreen(
     ) {
         Spacer(Modifier.height(24.dp))
         if (pending != null) SidesPair(email, pending, onResend)
+        if (pending != null && pending.requiresCode && pending.codeConfirmed) {
+            Spacer(Modifier.height(24.dp))
+            QuietNote(
+                text = stringResource(R.string.confirm_email_code_done, pending.newEmail),
+                modifier = Modifier.dataNode(Page / "codeDone"),
+            )
+        }
         CodeAndCommit(state, email, onCode, onConfirm)
         Spacer(Modifier.height(24.dp))
         QuietNote(
