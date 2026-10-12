@@ -6,6 +6,7 @@ import { cleanup } from "@testing-library/react";
 import { afterEach, beforeEach } from "vitest";
 
 import { resetClipMemoryForTests } from "@/lib/ui2/media/clip-memory";
+import { resetElementPoolForTests } from "@/lib/ui2/media/video-stage";
 
 import { installMediaEnvironment, resetMediaEnvironmentForTests } from "./media-env";
 
@@ -22,6 +23,9 @@ afterEach(resetMediaEnvironmentForTests);
 // BEFORE each test rather than after, because the unmounting `cleanup` above
 // is itself a writer — players record where they stood on the way out.
 beforeEach(resetClipMemoryForTests);
+// The same for the clips' parked elements (`video-stage.ts`): the players the
+// unmounting `cleanup` takes down park theirs on the way out.
+beforeEach(resetElementPoolForTests);
 
 // jsdom implements no Pointer Events (jsdom#2527), which the stance pad
 // is built on — they are the platform's own unification of mouse, touch,
