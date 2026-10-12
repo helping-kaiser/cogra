@@ -64,12 +64,22 @@
    takes a form-level fault line above the commitment, `SignInError`'s
    placement — the words are copy-voice's.
 
+   THE CODE CONFIRMED, THE LINK STILL OWED, is the `confirmed` chip's `code`
+   (jakob 2026-10-12, closing seam 115.3). The code's side reads confirmed,
+   the field and `Confirm the code` go — there is nothing left to type — and
+   one quiet line under the pair says where the errand moved: `Done on this
+   side — now open the link at` the new address. A return that finds the
+   change applied shows no snackbar; the Email row's new address says it.
+
    REGISTERED under the `changeEmail` prefix (design ⇄ impl seam 082, the
    settings packet). The inset is `pair`: its `label` and `resend`, then each
    side's caption and reading — `codeLabel` / `codeSide`, `linkLabel` /
-   `linkSide`. The field is `code`, the commit with its reason `commit`, the
-   line under it `note`, and `Cancel the change` is `cancel`. */
+   `linkSide`. Under it, on the chip's `code` only, the line `interim`.
+   The field is `code`, the commit with its reason `commit`, the line under
+   it `note`, and `Cancel the change` is `cancel`. */
 export const NODE = "changeEmail";
+export const PROPS = { confirmed: { editor: "enum", options: ["none", "code"], default: "none" } };
+export const VALS = `codeSideReading: this.props.confirmed === "code" ? "sol@solferreira.art — confirmed" : "sol@solferreira.art — still waiting", interimShown: this.props.confirmed === "code" ? "block" : "none", fieldShown: this.props.confirmed === "code" ? "none" : "block"`;
 export function Screen() {
   return (
     <>
@@ -134,7 +144,7 @@ export function Screen() {
               Code
             </span>
             <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)" }} data-node="codeSide">
-              sol@solferreira.art — still waiting
+              {"{{codeSideReading}}"}
             </span>
             <span style={{ fontSize: "var(--text-body-small)", lineHeight: "var(--text-body-small--line-height)", color: "var(--text-secondary)" }} data-node="linkLabel">
               Link
@@ -145,21 +155,27 @@ export function Screen() {
           </div>
         </div>
 
-        <div style={{ marginTop: 24 }}>
-          <TextField
-            id="email-change-code"
-            label="Confirmation code"
-            mono
-            kind="digits"
-            enterKeyHint="go"
-            value=""
-            hint="From the message to sol@solferreira.art."
-            node="code"
-          />
+        <div style={{ marginTop: "var(--space-2)", display: "{{interimShown}}" }}>
+          <QuietNote node="interim">Done on this side — now open the link at sol@ferreira.studio.</QuietNote>
         </div>
 
-        <div style={{ marginTop: 24 }}>
-          <WaitingCommit id="email-change-code" label="Confirm the code" reason="Waiting for the code" node="commit" />
+        <div style={{ display: "{{fieldShown}}" }}>
+          <div style={{ marginTop: 24 }}>
+            <TextField
+              id="email-change-code"
+              label="Confirmation code"
+              mono
+              kind="digits"
+              enterKeyHint="go"
+              value=""
+              hint="From the message to sol@solferreira.art."
+              node="code"
+            />
+          </div>
+
+          <div style={{ marginTop: 24 }}>
+            <WaitingCommit id="email-change-code" label="Confirm the code" reason="Waiting for the code" node="commit" />
+          </div>
         </div>
 
         <div style={{ marginTop: 24 }}>

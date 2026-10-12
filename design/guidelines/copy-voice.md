@@ -1893,8 +1893,14 @@ your account keeps the address it has, and a reset still goes there.`
 - A spent mail budget answers the request and `Resend` with
   `RATE_LIMITED`'s line in place (*Faults by code*), above the
   commitment; nothing is sent (jakob 2026-10-06).
+- With the code confirmed and the link still owed, one quiet line under
+  the pair says where the errand went: `Done on this side — now open the
+  link at sol@ferreira.studio.` (*new 2026-10-12, ruled (jakob
+  2026-10-12)*).
 - The change that lands answers `Email changed to sol@ferreira.studio.`
-  over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
+  over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*) — the
+  confirm press's answer only; a return that finds the change applied
+  shows no snackbar, the Email row's new address saying it.
 - The change past its window, as the fault line above the commitment:
   `This change ran out before both sides landed. Your email stays as it
   is — start again from settings.`
