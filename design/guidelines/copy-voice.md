@@ -687,7 +687,7 @@ DO, the way the sound toggle already does:
 **The stream and the viewer**:
 
 - `Back to feed` — the stream's way out when it was opened from the
-  feed (a post's pinned clip or a profile's posts name that origin
+  feed (a post's clip detail or a profile's posts name that origin
   instead; readme §13, *The nav-noun sweep*). Not "Close": the reader
   is going back to the feed the stream narrowed, not shutting a layer. The
   feed takes no article anywhere in this vocabulary (jakob 2026-09-15):

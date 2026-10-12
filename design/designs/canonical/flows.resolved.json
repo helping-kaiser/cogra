@@ -1679,7 +1679,7 @@
     },
     {
       "name": "reel-to-detail",
-      "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the pinned clip expands it back into the stream, the reader's place held.",
+      "description": "The score element on the stream's rail is the detail door: the clip squishes to the top of the screen, still playing, and the post rises beneath it — tapping the clip there expands it back into the stream, the reader's place held.",
       "status": "resolved",
       "steps": [
         "start · Reel · 7 «Feed score» → PostDetailVideo — the detail door — the clip squishes to the top, the post rises beneath",
@@ -3592,11 +3592,11 @@
     },
     {
       "name": "reveal-a-sensitive-video-post",
-      "description": "A sensitive video post opens unrevealed; Show on the card unveils the pinned clip and the card together.",
+      "description": "A sensitive video post opens unrevealed; Show on the card unveils the clip and the card together.",
       "status": "resolved",
       "steps": [
         "start · PostDetailVideoSensitive",
-        "end · PostDetailVideoSensitive · 5 «the card's veil (Show)» → PostDetailVideo — the reveal — pinned clip and card unveil together, one SensitiveScope answering for both"
+        "end · PostDetailVideoSensitive · 5 «the card's veil (Show)» → PostDetailVideo — the reveal — clip and card unveil together, one SensitiveScope answering for both"
       ],
       "boards": [
         "PostDetailVideoSensitive",
