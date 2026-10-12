@@ -792,7 +792,6 @@ async fn set_preferences_filter_level_zero_unveils_and_null_restores(pool: PgPoo
     let phone = rig.log_in("alice@example.com").await;
     let browser = rig.log_in("alice@example.com").await;
 
-    // Off unless the account chose otherwise.
     assert!(preferences(&rig, &phone).await["contentFilteringSeverityLevel"].is_null());
 
     let on = set_preferences(
@@ -803,7 +802,6 @@ async fn set_preferences_filter_level_zero_unveils_and_null_restores(pool: PgPoo
     .await;
     assert_eq!(codes(&json!({ "p": on }), "p"), Vec::<&str>::new());
     assert_eq!(on["preferences"]["contentFilteringSeverityLevel"], json!(0));
-    // Set on one device, read on another: the choice follows the account.
     assert_eq!(
         preferences(&rig, &phone).await["contentFilteringSeverityLevel"],
         json!(0)
