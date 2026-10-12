@@ -1123,8 +1123,11 @@ private fun CograNavGraphContent(
                                 popUpTo<ChangeEmailLinked> { inclusive = true }
                             }
                         },
-                        onSignIn = {
-                            heldEmailLink = token
+                        onSignIn = { holdsLink ->
+                            // Only a live link's sign-in holds it; a dead or
+                            // unknown one holds nothing, not even a link held
+                            // earlier (ChangeEmailLinkedSignedOut.md).
+                            heldEmailLink = if (holdsLink) token else null
                             // Back to the signed-out root, never a second sign-in on top of it.
                             navController.popBackStack()
                             if (navController.currentBackStackEntry?.destination?.hasRoute(Login::class) != true) {
