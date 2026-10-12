@@ -1651,6 +1651,9 @@ impl PendingEmailChange {
 pub struct UserPreferences {
     /// Sensitive-content filter aggressiveness: 0 (show everything) to
     /// 10 (strictest); null when unset, so the frontend default applies.
+    /// MVP reads it as one threshold: 0 unveils sensitive content wherever
+    /// the account reads (Settings' Always unveil sensitive content); null
+    /// or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
     pub content_filtering_severity_level: Option<i32>,
     /// The license the composer starts a new post from; null when unset,
     /// so the composer starts at public domain (0/0). It seeds the

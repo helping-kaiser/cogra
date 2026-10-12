@@ -112,7 +112,7 @@ const SET_PREFERENCES: &str = "mutation($input: SetPreferencesInput!) {
 }";
 const USER_BY_HANDLE: &str = "query($handle: String!) {
     user(handle: $handle) {
-        passwordChangedAt preferences { hasSeenOnboarding }
+        passwordChangedAt preferences { hasSeenOnboarding contentFilteringSeverityLevel }
     }
 }";
 
@@ -778,6 +778,48 @@ async fn set_preferences_has_seen_onboarding_reads_back(pool: PgPool) {
     );
 }
 
+/// The filter level is the account's one sensitive-content threshold
+/// (Settings' Always unveil sensitive content): the switch turned on
+/// writes 0, which every other session of the account reads back, and
+/// turned off writes the explicit null that restores the unset default.
+///
+/// A filter level of 0 saves on the account and reads back on every session, and an explicit null restores it to unset.
+/// ´claim:preferences:the-filter-level-round-trips´
+#[sqlx::test(migrations = "../../migrations")]
+async fn set_preferences_filter_level_zero_unveils_and_null_restores(pool: PgPool) {
+    let rig = rig(pool);
+    rig.seed_member("alice", "alice@example.com").await;
+    let phone = rig.log_in("alice@example.com").await;
+    let browser = rig.log_in("alice@example.com").await;
+
+    // Off unless the account chose otherwise.
+    assert!(preferences(&rig, &phone).await["contentFilteringSeverityLevel"].is_null());
+
+    let on = set_preferences(
+        &rig,
+        &browser,
+        json!({ "contentFilteringSeverityLevel": 0 }),
+    )
+    .await;
+    assert_eq!(codes(&json!({ "p": on }), "p"), Vec::<&str>::new());
+    assert_eq!(on["preferences"]["contentFilteringSeverityLevel"], json!(0));
+    // Set on one device, read on another: the choice follows the account.
+    assert_eq!(
+        preferences(&rig, &phone).await["contentFilteringSeverityLevel"],
+        json!(0)
+    );
+
+    let off = set_preferences(
+        &rig,
+        &phone,
+        json!({ "contentFilteringSeverityLevel": null }),
+    )
+    .await;
+    assert_eq!(codes(&json!({ "p": off }), "p"), Vec::<&str>::new());
+    assert!(off["preferences"]["contentFilteringSeverityLevel"].is_null());
+    assert!(preferences(&rig, &browser).await["contentFilteringSeverityLevel"].is_null());
+}
+
 /// Preferences are viewer-only, and writing them needs a session.
 ///
 /// Writing preferences needs a session; reading them resolves only for the account's own viewer.
@@ -787,7 +829,12 @@ async fn preferences_are_viewer_only(pool: PgPool) {
     let rig = rig(pool);
     rig.seed_member("alice", "alice@example.com").await;
     let alice = rig.log_in("alice@example.com").await;
-    set_preferences(&rig, &alice, json!({ "hasSeenOnboarding": true })).await;
+    set_preferences(
+        &rig,
+        &alice,
+        json!({ "hasSeenOnboarding": true, "contentFilteringSeverityLevel": 0 }),
+    )
+    .await;
 
     let anonymous = rig
         .gql_raw(

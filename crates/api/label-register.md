@@ -426,6 +426,7 @@ label.
 | `test:integration:session-revocations-never-touch-device-locks`                               | session_revocations_never_touch_device_locks                               |
 | `test:integration:sessions-rotate-and-reuse-revokes-everything`                               | sessions_rotate_and_reuse_revokes_everything                               |
 | `test:integration:set-preferences-absent-field-is-left-as-it-is`                              | set_preferences_absent_field_is_left_as_it_is                              |
+| `test:integration:set-preferences-filter-level-zero-unveils-and-null-restores`                | set_preferences_filter_level_zero_unveils_and_null_restores                |
 | `test:integration:set-preferences-has-seen-onboarding-reads-back`                             | set_preferences_has_seen_onboarding_reads_back                             |
 | `test:integration:set-preferences-null-restores-public-domain`                                | set_preferences_null_restores_public_domain                                |
 | `test:integration:set-preferences-off-ladder-axis-is-bad-input`                               | set_preferences_off_ladder_axis_is_bad_input                               |

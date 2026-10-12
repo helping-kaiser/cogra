@@ -2935,6 +2935,9 @@ absent field is left as it is; an explicit null restores its default.
 input SetPreferencesInput {
 	"""
 	0 (show everything) to 10 (strictest); null restores the default.
+	MVP reads it as one threshold: 0 unveils sensitive content wherever
+	the account reads (Settings' Always unveil sensitive content); null
+	or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
 	"""
 	contentFilteringSeverityLevel: Int
 	"""
@@ -3509,6 +3512,9 @@ type UserPreferences {
 	"""
 	Sensitive-content filter aggressiveness: 0 (show everything) to
 	10 (strictest); null when unset, so the frontend default applies.
+	MVP reads it as one threshold: 0 unveils sensitive content wherever
+	the account reads (Settings' Always unveil sensitive content); null
+	or 1–10 keeps the veil. The 0–10 gradient is post-MVP.
 	"""
 	contentFilteringSeverityLevel: Int
 	"""
