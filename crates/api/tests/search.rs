@@ -13,6 +13,8 @@
 mod rig;
 
 use api::ratelimit::RateLimitConfig;
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD as B64;
 use postgres_store::content::{self, LandingOrder};
 use postgres_store::{genesis, hashtag, search as search_store};
 use rig::WireRig;
@@ -242,7 +244,6 @@ async fn search_matches_title_words_and_a_typed_prefix(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn search_never_matches_a_body_a_description_or_a_bio(pool: PgPool) {
     let rig = rig(pool);
-    // The person's bio reads "a bio about salt".
     let sol = person(&rig.pool, "sol", Some("Sol")).await;
     post(
         &rig.pool,
@@ -411,7 +412,8 @@ async fn a_removed_posts_title_never_matches(pool: PgPool) {
 }
 
 /// Exact matches lead, newest first among them; partial matches follow,
-/// newest first. Kinds interleave by recency inside a tier.
+/// newest first. Kinds interleave by recency inside a tier: the posts are
+/// dated ahead of the registry rows (written now), so they lead each tier.
 ///
 /// Exact matches precede partial ones, and each tier reads newest first.
 /// ´claim:search:exact-then-partial-then-newest´
@@ -428,8 +430,6 @@ async fn exact_matches_precede_partial_then_newest_first(pool: PgPool) {
 
     let found = search(&rig, None, json!({ "query": "salt" })).await;
     let order = names(&found);
-    // The posts are dated ahead of the registry rows (written now, in
-    // 2026), so within each tier the posts lead.
     assert_eq!(
         order,
         vec![
@@ -446,7 +446,7 @@ async fn exact_matches_precede_partial_then_newest_first(pool: PgPool) {
 
 /// Walking every page forward, and every page backward from the end,
 /// yields the one-shot order exactly: nothing repeated, nothing skipped,
-/// ties on the instant broken by id.
+/// ties on the instant broken by id — the posts share instants in pairs.
 ///
 /// Search pages are stable and complete in both directions.
 /// ´claim:search:pages-are-stable-and-complete´
@@ -455,7 +455,6 @@ async fn search_pages_are_stable_and_complete(pool: PgPool) {
     let rig = rig(pool);
     let sol = person(&rig.pool, "sol", None).await;
     for n in 0..23 {
-        // Pairs share an instant, so the id must break the tie.
         post(
             &rig.pool,
             sol,
@@ -629,6 +628,7 @@ async fn include_seen_false_drops_seen_nodes(pool: PgPool) {
 
 /// The exclusion runs server-side, so a page still carries as many
 /// results as were asked for, and the next page picks up where it ended.
+/// The three newest are seen, so a client-side filter would serve two.
 ///
 /// The seen-list exclusion keeps page sizes whole.
 /// ´claim:search:include-seen-false-keeps-page-sizes´
@@ -642,8 +642,6 @@ async fn include_seen_false_keeps_page_sizes(pool: PgPool) {
     for n in 0..10 {
         posts.push(post(&rig.pool, sol, n, Some(&format!("Salt {n}")), None, "x").await);
     }
-    // The three newest are seen: a client-side filter would serve a
-    // first page of two.
     for id in &posts[7..] {
         seen(&rig.pool, reader, *id).await;
     }
@@ -729,7 +727,8 @@ async fn search_resolves_for_an_anonymous_viewer(pool: PgPool) {
     assert_eq!(anonymous, signed_in);
 }
 
-/// A cursor this matcher did not issue is a malformed argument, coded
+/// A cursor this matcher did not issue — garbage, or another
+/// connection's landing-order cursor — is a malformed argument, coded
 /// BAD_INPUT at the transport.
 ///
 /// A malformed search cursor is BAD_INPUT.
@@ -737,8 +736,8 @@ async fn search_resolves_for_an_anonymous_viewer(pool: PgPool) {
 #[sqlx::test(migrations = "../../migrations")]
 async fn search_with_a_malformed_cursor_is_bad_input(pool: PgPool) {
     let rig = rig(pool);
-    let landing_order_cursor = "MTowOjA="; // "1:0:0", a records cursor
-    for cursor in ["not a cursor", landing_order_cursor] {
+    let records_cursor = B64.encode("1:0:0");
+    for cursor in ["not a cursor", records_cursor.as_str()] {
         for (direction, arg) in [("after", "first"), ("before", "last")] {
             let refused = rig
                 .gql_raw(
@@ -790,7 +789,8 @@ async fn search_with_an_over_long_query_is_bad_input(pool: PgPool) {
 
 /// The finder rides the matcher: a person comes up by a prefix of their
 /// handle, bare or `@`-sigilled — but only a person who can be cited,
-/// so a keyless account never does.
+/// so a keyless account never does, though search itself returns it as
+/// `user(handle:)` resolves it.
 ///
 /// The finder offers a person by a handle prefix, and never a keyless account.
 /// ´claim:search:the-finder-offers-a-person-by-handle-prefix´
@@ -809,8 +809,6 @@ async fn the_finder_offers_a_person_by_handle_prefix(pool: PgPool) {
         .await
         .expect("refresh");
     drop(conn);
-    // The keyless account is a search result: search returns what
-    // `user(handle:)` resolves.
     let searched = search(&rig, None, json!({ "query": "sol" })).await;
     assert_eq!(names(&searched).len(), 2);
 
@@ -830,7 +828,8 @@ async fn the_finder_offers_a_person_by_handle_prefix(pool: PgPool) {
 }
 
 /// The finder offers a post by a word of its title, and a topic carrying
-/// the same word never: a topic is tagged, not referenced.
+/// the same word never: a topic is tagged, not referenced. A leading `@`
+/// narrows to people, and a query past the cap is a miss, never an error.
 ///
 /// The finder offers a post by a title word and never a topic.
 /// ´claim:search:the-finder-offers-a-post-by-a-title-word´
@@ -857,13 +856,10 @@ async fn the_finder_offers_a_post_by_a_title_word(pool: PgPool) {
     assert_eq!(found[0]["targetId"], json!(id));
     assert_eq!(found[0]["target"]["__typename"], "Post");
 
-    // The sigil narrows to people: the post is no longer offered.
     let people = rig
         .gql(None, REFERENCE_CANDIDATES, json!({ "query": "@coast" }))
         .await;
     assert_eq!(people["referenceCandidates"], json!([]));
-    // And a query past the cap is a miss, not an error — the finder
-    // never refuses what it is typed.
     let long = rig
         .gql(
             None,

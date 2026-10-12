@@ -509,14 +509,10 @@ impl Query {
             return Ok(out);
         }
 
-        // A leading `@` is the person sigil here, not a search scope: the
-        // picker's first keystroke for a mention is `@`.
         let (text, kinds): (&str, &[IndexKind]) = match query.strip_prefix('@') {
             Some(handle) => (handle, &[IndexKind::User]),
             None => (query, &[IndexKind::User, IndexKind::Post]),
         };
-        // Anything the matcher would not serve as plain text — blank, a
-        // second operator, past the cap — is a miss, never an error.
         let Ok(search::Parsed::Unscoped(text)) = search::parse(text) else {
             return Ok(Vec::new());
         };
@@ -593,8 +589,6 @@ impl Query {
         let empty = || search_page(Vec::new(), cursor.is_some(), backward, false, None);
         let text = match parsed {
             search::Parsed::Unscoped(text) => text,
-            // The scoped branch (search-surface B2) is not built: a scoped
-            // query reads empty until it is.
             search::Parsed::Blank | search::Parsed::Scoped { .. } => return Ok(empty()),
         };
         let kinds = served_kinds(kinds.as_deref());
@@ -610,8 +604,6 @@ impl Query {
         let mut hits = search_store::find(pool, &request, cursor, backward, limit + 1)
             .await
             .map_err(|e| async_graphql::Error::new(e.to_string()))?;
-        // The extra row proves another page exists; it sits at the end the
-        // walk reached last.
         let has_more = hits.len() as i64 > limit;
         if has_more {
             if backward {

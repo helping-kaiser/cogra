@@ -414,7 +414,8 @@ pub async fn land_post(
 /// unique, so a node carrying more than one unlanded version never lands
 /// a write's text on another's record. False when there is none — the
 /// edit landed without ever being staged here, and the promotion path
-/// appends the version instead.
+/// appends the version instead. Landing reorders the versions (pending
+/// ones lead), so the search index re-derives which one is current.
 pub async fn land_post_version(
     tx: &mut Transaction<'_, Postgres>,
     post_id: Uuid,
@@ -436,8 +437,6 @@ pub async fn land_post_version(
     .await?
     .rows_affected()
         == 1;
-    // Landing reorders the versions (pending ones lead), so which one is
-    // current may change.
     crate::search::refresh_posts(tx, &[post_id]).await?;
     Ok(landed)
 }
@@ -516,7 +515,9 @@ pub async fn discard_pending(
 /// handful of statements rather than six per node. `nodes` and
 /// `instants` are parallel: each index is one write's node and the
 /// authoring instant its rows carry, and the pair is what every
-/// statement matches on.
+/// statement matches on. The search index follows: a discarded version
+/// may have been the current one, and a discarded post has no title
+/// left to match.
 pub async fn discard_pending_many(
     tx: &mut Transaction<'_, Postgres>,
     nodes: &[Uuid],
@@ -570,8 +571,6 @@ pub async fn discard_pending_many(
         .await?,
     );
     discard_pending_thread(tx, removed).await?;
-    // A discarded version may have been the current one, and a discarded
-    // post has no title left to match.
     crate::search::refresh_posts(tx, nodes).await?;
     Ok(())
 }

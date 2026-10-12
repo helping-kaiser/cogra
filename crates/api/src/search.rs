@@ -98,14 +98,13 @@ pub fn parse(raw: &str) -> Result<Parsed<'_>, QueryTooLong> {
     if query.chars().count() > MAX_QUERY_CHARS {
         return Err(QueryTooLong);
     }
-    let scope = match query.as_bytes()[0] {
-        b'@' => Scope::Handle,
-        b'#' => Scope::Tag,
-        _ => return Ok(Parsed::Unscoped(query)),
+    let (scope, rest) = if let Some(rest) = query.strip_prefix('@') {
+        (Scope::Handle, rest)
+    } else if let Some(rest) = query.strip_prefix('#') {
+        (Scope::Tag, rest)
+    } else {
+        return Ok(Parsed::Unscoped(query));
     };
-    // Both operators are one ASCII byte, so slicing past it stays on a
-    // character boundary.
-    let rest = &query[1..];
     let (name, remainder) = match rest.split_once(char::is_whitespace) {
         Some((name, remainder)) => (name, Some(remainder.trim()).filter(|r| !r.is_empty())),
         None => (rest, None),
