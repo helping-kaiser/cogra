@@ -31,7 +31,7 @@ import org.robolectric.annotation.Config
  * A SENSITIVE VIDEO POST'S DETAIL, end to end: the real [PostDetailScreen],
  * its detail clip, and [VideoStage]'s one player.
  *
- * The pinned-clip veil ruling (jakob 2026-09-24): the clip above the
+ * The detail-clip veil ruling (jakob 2026-09-24): the clip above the
  * card wears ITS OWN veil in place — never demoted into the card — with no
  * transport under it, and it shares ONE scope with the card body beneath, so
  * one tap reveals both. A veiled clip is out of the stage (backlog item 103):
