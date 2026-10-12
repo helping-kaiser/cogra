@@ -8,7 +8,7 @@
 // parameters, so the reply's seal opens the two-axis field the board draws.
 //
 // THE GEOMETRY IS THE SHARED ONE. `pad-geometry` already owns "where travel
-// lands in the value field" for the press-and-hold pad on every card, and it is
+// lands in the value field" for the stance pad on every card, and it is
 // parameterised by the knob it is drawn with — so this pad passes its own 24px
 // knob rather than forking the module. The board's knob sits at 55%/45% for
 // +0.10 / +0.10, which is `padPercentOf` exactly: the board and the code are

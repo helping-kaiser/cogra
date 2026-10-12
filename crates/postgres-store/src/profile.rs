@@ -81,5 +81,5 @@ pub async fn insert_profile_version(
     )
     .execute(&mut **tx)
     .await?;
-    crate::search::refresh_actors(tx, &[actor_id]).await
+    Ok(())
 }

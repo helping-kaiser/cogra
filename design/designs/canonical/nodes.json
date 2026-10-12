@@ -288,6 +288,7 @@
         "changeEmail.commit.reason": [],
         "changeEmail.header": [],
         "changeEmail.header.back": [],
+        "changeEmail.interim": [],
         "changeEmail.note": [],
         "changeEmail.pair": [],
         "changeEmail.pair.codeLabel": [],
@@ -2532,7 +2533,8 @@
         ],
         "postDetail.header": [],
         "postDetail.header.back": [],
-        "postDetail.header.menu": []
+        "postDetail.header.menu": [],
+        "postDetail.newerVersion": []
       }
     },
     "PostDetailHidden": {

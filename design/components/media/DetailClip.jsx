@@ -4,8 +4,8 @@ import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
 
 /* THE DETAIL CLIP (readme §13, the reel round; the clip detail rulings) — the
    top of a video post's detail view, and what the stream's squish morph leaves
-   behind: the clip shrinks out of the stream to the top of the screen, still
-   playing, and the post rises beneath it.
+   behind: the clip shrinks out of the stream to the head of the post's detail,
+   still playing, and the post rises beneath it.
 
    IT SITS ABOVE THE CARD, not inside it, which is why the author chip leads the
    CARD on that surface rather than the screen. On every other surface the chip

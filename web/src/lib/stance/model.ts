@@ -15,13 +15,14 @@ export type StancePair = {
 export const DIMENSION_MIN = -1;
 export const DIMENSION_MAX = 1;
 
-/** The pad opens here, untilted toward either direction (design.md §8.3). */
+/** The origin: no lean in either direction. */
 export const ORIGIN: StancePair = { pDirected: 0, pInterest: 0 };
 
 /**
- * What a plain tap commits — the repo-wide low-defaults policy, so
- * stronger stances stay expressible (design.md §8.3, invitations.md §3).
- * The low default belongs to the tap, never to the considered gesture.
+ * The low default: what a press-and-hold commits, and where the pad
+ * opens — the repo-wide low-defaults policy, so stronger stances stay
+ * expressible (design.md §8.3, invitations.md §3). The name keeps the
+ * shared constants' `stance.tapDefault` key it is pinned against.
  */
 export const TAP_DEFAULT: StancePair = { pDirected: 0.1, pInterest: 0.1 };
 

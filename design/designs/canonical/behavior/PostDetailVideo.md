@@ -61,3 +61,5 @@ WHEN the fullscreen viewer closes GIVEN the viewer's clip was playing -> the det
 WHEN the fullscreen viewer closes GIVEN the viewer's clip was paused -> the detail's clip stands paused at the position the viewer's clip reached AND NEVER the clip starts over
 
 WHEN the phone turns to landscape GIVEN the detail holds a landscape clip -> the fullscreen viewer opens on the clip, filling the turned screen
+
+ALWAYS the detail holds the post as it opened and answers a change to the post, its tags or its citations with PostDetail's line Edited since you opened it — tap for the newest version. under the header, in the page's flow, a redaction never held behind it

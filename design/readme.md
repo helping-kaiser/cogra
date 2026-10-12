@@ -465,7 +465,7 @@ inventing one:
 | The pad's bloom | the dialog's entrance at the pad's parked spot — 200ms fade and 8px rise — with the wash at the scrim's 200ms; closing is the reverse |
 | The scrim | 200ms linear, with the surface it belongs to |
 | The media handover, feed to detail and back | a shared element: the media frame persists in place while the chrome fades around it (M3's container transform), 300ms. A post with no media takes the forward motion |
-| The reel's squish, through the score's door | the clip, still playing, moves to the top of the screen and the post rises beneath it — a shared element, 300ms, never a new page |
+| The reel's squish, through the score's door | the clip, still playing, moves to the head of the post's detail and the post rises beneath it — a shared element, 300ms, never a page sliding in |
 | The collapsing top | a 200ms `translateY(-110%)` exit — it hides only once half its own slot has scrolled past, and returns after about a third of a screen of accumulated upward scroll, or at once when the surface reaches its hard top |
 | In place — `More`, `View n replies`, a row leaving and the rows closing up, the veil's reveal, the face after `Set`, the snackbar coming and going | height and opacity at `--duration-short-4`, `--ease-standard`; nothing travels in from elsewhere |
 | `Back to top` | the platform's smooth scroll to the top |
@@ -819,7 +819,7 @@ is a different thing from a piece the apps have not reached yet.
 | `components/states/` | `EmptyState`, `LoadingState`, `ComingSoonCard` |
 | `components/honesty/` | `PendingMarker`, `EditedMarker`, `TransportError`, `SigningPending`, `NoticePanel`, `NoticeLine`, `RedactedContent`, `SensitiveVeil`, `SensitiveScope` |
 | `components/stance/` | `StanceControl`, `StancePad`, `StanceReadout`, `OwnStanceReadout`, `StanceValue`, `StanceStanding`, `StanceLandingLine`, `StanceSlider`, `StanceAlternates`, `HelpLine`, `SeveranceConfirm` |
-| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelCaption` |
+| `components/media/` | `MediaAttachment`, `MediaGallery`, `MediaDisc`, `PagerDots`, `MediaViewer`, `VideoTransport`, `Timeline`, `SeekLine`, `DetailClip`, `ReelRail`, `ReelRailItem`, `ReelRailScore`, `ReelPlate`, `ReelCaption` |
 | `components/proposed/` | `ExplainableNumber` — **not shipped**, see §7.1 |
 
 The pair a component is documented by is its **module file's**: every
@@ -2661,9 +2661,10 @@ item 33, jakob's rulings the same day).
   rides above the bottom bar rather than under it.
 - **The stream carries portrait clips only** — clips taller than they
   are wide. Square and landscape clips keep the ordinary grammar, a
-  tap to their post. **It is the default feed narrowed to them**: the
-  same graph, the same ranking, a mechanical filter, and **no second
-  algorithm**. Nothing labels it, because a header saying "your feed"
+  tap to their post. **It is the list it was opened from narrowed to
+  them**, in that list's order — the feed, History's rows, a profile's
+  posts (jakob 2026-10-12): the same graph, the same order, a mechanical
+  filter, and **no second algorithm**. Nothing labels it, because a header saying "your feed"
   is the reassurance only a product that ranks two ways needs. What
   says it instead is the **score on the rail** — the reader's own
   reach into this post, the same number the card wore.
@@ -2672,9 +2673,10 @@ item 33, jakob's rulings the same day).
   expands back into the stream with the reader's place held.
 - **The detail door on a reel is the score element** — the exact
   element a feed card wears, so the way in is a thing the reader has
-  already met. Tapping it **squishes the clip to the top of the
-  screen**, still playing, and the post rises beneath it: a state
-  change, never a page portal. On a card the same element opens the
+  already met. Tapping it **squishes the clip to the head of the post's
+  detail**, still playing, and the post rises beneath it: a shared-element
+  morph, never a page sliding in. The detail it lands on is the ordinary
+  one, its clip scrolling with the page (*The clip detail rulings*). On a card the same element opens the
   score drill-down (item 13) — one element, two surfaces, two
   destinations.
 - **The rail, top to bottom: author · stance · comments · share ·
@@ -2733,7 +2735,9 @@ item 33, jakob's rulings the same day).
   the post, media in the post opens the frame — or the transport's own
   fullscreen toggle, which is the same door. It is **the whole surface
   on black with nothing behind it**: a viewer you can still read a card
-  through is not full screen. Nothing is cut there —
+  through is not full screen. The black ends below the system status bar,
+  which is never the app's to paint — the stream's black and washes stop
+  there too. Nothing is cut there —
   it is the surface every crop in the product is measured against — a
   picture pinch-zooms and **the gallery's swipe and its dots** carry
   over, dots only, no arrows (the pager ruling holds here too: arrows
@@ -4957,12 +4961,13 @@ are reading about.
   and the way down is `FactRow`'s own action slot. `PathTrace` is the one
   genuinely new drawing, and it exists because no master's leading slot
   holds a chain.
-- **The aged-out state is content, not a tap.** The score opens the same
-  board in the state the dust floor leaves a post whose every path's last
-  opinion has decayed past it — `TagPageEmpty`'s arrangement exactly. It
-  is not `EmptyState`: that master says "nothing here yet" and offers the
-  action that fills it, and here something *was* here and nothing is
-  owed.
+- **The moved-on state is content, not a tap.** The score opens the same
+  board in the state its fetch leaves it when that fetch finds no paths —
+  the cover, the dash, the quiet line — `TagPageEmpty`'s arrangement
+  exactly (the trigger and the dash ruled 2026-10-12, *The slice-3
+  round*). It is not `EmptyState`: that master says "nothing here yet"
+  and offers the action that fills it, and here something *was* here and
+  nothing is owed.
 
 **The opinions list is the profile's own page, mirrored onto content**
 and ungated — everyone can check every post and comment, the way
@@ -9653,6 +9658,83 @@ and two spots on the transport's bar could not grow to 48dp.
   down from its track's top through the bar's lower half and the
   gesture-zone inset to the frame's bottom edge (`Timeline hitBelow`),
   so the clip's own tap above it stays whole. The ink does not move.
+
+### The slice-3 round — 2026-10-12
+
+jakob ruled the fourteen items the slice-3 packets (feed-card rework, the
+stream, the score readout) and the implementation loop raised, delegating
+the smaller set to the packets' written recommendations. The words each
+draw mints are drafted and wait for jakob's review (copy-voice marks
+each).
+
+- **The quiet note carries its weight.** `QuietNote` sets label-small's
+  500, which both clients already render; every board re-renders.
+- **The email change's half-way state is drawn.** `ChangeEmailConfirm`'s
+  `confirmed` chip draws the code's side landed: no field, no `Confirm
+  the code`, and one line under the pair, `Done on this side — now open
+  the link at` the new address. `Email changed to …` answers the confirm
+  press only; a return that finds the change applied says it with the
+  Email row alone.
+- **A detail holds what was opened.** When a fresh read finds the post
+  changed, one line stands in the page's flow between the header and the
+  post (`PostDetail`'s `read` chip), and its tap swaps the newest version
+  in place. A change to the post's tags or citations raises the same line
+  in the same words: on the graph those are acts of their own, but the
+  reader is owed the newer state either way, and one rule needs no
+  taxonomy. A redaction never waits behind it.
+- **The status bar is the system's.** The viewer's black and the stream's
+  black and washes end below it and never paint its strip — the one
+  amendment to the viewer's black-to-the-edges. Boards stay the
+  inset-zero case (*The viewer-grammar close*).
+- **The stream is the list it was opened from**, narrowed to its portrait
+  clips in that list's order — the feed, History, a profile's posts. It
+  pages vertically both ways from the tapped clip, never wraps and never
+  moves on by itself; the last clip carries `That's the last clip here.`
+  at its caption's head, and a load that does not come keeps the clip
+  playing with `Couldn't load more` and `Retry` there instead.
+- **The stream's other faces** ride `Reel`'s `state` chip. Under
+  suppressed autoplay the clip stands paused on its cover with the card's
+  play disc in the sound disc's corner. The rail's score is always the
+  door: the figure, the dash, or — still settling — the bare glyph with
+  `Still settling` under it, under Ranked and Newest alike. A hold that
+  did not sign, or that the write rule refused, says so beside the face —
+  the row the card would carry it on does not exist over a clip. Every
+  such line stands on the stream's plate (`ReelPlate`), the wash's black
+  at 60 %, and never fades on a timer.
+- **No target on the stream falls below 48dp.** The seek line keeps its
+  3px ink on the bottom bar and its target rises 48px from the track
+  (`Timeline hitAbove`, the transport's `hitBelow` mirrored); the caption
+  moves up to stand 66px above the bar, so `More`'s own target meets the
+  seek line's without overlapping (rulings 92 and 101).
+- **The score is the reader's last feed fetch.** A card's and the rail's
+  figure is what that fetch computed; the score's tap is the only fetch of
+  one thing's standing, and nothing is checked in the background. When
+  the trace's fetch finds no paths it stands on the dash and `The paths
+  that carried it here have moved on.`; back on the feed the card and the
+  rail read the dash too, the door standing, and the next feed fetch
+  dissolves it. The vocabulary is one: a figure is what a fetch computed,
+  the bare slot is settling's, the dash is no computed figure, and zero
+  is severance's alone. A thing still settling opens the same trace on
+  its dash with `Still settling — its paths count once it lands.`
+- **The trace speaks a borrowed view in the third person.** Under a
+  guest's or an applicant's borrowed view the paths start at the account
+  the view is borrowed from, so the trace names it, the band's way:
+  `Every path here starts with an opinion @mira gave.` (`FeedEntry`'s
+  `view` chip), its face leading every path.
+- **A step is one record, said per family**, a two-legged record naming
+  what it passed through, the trace showing only people and the reached
+  thing's mark; and a step whose
+  records add up past an opinion's limit says it carries the limit, the
+  unclipped sum in the exact values.
+- **Smaller lines**: each did-not-land family names itself, with
+  `Dismiss` alone; a tag card reaches the reader through the first person
+  on each strongest path; a refused report answers with the shared
+  `That didn't send. Try again.`; the Settings switch's On line is `On,
+  sensitive content stands unveiled wherever you read.`
+- **The gate**: edges **2025 → 2029** (`Reel`'s play disc and two
+  `Retry`s, `PostDetail`'s line), 4 gaps, flows 225 resolved; the
+  registry **75 / 2922 → 75 / 2924** — `changeEmail.interim` and
+  `postDetail.newerVersion` added, nothing removed or changed.
 
 ---
 

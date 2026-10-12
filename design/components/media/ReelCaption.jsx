@@ -26,7 +26,11 @@ import { SensitiveVeil } from "../honesty/SensitiveVeil.jsx";
    around the word, which keeps its ink. There is no real option; the floor is
    ruled. */
 
-export function ReelCaption({ handle, title, description, bottom = 86, onMore, sensitive = false }) {
+/* THE STREAM'S OWN LINE RIDES AT THE CAPTION'S HEAD (`notice`, jakob
+   2026-10-12, the slice-3 round): the last clip's line and the load that did
+   not come stand on a `ReelPlate` above the handle, so the caption keeps its
+   place and the line reads first. */
+export function ReelCaption({ handle, title, description, bottom = 86, onMore, sensitive = false, notice }) {
   // The veil wraps the clamped line, never the text inside it — the clamp clips
   // first, so the blur's halo stays soft on every side (PostCard's reason).
   const veiled = (node) => (sensitive ? <SensitiveVeil kind="text">{node}</SensitiveVeil> : node);
@@ -45,6 +49,7 @@ export function ReelCaption({ handle, title, description, bottom = 86, onMore, s
         textShadow: "0 1px 4px rgba(0,0,0,0.6)",
       }}
     >
+      {notice}
       {handle && (
         <span style={{ fontSize: "var(--text-label-large)", fontWeight: "var(--text-label-large--font-weight)" }}>@{handle}</span>
       )}

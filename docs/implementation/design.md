@@ -106,10 +106,13 @@ text lands on `body-large`.
 
 The web tests parse these passages (`anchors.test.ts`, `landing.test.ts`, `pad-parking.test.ts`); where one differs from `design/`, `design/` rules.
 
-A single tap target at rest. A plain tap commits a modest
+A single target at rest. A tap blooms the pad and stages
+nothing; a press-and-hold of 500ms commits a modest
 positive — **`(+0.1, +0.1)`**, per the repo-wide low-defaults
 policy: defaults sit low so stronger stances stay expressible
-([invitations.md §3](../primitive/invitations.md)).
+([invitations.md §3](../primitive/invitations.md)). The pad
+opens at that same default, so `Set` on an unmoved pick signs
+exactly what the hold would.
 
 **The pad lives at one fixed spot: the lower centre of the
 viewport** — the thumb-comfort zone — the same place every

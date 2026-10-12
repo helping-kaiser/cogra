@@ -140,6 +140,15 @@ glyph used as punctuation.
   and the trigger reads the deviation as `settled only` (blessed
   2026-10-01, jakob).
 - `Edited` — an edit, marked softly.
+- `Edited since you opened it — tap for the newest version.` — the one
+  line a post's detail raises when a fresh read finds the post, its tags
+  or its citations changed while it was being read (`PostDetail`'s
+  `read` chip). It says what happened and offers the newer state in the
+  same breath; the detail never changes under the reader on its own. A
+  tag or citation change is not an edit on the graph, and the line still
+  says *Edited*: the reader's word for "this is not what you opened",
+  one rule with no taxonomy (jakob 2026-10-12). (*new 2026-10-12, drafted
+  — its wording jakob's at review*.)
 - `Nothing is signed until Set.` — the opening of the first-ever pad's
   second coaching line, and of every pad help that says it.
 - `Signing needs your key, which isn't in this browser — the write waits
@@ -655,7 +664,18 @@ recorded so the registry is whole.
   the coast road — 2 pictures.` (`ComposeSeal` and its family).
 - **A post that didn't land** (`ComposeExpired`) — under `Your post didn't
   land`, `"Salt maps of the coast road" couldn't finish settling. Nothing
-  was spent — your draft is saved.` with `Open the draft`.
+  was spent — your draft is saved.` with `Open the draft`. Every other
+  family's notice keeps the shape and names itself (FC-G6): `Your opinion
+  didn't land` over `Your opinion of @ada couldn't finish settling.
+  Nothing was spent.`; `Your comment didn't land` over `Your comment on
+  "The long way home" couldn't finish settling. Nothing was spent.`;
+  `Your edit didn't land` over `Your edit of "Salt maps of the coast
+  road" couldn't finish settling. Nothing was spent.`; `Your tag didn't
+  land` over `#saltmaps on "The long way home" couldn't finish settling.
+  Nothing was spent.`; `Your citation didn't land` over `Your citation of
+  "The long way home" couldn't finish settling. Nothing was spent.` —
+  each with `Dismiss` alone, no draft being promised (*new 2026-10-12,
+  drafted — their wording jakob's at review*).
 - **The reply** — the composer's note `Words first — pictures can join
   them.`, once a picture is staged `Words first — pictures can join them,
   and they upload while you write.`, on a clip `Words first — a video can
@@ -1047,7 +1067,11 @@ spelling — one `License terms` everywhere, never the British spelling:
   over one body line, `It goes to the people who run CoGra for a look.`
   (*drafted 2026-10-09; the commit mails the report for MVP and the line
   names no mechanism*), the pair `Report` · `Cancel` and the snackbar
-  `Reported.` (**blessed**). It never connects to Report-a-problem.
+  `Reported.` (**blessed**). It never connects to Report-a-problem. A
+  report the server refuses — the day's reports spent, or the thing gone —
+  answers as no answer does, the sheet staying and the shared snackbar
+  `That didn't send. Try again.` (item 95's line, the interim for FC-G15;
+  *new 2026-10-12 as a placement — the line itself blessed*).
 - `Save` while a thing is not kept, `Unsave` while it is — one word
   either way (jakob 2026-09-11). It is the FIRST row of every menu that
   has it, a post's, a comment's, a person's and your own post's alike,
@@ -1172,6 +1196,15 @@ that was no, and no answer at all:
   arrive, on `ProfileMoreFailed`: the fact at body-medium
   `text-secondary` (rows are already on screen, so the missing page
   means stale, not gone), the way out an `InlineAction` ending the line.
+  The stream says the same two words when its next clips do not come, at
+  its caption's head on the stream's plate, the clip on screen playing on
+  (`Reel`'s `fault`; RL-G13).
+- `That's the last clip here.` — the stream's last clip, at its caption's
+  head: a fact, no way on, since the list simply ends (`Reel`'s `end`;
+  RL-G4; *new 2026-10-12, drafted — its wording jakob's at review*). A
+  hold that did not sign over a clip keeps the row line's words, `That
+  didn't sign.` · `Retry` and `You can't sign right now.`, beside the
+  face (RL-G8).
 
 ## Faults by code
 
@@ -1652,7 +1685,9 @@ sentence; copy-voice follows the board, blessed (jakob 2026-10-05).)*
 **Sensitive content**: one switch, `Always unveil sensitive content`
 (jakob's own wording, 2026-10-09 — never a sheet, never a pair of
 rows), off by default, with the switch-exception second line
-`Off, the veil stays until you tap it.` and the group footnote
+`Off, the veil stays until you tap it.` — and switched on, `On,
+sensitive content stands unveiled wherever you read.` (*new 2026-10-12,
+ruled (jakob 2026-10-12)*) — and the group footnote
 `This choice follows your account to every device.` — the one settings
 group whose value travels (the People group's hiding travels too, but
 its rows are doors, not switches). The account-travel sentence is the
@@ -1893,8 +1928,14 @@ your account keeps the address it has, and a reset still goes there.`
 - A spent mail budget answers the request and `Resend` with
   `RATE_LIMITED`'s line in place (*Faults by code*), above the
   commitment; nothing is sent (jakob 2026-10-06).
+- With the code confirmed and the link still owed, one quiet line under
+  the pair says where the errand went: `Done on this side — now open the
+  link at sol@ferreira.studio.` (*new 2026-10-12, ruled (jakob
+  2026-10-12)*).
 - The change that lands answers `Email changed to sol@ferreira.studio.`
-  over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*).
+  over settings (*new 2026-10-05, blessed (jakob 2026-10-05)*) — the
+  confirm press's answer only; a return that finds the change applied
+  shows no snackbar, the Email row's new address saying it.
 - The change past its window, as the fault line above the commitment:
   `This change ran out before both sides landed. Your email stays as it
   is — start again from settings.`
@@ -3031,10 +3072,48 @@ behind it` (`RankPath`); one step opens under `Your opinion of @ada — the
 first of this path's two steps.`, its `Behind it` reading `2 opinions`
 (`RankHop`).
 
-**The aged-out line**: `The paths that carried it here have moved on.`
+**The moved-on line**: `The paths that carried it here have moved on.`
 One line, and no offer of anything to do about it — nothing is owed and
 nothing is broken. It is deliberately not an empty-list line: something
-*was* here.
+*was* here. It stands when the trace's fetch finds no paths, under the
+dash — no computed figure, never `0.00`, since zero is severance's alone
+(jakob 2026-10-12).
+
+**The settling trace**: `Still settling — its paths count once it lands.`
+under the dash, for a thing not yet landed (`FeedEntryMoved`'s `cause`
+chip; SR-G2) — the pending marker's own words, then what the reader
+waits for (*new 2026-10-12, drafted — its wording jakob's at review*).
+
+**The borrowed view's twin** (jakob 2026-10-12, SR-G3): under a borrowed
+view the paths start at the account the view is borrowed from, so the
+first person would be false. The trace speaks that account by handle, the
+band's grammar: `Every path here starts with an opinion @mira gave.`; a
+step `@mira's opinion of @ada`; the fold `@mira has given @ada two
+opinions. They add up to one, and that one is what carries.` — the pad's
+clause left out, the pad being the reader's; the floor `The two records
+behind @mira's opinion of @ada.`; spoken, `@mira, then @ada, then what
+reached you` (*new 2026-10-12, drafted — their wording jakob's at
+review*).
+
+**A step in words, every family** (SR-G4/G5): one record is one step,
+however many legs it has, and it names what it passed through. An
+opinion `Your opinion of @ada` / `@ada's opinion of @tobias`; a publish
+`@ada published it`, a comment reached through its writing `@ada wrote
+it`; a comment passed through to what it answers `@ada replied to it`; a
+citation `@ada cited it in "The long way home"`; a tag `@ada tagged it
+#saltmaps`; a feeling about a topic `How you feel about #saltmaps` /
+`How @ada feels about #saltmaps` — the pad's own register, never the
+word *Affinity*. *It* is always the thing the path reached (*new
+2026-10-12, drafted — their wording jakob's at review*).
+
+**A step that hits the limit** (SR-G6): the fold sums, then stops at the
+limit an opinion can reach, so its records can add up past what the step
+carries. The fold's note closes with `Added up, they go past the limit
+an opinion can reach, so the step carries the limit.`, the records' with
+`Added up, these go past the limit an opinion can reach, so the step
+carries the limit.`, and the exact values show the unclipped sum beside
+the step's pair (*new 2026-10-12, drafted — their wording jakob's at
+review*).
 
 **The opinions list.** The post's door reads `8 opinions on this post`
 (`1 opinion on this post` in the singular), and those words are its

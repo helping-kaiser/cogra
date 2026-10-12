@@ -22,6 +22,8 @@ export interface ReelCaptionProps {
    * post's one `SensitiveScope`, so wrap the stream's clip and caption in it.
    */
   sensitive?: boolean;
+  /** The stream's own line — the last clip's, or the load that did not come — on a `ReelPlate` at the caption's head. */
+  notice?: React.ReactNode;
 }
 
 export declare function ReelCaption(props: ReelCaptionProps): JSX.Element;
