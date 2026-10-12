@@ -162,7 +162,7 @@ export function PostCard({
   onLinkCopied,
   citedBy = 0,
   onOpenCitedBy,
-  mediaPinned = false,
+  mediaAbove = false,
   onOpenMedia,
   node,
 }: {
@@ -203,16 +203,16 @@ export function PostCard({
   onOpenCitedBy?: () => void;
   /**
    * The surface is already showing this post's media above the card, so the
-   * card draws none — the video detail, where "THE CLIP IS PINNED ABOVE THE
-   * CARD, not inside it, which is why the author chip leads the card rather
+   * card draws none — the video detail, where "THE CLIP STANDS ABOVE THE
+   * CARD, not inside it — which is why the author chip leads the card rather
    * than the screen" (`screens/PostDetailVideo.jsx:7-10`).
    *
    * It moves the GALLERY only. Whether the post bears media is still what
    * decides everything else the card reads off it — words xor media above all:
-   * the clip is the body wherever it is drawn, so pinning it out of the card
+   * the clip is the body wherever it is drawn, so standing it above the card
    * cannot turn a caption into one.
    */
-  mediaPinned?: boolean;
+  mediaAbove?: boolean;
   /**
    * Opens the fullscreen viewer on one attachment of this post.
    *
@@ -252,7 +252,7 @@ export function PostCard({
   const redacted = payloadIsRedacted(post);
   const media = !redacted && hasMedia(post);
   // What the card DRAWS, as distinct from what the post bears.
-  const drawsMedia = media && !mediaPinned;
+  const drawsMedia = media && !mediaAbove;
   const veiled = !redacted && bodyIsSensitive(post);
   const title = redacted ? null : (post.title.value ?? null);
   // WORDS XOR MEDIA: the picture is the body, so a media post draws no

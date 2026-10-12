@@ -19,7 +19,7 @@ import { intersectEach, suppressesAutoplay } from "@/test/media-env";
 import * as clipMemory from "./clip-memory";
 import { MediaViewer } from "./media-viewer";
 import { resetMuteForTests, setMuted } from "./mute";
-import { PinnedClip } from "./pinned-clip";
+import { DetailClip } from "./detail-clip";
 import { StageHost } from "./stage-host";
 import { VideoPlayer } from "./video-player";
 import {
@@ -104,14 +104,14 @@ function Detail({ src = CLIP }: { src?: string }) {
   const [viewer, setViewer] = useState(false);
   return (
     <>
-      <PinnedClip
+      <DetailClip
         src={src}
         mimeType="video/mp4"
         poster={COVER}
         mediaId={ID}
         behindViewer={viewer}
         onOpenViewer={() => setViewer(true)}
-        testId="pinned"
+        testId="detail"
       />
       {viewer && (
         <MediaViewer
@@ -129,9 +129,9 @@ function Route({ at, src }: { at: "card" | "detail"; src?: string }) {
   return at === "card" ? <Card src={src} /> : <Detail src={src} />;
 }
 
-const pinned = () => video("pinned-media");
+const detailClip = () => video("detail-media");
 const viewerClip = () => video("viewer-video");
-const openViewer = () => fireEvent.click(screen.getByTestId("pinned-media-transport-fullscreen"));
+const openViewer = () => fireEvent.click(screen.getByTestId("detail-media-transport-fullscreen"));
 const closeViewer = () => fireEvent.click(screen.getByTestId("viewer-close"));
 
 /** A card whose clip is playing at `time`, with a decoded frame there. */
@@ -145,37 +145,37 @@ function playingCard(time: number) {
 }
 
 describe("the element survives the presentation swap", () => {
-  it("card → detail: the pinned clip IS the card's element, playing on from its frame with no seek, no pause, no still", () => {
+  it("card → detail: the detail clip IS the card's element, playing on from its frame with no seek, no pause, no still", () => {
     const { rerender } = playingCard(5);
     const element = video("card");
     const log = watch(element);
 
     rerender(<Route at="detail" />);
 
-    expect(pinned()).toBe(element);
+    expect(detailClip()).toBe(element);
     expect(element.isConnected).toBe(true);
     expect(carriedOver(element)).toBe(true);
     expect(element.currentTime).toBe(5);
     expect(element.paused).toBe(false);
     // The still finds nothing to cover: the element never stopped painting.
-    expect(screen.queryByTestId("pinned-media-still")).toBeNull();
+    expect(screen.queryByTestId("detail-media-still")).toBeNull();
     // The leaving feed's stage did not freeze it on the way out.
     expect(log).toEqual({ seeks: 0, pauses: 0, plays: 0 });
     // It wears the detail's presentation: the transport's programme stops at
     // its end, and the transport reads it as playing.
     expect(element).not.toHaveAttribute("loop");
-    expect(screen.getByTestId("pinned-media-transport-play")).toHaveAccessibleName(/pause/i);
+    expect(screen.getByTestId("detail-media-transport-play")).toHaveAccessibleName(/pause/i);
 
     // The detail's first measurement elects it, and it simply plays on.
-    onScreen("pinned-media");
+    onScreen("detail-media");
     expect(element.paused).toBe(false);
     expect(log).toEqual({ seeks: 0, pauses: 0, plays: 0 });
   });
 
-  it("detail → back: the card IS the pinned clip's element, and the feed's election keeps it playing", () => {
+  it("detail → back: the card IS the detail clip's element, and the feed's election keeps it playing", () => {
     const { rerender } = render(<Route at="detail" />);
-    onScreen("pinned-media");
-    const element = pinned();
+    onScreen("detail-media");
+    const element = detailClip();
     element.currentTime = 9;
     decoded(element);
     const log = watch(element);
@@ -191,10 +191,10 @@ describe("the element survives the presentation swap", () => {
     expect(log).toEqual({ seeks: 0, pauses: 0, plays: 0 });
   });
 
-  it("pinned clip → viewer → pinned clip: one element the whole way, never paused, never sought", () => {
+  it("detail clip → viewer → detail clip: one element the whole way, never paused, never sought", () => {
     render(<Detail />);
-    onScreen("pinned-media");
-    const element = pinned();
+    onScreen("detail-media");
+    const element = detailClip();
     element.currentTime = 6;
     decoded(element);
     const log = watch(element);
@@ -204,16 +204,16 @@ describe("the element survives the presentation swap", () => {
     expect(viewerClip()).toBe(element);
     expect(element.paused).toBe(false);
     expect(element.currentTime).toBe(6);
-    // Behind the viewer the pinned clip holds no element at all, so nothing
+    // Behind the viewer the detail clip holds no element at all, so nothing
     // of it can play there (PostDetailVideo.md:47).
-    expect(screen.queryByTestId("pinned-media")).toBeNull();
+    expect(screen.queryByTestId("detail-media")).toBeNull();
     expect(screen.queryByTestId("viewer-video-still")).toBeNull();
 
     element.currentTime = 11;
     log.seeks = 0;
     closeViewer();
 
-    expect(pinned()).toBe(element);
+    expect(detailClip()).toBe(element);
     expect(element.currentTime).toBe(11);
     expect(element.paused).toBe(false);
     expect(log).toEqual({ seeks: 0, pauses: 0, plays: 0 });
@@ -231,9 +231,9 @@ describe("the playback state carries with the element", () => {
     element.pause();
 
     rerender(<Route at="detail" />);
-    onScreen("pinned-media");
+    onScreen("detail-media");
 
-    expect(pinned()).toBe(element);
+    expect(detailClip()).toBe(element);
     expect(element.paused).toBe(true);
     expect(element.currentTime).toBe(3);
   });
@@ -246,14 +246,14 @@ describe("the playback state carries with the element", () => {
 
     rerender(<Route at="detail" />);
 
-    expect(pinned()).toBe(element);
+    expect(detailClip()).toBe(element);
     expect(element.muted).toBe(false);
   });
 
   it("an arrival its new surface does not elect freezes on the frame it reached, and the elected clip plays", () => {
     const { rerender } = render(<Route at="detail" />);
-    onScreen("pinned-media");
-    const element = pinned();
+    onScreen("detail-media");
+    const element = detailClip();
     element.currentTime = 4;
 
     rerender(
@@ -288,7 +288,7 @@ describe("the pool: what is parked, and what is taken", () => {
     expect(element.isConnected).toBe(false);
 
     render(<Detail />);
-    expect(pinned()).toBe(element);
+    expect(detailClip()).toBe(element);
   });
 
   it("a clip that never moved is not parked: its next presentation builds its own element", () => {
@@ -299,8 +299,8 @@ describe("the pool: what is parked, and what is taken", () => {
 
     rerender(<Route at="detail" />);
 
-    expect(pinned()).not.toBe(element);
-    expect(pinned()).toHaveAttribute("poster", COVER);
+    expect(detailClip()).not.toBe(element);
+    expect(detailClip()).toHaveAttribute("poster", COVER);
   });
 
   it("evicts the oldest parked element past the bound, and lets its media go", () => {
@@ -348,9 +348,9 @@ describe("the pool: what is parked, and what is taken", () => {
     clipMemory.forgetList([ID]);
     render(<Detail />);
 
-    expect(pinned()).not.toBe(element);
-    expect(pinned().currentTime).toBe(0);
-    expect(pinned()).toHaveAttribute("poster", COVER);
+    expect(detailClip()).not.toBe(element);
+    expect(detailClip().currentTime).toBe(0);
+    expect(detailClip()).toHaveAttribute("poster", COVER);
   });
 
   it("a different source for the same clip is not carried", () => {
@@ -359,7 +359,7 @@ describe("the pool: what is parked, and what is taken", () => {
 
     rerender(<Route at="detail" src="https://media.example/clip-720.mp4" />);
 
-    expect(pinned()).not.toBe(element);
+    expect(detailClip()).not.toBe(element);
   });
 
   it("an element the pool never handed out is never taken — not a detached one holding the clip's opening frame (FX-7)", () => {
@@ -371,11 +371,11 @@ describe("the pool: what is parked, and what is taken", () => {
 
     render(<Detail />);
 
-    expect(pinned()).not.toBe(stray);
-    expect(carriedOver(pinned())).toBe(false);
+    expect(detailClip()).not.toBe(stray);
+    expect(carriedOver(detailClip())).toBe(false);
     // The player builds its element in the commit, never while rendering: it
     // is in the document by the time anything asks what it can paint.
-    expect(pinned().isConnected).toBe(true);
+    expect(detailClip().isConnected).toBe(true);
   });
 
   it("a surface never acts on an element another presentation holds", () => {
@@ -400,9 +400,9 @@ describe("the still stays the fallback where the pool has nothing", () => {
 
     rerender(<Route at="detail" src="https://media.example/clip-720.mp4" />);
 
-    expect(pinned()).not.toBe(element);
-    expect(pinned().readyState).toBe(0);
-    expect(screen.getByTestId("pinned-media-still")).toBeInstanceOf(HTMLCanvasElement);
-    expect(pinned().currentTime).toBe(5);
+    expect(detailClip()).not.toBe(element);
+    expect(detailClip().readyState).toBe(0);
+    expect(screen.getByTestId("detail-media-still")).toBeInstanceOf(HTMLCanvasElement);
+    expect(detailClip().currentTime).toBe(5);
   });
 });

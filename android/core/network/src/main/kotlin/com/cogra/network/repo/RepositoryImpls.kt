@@ -332,6 +332,7 @@ class AccountRepositoryImpl @Inject constructor(private val client: ApolloClient
                     hasReciprocated = me.hasReciprocated,
                     invitedBy = me.invitedBy?.let { ActorRef(it.id, it.handle) },
                     vouchBackDismissed = me.vouchBackDismissed,
+                    contentFilteringSeverityLevel = me.preferences?.contentFilteringSeverityLevel,
                 ),
             )
         }

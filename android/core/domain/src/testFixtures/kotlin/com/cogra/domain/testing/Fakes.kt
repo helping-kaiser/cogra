@@ -330,6 +330,7 @@ open class ThrowingSettingsRepository : SettingsRepository {
     override suspend fun cancelEmailChange(): Outcome<AccountEmail> = throw UnsupportedOperationException()
     override suspend fun emailChangeLinkCheck(token: String): Outcome<EmailChangeLinkCheck?> =
         throw UnsupportedOperationException()
+    override suspend fun setAlwaysUnveil(on: Boolean): Outcome<Int?> = throw UnsupportedOperationException()
 }
 
 open class ThrowingOnboardingRepository : OnboardingRepository {

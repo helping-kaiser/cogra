@@ -1087,11 +1087,26 @@ the registry, rebuildable from them at any time.
 
 An untitled post has no row, and neither has a redacted value — a
 node whose current version carries a non-null `redaction_reason`
-(the explicit skip api-spec.md "Moderation" names). The store
-functions that write a source refresh the node's rows in the same
-transaction, re-deriving them from the current version, so
-"current", "untitled" and "redacted" are decided in one place per
-kind.
+(the explicit skip api-spec.md "Moderation" names).
+
+**The database maintains the table, by trigger.** Every source of an
+indexed value — `actors`, `actor_profile_versions`, `posts`,
+`post_versions`, `hashtags` — carries a row-level `AFTER INSERT OR
+UPDATE OR DELETE` trigger that re-derives the affected node's rows in
+the writing transaction, and a statement-level `AFTER TRUNCATE`
+trigger that rebuilds the kind it feeds. One derivation per kind
+decides "current", "untitled" and "redacted"; no store function writes
+the table. The duty sits in the database because a writer that forgot it
+would leave redacted or removed content findable — a silent privacy
+leak — and a trigger cannot be forgotten, whoever writes the source.
+A transaction-scoped advisory lock per node serializes concurrent
+re-derivations, so a redaction racing a rename cannot leave the
+renamed rows behind.
+
+This is the repo's only sanctioned trigger pattern, reserved for
+erasure-propagation guarantees: a derived copy of content that must
+vanish when its source is redacted or removed. Everything else keeps
+its logic in the store's functions.
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_trgm;

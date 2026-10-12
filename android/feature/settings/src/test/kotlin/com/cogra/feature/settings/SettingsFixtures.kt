@@ -29,6 +29,7 @@ internal fun account(
     keyBackupCreatedAt: Instant? = Instant.parse("2026-08-12T09:00:00Z"),
     pendingEmailChange: PendingEmailChange? = null,
     defaultLicense: LicenseChoice? = null,
+    contentFilteringSeverityLevel: Int? = null,
     sessions: List<SessionInfo> = listOf(
         SessionInfo("s2", "Pixel 8", NOW.minusSeconds(3 * 86_400), NOW.minusSeconds(2 * 86_400), false),
         SessionInfo("s1", "Pixel 6", NOW.minusSeconds(86_400), null, true),
@@ -46,6 +47,7 @@ internal fun account(
     pendingEmailChange = pendingEmailChange,
     defaultLicense = defaultLicense,
     sessions = sessions,
+    contentFilteringSeverityLevel = contentFilteringSeverityLevel,
 )
 
 /** The settings calls, scriptable per test. */
@@ -92,6 +94,15 @@ internal class ScriptedSettings : ThrowingSettingsRepository() {
     override suspend fun emailChangeLinkCheck(token: String): Outcome<EmailChangeLinkCheck?> {
         checks++
         return check
+    }
+
+    /** Each unveil save, as the switch's value; a set [saveUnveil] answers instead of the echo. */
+    val unveilSaves = mutableListOf<Boolean>()
+    var saveUnveil: Outcome<Int?>? = null
+
+    override suspend fun setAlwaysUnveil(on: Boolean): Outcome<Int?> {
+        unveilSaves += on
+        return saveUnveil ?: Outcome.Success(if (on) 0 else null)
     }
 }
 

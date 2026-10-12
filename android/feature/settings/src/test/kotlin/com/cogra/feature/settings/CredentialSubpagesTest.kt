@@ -361,6 +361,8 @@ class CredentialSubpagesTest {
         idle()
         vm.refresh()
         idle()
+        // Seam 132: a return that finds the change applied is silent — one
+        // exit, no snackbar event; the Email row's state speaks.
         assertThat(events).containsExactly(ConfirmEmailEvent.Exit(ConfirmEmailExit.Ended))
         collecting.cancel()
     }

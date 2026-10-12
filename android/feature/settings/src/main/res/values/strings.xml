@@ -59,6 +59,12 @@
     <string name="settings_people_hidden_none">None</string>
     <string name="settings_people_footnote">Hiding someone clears your own feed of them. Nothing changes for them, and their profile still opens if you go looking.</string>
 
+    <string name="settings_sensitive">Sensitive content</string>
+    <string name="settings_sensitive_unveil">Always unveil sensitive content</string>
+    <string name="settings_sensitive_unveil_off">Off, the veil stays until you tap it.</string>
+    <string name="settings_sensitive_unveil_on">On, sensitive content stands unveiled wherever you read.</string>
+    <string name="settings_sensitive_footnote">This choice follows your account to every device.</string>
+
     <string name="settings_backup">Key backup</string>
     <string name="settings_backup_recovery">Recovery code</string>
     <string name="settings_backup_recovery_made">Last created %1$s</string>
@@ -184,6 +190,7 @@
     <string name="confirm_email_reason">Waiting for the code</string>
     <string name="confirm_email_in_flight">Confirming the code…</string>
     <string name="confirm_email_note">Until both sides land your account keeps the address it has, and a reset still goes there.</string>
+    <string name="confirm_email_code_done">Done on this side — now open the link at %1$s</string>
     <string name="confirm_email_cancel">Cancel the change</string>
     <string name="confirm_email_wrong_code">That code doesn\'t check out.</string>
     <string name="confirm_email_code_disabled">Too many tries — for safety we have disabled your current code. Resend sends a fresh one.</string>
@@ -211,6 +218,8 @@
     <string name="linked_signed_out_title">Sign in to finish the change</string>
     <string name="linked_signed_out_body">This link confirms %1$s as your new address. It counts once you\'re signed in.</string>
     <string name="linked_sign_in">Sign in</string>
+    <string name="linked_dead_signed_out_body">The change it belonged to may have run out, been canceled or already happened — this link can\'t move your email anymore.</string>
+    <string name="linked_unknown_body">It isn\'t a link CoGra knows — it may be mistyped, or from a change long gone. Your email stays as it is.</string>
 
     <!-- About -->
     <string name="about_title">About CoGra</string>

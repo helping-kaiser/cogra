@@ -1,5 +1,6 @@
 package com.cogra.feature.content
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,11 +36,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -56,8 +59,9 @@ import com.cogra.core.designsystem.dataNodeSurface
 import com.cogra.core.designsystem.surfaceTopAppBarColors
 import com.cogra.core.designsystem.v2.atom.CograOverflowMenu
 import com.cogra.core.designsystem.v2.atom.LoadingState
+import com.cogra.core.designsystem.v2.media.DetailClip
+import com.cogra.core.designsystem.v2.media.MediaItem
 import com.cogra.core.designsystem.v2.media.MediaViewer
-import com.cogra.core.designsystem.v2.media.PinnedClip
 import com.cogra.core.designsystem.v2.media.SensitiveVeil
 import com.cogra.core.designsystem.v2.token.Layout
 import com.cogra.core.designsystem.v2.token.Space
@@ -511,10 +515,10 @@ private fun PostDetailBody(
     // carried: the license, the topics and the citations rode it away.
     val removed = isRemoved(post.content, post.attachments, post.attachmentsStatus)
     // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
-    // the clip leaves the card body, pins above the column still playing, and
-    // wears the full transport. A post of pictures is untouched — its gallery
-    // is still the card's body. A removed record has no clip to pin.
-    val pinned = if (removed) {
+    // the clip leaves the card body, heads the column above it, and wears the
+    // full transport. A post of pictures is untouched — its gallery is still
+    // the card's body. A removed record has no clip to raise.
+    val clip = if (removed) {
         null
     } else {
         post.attachments.firstOrNull { it.isVideo }?.toItem()
@@ -526,57 +530,57 @@ private fun PostDetailBody(
     // owns whether it is up.
     var viewerAt by rememberSaveable { mutableStateOf<Int?>(null) }
     val attachments = remember(post.attachments) { post.attachments.map { it.toItem() } }
-    // ONE SCOPE FOR THE WHOLE POST (jakob 2026-09-24, the pinned-clip veil
+    // ONE SCOPE FOR THE WHOLE POST (jakob 2026-09-24, the detail-clip veil
     // ruling; `SensitiveScope` in design/components/honesty/SensitiveVeil.jsx):
-    // the pinned clip and the card body beneath it are two veils over one
+    // the detail clip and the card body beneath it are two veils over one
     // body, so they read one revealed-state and one tap lifts both. The same
     // set the feed reads: a reader who already chose to look at this post is
     // not asked again on the way in.
     val mark = post.sensitiveMark()
     val revealed = state.reveals.isRevealed(post.id, mark)
     val reveal = { onReveal(post.id, mark) }
+    val clipVeiled = !revealed && isSensitive(post.content, post.description, post.attachmentsStatus)
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        if (pinned != null) {
-            // OUTSIDE the list, which is what "pinned" means: the body rises
-            // beneath a clip that stays put.
-            //
-            // A SENSITIVE CLIP WEARS ITS OWN VEIL IN PLACE — never demoted into
-            // the card. The veil is the post body's full face over the clip's
-            // frame, and under it the clip is out of the stage and carries no
-            // transport ([PinnedClip]).
-            SensitiveVeil(
-                veiled = !revealed && isSensitive(post.content, post.description, post.attachmentsStatus),
-                onReveal = reveal,
-                modifier = Modifier.fillMaxWidth(),
-                testTag = PINNED_VEIL_TAG,
-            ) {
-                PinnedClip(
-                    item = pinned,
+    // Never under the veil: nothing of a veiled clip plays, and the viewer
+    // would show it bare.
+    TurnToLandscapeOpensTheViewer(
+        landscapeClip = clip != null && !clipVeiled && clip.aspectRatio > 1f,
+        onTurn = { if (viewerAt == null) viewerAt = 0 },
+    )
+
+    // The post is a card here too, edge to edge with its 8dp seam — on the
+    // boards the post wears the card and the thread stands in its own sheet
+    // over it, not as a second half of this page.
+    LazyColumn(
+        state = listState,
+        modifier = Modifier
+            .fillMaxSize()
+            .testTag("detail_list"),
+        // The clip heads the column flush under the bar, as the board draws
+        // it (`PostDetailVideo.jsx:30-33`); a card alone keeps its seam.
+        contentPadding = PaddingValues(top = if (clip != null) 0.dp else Space.x2, bottom = Space.x4),
+        verticalArrangement = Arrangement.spacedBy(Space.x2),
+    ) {
+        item {
+            // THE CLIP HEADS THE COLUMN, FLUSH ON THE CARD (ruling 100,
+            // `DetailClip.prompt.md:15` — "one block, no gap between them"),
+            // and IN THE SAME ROW as the card: it scrolls with the page
+            // (PostDetailVideo.md:5), and a lazy list disposes a row scrolled
+            // out of view — a clip in a row of its own would surrender its
+            // player there and stop, where the law says it plays on (:11).
+            // The card's row is on screen for as long as any of the post is.
+            Column(modifier = Modifier.fillMaxWidth().testTag(DETAIL_BLOCK_TAG)) {
+                if (clip != null) {
                     // The clip's two routes into the viewer — the bar's
                     // fullscreen toggle and the clip's own tap (graph.json,
-                    // `PostDetailVideo` via 19 and via 3). A post carries one
-                    // clip, so the viewer opens on it.
-                    onOpenViewer = { viewerAt = 0 },
-                )
-            }
-        }
-        // The post is a card here too, edge to edge with its 8dp seam — on the
-        // boards the post wears the card and the thread stands in its own sheet
-        // over it, not as a second half of this page.
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .testTag("detail_list"),
-            contentPadding = PaddingValues(top = Space.x2, bottom = Space.x4),
-            verticalArrangement = Arrangement.spacedBy(Space.x2),
-        ) {
-            item {
+                    // `PostDetailVideo` via 19 and via 3; PostDetailVideo.md:35/37).
+                    // A post carries one clip, so the viewer opens on it.
+                    VeiledDetailClip(clip, veiled = clipVeiled, onReveal = reveal, onOpenViewer = { viewerAt = 0 })
+                }
                 DetailCard(
                     post = post,
                     removed = removed,
-                    mediaPinned = pinned != null,
+                    mediaAbove = clip != null,
                     // THE POST'S TAP OPENS THE FRAME (graph.json, `PostDetail`
                     // via 4), on the page the reader was looking at.
                     onOpenMedia = { page -> viewerAt = page },
@@ -603,6 +607,54 @@ private fun PostDetailBody(
     }
 }
 
+/**
+ * The detail clip in its own veil: a sensitive clip WEARS ITS OWN VEIL IN
+ * PLACE — never demoted into the card. The veil is the post body's full face
+ * over the clip's frame, and under it the clip is out of the stage and carries
+ * no transport ([DetailClip]; PostDetailVideoSensitive.md:3-7).
+ */
+@Composable
+private fun VeiledDetailClip(
+    clip: MediaItem,
+    veiled: Boolean,
+    onReveal: () -> Unit,
+    onOpenViewer: () -> Unit,
+) {
+    SensitiveVeil(
+        veiled = veiled,
+        onReveal = onReveal,
+        modifier = Modifier.fillMaxWidth(),
+        testTag = DETAIL_CLIP_VEIL_TAG,
+    ) {
+        DetailClip(item = clip, onOpenViewer = onOpenViewer)
+    }
+}
+
+/**
+ * THE PHONE TURNING TO LANDSCAPE OPENS THE VIEWER: "WHEN the phone turns to
+ * landscape GIVEN the detail holds a landscape clip -> the fullscreen viewer
+ * opens on the clip, filling the turned screen" (PostDetailVideo.md:63).
+ *
+ * A TURN is a change, so the orientation last seen is kept across the
+ * activity's own recreation on rotation
+ * (developer.android.com/guide/topics/resources/runtime-changes;
+ * `rememberSaveable` survives it) — a detail opened already in landscape
+ * opens nothing.
+ */
+@Composable
+private fun TurnToLandscapeOpensTheViewer(landscapeClip: Boolean, onTurn: () -> Unit) {
+    val orientation = LocalConfiguration.current.orientation
+    var orientationSeen by rememberSaveable { mutableIntStateOf(orientation) }
+    val turnNow by rememberUpdatedState(onTurn)
+    val holdsLandscapeClip by rememberUpdatedState(landscapeClip)
+    LaunchedEffect(orientation) {
+        val turned = orientation == Configuration.ORIENTATION_LANDSCAPE &&
+            orientationSeen != Configuration.ORIENTATION_LANDSCAPE
+        orientationSeen = orientation
+        if (turned && holdsLandscapeClip) turnNow()
+    }
+}
+
 /** The post itself, as the card it wears on every surface. */
 @Composable
 private fun DetailCard(
@@ -610,9 +662,9 @@ private fun DetailCard(
     removed: Boolean,
     /** The gallery's tap, handed the page under the reader's thumb. */
     onOpenMedia: (Int) -> Unit,
-    /** The clip is pinned above this card, so the body draws no gallery. */
-    mediaPinned: Boolean,
-    /** The post's one revealed-state, shared with the pinned clip's veil. */
+    /** The clip stands above this card, so the body draws no gallery. */
+    mediaAbove: Boolean,
+    /** The post's one revealed-state, shared with the detail clip's veil. */
     revealed: Boolean,
     onReveal: () -> Unit,
     onOpenActor: (String) -> Unit,
@@ -665,7 +717,7 @@ private fun DetailCard(
                 node = card,
                 modifier = Modifier.testTag("detail_body"),
                 bleed = Space.x4,
-                mediaPinned = mediaPinned,
+                mediaAbove = mediaAbove,
                 onOpenMedia = onOpenMedia,
                 revealed = revealed,
                 onReveal = onReveal,
@@ -793,8 +845,11 @@ internal fun CommentView.asReplyTarget(): ReplyTarget = ReplyTarget(
 private fun String.clipForCard(limit: Int = TARGET_SNIPPET_CHARS): String =
     if (length <= limit) this else take(limit).trimEnd() + "…"
 
-/** The pinned clip's own veil; its reveal button is `${PINNED_VEIL_TAG}_reveal`. */
-internal const val PINNED_VEIL_TAG = "detail_pinned_veil"
+/** The detail clip's own veil; its reveal button is `${DETAIL_CLIP_VEIL_TAG}_reveal`. */
+internal const val DETAIL_CLIP_VEIL_TAG = "detail_clip_veil"
+
+/** The clip and the card as the one block the board draws, in the list's one row. */
+internal const val DETAIL_BLOCK_TAG = "detail_block"
 
 private const val TARGET_TITLE_CHARS = 48
 private const val TARGET_SNIPPET_CHARS = 120

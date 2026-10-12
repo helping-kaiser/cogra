@@ -134,11 +134,8 @@ export function ChangeEmailConfirmView() {
         router.push("/settings?done=email");
         return;
       }
-      // DRIFT (seam 115.3): `ChangeEmailConfirm.md` draws this state as the
-      // pair alone — `Code — confirmed`, no field, no commit (G3) — and no
-      // line saying the page's errand is done and the link at the new address
-      // is what is left. That line is asked of design; nothing is drawn here
-      // until its words land.
+      // The code's side landed, the link's still owed: the page stays, and its
+      // interim line says the link at the new address is what is left.
       setPending(outcome.value.pending);
       setCode("");
       setFieldError(null);
@@ -240,6 +237,12 @@ export function ChangeEmailConfirmView() {
               </span>
             </div>
           </div>
+
+          {pending.requiresCode && pending.codeConfirmed && (
+            <div className="mt-6">
+              <QuietNote node={node("codeDone")}>{`Done on this side — now open the link at ${pending.newEmail}`}</QuietNote>
+            </div>
+          )}
 
           {codeOwed ? (
             <form onSubmit={onConfirm} noValidate className="flex flex-col">

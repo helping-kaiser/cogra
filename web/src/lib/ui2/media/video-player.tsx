@@ -40,7 +40,7 @@
 // ONE CLIP, MANY PRESENTATIONS (the stage-law packet §3.2 rules 5 and 13). A
 // clip that has played never wears its stored still again within the reading
 // session, its remounts included (FeedCover.md:7/9), and it carries the frame
-// it reached card → detail → back (PostDetailVideo.md:43/45).
+// it reached card → detail → back (PostDetailVideo.md:53/55).
 //
 // THE ELEMENT ITSELF CARRIES IT (jakob's ruling q-fx2a). The `<video>` is not
 // this component's: it is the clip's live element from the player layer's
@@ -61,16 +61,17 @@
 // clip then PLAYS is its surface's stage's to decide in both cases.
 //
 // The fullscreen viewer is the one presentation that also carries the PLAY
-// STATE (PostDetailVideo.md:47–51, ViewerVideo.md:5): the pinned clip HANDS
+// STATE (PostDetailVideo.md:57–61, ViewerVideo.md:5): the detail clip HANDS
 // its clip over as the viewer opens — remembers where it stood and whether it
 // played, gives up its element and leaves its stage, so nothing of it plays
 // behind the viewer — and the viewer CARRIES that state in; on close the
-// viewer remembers on its way out and the pinned clip takes it back the same
+// viewer remembers on its way out and the detail clip takes it back the same
 // way.
 
 import {
   useCallback,
   useEffect,
+  useEffectEvent,
   useLayoutEffect,
   useRef,
   useState,
@@ -106,7 +107,7 @@ import { claim, holds, releaseElement, takeElement } from "./video-stage";
  * wears the sound control and nothing else — no play/pause, no duration pill,
  * at both scales". Presence on screen is the whole policy there.
  *
- * `transport` is the ladder's second rung — the post detail's pinned clip, and
+ * `transport` is the ladder's second rung — the post detail's clip, and
  * the fullscreen viewer after it. The reader opened this clip on purpose, so
  * the transport is real: play/pause, the skips, and a timeline that takes a tap
  * anywhere or a drag along it. The sound moves INTO the bar there, which is why
@@ -150,6 +151,7 @@ function Player({
   mediaId,
   carry = false,
   handedOver = false,
+  openOnLandscape = false,
 }: {
   src: string;
   /**
@@ -160,17 +162,17 @@ function Player({
   mediaId?: string | null;
   /**
    * This presentation CARRIES ON a clip shown elsewhere — the fullscreen
-   * viewer opened on the pinned clip: it opens at the remembered frame AND in
-   * the remembered play state (PostDetailVideo.md:47–51, ViewerVideo.md:5),
+   * viewer opened on the detail clip: it opens at the remembered frame AND in
+   * the remembered play state (PostDetailVideo.md:57–61, ViewerVideo.md:5),
    * rather than its stage deciding. With nothing remembered, the stage's law.
    */
   carry?: boolean;
   /**
-   * The clip is HANDED OVER to a layer presenting it bigger (the pinned clip
+   * The clip is HANDED OVER to a layer presenting it bigger (the detail clip
    * while the viewer is up): the layer has its element, and this player stands
    * off its stage with none, so nothing of it plays behind that layer
-   * (PostDetailVideo.md:47). Lowered, it takes the clip back at the frame and
-   * in the play state the layer left it in (PostDetailVideo.md:49/51).
+   * (PostDetailVideo.md:57). Lowered, it takes the clip back at the frame and
+   * in the play state the layer left it in (PostDetailVideo.md:59/61).
    */
   handedOver?: boolean;
   /** The registered node the sound disc is; it then names the disc instead of `testId`'s. */
@@ -225,6 +227,16 @@ function Player({
    * reveal tap intact and still gives the clip its own route in.
    */
   onOpenViewer?: () => void;
+  /**
+   * The phone TURNING to landscape opens the viewer too: "WHEN the phone turns
+   * to landscape GIVEN the detail holds a landscape clip -> the fullscreen
+   * viewer opens on the clip, filling the turned screen"
+   * (PostDetailVideo.md:63). The caller says whether its clip is one; the
+   * turn is the Screen Orientation API's `change` event — the device's own
+   * rotation, which a desktop window being resized never fires
+   * (https://developer.mozilla.org/en-US/docs/Web/API/ScreenOrientation/change_event).
+   */
+  openOnLandscape?: boolean;
   /**
    * Whether this player reaches the edges of the SCREEN rather than sitting in
    * a frame on the page.
@@ -339,7 +351,7 @@ function Player({
   /**
    * The way into the fullscreen viewer, handing the clip over first: where it
    * stands and whether it plays are remembered BEFORE the viewer renders, so
-   * the viewer opens on them (ViewerVideo.md:5, PostDetailVideo.md:47).
+   * the viewer opens on them (ViewerVideo.md:5, PostDetailVideo.md:57).
    */
   const openViewer =
     onOpenViewer === undefined
@@ -353,6 +365,23 @@ function Player({
           }
           onOpenViewer();
         };
+
+  // THE TURN TO LANDSCAPE (PostDetailVideo.md:63) takes the same way in as
+  // the toggle and the tap, handing the clip over first. Read through an
+  // effect event (react.dev, `useEffectEvent`): the subscription lives as
+  // long as the clip may open, and always opens with the latest hand-over.
+  const turnedToLandscape = useEffectEvent((type: string) => {
+    if (type.startsWith("landscape")) openViewer?.();
+  });
+  const opensViewer = onOpenViewer !== undefined;
+  useEffect(() => {
+    if (!openOnLandscape || handedOver || !opensViewer) return;
+    const orientation = typeof screen === "undefined" ? undefined : screen.orientation;
+    if (orientation === undefined || orientation === null) return;
+    const onChange = () => turnedToLandscape(orientation.type);
+    orientation.addEventListener("change", onChange);
+    return () => orientation.removeEventListener("change", onChange);
+  }, [openOnLandscape, handedOver, opensViewer]);
 
   // WHAT THE ELEMENT SAYS, AS THE CONTROLS HEAR IT. The element's listeners
   // are added by hand (the element is not React's), so the current render's
@@ -432,7 +461,7 @@ function Player({
     // reel-vs-video split: a clip in a card or a stream is a MOMENT, read
     // with the scroller's grammar, and stopping it would leave a card gone
     // still and dead under a reader still looking at it. A clip the reader
-    // opened on purpose — the detail's pinned clip, the viewer — is a
+    // opened on purpose — the detail clip, the viewer — is a
     // PROGRAMME, read with a player's grammar, and a programme that silently
     // restarted would be a player that never admits it finished. The
     // transport then stands at its Play glyph, and pressing it replays.
@@ -473,7 +502,7 @@ function Player({
   }, [veiled]);
 
   // A REMEMBERED CLIP STANDS AT THE FRAME IT REACHED (FeedCover.md:9,
-  // PostDetailVideo.md:43/45). Read at mount, in a LAYOUT effect: React runs
+  // PostDetailVideo.md:53/55). Read at mount, in a LAYOUT effect: React runs
   // a commit's layout cleanups — the outgoing presentation's goodbye below —
   // before its layout mounts, so this sees the frame the clip left at. And it
   // runs before the stage (a passive effect) can start the clip, so a start
@@ -496,7 +525,7 @@ function Player({
   // the host's stage is a parent whose passive cleanup freezes the clip as it
   // goes, and React runs every layout cleanup of a removed tree before any
   // passive one — so this still sees whether the clip was playing, which is
-  // the play state the viewer hands back (PostDetailVideo.md:49/51) — and its
+  // the play state the viewer hands back (PostDetailVideo.md:59/61) — and its
   // stage still holds its place, so this sees whether it was on screen.
   //
   // A player whose element another presentation holds by then — handed to the
@@ -516,19 +545,22 @@ function Player({
   }, [mediaId, remembered, bornIn, stage, stageToken]);
 
   // ON THE STAGE for as long as the player is mounted — and not handed over.
-  // It joins unveiled and the veil effect below says otherwise in the same
-  // commit — so a veil coming or going is an eligibility change on the one
-  // registration, never a leave-and-rejoin that would hand the stage away.
+  // It joins wearing the veil it stands under (`veiledNow`, written by the
+  // effect above, earlier in the same commit), and the veil effect below
+  // follows every later change — so a veil coming or going is an eligibility
+  // change on the one registration, never a leave-and-rejoin that would hand
+  // the stage away, and the detail's open never sees a veiled clip as bare.
   //
   // HANDED OVER, it leaves the stage: leaving freezes it where it stands, and
   // a clip that is on no stage cannot be started by one — not by an election,
-  // a page shown again, or autoplay coming back (PostDetailVideo.md:47).
+  // a page shown again, or autoplay coming back (PostDetailVideo.md:57).
   // Taken back, it rejoins and carries the layer's play state in.
   //
   // AN ELEMENT CARRIED IN PLAYING keeps playing into the surface's first
   // measurement of it, which decides whether it holds the stage there
   // (`Stage.arrivePlaying`) — the hand-over below being the one presentation
-  // that says so itself.
+  // that says so itself. On the detail, standing on the stage is the OPEN,
+  // which starts the clip where it stands (`Stage.open`, PostDetailVideo.md:7).
   useEffect(() => {
     if (!autoplay || stage === null) return;
     if (handedOver) {
@@ -537,7 +569,7 @@ function Player({
     }
     const video = ref.current;
     if (!video) return;
-    stage.register(stageToken, video, false);
+    stage.register(stageToken, video, veiledNow.current);
     let decided = false;
     if ((carry || dueBack.current) && mediaId) {
       dueBack.current = false;
@@ -548,7 +580,7 @@ function Player({
           video.currentTime = carried.time;
         }
         // "playing returns playing, paused returns paused" (RULINGS 4c,
-        // PostDetailVideo.md:49/51). A carried PLAYING state is the reader's
+        // PostDetailVideo.md:59/61). A carried PLAYING state is the reader's
         // own start continuing — under suppressed autoplay too, as the pad's
         // resume is (Feed.md:41): not a clip starting "on its own"
         // (FeedCover.md:25). A veiled clip starts nothing (Feed.md:43).
@@ -556,7 +588,7 @@ function Player({
         else stage.seat(stageToken);
       }
     }
-    if (!decided && carriedIn.current) stage.arrivePlaying(stageToken);
+    if (!decided) stage.arrive(stageToken, carriedIn.current);
     return () => stage.unregister(stageToken);
     // `src` too: a new source is a new element in the slot (`slot`), and the
     // stage has to watch the one that is there.

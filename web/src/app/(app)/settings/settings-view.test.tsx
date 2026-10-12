@@ -3,6 +3,7 @@ import { delay, graphql, HttpResponse } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTokenStore } from "@/lib/session/token-store";
+import { accountFilterLevel, setAccountFilterLevel } from "@/lib/settings/sensitive-content";
 import { fakeIdentityStore } from "@/test/identity";
 import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
@@ -103,6 +104,7 @@ const byNode = (path: string, key?: string) =>
 beforeEach(() => {
   window.localStorage.clear();
   window.sessionStorage.clear();
+  setAccountFilterLevel(null);
   delete document.documentElement.dataset.theme;
   push.mockReset();
   replace.mockReset();
@@ -120,6 +122,7 @@ describe("the settings page", () => {
       "settings.writing",
       "settings.reading",
       "settings.people",
+      "settings.sensitive",
       "settings.backup",
       "settings.sessions",
       "settings.credentials",
@@ -430,6 +433,128 @@ describe("the settings page", () => {
       "Password changed — other devices are signed out.",
     );
     expect(screen.getByTestId("settings.credentials.password.status")).toHaveTextContent("Changed now");
+  });
+});
+
+describe("sensitive content (B5)", () => {
+  function preferencesWith(level: number | null) {
+    return {
+      preferences: {
+        __typename: "UserPreferences",
+        defaultLicense: null,
+        contentFilteringSeverityLevel: level,
+      },
+    };
+  }
+
+  /** A SetPreferences that records each input and answers the level it was sent. */
+  function recordingSave(sent: unknown[]) {
+    return graphql.mutation("SetPreferences", ({ variables }) => {
+      sent.push(variables.input);
+      const level = (variables.input as { contentFilteringSeverityLevel: number | null })
+        .contentFilteringSeverityLevel;
+      return HttpResponse.json({
+        data: {
+          setPreferences: {
+            __typename: "SetPreferencesPayload",
+            preferences: {
+              __typename: "UserPreferences",
+              defaultLicense: null,
+              contentFilteringSeverityLevel: level,
+            },
+            userErrors: [],
+          },
+        },
+      });
+    });
+  }
+
+  it("sensitive_group_stands_after_people", async () => {
+    renderSettings();
+    const group = await screen.findByTestId("settings.sensitive");
+    expect(screen.getByTestId("settings.sensitive.label")).toHaveTextContent("Sensitive content");
+    expect(screen.getByTestId("settings.sensitive.footnote")).toHaveTextContent(
+      "This choice follows your account to every device.",
+    );
+    const people = screen.getByTestId("settings.people");
+    const backup = screen.getByTestId("settings.backup");
+    expect(people.compareDocumentPosition(group) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(group.compareDocumentPosition(backup) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // One switch, never a sheet or a pair of rows.
+    expect(within(group).getAllByRole("switch")).toHaveLength(1);
+  });
+
+  it("unveil_switch_reads_off_by_default", async () => {
+    renderSettings();
+    await screen.findByTestId("settings.credentials.password.status");
+    const row = screen.getByTestId("settings.sensitive.unveil");
+    expect(row).toHaveAttribute("role", "switch");
+    expect(row).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByTestId("settings.sensitive.unveil.label")).toHaveTextContent(
+      "Always unveil sensitive content",
+    );
+    expect(screen.getByTestId("settings.sensitive.unveil.status")).toHaveTextContent(
+      "Off, the veil stays until you tap it.",
+    );
+  });
+
+  it("unveil_switch_flips_without_a_dialog_and_saves_to_the_account", async () => {
+    const sent: unknown[] = [];
+    server.use(recordingSave(sent));
+    renderSettings();
+    await screen.findByTestId("settings.credentials.password.status");
+    const row = screen.getByTestId("settings.sensitive.unveil");
+    fireEvent.click(row);
+    // Optimistic: on at once, no dialog.
+    expect(row).toHaveAttribute("aria-checked", "true");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() => expect(sent).toEqual([{ contentFilteringSeverityLevel: 0 }]));
+    await waitFor(() => expect(accountFilterLevel()).toBe(0));
+    // The On line (seam 132, G10), verbatim.
+    expect(screen.getByTestId("settings.sensitive.unveil.status").textContent).toBe(
+      "On, sensitive content stands unveiled wherever you read.",
+    );
+
+    fireEvent.click(row);
+    expect(row).toHaveAttribute("aria-checked", "false");
+    // Off writes the explicit null that restores the default veil.
+    await waitFor(() =>
+      expect(sent).toEqual([
+        { contentFilteringSeverityLevel: 0 },
+        { contentFilteringSeverityLevel: null },
+      ]),
+    );
+    await waitFor(() => expect(accountFilterLevel()).toBeNull());
+    // Never written to this device.
+    expect(JSON.stringify({ ...window.localStorage })).not.toMatch(/unveil|sensitive/i);
+  });
+
+  it("a_choice_made_on_another_device_reads_here", async () => {
+    server.use(accountHandler(preferencesWith(0)));
+    renderSettings();
+    await waitFor(() =>
+      expect(screen.getByTestId("settings.sensitive.unveil")).toHaveAttribute("aria-checked", "true"),
+    );
+    expect(accountFilterLevel()).toBe(0);
+  });
+
+  it("a level other than 0 reads off — the gradient is post-MVP", async () => {
+    server.use(accountHandler(preferencesWith(4)));
+    renderSettings();
+    await screen.findByTestId("settings.credentials.password.status");
+    expect(screen.getByTestId("settings.sensitive.unveil")).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("unveil_save_without_an_answer_reverts_with_the_no_answer_snackbar", async () => {
+    server.use(graphql.mutation("SetPreferences", () => HttpResponse.error()));
+    renderSettings();
+    await screen.findByTestId("settings.credentials.password.status");
+    const row = screen.getByTestId("settings.sensitive.unveil");
+    fireEvent.click(row);
+    expect(row).toHaveAttribute("aria-checked", "true");
+    expect(await screen.findByTestId("settings-snackbar")).toHaveTextContent("That didn't send. Try again.");
+    expect(row).toHaveAttribute("aria-checked", "false");
+    expect(accountFilterLevel()).toBeNull();
   });
 });
 

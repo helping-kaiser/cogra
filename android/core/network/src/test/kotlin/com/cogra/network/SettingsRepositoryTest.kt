@@ -71,8 +71,8 @@ class SettingsRepositoryTest {
                "email":"sol@solferreira.art","emailVerified":true,"accountState":"MEMBER",
                "actorPubkey":"cGs=","passwordChangedAt":"2026-09-16T10:00:00+00:00",
                "keyBackupCreatedAt":null,"pendingEmailChange":$pending,
-               "preferences":{"__typename":"UserPreferences","defaultLicense":
-                 {"__typename":"License","attribution":1.0,"provenance":0.0}},
+               "preferences":{"__typename":"UserPreferences","contentFilteringSeverityLevel":0,
+                 "defaultLicense":{"__typename":"License","attribution":1.0,"provenance":0.0}},
                "sessions":[{"__typename":"Session","id":"s1","deviceLabel":"Pixel 6",
                  "createdAt":"2026-07-24T12:00:00+00:00","lastUsedAt":null,"isCurrent":true}]}}}""",
         )
@@ -83,6 +83,8 @@ class SettingsRepositoryTest {
         assertThat(account.passwordChangedAt).isEqualTo(Instant.parse("2026-09-16T10:00:00Z"))
         assertThat(account.keyBackupCreatedAt).isNull()
         assertThat(account.defaultLicense).isEqualTo(LicenseChoice(1.0, 0.0))
+        // The account's sensitive-content threshold rides the same read.
+        assertThat(account.contentFilteringSeverityLevel).isEqualTo(0)
         val change = checkNotNull(account.pendingEmailChange)
         assertThat(change.codeOwed).isTrue()
         assertThat(change.linkOwed).isFalse()
@@ -110,10 +112,38 @@ class SettingsRepositoryTest {
         val saved = (repo().setDefaultLicense(LicenseChoice(0.5, 1.0)) as Outcome.Success).value
         assertThat(saved).isEqualTo(LicenseChoice(0.5, 1.0))
         val body = server.takeRequest().body.readUtf8()
-        assertThat(body).contains("\"defaultLicense\":{\"attribution\":0.5,\"provenance\":1.0}")
-        // Absent fields are left as they are — never sent as null.
+        // Absent fields are left as they are — never sent as null: the input
+        // carries the license and nothing else.
+        assertThat(body).contains("\"input\":{\"defaultLicense\":{\"attribution\":0.5,\"provenance\":1.0}}")
         assertThat(body).doesNotContain("hasSeenOnboarding")
-        assertThat(body).doesNotContain("contentFilteringSeverityLevel")
+    }
+
+    @Test
+    fun setAlwaysUnveilOnSendsTheThresholdZeroAndNothingElse() = runTest {
+        tokenStore.save(AuthTokens("a", "r", "u1"))
+        enqueue(
+            """{"data":{"setPreferences":{"__typename":"SetPreferencesPayload",
+               "preferences":{"__typename":"UserPreferences","contentFilteringSeverityLevel":0,
+                 "defaultLicense":null},"userErrors":[]}}}""",
+        )
+        val saved = (repo().setAlwaysUnveil(true) as Outcome.Success).value
+        assertThat(saved).isEqualTo(0)
+        assertThat(server.takeRequest().body.readUtf8())
+            .contains("\"input\":{\"contentFilteringSeverityLevel\":0}")
+    }
+
+    @Test
+    fun setAlwaysUnveilOffIsTheExplicitNullThatRestoresTheVeil() = runTest {
+        tokenStore.save(AuthTokens("a", "r", "u1"))
+        enqueue(
+            """{"data":{"setPreferences":{"__typename":"SetPreferencesPayload",
+               "preferences":{"__typename":"UserPreferences","contentFilteringSeverityLevel":null,
+                 "defaultLicense":null},"userErrors":[]}}}""",
+        )
+        val saved = repo().setAlwaysUnveil(false) as Outcome.Success
+        assertThat(saved.value).isNull()
+        assertThat(server.takeRequest().body.readUtf8())
+            .contains("\"input\":{\"contentFilteringSeverityLevel\":null}")
     }
 
     @Test

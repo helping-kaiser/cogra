@@ -1,5 +1,5 @@
 import { gql, InMemoryCache } from "@apollo/client";
-import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { graphql, HttpResponse } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -15,7 +15,7 @@ import { startMswServer } from "@/test/msw";
 import { renderWithProviders } from "@/test/providers";
 import { fakeIdentityStore } from "@/test/identity";
 import { fakeWriteSigner } from "@/test/registration";
-import { intersectEach, whenObserved } from "@/test/media-env";
+import { whenObserved } from "@/test/media-env";
 import { stanceBundle, stanceHandlers } from "@/test/stance";
 import { PostView } from "./post-view";
 import { byNode } from "@/test/data-node";
@@ -2241,40 +2241,64 @@ describe("PostView — references", () => {
       thread("u1", [], undefined, false, [], [], body);
 
     // A VIDEO POST'S DETAIL IS ITS OWN BOARD (`screens/PostDetailVideo.jsx`):
-    // the clip is PINNED ABOVE THE CARD, not inside it, and it wears the full
-    // transport. A post of pictures keeps the gallery in its body.
+    // the clip STANDS ABOVE THE CARD, not inside it, flush on it and in the
+    // page's flow (ruling 100), and it wears the full transport. A post of
+    // pictures keeps the gallery in its body.
     describe("a video post", () => {
-      it("pins the clip above the card and leaves the card without it", async () => {
+      it("stands the clip above the card, flush on it as one block, and leaves the card without it (PostDetailVideo.md:3)", async () => {
         server.use(...withBody({ content: null, attachments: [clip("m1")] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        const pinned = await screen.findByTestId("post-pinned-clip");
+        const above = await screen.findByTestId("post-detail-clip");
         const card = screen.getByTestId(byNode("postDetail.card"));
-        expect(card).not.toContainElement(pinned);
+        expect(card).not.toContainElement(above);
         // ABOVE it, which is the whole of why the author chip leads the card
         // rather than the screen.
-        expect(pinned.compareDocumentPosition(card)).toBe(
+        expect(above.compareDocumentPosition(card)).toBe(
           Node.DOCUMENT_POSITION_FOLLOWING,
         );
+        // FLUSH ON IT: the clip and the card share one block, so the page's
+        // stack gap never falls between them (`DetailClip.prompt.md:15`).
+        const block = card.parentElement!;
+        expect(block).toContainElement(above);
+        expect(block.className).not.toMatch(/\bgap-/);
+        // IN THE PAGE'S FLOW: nothing holds it on screen (PostDetailVideo.md:5).
+        expect(above.className).not.toMatch(/\b(sticky|fixed)\b/);
+        expect(block.className).not.toMatch(/\b(sticky|fixed)\b/);
         expect(screen.queryByTestId(byNode("postDetail.card.media"))).not.toBeInTheDocument();
         // The title still leads the card: it titles the thing.
         expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("The title");
       });
 
-      it("gives the pinned clip the transport, not the disc", async () => {
+      it("gives the detail clip the transport, not the disc", async () => {
         server.use(...withBody({ content: null, attachments: [clip("m1")] }));
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        await screen.findByTestId("post-pinned-clip");
-        expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
-        expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
-        // An unmarked post pins no veil over its clip.
-        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+        await screen.findByTestId("post-detail-clip");
+        expect(screen.getByTestId("post-detail-clip-media-transport")).toBeInTheDocument();
+        expect(screen.queryByTestId("post-detail-clip-media-sound")).toBeNull();
+        // An unmarked post raises no veil over its clip.
+        expect(screen.queryByTestId("post-detail-clip-veil")).toBeNull();
       });
 
-      // ONE CLIP SHOWN BIGGER (PostDetailVideo.md:47–51, ViewerVideo.md:5):
-      // the page hands its pinned clip to the viewer and takes it back.
-      it("hands the pinned clip to the viewer at its frame, and takes it back at the viewer's", async () => {
+      // THE DETAIL'S HEADER PINS (design/readme.md §4, "Browse collapses, task
+      // pins"; restated by the clip detail rulings): the clip and the card
+      // scroll under a bar that rides the page's edge.
+      it("pins the detail's header above the clip that scrolls under it", async () => {
+        server.use(...withBody({ content: null, attachments: [clip("m1")] }));
+        renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
+
+        const above = await screen.findByTestId("post-detail-clip");
+        const bar = screen.getByTestId("post-header-bar");
+        expect(bar.className).toMatch(/\bsticky\b/);
+        expect(bar.className).toMatch(/\btop-0\b/);
+        expect(bar).toContainElement(screen.getByTestId(byNode("postDetail.header")));
+        expect(bar.compareDocumentPosition(above)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+      });
+
+      // ONE CLIP SHOWN BIGGER (PostDetailVideo.md:57–61, ViewerVideo.md:5):
+      // the page hands its detail clip to the viewer and takes it back.
+      it("hands the detail clip to the viewer at its frame, and takes it back at the viewer's", async () => {
         // The page's count read lands inside this test, never after it.
         let counted = false;
         server.use(
@@ -2288,38 +2312,40 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        await screen.findByTestId("post-pinned-clip");
+        await screen.findByTestId("post-detail-clip");
         await waitFor(() => expect(counted).toBe(true));
-        const pinned = screen.getByTestId("post-pinned-clip-media") as HTMLVideoElement;
-        await whenObserved(pinned);
-        act(() => intersectEach([{ target: pinned, ratio: 1 }]));
-        expect(pinned.paused).toBe(false);
-        pinned.currentTime = 6;
+        const element = screen.getByTestId("post-detail-clip-media") as HTMLVideoElement;
+        // The open started it: no share of the screen was ever reported
+        // (PostDetailVideo.md:7). Its registration is the open, so waiting
+        // for the stage to watch it is waiting for the open.
+        await whenObserved(element);
+        expect(element.paused).toBe(false);
+        element.currentTime = 6;
 
-        fireEvent.click(screen.getByTestId("post-pinned-clip-media-transport-fullscreen"));
+        fireEvent.click(screen.getByTestId("post-detail-clip-media-transport-fullscreen"));
         const viewer = screen.getByTestId("post-media-viewer-video") as HTMLVideoElement;
         // The clip's one element moves into the viewer, so nothing of the
-        // pinned clip plays behind it (PostDetailVideo.md:47); the viewer
+        // detail clip plays behind it (PostDetailVideo.md:57); the viewer
         // stands where it stood, playing (ViewerVideo.md:5, N1).
-        expect(viewer).toBe(pinned);
-        expect(screen.queryByTestId("post-pinned-clip-media")).toBeNull();
+        expect(viewer).toBe(element);
+        expect(screen.queryByTestId("post-detail-clip-media")).toBeNull();
         expect(viewer.currentTime).toBe(6);
         expect(viewer.paused).toBe(false);
 
         viewer.currentTime = 15;
         fireEvent.click(screen.getByTestId("post-media-viewer-close"));
-        // Plays on from the viewer's position (PostDetailVideo.md:49).
+        // Plays on from the viewer's position (PostDetailVideo.md:59).
         expect(screen.queryByTestId("post-media-viewer")).toBeNull();
-        expect(pinned.currentTime).toBe(15);
-        expect(pinned.paused).toBe(false);
+        expect(element.currentTime).toBe(15);
+        expect(element.paused).toBe(false);
       });
 
-      // THE PINNED CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video
+      // THE DETAIL CLIP'S VEIL FACE (jakob 2026-09-24): a sensitive video
       // post's clip veils IN PLACE — never demoted into the card — and ONE
       // scope spans the clip and the card body, sharing the post's own
       // reveal (`reveal.ts`) the way the card's own `BodyRegion` already
       // does.
-      it("veils the pinned clip in place, mounted but wearing no transport or sound disc", async () => {
+      it("veils the detail clip in place, mounted but wearing no transport or sound disc", async () => {
         server.use(
           ...withBody({
             description: "One rubbing includes a dead seabird.",
@@ -2329,19 +2355,19 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        await screen.findByTestId("post-pinned-clip-veil");
+        await screen.findByTestId("post-detail-clip-veil");
         // Still mounted under the veil, the same contract `BodyVeil` keeps
         // for every other veiled body — revealing must move nothing.
-        expect(screen.getByTestId("post-pinned-clip")).toBeInTheDocument();
+        expect(screen.getByTestId("post-detail-clip")).toBeInTheDocument();
         // Nothing plays beneath a veil (backlog item 103): no transport bar
         // to operate and no sound disc for a clip that cannot claim playback.
-        expect(screen.queryByTestId("post-pinned-clip-media-transport")).toBeNull();
-        expect(screen.queryByTestId("post-pinned-clip-media-sound")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip-media-transport")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip-media-sound")).toBeNull();
         // The card's own body veils too — the same post, one sensitive state.
         expect(screen.getByTestId("post-veil")).toBeInTheDocument();
       });
 
-      it("answers one reveal for the pinned clip and the card together", async () => {
+      it("answers one reveal for the detail clip and the card together", async () => {
         server.use(
           ...withBody({
             description: "One rubbing includes a dead seabird.",
@@ -2351,17 +2377,17 @@ describe("PostView — references", () => {
         );
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
-        const veil = await screen.findByTestId("post-pinned-clip-veil");
+        const veil = await screen.findByTestId("post-detail-clip-veil");
         fireEvent.click(within(veil).getByRole("button"));
 
         // The one tap on the clip's own face lifted the card's veil too.
-        expect(screen.queryByTestId("post-pinned-clip-veil")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip-veil")).toBeNull();
         expect(screen.queryByTestId("post-veil")).toBeNull();
         expect(screen.getByTestId(byNode("postDetail.card.description"))).toHaveTextContent(
           "One rubbing includes a dead seabird.",
         );
         // Revealed, the clip stands with its ladder's second rung back.
-        expect(screen.getByTestId("post-pinned-clip-media-transport")).toBeInTheDocument();
+        expect(screen.getByTestId("post-detail-clip-media-transport")).toBeInTheDocument();
       });
 
       it("leaves a post of pictures exactly where it was", async () => {
@@ -2369,12 +2395,12 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         expect(await screen.findByTestId(byNode("postDetail.card.media"))).toBeInTheDocument();
-        expect(screen.queryByTestId("post-pinned-clip")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip")).toBeNull();
       });
 
       // REDACTION IS RECORD-GRANULAR: a removed clip removes the payload, so
-      // the card is the skeleton and there is nothing left to pin above it.
-      it("pins nothing when the clip was removed", async () => {
+      // the card is the skeleton and there is no clip left to stand above it.
+      it("raises no clip when the clip was removed", async () => {
         server.use(
           ...withBody({
             content: null,
@@ -2384,7 +2410,7 @@ describe("PostView — references", () => {
         renderWithProviders(<PostView postId="p1" />, { writeSigner: fakeWriteSigner() });
 
         expect(await screen.findByTestId("post-removed")).toBeInTheDocument();
-        expect(screen.queryByTestId("post-pinned-clip")).toBeNull();
+        expect(screen.queryByTestId("post-detail-clip")).toBeNull();
       });
     });
 
@@ -2707,10 +2733,10 @@ describe("PostView — opened from the feed", () => {
     expect(screen.queryByTestId(byNode("postDetail.card"))).not.toBeInTheDocument();
   });
 
-  // THE PINNED CLIP MOUNTS WITH THE PAINT — which is what lets the handover
+  // THE DETAIL CLIP MOUNTS WITH THE PAINT — which is what lets the handover
   // still (#137) begin at once rather than one read later — and the fresh
   // answer landing over it keeps the same element: nothing remounts.
-  it("pins a cached video post's clip on the first render and keeps it through the fresh answer", async () => {
+  it("mounts a cached video post's clip on the first render and keeps it through the fresh answer", async () => {
     const clip = {
       __typename: "MediaAttachment",
       id: "m1",
@@ -2730,11 +2756,11 @@ describe("PostView — opened from the feed", () => {
       cache: feedCache(feedNode(data, 0)),
     });
 
-    const media = screen.getByTestId("post-pinned-clip-media");
+    const media = screen.getByTestId("post-detail-clip-media");
     read.release();
     await waitFor(() =>
       expect(screen.getByTestId(byNode("postDetail.card.title"))).toHaveTextContent("Edited title"),
     );
-    expect(screen.getByTestId("post-pinned-clip-media")).toBe(media);
+    expect(screen.getByTestId("post-detail-clip-media")).toBe(media);
   });
 });

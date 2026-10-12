@@ -96,6 +96,7 @@ fun SettingsRoute(
             onDismissLicense = viewModel::onDismissLicense,
             onRetryLicense = viewModel::onRetryLicense,
             onShowExactValues = viewModel::onShowExactValues,
+            onAlwaysUnveil = viewModel::onAlwaysUnveil,
             onRevokeSession = viewModel::onRevokeSession,
             onRevokeOthers = viewModel::onRevokeOthers,
             onForgetOnSignOut = viewModel::onForgetOnSignOut,
@@ -129,6 +130,7 @@ data class SettingsActions(
     val onDismissLicense: () -> Unit = {},
     val onRetryLicense: () -> Unit = {},
     val onShowExactValues: () -> Unit = {},
+    val onAlwaysUnveil: () -> Unit = {},
     val onRevokeSession: (String) -> Unit = {},
     val onRevokeOthers: () -> Unit = {},
     val onForgetOnSignOut: () -> Unit = {},
@@ -181,6 +183,7 @@ fun SettingsScreen(
             WritingGroup(state, actions, licenseFocus)
             ReadingGroup(state, actions)
             PeopleGroup()
+            SensitiveGroup(state, actions)
             BackupGroup(state, doors)
             SessionsGroup(state, actions, sessionFocus)
             CredentialsGroup(state, doors)
@@ -410,6 +413,39 @@ private fun PeopleGroup() {
                     value = stringResource(R.string.settings_people_hidden_none),
                     kind = SettingsRowKind.Inert,
                     node = group / "hidden",
+                )
+            },
+        ),
+    )
+}
+
+/**
+ * THE VEIL IS THE ACCOUNT'S CHOICE, NOT THIS PHONE'S (#141): a group of its
+ * own, because Reading's footnote promises "this device" and this does not.
+ * One switch, off by default, never a sheet — live in the app, since Play
+ * has no web-only rule.
+ */
+@Composable
+private fun SensitiveGroup(state: SettingsUiState, actions: SettingsActions) {
+    val group = Page / "sensitive"
+    SettingsGroup(
+        label = stringResource(R.string.settings_sensitive),
+        footnote = stringResource(R.string.settings_sensitive_footnote),
+        node = group,
+        rows = listOf(
+            {
+                SettingsRow(
+                    label = stringResource(R.string.settings_sensitive_unveil),
+                    status = stringResource(
+                        if (state.alwaysUnveil) {
+                            R.string.settings_sensitive_unveil_on
+                        } else {
+                            R.string.settings_sensitive_unveil_off
+                        },
+                    ),
+                    kind = SettingsRowKind.Switch(checked = state.alwaysUnveil),
+                    onClick = actions.onAlwaysUnveil,
+                    node = group / "unveil",
                 )
             },
         ),

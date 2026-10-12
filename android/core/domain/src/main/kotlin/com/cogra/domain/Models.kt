@@ -73,6 +73,12 @@ data class UserProfile(
      * every device (auth.md "Reciprocation is the joiner's own act").
      */
     val vouchBackDismissed: Boolean = false,
+    /**
+     * The account's sensitive-content threshold (`me.preferences`): 0
+     * unveils sensitive content wherever the account reads, null or 1–10
+     * keeps the veil ([com.cogra.domain.settings.unveilsSensitive]).
+     */
+    val contentFilteringSeverityLevel: Int? = null,
 )
 
 /** A minimal reference to another actor, as the actor chip renders it. */

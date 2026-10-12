@@ -16,6 +16,12 @@ query Me {
       id
       handle
     }
+    # The sensitive-content choice is the ACCOUNT's (Settings' Always
+    # unveil sensitive content): 0 unveils wherever the account reads,
+    # null or 1–10 keeps the veil — read here, never kept on the device.
+    preferences {
+      contentFilteringSeverityLevel
+    }
   }
 }
 
@@ -125,6 +131,7 @@ query SettingsAccount {
       ...PendingEmailChangeFields
     }
     preferences {
+      contentFilteringSeverityLevel
       defaultLicense {
         attribution
         provenance
@@ -158,6 +165,7 @@ query DefaultLicense {
 mutation SetPreferences($input: SetPreferencesInput!) {
   setPreferences(input: $input) {
     preferences {
+      contentFilteringSeverityLevel
       defaultLicense {
         attribution
         provenance

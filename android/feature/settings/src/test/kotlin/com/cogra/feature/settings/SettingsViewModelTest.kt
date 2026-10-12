@@ -9,6 +9,7 @@ import com.cogra.domain.LicenseChoice
 import com.cogra.domain.Outcome
 import com.cogra.domain.identity.BackupManager
 import com.cogra.domain.identity.SignOut
+import com.cogra.domain.settings.SensitiveContentChoice
 import com.cogra.domain.stance.StanceInputMode
 import com.cogra.domain.store.ThemeChoice
 import com.cogra.domain.testing.FakeDevicePreferences
@@ -39,6 +40,7 @@ class SettingsViewModelTest {
     private val device = FakeDevicePreferences()
     private val settings = ScriptedSettings()
     private val sessions = ScriptedSessions()
+    private val sensitive = SensitiveContentChoice()
 
     @Before
     fun setUp() {
@@ -58,6 +60,7 @@ class SettingsViewModelTest {
         SignOut(sessions, identity, tokens),
         identity,
         device,
+        sensitive,
     ).also {
         it.clock = { NOW }
         it.refresh()
@@ -97,6 +100,69 @@ class SettingsViewModelTest {
         idle()
         assertThat(identity.confirmMultiAction.value).isFalse()
         assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+    }
+
+    // ------------------------------------------------- sensitive content
+
+    @Test
+    fun `unveil_switch_reads_off_by_default`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+    }
+
+    @Test
+    fun `unveil_switch_flips_without_a_dialog_and_saves_to_the_account`() = runTest(dispatcher) {
+        val vm = viewModel()
+        idle()
+        vm.onAlwaysUnveil()
+        // Optimistic: every veil answers before the save does.
+        assertThat(sensitive.alwaysUnveil.value).isTrue()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isTrue()
+        assertThat(settings.unveilSaves).containsExactly(true)
+        assertThat(sensitive.level.value).isEqualTo(0)
+        assertThat(vm.state.value.signOutConfirmOpen).isFalse()
+
+        vm.onAlwaysUnveil()
+        idle()
+        // Off saves the explicit null that restores the veil.
+        assertThat(settings.unveilSaves).containsExactly(true, false).inOrder()
+        assertThat(sensitive.level.value).isNull()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+    }
+
+    @Test
+    fun `a_choice_made_on_another_device_reads_here`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(contentFilteringSeverityLevel = 0))
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isTrue()
+        assertThat(sensitive.alwaysUnveil.value).isTrue()
+    }
+
+    @Test
+    fun `a level other than 0 reads off — the gradient is post-MVP`() = runTest(dispatcher) {
+        settings.read = Outcome.Success(account(contentFilteringSeverityLevel = 4))
+        val vm = viewModel()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+    }
+
+    @Test
+    fun `unveil_save_without_an_answer_reverts_with_the_no_answer_snackbar`() = runTest(dispatcher) {
+        settings.saveUnveil = Outcome.Failed(IOException("offline"))
+        val vm = viewModel()
+        idle()
+        val events = mutableListOf<SettingsEvent>()
+        val collecting = launch { vm.events.toList(events) }
+        vm.onAlwaysUnveil()
+        assertThat(sensitive.alwaysUnveil.value).isTrue()
+        idle()
+        assertThat(vm.state.value.alwaysUnveil).isFalse()
+        assertThat(sensitive.level.value).isNull()
+        assertThat(events).containsExactly(SettingsEvent.Snackbar(R.string.network_error))
+        collecting.cancel()
     }
 
     @Test

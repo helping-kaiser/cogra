@@ -10,7 +10,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.media3.common.util.UnstableApi
-import com.cogra.core.designsystem.v2.media.PINNED_CLIP_TAG
+import com.cogra.core.designsystem.v2.media.DETAIL_CLIP_TAG
 import com.cogra.core.designsystem.v2.media.VideoSound
 import com.cogra.core.designsystem.v2.media.VideoStage
 import com.cogra.domain.FieldStatus
@@ -29,9 +29,9 @@ import org.robolectric.annotation.Config
 
 /**
  * A SENSITIVE VIDEO POST'S DETAIL, end to end: the real [PostDetailScreen],
- * its pinned clip, and [VideoStage]'s one player.
+ * its detail clip, and [VideoStage]'s one player.
  *
- * The pinned-clip veil ruling (jakob 2026-09-24): the clip pinned above the
+ * The detail-clip veil ruling (jakob 2026-09-24): the clip above the
  * card wears ITS OWN veil in place — never demoted into the card — with no
  * transport under it, and it shares ONE scope with the card body beneath, so
  * one tap reveals both. A veiled clip is out of the stage (backlog item 103):
@@ -57,15 +57,15 @@ class PostDetailVeilTest {
     }
 
     @Test
-    fun aSensitivePinnedClipWearsItsOwnVeilInPlaceAndClaimsNothing() {
+    fun aSensitiveDetailClipWearsItsOwnVeilInPlaceAndClaimsNothing() {
         renderDetail(sensitiveClipPost())
 
-        // In place: the veil is over the pinned frame, not folded into the card.
-        compose.onNodeWithTag(PINNED_VEIL_TAG).assertExists()
-        compose.onNodeWithTag("${PINNED_VEIL_TAG}_reveal").assertExists()
-        compose.onNodeWithTag("${PINNED_CLIP_TAG}_poster", useUnmergedTree = true).assertExists()
+        // In place: the veil is over the detail frame, not folded into the card.
+        compose.onNodeWithTag(DETAIL_CLIP_VEIL_TAG).assertExists()
+        compose.onNodeWithTag("${DETAIL_CLIP_VEIL_TAG}_reveal").assertExists()
+        compose.onNodeWithTag("${DETAIL_CLIP_TAG}_poster", useUnmergedTree = true).assertExists()
         // No player composed, so no claim, no playback, no transport.
-        compose.onNodeWithTag("${PINNED_CLIP_TAG}_video", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("${DETAIL_CLIP_TAG}_video", useUnmergedTree = true).assertDoesNotExist()
         compose.onNodeWithTag(TRANSPORT_TAG, useUnmergedTree = true).assertDoesNotExist()
         assertThat(VideoStage.holding).isNull()
     }
@@ -74,22 +74,22 @@ class PostDetailVeilTest {
     fun oneRevealOnTheClipLiftsTheClipAndTheCardBodyTogether() {
         renderDetail(sensitiveClipPost())
 
-        compose.onNodeWithTag("${PINNED_VEIL_TAG}_reveal").performClick()
+        compose.onNodeWithTag("${DETAIL_CLIP_VEIL_TAG}_reveal").performClick()
         compose.waitForIdle()
 
         assertThat(revealCalls).isEqualTo(1)
         // One revealed-state: both faces are gone after the one tap.
-        compose.onNodeWithTag("${PINNED_VEIL_TAG}_reveal").assertDoesNotExist()
+        compose.onNodeWithTag("${DETAIL_CLIP_VEIL_TAG}_reveal").assertDoesNotExist()
         compose.onNodeWithTag("detail_veil_reveal").assertDoesNotExist()
         assertTheClipIsOnStage()
     }
 
-    // The scope runs both ways. With the clip pinned, the card body is the
+    // The scope runs both ways. With the clip above the card, the card body is the
     // description alone — one line, under which the face's chrome is clipped
     // (SensitiveVeil's own caveat) — so the reader's way in is the wash over
     // it, which is the whole-tile reveal (PR #864).
     @Test
-    fun aTapOnTheCardsVeiledBodyLiftsThePinnedClipToo() {
+    fun aTapOnTheCardsVeiledBodyLiftsTheDetailClipToo() {
         renderDetail(sensitiveClipPost())
 
         // `detail_body` is the veil's own node: the card tags the region it
@@ -98,21 +98,21 @@ class PostDetailVeilTest {
         compose.waitForIdle()
 
         assertThat(revealCalls).isEqualTo(1)
-        compose.onNodeWithTag("${PINNED_VEIL_TAG}_reveal").assertDoesNotExist()
+        compose.onNodeWithTag("${DETAIL_CLIP_VEIL_TAG}_reveal").assertDoesNotExist()
         assertTheClipIsOnStage()
     }
 
     // THE WHOLE TILE IS THE REVEAL (PR #864): a tap on the wash away from the
     // button reveals, and does not fall through to the clip's viewer route.
     @Test
-    fun aTapOnThePinnedWashRevealsRatherThanOpeningTheViewer() {
+    fun aTapOnTheDetailClipWashRevealsRatherThanOpeningTheViewer() {
         renderDetail(sensitiveClipPost())
 
-        compose.onNodeWithTag(PINNED_VEIL_TAG).performTouchInput { click(Offset(WASH_INSET, WASH_INSET)) }
+        compose.onNodeWithTag(DETAIL_CLIP_VEIL_TAG).performTouchInput { click(Offset(WASH_INSET, WASH_INSET)) }
         compose.waitForIdle()
 
         assertThat(revealCalls).isEqualTo(1)
-        compose.onNodeWithTag("${PINNED_VEIL_TAG}_reveal").assertDoesNotExist()
+        compose.onNodeWithTag("${DETAIL_CLIP_VEIL_TAG}_reveal").assertDoesNotExist()
         compose.onNodeWithTag("media_viewer").assertDoesNotExist()
     }
 
@@ -122,7 +122,7 @@ class PostDetailVeilTest {
         reveals = mapOf(post.id to post.sensitiveMark())
         renderDetail(post)
 
-        compose.onNodeWithTag("${PINNED_VEIL_TAG}_reveal").assertDoesNotExist()
+        compose.onNodeWithTag("${DETAIL_CLIP_VEIL_TAG}_reveal").assertDoesNotExist()
         compose.onNodeWithTag("detail_veil_reveal").assertDoesNotExist()
         assertTheClipIsOnStage()
     }
@@ -131,13 +131,13 @@ class PostDetailVeilTest {
     fun aClipThatIsNotSensitivePlaysWithItsTransportAsBefore() {
         renderDetail(sensitiveClipPost().copy(attachmentsStatus = FieldStatus.NORMAL))
 
-        compose.onNodeWithTag("${PINNED_VEIL_TAG}_reveal").assertDoesNotExist()
-        compose.onNodeWithTag("${PINNED_CLIP_TAG}_poster", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("${DETAIL_CLIP_VEIL_TAG}_reveal").assertDoesNotExist()
+        compose.onNodeWithTag("${DETAIL_CLIP_TAG}_poster", useUnmergedTree = true).assertDoesNotExist()
         assertTheClipIsOnStage()
     }
 
     private fun assertTheClipIsOnStage() {
-        compose.onNodeWithTag("${PINNED_CLIP_TAG}_video", useUnmergedTree = true).assertExists()
+        compose.onNodeWithTag("${DETAIL_CLIP_TAG}_video", useUnmergedTree = true).assertExists()
         compose.onNodeWithTag(TRANSPORT_TAG, useUnmergedTree = true).assertExists()
         assertThat(VideoStage.holding?.url).isEqualTo(CLIP)
         assertThat(VideoStage.holding?.owner).isNotNull()

@@ -24,6 +24,7 @@ import {
   fetchSettingsAccount,
   revokeOtherSessions,
   revokeSession,
+  setAlwaysUnveil,
   setDefaultLicense,
   type SessionView,
   type SettingsAccount,
@@ -40,6 +41,12 @@ import {
   themePreference,
   type ThemeChoice,
 } from "@/lib/settings/device-preference";
+import {
+  accountFilterLevel,
+  setAccountFilterLevel,
+  UNVEIL_LEVEL,
+  useAlwaysUnveil,
+} from "@/lib/settings/sensitive-content";
 import { useConfirmMultiAction } from "@/lib/signing/confirm-multi-action";
 import { useStanceInputMode, type StanceInputMode } from "@/lib/stance/input-mode";
 import { instance, part, type DataNode } from "@/lib/ui/data-node";
@@ -103,6 +110,10 @@ const DELETE_FOOTNOTE_APPLICANT = "Nothing is deleted here. The next screen says
 /** What a row-level act that got no answer says (copy-voice *Faults by code*). */
 const NO_ANSWER = "That didn't send. Try again.";
 
+/** The unveil switch's second line, by state (`_shared.jsx`, #141; the On words ruled in seam 132). */
+const UNVEIL_OFF_STATUS = "Off, the veil stays until you tap it.";
+const UNVEIL_ON_STATUS = "On, sensitive content stands unveiled wherever you read.";
+
 export function SettingsView({
   store = identityStore,
   drafts = composeDraftStore,
@@ -134,6 +145,7 @@ export function SettingsView({
   const [exactValues, setExactValues] = exactValuesPreference.use();
   const [stanceMode, setStanceMode] = useStanceInputMode();
   const [confirmMulti, setConfirmMulti] = useConfirmMultiAction();
+  const alwaysUnveil = useAlwaysUnveil();
 
   const sessionRows = useRef(new Map<string, HTMLElement | null>());
   const signOutRow = useRef<HTMLButtonElement | null>(null);
@@ -144,6 +156,9 @@ export function SettingsView({
       if (outcome.kind === "success") {
         setAccount(outcome.value);
         setReadFailed(false);
+        // The account's own answer, so a choice made on another device
+        // reads here (Settings.md: it follows the account).
+        setAccountFilterLevel(outcome.value.preferences?.contentFilteringSeverityLevel ?? null);
       } else {
         setReadFailed(true);
       }
@@ -220,7 +235,10 @@ export function SettingsView({
     // the new default at once, and a failure reverts it and says so.
     setAccount({
       ...account,
-      preferences: { ...account.preferences, defaultLicense: { ...license } },
+      preferences: {
+        contentFilteringSeverityLevel: account.preferences?.contentFilteringSeverityLevel ?? null,
+        defaultLicense: { ...license },
+      },
     });
     setLicenseFailed(null);
     const outcome = await guard.run(() => setDefaultLicense(client, license));
@@ -228,6 +246,30 @@ export function SettingsView({
       setAccount(before);
       setLicenseFailed(license);
     }
+  };
+
+  // ------------------------------------------------------- sensitive content
+
+  /** Only the latest flip's failure may put the switch back. */
+  const unveilSave = useRef(0);
+
+  const onUnveil = async () => {
+    const before = accountFilterLevel();
+    const on = !alwaysUnveil;
+    // Saved optimistically (R8; seam 044 K4.1): the switch flips at once,
+    // every veil in this tab answers it, and no dialog asks.
+    setAccountFilterLevel(on ? UNVEIL_LEVEL : null);
+    const save = ++unveilSave.current;
+    const outcome = await guard.run(() => setAlwaysUnveil(client, on));
+    if (save !== unveilSave.current) return;
+    if (outcome.kind === "success") {
+      setAccountFilterLevel(outcome.value);
+      return;
+    }
+    // Both values are valid, so the only failure is no answer: the switch
+    // goes back and the shared no-answer line says so (digest item 95).
+    setAccountFilterLevel(before);
+    setSnackbar(NO_ANSWER);
   };
 
   // ---------------------------------------------------------------- sign out
@@ -407,6 +449,23 @@ export function SettingsView({
           {/* Nobody can be hidden yet (the Hide packet), so the row is the
               drawn empty state: inert, `None`. */}
           <SettingsRow label="Hidden accounts" value="None" inert node={node("people.hidden")} />
+        </SettingsGroup>
+
+        {/* THE VEIL IS THE ACCOUNT'S CHOICE, NOT THIS DEVICE'S (#141): its own
+            group, because Reading's footnote promises "this device" and this
+            does not. One switch, off by default, never a sheet. */}
+        <SettingsGroup
+          label="Sensitive content"
+          footnote="This choice follows your account to every device."
+          node={node("sensitive")}
+        >
+          <SettingsRow
+            checked={alwaysUnveil}
+            label="Always unveil sensitive content"
+            status={alwaysUnveil ? UNVEIL_ON_STATUS : UNVEIL_OFF_STATUS}
+            onOpen={() => void onUnveil()}
+            node={node("sensitive.unveil")}
+          />
         </SettingsGroup>
 
         <SettingsGroup
