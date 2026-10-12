@@ -2378,8 +2378,9 @@ async fn ranking_past_the_timeout_is_internal(pool: PgPool) {
 
 /// Backpressure: with every slot held, a call that cannot get one within
 /// the timeout is refused without reaching the pod. One slot; the first
-/// call holds it until its own timeout, the second takes it then, and the
-/// third — queued behind both — runs out of time first.
+/// call holds it at the pod until its own timeout, the second (queued once
+/// the first is at the pod) takes it then, and the third — queued behind
+/// both — runs out of time first.
 ///
 /// A ranking over the in-flight cap is INTERNAL and never reaches the pod.
 /// ´claim:relay:over-the-cap-is-internal´
@@ -2394,7 +2395,14 @@ async fn ranking_over_the_in_flight_cap_is_internal(pool: PgPool) {
     let (_guard, logs) = Logs::capture();
     let variables = json!({ "viewer": f.viewer });
     let (first, (second, third)) = tokio::join!(rank_raw(&rig, None, variables.clone()), async {
-        tokio::time::sleep(Duration::from_millis(150)).await;
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while pod.requests().is_empty() {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await
+        .expect("the first call reaches the pod");
+        tokio::time::sleep(Duration::from_millis(100)).await;
         tokio::join!(
             rank_raw(&rig, None, variables.clone()),
             rank_raw(&rig, None, variables.clone())
