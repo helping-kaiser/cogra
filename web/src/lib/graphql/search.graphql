@@ -1,0 +1,119 @@
+# Search (api-spec.md "Search"; slice 2.7): the Explore surface's one
+# read. Recall is names and titles only — a handle, a display name, a
+# topic's name, a post's title — exact matches first, then newest.
+#
+# The node is the `SearchResult` UNION, so every selection below is
+# inline: a fragment whose type condition is the union cannot be matched
+# by `InMemoryCache` without a `possibleTypes` map (see
+# `fragments.graphql`).
+#
+# `includeSeen` is the reader's `Show what you've already seen`; the
+# exclusion runs server-side, so a page keeps its size. Nothing here is
+# marked seen: search results never become seen by being on screen —
+# only opening one counts, on the surface it opens.
+#
+# The Explore surface that sends this is not built yet (search-surface
+# S1); the document lands with the contract so both clients generate
+# against it.
+query Search(
+  $query: String!
+  $kinds: [NodeKind!]
+  $includeSeen: Boolean
+  $first: Int
+  $after: String
+) {
+  search(
+    query: $query
+    kinds: $kinds
+    includeSeen: $includeSeen
+    first: $first
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        __typename
+        ... on Post {
+          id
+          title {
+            value
+            status
+          }
+          createdAt
+          landing {
+            state
+          }
+          author {
+            id
+            handle
+          }
+          # The first entry is the cover the row's mark draws.
+          attachments {
+            id
+            url
+            status
+            mimeType
+            coverMedia {
+              url
+              status
+            }
+          }
+          # Sensitivity veils the cover: the row falls back to the text tile.
+          attachmentsStatus
+        }
+        ... on Comment {
+          id
+          content {
+            value
+            status
+          }
+          createdAt
+          landing {
+            state
+          }
+          # The found-through line, `on <title>`: derived from the target,
+          # never a field of its own.
+          target {
+            __typename
+            ... on Post {
+              id
+              title {
+                value
+              }
+            }
+            ... on Comment {
+              id
+              author {
+                handle
+              }
+              content {
+                value
+              }
+            }
+          }
+        }
+        ... on User {
+          id
+          handle
+          displayName {
+            value
+          }
+          avatar {
+            url
+            status
+          }
+        }
+        ... on Hashtag {
+          id
+          name {
+            value
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

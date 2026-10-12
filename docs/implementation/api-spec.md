@@ -2216,12 +2216,11 @@ type Query {
 
   "Candidate targets for the reference picker.
 
-   **Exact-match resolution only.** Real search — prefix matching,
-   ranking, snippets — arrives with slice 2.7 *behind this same
-   field*, so a client binds to it once and does not change when
-   the implementation is replaced. Two shapes resolve today: a
-   handle, bare or @-sigilled, names a person; a UUID names
-   whatever node it addresses.
+   Candidates come from the one search matcher (see Search) — names
+   and titles, exact tier first, then newest — narrowed to what
+   prepareReference accepts: never a topic, never a keyless
+   account. A UUID still names whatever node it addresses, and a
+   leading @ narrows to people.
 
    An empty or unresolvable query yields an empty list, never an
    error. A finder runs on every keystroke, so most of what it is
@@ -2325,7 +2324,7 @@ type Query {
     first: Int, after: String, last: Int, before: String
   ): NodeConnection!
 
-  "Global search across nodes; returns mixed node types. Recall is
+  "Global search across nodes; returns a `SearchResult` per edge. Recall is
    lexical over the indexed name-class fields and post titles — an
    untitled post is never matched by its words; order is exact-match
    tier first, then newest first — viewer-independent, the backend
@@ -2335,7 +2334,8 @@ type Query {
    valid kind but is served only under a scope operator (`@handle`,
    `#tag`) — unscoped, it contributes no rows, never an error.
    COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with their
-   slices and read empty until then. `includeSeen: false` drops nodes
+   slices and read empty until then. An empty `kinds` list means the
+   same as null (no narrowing). `includeSeen: false` drops nodes
    on the viewer's seen-list (`User.viewHistory`); it needs a session
    and is ignored without one. Full semantics in the Search section."
   search(
@@ -2472,9 +2472,14 @@ by prefix and substring; Post titles and chat-message bodies
 match by word-level full-text. The index technology behind those
 semantics is an implementation choice.
 
+A blank query returns an empty connection, never an error. A query
+longer than 640 characters is BAD_INPUT. Only a leading `@handle`
+or `#tag` scopes; elsewhere those characters are text.
+
 **Order.** Backend order is exact-match tier first — a result
 whose indexed field equals the query case-insensitively — then
-newest first. Both keys are viewer-independent: the backend never
+newest first, by the node's `createdAt`; a Hashtag, which carries
+no date, by its registry entry's age (not served). Both keys are viewer-independent: the backend never
 ranks by graph
 ([feed-ranking.md §11](../primitive/feed-ranking.md#11-where-ranking-runs)).
 Graph-blended ordering is the ranker's option, the same split as
@@ -2503,6 +2508,10 @@ rule, a substring query for "redacted" would surface every
 redacted handle and title.
 
 ```graphql
+"What search returns: the kinds it serves; later slices add members
+ as their kinds join (Collective, Chat, ChatMessage, Item, Offer)."
+union SearchResult = Post | Comment | User | Hashtag
+
 type SearchConnection {
   edges: [SearchEdge!]!
   pageInfo: PageInfo!
@@ -2510,7 +2519,7 @@ type SearchConnection {
 }
 type SearchEdge {
   cursor: String!
-  node: Node!
+  node: SearchResult!
 }
 type ChatMessageConnection {
   edges: [ChatMessageEdge!]!

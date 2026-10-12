@@ -6,21 +6,28 @@
 //! Reads need no authentication — the shared graph is public; the
 //! private fields are field-level authorized on their types.
 
+use std::collections::HashMap;
+
+use async_graphql::connection::Edge;
 use async_graphql::{Context, Object, SimpleObject};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as B64;
+use postgres_store::search as search_store;
 use postgres_store::{PgPool, auth as store, content as content_store, genesis, mirror, staged};
 use uuid::Uuid;
 
 use super::types::{
-    Actor, AskLinkCheck, CommentType, EmailChangeLinkCheck, EmailChangeLinkState, HashtagType,
-    InviteLinkCheck, KeysetConnection, MediaAttachmentType, Node, PostType, Record,
-    RecordConnection, RecordFamily, RecordId, ReferenceCandidate, ReferenceTarget, StagedWriteType,
-    User, borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
+    Actor, AskLinkCheck, CommentType, DEFAULT_PAGE_SIZE, EmailChangeLinkCheck,
+    EmailChangeLinkState, HashtagType, InviteLinkCheck, KeysetConnection, MediaAttachmentType,
+    Node, NodeKind, PostType, Record, RecordConnection, RecordFamily, RecordId, ReferenceCandidate,
+    ReferenceTarget, SearchConnection, SearchConnectionFields, SearchResult, StagedWriteType, User,
+    borrowed_vantage, connection_cost, content_cursor, content_cursor_key, keyset_connection,
     keyset_page, list_cost, list_limit, record_connection, resolve_reference_target,
+    validate_page_args,
 };
 use crate::auth::Viewer;
 use crate::l1::{L1Boundary, StandInBoundary};
+use crate::search::{self, IndexKind};
 
 /// Connectivity report for the API process and its store.
 #[derive(SimpleObject)]
@@ -453,12 +460,11 @@ impl Query {
 
     /// Candidate targets for the reference picker.
     ///
-    /// **Exact-match resolution only.** Real search — prefix matching,
-    /// ranking, snippets — arrives with slice 2.7 *behind this same
-    /// field*, so a client binds to it once and does not change when the
-    /// implementation is replaced. Two shapes resolve today: a handle,
-    /// bare or `@`-sigilled, names a person; a UUID names whatever node
-    /// it addresses.
+    /// Candidates come from the one search matcher (see Search) — names
+    /// and titles, exact tier first, then newest — narrowed to what
+    /// `prepareReference` accepts: never a topic, never a keyless
+    /// account. A UUID still names whatever node it addresses, and a
+    /// leading `@` narrows to people.
     ///
     /// An empty or unresolvable query yields an empty list, never an
     /// error. A finder runs on every keystroke, so most of what it is
@@ -482,17 +488,14 @@ impl Query {
         limit: Option<i32>,
     ) -> async_graphql::Result<Vec<ReferenceCandidate>> {
         let pool = ctx.data::<PgPool>()?;
-        let limit = list_limit(limit)? as usize;
+        let limit = list_limit(limit)?;
         let query = query.trim();
-        if query.is_empty() || limit == 0 {
+        if query.is_empty() || limit == 0 || query.starts_with('#') {
             return Ok(Vec::new());
         }
 
-        let mut out = Vec::new();
-        if query.starts_with('#') {
-            return Ok(Vec::new());
-        }
         if let Ok(id) = Uuid::parse_str(query) {
+            let mut out = Vec::new();
             if let Some(node) = crate::nodes::resolve_id(pool, id)
                 .await
                 .map_err(|e| async_graphql::Error::new(e.to_string()))?
@@ -503,21 +506,120 @@ impl Query {
                     target_id: id,
                 });
             }
-        } else if let Ok(folded) = crate::auth::normalize_handle(query.trim_start_matches('@'))
-            && let Some(identity) = store::actor_identity_by_handle(pool, &folded).await?
-            && identity.kind == "user"
-            && identity.realization_address.is_some()
-        {
-            out.push(ReferenceCandidate {
-                target_id: identity.id,
-                target: ReferenceTarget::Profile(User {
-                    identity,
-                    viewer_session: None,
-                }),
-            });
+            return Ok(out);
         }
-        out.truncate(limit);
-        Ok(out)
+
+        let (text, kinds): (&str, &[IndexKind]) = match query.strip_prefix('@') {
+            Some(handle) => (handle, &[IndexKind::User]),
+            None => (query, &[IndexKind::User, IndexKind::Post]),
+        };
+        let Ok(search::Parsed::Unscoped(text)) = search::parse(text) else {
+            return Ok(Vec::new());
+        };
+        let request = search::unscoped(text, kinds, None, true);
+        let hits = search_store::find(pool, &request, None, false, i64::from(limit))
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(hydrate(pool, hits)
+            .await?
+            .into_iter()
+            .filter_map(|(_, result)| match result {
+                SearchResult::Post(post) => Some(ReferenceCandidate {
+                    target_id: post.0.id,
+                    target: ReferenceTarget::Post(post),
+                }),
+                SearchResult::User(user) => Some(ReferenceCandidate {
+                    target_id: user.identity.id,
+                    target: ReferenceTarget::Profile(user),
+                }),
+                SearchResult::Comment(_) | SearchResult::Hashtag(_) => None,
+            })
+            .collect())
+    }
+
+    /// Global search across nodes; returns a `SearchResult` per edge.
+    /// Recall is lexical over the indexed name-class fields and post
+    /// titles — an untitled post is never matched by its words; order is
+    /// exact-match tier first, then newest first — viewer-independent,
+    /// the backend never graph-ranks (feed-ranking.md §11). A ranker may
+    /// re-order fetched results by the viewer's feed metric. Served kinds
+    /// grow with the slices: USER, POST, HASHTAG unscoped; COMMENT is
+    /// always a valid kind but is served only under a scope operator
+    /// (`@handle`, `#tag`) — unscoped, it contributes no rows, never an
+    /// error. COLLECTIVE, CHAT, CHAT_MESSAGE, ITEM and OFFER join with
+    /// their slices and read empty until then. An empty `kinds` list
+    /// means the same as null (no narrowing). `includeSeen: false` drops
+    /// nodes on the viewer's seen-list (`User.viewHistory`); it needs a
+    /// session and is ignored without one. Full semantics in the Search
+    /// section.
+    #[graphql(complexity = "connection_cost(first, last, child_complexity)")]
+    #[expect(
+        clippy::too_many_arguments,
+        reason = "each argument is a GraphQL field argument the schema declares; grouping them into a struct would change the published contract"
+    )]
+    async fn search(
+        &self,
+        ctx: &Context<'_>,
+        query: String,
+        kinds: Option<Vec<NodeKind>>,
+        #[graphql(default_with = "Some(true)")] include_seen: Option<bool>,
+        first: Option<i32>,
+        after: Option<String>,
+        last: Option<i32>,
+        before: Option<String>,
+    ) -> async_graphql::Result<SearchConnection> {
+        let pool = ctx.data::<PgPool>()?;
+        validate_page_args(first, last, after.as_deref(), before.as_deref())
+            .map_err(|e| bad_input(e.message))?;
+        let backward = last.is_some() || before.is_some();
+        let cursor = match if backward { &before } else { &after } {
+            Some(raw) => {
+                Some(search::decode_cursor(raw).ok_or_else(|| bad_input("invalid cursor"))?)
+            }
+            None => None,
+        };
+        let limit = i64::from(last.or(first).unwrap_or(DEFAULT_PAGE_SIZE));
+
+        let parsed = search::parse(&query).map_err(|_| {
+            bad_input(format!(
+                "query may be at most {} characters",
+                search::MAX_QUERY_CHARS
+            ))
+        })?;
+        let empty = || search_page(Vec::new(), cursor.is_some(), backward, false, None);
+        let text = match parsed {
+            search::Parsed::Unscoped(text) => text,
+            search::Parsed::Blank | search::Parsed::Scoped { .. } => return Ok(empty()),
+        };
+        let kinds = served_kinds(kinds.as_deref());
+        if kinds.is_empty() {
+            return Ok(empty());
+        }
+        let viewer = match ctx.data_opt::<Option<Viewer>>() {
+            Some(Some(v)) => Some(v.user_id),
+            _ => None,
+        };
+        let exclude_seen_by = viewer.filter(|_| include_seen == Some(false));
+        let request = search::unscoped(text, &kinds, exclude_seen_by, false);
+        let mut hits = search_store::find(pool, &request, cursor, backward, limit + 1)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        let has_more = hits.len() as i64 > limit;
+        if has_more {
+            if backward {
+                hits.remove(0);
+            } else {
+                hits.pop();
+            }
+        }
+        let page = hydrate(pool, hits).await?;
+        Ok(search_page(
+            page,
+            cursor.is_some(),
+            backward,
+            has_more,
+            Some(request),
+        ))
     }
 
     /// The chronological listing (roadmap "Slice 2"): every post,
@@ -574,6 +676,106 @@ async fn lookup_actor(
             "provide exactly one of id or handle",
         )),
     }
+}
+
+/// The transport-tier refusal for a malformed search argument
+/// (api-spec.md "Errors are tiered"): `BAD_INPUT` in
+/// `errors[].extensions.code`.
+fn bad_input(message: impl Into<String>) -> async_graphql::Error {
+    use async_graphql::ErrorExtensions;
+    async_graphql::Error::new(message).extend_with(|_, e| e.set("code", "BAD_INPUT"))
+}
+
+/// The index kinds a `kinds` argument serves unscoped. Null or empty
+/// narrows nothing; COMMENT is served only under a scope, and the kinds
+/// whose slices have not shipped read empty.
+fn served_kinds(kinds: Option<&[NodeKind]>) -> Vec<IndexKind> {
+    match kinds {
+        None | Some([]) => IndexKind::ALL.to_vec(),
+        Some(kinds) => IndexKind::ALL
+            .into_iter()
+            .filter(|served| {
+                kinds.iter().any(|kind| match served {
+                    IndexKind::User => *kind == NodeKind::User,
+                    IndexKind::Post => *kind == NodeKind::Post,
+                    IndexKind::Hashtag => *kind == NodeKind::Hashtag,
+                })
+            })
+            .collect(),
+    }
+}
+
+/// The matched nodes, typed, in match order. A hit whose node vanished
+/// between the match and the load is dropped rather than served empty.
+async fn hydrate(
+    pool: &PgPool,
+    hits: Vec<search_store::SearchHit>,
+) -> async_graphql::Result<Vec<(search_store::SearchHit, SearchResult)>> {
+    let ids_of = |kind: IndexKind| -> Vec<Uuid> {
+        hits.iter()
+            .filter(|h| h.kind == kind.as_store())
+            .map(|h| h.node_id)
+            .collect()
+    };
+    let posts = crate::nodes::resolve_content_many(pool, &ids_of(IndexKind::Post))
+        .await
+        .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+    let mut users: HashMap<Uuid, store::ActorIdentity> =
+        store::actor_identities_by_ids(pool, &ids_of(IndexKind::User))
+            .await?
+            .into_iter()
+            .map(|identity| (identity.id, identity))
+            .collect();
+    Ok(hits
+        .into_iter()
+        .filter_map(|hit| {
+            let result = match hit.kind.as_str() {
+                "post" => match posts.get(&hit.node_id) {
+                    Some(crate::nodes::ContentNode::Post(post)) => {
+                        SearchResult::Post(PostType(post.clone()))
+                    }
+                    _ => return None,
+                },
+                "user" => SearchResult::User(User {
+                    identity: users.remove(&hit.node_id)?,
+                    viewer_session: None,
+                }),
+                "hashtag" => SearchResult::Hashtag(HashtagType {
+                    name: hit.name.clone()?,
+                }),
+                _ => return None,
+            };
+            Some((hit, result))
+        })
+        .collect())
+}
+
+/// A search page from hydrated hits. `had_cursor` and `has_more` decide
+/// the page flags the way every keyset connection does: walking forward,
+/// a cursor means a previous page and the extra row a next one; walking
+/// backward, the other way round.
+fn search_page(
+    page: Vec<(search_store::SearchHit, SearchResult)>,
+    had_cursor: bool,
+    backward: bool,
+    has_more: bool,
+    request: Option<search_store::MatchQuery>,
+) -> SearchConnection {
+    let (has_previous, has_next) = if backward {
+        (has_more, had_cursor)
+    } else {
+        (had_cursor, has_more)
+    };
+    let mut connection = SearchConnection::with_additional_fields(
+        has_previous,
+        has_next,
+        SearchConnectionFields { request },
+    );
+    connection.edges.extend(
+        page.into_iter()
+            .map(|(hit, result)| Edge::new(search::encode_cursor(hit.cursor()), result)),
+    );
+    connection
 }
 
 /// A resolved content row as the `Node` union serves it.

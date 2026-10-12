@@ -244,6 +244,7 @@ pub async fn insert_post(
     )
     .fetch_one(&mut **tx)
     .await?;
+    crate::search::refresh_posts(tx, &[id]).await?;
     Ok(Some(version_id))
 }
 
@@ -266,7 +267,7 @@ pub async fn insert_post_version(
     order: Option<LandingOrder>,
     created_at: Timestamp,
 ) -> Result<Option<i64>, ContentError> {
-    Ok(sqlx::query_scalar!(
+    let version_id = sqlx::query_scalar!(
         "INSERT INTO post_versions
              (post_id, title, description, content, sensitive,
               sensitive_reason, pending, created_at,
@@ -287,7 +288,9 @@ pub async fn insert_post_version(
         order.map(|o| o.position),
     )
     .fetch_optional(&mut **tx)
-    .await?)
+    .await?;
+    crate::search::refresh_posts(tx, &[post_id]).await?;
+    Ok(version_id)
 }
 
 /// Inserts a comment's entity row and its first version row; same
@@ -411,14 +414,15 @@ pub async fn land_post(
 /// unique, so a node carrying more than one unlanded version never lands
 /// a write's text on another's record. False when there is none — the
 /// edit landed without ever being staged here, and the promotion path
-/// appends the version instead.
+/// appends the version instead. Landing reorders the versions (pending
+/// ones lead), so the search index re-derives which one is current.
 pub async fn land_post_version(
     tx: &mut Transaction<'_, Postgres>,
     post_id: Uuid,
     created_at: Timestamp,
     order: LandingOrder,
 ) -> Result<bool, ContentError> {
-    Ok(sqlx::query!(
+    let landed = sqlx::query!(
         "UPDATE post_versions
             SET pending = FALSE, landed_epoch = $3, act_time = $4,
                 position = $5
@@ -432,7 +436,9 @@ pub async fn land_post_version(
     .execute(&mut **tx)
     .await?
     .rows_affected()
-        == 1)
+        == 1;
+    crate::search::refresh_posts(tx, &[post_id]).await?;
+    Ok(landed)
 }
 
 /// Confirm: the comment side of [`land_post`].
@@ -509,7 +515,9 @@ pub async fn discard_pending(
 /// handful of statements rather than six per node. `nodes` and
 /// `instants` are parallel: each index is one write's node and the
 /// authoring instant its rows carry, and the pair is what every
-/// statement matches on.
+/// statement matches on. The search index follows: a discarded version
+/// may have been the current one, and a discarded post has no title
+/// left to match.
 pub async fn discard_pending_many(
     tx: &mut Transaction<'_, Postgres>,
     nodes: &[Uuid],
@@ -563,6 +571,7 @@ pub async fn discard_pending_many(
         .await?,
     );
     discard_pending_thread(tx, removed).await?;
+    crate::search::refresh_posts(tx, nodes).await?;
     Ok(())
 }
 

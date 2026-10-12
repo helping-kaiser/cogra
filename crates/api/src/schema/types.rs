@@ -3491,6 +3491,78 @@ pub enum CommentTarget {
     Comment(CommentType),
 }
 
+/// What search returns: the kinds it serves. Later slices add members as
+/// their kinds join (Collective, Chat, ChatMessage, Item, Offer).
+///
+/// A union rather than the `Node` interface because a `Hashtag` is
+/// deliberately not a `Node` — it has nothing to date and nothing to land
+/// — and search serves topics (GraphQL spec §3.8, *Unions*).
+#[derive(async_graphql::Union)]
+pub enum SearchResult {
+    Post(PostType),
+    Comment(CommentType),
+    User(User),
+    Hashtag(HashtagType),
+}
+
+/// Names the search connection `SearchConnection`, as the contract does,
+/// rather than after its node type (`SearchResultConnection`).
+pub struct SearchConnectionName;
+
+impl async_graphql::connection::ConnectionNameType for SearchConnectionName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "SearchConnection".to_string()
+    }
+}
+
+/// Names the search edge `SearchEdge` (see [`SearchConnectionName`]).
+pub struct SearchEdgeName;
+
+impl async_graphql::connection::EdgeNameType for SearchEdgeName {
+    fn type_name<T: async_graphql::OutputType>() -> String {
+        "SearchEdge".to_string()
+    }
+}
+
+/// A page of search results.
+pub type SearchConnection = Connection<
+    String,
+    SearchResult,
+    SearchConnectionFields,
+    async_graphql::connection::EmptyFields,
+    SearchConnectionName,
+    SearchEdgeName,
+    async_graphql::connection::DisableNodesField,
+>;
+
+/// `SearchConnection`'s connection-level fields. It holds the match
+/// request that served the edges, so the count is resolved under exactly
+/// that predicate and only when asked. `None` is a request that matched
+/// nothing without asking the store — a blank query, a scoped query
+/// before the scoped branch exists, a kind filter naming no served kind —
+/// whose count is zero without a query.
+pub struct SearchConnectionFields {
+    pub(crate) request: Option<postgres_store::search::MatchQuery>,
+}
+
+#[Object]
+impl SearchConnectionFields {
+    /// How many nodes the query matches in total, across every page,
+    /// independent of the cursor. Priced at zero like every connection
+    /// count; saturates at [`i32::MAX`].
+    #[graphql(complexity = 0)]
+    async fn total_count(&self, ctx: &Context<'_>) -> async_graphql::Result<Option<i32>> {
+        let Some(request) = &self.request else {
+            return Ok(Some(0));
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let total = postgres_store::search::count(pool, request)
+            .await
+            .map_err(|e| async_graphql::Error::new(e.to_string()))?;
+        Ok(Some(i32::try_from(total).unwrap_or(i32::MAX)))
+    }
+}
+
 async fn author_user(ctx: &Context<'_>, author_id: Uuid) -> async_graphql::Result<Option<User>> {
     Ok(ctx
         .data::<DataLoader<ActorByIdLoader>>()?
